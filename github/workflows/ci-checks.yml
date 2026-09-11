@@ -1,0 +1,32 @@
+name: Tapuai Team Quality Checks
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run TypeScript Type Checks (Architect Bot)
+        run: npx tsc --noEmit
+
+      - name: Check for Leaked Backend Keys (Security Bot)
+        run: |
+          if grep -rn "sk_test_" src/frontend/; then
+            echo "ERROR: Stripe Secret Key found in frontend code!"
+            exit 1
+          fi
