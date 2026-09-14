@@ -1,0 +1,321 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { BlurTargetView, BlurView } from 'expo-blur';
+
+import { ReelViewModal } from '@/components/Reels/ReelViewModal';
+import { colors } from '@/constants/theme';
+import { isClipVaultOnly, isFlashUnlockActive, VAULT_BADGE_LABEL } from '@/data/exclusive';
+import type { HighlightClip } from '@/data/highlights';
+import type { Player } from '@/data/players';
+import { hypeFromReel, sortClipsNewestFirst, type ReelHype } from '@/lib/reels';
+import { FOCAL } from '@/theme/motion';
+
+const COLS = 3;
+const GAP = 2;
+
+type TaggedReelGridProps = {
+  clips: HighlightClip[];
+  player?: Player | null;
+  tipping?: boolean;
+  /** When false, vault clips stay locked. Omit to leave every tile playable. */
+  subscribed?: boolean;
+  /** Athlete manager: long-press opens vault placement options. */
+  onLongPressClip?: (clip: HighlightClip) => void;
+  /** Show a vault chip on `is_vault_only` tiles even when the owner can play them. */
+  showVaultBadge?: boolean;
+  onLockedPress?: () => void;
+  onOpenAthlete?: (playerId: string) => void;
+  onHypeChange?: (reelId: string, hype: ReelHype) => void;
+  onBacked?: (nextCount: number) => void;
+};
+
+type TaggedReelTileProps = {
+  clip: HighlightClip;
+  locked: boolean;
+  vaultBadge: boolean;
+  tileSize: number;
+  tileHeight: number;
+  onPress: () => void;
+  onLongPress?: () => void;
+};
+
+/**
+ * @purpose 3×3 tagged-clip grid (newest first); vault tiles blur until the fan subscribes.
+ * @param subscribed When `false`, `is_vault_only` tiles cannot open the reel player.
+ * @param onLongPressClip Athlete manager options (vault / public).
+ * @returns Poster grid plus a paging `ReelViewModal` (same double-tap Aura as the hub feed).
+ * @sideEffects Opens the reel pager; locked taps call `onLockedPress` (paywall).
+ */
+export function TaggedReelGrid({
+  clips,
+  player = null,
+  tipping = false,
+  subscribed,
+  onLongPressClip,
+  showVaultBadge = false,
+  onLockedPress,
+  onOpenAthlete,
+  onHypeChange,
+  onBacked,
+}: TaggedReelGridProps) {
+  const { width } = useWindowDimensions();
+  const ordered = useMemo(() => sortClipsNewestFirst(clips), [clips]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [hypeById, setHypeById] = useState<Record<string, ReelHype>>({});
+  const tileSize = Math.floor((width - 32 - GAP * (COLS - 1)) / COLS);
+  const tileHeight = Math.round(tileSize * (4 / 3));
+
+  useEffect(() => {
+    setHypeById((current) => {
+      const next: Record<string, ReelHype> = {};
+      for (const clip of ordered) {
+        const fromClip = hypeFromReel({
+          seki_count: clip.sekiCount,
+          aura_count: clip.auraCount,
+          flex_count: clip.flexCount,
+          total_tips_cents: clip.totalTipsCents,
+        });
+        const local = current[clip.id];
+        next[clip.id] = local
+          ? {
+              seki_count: Math.max(local.seki_count, fromClip.seki_count),
+              aura_count: Math.max(local.aura_count, fromClip.aura_count),
+              flex_count: Math.max(local.flex_count, fromClip.flex_count),
+              total_tips_cents: Math.max(local.total_tips_cents, fromClip.total_tips_cents),
+            }
+          : fromClip;
+      }
+      return next;
+    });
+  }, [ordered]);
+
+  useEffect(() => {
+    if (!activeId) return;
+    const clip = ordered.find((item) => item.id === activeId);
+    if (clip && isClipVaultOnly(clip) && subscribed === false && !isFlashUnlockActive(clip.flashUnlockUntil)) {
+      setActiveId(null);
+    }
+  }, [activeId, ordered, subscribed]);
+
+  if (ordered.length === 0) {
+    return <Text style={styles.empty}>No tagged clips yet.</Text>;
+  }
+
+  const applyHype = (reelId: string, hype: ReelHype) => {
+    setHypeById((current) => ({ ...current, [reelId]: hype }));
+    onHypeChange?.(reelId, hype);
+  };
+
+  const pagerClips = ordered.map((clip) => {
+    const hype = hypeById[clip.id];
+    if (!hype) return clip;
+    return {
+      ...clip,
+      sekiCount: hype.seki_count,
+      auraCount: hype.aura_count,
+      flexCount: hype.flex_count,
+      totalTipsCents: hype.total_tips_cents,
+    };
+  });
+
+  return (
+    <View>
+      <View style={styles.grid} accessibilityRole="list" accessibilityLabel="Tagged clips">
+        {ordered.map((clip) => {
+          const vaultOnly = isClipVaultOnly(clip);
+          const locked = vaultOnly && subscribed === false && !isFlashUnlockActive(clip.flashUnlockUntil);
+          return (
+            <TaggedReelTile
+              key={clip.id}
+              clip={clip}
+              locked={locked}
+              vaultBadge={showVaultBadge && vaultOnly}
+              tileSize={tileSize}
+              tileHeight={tileHeight}
+              onLongPress={onLongPressClip ? () => onLongPressClip(clip) : undefined}
+              onPress={() => {
+                if (locked) {
+                  onLockedPress?.();
+                  return;
+                }
+                setActiveId(clip.id);
+              }}
+            />
+          );
+        })}
+      </View>
+      <ReelViewModal
+        clips={pagerClips}
+        initialClipId={activeId}
+        player={player}
+        tipping={tipping}
+        onClose={() => setActiveId(null)}
+        onOpenAthlete={onOpenAthlete}
+        onHypeChange={applyHype}
+        onBacked={onBacked}
+        onTipped={(reelId, amountCents) => {
+          const current = hypeById[reelId] ?? hypeFromReel({
+            seki_count: pagerClips.find((item) => item.id === reelId)?.sekiCount,
+            aura_count: pagerClips.find((item) => item.id === reelId)?.auraCount,
+            flex_count: pagerClips.find((item) => item.id === reelId)?.flexCount,
+            total_tips_cents: pagerClips.find((item) => item.id === reelId)?.totalTipsCents,
+          });
+          applyHype(reelId, {
+            ...current,
+            total_tips_cents: current.total_tips_cents + amountCents,
+          });
+        }}
+      />
+    </View>
+  );
+}
+
+function TaggedReelTile({
+  clip,
+  locked,
+  vaultBadge,
+  tileSize,
+  tileHeight,
+  onPress,
+  onLongPress,
+}: TaggedReelTileProps) {
+  const blurTarget = useRef<View>(null);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={
+        locked
+          ? `${clip.tag} clip, ${VAULT_BADGE_LABEL}`
+          : `${clip.tag} clip, ${clip.athleteName}`
+      }
+      delayLongPress={280}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={({ pressed }) => [
+        styles.tile,
+        { width: tileSize, height: tileHeight },
+        pressed && styles.pressed,
+      ]}
+    >
+      <BlurTargetView ref={blurTarget} style={styles.poster}>
+        <Ionicons name="play" size={28} color={locked ? colors.textMuted : colors.primary} />
+      </BlurTargetView>
+      {locked ? (
+        <BlurView
+          intensity={80}
+          tint="dark"
+          blurMethod="dimezisBlurView"
+          blurTarget={blurTarget}
+          style={styles.lockBlur}
+        >
+          <View style={styles.lockBadge}>
+            <Text style={styles.lockLabel}>{VAULT_BADGE_LABEL}</Text>
+          </View>
+        </BlurView>
+      ) : vaultBadge ? (
+        <View style={styles.vaultChip}>
+          <Text style={styles.vaultChipLabel}>Vault 🔒</Text>
+        </View>
+      ) : clip.sekiPlay ? (
+        <View style={styles.seki}>
+          <Text style={styles.sekiLabel}>SEKI</Text>
+        </View>
+      ) : null}
+      <Text style={styles.tag} numberOfLines={1}>
+        {clip.tag}
+      </Text>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: GAP,
+  },
+  tile: {
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+  },
+  poster: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: '#151C1F',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lockBlur: {
+    ...StyleSheet.absoluteFill,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  lockBadge: {
+    backgroundColor: 'rgba(15,20,22,0.72)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 5,
+  },
+  lockLabel: {
+    color: colors.text,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+    textAlign: 'center',
+  },
+  seki: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    backgroundColor: colors.primary,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  sekiLabel: {
+    color: colors.onAccent,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  vaultChip: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    backgroundColor: 'rgba(15,20,22,0.78)',
+    borderWidth: 1,
+    borderColor: FOCAL.neonJade,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  vaultChipLabel: {
+    color: FOCAL.neonJade,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  tag: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '800',
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(15,20,22,0.78)',
+    zIndex: 1,
+  },
+  empty: {
+    color: colors.textMuted,
+    fontSize: 14,
+    paddingVertical: 24,
+    textAlign: 'center',
+  },
+  pressed: {
+    opacity: 0.88,
+  },
+});

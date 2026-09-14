@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
 import { NOTIFICATION_PREFS, type NotificationPref } from '@/data/players';
@@ -63,8 +64,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.deepGreen,
+    borderColor: colors.deepGreen,
   },
   chipLabel: {
     fontSize: 12,
@@ -72,6 +73,6 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   chipLabelSelected: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
   },
 });

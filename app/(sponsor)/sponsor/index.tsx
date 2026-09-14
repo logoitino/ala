@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { Stack } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
+import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { colors, radii } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
@@ -12,6 +14,7 @@ export default function SponsorHomeScreen() {
   const [ads, setAds] = useState<SponsorAd[]>([]);
   const [title, setTitle] = useState('Friday Lights presented by Alpine Credit Union');
   const [rivalry, setRivalry] = useState('Westlake vs Lone Peak');
+  const [busy, setBusy] = useState(false);
 
   const loadAds = useCallback(async () => {
     const { data } = await supabase.from('sponsor_ads').select('*').order('title');
@@ -23,44 +26,61 @@ export default function SponsorHomeScreen() {
   }, [loadAds]);
 
   const saveAd = async (placement: string) => {
-    const { error } = await supabase.from('sponsor_ads').insert({
-      title,
-      placement,
-      rivalry: rivalry || null,
-      is_active: true,
-    });
-    if (error) {
-      Alert.alert('Couldn’t save ad', error.message);
-      return;
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('sponsor_ads').insert({
+        title,
+        placement,
+        rivalry: rivalry || null,
+        is_active: true,
+      });
+      if (error) {
+        Alert.alert('Couldn’t save ad', error.message);
+        return;
+      }
+      void loadAds();
+    } finally {
+      setBusy(false);
     }
-    void loadAds();
   };
 
   const toggleAd = async (ad: SponsorAd) => {
-    const { error } = await supabase
-      .from('sponsor_ads')
-      .update({ is_active: !ad.is_active })
-      .eq('id', ad.id);
-    if (error) {
-      Alert.alert('Update failed', error.message);
-      return;
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase
+        .from('sponsor_ads')
+        .update({ is_active: !ad.is_active })
+        .eq('id', ad.id);
+      if (error) {
+        Alert.alert('Update failed', error.message);
+        return;
+      }
+      setAds((current) =>
+        current.map((item) => (item.id === ad.id ? { ...item, is_active: !item.is_active } : item)),
+      );
+    } finally {
+      setBusy(false);
     }
-    setAds((current) =>
-      current.map((item) => (item.id === ad.id ? { ...item, is_active: !item.is_active } : item)),
-    );
   };
 
   return (
     <ScreenShell>
       <Stack.Screen options={{ title: 'Sponsor' }} />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Sponsor Studio</Text>
+        <ScreenHeading
+          kicker="Tapua'i sponsor"
+          title="Sponsor Studio"
+          lede="Sideline boards and rivalry banners for live Tapua'i games."
+        />
         <DashboardPanel title="Digital stadium ad manager">
           <TextInput value={title} onChangeText={setTitle} style={styles.input} />
           <Pressable
             accessibilityRole="button"
+            disabled={busy}
             onPress={() => void saveAd('sideline-board')}
-            style={styles.primary}
+            style={[styles.primary, busy && { opacity: 0.5 }]}
           >
             <Text style={styles.primaryLabel}>Place sideline board ad</Text>
           </Pressable>
@@ -69,8 +89,9 @@ export default function SponsorHomeScreen() {
           <TextInput value={rivalry} onChangeText={setRivalry} style={styles.input} />
           <Pressable
             accessibilityRole="button"
+            disabled={busy}
             onPress={() => void saveAd('rivalry-banner')}
-            style={styles.secondary}
+            style={[styles.secondary, busy && { opacity: 0.5 }]}
           >
             <Text style={styles.primaryLabel}>Publish rivalry banner</Text>
           </Pressable>
@@ -85,7 +106,11 @@ export default function SponsorHomeScreen() {
                   {ad.title} · {ad.placement}
                   {ad.rivalry ? ` · ${ad.rivalry}` : ''}
                 </Text>
-                <Pressable onPress={() => void toggleAd(ad)}>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={busy}
+                  onPress={() => void toggleAd(ad)}
+                >
                   <Text style={styles.link}>{ad.is_active ? 'Pause' : 'Activate'}</Text>
                 </Pressable>
               </View>
@@ -102,11 +127,6 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 14,
   },
-  heading: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.text,
-  },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -118,7 +138,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   primary: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.deepGreen,
     borderRadius: radii.md,
     paddingVertical: 14,
     alignItems: 'center',
@@ -130,7 +150,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   primaryLabel: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontWeight: '800',
   },
   row: {

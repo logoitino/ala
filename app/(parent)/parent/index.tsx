@@ -1,33 +1,47 @@
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { Stack } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
+import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
+import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { colors, radii } from '@/constants/theme';
+import { useAuth } from '@/context/AuthContext';
 import { displayValue } from '@/data/players';
+import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useRoster } from '@/hooks/useRoster';
 import { requestPayout } from '@/lib/payouts';
 import { supabase } from '@/lib/supabase';
 
 export default function ParentHomeScreen() {
+  const { profile } = useAuth();
   const { players, setPlayers } = useRoster();
+  const pending = usePendingPlayerTags();
   const [busy, setBusy] = useState(false);
 
   const toggleConsent = async (playerId: string, approved: boolean) => {
-    const { error } = await supabase
-      .from('players')
-      .update({ parental_consent_approved: approved })
-      .eq('id', playerId);
-    if (error) {
-      Alert.alert('Couldn’t update consent', error.message);
-      return;
+    if (busy) return;
+    setBusy(true);
+    try {
+      const patch: { parental_consent_approved: boolean; guardian_id?: string | null } = {
+        parental_consent_approved: approved,
+      };
+      if (approved && profile?.id) patch.guardian_id = profile.id;
+      const { error } = await supabase.from('players').update(patch).eq('id', playerId);
+      if (error) {
+        Alert.alert('Couldn’t update consent', error.message);
+        return;
+      }
+      setPlayers((current) =>
+        current.map((player) =>
+          player.id === playerId ? { ...player, parental_consent_approved: approved } : player,
+        ),
+      );
+    } finally {
+      setBusy(false);
     }
-    setPlayers((current) =>
-      current.map((player) =>
-        player.id === playerId ? { ...player, parental_consent_approved: approved } : player,
-      ),
-    );
   };
 
   const setupPayout = async () => {
@@ -50,10 +64,22 @@ export default function ParentHomeScreen() {
     <ScreenShell>
       <Stack.Screen options={{ title: 'Parent' }} />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Parent Guardian</Text>
+        <ScreenHeading
+          kicker="Tapua'i parent"
+          title="Parent Guardian"
+          lede="Consent, custodial payouts, and confirm that a fan tagged the right jersey."
+        />
+        <TagConfirmList
+          tags={pending.tags}
+          busyId={pending.busyId}
+          error={pending.error}
+          emptyText="No pending tags for your athletes."
+          onConfirm={(id) => void pending.resolve(id, 'confirm')}
+          onReject={(id) => void pending.resolve(id, 'reject')}
+        />
         <DashboardPanel
           title="Linked student-athletes"
-          body="Approve minor consent before public tipping is enabled for each athlete."
+          body="Approve minor consent before public Mālo is enabled for each athlete."
         >
           <View style={styles.list}>
             {players.map((player) => {
@@ -70,8 +96,9 @@ export default function ParentHomeScreen() {
                   </View>
                   <Pressable
                     accessibilityRole="button"
+                    disabled={busy}
                     onPress={() => void toggleConsent(player.id, !approved)}
-                    style={[styles.chip, approved && styles.chipOn]}
+                    style={[styles.chip, approved && styles.chipOn, busy && { opacity: 0.5 }]}
                   >
                     <Text style={[styles.chipLabel, approved && styles.chipLabelOn]}>
                       {approved ? 'Revoke' : 'Approve'}
@@ -99,11 +126,6 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     gap: 14,
-  },
-  heading: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.text,
   },
   list: {
     gap: 10,
@@ -135,24 +157,24 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   chipOn: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.deepGreen,
+    borderColor: colors.deepGreen,
   },
   chipLabel: {
     fontWeight: '700',
     color: colors.text,
   },
   chipLabelOn: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
   },
   primary: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.deepGreen,
     borderRadius: radii.md,
     paddingVertical: 16,
     alignItems: 'center',
   },
   primaryLabel: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontWeight: '800',
     fontSize: 16,
   },

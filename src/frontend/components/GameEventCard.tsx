@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { TipCheckout } from '@/components/TipCheckout';
 import { cardShadow, colors, radii } from '@/constants/theme';
@@ -60,7 +61,7 @@ function EventCardBody({
           onBacked={(nextCount) => onBacked?.(player.id, nextCount)}
         />
       ) : player && onPressPlayer ? (
-        <Text style={styles.tipHint}>Tap to send a $3 / $5 / $10 tip</Text>
+        <Text style={styles.tipHint}>Tap to drop a $3 / $5 / $10 Mālo</Text>
       ) : null}
     </>
   );
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   actionLabel: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.3,

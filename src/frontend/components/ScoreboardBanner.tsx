@@ -36,8 +36,10 @@ export function ScoreboardBanner({ game }: ScoreboardBannerProps) {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.primary,
     padding: 16,
     gap: 12,
     ...cardShadow,
@@ -50,7 +52,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   statusText: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -69,25 +71,26 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   teamName: {
-    color: '#FFFFFF',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '800',
   },
   school: {
-    color: 'rgba(255,255,255,0.75)',
+    color: colors.textMuted,
     fontSize: 12,
   },
   score: {
-    color: '#FFFFFF',
+    color: colors.primary,
     fontSize: 28,
     fontWeight: '800',
   },
   scoreDivider: {
     fontSize: 22,
     fontWeight: '600',
+    color: colors.textMuted,
   },
   venue: {
-    color: 'rgba(255,255,255,0.8)',
+    color: colors.textMuted,
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',

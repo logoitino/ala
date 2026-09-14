@@ -1,0 +1,499 @@
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+
+export type AppRuntimeTabs = {
+  home: boolean;
+  local: boolean;
+  spotlight: boolean;
+  drip: boolean;
+  profile: boolean;
+  upload: boolean;
+};
+
+export type AppRuntimeButtons = {
+  seki: boolean;
+  aura: boolean;
+  flex: boolean;
+  malo: boolean;
+  more: boolean;
+  subscribe: boolean;
+  crew: boolean;
+  vault: boolean;
+  flashUnlock: boolean;
+};
+
+export type AppRuntimeLayouts = {
+  liveMatches: boolean;
+  cheerPolls: boolean;
+  topBoosters: boolean;
+  sponsorshipModal: boolean;
+  spotlightModal: boolean;
+  homeSearch: boolean;
+  localSearch: boolean;
+  operatorConsole: boolean;
+  parentHq: boolean;
+  boosterHq: boolean;
+  sponsorHq: boolean;
+};
+
+export type AppRuntimeConfig = {
+  tabs: AppRuntimeTabs;
+  buttons: AppRuntimeButtons;
+  layouts: AppRuntimeLayouts;
+  theme: AppRuntimeTheme;
+  profile: AppRuntimeProfile;
+  highlights: AppRuntimeHighlights;
+};
+
+export type AppRuntimeTheme = {
+  background: string;
+  surface: string;
+  jade: string;
+  gold: string;
+  text: string;
+};
+
+export type AppRuntimeProfile = {
+  showCard: boolean;
+  showCrew: boolean;
+  showStats: boolean;
+  showVault: boolean;
+  actionsOnTop: boolean;
+  statsFirst: boolean;
+};
+
+export type HighlightRailItem = 'seki' | 'aura' | 'flex' | 'malo' | 'more';
+
+export type AppRuntimeHighlights = {
+  railSide: 'left' | 'right';
+  namePlacement: 'top' | 'bottom';
+  showSchool: boolean;
+  showCaption: boolean;
+  railOrder: HighlightRailItem[];
+};
+
+export type AppRuntimeFlagPath =
+  | `tabs.${keyof AppRuntimeTabs}`
+  | `buttons.${keyof AppRuntimeButtons}`
+  | `layouts.${keyof AppRuntimeLayouts}`;
+
+export type AppRuntimeBundle = {
+  draft: AppRuntimeConfig;
+  published: AppRuntimeConfig;
+  publishedAt: string | null;
+  updatedAt: string | null;
+};
+
+export type AppFlagGroup = {
+  id: 'tabs' | 'buttons' | 'layouts';
+  label: string;
+  hint: string;
+  flags: { path: AppRuntimeFlagPath; label: string; hint: string }[];
+};
+
+/** Heavy chrome that stays draft until Publish to app. */
+export const APP_FLAG_GROUPS: AppFlagGroup[] = [
+  {
+    id: 'tabs',
+    label: 'Fan bar',
+    hint: 'Hide a tab for a campaign. Draft until you hit Publish to app.',
+    flags: [
+      { path: 'tabs.home', label: 'Home', hint: 'Highlights ⚡ feed' },
+      { path: 'tabs.local', label: 'Local', hint: 'Matches, polls, boosters' },
+      { path: 'tabs.spotlight', label: 'Spotlight', hint: 'Player of the Week board' },
+      { path: 'tabs.drip', label: 'Drip', hint: 'Marketplace' },
+      { path: 'tabs.profile', label: 'Profile', hint: 'Trading card hub' },
+      { path: 'tabs.upload', label: 'Upload +', hint: 'Center plus on the fan bar' },
+    ],
+  },
+  {
+    id: 'buttons',
+    label: 'Hype and support',
+    hint: 'Kill a rail or checkout without shipping a new binary.',
+    flags: [
+      { path: 'buttons.seki', label: 'Seki', hint: '🤙 on Highlights ⚡' },
+      { path: 'buttons.aura', label: 'Aura', hint: '⚡ on Highlights ⚡' },
+      { path: 'buttons.flex', label: 'Flex', hint: '💪 on Highlights ⚡' },
+      { path: 'buttons.malo', label: 'Mālo', hint: 'Tip rail and Profile Drop Mālo' },
+      { path: 'buttons.more', label: 'More sheet', hint: 'Share / Save / Report' },
+      { path: 'buttons.subscribe', label: 'Subscribe', hint: '$4.99 exclusive pass' },
+      { path: 'buttons.crew', label: 'Join Crew', hint: 'The Crew ⚡' },
+      { path: 'buttons.vault', label: 'Vault', hint: 'Lock / Open Vault' },
+      { path: 'buttons.flashUnlock', label: 'Flash Unlock', hint: '2-hour Vault unlock' },
+    ],
+  },
+  {
+    id: 'layouts',
+    label: 'Boards and portals',
+    hint: 'Park a Local board or a role HQ without deleting data.',
+    flags: [
+      { path: 'layouts.liveMatches', label: 'Live Matches', hint: 'Local match list' },
+      { path: 'layouts.cheerPolls', label: 'School Polls', hint: 'Cheer matchups' },
+      { path: 'layouts.topBoosters', label: 'Top Boosters', hint: 'Local sponsorship rail' },
+      { path: 'layouts.sponsorshipModal', label: 'Sponsorship checkout', hint: 'Booster PaymentSheet' },
+      { path: 'layouts.spotlightModal', label: 'Player of the Week modal', hint: 'Home launch Spotlight' },
+      { path: 'layouts.homeSearch', label: 'Home search', hint: 'Highlights ⚡ clip search' },
+      { path: 'layouts.localSearch', label: 'Local Explore', hint: 'Players, schools, sponsors' },
+      { path: 'layouts.operatorConsole', label: 'Operator console', hint: '/operator scorekeeper' },
+      { path: 'layouts.parentHq', label: 'Parent HQ', hint: '/parent' },
+      { path: 'layouts.boosterHq', label: 'Booster HQ', hint: '/booster' },
+      { path: 'layouts.sponsorHq', label: 'Sponsor HQ', hint: '/sponsor' },
+    ],
+  },
+];
+
+export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
+  tabs: { home: true, local: true, spotlight: true, drip: true, profile: true, upload: true },
+  buttons: {
+    seki: true,
+    aura: true,
+    flex: true,
+    malo: true,
+    more: true,
+    subscribe: true,
+    crew: true,
+    vault: true,
+    flashUnlock: true,
+  },
+  layouts: {
+    liveMatches: true,
+    cheerPolls: true,
+    topBoosters: true,
+    sponsorshipModal: true,
+    spotlightModal: true,
+    homeSearch: true,
+    localSearch: true,
+    operatorConsole: true,
+    parentHq: true,
+    boosterHq: true,
+    sponsorHq: true,
+  },
+  theme: {
+    background: '#0F1416',
+    surface: '#1E262B',
+    jade: '#00E676',
+    gold: '#FFD700',
+    text: '#F3FBF7',
+  },
+  profile: {
+    showCard: true,
+    showCrew: true,
+    showStats: true,
+    showVault: true,
+    actionsOnTop: false,
+    statsFirst: false,
+  },
+  highlights: {
+    railSide: 'right',
+    namePlacement: 'bottom',
+    showSchool: true,
+    showCaption: true,
+    railOrder: ['seki', 'aura', 'flex', 'malo', 'more'],
+  },
+};
+
+export const THEME_PRESETS: { id: string; label: string; hint: string; theme: AppRuntimeTheme }[] = [
+  {
+    id: 'tapuai',
+    label: "Tapua'i",
+    hint: 'Obsidian / Neon Jade / Electric Gold',
+    theme: {
+      background: '#0F1416',
+      surface: '#1E262B',
+      jade: '#00E676',
+      gold: '#FFD700',
+      text: '#F3FBF7',
+    },
+  },
+  {
+    id: 'friday',
+    label: 'Friday night',
+    hint: 'Warm gold under the lights',
+    theme: {
+      background: '#120F0A',
+      surface: '#241C12',
+      jade: '#F5C518',
+      gold: '#FFD700',
+      text: '#FFF8E7',
+    },
+  },
+  {
+    id: 'ice',
+    label: 'Ice',
+    hint: 'Cyan away kit',
+    theme: {
+      background: '#0B1218',
+      surface: '#15202A',
+      jade: '#00E5FF',
+      gold: '#E8F4FF',
+      text: '#F3FBFF',
+    },
+  },
+  {
+    id: 'ember',
+    label: 'Ember',
+    hint: 'Crimson sideline',
+    theme: {
+      background: '#140A0A',
+      surface: '#261414',
+      jade: '#FF6B35',
+      gold: '#FFD166',
+      text: '#FFF4F0',
+    },
+  },
+];
+
+export const HIGHLIGHT_RAIL_ITEMS: { id: HighlightRailItem; label: string }[] = [
+  { id: 'seki', label: 'Seki' },
+  { id: 'aura', label: 'Aura' },
+  { id: 'flex', label: 'Flex' },
+  { id: 'malo', label: 'Mālo' },
+  { id: 'more', label: 'More' },
+];
+
+function asBool(value: unknown, fallback: boolean): boolean {
+  return typeof value === 'boolean' ? value : fallback;
+}
+
+function parseGroup<T extends Record<string, boolean>>(raw: unknown, fallback: T): T {
+  const record = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const next = { ...fallback };
+  for (const key of Object.keys(fallback) as (keyof T)[]) {
+    next[key] = asBool(record[String(key)], fallback[key]) as T[keyof T];
+  }
+  return next;
+}
+
+function asHex(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback;
+  const next = value.trim();
+  return /^#[0-9A-Fa-f]{6}$/.test(next) ? next.toUpperCase() : fallback;
+}
+
+function parseTheme(raw: unknown): AppRuntimeTheme {
+  const record = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const fallback = DEFAULT_APP_RUNTIME.theme;
+  return {
+    background: asHex(record.background, fallback.background),
+    surface: asHex(record.surface, fallback.surface),
+    jade: asHex(record.jade, fallback.jade),
+    gold: asHex(record.gold, fallback.gold),
+    text: asHex(record.text, fallback.text),
+  };
+}
+
+function parseProfile(raw: unknown): AppRuntimeProfile {
+  return parseGroup(raw, DEFAULT_APP_RUNTIME.profile);
+}
+
+function parseRailOrder(raw: unknown): HighlightRailItem[] {
+  const allowed: HighlightRailItem[] = ['seki', 'aura', 'flex', 'malo', 'more'];
+  const seen = new Set<HighlightRailItem>();
+  const next: HighlightRailItem[] = [];
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      if (typeof item !== 'string') continue;
+      const id = item as HighlightRailItem;
+      if (!allowed.includes(id) || seen.has(id)) continue;
+      seen.add(id);
+      next.push(id);
+    }
+  }
+  for (const id of allowed) {
+    if (!seen.has(id)) next.push(id);
+  }
+  return next;
+}
+
+function parseHighlights(raw: unknown): AppRuntimeHighlights {
+  const record = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const fallback = DEFAULT_APP_RUNTIME.highlights;
+  return {
+    railSide: record.railSide === 'left' ? 'left' : 'right',
+    namePlacement: record.namePlacement === 'top' ? 'top' : 'bottom',
+    showSchool: asBool(record.showSchool, fallback.showSchool),
+    showCaption: asBool(record.showCaption, fallback.showCaption),
+    railOrder: parseRailOrder(record.railOrder),
+  };
+}
+
+/**
+ * @purpose Merge a stored jsonb blob onto the default chrome map so missing keys stay on.
+ */
+export function parseAppRuntimeConfig(raw: unknown): AppRuntimeConfig {
+  const record = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  return {
+    tabs: parseGroup(record.tabs, DEFAULT_APP_RUNTIME.tabs),
+    buttons: parseGroup(record.buttons, DEFAULT_APP_RUNTIME.buttons),
+    layouts: parseGroup(record.layouts, DEFAULT_APP_RUNTIME.layouts),
+    theme: parseTheme(record.theme),
+    profile: parseProfile(record.profile),
+    highlights: parseHighlights(record.highlights),
+  };
+}
+
+export function cloneAppRuntime(config: AppRuntimeConfig): AppRuntimeConfig {
+  return {
+    tabs: { ...config.tabs },
+    buttons: { ...config.buttons },
+    layouts: { ...config.layouts },
+    theme: { ...config.theme },
+    profile: { ...config.profile },
+    highlights: { ...config.highlights, railOrder: [...config.highlights.railOrder] },
+  };
+}
+
+export function runtimeConfigsEqual(left: AppRuntimeConfig, right: AppRuntimeConfig): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+export function getRuntimeFlag(config: AppRuntimeConfig, path: AppRuntimeFlagPath): boolean {
+  const [group, key] = path.split('.') as [keyof AppRuntimeConfig, string];
+  const bag = config[group] as Record<string, boolean>;
+  return bag[key] !== false;
+}
+
+export function setRuntimeFlag(config: AppRuntimeConfig, path: AppRuntimeFlagPath, value: boolean): AppRuntimeConfig {
+  const next = cloneAppRuntime(config);
+  const [group, key] = path.split('.') as [keyof AppRuntimeConfig, string];
+  (next[group] as Record<string, boolean>)[key] = value;
+  return next;
+}
+
+export function diffRuntimeFlags(draft: AppRuntimeConfig, published: AppRuntimeConfig): { path: AppRuntimeFlagPath; label: string; from: boolean; to: boolean }[] {
+  const rows: { path: AppRuntimeFlagPath; label: string; from: boolean; to: boolean }[] = [];
+  for (const group of APP_FLAG_GROUPS) {
+    for (const flag of group.flags) {
+      const from = getRuntimeFlag(published, flag.path);
+      const to = getRuntimeFlag(draft, flag.path);
+      if (from !== to) rows.push({ path: flag.path, label: flag.label, from, to });
+    }
+  }
+  return rows;
+}
+
+/**
+ * @purpose Count unpublished flag + look diffs for the Publish to app badge.
+ */
+export function countRuntimeChanges(draft: AppRuntimeConfig, published: AppRuntimeConfig): number {
+  let n = diffRuntimeFlags(draft, published).length;
+  (Object.keys(draft.theme) as (keyof AppRuntimeTheme)[]).forEach((key) => {
+    if (draft.theme[key] !== published.theme[key]) n += 1;
+  });
+  (Object.keys(draft.profile) as (keyof AppRuntimeProfile)[]).forEach((key) => {
+    if (draft.profile[key] !== published.profile[key]) n += 1;
+  });
+  if (draft.highlights.railSide !== published.highlights.railSide) n += 1;
+  if (draft.highlights.namePlacement !== published.highlights.namePlacement) n += 1;
+  if (draft.highlights.showSchool !== published.highlights.showSchool) n += 1;
+  if (draft.highlights.showCaption !== published.highlights.showCaption) n += 1;
+  if (JSON.stringify(draft.highlights.railOrder) !== JSON.stringify(published.highlights.railOrder)) n += 1;
+  return n;
+}
+
+export function moveHighlightRailItem(order: HighlightRailItem[], id: HighlightRailItem, dir: -1 | 1): HighlightRailItem[] {
+  const index = order.indexOf(id);
+  const nextIndex = index + dir;
+  if (index < 0 || nextIndex < 0 || nextIndex >= order.length) return order;
+  const next = [...order];
+  const [item] = next.splice(index, 1);
+  next.splice(nextIndex, 0, item);
+  return next;
+}
+
+const TAB_HREF: Record<keyof AppRuntimeTabs, string> = {
+  home: '/',
+  local: '/local',
+  spotlight: '/spotlight',
+  drip: '/drip',
+  profile: '/profile',
+  upload: '/',
+};
+
+/**
+ * @purpose First live fan-bar destination when a published tab is turned off.
+ */
+export function firstEnabledFanHref(config: AppRuntimeConfig): string {
+  const order: (keyof AppRuntimeTabs)[] = ['home', 'local', 'spotlight', 'drip', 'profile'];
+  const hit = order.find((key) => config.tabs[key]);
+  return hit ? TAB_HREF[hit] : '/profile';
+}
+
+function parseBundle(raw: Record<string, unknown> | null): AppRuntimeBundle {
+  return {
+    draft: parseAppRuntimeConfig(raw?.draft),
+    published: parseAppRuntimeConfig(raw?.published),
+    publishedAt: typeof raw?.published_at === 'string' ? raw.published_at : null,
+    updatedAt: typeof raw?.updated_at === 'string' ? raw.updated_at : null,
+  };
+}
+
+/**
+ * @purpose Load draft + published chrome for the admin Features desk.
+ * @sideEffects `app_runtime_config` SELECT.
+ */
+export async function fetchAppRuntimeBundle(): Promise<AppRuntimeBundle> {
+  const empty: AppRuntimeBundle = {
+    draft: cloneAppRuntime(DEFAULT_APP_RUNTIME),
+    published: cloneAppRuntime(DEFAULT_APP_RUNTIME),
+    publishedAt: null,
+    updatedAt: null,
+  };
+  if (!isSupabaseConfigured) return empty;
+  const { data, error } = await supabase.from('app_runtime_config').select('draft, published, published_at, updated_at').eq('id', 'default').maybeSingle();
+  if (error || !data) return empty;
+  return parseBundle(data as Record<string, unknown>);
+}
+
+/**
+ * @purpose Write the Features draft. Fans still see `published` until Publish to app.
+ * @sideEffects `patch_app_runtime_draft` RPC; table UPDATE fallback.
+ */
+export async function saveAppRuntimeDraft(draft: AppRuntimeConfig): Promise<AppRuntimeBundle> {
+  if (!isSupabaseConfigured) {
+    return { draft, published: draft, publishedAt: null, updatedAt: new Date().toISOString() };
+  }
+  const { data, error } = await supabase.rpc('patch_app_runtime_draft', { next_draft: draft });
+  if (!error && data && typeof data === 'object') return parseBundle(data as Record<string, unknown>);
+  const { data: updated, error: updateError } = await supabase
+    .from('app_runtime_config')
+    .update({ draft, updated_at: new Date().toISOString() })
+    .eq('id', 'default')
+    .select('draft, published, published_at, updated_at')
+    .single();
+  if (updateError) throw new Error(error?.message || updateError.message);
+  return parseBundle(updated as Record<string, unknown>);
+}
+
+/**
+ * @purpose Copy draft onto published so the fan app chrome updates.
+ * @sideEffects `publish_app_runtime` RPC; table UPDATE fallback.
+ */
+export async function publishAppRuntime(): Promise<AppRuntimeBundle> {
+  if (!isSupabaseConfigured) {
+    const draft = cloneAppRuntime(DEFAULT_APP_RUNTIME);
+    return { draft, published: draft, publishedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  }
+  const { data, error } = await supabase.rpc('publish_app_runtime');
+  if (!error && data && typeof data === 'object') return parseBundle(data as Record<string, unknown>);
+  const current = await fetchAppRuntimeBundle();
+  const { data: updated, error: updateError } = await supabase
+    .from('app_runtime_config')
+    .update({
+      published: current.draft,
+      published_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', 'default')
+    .select('draft, published, published_at, updated_at')
+    .single();
+  if (updateError) throw new Error(error?.message || updateError.message);
+  return parseBundle(updated as Record<string, unknown>);
+}
+
+/**
+ * @purpose Throw away unpublished chrome and restore the live map.
+ */
+export async function discardAppRuntimeDraft(): Promise<AppRuntimeBundle> {
+  const current = await fetchAppRuntimeBundle();
+  return saveAppRuntimeDraft(current.published);
+}

@@ -2,19 +2,20 @@ import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { FanBackerBadge } from '@/components/FanBackerBadge';
-import { ReactionButtons } from '@/components/ReactionButtons';
+import { HypeBoard } from '@/components/HypeBoard';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TipCheckout } from '@/components/TipCheckout';
 import { cardShadow, colors, radii } from '@/constants/theme';
-import { displayValue, type Player } from '@/data/players';
+import { displayValue, type PlayReactionId, type Player } from '@/data/players';
+import { bumpPlayerHype, hydratePlayerHype, hypeFromPlayer } from '@/lib/hype';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 const CONFIG_ERROR =
@@ -66,7 +67,7 @@ export default function PlayerProfileScreen() {
       return;
     }
 
-    setPlayer(data);
+    setPlayer(await hydratePlayerHype(data as Player));
     setLoading(false);
   }, [playerId]);
 
@@ -78,7 +79,7 @@ export default function PlayerProfileScreen() {
     return (
       <ScreenShell>
         <View style={styles.missing}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.deepGreen} />
           <Text style={styles.missingText}>Loading player…</Text>
         </View>
       </ScreenShell>
@@ -121,13 +122,21 @@ export default function PlayerProfileScreen() {
           <FanBackerBadge player={player} />
         </View>
 
+        <HypeBoard
+          hype={hypeFromPlayer(player)}
+          interactive
+          onBump={(kind: PlayReactionId) => {
+            void bumpPlayerHype(player, kind).then((hype) =>
+              setPlayer((current) => (current ? { ...current, ...hype } : current)),
+            );
+          }}
+        />
+
         <View style={styles.details}>
           <DetailRow label="Position" value={displayValue(player.position)} />
           <DetailRow label="Height" value={displayValue(player.height)} />
           <DetailRow label="School" value={displayValue(player.school_name)} isLast />
         </View>
-
-        <ReactionButtons playerName={displayValue(player.name, 'this athlete')} />
 
         <TipCheckout
           player={player}
@@ -191,10 +200,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 18,
     borderRadius: radii.md,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.deepGreen,
   },
   retryLabel: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontWeight: '700',
   },
   pressed: {

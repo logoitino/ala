@@ -34,13 +34,22 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Tapua'i to pick a Seki play from your camera roll.",
+          "cameraPermission": "Allow Tapua'i to record a Seki play.",
+          "microphonePermission": "Allow Tapua'i to record audio with your clip."
+        }
+      ],
+      [
         "@stripe/stripe-react-native",
         {
           "merchantIdentifier": "merchant.com.alasports.tapuai",
           "enableGooglePay": false
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

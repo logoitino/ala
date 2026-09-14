@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radii } from '@/constants/theme';
@@ -78,16 +79,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: colors.deepGreen,
+    backgroundColor: colors.surface,
     borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: '#F4C430',
+    borderColor: colors.gold,
     paddingVertical: 10,
     paddingHorizontal: 12,
   },
   copy: {
     flex: 1,
-    color: '#FFFFFF',
+    color: colors.text,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '700',
@@ -96,12 +97,12 @@ const styles = StyleSheet.create({
     minHeight: 32,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: '#F4C430',
+    backgroundColor: colors.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dismissLabel: {
-    color: colors.deepGreen,
+    color: colors.onAccent,
     fontSize: 12,
     fontWeight: '800',
   },

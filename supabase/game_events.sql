@@ -23,4 +23,6 @@ create policy "Anyone can insert game_events"
 
 grant select, insert on public.game_events to anon, authenticated;
 
+alter table public.game_events alter column player_id drop not null;
+
 alter publication supabase_realtime add table public.game_events;

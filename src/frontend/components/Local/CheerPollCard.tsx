@@ -1,0 +1,340 @@
+import { useEffect, useRef, useState } from 'react';
+import { type GestureResponderEvent, StyleSheet, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+
+import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
+import { cardShadow, colors, radii } from '@/constants/theme';
+import { useCheerPoll, type CheerSide } from '@/hooks/useCheerPoll';
+import { SPRING_CARD } from '@/theme/motion';
+
+type CheerPollCardProps = {
+  slug?: string;
+  homeLabel?: string;
+  awayLabel?: string;
+};
+
+type VoteFloat = {
+  id: number;
+  side: CheerSide;
+  x: number;
+  y: number;
+};
+
+const DEFAULT_HOME = 'Westlake Thunder';
+const DEFAULT_AWAY = 'Lone Peak Knights';
+const FLOAT_MS = 720;
+const FLOAT_RISE = -60;
+
+/**
+ * @purpose Live community cheer poll (Westlake Thunder vs Lone Peak Knights). A tap springs the bar from 0% to the new share, fires Medium haptics, floats +1 Vote ⚡ from the press point (+60px), and persists via `cast_cheer_vote`.
+ * @param slug `cheer_polls.slug` (featured rivalry is `westlake-lone-peak`).
+ * @param homeLabel Home school display name.
+ * @param awayLabel Away school display name.
+ * @returns Interactive poll card with AnimatedPressable options.
+ * @sideEffects `useCheerPoll` Realtime + `cast_cheer_vote`, AsyncStorage vote side, `Haptics.impactAsync(Medium)`.
+ */
+export function CheerPollCard({
+  slug = 'westlake-lone-peak',
+  homeLabel = DEFAULT_HOME,
+  awayLabel = DEFAULT_AWAY,
+}: CheerPollCardProps) {
+  const { poll, myVote, vote } = useCheerPoll(slug, homeLabel, awayLabel);
+  const rawTotal = poll.home_votes + poll.away_votes;
+  const homePct = rawTotal === 0 ? 50 : Math.round((poll.home_votes / rawTotal) * 100);
+  const awayPct = rawTotal === 0 ? 50 : 100 - homePct;
+  const total = rawTotal;
+  const homeWidth = useSharedValue(0);
+  const awayWidth = useSharedValue(0);
+  const replayFromZero = useRef(false);
+  const [trackW, setTrackW] = useState(0);
+  const [floats, setFloats] = useState<VoteFloat[]>([]);
+  const floatSeq = useRef(0);
+
+  useEffect(() => {
+    if (replayFromZero.current) {
+      homeWidth.value = 0;
+      awayWidth.value = 0;
+      replayFromZero.current = false;
+    }
+    homeWidth.value = withSpring(homePct, SPRING_CARD);
+    awayWidth.value = withSpring(awayPct, SPRING_CARD);
+  }, [awayPct, awayWidth, homePct, homeWidth]);
+
+  const homeBar = useAnimatedStyle(() => ({
+    width: trackW > 0 ? (homeWidth.value / 100) * trackW : 0,
+  }));
+  const awayBar = useAnimatedStyle(() => ({
+    width: trackW > 0 ? (awayWidth.value / 100) * trackW : 0,
+  }));
+
+  const handleVote = (side: CheerSide, event?: GestureResponderEvent) => {
+    if (myVote === side) return;
+    replayFromZero.current = true;
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {
+      // Web / simulator may not expose a haptics engine.
+    }
+    const id = floatSeq.current + 1;
+    floatSeq.current = id;
+    const x = event?.nativeEvent.locationX ?? 48;
+    const y = event?.nativeEvent.locationY ?? 18;
+    setFloats((current) => [...current, { id, side, x, y }]);
+    void vote(side);
+  };
+
+  const dropFloat = (id: number) => {
+    setFloats((current) => current.filter((item) => item.id !== id));
+  };
+
+  return (
+    <View style={styles.card} accessibilityRole="summary" accessibilityLabel="Cheer poll">
+      <View style={styles.top}>
+        <Text style={styles.kicker}>Live cheer poll</Text>
+        <View style={styles.livePill}>
+          <View style={styles.liveDot} />
+          <Text style={styles.liveLabel}>LIVE</Text>
+        </View>
+      </View>
+      <Text style={styles.title}>Who are you riding with?</Text>
+      <Text style={styles.matchup}>
+        {homeLabel} vs {awayLabel}
+      </Text>
+
+      <View
+        style={styles.track}
+        onLayout={(event) => setTrackW(event.nativeEvent.layout.width)}
+      >
+        <Animated.View style={[styles.homeFill, homeBar]} />
+        <Animated.View style={[styles.awayFill, awayBar]} />
+      </View>
+
+      <View style={styles.pctRow}>
+        <Text style={styles.homePct}>{homePct}%</Text>
+        <Text style={styles.voteCount}>{total.toLocaleString()} cheers</Text>
+        <Text style={styles.awayPct}>{awayPct}%</Text>
+      </View>
+
+      <View style={styles.actions}>
+        <TeamVoteButton
+          side="home"
+          label={homeLabel}
+          selected={myVote === 'home'}
+          floats={floats}
+          onDropFloat={dropFloat}
+          onPress={(event) => handleVote('home', event)}
+        />
+        <TeamVoteButton
+          side="away"
+          label={awayLabel}
+          selected={myVote === 'away'}
+          floats={floats}
+          onDropFloat={dropFloat}
+          onPress={(event) => handleVote('away', event)}
+        />
+      </View>
+    </View>
+  );
+}
+
+function TeamVoteButton({
+  side,
+  label,
+  selected,
+  floats,
+  onDropFloat,
+  onPress,
+}: {
+  side: CheerSide;
+  label: string;
+  selected: boolean;
+  floats: VoteFloat[];
+  onDropFloat: (id: number) => void;
+  onPress: (event: GestureResponderEvent) => void;
+}) {
+  return (
+    <View style={styles.actionFlex}>
+      {floats
+        .filter((item) => item.side === side)
+        .map((item) => (
+          <CheerVoteFloat key={item.id} x={item.x} y={item.y} onDone={() => onDropFloat(item.id)} />
+        ))}
+      <AnimatedPressable
+        haptic="none"
+        scaleTo={0.94}
+        accessibilityLabel={`Cheer ${label}`}
+        accessibilityState={{ selected }}
+        onPress={onPress}
+        contentStyle={[styles.teamBtn, side === 'home' ? styles.homeBtn : styles.awayBtn, selected && styles.teamBtnOn]}
+      >
+        <Text style={[styles.teamBtnLabel, selected && styles.teamBtnLabelOn]} numberOfLines={2}>
+          {label}
+        </Text>
+      </AnimatedPressable>
+    </View>
+  );
+}
+
+function CheerVoteFloat({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
+  const rise = useSharedValue(0);
+  const fade = useSharedValue(1);
+  const doneRef = useRef(onDone);
+  doneRef.current = onDone;
+  const style = useAnimatedStyle(() => ({
+    opacity: fade.value,
+    transform: [{ translateY: rise.value }],
+  }));
+
+  useEffect(() => {
+    rise.value = withTiming(FLOAT_RISE, { duration: FLOAT_MS });
+    fade.value = withTiming(0, { duration: FLOAT_MS });
+    const timer = setTimeout(() => doneRef.current(), FLOAT_MS + 40);
+    return () => clearTimeout(timer);
+  }, [fade, rise]);
+
+  return (
+    <Animated.Text pointerEvents="none" style={[styles.floatBadge, { left: x - 42, top: y - 12 }, style]}>
+      +1 Vote ⚡
+    </Animated.Text>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+    gap: 10,
+    overflow: 'visible',
+    ...cardShadow,
+  },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  kicker: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+  },
+  livePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+  },
+  liveLabel: {
+    color: colors.primary,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  matchup: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  track: {
+    flexDirection: 'row',
+    height: 12,
+    borderRadius: 999,
+    overflow: 'hidden',
+    backgroundColor: '#101618',
+  },
+  homeFill: {
+    height: 12,
+    backgroundColor: colors.primary,
+  },
+  awayFill: {
+    height: 12,
+    backgroundColor: '#4A5A5E',
+  },
+  pctRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  homePct: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  awayPct: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  voteCount: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+    overflow: 'visible',
+  },
+  actionFlex: {
+    flex: 1,
+    overflow: 'visible',
+  },
+  teamBtn: {
+    minHeight: 48,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: '#101618',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  homeBtn: {
+    borderColor: colors.primary,
+  },
+  awayBtn: {
+    borderColor: '#6B7B80',
+  },
+  teamBtnOn: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  teamBtnLabel: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  teamBtnLabelOn: {
+    color: colors.onAccent,
+  },
+  floatBadge: {
+    position: 'absolute',
+    width: 84,
+    zIndex: 4,
+    textAlign: 'center',
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+});

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { Stack } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
+import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
@@ -34,6 +36,7 @@ export default function BoosterHomeScreen() {
   const { players, refresh, setPlayers } = useRoster();
   const [csv, setCsv] = useState('name,jersey_number,position,school_name\nJane Doe,12,WR,Westlake High');
   const [queue, setQueue] = useState<VerificationRequest[]>([]);
+  const [busy, setBusy] = useState(false);
 
   const loadQueue = useCallback(async () => {
     const { data } = await supabase
@@ -48,18 +51,24 @@ export default function BoosterHomeScreen() {
   }, [loadQueue]);
 
   const uploadCsv = async () => {
+    if (busy) return;
     const rows = parseRosterCsv(csv);
     if (rows.length === 0) {
       Alert.alert('CSV empty', 'Add at least one player row.');
       return;
     }
-    const { error } = await supabase.from('players').insert(rows);
-    if (error) {
-      Alert.alert('Upload failed', error.message);
-      return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('players').insert(rows);
+      if (error) {
+        Alert.alert('Upload failed', error.message);
+        return;
+      }
+      Alert.alert('Roster updated', `Inserted ${rows.length} player${rows.length === 1 ? '' : 's'}.`);
+      void refresh();
+    } finally {
+      setBusy(false);
     }
-    Alert.alert('Roster updated', `Inserted ${rows.length} player${rows.length === 1 ? '' : 's'}.`);
-    void refresh();
   };
 
   const updateJersey = async (playerId: string, jersey: string) => {
@@ -76,19 +85,29 @@ export default function BoosterHomeScreen() {
   };
 
   const verify = async (id: string, status: string) => {
-    const { error } = await supabase.from('verification_requests').update({ status }).eq('id', id);
-    if (error) {
-      Alert.alert('Verification failed', error.message);
-      return;
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.from('verification_requests').update({ status }).eq('id', id);
+      if (error) {
+        Alert.alert('Verification failed', error.message);
+        return;
+      }
+      setQueue((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
+    } finally {
+      setBusy(false);
     }
-    setQueue((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
   };
 
   return (
     <ScreenShell>
       <Stack.Screen options={{ title: 'Booster' }} />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Booster Tools</Text>
+        <ScreenHeading
+          kicker="Tapua'i booster"
+          title="Booster Tools"
+          lede="Roster uploads, jersey edits, and verification — ready for Friday night."
+        />
         <DashboardPanel title="CSV bulk roster upload" body="Columns: name, jersey_number, position, school_name">
           <TextInput
             value={csv}
@@ -97,7 +116,12 @@ export default function BoosterHomeScreen() {
             textAlignVertical="top"
             style={styles.csv}
           />
-          <Pressable accessibilityRole="button" onPress={() => void uploadCsv()} style={styles.primary}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={busy}
+            onPress={() => void uploadCsv()}
+            style={[styles.primary, busy && { opacity: 0.5 }]}
+          >
             <Text style={styles.primaryLabel}>Upload roster</Text>
           </Pressable>
         </DashboardPanel>
@@ -123,7 +147,11 @@ export default function BoosterHomeScreen() {
                 <Text style={styles.name}>
                   {item.full_name} · {item.status}
                 </Text>
-                <Pressable onPress={() => void verify(item.id, 'verified')}>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={busy}
+                  onPress={() => void verify(item.id, 'verified')}
+                >
                   <Text style={styles.link}>Verify</Text>
                 </Pressable>
               </View>
@@ -140,11 +168,6 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 14,
   },
-  heading: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.text,
-  },
   csv: {
     minHeight: 120,
     borderWidth: 1,
@@ -156,13 +179,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   primary: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.deepGreen,
     borderRadius: radii.md,
     paddingVertical: 14,
     alignItems: 'center',
   },
   primaryLabel: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontWeight: '800',
   },
   row: {

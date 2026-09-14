@@ -1,0 +1,179 @@
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { colors, radii } from '@/constants/theme';
+import { displayValue, type Player } from '@/data/players';
+
+type OperatorRosterModalProps = {
+  visible: boolean;
+  title: string;
+  subtitle?: string;
+  players: Player[];
+  busy?: boolean;
+  onSelect: (player: Player) => void;
+  onClose: () => void;
+};
+
+export function OperatorRosterModal({
+  visible,
+  title,
+  subtitle,
+  players,
+  busy = false,
+  onSelect,
+  onClose,
+}: OperatorRosterModalProps) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={() => {
+        if (!busy) onClose();
+      }}
+    >
+      <View style={[styles.sheet, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 12 }]}>
+        <View style={styles.header}>
+          <View style={styles.headerCopy}>
+            <Text style={styles.title}>{title}</Text>
+            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close roster"
+            disabled={busy}
+            onPress={onClose}
+            style={({ pressed }) => [styles.close, pressed && styles.pressed, busy && styles.disabled]}
+          >
+            <Text style={styles.closeLabel}>Close</Text>
+          </Pressable>
+        </View>
+        <ScrollView contentContainerStyle={styles.list}>
+          {players.length === 0 ? (
+            <Text style={styles.empty}>No players on this roster. Seed the players table, then retry.</Text>
+          ) : (
+            players.map((player) => (
+              <Pressable
+                key={player.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Tag ${displayValue(player.name)}`}
+                disabled={busy}
+                onPress={() => onSelect(player)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed, busy && styles.disabled]}
+              >
+                <View style={styles.jersey}>
+                  <Text style={styles.jerseyLabel}>#{displayValue(player.jersey_number)}</Text>
+                </View>
+                <View style={styles.copy}>
+                  <Text style={styles.name}>{displayValue(player.name, 'Unknown player')}</Text>
+                  <Text style={styles.meta}>
+                    {displayValue(player.position)} · {displayValue(player.school_name || player.team_name || player.team)}
+                  </Text>
+                </View>
+              </Pressable>
+            ))
+          )}
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  sheet: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  headerCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  subtitle: {
+    color: colors.textMuted,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  close: {
+    minHeight: 44,
+    paddingHorizontal: 12,
+    borderRadius: radii.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeLabel: {
+    color: colors.onAccent,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  list: {
+    gap: 8,
+    paddingBottom: 16,
+  },
+  empty: {
+    color: colors.textMuted,
+    fontSize: 15,
+    textAlign: 'center',
+    paddingVertical: 24,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 64,
+    padding: 12,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  jersey: {
+    minWidth: 56,
+    height: 48,
+    borderRadius: radii.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  jerseyLabel: {
+    color: colors.onAccent,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  copy: {
+    flex: 1,
+    gap: 2,
+  },
+  name: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  meta: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  pressed: {
+    opacity: 0.88,
+  },
+  disabled: {
+    opacity: 0.55,
+  },
+});

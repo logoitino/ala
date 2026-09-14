@@ -5,7 +5,7 @@ import { roleStackOptions } from '@/lib/navigation';
 
 export default function FanLayout() {
   return (
-    <RoleGate allow={['fan']}>
+    <RoleGate allow={['fan', 'athlete']}>
       <Stack screenOptions={roleStackOptions} />
     </RoleGate>
   );

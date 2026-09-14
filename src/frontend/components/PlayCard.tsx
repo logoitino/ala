@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { TipCheckout } from '@/components/TipCheckout';
 import { cardShadow, colors, radii } from '@/constants/theme';
@@ -11,6 +12,7 @@ import {
   type Player,
   type PlayReactionId,
 } from '@/data/players';
+import { bumpPlayerHype } from '@/lib/hype';
 import type { GameEventWithPlayer } from '@/types/database';
 
 type PlayCardProps = {
@@ -48,6 +50,7 @@ export function PlayCard({ event, onBacked }: PlayCardProps) {
   const player = resolveEventPlayer(event);
   const [counts, setCounts] = useState(() => getCounts(event.id));
   const [sekiHint, setSekiHint] = useState(false);
+  const [reacting, setReacting] = useState(false);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tone = actionTone(event.event_type);
 
@@ -65,11 +68,16 @@ export function PlayCard({ event, onBacked }: PlayCardProps) {
   };
 
   const bump = (id: PlayReactionId) => {
+    if (reacting) return;
     const current = getCounts(event.id);
     const next = { ...current, [id]: current[id] + 1 };
     reactionStore.set(event.id, next);
     setCounts(next);
     if (id === 'seki') revealSekiHint();
+    if (player) {
+      setReacting(true);
+      void bumpPlayerHype(player, id).finally(() => setReacting(false));
+    }
   };
 
   return (
@@ -112,6 +120,7 @@ export function PlayCard({ event, onBacked }: PlayCardProps) {
             accessibilityLabel={`${reaction.label} ${reaction.emoji}, ${counts[reaction.id]} taps`}
             accessibilityHint={reaction.id === 'seki' ? 'Awesome' : undefined}
             onPress={() => bump(reaction.id)}
+            disabled={reacting}
             onHoverIn={() => {
               if (reaction.id === 'seki') revealSekiHint(true);
             }}
@@ -185,13 +194,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   jerseyHash: {
-    color: 'rgba(255,255,255,0.55)',
+    color: 'rgba(15,20,22,0.55)',
     fontSize: 10,
     fontWeight: '800',
     marginBottom: -4,
   },
   jerseyNumber: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontSize: 22,
     fontWeight: '800',
     letterSpacing: -0.4,
@@ -218,7 +227,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   tagLabel: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.2,
@@ -248,12 +257,12 @@ const styles = StyleSheet.create({
   },
   reactionPressed: {
     backgroundColor: colors.accentSoft,
-    borderColor: '#E8CFC0',
+    borderColor: colors.primary,
     transform: [{ scale: 0.98 }],
   },
   sekiReaction: {
-    borderColor: '#F4C430',
-    backgroundColor: '#FFF8E1',
+    borderColor: colors.gold,
+    backgroundColor: colors.accentSoft,
     overflow: 'visible',
   },
   tooltip: {
@@ -267,7 +276,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   tooltipLabel: {
-    color: '#F4C430',
+    color: colors.onAccent,
     fontSize: 11,
     fontWeight: '800',
   },

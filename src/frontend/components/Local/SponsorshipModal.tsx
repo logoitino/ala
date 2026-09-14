@@ -1,0 +1,549 @@
+import { useEffect, useState } from 'react';
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import { colors, palette, radii } from '@/constants/theme';
+import {
+  formatSponsorDollars,
+  initialsForBusiness,
+  SPONSOR_TIERS,
+  type SponsorTier,
+} from '@/data/sponsorships';
+import { useTipCheckout } from '@/hooks/useTipCheckout';
+import { uploadSponsorLogo, type RecordSponsorshipInput } from '@/hooks/useSponsorships';
+import type { SponsorshipTierId } from '@/types/database';
+
+type SponsorshipModalProps = {
+  visible: boolean;
+  schoolOptions?: string[];
+  onClose: () => void;
+  onSponsored: (input: RecordSponsorshipInput) => Promise<void>;
+};
+
+const IMAGE_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ['images'],
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 0.85,
+};
+
+function fireLight() {
+  try {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  } catch {
+    // Simulator / web may not expose haptics.
+  }
+}
+
+/**
+ * @purpose Local booster Sponsorship Tier sheet: Silver / Gold / Platinum, business identity, Stripe PaymentSheet.
+ * @param visible Opens the modal over Local.
+ * @param schoolOptions Live match school chips for Targeted School Team.
+ * @param onClose Dismiss (locked while PaymentSheet is open).
+ * @param onSponsored Persist `sponsorships` after a successful first-month charge.
+ * @returns Bottom sheet with Silver / Gold / Platinum cards, logo, and Complete Sponsorship checkout.
+ * @sideEffects ImagePicker, Storage logo upload, `useTipCheckout` PaymentSheet, `add_user_aura` (payer), Light `impactAsync` on tier change, Success notification from checkout.
+ */
+export function SponsorshipModal({
+  visible,
+  schoolOptions = [],
+  onClose,
+  onSponsored,
+}: SponsorshipModalProps) {
+  const insets = useSafeAreaInsets();
+  const { startCheckout, busy } = useTipCheckout();
+  const [tierId, setTierId] = useState<SponsorshipTierId>('silver');
+  const [businessName, setBusinessName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [schoolTeam, setSchoolTeam] = useState('');
+
+  useEffect(() => {
+    if (!visible) return;
+    setTierId('silver');
+    setBusinessName('');
+    setLogoUrl('');
+    setSchoolTeam('');
+  }, [visible]);
+
+  const tier = SPONSOR_TIERS.find((item) => item.id === tierId) ?? SPONSOR_TIERS[0];
+
+  const dismiss = () => {
+    if (busy) return;
+    onClose();
+  };
+
+  const selectTier = (next: SponsorTier) => {
+    if (next.id === tierId) return;
+    fireLight();
+    setTierId(next.id);
+  };
+
+  const pickLogo = async () => {
+    if (busy) return;
+    fireLight();
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Photo library', 'Allow photo access to upload a brand logo.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync(IMAGE_OPTIONS);
+      if (result.canceled || !result.assets[0]?.uri) return;
+      setLogoUrl(result.assets[0].uri);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not open the photo library.';
+      Alert.alert('Logo upload', message);
+    }
+  };
+
+  const checkout = () => {
+    const name = businessName.trim();
+    const school = schoolTeam.trim();
+    if (!name) {
+      Alert.alert('Business name', 'Add the business name that will appear on the booster rail.');
+      return;
+    }
+    if (!school) {
+      Alert.alert('School team', 'Pick the high school team this sponsorship backs.');
+      return;
+    }
+
+    void startCheckout({
+      tipAmount: tier.dollars,
+      coverFees: false,
+      skipBacker: true,
+      auraPoints: tier.auraPoints,
+      successToast: `${tier.name} locked 🏆 +${tier.auraPoints.toLocaleString()} Aura`,
+      onPaid: async () => {
+        const storedLogo = logoUrl.trim() ? await uploadSponsorLogo(logoUrl.trim()) : '';
+        await onSponsored({
+          businessName: name,
+          logoUrl: storedLogo,
+          schoolTeam: school,
+          tier: tier.id,
+        });
+        onClose();
+      },
+    });
+  };
+
+  const previewName = businessName.trim() || 'Your business';
+
+  return (
+    <Modal animationType="fade" transparent visible={visible} onRequestClose={dismiss}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.backdropWrap}
+      >
+        <Pressable haptic="none" disabled={busy} style={styles.backdrop} onPress={dismiss}>
+          <BlurView intensity={48} tint="dark" pointerEvents="none" style={styles.blur} />
+          <Pressable haptic="none" style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]} onPress={() => undefined}>
+            <View style={styles.handle} />
+            <Text style={styles.kicker}>Local boosters</Text>
+            <Text style={styles.title}>Become a Team Sponsor</Text>
+            <Text style={styles.blurb}>
+              Back a high school program. First month bills through Stripe PaymentSheet; the rail lists you as {formatSponsorDollars(tier.dollars)}.
+            </Text>
+
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.form}
+            >
+              {SPONSOR_TIERS.map((option) => {
+                const selected = option.id === tierId;
+                return (
+                  <AnimatedButton
+                    key={option.id}
+                    accessibilityLabel={`${option.name}, ${formatSponsorDollars(option.dollars)}`}
+                    accessibilityState={{ selected }}
+                    haptic="none"
+                    onPress={() => selectTier(option)}
+                    contentStyle={[
+                      styles.tierCard,
+                      selected && styles.tierCardOn,
+                      selected && { borderColor: option.accent, backgroundColor: `${option.accent}22` },
+                    ]}
+                  >
+                    <View style={styles.tierHead}>
+                      <Text style={[styles.tierName, selected && { color: option.accent }]}>{option.name}</Text>
+                      <View style={[styles.badge, { borderColor: option.accent }]}>
+                        <Text style={[styles.badgeLabel, { color: option.accent }]}>{option.badge}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.tierPrice}>{formatSponsorDollars(option.dollars)}</Text>
+                    <Text style={styles.tierPerks}>{option.perks}</Text>
+                    {selected ? <Text style={[styles.tierSelected, { color: option.accent }]}>Selected</Text> : null}
+                  </AnimatedButton>
+                );
+              })}
+
+              <Text style={styles.fieldLabel}>Business Name</Text>
+              <TextInput
+                value={businessName}
+                onChangeText={setBusinessName}
+                editable={!busy}
+                placeholder="Island Grill"
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize="words"
+                style={styles.input}
+              />
+
+              <Text style={styles.fieldLabel}>Logo Upload / URL</Text>
+              <View style={styles.logoRow}>
+                <View style={styles.logoPreview}>
+                  {logoUrl.trim() ? (
+                    <Image source={{ uri: logoUrl.trim() }} style={styles.logoImage} />
+                  ) : (
+                    <Text style={styles.logoInitials}>{initialsForBusiness(previewName)}</Text>
+                  )}
+                </View>
+                <View style={styles.logoFields}>
+                  <TextInput
+                    value={logoUrl}
+                    onChangeText={setLogoUrl}
+                    editable={!busy}
+                    placeholder="https://… or pick a photo"
+                    placeholderTextColor={colors.textMuted}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    style={styles.input}
+                  />
+                  <AnimatedButton
+                    accessibilityLabel="Upload logo from photo library"
+                    disabled={busy}
+                    haptic="none"
+                    onPress={() => void pickLogo()}
+                    contentStyle={styles.uploadBtn}
+                  >
+                    <Text style={styles.uploadLabel}>Upload logo</Text>
+                  </AnimatedButton>
+                </View>
+              </View>
+
+              <Text style={styles.fieldLabel}>Targeted School Team</Text>
+              <TextInput
+                value={schoolTeam}
+                onChangeText={setSchoolTeam}
+                editable={!busy}
+                placeholder="Westlake Thunder"
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize="words"
+                style={styles.input}
+              />
+              {schoolOptions.length > 0 ? (
+                <View style={styles.schoolChips}>
+                  {schoolOptions.slice(0, 8).map((school) => {
+                    const selected = schoolTeam.trim().toLowerCase() === school.toLowerCase();
+                    return (
+                      <AnimatedButton
+                        key={school}
+                        accessibilityLabel={`Target ${school}`}
+                        accessibilityState={{ selected }}
+                        haptic="none"
+                        onPress={() => {
+                          fireLight();
+                          setSchoolTeam(school);
+                        }}
+                        contentStyle={[styles.schoolChip, selected && styles.schoolChipOn]}
+                      >
+                        <Text style={[styles.schoolChipLabel, selected && styles.schoolChipLabelOn]} numberOfLines={1}>
+                          {school}
+                        </Text>
+                      </AnimatedButton>
+                    );
+                  })}
+                </View>
+              ) : null}
+
+              <AnimatedButton
+                accessibilityLabel={`Complete Sponsorship, ${tier.name} for ${formatSponsorDollars(tier.dollars)}`}
+                disabled={busy}
+                onPress={checkout}
+                contentStyle={[styles.pay, busy && styles.payOff]}
+              >
+                <Text style={styles.payLabel}>{busy ? 'Opening PaymentSheet…' : 'Complete Sponsorship'}</Text>
+                {busy ? null : (
+                  <Text style={styles.payMeta}>
+                    {tier.name} · {formatSponsorDollars(tier.dollars)}
+                  </Text>
+                )}
+              </AnimatedButton>
+            </ScrollView>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: busy }}
+              disabled={busy}
+              onPress={dismiss}
+              style={[styles.close, busy && styles.closeDisabled]}
+            >
+              <Text style={styles.closeLabel}>{busy ? 'Finish payment to close' : 'Cancel'}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  backdropWrap: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    ...Platform.select({
+      web: {
+        ...StyleSheet.absoluteFill,
+        zIndex: 50,
+      },
+      default: {},
+    }),
+  },
+  backdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(7,22,15,0.28)',
+  },
+  blur: {
+    ...StyleSheet.absoluteFill,
+  },
+  sheet: {
+    maxHeight: '92%',
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 10,
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 42,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: colors.border,
+    marginBottom: 4,
+  },
+  kicker: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  title: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  blurb: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
+  },
+  form: {
+    gap: 10,
+    paddingBottom: 8,
+  },
+  tierCard: {
+    backgroundColor: palette.midnightObsidian,
+    borderRadius: radii.lg,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    padding: 12,
+    gap: 4,
+    alignItems: 'stretch',
+  },
+  tierCardOn: {
+    borderWidth: 2,
+  },
+  tierHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  tierName: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  badge: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  badgeLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  tierPrice: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  tierPerks: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
+  },
+  tierSelected: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
+  fieldLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginTop: 4,
+  },
+  input: {
+    minHeight: 48,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: palette.midnightObsidian,
+    color: colors.text,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  logoRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  logoPreview: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    backgroundColor: colors.photoPlaceholder,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: 56,
+    height: 56,
+  },
+  logoInitials: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  logoFields: {
+    flex: 1,
+    gap: 8,
+  },
+  uploadBtn: {
+    minHeight: 40,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadLabel: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  schoolChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  schoolChip: {
+    minHeight: 34,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: palette.midnightObsidian,
+    alignItems: 'center',
+    justifyContent: 'center',
+    maxWidth: 180,
+  },
+  schoolChipOn: {
+    borderColor: colors.primary,
+    backgroundColor: colors.accentSoft,
+  },
+  schoolChipLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  schoolChipLabelOn: {
+    color: colors.primary,
+  },
+  pay: {
+    minHeight: 52,
+    borderRadius: radii.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 6,
+    gap: 2,
+  },
+  payOff: {
+    opacity: 0.55,
+  },
+  payLabel: {
+    color: colors.onAccent,
+    fontSize: 15,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  payMeta: {
+    color: colors.onAccent,
+    fontSize: 12,
+    fontWeight: '700',
+    opacity: 0.85,
+    textAlign: 'center',
+  },
+  close: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeDisabled: {
+    opacity: 0.55,
+  },
+  closeLabel: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+});

@@ -1,18 +1,33 @@
 import { Platform, type ViewStyle } from 'react-native';
 
+import { FOCAL } from '@/theme/motion';
+
+export const palette = {
+  midnightObsidian: FOCAL.backgroundBase,
+  neonJade: FOCAL.neonJade,
+  electricGold: FOCAL.electricGold,
+  slateCharcoal: '#1E262B',
+};
+
 export const colors = {
-  background: '#F4F1EC',
-  surface: '#FFFFFF',
-  border: '#E6E0D8',
-  text: '#111827',
-  textMuted: '#6B7280',
-  primary: '#0B3D2E',
-  primaryMuted: '#145C45',
-  deepGreen: '#054A29',
-  accent: '#C45C26',
-  accentSoft: '#F3E6DE',
-  photoPlaceholder: '#D9D3CA',
-  success: '#166534',
+  background: palette.midnightObsidian,
+  surface: palette.slateCharcoal,
+  border: '#2E3A40',
+  text: '#F3FBF7',
+  textMuted: '#9EB0AA',
+  primary: palette.neonJade,
+  primaryMuted: '#00B85C',
+  deepGreen: palette.neonJade,
+  accent: palette.neonJade,
+  accentSoft: '#16342C',
+  /** Headings / Seki chrome stay jade. Rank + Gold/Platinum boosters use `electricGold`. */
+  gold: palette.neonJade,
+  electricGold: palette.electricGold,
+  night: palette.midnightObsidian,
+  onAccent: palette.midnightObsidian,
+  photoPlaceholder: '#2A3439',
+  success: palette.neonJade,
+  danger: '#FF6B6B',
 };
 
 export const radii = {
@@ -24,18 +39,15 @@ export const SCREEN_BOTTOM_GAP = 52;
 
 export const cardShadow: ViewStyle = Platform.select({
   ios: {
-    shadowColor: '#111827',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
   },
   android: {
-    elevation: 4,
+    elevation: 8,
   },
   default: {
-    shadowColor: '#111827',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
+    boxShadow: '0px 10px 18px rgba(0, 0, 0, 0.35)',
   },
 }) as ViewStyle;

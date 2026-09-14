@@ -1,0 +1,1025 @@
+import * as ImagePicker from 'expo-image-picker';
+import * as Haptics from 'expo-haptics';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { colors, radii } from '@/constants/theme';
+import {
+  HIGHLIGHT_PUBLISH_LABEL,
+  REEL_CATEGORY_GAME,
+  REEL_CATEGORY_PILLS,
+  REEL_CATEGORY_SERVE,
+  SERVE_LIKE_ME_BOOST_LABEL,
+  type ReelCategory,
+} from '@/data/highlights';
+import { displayValue } from '@/data/players';
+import { gameMatchupLabel, playerTagLabel, uploadSekiPlay } from '@/lib/reels';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import type { Game, Player, Reel } from '@/types/database';
+
+type UploadVideoModalProps = {
+  visible: boolean;
+  players: Player[];
+  onClose: () => void;
+  onUploaded: (reel: Reel) => void;
+};
+
+type PickedVideo = {
+  uri: string;
+  mimeType?: string | null;
+  fileName?: string | null;
+  durationMs?: number | null;
+};
+
+type OpenSelect = 'game' | 'player' | null;
+type PickSource = 'library' | 'camera';
+
+const VIDEO_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ['videos'],
+  allowsEditing: false,
+  quality: 1,
+  videoMaxDuration: 45,
+};
+
+const NEON_JADE = '#00E676';
+
+function formatDuration(durationMs?: number | null): string {
+  if (!durationMs || durationMs <= 0) return '';
+  const totalSeconds = Math.round(durationMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function fireSuccess() {
+  try {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  } catch {
+    // Simulator / web may not expose haptics.
+  }
+}
+
+/**
+ * @purpose Paused first-frame preview of the picked clip URI (expo-video, no cache flag).
+ * @param uri Local ImagePicker video URI.
+ * @returns Cover-fit `VideoView` paused at 0.
+ * @sideEffects `useVideoPlayer` loads the local file; paused + muted so it is a thumbnail, not playback.
+ */
+function ClipPreview({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, (instance) => {
+    instance.loop = false;
+    instance.muted = true;
+  });
+
+  useEffect(() => {
+    void player.replaceAsync(uri).then(() => {
+      player.currentTime = 0;
+      player.pause();
+    });
+  }, [player, uri]);
+
+  return (
+    <VideoView player={player} nativeControls={false} contentFit="cover" style={styles.thumb} />
+  );
+}
+
+/**
+ * @purpose Full-screen Seki clip uploader (library/camera → `game_highlights`).
+ * @param visible Controls the sheet; closing resets clip, caption, exclusive flag, category, and tags.
+ * @param players Roster for the player tag picker.
+ * @param onClose Dismiss (blocked while uploading).
+ * @param onUploaded Pushes the new reel onto the active feed via `UploadSheetContext`.
+ * @sideEffects ImagePicker URI + expo-video thumbnail; Storage upload with progress bar; `reels` insert including `is_vault_only` / `is_exclusive` / `category` (default public Game Play); Success haptic on Publish Highlight ⚡.
+ */
+export function UploadVideoModal({ visible, players, onClose, onUploaded }: UploadVideoModalProps) {
+  const insets = useSafeAreaInsets();
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0.45)).current;
+
+  const [games, setGames] = useState<Game[]>([]);
+  const [gameId, setGameId] = useState('');
+  const [playerId, setPlayerId] = useState('');
+  const [caption, setCaption] = useState('');
+  const [asset, setAsset] = useState<PickedVideo | null>(null);
+  const [openSelect, setOpenSelect] = useState<OpenSelect>(null);
+  const [pickSource, setPickSource] = useState<PickSource | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [statusLabel, setStatusLabel] = useState('Uploading Seki play…');
+  const [isExclusive, setIsExclusive] = useState(false);
+  const [category, setCategory] = useState<ReelCategory>(REEL_CATEGORY_GAME);
+
+  const selectedGame = games.find((game) => game.id === gameId) ?? null;
+  const selectedPlayer = players.find((player) => player.id === playerId) ?? null;
+
+  const gameLabel = selectedGame
+    ? gameMatchupLabel(selectedGame.home_team, selectedGame.away_team)
+    : 'Pick a game';
+  const playerLabel = selectedPlayer ? playerTagLabel(selectedPlayer) : 'Tag a player';
+
+  const canSubmit = Boolean(asset && gameId && playerId && caption.trim()) && !uploading;
+
+  const sortedPlayers = useMemo(
+    () =>
+      [...players].sort((a, b) => {
+        if (a.jersey_number !== b.jersey_number) return a.jersey_number - b.jersey_number;
+        return a.name.localeCompare(b.name);
+      }),
+    [players],
+  );
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 260,
+      useNativeDriver: false,
+    }).start();
+  }, [progress, progressAnim]);
+
+  useEffect(() => {
+    if (!uploading) {
+      pulse.stopAnimation();
+      pulse.setValue(0.45);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0.45, duration: 700, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    const creep = setInterval(() => {
+      setProgress((current) => (current > 0 && current < 0.78 ? Math.min(0.78, current + 0.02) : current));
+    }, 240);
+    return () => {
+      loop.stop();
+      clearInterval(creep);
+    };
+  }, [uploading, pulse]);
+
+  useEffect(() => {
+    if (!visible) {
+      setAsset(null);
+      setCaption('');
+      setGameId('');
+      setPlayerId('');
+      setProgress(0);
+      setUploading(false);
+      setOpenSelect(null);
+      setPickSource(null);
+      setLoadError(null);
+      setUploadError(null);
+      setStatusLabel('Uploading Seki play…');
+      setIsExclusive(false);
+      setCategory(REEL_CATEGORY_GAME);
+      return;
+    }
+
+    let active = true;
+    const loadGames = async () => {
+      if (!isSupabaseConfigured) {
+        if (active) setLoadError('Add EXPO_PUBLIC Supabase keys to .env.local, then restart Expo.');
+        return;
+      }
+
+      const activeQuery = await supabase.from('games').select('*').eq('is_active', true);
+      let rows = (activeQuery.data as Game[] | null) ?? [];
+      if (activeQuery.error || rows.length === 0) {
+        const fallback = await supabase.from('games').select('*').order('home_team', { ascending: true });
+        if (fallback.error) {
+          if (active) setLoadError(fallback.error.message);
+          return;
+        }
+        rows = (fallback.data as Game[] | null) ?? [];
+      }
+      if (!active) return;
+      setGames(rows);
+      setLoadError(rows.length === 0 ? 'No games found. Seed the games table, then retry.' : null);
+
+      const westlake = rows.find(
+        (game) =>
+          game.home_team.toLowerCase().includes('westlake') &&
+          game.away_team.toLowerCase().includes('lone peak'),
+      );
+      setGameId((current) => current || westlake?.id || rows[0]?.id || '');
+    };
+
+    void loadGames();
+    return () => {
+      active = false;
+    };
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible || players.length === 0) return;
+    const marcus = players.find(
+      (player) => player.jersey_number === 7 || player.name.toLowerCase().includes('marcus'),
+    );
+    setPlayerId((current) => current || marcus?.id || players[0]?.id || '');
+  }, [visible, players]);
+
+  const pickVideo = async (source: 'library' | 'camera') => {
+    if (uploading) return;
+
+    try {
+      if (source === 'library') {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert('Permission needed', 'Allow photo library access to pick a Seki play.');
+          return;
+        }
+        const result = await ImagePicker.launchImageLibraryAsync(VIDEO_OPTIONS);
+        if (result.canceled || !result.assets[0]) return;
+        const next = result.assets[0];
+        setAsset({
+          uri: next.uri,
+          mimeType: next.mimeType,
+          fileName: next.fileName,
+          durationMs: next.duration,
+        });
+        setPickSource(source);
+        setUploadError(null);
+        return;
+      }
+
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission needed', 'Allow camera access to record a Seki play.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync(VIDEO_OPTIONS);
+      if (result.canceled || !result.assets[0]) return;
+      const next = result.assets[0];
+      setAsset({
+        uri: next.uri,
+        mimeType: next.mimeType,
+        fileName: next.fileName,
+        durationMs: next.duration,
+      });
+      setPickSource(source);
+      setUploadError(null);
+    } catch (caught) {
+      Alert.alert(
+        source === 'camera' ? 'Could not open camera' : 'Could not open library',
+        caught instanceof Error ? caught.message : 'Try Expo Go on a phone to pick or record a clip.',
+      );
+    }
+  };
+
+  const submit = async () => {
+    if (!asset || !canSubmit) return;
+    setUploading(true);
+    setUploadError(null);
+    setStatusLabel('Reading clip…');
+    setProgress(0.04);
+    try {
+      const reel = await uploadSekiPlay({
+        uri: asset.uri,
+        mimeType: asset.mimeType,
+        fileName: asset.fileName,
+        title: caption,
+        playerId,
+        gameId,
+        isExclusive,
+        category,
+        onProgress: setProgress,
+        onStatus: setStatusLabel,
+      });
+      setProgress(1);
+      setStatusLabel('Seki play uploaded.');
+      fireSuccess();
+      onUploaded(reel);
+      onClose();
+    } catch (caught) {
+      setProgress(0);
+      const message =
+        caught instanceof Error ? caught.message : 'Could not upload that clip. Try picking it again.';
+      setUploadError(message);
+      setStatusLabel('Upload failed');
+      Alert.alert('Upload failed', message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const barWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={() => {
+        if (!uploading) onClose();
+      }}
+    >
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={[styles.sheet, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
+          <View style={styles.header}>
+            <View style={styles.headerCopy}>
+              <Text style={styles.title}>Upload Highlight ⚡</Text>
+              <Text style={styles.subtitle}>Clip, tag, caption — then publish.</Text>
+            </View>
+            <AnimatedButton
+              accessibilityLabel="Close upload"
+              disabled={uploading}
+              haptic="light"
+              onPress={onClose}
+              contentStyle={[styles.close, uploading && styles.disabled]}
+            >
+              <Ionicons name="close" size={20} color={colors.text} />
+            </AnimatedButton>
+          </View>
+
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.body}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.pickerRow}>
+              <AnimatedButton
+                accessibilityLabel="Choose a video from library"
+                disabled={uploading}
+                haptic="light"
+                style={styles.sourceHit}
+                contentStyle={[
+                  styles.sourceBtn,
+                  pickSource === 'library' && styles.sourceBtnOn,
+                  uploading && styles.disabled,
+                ]}
+                onPress={() => void pickVideo('library')}
+              >
+                <View style={[styles.sourceIcon, pickSource === 'library' && styles.sourceIconOn]}>
+                  <Ionicons
+                    name="images-outline"
+                    size={22}
+                    color={pickSource === 'library' ? colors.onAccent : NEON_JADE}
+                  />
+                </View>
+                <Text style={styles.sourceTitle}>Library</Text>
+                <Text style={styles.sourceHint}>Pick a clip</Text>
+              </AnimatedButton>
+              <AnimatedButton
+                accessibilityLabel="Record a video"
+                disabled={uploading}
+                haptic="light"
+                style={styles.sourceHit}
+                contentStyle={[
+                  styles.sourceBtn,
+                  pickSource === 'camera' && styles.sourceBtnOn,
+                  uploading && styles.disabled,
+                ]}
+                onPress={() => void pickVideo('camera')}
+              >
+                <View style={[styles.sourceIcon, pickSource === 'camera' && styles.sourceIconOn]}>
+                  <Ionicons
+                    name="videocam-outline"
+                    size={22}
+                    color={pickSource === 'camera' ? colors.onAccent : NEON_JADE}
+                  />
+                </View>
+                <Text style={styles.sourceTitle}>Record</Text>
+                <Text style={styles.sourceHint}>Capture live</Text>
+              </AnimatedButton>
+            </View>
+
+            <View style={[styles.videoCard, asset ? styles.videoCardReady : null]}>
+              {asset ? (
+                <View style={styles.previewRow}>
+                  <ClipPreview uri={asset.uri} />
+                  <View style={styles.videoCopy}>
+                    <Text style={styles.videoLabel}>Clip ready</Text>
+                    <Text style={styles.videoMeta} numberOfLines={2}>
+                      {[asset.fileName || 'Selected video', formatDuration(asset.durationMs)]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.videoLabel}>No video selected</Text>
+                  <Text style={styles.videoMeta} numberOfLines={2}>
+                    Pick from your library or record a new Seki play.
+                  </Text>
+                </>
+              )}
+            </View>
+
+            <SelectField
+              label="Active Game"
+              value={gameLabel}
+              open={openSelect === 'game'}
+              disabled={uploading || games.length === 0}
+              filled={Boolean(gameId)}
+              onToggle={() => setOpenSelect((current) => (current === 'game' ? null : 'game'))}
+            >
+              {games.map((game) => {
+                const label = gameMatchupLabel(game.home_team, game.away_team);
+                const selected = game.id === gameId;
+                return (
+                  <Pressable
+                    key={game.id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => {
+                      setGameId(game.id);
+                      setOpenSelect(null);
+                    }}
+                    style={[styles.option, selected && styles.optionSelected]}
+                  >
+                    <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>{label}</Text>
+                    <Text style={styles.optionMeta}>
+                      {displayValue(game.venue)} · {displayValue(game.status)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </SelectField>
+
+            <SelectField
+              label="Player Tagging"
+              value={playerLabel}
+              open={openSelect === 'player'}
+              disabled={uploading || sortedPlayers.length === 0}
+              filled={Boolean(playerId)}
+              onToggle={() => setOpenSelect((current) => (current === 'player' ? null : 'player'))}
+            >
+              {sortedPlayers.map((player) => {
+                const selected = player.id === playerId;
+                return (
+                  <Pressable
+                    key={player.id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => {
+                      setPlayerId(player.id);
+                      setOpenSelect(null);
+                    }}
+                    style={[styles.option, selected && styles.optionSelected]}
+                  >
+                    <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
+                      {playerTagLabel(player)}
+                    </Text>
+                    <Text style={styles.optionMeta}>
+                      {displayValue(player.position)} · {displayValue(player.school_name)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </SelectField>
+
+            <Text style={styles.fieldLabel}>Title / Hype Caption</Text>
+            <TextInput
+              value={caption}
+              onChangeText={setCaption}
+              editable={!uploading}
+              placeholder="Walk-off scramble — Westlake vs Lone Peak"
+              placeholderTextColor={colors.textMuted}
+              style={styles.input}
+              maxLength={120}
+              returnKeyType="done"
+            />
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Category</Text>
+              <View style={styles.categoryRow} accessibilityLabel="Video category">
+                {REEL_CATEGORY_PILLS.map((pill) => {
+                  const selected = pill.id === category;
+                  const serve = pill.id === REEL_CATEGORY_SERVE;
+                  return (
+                    <AnimatedButton
+                      key={pill.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={pill.label}
+                      accessibilityState={{ selected, disabled: uploading }}
+                      disabled={uploading}
+                      haptic="light"
+                      style={styles.categoryPillWrap}
+                      contentStyle={[
+                        styles.categoryPill,
+                        selected && styles.categoryPillOn,
+                        serve && styles.categoryPillServe,
+                        selected && serve && styles.categoryPillServeOn,
+                      ]}
+                      onPress={() => setCategory(pill.id)}
+                    >
+                      <View style={styles.categoryPillHead}>
+                        <View style={styles.categoryPillCopy}>
+                          <Text
+                            style={[
+                              styles.categoryPillLabel,
+                              selected && styles.categoryPillLabelOn,
+                              selected && serve && styles.categoryPillLabelServe,
+                            ]}
+                          >
+                            {pill.label}
+                          </Text>
+                          {selected && serve ? (
+                            <Text style={styles.impactBadgeLabel}>{SERVE_LIKE_ME_BOOST_LABEL}</Text>
+                          ) : null}
+                        </View>
+                        <Ionicons
+                          name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+                          size={20}
+                          color={selected ? NEON_JADE : colors.border}
+                        />
+                      </View>
+                    </AnimatedButton>
+                  );
+                })}
+              </View>
+            </View>
+
+            <Pressable
+              accessibilityRole="switch"
+              accessibilityState={{ checked: isExclusive, disabled: uploading }}
+              accessibilityLabel="Subscriber Vault"
+              disabled={uploading}
+              onPress={() => setIsExclusive((current) => !current)}
+              style={({ pressed }) => [
+                styles.exclusiveCard,
+                isExclusive && styles.exclusiveCardOn,
+                pressed && styles.pressed,
+                uploading && styles.disabled,
+              ]}
+            >
+              <View style={styles.exclusiveCopy}>
+                <Text style={[styles.exclusiveTitle, isExclusive && styles.exclusiveTitleOn]}>
+                  Subscriber Vault 🔒
+                </Text>
+                <Text style={styles.exclusiveHint}>
+                  Off by default (free public feed). On: only $4.99/mo subscribers can watch.
+                </Text>
+              </View>
+              <View style={[styles.exclusiveTrack, isExclusive && styles.exclusiveTrackOn]}>
+                <View style={[styles.exclusiveThumb, isExclusive && styles.exclusiveThumbOn]} />
+              </View>
+            </Pressable>
+
+            {loadError ? <Text style={styles.error}>{loadError}</Text> : null}
+            {uploadError ? <Text style={styles.error}>{uploadError}</Text> : null}
+
+            {uploading ? (
+              <View style={styles.progressWrap} accessibilityRole="progressbar">
+                <Animated.View style={[styles.progressGlow, { opacity: pulse }]} />
+                <View style={styles.progressTrack}>
+                  <Animated.View style={[styles.progressFill, { width: barWidth }]} />
+                </View>
+                <View style={styles.progressMeta}>
+                  <ActivityIndicator color={NEON_JADE} />
+                  <Text style={styles.progressLabel}>
+                    {statusLabel} {Math.round(progress * 100)}%
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
+            <AnimatedButton
+              accessibilityLabel={HIGHLIGHT_PUBLISH_LABEL}
+              disabled={!canSubmit}
+              haptic="medium"
+              onPress={() => void submit()}
+              contentStyle={[styles.submit, !canSubmit && styles.submitDisabled]}
+            >
+              <Text style={styles.submitLabel}>{uploading ? 'Publishing…' : HIGHLIGHT_PUBLISH_LABEL}</Text>
+            </AnimatedButton>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  open,
+  disabled,
+  filled,
+  onToggle,
+  children,
+}: {
+  label: string;
+  value: string;
+  open: boolean;
+  disabled: boolean;
+  filled: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ expanded: open, disabled }}
+        disabled={disabled}
+        onPress={onToggle}
+        style={({ pressed }) => [styles.select, pressed && styles.pressed, disabled && styles.disabled]}
+      >
+        <Text style={[styles.selectValue, !filled && styles.selectPlaceholder]}>{value}</Text>
+        <Text style={styles.selectChevron}>{open ? '▲' : '▼'}</Text>
+      </Pressable>
+      {open ? <View style={styles.options}>{children}</View> : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  sheet: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 430,
+    alignSelf: 'center',
+    backgroundColor: colors.background,
+    paddingHorizontal: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 16,
+  },
+  headerCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  subtitle: {
+    color: colors.textMuted,
+    fontSize: 13,
+  },
+  close: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  body: {
+    gap: 14,
+    paddingBottom: 24,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  sourceHit: {
+    flex: 1,
+  },
+  sourceBtn: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 108,
+  },
+  sourceBtnOn: {
+    borderColor: NEON_JADE,
+    backgroundColor: 'rgba(0,230,118,0.08)',
+  },
+  sourceIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0,230,118,0.4)',
+    backgroundColor: 'rgba(0,230,118,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  sourceIconOn: {
+    backgroundColor: NEON_JADE,
+    borderColor: NEON_JADE,
+  },
+  sourceTitle: {
+    color: colors.text,
+    fontWeight: '800',
+    fontSize: 15,
+  },
+  sourceHint: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  videoCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+    gap: 4,
+  },
+  videoCardReady: {
+    borderColor: NEON_JADE,
+  },
+  previewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  thumb: {
+    width: 72,
+    height: 96,
+    borderRadius: 10,
+    backgroundColor: colors.photoPlaceholder,
+    overflow: 'hidden',
+  },
+  videoCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  videoLabel: {
+    color: colors.text,
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  videoMeta: {
+    color: colors.textMuted,
+    fontSize: 12,
+  },
+  field: {
+    gap: 8,
+  },
+  fieldLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  select: {
+    minHeight: 48,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  selectValue: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  selectPlaceholder: {
+    color: colors.textMuted,
+    fontWeight: '600',
+  },
+  selectChevron: {
+    color: NEON_JADE,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  options: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+  },
+  option: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    gap: 2,
+  },
+  optionSelected: {
+    backgroundColor: colors.accentSoft,
+  },
+  optionLabel: {
+    color: colors.text,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  optionLabelSelected: {
+    color: NEON_JADE,
+  },
+  optionMeta: {
+    color: colors.textMuted,
+    fontSize: 12,
+  },
+  input: {
+    minHeight: 48,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    color: colors.text,
+    paddingHorizontal: 14,
+    fontSize: 15,
+  },
+  categoryRow: {
+    gap: 8,
+  },
+  categoryPillWrap: {
+    width: '100%',
+  },
+  categoryPill: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 52,
+    justifyContent: 'center',
+  },
+  categoryPillHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  categoryPillCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  categoryPillOn: {
+    borderColor: NEON_JADE,
+    backgroundColor: 'rgba(0,230,118,0.12)',
+  },
+  categoryPillServe: {
+    borderColor: 'rgba(0,230,118,0.4)',
+  },
+  categoryPillServeOn: {
+    borderColor: NEON_JADE,
+    backgroundColor: 'rgba(0,230,118,0.18)',
+  },
+  categoryPillLabel: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  categoryPillLabelOn: {
+    color: NEON_JADE,
+  },
+  categoryPillLabelServe: {
+    color: NEON_JADE,
+  },
+  impactBadgeLabel: {
+    color: NEON_JADE,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  exclusiveCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: colors.border,
+    padding: 14,
+  },
+  exclusiveCardOn: {
+    borderColor: NEON_JADE,
+    backgroundColor: 'rgba(0,230,118,0.08)',
+  },
+  exclusiveCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  exclusiveTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  exclusiveTitleOn: {
+    color: NEON_JADE,
+  },
+  exclusiveHint: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '600',
+  },
+  exclusiveTrack: {
+    width: 48,
+    height: 28,
+    borderRadius: 999,
+    backgroundColor: colors.border,
+    padding: 3,
+    justifyContent: 'center',
+  },
+  exclusiveTrackOn: {
+    backgroundColor: NEON_JADE,
+  },
+  exclusiveThumb: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.text,
+    alignSelf: 'flex-start',
+  },
+  exclusiveThumbOn: {
+    backgroundColor: colors.onAccent,
+    alignSelf: 'flex-end',
+  },
+  error: {
+    color: colors.danger,
+    fontSize: 13,
+  },
+  progressWrap: {
+    gap: 10,
+  },
+  progressGlow: {
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: NEON_JADE,
+    opacity: 0.25,
+  },
+  progressTrack: {
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+    marginTop: -18,
+  },
+  progressFill: {
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: NEON_JADE,
+  },
+  progressMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressLabel: {
+    color: colors.text,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  submit: {
+    minHeight: 54,
+    borderRadius: radii.md,
+    backgroundColor: NEON_JADE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitDisabled: {
+    opacity: 0.45,
+  },
+  submitLabel: {
+    color: colors.onAccent,
+    fontWeight: '800',
+    fontSize: 16,
+  },
+  pressed: {
+    opacity: 0.85,
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+});

@@ -1,0 +1,235 @@
+# Changelog
+
+All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
+
+## 2026-09-14
+
+### Admin Money — financial control plane
+
+- `/admin/money` is the revenue desk (Expo Router, not `app/finance/page.tsx`): Gross Platform Volume, Company Net Revenue, Athlete & Operator Payouts, plus a split table for Mālo (10/90), district boosters (15/85), and merch + Vault. Totals come from `get_company_revenue_summary`; the log list reads `company_revenue_logs`. Incremental: `supabase/company_revenue.sql`. Fan Mālo copy is still 100% to custodial until counsel updates `MALO_DISCLAIMER`.
+
+### Auto Spotlight + tag verification
+
+- Player of the Week / Month / Year is elected from **confirmed** Game Play hype (Seki + Aura + Flex). The award is the tagged athlete; the hottest clip is the tape; a fan uploader gets **Clip by**, not the crown.
+- Fan tags start `pending`. The athlete, their parent, a school operator, or admin taps **That's them** / **Not them**. Computer vision is out of scope — we verify the confirmer, not the pixels.
+- `/admin/spotlight` shows the live race, pending tags, Crown from hype, and a locked manual override. Incremental: `supabase/spotlight_auto.sql`.
+
+## 2026-09-13
+
+### Admin Look + Reports graphs
+
+- `/admin/look` drafts brand colors (Obsidian / jade / gold presets + hex), Profile chrome (card / Crew / Stats / Vault / action placement), and Highlights ⚡ overlay (rail left/right, name top/bottom, school/caption, button order). Same **Publish to app** gate as Features.
+- Reports open on **Health** (pass / warn / fail for stalls, flags, checkout, payouts, live board, Drip stock, Spotlight, unpublished chrome) plus 7-day bar charts for clips, Mālo, and stalls. Incremental: `get_admin_reports` `series`.
+
+### Admin Features + Publish to app + Reports
+
+- Fan-bar tabs, Upload +, Seki / Aura / Flex / Mālo / More, Subscribe / Crew / Vault / Flash Unlock, Local boards, search, Spotlight modal, and role HQs are flags on `app_runtime_config`. Toggles stay **draft** until **Publish to app** (sidebar gold button). School names, player stats, captions, Drip prices, scores, and verify stay **instant**.
+- `/admin` nav is grouped: Ship / Content / Catalog / People & money / Insights. New desks: **Features** (`/admin/features`) and **Reports** (`/admin/reports` — usage windows, Mālo, leaders, reliability). Incremental: `supabase/app_runtime.sql` + `supabase/admin_reports.sql` (`patch_app_runtime_draft`, `publish_app_runtime`, `get_admin_reports`).
+
+### Admin Studio / Publish / QA
+
+- The fan app no longer shows a Dev role bar or Aura persona chips. Guest / Fan / Athlete / Operator preview lives only in `/admin/studio`. Expo Go **Unlock Studio** (Access Restricted) or `profiles.is_admin` opens the portal; Profile shows **Admin portal** for those sessions. Operator / Parent / Booster / Sponsor previews keep a one-line hatch back to `/admin`.
+- New desks: **Publish** (go-live parked games, restore clips, activate Drip/polls, Spotlight status) and **QA** (24h stalls, offline queue flush, empty-state checklist, walk production). Games / Highlights / Drip / Polls / Boosters / Spotlight link out to the matching fan surface or operator console.
+
+### Admin portal desks
+
+- Admin tools are ops desks, not raw CRUD: dollars instead of cents, school/athlete pickers, live/parked/on-Drip filters, score +1 on live games, Highlight retitle/retag, Mālo payout mark-paid, vote share bars, and an Overview inbox for flags / verify / payouts / low stock / empty live board.
+
+### Admin portal (production control plane)
+
+- `/admin` is the **admin portal** that writes the same tables the fan app reads. Nested routes + Obsidian sidebar: Overview, Spotlight, Moderation, Athletes, Schools, Live games, Highlights, People, Drip, Boosters, Money, Polls. Non-admins still see **Access Restricted**. Incremental: `supabase/admin_portal.sql` (`shop_products`, admin writes on `schools_and_teams` / `cheer_polls` / `games` INSERT / `sponsorships`, `upsert_cheer_poll`). Drip tab loads `shop_products` (`useDripCatalog`) with `DRIP_ITEMS` fallback. Local School Polls prefer published `cheer_polls` labels.
+
+### Web Admin Dashboard
+
+- `/admin` is the Obsidian / Neon Jade **Web Admin Dashboard** (Expo Router, not Next.js). Non-admins see **Access Restricted**. Admins get Spotlight Manager (publish Player of the Week), Moderation & Reports (Dismiss / Remove Content on flagged Highlights), and Platform Telemetry (Highlights count, Seki+Aura+Flex, Mālo ledger). `profiles.is_admin` plus Studio unlock. Incremental: `supabase/admin_dashboard.sql` (`publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`, `reels.is_removed`).
+
+### Home feed + one hype / Mālo state
+
+- Fan bar first tab is **Home**. Highlights ⚡ still lives on Profile. Top chrome is search + **Home / All / Seki**. Home ranks Crew you follow, your school, Serve Like Me, Flash Unlock, energy, and freshness. Search looks up clip titles and athlete profiles (`search_local_entities` + the live feed) in the same dark jade sheet as Local Explore.
+- Name + Seki / Aura / Flex / Mālo / ⋯ sit on the clip, just above the fan bar. The video fills the scene from the status area to the nav. iOS Live Text / frame analysis is off (`allowsVideoFrameAnalysis={false}`) so the blue gear does not sit on the clip.
+- One Seki, one Aura, and one Flex per fan per clip (`reel_hype_votes` + local `tapuai.reelVotes.*`). Double-tap Aura is that one Aura. After a Mālo, the button fills jade and reads **Mālo'd**. Incremental: `supabase/reel_hype_votes.sql`.
+
+### Highlights chrome + fan bar
+
+- Highlights ⚡ no longer shows the pulsing Aura rank chip. The athlete name wears a 7-tier color border (full **Tier n • title** stays on Profile). Fan bar sits in a phone-width row around a centered Upload plus so Spotlight does not squeeze Drip / Profile. Upload sheet: Library / Record tiles, stacked category rows with a check, phone-width column on web.
+- Highlights overlay is TikTok-style: name (tier color) + school + caption bottom-left; right rail is Seki / Aura / Flex / Mālo / ⋯. Share, Save, and Report live in `ReelMoreSheet`. Views leave the feed and show on the Profile trading card. **SEKI PLAY** badge is gone; **All / Seki** switch at the top of Highlights filters `sekiPlay` clips. Upload plus sits in its own slot between Local and Spotlight so it does not cover a tab.
+
+### Crew / Squad + Vault Flash Unlock
+
+- Profile counters are **The Crew ⚡** (followers) and **Your Squad 🛡️** (following). Visitors tap **Join Crew ⚡** (Neon Jade). Mutual follows show a glowing **Teammates 🤝** badge. Persistence: `crew_follows` + `get_crew_graph` / `toggle_crew_follow`.
+- Athletes long-press a Vault clip and tap **🔓 Flash Unlock (2 Hours)**. `set_reel_flash_unlock` writes `reels.flash_unlock_until` and queues a `crew_push_queue` row for every Crew member. Highlights ⚡ shows **⚡ FLASH UNLOCK • Locks in 1h 45m** and plays the clip without Subscribe for that window. Incremental: `supabase/crew_and_flash_unlock.sql`.
+
+### Serve Like Me / Train Like Me
+
+- Upload pills tag a Highlight as **⚡ Game Play**, **💪 Train Like Me**, or **🤝 Serve Like Me (2x Aura Boost)**. Serve shows a Neon Jade **Community Impact Boost ⚡** chip. Persists `reels.category` (`game_play` / `train_like_me` / `serve_like_me`). Incremental: `supabase/reel_category.sql`.
+- Feed cards float **🤝 SERVE LIKE ME • 2x AURA** or **💪 TRAIN LIKE ME** top-left. Double-tapping Serve Like Me grants 2 Aura (vs 1) and a jade particle burst. OfflineQueue flushes the same point count.
+
+### Player of the Week spotlight
+
+- Highlights launch queries `get_active_spotlight_award(viewer_user_id)` and, if the current week/month award is unviewed, opens `SpotlightModal` over the feed: looped winning Highlight, Neon Jade badge, 7-tier Aura portrait, **Support & Tip Athlete ⚡** (Mālo sheet) and **Watch Full Highlight 🎥**. **Dismiss (seen)** stores AsyncStorage `tapuai.spotlightSeen.{awardId}` so it pops once per period. Incremental: `supabase/spotlight_awards.sql`.
+- Spotlight video never calls `pause()` on unmount (expo-video already released the native player; that crash blocked every CTA). Support / Watch wait for the modal fade, then open Mālo or scroll the Highlights ⚡ feed.
+- **Spotlight** fan-bar tab (`/spotlight`) lists current and recent Player of the Week/Month cards so a dismissed launch popup is still reachable. Tap a card to replay the modal (Close does not re-arm the popup).
+
+### Athlete Vault lock
+
+- Athletes **Lock Vault 🔒** so fans must subscribe ($4.99/mo) to watch Vault Highlights ⚡, or **Open Vault 🌐** for a public preview. Default is locked (`players.vault_locked`). Clip placement (Highlights vs Vault) is still long-press. Incremental: `supabase/player_vault_lock.sql`. RPC `set_player_vault_locked`.
+
+### Unified athlete profile + Highlights ⚡
+
+- User-facing **Reel / Reels** copy is **Highlight / Highlights ⚡** (fan bar, publish, receipts, trading card). Persistence stays `reels`.
+- `AthleteProfileView` is the shared sheet for own Profile and `/user/[id]` (name taps). Tabs: **Highlights ⚡**, **Stats 📊**, **Vault 🔒**. Legacy `/athlete/[id]` redirects. Fan bar stays mounted.
+- Stats engine: combine measurables on `players` plus `athlete_career_stats` / `athlete_game_logs`. Trading-card back face shows Games / scoring / volume. Incremental: `supabase/athlete_stats.sql`.
+
+### Local match stays in the fan bar
+
+- Tapping a live game on Local pushes `/local/game/[id]` inside the Local nested stack, so `FanTabBar` stays visible. Public `/game/[id]` in `(guest)` is unchanged for deep links. Tapping Local again pops back to the hub.
+
+### Universal team search (HS + NCAA)
+
+- Athlete onboarding in `RoleSwitcherModal` uses one `schools_and_teams` autocomplete (`ILIKE %query%`) with `[ High School • UT ]` / `[ NCAA D1 • Big 12 ]` badges. HS and college share sport, roster number, position, and class year. Saves `profiles.school_id` + `athlete_division`. Aura trading card shows team name, mascot, and division on both faces. Incremental: `supabase/schools_and_teams.sql`. `docs:check` now fails if SCHEMA omits a `schema.sql` table or RPC.
+
+### Fan-first Open Vault
+
+- Reels default to the free public feed (`reels.is_vault_only` / `is_exclusive` false). Vault clips on `ReelCard` show a semi-transparent **Subscriber Vault 🔒** badge and **Unlock Vault ($4.99/mo)** PaymentSheet; subscribers and public clips play full-resolution with no overlay.
+- Athlete Management Profile grid (`AthleteReelManager`) long-presses a thumbnail to **Move to Subscriber Vault 🔒** / **Move to Free Public Feed 🌐**. Medium haptic, optimistic chip, `toggle_reel_vault_status` RPC. Incremental: `supabase/toggle_reel_vault_status.sql`.
+
+### Front-of-house docs sync
+
+- `npm run docs:sync` (`scripts/sync-front-docs.mjs`) reads Mālo / exclusive / booster / Aura / PIN / Connect constants and writes `docs/PRODUCT_FACTS.md` plus marked blocks in PUBLIC / INVESTOR / LEGAL. CI runs `npm run docs:check`. Legal analysis outside the markers stays human-written.
+
+### Front-of-house briefing pack
+
+- Public one-pager, investor memo, and legal/liability briefing (not legal advice) in `docs/PUBLIC.md`, `docs/INVESTOR.md`, `docs/LEGAL_BRIEFING.md`. Prototype stills in `docs/press/`.
+
+## 2026-09-12
+
+### Unified motion + Reel / trading-card focal chrome
+
+- `src/frontend/theme/motion.ts` is the spring and focal-color source: `SPRING_CARD` (sheets / pills), `SPRING_BOUNCE` (reaction chips / score pops), `SPRING_FLIP` (Aura trading card). Neon Jade `#00E676` is reserved for tips, Aura gains, and active roles. Electric Gold `#FFD700` is reserved for Gold / Platinum boosters and top ranks.
+- Reel feed: tagged athlete name sits top-left in a 7-tier Aura color border (full rank lives on Profile). School roster + category / Flash Unlock chips stay under the name. Mālo ⚡ keeps a persistent Neon Jade border glow.
+- `AuraTradingCard` flips with `SPRING_FLIP`. Back-face Season Points and Total Tipped land in Neon Jade with a staggered `withDelay` fade.
+
+### Phase B production readiness
+
+- `OfflineQueue` (`src/frontend/services/OfflineQueue.ts`) persists Aura taps, cheer votes, bookmarks, and reports in AsyncStorage while `NetInfo.isConnected === false`, then flushes `increment_reel_hype` / `add_user_aura` / `cast_cheer_vote` / `saved_reels` / `report_reel` on reconnect. Root layout starts the singleton at boot.
+- Reel rail **Report / Hide Highlight 🚩** opens `ReportContentModal`. Confirm appends the fan onto `reels.reported_by`, sets `is_flagged`, hides the clip on this account (`tapuai.hiddenReels` + toast). Incremental SQL: `supabase/report_reel.sql`.
+- Stripe Express Account Links are minted only server-side. `useStripeConnect` / `PayoutSetupCard` call Edge Function `create-stripe-account` with `Authorization: Bearer` session JWT. The handler binds the Express account to `auth.uid()` (ignores client `accountId` / `profileId`) and writes `stripe_connect_id` / `stripe_onboarding_complete` / `payouts_enabled`. Metro `POST /api/create-stripe-account` is a JWT-gated local fallback only.
+
+### Profile trading card + Account Settings audit
+
+- `AuraTradingCard` flips with Reanimated `withTiming` (`rotateY` 0°↔180°, `perspective: 1000`). Tap the card or **Flip Card 🔄**. Medium `impactAsync` fires when rotation crosses 90°. Front keeps the live 7-tier Aura border; back shows Season Points, Reels Posted, and Tips Received.
+- **Account Capability** opens `RoleSwitcherModal` over `expo-blur`. Dual Fan + Athlete accounts get a jade segmented Fan View / Athlete Management toggle that writes `profiles.active_role` with Medium haptic. Fan-only **Apply for Athlete Verification 🏆** calls `add_user_role`, updates `roles` immediately, and unlocks `PayoutSetupCard`.
+- **Connect Bank Account** launches Stripe Express via JWT Edge Function `create-stripe-account` (`WebBrowser.openAuthSessionAsync`). The server writes `stripe_onboarding_complete` on return. **Tip History & Receipts 🧾** fires Light `impactAsync` and pushes `/receipts` (hidden fan tab).
+
+### Drip + Upload button audit
+
+- Drip `GearCard` scales to 0.96 and opens `ProductSheet` over an `expo-blur` backdrop. Size pills (S–2XL) slide a jade indicator with `withSpring` and Light `impactAsync`. Quantity + / − clamps 1…`inventory` and updates total + Aura live. **Buy Now** runs `useTipCheckout` PaymentSheet (`skipBacker`); success grants order dollars × 10 Aura to the payer.
+- Center tab **+** (`accessibilityLabel="Upload video"`) opens `UploadVideoModal`. ImagePicker stores the video URI; a paused `expo-video` `VideoView` is the thumbnail. **Subscriber Exclusive 🔒** paints a `#00E676` border and sets `is_exclusive: true`. **Publish Reel** shows the Storage progress bar, fires `notificationAsync(Success)`, and `UploadSheetContext` prepends the clip onto the Reel feed.
+
+### Local Explore search
+
+- Persistent search bar on Local (`🔍` + `TextInput` + `✕`) sits above hub pills. Light `impactAsync` on focus and throttled typing.
+- Queries longer than 1 character slide up `SearchResultsOverlay` with All / Athletes / Schools / Boosters chips, AsyncStorage recents, and live `search_local_entities` hits (`useLocalSearch`, table SELECT fallback).
+- Athlete rows open `/athlete/[id]`. Booster rows switch to School Polls and jade-highlight the sponsor rail. School rows filter rivalry polls for that high school. Incremental SQL: `supabase/search_local_entities.sql`.
+
+### Local Discovery button audit
+
+- Hub / region `FilterPills` slide the jade indicator with `withSpring`. Selected pills are transparent so only the indicator paints; hub panes stay mounted (`display: 'none'`) so Live Matches / School Polls / Top Boosters swap without shifting the bar.
+- `CheerPollCard` fires Medium `impactAsync`, recalculates % immediately, springs bars from 0% to the new share, and floats **+1 Vote ⚡** from the press point 60px up.
+- **+ Become a Team Sponsor** opens `SponsorshipModal` with an `expo-blur` backdrop. Silver / Gold / Platinum cards highlight on Light haptic. **Complete Sponsorship** calls `useTipCheckout` PaymentSheet; success uses `notificationAsync(Success)`.
+
+### Reel feed button audit
+
+- `Gesture.Exclusive(doubleTap, singleTap)` keeps single-tap mute off the double-tap Aura ⚡ burst (`maxDistance` / `maxDeltaY` so paging still wins). Double-tap fires Medium `impactAsync`, optimistic `aura_count`, background `increment_reel_hype`, and `add_user_aura(+1)` for the signed-in fan.
+- Seki / Aura / Flex chips stay on `AnimatedPressable` (0.88 → 1.15 → 1.0) and increment local counters immediately.
+- **Mālo ⚡** opens `MaloTipModal` (blurred backdrop). **Share** uses Expo `Share.share` with `alasports://athlete/{id}?reel=`. **Save** syncs `public.saved_reels` via `useSavedReel`. Incremental SQL: `supabase/saved_reels.sql`.
+- `SwipeableBannerWrapper` pan activates only on swipe-up so vertical Reel scroll is not captured; ✕ / swipe-up still set `isDismissed` with Light haptics.
+
+### Reel Realtime channel collision
+
+- `useLiveGame` / discovery / cheer poll topics go through `nextRealtimeTopic` so two hooks in the same tick never call `.on('postgres_changes')` after `subscribe()`. The Reel feed passes its live snapshot into `LiveMatchBanner` (`live={liveGame}`) so the banner does not open a second `live_game_*` socket. `useGameEventBroadcast` fans share one `game_events_{id}` channel.
+
+### Profile tagged-clip pager
+
+- Profile and `/athlete/[id]` 3×3 grids sort `reels.created_at` **newest → oldest**. Tapping a tile opens `ReelViewModal` as a vertical pager of `ReelCard` (same Exclusive mute / double-tap Aura ⚡, chips, Mālo, Share, Save as the hub feed). Swipe up for older clips.
+
+### Client telemetry (video + sockets)
+
+- `TelemetryManager` (`src/frontend/services/TelemetryManager.ts`) batches events in memory and flushes to `public.telemetry_logs` every 10s or at 15 items. `ReelCard` logs time-to-first-frame and mid-reel stalls. `useLiveGame` logs Realtime `CHANNEL_ERROR` / `CLOSED` reconnect attempts. `useTipCheckout` logs PaymentSheet step latency. Incremental SQL: `supabase/telemetry_logs.sql`.
+
+### Local booster sponsorship tiers
+
+- School Polls shows a **Local Team Boosters & Sponsors 🏆** rail (Obsidian cards + Silver / Gold ⚡ / Platinum 💎 badges). **+ Become a Team Sponsor** fires Light `impactAsync` and opens `SponsorshipModal`. First month is Stripe PaymentSheet via `useTipCheckout` (`skipBacker`); success inserts `public.sponsorships` and grants 500 / 2,000 / 10,000 Aura. Incremental SQL: `supabase/sponsorships.sql`.
+
+### Fan Tip History & Receipts
+
+- Profile **Account Settings** adds **Tip History & Receipts 🧾** (Light `impactAsync` → `/receipts`). The screen is a hidden fan tab so the bar stays. Header metrics: Total Tipped, Athletes Supported, Total Aura Earned. Cards (`ReceiptCard`) use Polynesian Obsidian, `$10.00 Mālo ⚡`, Neon Jade `+100 Aura`, and **View Reel** → `/athlete/[id]`.
+- `public.tips` now stores `fan_id`, `reel_id`, and `aura_points`. `useTipCheckout` inserts a ledger row on successful Mālo. RPC `get_fan_tip_history(fan_user_id)` joins `players` for name + school. Incremental SQL: `supabase/get_fan_tip_history.sql` (creates `public.tips` if this project never ran full `schema.sql`).
+
+### Account Capability switcher
+
+- Profile **Account Settings** shows an Account Capability row (`[ Fan ⚡ ]` or `[ Fan ⚡ | Athlete 🏆 ]`). The sheet (`RoleSwitcherModal`) explains Fan vs Athlete. Fan-only accounts get **Apply for Athlete Verification 🏆**, which calls `add_user_role` and unlocks payouts / Vault immediately. Dual accounts get a Fan View / Athlete Management toggle (`profiles.active_role`) with Medium `impactAsync`. Incremental SQL: `supabase/add_user_role.sql`.
+
+### Fan bar on athlete profiles
+
+- `/athlete/[id]` lives under `(tabs)` as a hidden tab (`href: null`) so Reel / Local / Upload / Drip / Profile stay on screen when opening an athlete from a Reel or Profile.
+
+### Swipe-dismiss live banners
+
+- `SwipeableBannerWrapper` (`Gesture.Pan`) lets fans swipe a top-floating banner up. Past `-30` `translationY` it times off to `-120` and calls `onDismiss`; otherwise it springs back to `0`. Opacity interpolates with the drag. A semi-transparent ✕ in the corner dismisses the same way. Light `impactAsync` on swipe or tap.
+- Reel `LiveMatchBanner` stays dismissed for that game after swipe/✕ (survives Reel paging). It returns only for a new match or a score change; `ReelCard` play callouts and `/game/[id]` play toasts are separate new notifications.
+
+### Stripe Connect Express
+
+- Athlete Profile **Account Settings** (`PayoutSetupCard`) when `roles` includes `athlete`. Incomplete: **Set Up Payouts ⚡** + Neon Jade **Connect Bank Account**. Complete: **Payouts Active ✅** + **Manage Bank Account / View Express Dashboard**.
+- `useStripeConnect.createStripeExpressAccount()` calls `POST /api/create-stripe-account` (Stripe Accounts **v2** Express + Account Link or login link), then `WebBrowser.openAuthSessionAsync`. Return syncs `stripe_onboarding_complete` and `payouts_enabled` onto `profiles` (and local cache). Button fires Medium `impactAsync` and shows a spinner while the link is generated.
+- Incremental SQL: `supabase/stripe_connect.sql`. Deep-link return: `/stripe-connect` (`alasports://stripe-connect`).
+
+### Dual Fan / Athlete
+
+- `AuthContext` exposes `roles` (e.g. `['fan', 'athlete']`), `isAthlete`, `canReceiveTips`, and `isVerified`. Athletes keep Fan capability and stay on the fan hub when the Dev switcher selects Athlete (`ROLE_HOME.athlete = '/'`).
+- Profile `AuraTradingCard` renders **[ Fan ⚡ ]** and **[ Athlete 🏆 ]** side-by-side when both are active. The flip back-face shows Total Tips Dropped + Poll Votes (Fan) and Season Points + Reels Uploaded (Athlete).
+- Mālo via `useTipCheckout` is open to any authenticated user, including verified athletes. Success calls `add_user_aura` for the tipper and the reel athlete (skip the second call when the ids match). Drip / exclusive still grant only the payer. Incremental SQL: `supabase/profile_roles.sql`.
+
+### Documentation
+
+- Cursor rule `.cursor/rules/documentation.mdc`: JSDoc on new/changed functions; keep `DOCUMENTATION.md`, `docs/SCHEMA.md`, and `docs/ONBOARDING.md` in sync with code.
+- System overview, schema, and onboarding rewritten for Phase 1 complete / Phase 2 staged / Phase 3 active engine.
+- Product aliases: `video_tips` → `public.tips`; `add_user_aura(user_id, points)` → Postgres `target_user_id` / `points_to_add`.
+- `AGENTS.md` and `TROUBLESHOOTING.md` aligned with the live tree.
+
+### Cheer polls
+
+- `cast_cheer_vote` now takes optional `home_name` / `away_name` (re-run `supabase/cheer_polls.sql`; `DROP FUNCTION` of the 3-arg form first). Insert-on-miss starts at 0–0 with those labels. Featured `westlake-lone-peak` seed stays 124 / 98. Votes write `cheer_polls`, not `games`.
+
+### Aura palette
+
+- Tier 1 **Slate Silver** `#94A3B8` → Tier 2 **Island Cyan** `#00E5FF` → Tier 3 **Neon Jade** `#00E676` → Tier 4 **Electric Violet** `#B388FF` → Tier 5 **Crimson Ember** `#FF1744` → Tier 6 **Polished Gold** `#FFD700` → Tier 7 **Celestial Prism** `#00E676` / `#00E5FF`. Point bands unchanged. Re-run `supabase/add_user_aura.sql` (includes `DROP FUNCTION`) so `get_aura_tier` matches.
+
+### Fan hub (Phase 1)
+
+- Five-item bar: Reel, Local, Upload FAB, Drip, Profile.
+- `expo-video` reel feed, tagged athlete clips, cheer poll, Top Aura Boosters.
+- Reel feed micro-interactions: double-tap Neon Jade Aura ⚡ at the touch point (`bumpReelHype` + Medium haptic), Seki/Aura/Flex chips bounce 0.88→1.15→1.0 with a floating +1, single-tap mute badge.
+- Profile 3D Aura trading card: `AuraTradingCard` replaces the static hub header. Front is identity + Aura progress; back is season stats, bio, and earned badges. Flip via **Flip Card 🔄** or double-tap; Medium haptic fires at 90°.
+- Drip marketplace: `app/(tabs)/drip.tsx` with All Drip / Team Apparel / Custom Aura Cards / Athlete Merch pills (sliding jade indicator), `GearCard` 0.96 press + Light haptic, Reanimated `ProductSheet` (sizes, qty, Aura banner), Stripe **Buy Now**. Success runs `add_user_aura` (`dollars × 10`), success haptics, and toast **Drip secured ⚡**. `/shop` redirects to `/drip`.
+- Local hub: **Live Matches / School Polls / Top Boosters** pills with the same sliding jade indicator. `CheerPollCard` (`src/frontend/components/Local/CheerPollCard.tsx`) springs the vote bar from 0% to the live share, fires Medium haptics, floats **+1 Vote ⚡**, and increments `cheer_polls` via `cast_cheer_vote` (not `games`). Top Aura Boosters cards scale 0.96 and open a 7-tier profile peek.
+- Interaction audit: every product button fires `Haptics.impactAsync(Light)` via `HapticPressable` / `AnimatedButton`; pending disables on upload, PaymentSheet, reactions, operator GPS, and role-dashboard writes. See [AUDIT_REPORT.md](docs/AUDIT_REPORT.md).
+
+### Operator (Phase 2)
+
+- PIN keypad sheet (`Operator/PINClaimModal`) with Light `impactAsync` per digit; valid `1234` writes `games.claimed_by` and opens `/operator/[gameId]`. `/operator/console/[gameId]` redirects there.
+- Scorekeeper: Home/Away **+1 / +3 / +6** spring the digits and call `update_game_score`. **Start / Pause Clock** toggles `is_clock_running` and ticks once per second.
+- Callouts **⚡ Big Play / 🏆 Touchdown / 🤙 Big Hit / 🛑 Turnover** Broadcast on `game_events_${gameId}` with `{ type, timestamp, team }` (`Haptics.notificationAsync` on the operator). Focused `ReelCard` springs **⚡ BIG PLAY: Westlake Thunder!** for 3s (`useGameEventBroadcast`). Optional `game_events` INSERT still feeds `/game/[id]` history.
+- Fan live overlay: `useLiveGame` subscribes to `games` / `game_events` Realtime; `Reels/LiveMatchBanner` shows home vs away, live score with `withSpring` on increments, quarter + pulse. `Operator/LiveScoreHeader` re-exports the banner.
+- Incremental SQL: `supabase/games_operator.sql` (re-run to add `claimed_by`, `is_clock_running`, and the RPC).
+- PIN + GPS check-in, game console (clock/score/events), scorer screen. Demo-open RLS remains.
+
+### Monetization (Phase 3)
+
+- Mālo presets `$5` / `$10` / `$25` / Custom; Aura `tipAmount * 10`.
+- Athlete exclusive paywall: `$4.99/mo` Stripe PaymentSheet on `/athlete/[id]`; locked tiles blur with **Subscriber Exclusive 🔒**; success inserts `subscriptions` (`subscriber_id`, `athlete_id`), grants **+100 Aura**, success haptics, unlock toast, and unblurs immediately. `supabase/subscriptions.sql` reshapes stub tables and renames `user_id` → `subscriber_id`.
+- Upload Seki Play: **Subscriber Exclusive 🔒** toggle persists `reels.is_exclusive`; athlete 3×3 grid refreshes from `UploadSheetContext` and shows the lock badge for non-subscribers.
+- Subscriber Vault on `/athlete/[id]`: **All Highlights / Vault 🔒** pills; Vault filters `is_exclusive` clips; non-subscribers see the $4.99/mo callout; subscribers get Direct Request Q&A (`subscriber_requests`) and a Neon Jade crest on their Profile avatar and Q&A rows.
+- RPC `add_user_aura` + `get_aura_tier`; 7-tier Aura card borders.
+- **Known gap:** checkout does not insert `public.tips` rows (backer count, reel cents, and Aura still update).

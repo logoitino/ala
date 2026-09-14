@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { displayValue, type Player } from '@/data/players';
@@ -31,6 +32,9 @@ export function PlayerListItem({
         <View style={styles.info}>
           <Text style={styles.name}>{displayValue(player.name, 'Unknown player')}</Text>
           <Text style={styles.position}>{displayValue(player.position)}</Text>
+          <Text style={styles.views}>
+            {displayValue(player.view_count, '0')} highlight views
+          </Text>
         </View>
 
         <View style={styles.backers}>
@@ -92,7 +96,7 @@ const styles = StyleSheet.create({
   jerseyNumber: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.onAccent,
   },
   info: {
     flex: 1,
@@ -107,6 +111,11 @@ const styles = StyleSheet.create({
   position: {
     fontSize: 14,
     color: colors.textMuted,
+  },
+  views: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.deepGreen,
   },
   backers: {
     alignItems: 'flex-end',

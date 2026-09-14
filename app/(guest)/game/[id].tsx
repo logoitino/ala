@@ -2,17 +2,17 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { PlayCard, resolveEventPlayer } from '@/components/PlayCard';
+import { LiveMatchBanner } from '@/components/Reels/LiveMatchBanner';
 import { NotificationPrefsBar } from '@/components/NotificationPrefsBar';
 import { PlayerListItem } from '@/components/PlayerListItem';
-import { ScoreHeader } from '@/components/ScoreHeader';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TabSwitcher } from '@/components/TabSwitcher';
 import { TipSheetModal } from '@/components/TipSheetModal';
@@ -250,7 +250,7 @@ export default function GameOverviewScreen() {
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.deepGreen} />
           <Text style={styles.statusText}>Loading game…</Text>
         </View>
       ) : error || !game ? (
@@ -267,7 +267,7 @@ export default function GameOverviewScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
-          <ScoreHeader gameId={game.id} game={game} />
+          <LiveMatchBanner gameId={game.id} />
           <NotificationPrefsBar value={alertPref} onChange={setAlertPref} />
           <TabSwitcher value={tab} onChange={setTab} />
 
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   },
   feedError: {
     fontSize: 13,
-    color: '#991B1B',
+    color: colors.danger,
   },
   centered: {
     flex: 1,
@@ -361,10 +361,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 18,
     borderRadius: radii.md,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.deepGreen,
   },
   retryLabel: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontWeight: '700',
   },
   pressed: {

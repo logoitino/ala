@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { cardShadow, colors, radii } from '@/constants/theme';
 import {
@@ -8,7 +9,7 @@ import {
   isGameClockLive,
   parseClockToSeconds,
 } from '@/data/players';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
 import type { Game } from '@/types/database';
 
 type ScoreHeaderProps = {
@@ -39,7 +40,7 @@ export function ScoreHeader({ gameId, game: seed, onPress }: ScoreHeaderProps) {
     if (!id || !isSupabaseConfigured) return;
 
     const channel = supabase
-      .channel(`score_header_${id}`)
+      .channel(nextRealtimeTopic(`score_header_${id}`))
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'games', filter: `id=eq.${id}` },
@@ -117,8 +118,10 @@ export function ScoreHeader({ gameId, game: seed, onPress }: ScoreHeaderProps) {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
     gap: 14,
@@ -134,7 +137,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: colors.accentSoft,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -146,10 +149,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F43F5E',
   },
   dotIdle: {
-    backgroundColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: colors.textMuted,
   },
   liveText: {
-    color: '#FFFFFF',
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -157,7 +160,7 @@ const styles = StyleSheet.create({
   venue: {
     flex: 1,
     textAlign: 'right',
-    color: 'rgba(255,255,255,0.78)',
+    color: colors.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -174,18 +177,18 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   teamLabel: {
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textMuted,
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 1,
   },
   teamName: {
-    color: '#FFFFFF',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '800',
   },
   score: {
-    color: '#FFFFFF',
+    color: colors.primary,
     fontSize: 34,
     fontWeight: '800',
     letterSpacing: -0.8,
@@ -193,6 +196,6 @@ const styles = StyleSheet.create({
   scoreDash: {
     fontSize: 22,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.55)',
+    color: colors.textMuted,
   },
 });

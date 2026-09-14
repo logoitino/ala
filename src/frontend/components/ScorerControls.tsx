@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
 import {
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   choiceLabelActive: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
   },
   actionGrid: {
     flexDirection: 'row',
@@ -145,7 +146,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionLabel: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   alertLabel: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontSize: 17,
     fontWeight: '700',
   },

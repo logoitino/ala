@@ -7,11 +7,16 @@ import { SCREEN_BOTTOM_GAP, colors } from '@/constants/theme';
 type ScreenShellProps = {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
+  edges?: ('top' | 'bottom' | 'left' | 'right')[];
 };
 
-export function ScreenShell({ children, style }: ScreenShellProps) {
+export function ScreenShell({
+  children,
+  style,
+  edges = ['bottom', 'left', 'right'],
+}: ScreenShellProps) {
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.root, style]}>
+    <SafeAreaView edges={edges} style={[styles.root, style]}>
       {children}
     </SafeAreaView>
   );

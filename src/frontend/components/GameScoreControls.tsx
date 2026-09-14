@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
 import { GAME_STATUSES, SCORE_MACROS, displayValue } from '@/data/players';
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   sideLabelActive: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
   },
   grid: {
     flexDirection: 'row',
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreLabel: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -163,7 +164,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   statusLabelActive: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
   },
   pressed: {
     opacity: 0.88,

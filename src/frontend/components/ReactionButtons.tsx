@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
 import { QUICK_REACTIONS, type QuickReaction } from '@/data/players';
@@ -90,12 +91,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sekiButton: {
-    borderColor: '#F4C430',
-    backgroundColor: '#FFF8E1',
+    borderColor: colors.gold,
+    backgroundColor: colors.accentSoft,
   },
   buttonPressed: {
     backgroundColor: colors.accentSoft,
-    borderColor: '#E8CFC0',
+    borderColor: colors.primary,
   },
   label: {
     fontSize: 14,

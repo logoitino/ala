@@ -2,9 +2,15 @@ import type { Player } from '@/types/database';
 
 export type { Game, GameStatus, Player } from '@/types/database';
 
-export const TIP_AMOUNTS = [3, 5, 10] as const;
+export const TIP_AMOUNTS = [5, 10, 25] as const;
+
+export const AURA_PER_DOLLAR = 10;
 
 export const FEE_AMOUNT = 0.5;
+
+export function auraPointsForTip(tipAmount: number): number {
+  return Math.max(0, Math.round(tipAmount * AURA_PER_DOLLAR));
+}
 
 export const MALO_DISCLAIMER =
   "100% of your backing (minus standard payment processing unless covered) goes directly to the athlete's custodial account.";
@@ -40,7 +46,7 @@ export function getPlayerFirstName(name: string): string {
 export function formatTipTotal(amount: number, includeFee: boolean): string {
   const fee = includeFee ? FEE_AMOUNT : 0;
   const total = amount + fee;
-  return `Total: $${total.toFixed(2)} ($${amount.toFixed(2)} tip + $${fee.toFixed(2)} fee)`;
+  return `Total: $${total.toFixed(2)} ($${amount.toFixed(2)} Mālo + $${fee.toFixed(2)} fee)`;
 }
 
 export function displayValue(value: string | number | null | undefined, fallback = '—'): string {
@@ -105,7 +111,12 @@ export function getQuarterCode(game: {
   return raw;
 }
 
-export function isGameClockLive(game: { status?: string | null; quarter?: string | null }): boolean {
+export function isGameClockLive(game: {
+  status?: string | null;
+  quarter?: string | null;
+  is_clock_running?: boolean | null;
+}): boolean {
+  if (typeof game.is_clock_running === 'boolean') return game.is_clock_running;
   const code = getQuarterCode(game);
   return code !== 'FINAL' && code !== 'HALFTIME';
 }
@@ -181,7 +192,7 @@ export function gameMatchesQuery(
 }
 
 export function eventMatchesNotificationPref(
-  event: { player_id: string; event_type: string; description: string },
+  event: { player_id?: string | null; event_type: string; description: string },
   pref: NotificationPref,
   favoritePlayerIds: string[],
 ): boolean {
@@ -190,13 +201,17 @@ export function eventMatchesNotificationPref(
     const haystack = `${event.event_type} ${event.description}`.toLowerCase();
     return haystack.includes('touchdown') || haystack.includes(' td') || haystack.endsWith('td');
   }
-  return favoritePlayerIds.includes(event.player_id);
+  return Boolean(event.player_id && favoritePlayerIds.includes(event.player_id));
 }
 
-export function playerBelongsToSchool(player: Player, school: string): boolean {
+export function playerBelongsToSchool(
+  player: Player | null | undefined,
+  school?: string | null,
+): boolean {
+  if (!school) return false;
   const needle = school.trim().toLowerCase();
   if (!needle) return false;
-  return [player.school_name, player.team ?? '']
-    .filter(Boolean)
+  return [player?.school_name, player?.team_name, player?.team]
+    .filter((value): value is string => Boolean(value))
     .some((value) => value.toLowerCase().includes(needle) || needle.includes(value.toLowerCase()));
 }

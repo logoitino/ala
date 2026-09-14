@@ -31,6 +31,9 @@ grant select, update on public.games to anon, authenticated;
 alter table public.game_events
   add column if not exists game_id uuid references public.games (id) on delete set null;
 
+alter table public.games add column if not exists clock text not null default '12:00';
+alter table public.games add column if not exists created_at timestamptz not null default now();
+
 do $$
 begin
   alter publication supabase_realtime add table public.games;

@@ -2,6 +2,7 @@ import 'react-native-url-polyfill/auto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 
 import type { Database } from '@/types/database';
 
@@ -18,15 +19,72 @@ if (!isSupabaseConfigured) {
   );
 }
 
+type AuthStorage = {
+  getItem: (key: string) => string | null | Promise<string | null>;
+  setItem: (key: string, value: string) => void | Promise<void>;
+  removeItem: (key: string) => void | Promise<void>;
+};
+
+const memoryStore = new Map<string, string>();
+
+const memoryStorage: AuthStorage = {
+  getItem: (key) => memoryStore.get(key) ?? null,
+  setItem: (key, value) => {
+    memoryStore.set(key, value);
+  },
+  removeItem: (key) => {
+    memoryStore.delete(key);
+  },
+};
+
+const isWebSSR = Platform.OS === 'web' && typeof window === 'undefined';
+
+const webStorage: AuthStorage = {
+  getItem: (key) => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key, value) => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(key, value);
+  },
+  removeItem: (key) => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.removeItem(key);
+  },
+};
+
+const authStorage: AuthStorage = isWebSSR
+  ? memoryStorage
+  : Platform.OS === 'web'
+    ? webStorage
+    : AsyncStorage;
+
 export const supabase = createClient<Database>(
   supabaseUrl ?? 'https://placeholder.supabase.co',
   supabaseAnonKey ?? 'public-anon-key',
   {
     auth: {
-      storage: AsyncStorage,
-      autoRefreshToken: true,
-      persistSession: true,
+      storage: authStorage,
+      autoRefreshToken: !isWebSSR,
+      persistSession: !isWebSSR,
       detectSessionInUrl: false,
     },
   },
 );
+
+let realtimeTopicSeq = 0;
+
+/**
+ * @purpose Unique Realtime channel topic so two hooks in the same tick never reuse a subscribed socket.
+ * @param prefix Stable label such as `live_game_{uuid}`.
+ * @returns `{prefix}_{n}` that is unique for this JS runtime.
+ */
+export function nextRealtimeTopic(prefix: string): string {
+  realtimeTopicSeq += 1;
+  return `${prefix}_${realtimeTopicSeq}`;
+}

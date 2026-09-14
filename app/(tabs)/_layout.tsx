@@ -1,85 +1,69 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Platform, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FanTabBar } from '@/components/UI/FanTabBar';
+import { UploadVideoModal } from '@/components/Reels/UploadVideoModal';
 import { RoleGate } from '@/context/RoleGate';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useUploadSheet } from '@/context/UploadSheetContext';
 import { colors } from '@/constants/theme';
+import { useRoster } from '@/hooks/useRoster';
 
-const TAB_ICON_SIZE = 24;
+function FanTabs() {
+  const { players } = useRoster();
+  const { visible, closeUpload, notifyUploaded } = useUploadSheet();
+  const { live } = useAppRuntime();
+
+  return (
+    <SafeAreaView edges={['left', 'right']} style={[styles.shell, { backgroundColor: live.theme.background }]}>
+      <Tabs
+        detachInactiveScreens={false}
+        tabBar={(props) => <FanTabBar {...props} />}
+        screenOptions={{
+          headerShown: false,
+          freezeOnBlur: true,
+          animation: 'fade',
+          transitionSpec: {
+            animation: 'timing',
+            config: { duration: 180 },
+          },
+          sceneStyle: { backgroundColor: live.theme.background },
+          tabBarStyle: {
+            backgroundColor: 'transparent',
+            borderTopWidth: 0,
+            elevation: 0,
+            overflow: 'visible',
+          },
+        }}
+      >
+        <Tabs.Screen name="index" options={{ title: 'Home', tabBarLabel: 'Home', href: live.tabs.home ? undefined : null }} />
+        <Tabs.Screen name="local" options={{ title: 'Local', tabBarLabel: 'Local', href: live.tabs.local ? undefined : null }} />
+        <Tabs.Screen name="spotlight" options={{ title: 'Spotlight', tabBarLabel: 'Spotlight', href: live.tabs.spotlight ? undefined : null }} />
+        <Tabs.Screen name="drip" options={{ title: 'Drip', tabBarLabel: 'Drip', href: live.tabs.drip ? undefined : null }} />
+        <Tabs.Screen name="shop" options={{ href: null, title: 'Drip' }} />
+        <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarLabel: 'Profile', href: live.tabs.profile ? undefined : null }} />
+        <Tabs.Screen name="athlete" options={{ href: null, title: 'Athlete' }} />
+        <Tabs.Screen name="user" options={{ href: null, title: 'Athlete' }} />
+        <Tabs.Screen name="receipts" options={{ href: null, title: 'Receipts' }} />
+      </Tabs>
+      <UploadVideoModal
+        visible={visible && live.tabs.upload}
+        players={players}
+        onClose={closeUpload}
+        onUploaded={(reel) => {
+          notifyUploaded(reel);
+          closeUpload();
+        }}
+      />
+    </SafeAreaView>
+  );
+}
 
 export default function FanTabsLayout() {
   return (
-    <RoleGate allow={['guest', 'fan']}>
-      <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.shell}>
-        <Tabs
-          safeAreaInsets={{ bottom: 0, left: 0, right: 0 }}
-          screenOptions={{
-            headerShown: false,
-            tabBarActiveTintColor: colors.deepGreen,
-            tabBarInactiveTintColor: colors.textMuted,
-            tabBarLabelStyle: {
-              fontSize: 11,
-              fontWeight: '700',
-              marginBottom: 2,
-            },
-            tabBarItemStyle: {
-              paddingTop: 4,
-            },
-            tabBarStyle: {
-              backgroundColor: colors.surface,
-              borderTopColor: colors.border,
-              borderTopWidth: StyleSheet.hairlineWidth,
-              height: 58,
-              paddingTop: 4,
-              paddingBottom: 6,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-          }}
-        >
-          <Tabs.Screen
-            name="index"
-            options={{
-              title: 'Reel',
-              tabBarLabel: 'Reel',
-              tabBarIcon: ({ color }) => (
-                <Ionicons name="play-circle" size={TAB_ICON_SIZE} color={color} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="local"
-            options={{
-              title: 'Local',
-              tabBarLabel: 'Local',
-              tabBarIcon: ({ color }) => (
-                <Ionicons name="location" size={TAB_ICON_SIZE} color={color} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="shop"
-            options={{
-              title: 'Locker Room',
-              tabBarLabel: 'Locker Room',
-              tabBarIcon: ({ color }) => (
-                <Ionicons name="bag-handle" size={TAB_ICON_SIZE} color={color} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="profile"
-            options={{
-              title: 'My Hub',
-              tabBarLabel: 'My Hub',
-              tabBarIcon: ({ color }) => (
-                <Ionicons name="person" size={TAB_ICON_SIZE} color={color} />
-              ),
-            }}
-          />
-        </Tabs>
-      </SafeAreaView>
+    <RoleGate allow={['guest', 'fan', 'athlete']}>
+      <FanTabs />
     </RoleGate>
   );
 }
@@ -87,6 +71,14 @@ export default function FanTabsLayout() {
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
+    ...Platform.select({
+      web: {
+        width: '100%',
+        maxWidth: 430,
+        alignSelf: 'center',
+      },
+      default: {},
+    }),
   },
 });

@@ -1,5 +1,6 @@
 import { Checkbox } from 'expo-checkbox';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
 import { FEE_AMOUNT } from '@/data/players';
@@ -19,15 +20,15 @@ export function FeeCheckbox({ playerName, checked, onChange }: FeeCheckboxProps)
       style={styles.row}
     >
       <Checkbox
+        pointerEvents="none"
         value={checked}
-        onValueChange={onChange}
-        color={checked ? colors.primary : undefined}
+        color={checked ? colors.deepGreen : undefined}
         style={styles.checkbox}
       />
       <View style={styles.copy}>
         <Text style={styles.label}>
           Add ${FEE_AMOUNT.toFixed(2)} to cover transaction fees so {playerName} gets 100% of your
-          support.
+          Mālo.
         </Text>
       </View>
     </Pressable>

@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
 
@@ -24,7 +25,7 @@ export function TabSwitcher({ value, onChange }: TabSwitcherProps) {
         onPress={() => onChange('rosters')}
         style={[styles.tab, value === 'rosters' && styles.tabActive]}
       >
-        <Text style={[styles.label, value === 'rosters' && styles.labelActive]}>Team Rosters</Text>
+        <Text style={[styles.label, value === 'rosters' && styles.labelActive]}>Rosters & Mālo</Text>
       </Pressable>
     </View>
   );
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.deepGreen,
   },
   label: {
     fontSize: 13,
@@ -55,6 +56,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   labelActive: {
-    color: '#FFFFFF',
+    color: colors.onAccent,
   },
 });

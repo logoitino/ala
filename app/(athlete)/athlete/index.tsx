@@ -3,10 +3,13 @@ import { ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import { Stack } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
+import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
+import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { displayValue } from '@/data/players';
+import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useRoster } from '@/hooks/useRoster';
 import { supabase } from '@/lib/supabase';
 import type { TipLedgerEntry } from '@/types/database';
@@ -14,6 +17,7 @@ import type { TipLedgerEntry } from '@/types/database';
 export default function AthleteHomeScreen() {
   const { profile } = useAuth();
   const { players } = useRoster();
+  const pending = usePendingPlayerTags();
   const [tips, setTips] = useState<TipLedgerEntry[]>([]);
   const [headline, setHeadline] = useState(profile?.full_name ?? '');
 
@@ -43,9 +47,21 @@ export default function AthleteHomeScreen() {
     <ScreenShell>
       <Stack.Screen options={{ title: 'Athlete' }} />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Athlete HQ</Text>
+        <ScreenHeading
+          kicker="Tapua'i athlete"
+          title="Athlete HQ"
+          lede="Private Mālo ledger, badges, and confirm fan tags that name you."
+        />
+        <TagConfirmList
+          tags={pending.tags}
+          busyId={pending.busyId}
+          error={pending.error}
+          emptyText="No one has tagged you in a clip that still needs That's me."
+          onConfirm={(id) => void pending.resolve(id, 'confirm')}
+          onReject={(id) => void pending.resolve(id, 'reject')}
+        />
         <DashboardPanel
-          title="Private tip ledger"
+          title="Private Mālo ledger"
           body={
             athlete
               ? `${displayValue(athlete.name)} has received $${(total / 100).toFixed(2)} from fans.`
@@ -53,7 +69,7 @@ export default function AthleteHomeScreen() {
           }
         >
           {tips.length === 0 ? (
-            <Text style={styles.muted}>Tips will appear here after PaymentSheet checkouts.</Text>
+            <Text style={styles.muted}>Mālo will appear here after PaymentSheet checkouts.</Text>
           ) : (
             tips.map((tip) => (
               <Text key={tip.id} style={styles.row}>
@@ -87,11 +103,6 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 14,
   },
-  heading: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.text,
-  },
   muted: {
     color: colors.textMuted,
     fontSize: 14,
@@ -104,7 +115,7 @@ const styles = StyleSheet.create({
   badge: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.deepGreen,
   },
   input: {
     borderWidth: 1,

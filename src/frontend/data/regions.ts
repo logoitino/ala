@@ -14,7 +14,7 @@ export const UTAH_REGIONS: UtahRegion[] = [
   },
   {
     id: 'salt-lake',
-    label: 'Salt Lake Valley',
+    label: 'Salt Lake',
     zipPrefixes: ['84020', '84047', '84070', '84092', '84093', '84094', '84101', '84106', '84117', '84121'],
     keywords: ['alta', 'brighton', 'jordan', 'cottonwood', 'olympus', 'highland'],
   },
@@ -30,6 +30,24 @@ export const UTAH_REGIONS: UtahRegion[] = [
     zipPrefixes: ['84401', '84403', '84404', '84405', '84414'],
     keywords: ['weber', 'ogden', 'roy', 'fremont'],
   },
+];
+
+export const LOCAL_FILTERS = [
+  { id: 'utah-county', label: 'Utah County' },
+  { id: 'salt-lake', label: 'Salt Lake' },
+  { id: 'rivalry', label: 'Rivalry Games' },
+] as const;
+
+export type LocalFilterId = (typeof LOCAL_FILTERS)[number]['id'];
+
+const RIVALRY_PAIRS: Array<[string, string]> = [
+  ['westlake', 'lone peak'],
+  ['westlake', 'skyridge'],
+  ['lone peak', 'american fork'],
+  ['ala', 'skyridge'],
+  ['american fork', 'pleasant grove'],
+  ['alta', 'brighton'],
+  ['olympus', 'highland'],
 ];
 
 export function regionForZip(zip: string): UtahRegion | null {
@@ -61,4 +79,35 @@ export function gameInRegion(
     .join(' ')
     .toLowerCase();
   return region.keywords.some((keyword) => haystack.includes(keyword));
+}
+
+function gameHaystack(game: {
+  home_team: string;
+  away_team: string;
+  home_school: string;
+  away_school: string;
+  venue?: string;
+}): string {
+  return [
+    game.home_team,
+    game.away_team,
+    game.home_school,
+    game.away_school,
+    game.venue ?? '',
+  ]
+    .join(' ')
+    .toLowerCase();
+}
+
+export function isRivalryGame(game: {
+  home_team: string;
+  away_team: string;
+  home_school: string;
+  away_school: string;
+  venue?: string;
+}): boolean {
+  const haystack = gameHaystack(game);
+  return RIVALRY_PAIRS.some(
+    ([a, b]) => haystack.includes(a) && haystack.includes(b),
+  );
 }

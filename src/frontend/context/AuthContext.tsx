@@ -11,42 +11,64 @@ import {
   useState,
 } from 'react';
 
-import { ROLE_HOME } from '@/lib/roles';
+import { deriveRoles, isAdminAccess, isUserRole, ROLE_HOME, addUserRoleRemote, parseRoles } from '@/lib/roles';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { subscribeProfileAura } from '@/lib/aura';
+import {
+  fetchSchoolTeam,
+  readAthleteOnboarding,
+  saveAthleteOnboardingRemote,
+  type AthleteOnboarding,
+} from '@/lib/teams';
 import type { Profile, UserRole } from '@/types/database';
 
 const DEV_ROLE_KEY = 'tapuai.devRole';
+const STUDIO_KEY = 'tapuai.studioUnlocked';
 
 type AuthContextValue = {
+  /** Active RoleGate / Studio preview value. Fan chrome never shows this. */
   role: UserRole;
+  /** Dual capability list, e.g. `['fan', 'athlete']`. */
+  roles: UserRole[];
+  /** Fan View vs Athlete Management View (dual accounts). */
+  activeRole: 'fan' | 'athlete';
+  isAthlete: boolean;
+  isAdmin: boolean;
+  /** Local Studio session so `/admin` stays open while previewing Fan / Operator. */
+  studioUnlocked: boolean;
+  canReceiveTips: boolean;
+  isVerified: boolean;
   session: Session | null;
   user: User | null;
   profile: Profile | null;
   loading: boolean;
   switchRole: (role: UserRole) => Promise<void>;
+  /** Preview a production surface from Studio without losing portal access. */
+  previewAsRole: (role: UserRole) => Promise<void>;
+  unlockStudio: () => Promise<void>;
+  lockStudio: () => Promise<void>;
+  setActiveRole: (role: 'fan' | 'athlete') => Promise<void>;
+  addUserRole: (role: UserRole) => Promise<void>;
+  completeAthleteOnboarding: (onboard: AthleteOnboarding) => Promise<void>;
+  refreshProfile: () => Promise<Profile | null>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function isUserRole(value: string | null | undefined): value is UserRole {
-  return (
-    value === 'guest' ||
-    value === 'fan' ||
-    value === 'athlete' ||
-    value === 'parent' ||
-    value === 'operator' ||
-    value === 'booster' ||
-    value === 'sponsor' ||
-    value === 'admin'
-  );
-}
-
+/**
+ * @purpose Session, `profiles` row, dual Fan/Athlete flags, Studio unlock, and Account Capability conversion.
+ * @returns Auth bag including `roles`, `activeRole`, `isAthlete`, `isAdmin`, `studioUnlocked`, `canReceiveTips`, and `isVerified`.
+ * @sideEffects Supabase Auth + `profiles` SELECT/UPDATE; `add_user_role` RPC; `schools_and_teams` hydrate; AsyncStorage `tapuai.devRole` / `tapuai.studioUnlocked` / `tapuai.athleteOnboarding`; `subscribeProfileAura`.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [role, setRole] = useState<UserRole>('guest');
+  const [role, setRole] = useState<UserRole>('fan');
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [extraRoles, setExtraRoles] = useState<UserRole[]>([]);
+  const [activeRoleOverride, setActiveRoleOverride] = useState<'fan' | 'athlete' | null>(null);
+  const [studioUnlocked, setStudioUnlocked] = useState(false);
 
   const loadProfile = useCallback(async (userId: string | undefined) => {
     if (!userId || !isSupabaseConfigured) {
@@ -61,6 +83,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     const next = (data as Profile | null) ?? null;
+    if (next?.school_id) {
+      next.team = await fetchSchoolTeam(next.school_id);
+    } else {
+      const local = await readAthleteOnboarding();
+      if (next && local?.team) next.team = local.team;
+    }
     setProfile(next);
     return next;
   }, []);
@@ -69,7 +97,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
 
     const bootstrap = async () => {
-      const storedRole = await AsyncStorage.getItem(DEV_ROLE_KEY);
+      const [storedRole, storedStudio] = await Promise.all([
+        AsyncStorage.getItem(DEV_ROLE_KEY),
+        AsyncStorage.getItem(STUDIO_KEY),
+      ]);
       const nextSession = isSupabaseConfigured
         ? (await supabase.auth.getSession()).data.session
         : null;
@@ -80,13 +111,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const nextProfile = await loadProfile(nextSession?.user.id);
       if (!active) return;
 
-      if (isUserRole(storedRole)) {
+      let unlocked = storedStudio === '1';
+      if (storedRole === 'admin') {
+        unlocked = true;
+        setRole('fan');
+        await AsyncStorage.setItem(DEV_ROLE_KEY, 'fan');
+        await AsyncStorage.setItem(STUDIO_KEY, '1');
+      } else if (isUserRole(storedRole)) {
         setRole(storedRole);
-      } else if (nextProfile && isUserRole(nextProfile.role)) {
+      } else if (nextProfile && isUserRole(nextProfile.role) && nextProfile.role !== 'admin') {
         setRole(nextProfile.role);
       } else {
-        setRole('guest');
+        setRole('fan');
       }
+      setStudioUnlocked(unlocked);
       setLoading(false);
     };
 
@@ -118,16 +156,175 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [router],
   );
 
+  const unlockStudio = useCallback(async () => {
+    setStudioUnlocked(true);
+    await AsyncStorage.setItem(STUDIO_KEY, '1');
+  }, []);
+
+  const lockStudio = useCallback(async () => {
+    setStudioUnlocked(false);
+    await AsyncStorage.removeItem(STUDIO_KEY);
+    if (role === 'admin') {
+      setRole('fan');
+      await AsyncStorage.setItem(DEV_ROLE_KEY, 'fan');
+    }
+    router.replace('/' as Href);
+  }, [role, router]);
+
+  const previewAsRole = useCallback(
+    async (nextRole: UserRole) => {
+      setStudioUnlocked(true);
+      await AsyncStorage.setItem(STUDIO_KEY, '1');
+      await switchRole(nextRole);
+    },
+    [switchRole],
+  );
+
+  useEffect(() => {
+    return subscribeProfileAura((userId, auraPoints) => {
+      setProfile((current) => {
+        if (!current) return current;
+        if (current.user_id === userId || current.id === userId) {
+          return { ...current, aura_points: auraPoints };
+        }
+        return current;
+      });
+    });
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    return loadProfile(session?.user.id);
+  }, [loadProfile, session?.user.id]);
+
+  const roles = useMemo(() => {
+    const merged = [...parseRoles(profile?.roles), ...extraRoles];
+    return deriveRoles(role, { role: profile?.role, roles: merged });
+  }, [extraRoles, profile, role]);
+  const isAthlete = roles.includes('athlete');
+  const isAdmin = studioUnlocked || isAdminAccess({ role, roles, profile });
+  const isVerified = Boolean(profile?.is_verified) || isAthlete;
+  const canReceiveTips = isAthlete;
+  const activeRole: 'fan' | 'athlete' = useMemo(() => {
+    if (!isAthlete) return 'fan';
+    if (activeRoleOverride === 'fan' || activeRoleOverride === 'athlete') return activeRoleOverride;
+    const stored = profile?.active_role;
+    if (stored === 'fan' || stored === 'athlete') return stored;
+    if (role === 'athlete') return 'athlete';
+    return 'fan';
+  }, [activeRoleOverride, isAthlete, profile?.active_role, role]);
+
+  const addUserRole = useCallback(
+    async (newRole: UserRole) => {
+      setExtraRoles((current) => (current.includes(newRole) ? current : [...current, newRole]));
+      if (newRole === 'athlete') setActiveRoleOverride('athlete');
+      setProfile((current) => {
+        if (!current) return current;
+        const nextRoles = Array.from(new Set([...parseRoles(current.roles), newRole, 'fan']));
+        return {
+          ...current,
+          roles: nextRoles,
+          role: newRole === 'admin' ? 'admin' : newRole === 'athlete' ? 'athlete' : current.role,
+          is_admin: newRole === 'admin' ? true : current.is_admin,
+          active_role: newRole === 'athlete' ? 'athlete' : current.active_role,
+          is_verified: newRole === 'athlete' ? true : current.is_verified,
+        };
+      });
+      const remote = await addUserRoleRemote(newRole);
+      if (remote && remote.length > 0) {
+        setProfile((current) =>
+          current
+            ? {
+                ...current,
+                roles: remote,
+                role: newRole === 'admin' ? 'admin' : newRole === 'athlete' ? 'athlete' : current.role,
+                is_admin: newRole === 'admin' ? true : current.is_admin,
+                active_role: newRole === 'athlete' ? 'athlete' : current.active_role,
+                is_verified: newRole === 'athlete' ? true : current.is_verified,
+              }
+            : current,
+        );
+        await loadProfile(session?.user.id);
+      }
+    },
+    [loadProfile, session?.user.id],
+  );
+
+  const completeAthleteOnboarding = useCallback(
+    async (onboard: AthleteOnboarding) => {
+      await addUserRole('athlete');
+      await saveAthleteOnboardingRemote(session?.user.id, onboard);
+      setProfile((current) =>
+        current
+          ? {
+              ...current,
+              school_id: onboard.team.id,
+              athlete_division: onboard.team.division,
+              athlete_sport: onboard.sport,
+              athlete_jersey: onboard.jersey,
+              athlete_position: onboard.position,
+              athlete_class_year: onboard.classYear,
+              team: onboard.team,
+            }
+          : current,
+      );
+    },
+    [addUserRole, session?.user.id],
+  );
+
+  const setActiveRole = useCallback(
+    async (nextRole: 'fan' | 'athlete') => {
+      setActiveRoleOverride(nextRole);
+      setProfile((current) => (current ? { ...current, active_role: nextRole } : current));
+      if (!session?.user.id || !isSupabaseConfigured) return;
+      await supabase.from('profiles').update({ active_role: nextRole }).eq('user_id', session.user.id);
+    },
+    [session?.user.id],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       role,
+      roles,
+      activeRole,
+      isAthlete,
+      isAdmin,
+      studioUnlocked,
+      canReceiveTips,
+      isVerified,
       session,
       user: session?.user ?? null,
       profile,
       loading,
       switchRole,
+      previewAsRole,
+      unlockStudio,
+      lockStudio,
+      setActiveRole,
+      addUserRole,
+      completeAthleteOnboarding,
+      refreshProfile,
     }),
-    [loading, profile, role, session, switchRole],
+    [
+      activeRole,
+      addUserRole,
+      canReceiveTips,
+      completeAthleteOnboarding,
+      isAthlete,
+      isAdmin,
+      isVerified,
+      loading,
+      lockStudio,
+      previewAsRole,
+      profile,
+      refreshProfile,
+      role,
+      roles,
+      session,
+      setActiveRole,
+      studioUnlocked,
+      switchRole,
+      unlockStudio,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
