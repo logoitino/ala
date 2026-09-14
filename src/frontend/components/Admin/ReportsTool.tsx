@@ -26,7 +26,7 @@ import { fetchAdminOpsInbox } from '@/lib/adminCatalog';
 import { formatTipDollars } from '@/lib/reels';
 import { FOCAL } from '@/theme/motion';
 
-type ReportId = 'health' | 'engagement' | 'money' | 'content' | 'audience' | 'live' | 'reliability' | 'leaders';
+type ReportId = 'health' | 'usage' | 'engagement' | 'money' | 'content' | 'audience' | 'live' | 'reliability' | 'leaders';
 
 const EMPTY: AdminReports = {
   generatedAt: null,
@@ -36,12 +36,18 @@ const EMPTY: AdminReports = {
   audience: {},
   live: {},
   reliability: {},
+  usage: {},
+  tabs: [],
+  features: [],
+  issues: [],
+  scroll: [],
   leaders: { malo: [], hype: [], schools: [] },
-  series: { clips: [], malo: [], stalls: [] },
+  series: { clips: [], malo: [], stalls: [], dwell: [] },
 };
 
 const SECTIONS: { id: ReportId; label: string; hint: string; href?: Href }[] = [
   { id: 'health', label: 'Health', hint: 'Pass / warn / fail across the stack' },
+  { id: 'usage', label: 'Usage', hint: 'Where fans scroll, stay, tap, and report' },
   { id: 'engagement', label: 'Engagement', hint: 'How Highlights ⚡ and Crew are used', href: '/admin/highlights' },
   { id: 'money', label: 'Money', hint: 'Mālo windows, payouts, subscribe', href: '/admin/money' },
   { id: 'content', label: 'Content', hint: 'Vault, flags, Flash Unlock, mix', href: '/admin/moderation' },
@@ -100,12 +106,33 @@ const LABELS: Record<string, string> = {
   checkouts_24h: 'Checkout events (24h)',
   avg_checkout_ms_24h: 'Avg Mālo checkout ms',
   events_24h: 'Telemetry events (24h)',
+  sessions_24h: 'Tab sessions (24h)',
+  dwell_ms_24h: 'Time on tabs (24h)',
+  dwell_ms_7d: 'Time on tabs (7d)',
+  taps_24h: 'Feature taps (24h)',
+  taps_7d: 'Feature taps (7d)',
+  issues_24h: 'Control issues (24h)',
+  issues_7d: 'Control issues (7d)',
+  feedback_bugs_open: 'Open bug reports',
+  avg_scroll_pct_7d: 'Avg scroll depth (7d)',
 };
 
 const STATUS_RANK: Record<AdminHealthStatus, number> = { fail: 0, warn: 1, ok: 2 };
 
+function formatDwell(ms: number): string {
+  const sec = Math.max(0, Math.round(ms / 1000));
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  const rem = sec % 60;
+  if (min < 60) return rem ? `${min}m ${rem}s` : `${min}m`;
+  const hr = Math.floor(min / 60);
+  return `${hr}h ${min % 60}m`;
+}
+
 function formatValue(key: string, value: number): string {
   if (key.includes('cents')) return formatTipDollars(value);
+  if (key.includes('dwell_ms')) return formatDwell(value);
+  if (key.includes('scroll_pct')) return `${value}%`;
   return value.toLocaleString();
 }
 
@@ -117,7 +144,21 @@ function cardsFor(section: AdminReportSection) {
   }));
 }
 
-function LeaderList({ title, rows, cents }: { title: string; rows: AdminReportLeader[]; cents?: boolean }) {
+function LeaderList({
+  title,
+  rows,
+  kind,
+}: {
+  title: string;
+  rows: AdminReportLeader[];
+  kind?: 'cents' | 'dwell' | 'pct';
+}) {
+  const meta = (value: number) => {
+    if (kind === 'cents') return formatTipDollars(value);
+    if (kind === 'dwell') return formatDwell(value);
+    if (kind === 'pct') return `${value}%`;
+    return value.toLocaleString();
+  };
   return (
     <View style={styles.leaderBlock}>
       <Text style={styles.section}>{title}</Text>
@@ -125,7 +166,7 @@ function LeaderList({ title, rows, cents }: { title: string; rows: AdminReportLe
         <AdminEmpty text="No rows yet." />
       ) : (
         rows.map((row, index) => (
-          <AdminRow key={`${title}-${row.label}-${index}`} title={`${index + 1}. ${row.label}`} meta={cents ? formatTipDollars(row.value) : row.value.toLocaleString()} />
+          <AdminRow key={`${title}-${row.label}-${index}`} title={`${index + 1}. ${row.label}`} meta={meta(row.value)} />
         ))
       )}
     </View>
@@ -195,7 +236,7 @@ export function ReportsTool() {
   return (
     <AdminPage
       title="Reports"
-      lede="Health checks first, then graphs for how Highlights ⚡, Mālo, and the live board are moving."
+      lede="Health first, then where fans scroll, which tabs they stay on, what they tap, and which controls fail."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
@@ -232,6 +273,21 @@ export function ReportsTool() {
               }}
             />
           ))}
+        </>
+      ) : null}
+
+      {tab === 'usage' ? (
+        <>
+          <AdminBarChart title="Time on tabs · 7 days" points={reports.series.dwell} formatValue={formatDwell} />
+          <AdminBarChart
+            title="Where they stay"
+            points={reports.tabs.map((row) => ({ day: row.label.slice(0, 10), value: row.value }))}
+            formatValue={formatDwell}
+          />
+          <LeaderList title="Time on tabs (7d)" rows={reports.tabs} kind="dwell" />
+          <LeaderList title="Features they use" rows={reports.features} />
+          <LeaderList title="Hottest issues" rows={reports.issues} />
+          <LeaderList title="Scroll depth" rows={reports.scroll} kind="pct" />
         </>
       ) : null}
 
@@ -274,7 +330,7 @@ export function ReportsTool() {
             formatValue={formatTipDollars}
             accent={FOCAL.electricGold}
           />
-          <LeaderList title="Mālo received" rows={reports.leaders.malo} cents />
+          <LeaderList title="Mālo received" rows={reports.leaders.malo} kind="cents" />
           <LeaderList title="Hottest clips" rows={reports.leaders.hype} />
           <LeaderList title="Athletes by school" rows={reports.leaders.schools} />
         </>
@@ -289,7 +345,7 @@ export function ReportsTool() {
             </View>
           ))}
         </View>
-      ) : tab !== 'health' && tab !== 'leaders' && cards.length === 0 ? (
+      ) : tab !== 'health' && tab !== 'leaders' && tab !== 'usage' && cards.length === 0 ? (
         <AdminEmpty text="No rows in this report yet." />
       ) : null}
 

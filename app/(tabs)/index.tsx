@@ -32,6 +32,7 @@ import { useFanTipHistory } from '@/hooks/useFanTipHistory';
 import { useLiveGame } from '@/hooks/useLiveGame';
 import { useReels } from '@/hooks/useReels';
 import { useRoster } from '@/hooks/useRoster';
+import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { fetchSquadAthleteIds } from '@/lib/crew';
 import { playerFromReel, readHiddenReelIds, reelHiddenForUser, reelToClip } from '@/lib/reels';
 import { userProfileHref } from '@/lib/navigation';
@@ -65,6 +66,7 @@ export default function HighlightsTab() {
   const { receipts } = useFanTipHistory();
   const liveGame = useLiveGame();
   const liveGameId = liveGame.gameId;
+  const { noteScrollPct, trackFeature } = useSurfaceUsage('home');
   const spotlight = useActiveSpotlight(user?.id, players, { enabled: !authLoading && runtime.layouts.spotlightModal });
   const [pageHeight, setPageHeight] = useState(0);
   const [chromeHeight, setChromeHeight] = useState(96);
@@ -179,6 +181,14 @@ export default function HighlightsTab() {
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 80 }).current;
 
   useEffect(() => {
+    if (feed.length <= 1) {
+      if (feed.length === 1) noteScrollPct(100);
+      return;
+    }
+    noteScrollPct((activeIndex / (feed.length - 1)) * 100);
+  }, [activeIndex, feed.length, noteScrollPct]);
+
+  useEffect(() => {
     let cancelled = false;
     const ready = () => {
       if (!cancelled) setCacheReady(true);
@@ -214,23 +224,26 @@ export default function HighlightsTab() {
 
   const tipPlayer = useCallback(async (player: Player | null, reelId?: string) => {
     if (!player) return;
+    trackFeature('malo');
     setTipTarget({ player, reelId });
-  }, []);
+  }, [trackFeature]);
 
   const switchFeed = useCallback((id: HighlightFeedFilter) => {
     closeSearch();
+    trackFeature(`feed.${id}`);
     setFeedFilter(id);
     setActiveIndex(0);
     requestAnimationFrame(() => {
       listRef.current?.scrollToOffset({ offset: 0, animated: false });
     });
-  }, [closeSearch]);
+  }, [closeSearch, trackFeature]);
 
   const jumpToClip = useCallback((clipId: string) => {
     pendingClipId.current = clipId;
     closeSearch();
+    trackFeature('home_search_clip');
     setFeedFilter('all');
-  }, [closeSearch]);
+  }, [closeSearch, trackFeature]);
 
   const jumpToSpotlightClip = useCallback(
     (reelId?: string | null, playerId?: string) => {
@@ -394,6 +407,7 @@ export default function HighlightsTab() {
                   closeSearch();
                   return;
                 }
+                trackFeature('home_search');
                 setSearchOpen(true);
               }}
             >
@@ -444,6 +458,7 @@ export default function HighlightsTab() {
           onApplyQuery={setSearchQuery}
           onSelectAthlete={(playerId) => {
             closeSearch();
+            trackFeature('athlete_profile');
             router.push(userProfileHref(playerId));
           }}
           onSelectClip={jumpToClip}

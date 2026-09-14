@@ -516,6 +516,13 @@ create table if not exists public.telemetry_logs (
   created_at timestamptz not null default now()
 );
 
+alter table public.telemetry_logs add column if not exists video_id text;
+alter table public.telemetry_logs add column if not exists channel text;
+alter table public.telemetry_logs add column if not exists step text;
+alter table public.telemetry_logs add column if not exists duration_ms integer;
+alter table public.telemetry_logs add column if not exists attempts integer;
+alter table public.telemetry_logs add column if not exists payload jsonb not null default '{}'::jsonb;
+
 create index if not exists telemetry_logs_created_at_idx on public.telemetry_logs (created_at desc);
 create index if not exists telemetry_logs_event_type_idx on public.telemetry_logs (event_type, created_at desc);
 
@@ -2872,7 +2879,7 @@ as $$
     'audience', jsonb_build_object(
       'profiles', (select count(*)::int from public.profiles),
       'athletes', (select count(*)::int from public.players),
-      'verified', (select count(*)::int from public.profiles where coalesce(is_verified, false) = true or role = 'athlete'),
+      'verified', (select count(*)::int from public.profiles where coalesce(is_verified_athlete, false) = true or role = 'athlete'),
       'admins', (select count(*)::int from public.profiles where coalesce(is_admin, false) = true),
       'schools', (select count(*)::int from public.schools_and_teams),
       'pending_verify', (select count(*)::int from public.verification_requests where status = 'pending')
@@ -2959,7 +2966,112 @@ as $$
             group by 1
           ) c on c.day = d::date
         ) bucket
+      ),
+      'dwell', (
+        select coalesce(jsonb_agg(jsonb_build_object('label', to_char(bucket.d, 'Dy'), 'value', bucket.n) order by bucket.d), '[]'::jsonb)
+        from (
+          select d::date as d, coalesce(c.n, 0)::int as n
+          from generate_series((timezone('utc', now()))::date - 6, (timezone('utc', now()))::date, interval '1 day') as d
+          left join (
+            select created_at::date as day, coalesce(sum(duration_ms), 0)::int as n
+            from public.telemetry_logs
+            where event_type = 'tab_dwell'
+            group by 1
+          ) c on c.day = d::date
+        ) bucket
       )
+    ),
+    'usage', jsonb_build_object(
+      'sessions_24h', (select count(*)::int from public.telemetry_logs where event_type = 'tab_dwell' and created_at >= timezone('utc', now()) - interval '24 hours'),
+      'dwell_ms_24h', (select coalesce(sum(duration_ms), 0)::int from public.telemetry_logs where event_type = 'tab_dwell' and created_at >= timezone('utc', now()) - interval '24 hours'),
+      'dwell_ms_7d', (select coalesce(sum(duration_ms), 0)::int from public.telemetry_logs where event_type = 'tab_dwell' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'taps_24h', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and created_at >= timezone('utc', now()) - interval '24 hours'),
+      'taps_7d', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'issues_24h', (select count(*)::int from public.telemetry_logs where event_type = 'ui_issue' and created_at >= timezone('utc', now()) - interval '24 hours'),
+      'issues_7d', (select count(*)::int from public.telemetry_logs where event_type = 'ui_issue' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'feedback_bugs_open', (select count(*)::int from public.app_feedback where kind = 'bug' and status not in ('shipped', 'declined')),
+      'avg_scroll_pct_7d', (select coalesce(avg(duration_ms), 0)::int from public.telemetry_logs where event_type = 'surface_scroll' and created_at >= timezone('utc', now()) - interval '7 days')
+    ),
+    'tabs', (
+      select coalesce(jsonb_agg(jsonb_build_object('label', ranked.label, 'value', ranked.value) order by ranked.value desc), '[]'::jsonb)
+      from (
+        select
+          case coalesce(channel, 'other')
+            when 'home' then 'Home'
+            when 'local' then 'Local'
+            when 'spotlight' then 'Spotlight'
+            when 'drip' then 'Drip'
+            when 'profile' then 'Profile'
+            when 'upload' then 'Upload'
+            else coalesce(nullif(channel, ''), 'Other')
+          end as label,
+          coalesce(sum(duration_ms), 0)::int as value
+        from public.telemetry_logs
+        where event_type = 'tab_dwell'
+          and created_at >= timezone('utc', now()) - interval '7 days'
+        group by 1
+        order by value desc
+        limit 8
+      ) ranked
+    ),
+    'features', (
+      select coalesce(jsonb_agg(jsonb_build_object('label', ranked.label, 'value', ranked.value) order by ranked.value desc), '[]'::jsonb)
+      from (
+        select coalesce(nullif(step, ''), 'unknown') as label, count(*)::int as value
+        from public.telemetry_logs
+        where event_type = 'feature_tap'
+          and created_at >= timezone('utc', now()) - interval '7 days'
+          and coalesce(step, '') not like 'tab.%'
+        group by 1
+        order by value desc
+        limit 8
+      ) ranked
+    ),
+    'issues', (
+      select coalesce(jsonb_agg(jsonb_build_object('label', ranked.label, 'value', ranked.value) order by ranked.value desc), '[]'::jsonb)
+      from (
+        select combined.label, sum(combined.n)::int as value
+        from (
+          select
+            coalesce(nullif(step, ''), 'control') || ' · ' || coalesce(nullif(channel, ''), 'app') as label,
+            count(*)::int as n
+          from public.telemetry_logs
+          where event_type = 'ui_issue'
+            and created_at >= timezone('utc', now()) - interval '7 days'
+          group by 1
+          union all
+          select coalesce(surface, 'other') || ' bug' as label, count(*)::int as n
+          from public.app_feedback
+          where kind = 'bug'
+            and status not in ('shipped', 'declined')
+          group by 1
+        ) combined
+        where combined.label <> ''
+        group by combined.label
+        order by value desc
+        limit 8
+      ) ranked
+    ),
+    'scroll', (
+      select coalesce(jsonb_agg(jsonb_build_object('label', ranked.label, 'value', ranked.value) order by ranked.value desc), '[]'::jsonb)
+      from (
+        select
+          case coalesce(channel, 'other')
+            when 'home' then 'Home'
+            when 'local' then 'Local'
+            when 'spotlight' then 'Spotlight'
+            when 'drip' then 'Drip'
+            when 'profile' then 'Profile'
+            else coalesce(nullif(channel, ''), 'Other')
+          end as label,
+          coalesce(avg(duration_ms), 0)::int as value
+        from public.telemetry_logs
+        where event_type = 'surface_scroll'
+          and created_at >= timezone('utc', now()) - interval '7 days'
+        group by 1
+        order by value desc
+        limit 8
+      ) ranked
     )
   );
 $$;

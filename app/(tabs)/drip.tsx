@@ -11,6 +11,7 @@ import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { DRIP_FILTERS, type DripFilter, type DripItem } from '@/data/shop';
 import { useDripCatalog } from '@/hooks/useDripCatalog';
+import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 
 /**
  * @purpose Drip marketplace: category pills, GearCard 0.96 press, ProductSheet checkout.
@@ -19,6 +20,7 @@ import { useDripCatalog } from '@/hooks/useDripCatalog';
 export default function DripTab() {
   const { live } = useAppRuntime();
   const { items: catalog } = useDripCatalog();
+  const { onScroll, trackFeature } = useSurfaceUsage('drip');
   const [filter, setFilter] = useState<DripFilter>('all');
   const [selected, setSelected] = useState<DripItem | null>(null);
 
@@ -33,18 +35,31 @@ export default function DripTab() {
 
   return (
     <TabScreen>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} onScroll={onScroll} scrollEventThrottle={400}>
         <ScreenHeading compact kicker={live.copy.dripKicker} title="Drip" lede={live.copy.dripLede} />
         <FilterPills
           items={DRIP_FILTERS}
           value={filter}
-          onChange={(id) => setFilter(id ?? 'all')}
+          onChange={(id) => {
+            const next = id ?? 'all';
+            trackFeature(`filter.${next}`);
+            setFilter(next);
+          }}
           accessibilityLabel="Drip categories"
         />
         {items.length === 0 ? (
           <Text style={styles.empty}>{live.copy.dripEmpty}</Text>
         ) : (
-          items.map((item) => <GearCard key={item.id} item={item} onPress={setSelected} />)
+          items.map((item) => (
+            <GearCard
+              key={item.id}
+              item={item}
+              onPress={(next) => {
+                trackFeature('drip_item');
+                setSelected(next);
+              }}
+            />
+          ))
         )}
       </ScrollView>
       <ProductSheet item={selected} onClose={() => setSelected(null)} />

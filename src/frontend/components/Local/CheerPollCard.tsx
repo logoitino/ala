@@ -6,6 +6,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { useCheerPoll, type CheerSide } from '@/hooks/useCheerPoll';
+import { telemetry } from '@/services/TelemetryManager';
 import { SPRING_CARD } from '@/theme/motion';
 
 type CheerPollCardProps = {
@@ -71,6 +72,7 @@ export function CheerPollCard({
   const handleVote = (side: CheerSide, event?: GestureResponderEvent) => {
     if (myVote === side) return;
     replayFromZero.current = true;
+    telemetry.trackFeature('cheer_poll', 'local');
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch {

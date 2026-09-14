@@ -177,6 +177,7 @@ export function useTipCheckout() {
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Something went wrong.';
         Alert.alert('Payment failed', message);
+        telemetry.trackIssue('checkout');
       } finally {
         setBusy(false);
       }

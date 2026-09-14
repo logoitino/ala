@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
@@ -17,6 +18,8 @@ import { colors, palette, radii } from '@/constants/theme';
 import { displayValue, getQuarterCode } from '@/data/players';
 import { useLiveGame } from '@/hooks/useLiveGame';
 import { OPERATOR_CALLOUTS } from '@/lib/operator';
+import { localGameHref } from '@/lib/navigation';
+import { telemetry } from '@/services/TelemetryManager';
 import { SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 
 type LiveMatchBannerProps = {
@@ -38,8 +41,8 @@ const TOAST_MS = 2200;
  * @param overlay Absolutely positions over highlight video.
  * @param playToasts When false, skip the postgres play toast (Reel uses `ReelCard` Broadcast banners).
  * @param live Optional parent snapshot; when set, this banner does not open its own Realtime channel.
- * @returns Compact live banner plus an optional play-by-play toast, both swipe-up dismissible.
- * @sideEffects `useLiveGame` Realtime unless `live` is passed; `Haptics.notificationAsync(Success)` when a play lands; Light impact on banner dismiss.
+ * @returns Compact live banner plus an optional play-by-play toast, both swipe-up dismissible. Tap the scoreboard to open the Local game.
+ * @sideEffects `useLiveGame` Realtime unless `live` is passed; `Haptics.notificationAsync(Success)` when a play lands; Light impact on banner dismiss; `feature_tap` live_banner on open.
  */
 export function LiveMatchBanner({
   gameId,
@@ -47,6 +50,7 @@ export function LiveMatchBanner({
   playToasts = true,
   live: liveFromParent,
 }: LiveMatchBannerProps) {
+  const router = useRouter();
   const hooked = useLiveGame(gameId, { enabled: !liveFromParent });
   const {
     game,
@@ -139,6 +143,11 @@ export function LiveMatchBanner({
       {isDismissed ? null : (
         <SwipeableBannerWrapper
           accessibilityLabel="Dismiss live scoreboard"
+          onPress={() => {
+            if (!game.id) return;
+            telemetry.trackFeature('live_banner', 'home');
+            router.push(localGameHref(game.id));
+          }}
           onDismiss={() => {
             if (game.id) dismissedLiveGames.add(game.id);
             setIsDismissed(true);

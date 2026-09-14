@@ -22,6 +22,7 @@ import { useAthleteStats } from '@/hooks/useAthleteStats';
 import { countStoredCheerVotes } from '@/hooks/useCheerPoll';
 import { useRoster } from '@/hooks/useRoster';
 import { readMaloDroppedCount, useTipCheckout } from '@/hooks/useTipCheckout';
+import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { loadFavoritePlayerIds } from '@/lib/favorites';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst } from '@/lib/reels';
 import { formatCapabilityLine } from '@/lib/roles';
@@ -57,6 +58,7 @@ export default function MyHubTab() {
   const { live } = useAppRuntime();
   const { players, applyBackerCount, applyVaultLocked } = useRoster();
   const { startCheckout, busy } = useTipCheckout();
+  const { onScroll, trackFeature } = useSurfaceUsage('profile');
   const hasSubscriberPass = useHasSubscriberPass();
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [tips, setTips] = useState<TipLedgerEntry[]>([]);
@@ -184,7 +186,7 @@ export default function MyHubTab() {
 
   return (
     <TabScreen>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} onScroll={onScroll} scrollEventThrottle={400}>
         <AthleteProfileView
           player={athlete}
           clips={taggedReels}
@@ -325,7 +327,10 @@ export default function MyHubTab() {
               <AnimatedButton
                 accessibilityLabel="Send a suggestion"
                 haptic="light"
-                onPress={() => setSuggestOpen(true)}
+                onPress={() => {
+                  trackFeature('suggestion');
+                  setSuggestOpen(true);
+                }}
                 contentStyle={styles.capabilityRow}
               >
                 <View style={styles.capabilityCopy}>

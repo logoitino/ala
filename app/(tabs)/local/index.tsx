@@ -34,6 +34,7 @@ import { initialsForBusiness, sponsorTierById } from '@/data/sponsorships';
 import { useLiveScores } from '@/hooks/useLiveScores';
 import { usePublishedCheerPolls } from '@/hooks/useCheerPoll';
 import { useSponsorships } from '@/hooks/useSponsorships';
+import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { localGameHref, userProfileHref } from '@/lib/navigation';
 import type { Game, LocalSearchHit, Sponsorship } from '@/types/database';
@@ -206,6 +207,7 @@ export default function LocalTab() {
   const { sponsors, recordSponsorship } = useSponsorships();
   const publishedPolls = usePublishedCheerPolls();
   const { live } = useAppRuntime();
+  const { onScroll, trackFeature } = useSurfaceUsage('local');
   const [hub, setHub] = useState<LocalHubId>('matches');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterId, setFilterId] = useState<LocalFilterId | null>(null);
@@ -292,10 +294,12 @@ export default function LocalTab() {
   const openSponsorSheet = () => {
     if (!live.layouts.sponsorshipModal) return;
     lightImpact();
+    trackFeature('sponsorship');
     setSponsorSheetOpen(true);
   };
 
   const openGame = (gameId: string) => {
+    trackFeature('live_game');
     router.push(localGameHref(gameId));
   };
 
@@ -360,12 +364,15 @@ export default function LocalTab() {
         </View>
 
         <View style={styles.hubFrame}>
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} onScroll={onScroll} scrollEventThrottle={400}>
             <FilterPills
               items={hubs}
               value={hub}
               onChange={(id) => {
-                if (id) setHub(id);
+                if (id) {
+                  trackFeature(`hub.${id}`);
+                  setHub(id);
+                }
               }}
               accessibilityLabel="Local hub"
             />

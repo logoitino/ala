@@ -482,21 +482,21 @@ Admin publisher for School Polls. Grant: `EXECUTE` to `anon`, `authenticated`. C
 
 ### `telemetry_logs`
 
-Batched client performance events (Reel stalls, Realtime reconnects, Mālo checkout latency).
+Batched client performance **and** product-usage events (Reel stalls, Realtime reconnects, Mālo checkout latency, tab dwell, scroll depth, feature taps, control issues).
 
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | uuid PK | |
-| `event_type` | text | `video_stall` \| `video_first_frame` \| `socket_reconnect` \| `checkout_latency` |
+| `event_type` | text | `video_stall` \| `video_first_frame` \| `socket_reconnect` \| `checkout_latency` \| `tab_dwell` \| `surface_scroll` \| `feature_tap` \| `ui_issue` |
 | `video_id` | text | `reels.id` for video events |
-| `channel` | text | Realtime channel name |
-| `step` | text | Checkout phase (`payment_intent`, `init_sheet`, `present_sheet`, `total`) |
-| `duration_ms` | integer | Stall / TTFF / step duration |
+| `channel` | text | Realtime channel, or fan surface (`home` / `local` / `spotlight` / `drip` / `profile`) |
+| `step` | text | Checkout phase, feature id (`hype.seki`, `malo`, `cheer_poll`), or failed control (`checkout`, `report`) |
+| `duration_ms` | integer | Stall / TTFF / tab dwell ms; for `surface_scroll` this is 0–100 depth |
 | `attempts` | integer | Consecutive socket errors before a reconnect log |
 | `payload` | jsonb | Extra context |
 | `created_at` | timestamptz | |
 
-**RLS (demo):** INSERT anyone; SELECT authenticated. Incremental: `supabase/telemetry_logs.sql`. Client: `src/frontend/services/TelemetryManager.ts` (flush every 10s or queue size 15).
+**RLS (demo):** INSERT anyone; SELECT authenticated. Aggregates still reach `/admin/reports` through `get_admin_reports()` (security definer). Incremental: `supabase/telemetry_logs.sql` then `supabase/usage_reports.sql` (adds `duration_ms` / `channel` / `step` on remotes that still store checkout time in `metric_value`). Client: `src/frontend/services/TelemetryManager.ts` + `useSurfaceUsage` (flush every 10s or queue size 15).
 
 ---
 
@@ -614,10 +614,12 @@ Gold **Publish to app** in the admin sidebar. Incremental: `supabase/app_runtime
 
 ```sql
 get_admin_reports() returns jsonb
-  -- generated_at, engagement, money, content, audience, live, reliability, leaders
+  -- generated_at, engagement, money, content, audience, live, reliability,
+  -- usage, tabs, features, issues, scroll, leaders,
+  -- series { clips, malo, stalls, dwell }
 ```
 
-Usage windows (24h / 7d / previous 7d), Mālo, Vault / Flash Unlock / Spotlight mix, Crew follows, telemetry stalls, top Mālo / hottest clips / athletes-by-school, and `series` (7-day clips / Mālo / stalls). Incremental: `supabase/app_runtime.sql` + `supabase/admin_reports.sql`. Client: `/admin/reports` (graphs + health checks).
+Usage windows (24h / 7d / previous 7d), Mālo, Vault / Flash Unlock / Spotlight mix, Crew follows, telemetry stalls, **tab dwell / scroll / feature taps / control issues**, top Mālo / hottest clips / athletes-by-school, and `series` (7-day clips / Mālo / stalls / dwell). Incremental: `supabase/app_runtime.sql` + `supabase/admin_reports.sql` + `supabase/usage_reports.sql`. Client: `/admin/reports` (Health + **Usage** desk, graphs).
 
 ### `company_revenue_bps(stream_source)` / `record_company_revenue` / `sync_company_revenue_logs`
 
@@ -777,4 +779,4 @@ Prefer full `schema.sql` on a blank project (includes `profiles` / `tips` / oper
 
 1. `players.sql` → `game_events.sql` → `games.sql` (+ `games_clock.sql` + `games_operator.sql`)
 2. `increment_backer.sql` → `increment_hype.sql` (`increment_player_hype`)
-3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql`
+3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql`

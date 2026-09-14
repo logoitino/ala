@@ -86,7 +86,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     id: 'insights',
     label: 'Insights',
-    items: [{ href: '/admin/reports', label: 'Reports', hint: 'Usage, money, leaders, reliability' }],
+    items: [{ href: '/admin/reports', label: 'Reports', hint: 'Tab time, taps, issues, money, leaders' }],
   },
 ];
 
@@ -490,6 +490,10 @@ function telemetryTitle(eventType: string): string {
   if (eventType === 'socket_reconnect') return 'Realtime reconnect';
   if (eventType === 'video_first_frame') return 'Time to first frame';
   if (eventType === 'checkout_latency') return 'Mālo checkout';
+  if (eventType === 'tab_dwell') return 'Tab time';
+  if (eventType === 'surface_scroll') return 'Scroll depth';
+  if (eventType === 'feature_tap') return 'Feature tap';
+  if (eventType === 'ui_issue') return 'Control issue';
   return eventType.replace(/_/g, ' ');
 }
 
@@ -575,6 +579,11 @@ export type AdminReports = {
   audience: AdminReportSection;
   live: AdminReportSection;
   reliability: AdminReportSection;
+  usage: AdminReportSection;
+  tabs: AdminReportLeader[];
+  features: AdminReportLeader[];
+  issues: AdminReportLeader[];
+  scroll: AdminReportLeader[];
   leaders: AdminReportLeaders;
   series: AdminReportSeries;
 };
@@ -588,6 +597,7 @@ export type AdminReportSeries = {
   clips: AdminReportPoint[];
   malo: AdminReportPoint[];
   stalls: AdminReportPoint[];
+  dwell: AdminReportPoint[];
 };
 
 export type AdminHealthStatus = 'ok' | 'warn' | 'fail';
@@ -638,6 +648,7 @@ function parseSeries(raw: unknown): AdminReportSeries {
     clips: asLeaders(bag.clips).map((row) => ({ day: row.label, value: row.value })),
     malo: asLeaders(bag.malo).map((row) => ({ day: row.label, value: row.value })),
     stalls: asLeaders(bag.stalls).map((row) => ({ day: row.label, value: row.value })),
+    dwell: asLeaders(bag.dwell).map((row) => ({ day: row.label, value: row.value })),
   };
 }
 
@@ -649,8 +660,13 @@ const EMPTY_REPORTS: AdminReports = {
   audience: {},
   live: {},
   reliability: {},
+  usage: {},
+  tabs: [],
+  features: [],
+  issues: [],
+  scroll: [],
   leaders: { malo: [], hype: [], schools: [] },
-  series: { clips: [], malo: [], stalls: [] },
+  series: { clips: [], malo: [], stalls: [], dwell: [] },
 };
 
 /**
@@ -670,6 +686,11 @@ export async function fetchAdminReports(): Promise<AdminReports> {
     audience: asSection(row.audience),
     live: asSection(row.live),
     reliability: asSection(row.reliability),
+    usage: asSection(row.usage),
+    tabs: asLeaders(row.tabs),
+    features: asLeaders(row.features),
+    issues: asLeaders(row.issues),
+    scroll: asLeaders(row.scroll),
     leaders: parseLeaders(row.leaders),
     series: parseSeries(row.series),
   };
@@ -682,7 +703,7 @@ function band(value: number, warnAt: number, failAt: number): AdminHealthStatus 
 }
 
 /**
- * @purpose Pass / warn / fail checks across feed, money, content, live ops, and shipping.
+ * @purpose Pass / warn / fail checks across feed, money, content, live ops, usage, and shipping.
  */
 export function buildAdminHealth(
   reports: AdminReports,
@@ -698,6 +719,8 @@ export function buildAdminHealth(
   const drip = reports.live.drip_skus ?? 0;
   const clips24 = reports.engagement.clips_24h ?? 0;
   const spotlight = reports.content.spotlight_live ?? 0;
+  const sessions = reports.usage.sessions_24h ?? 0;
+  const issues = reports.usage.issues_24h ?? 0;
 
   const checks: AdminHealthCheck[] = [
     {
@@ -794,6 +817,25 @@ export function buildAdminHealth(
         ? `${extras.pendingCount} draft change${extras.pendingCount === 1 ? '' : 's'} wait on Publish to app.`
         : 'Fan chrome matches the last publish.',
       href: '/admin/features',
+    },
+    {
+      id: 'sessions',
+      label: 'Tab sessions',
+      category: 'Usage',
+      status: sessions === 0 ? 'warn' : 'ok',
+      detail: sessions === 0 ? 'No tab dwell in 24h yet.' : `${sessions} session${sessions === 1 ? '' : 's'} in 24h.`,
+      href: '/admin/reports',
+    },
+    {
+      id: 'ui-issues',
+      label: 'Control issues',
+      category: 'Usage',
+      status: band(issues, 3, 12),
+      detail:
+        issues === 0
+          ? 'No failed controls in 24h.'
+          : `${issues} issue${issues === 1 ? '' : 's'} on buttons and tabs in 24h.`,
+      href: '/admin/feedback',
     },
   ];
   return checks;

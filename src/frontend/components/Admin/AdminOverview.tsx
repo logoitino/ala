@@ -43,8 +43,13 @@ const EMPTY_REPORTS: AdminReports = {
   audience: {},
   live: {},
   reliability: {},
+  usage: {},
+  tabs: [],
+  features: [],
+  issues: [],
+  scroll: [],
   leaders: { malo: [], hype: [], schools: [] },
-  series: { clips: [], malo: [], stalls: [] },
+  series: { clips: [], malo: [], stalls: [], dwell: [] },
 };
 
 /**

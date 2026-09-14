@@ -32,6 +32,7 @@ import {
 import { displayValue } from '@/data/players';
 import { gameMatchupLabel, playerTagLabel, uploadSekiPlay } from '@/lib/reels';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { telemetry } from '@/services/TelemetryManager';
 import type { Game, Player, Reel } from '@/types/database';
 
 type UploadVideoModalProps = {
@@ -308,6 +309,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       setProgress(1);
       setStatusLabel('Seki play uploaded.');
       fireSuccess();
+      telemetry.trackFeature('upload', 'home');
       onUploaded(reel);
       onClose();
     } catch (caught) {
@@ -316,6 +318,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         caught instanceof Error ? caught.message : 'Could not upload that clip. Try picking it again.';
       setUploadError(message);
       setStatusLabel('Upload failed');
+      telemetry.trackIssue('upload', 'home');
       Alert.alert('Upload failed', message);
     } finally {
       setUploading(false);

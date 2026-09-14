@@ -18,6 +18,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { recordDripOrder } from '@/lib/finance';
+import { telemetry } from '@/services/TelemetryManager';
 import { SPRING_CARD } from '@/theme/motion';
 
 const SHEET_OFF = 720;
@@ -127,6 +128,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
 
   const buy = () => {
     if (!item || busy) return;
+    telemetry.trackFeature('drip_buy', 'drip');
     void startCheckout({
       tipAmount: totalCents / 100,
       coverFees: false,

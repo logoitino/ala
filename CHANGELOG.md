@@ -4,6 +4,11 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-14
 
+### Usage reports + live scoreboard tap
+
+- `/admin/reports` **Usage** desk: time on tabs, deepest scroll, features fans tap (Seki / Mālo / polls / Drip), hottest control issues (failed checkout, Report, upload, open bugs). Still one Expo `/admin` — no second admin app.
+- Fan surfaces write `tab_dwell` / `surface_scroll` / `feature_tap` / `ui_issue` into `telemetry_logs` via `useSurfaceUsage`. Home live scoreboard taps through to the Local game. Incremental: `supabase/usage_reports.sql` (adds `duration_ms` / `channel` / `step` on remotes that still used `metric_value`, then `get_admin_reports` usage keys).
+
 ### Admin control plane — Marketing / Owner / Engineer
 
 - One `/admin` portal. Sidebar **All desks / Marketing / Owner / Engineer** pills filter the same routes (`tapuai.adminLens`). Marketing lands on Look / copy / Features; Owner on Overview / Money / Reports; Engineer on Lab / QA / flags.

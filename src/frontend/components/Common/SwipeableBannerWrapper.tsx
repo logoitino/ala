@@ -23,6 +23,7 @@ const DISMISS_MS = 160;
 type SwipeableBannerWrapperProps = {
   children: ReactNode;
   onDismiss: () => void;
+  onPress?: () => void;
   accessibilityLabel?: string;
 };
 
@@ -38,12 +39,14 @@ function fireLightHaptic() {
  * @purpose Swipe-up / tap-✕ dismiss for top-floating live scoreboards and play-by-play toasts.
  * @param children Banner body (score chip or callout card).
  * @param onDismiss Fired after the banner animates off-screen (`translateY: -120`).
+ * @param onPress Optional tap on the banner body (live scoreboard → Local game). ✕ still dismisses.
  * @returns Reanimated `Gesture.Pan` container with a semi-transparent ✕.
  * @sideEffects `Haptics.impactAsync(Light)` on swipe or tap dismiss. Pan activates only on upward travel so vertical Reel paging is not captured.
  */
 export function SwipeableBannerWrapper({
   children,
   onDismiss,
+  onPress,
   accessibilityLabel = 'Dismiss banner',
 }: SwipeableBannerWrapperProps) {
   const translateY = useSharedValue(0);
@@ -89,7 +92,18 @@ export function SwipeableBannerWrapper({
   return (
     <GestureDetector gesture={pan}>
       <Animated.View collapsable={false} style={[styles.frame, style]}>
-        {children}
+        {onPress ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open live match"
+            haptic="selection"
+            onPress={onPress}
+          >
+            {children}
+          </Pressable>
+        ) : (
+          children
+        )}
         <Pressable
           accessibilityLabel={accessibilityLabel}
           haptic="none"

@@ -19,18 +19,20 @@ import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useRoster } from '@/hooks/useRoster';
 import { useSpotlightBoard } from '@/hooks/useSpotlightBoard';
+import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { userProfileHref } from '@/lib/navigation';
 import type { Player, SpotlightAward } from '@/types/database';
 
 /**
  * @purpose Fan-bar Spotlight tab: reopen Player of the Week/Month after the Highlights launch popup is dismissed.
- * @sideEffects `useSpotlightBoard` on focus; `SpotlightModal` replay; `MaloTipModal` PaymentSheet.
+ * @sideEffects `useSpotlightBoard` on focus; `SpotlightModal` replay; `MaloTipModal` PaymentSheet; `useSurfaceUsage` dwell / taps.
  */
 export default function SpotlightTab() {
   const router = useRouter();
   const { live } = useAppRuntime();
   const { players, applyBackerCount } = useRoster();
   const { awards, loading, refresh } = useSpotlightBoard(players);
+  const { onScroll, trackFeature } = useSurfaceUsage('spotlight');
   const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState<SpotlightAward | null>(null);
   const [tipTarget, setTipTarget] = useState<{ player: Player; reelId?: string } | null>(null);
@@ -57,6 +59,8 @@ export default function SpotlightTab() {
     <TabScreen>
       <ScrollView
         contentContainerStyle={styles.content}
+        onScroll={onScroll}
+        scrollEventThrottle={400}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -78,7 +82,10 @@ export default function SpotlightTab() {
           </View>
         ) : null}
         {featured ? (
-          <SpotlightAwardCard featured award={featured} onPress={() => setSelected(featured)} />
+          <SpotlightAwardCard featured award={featured} onPress={() => {
+            trackFeature('spotlight_card');
+            setSelected(featured);
+          }} />
         ) : (
           <Text style={styles.empty}>{live.copy.spotlightEmpty}</Text>
         )}
@@ -86,7 +93,10 @@ export default function SpotlightTab() {
           <View style={styles.list}>
             <Text style={styles.section}>Recent Spotlights</Text>
             {rest.map((award) => (
-              <SpotlightAwardCard key={award.id} award={award} onPress={() => setSelected(award)} />
+              <SpotlightAwardCard key={award.id} award={award} onPress={() => {
+                trackFeature('spotlight_card');
+                setSelected(award);
+              }} />
             ))}
           </View>
         ) : null}
@@ -97,6 +107,7 @@ export default function SpotlightTab() {
         replay
         onDismiss={() => setSelected(null)}
         onSupport={(player, reelId) => {
+          trackFeature('malo');
           setSelected(null);
           setTimeout(() => setTipTarget({ player, reelId }), 320);
         }}

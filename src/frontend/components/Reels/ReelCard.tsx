@@ -59,6 +59,7 @@ import { isVaultSealed } from '@/lib/vault';
 import { telemetry } from '@/services/TelemetryManager';
 import { offlineQueue } from '@/services/OfflineQueue';
 import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
+import type { UsageSurface } from '@/hooks/useSurfaceUsage';
 
 export type ReelCardProps = {
   clip: HighlightClip;
@@ -76,6 +77,8 @@ export type ReelCardProps = {
   onReelHypeChange?: (reelId: string, hype: ReelHype) => void;
   /** After Report / Hide, parent drops this clip from the paging feed. */
   onHide?: (reelId: string) => void;
+  /** Tab that owns this card so usage reports know which surface liked / failed the control. */
+  surface?: UsageSurface;
 };
 
 type AuraBurst = {
@@ -152,7 +155,7 @@ const OVERLAY_BOTTOM_INSET = 8;
  * @param clip Highlight including `isVaultOnly` from `reels.is_vault_only` (default false), optional `gameId`, `category`, and `flashUnlockUntil`.
  * @param onOpenProfile Opens `/user/[id]` so the fan can subscribe when Stripe is unavailable.
  * @param playbackActive When true, play the focused page even if the Expo route is unfocused (profile modal).
- * @sideEffects expo-video; optimistic `reels` hype + `increment_reel_hype` (OfflineQueue when `NetInfo.isConnected === false`); double-tap `add_user_aura` (2× on Serve Like Me) + Medium haptic; mute toggle; `saved_reels`; Expo `Share.share`; `report_reel`; Broadcast subscribe on `game_events_${gameId}`; `TelemetryManager` TTFF + stall; vault unlock via PaymentSheet.
+ * @sideEffects expo-video; optimistic `reels` hype + `increment_reel_hype` (OfflineQueue when `NetInfo.isConnected === false`); double-tap `add_user_aura` (2× on Serve Like Me) + Medium haptic; mute toggle; `saved_reels`; Expo `Share.share`; `report_reel`; Broadcast subscribe on `game_events_${gameId}`; `TelemetryManager` TTFF + stall + feature taps / report issues; vault unlock via PaymentSheet.
  */
 export function ReelCard({
   clip,
@@ -167,6 +170,7 @@ export function ReelCard({
   onOpenProfile,
   onReelHypeChange,
   onHide,
+  surface = 'home',
 }: ReelCardProps) {
   const insets = useSafeAreaInsets();
   const { user, profile, isAthlete } = useAuth();
@@ -329,6 +333,7 @@ export function ReelCard({
     (kind: PlayReactionId, fromDoubleTap = false) => {
       if (lockedRef.current) return;
       if (votesRef.current[kind]) return;
+      telemetry.trackFeature(`hype.${kind}`, surface);
       const nextVotes = { ...votesRef.current, [kind]: true };
       votesRef.current = nextVotes;
       setVotes(nextVotes);
@@ -383,7 +388,7 @@ export function ReelCard({
         }
       })();
     },
-    [clip.category, clip.id, onReelHypeChange, user?.id],
+    [clip.category, clip.id, onReelHypeChange, surface, user?.id],
   );
 
   const onDoubleAura = useCallback(
@@ -410,6 +415,7 @@ export function ReelCard({
     try {
       await hideReelLocally(clip.id);
       onHide?.(clip.id);
+      telemetry.trackIssue('report', surface);
       celebration?.showToast('Highlight hidden 🚩');
       setReportOpen(false);
       if (user?.id && isReelUuid(clip.id)) {
@@ -418,10 +424,11 @@ export function ReelCard({
     } finally {
       setReporting(false);
     }
-  }, [celebration, clip.id, onHide, reporting, user?.id]);
+  }, [celebration, clip.id, onHide, reporting, surface, user?.id]);
 
   const unlockVault = useCallback(() => {
     if (unlocking) return;
+    telemetry.trackFeature('vault_unlock', surface);
     if (!player) {
       onOpenProfile?.();
       return;
@@ -434,11 +441,12 @@ export function ReelCard({
       skipBacker: true,
       onPaid: grant,
     });
-  }, [grant, onOpenProfile, player, startCheckout, unlocking]);
+  }, [grant, onOpenProfile, player, startCheckout, surface, unlocking]);
 
   const onShare = useCallback(async () => {
     const url = formatReelDeepLink(clip.id, clip.playerId ?? player?.id ?? null);
     const message = `Watch ${playerName} on Tapua'i`;
+    telemetry.trackFeature('share', surface);
     try {
       await Share.share(
         Platform.OS === 'ios' ? { url, message } : { message: `${message}\n${url}` },
@@ -446,7 +454,7 @@ export function ReelCard({
     } catch {
       // User cancelled or the share sheet is unavailable.
     }
-  }, [clip.id, clip.playerId, player?.id, playerName]);
+  }, [clip.id, clip.playerId, player?.id, playerName, surface]);
 
   useEffect(() => {
     if (!lastEvent) return;
@@ -661,8 +669,14 @@ export function ReelCard({
           canTip={Boolean(player) && !locked}
           canOpenAthlete={Boolean(onOpenProfile)}
           onOpenAthlete={onOpenProfile}
-          onTip={onTip}
-          onOpenMore={() => setMoreOpen(true)}
+          onTip={() => {
+            telemetry.trackFeature('malo', surface);
+            onTip();
+          }}
+          onOpenMore={() => {
+            telemetry.trackFeature('more', surface);
+            setMoreOpen(true);
+          }}
           onReact={(kind) => {
             if (locked) return;
             commitHype(kind);
@@ -680,6 +694,7 @@ export function ReelCard({
           void onShare();
         }}
         onToggleSave={() => {
+          telemetry.trackFeature('save', surface);
           void toggleSave();
         }}
         onReport={() => {

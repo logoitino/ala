@@ -11,7 +11,11 @@ type TelemetryEventType =
   | 'video_stall'
   | 'video_first_frame'
   | 'socket_reconnect'
-  | 'checkout_latency';
+  | 'checkout_latency'
+  | 'tab_dwell'
+  | 'surface_scroll'
+  | 'feature_tap'
+  | 'ui_issue';
 
 export type TelemetryEvent = {
   event_type: TelemetryEventType | string;
@@ -35,7 +39,7 @@ function asMillis(value: number): number {
 }
 
 /**
- * @purpose Batch client performance events (Reel stalls, Realtime reconnects, Mālo checkout latency) into `telemetry_logs`.
+ * @purpose Batch client performance and product-usage events into `telemetry_logs` for `/admin/reports`.
  * @returns Process-wide singleton. `track*` enqueues; flush runs every 10s or when the queue exceeds 15.
  * @sideEffects In-memory queue, `setInterval`, AppState background flush, Supabase INSERT (swallowed if the table is missing).
  */
@@ -120,6 +124,56 @@ export class TelemetryManager {
       event_type: 'checkout_latency',
       step,
       duration_ms: asMillis(durationMs),
+    });
+  }
+
+  /**
+   * @purpose How long a fan stayed on Home / Local / Spotlight / Drip / Profile.
+   */
+  trackTabDwell(tab: string, durationMs: number): void {
+    const duration = asMillis(durationMs);
+    if (!tab || duration < 500) return;
+    this.track({
+      event_type: 'tab_dwell',
+      channel: tab,
+      duration_ms: duration,
+    });
+  }
+
+  /**
+   * @purpose Deepest scroll on a surface (0–100). Flushed on blur so Reports can say where people actually look.
+   */
+  trackScroll(surface: string, depthPct: number): void {
+    const depth = Math.max(0, Math.min(100, Math.round(depthPct)));
+    if (!surface || depth < 1) return;
+    this.track({
+      event_type: 'surface_scroll',
+      channel: surface,
+      duration_ms: depth,
+    });
+  }
+
+  /**
+   * @purpose A working control the fan chose (Seki, Mālo, search, poll, Drip buy). This is “what they like.”
+   */
+  trackFeature(feature: string, surface?: string): void {
+    if (!feature) return;
+    this.track({
+      event_type: 'feature_tap',
+      channel: surface ?? null,
+      step: feature,
+    });
+  }
+
+  /**
+   * @purpose A control that failed or that the fan reported (checkout error, Report / Hide, bug suggestion).
+   */
+  trackIssue(control: string, surface?: string): void {
+    if (!control) return;
+    this.track({
+      event_type: 'ui_issue',
+      channel: surface ?? null,
+      step: control,
     });
   }
 

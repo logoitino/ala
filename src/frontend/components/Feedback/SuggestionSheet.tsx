@@ -13,6 +13,7 @@ import {
   type AppFeedbackKind,
   type AppFeedbackSurface,
 } from '@/lib/feedback';
+import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
 
 type SuggestionSheetProps = {
@@ -39,6 +40,8 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
     setBusy(true);
     try {
       await submitAppFeedback(body, kind, place);
+      if (kind === 'bug') telemetry.trackIssue('suggestion_bug', place);
+      else telemetry.trackFeature('suggestion', place);
       setBody('');
       onClose();
       Alert.alert('Got it', 'Admin will see this on Feedback. If it ships, it goes out with Publish to app.');

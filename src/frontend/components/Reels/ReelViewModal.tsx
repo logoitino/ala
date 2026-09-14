@@ -200,6 +200,7 @@ function ReelViewPager({
                 }
                 onReelHypeChange={onHypeChange}
                 onHide={hideClip}
+                surface="profile"
               />
             )}
           />
