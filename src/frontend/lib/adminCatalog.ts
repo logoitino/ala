@@ -42,7 +42,8 @@ export type AdminOpsItem = {
     | '/admin/money'
     | '/admin/publish'
     | '/admin/qa'
-    | '/admin/spotlight';
+    | '/admin/spotlight'
+    | '/admin/feedback';
   label: string;
   hint: string;
   count: number;
@@ -57,6 +58,7 @@ export type AdminOpsInbox = {
   hiddenDrip: number;
   lowStock: number;
   queuedPayouts: number;
+  newFeedback: number;
   items: AdminOpsItem[];
 };
 
@@ -597,8 +599,8 @@ export async function setDisbursementStatus(id: string, status: 'queued' | 'paid
 }
 
 /**
- * @purpose Ops inbox for Overview: flags, verify queue, live board, Drip stock, queued payouts.
- * @sideEffects Parallel SELECTs on flags, verification, games, shop_products, disbursements.
+ * @purpose Ops inbox for Overview: flags, verify queue, live board, Drip stock, queued payouts, new feedback.
+ * @sideEffects Parallel SELECTs on flags, verification, games, shop_products, disbursements, app_feedback.
  */
 export async function fetchAdminOpsInbox(): Promise<AdminOpsInbox> {
   const empty: AdminOpsInbox = {
@@ -610,17 +612,19 @@ export async function fetchAdminOpsInbox(): Promise<AdminOpsInbox> {
     hiddenDrip: 0,
     lowStock: 0,
     queuedPayouts: 0,
+    newFeedback: 0,
     items: [],
   };
   if (!isSupabaseConfigured) return empty;
 
-  const [flags, verify, tags, games, drip, payouts] = await Promise.all([
+  const [flags, verify, tags, games, drip, payouts, feedback] = await Promise.all([
     supabase.from('reels').select('id', { count: 'exact', head: true }).eq('is_flagged', true).eq('is_removed', false),
     supabase.from('verification_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('reels').select('id', { count: 'exact', head: true }).eq('tag_status', 'pending').eq('is_removed', false),
     supabase.from('games').select('id, is_active'),
     supabase.from('shop_products').select('id, is_active, inventory'),
     supabase.from('disbursements').select('id', { count: 'exact', head: true }).eq('status', 'queued'),
+    supabase.from('app_feedback').select('id', { count: 'exact', head: true }).eq('status', 'new'),
   ]);
 
   const gameRows = Array.isArray(games.data) ? games.data : [];
@@ -639,9 +643,18 @@ export async function fetchAdminOpsInbox(): Promise<AdminOpsInbox> {
     hiddenDrip,
     lowStock,
     queuedPayouts: payouts.count ?? 0,
+    newFeedback: feedback.count ?? 0,
     items: [],
   };
   const items: AdminOpsItem[] = [];
+  if (inbox.newFeedback > 0) {
+    items.push({
+      href: '/admin/feedback',
+      label: 'New suggestions',
+      hint: 'Fan voice waiting on Feedback',
+      count: inbox.newFeedback,
+    });
+  }
   if (inbox.flags > 0) {
     items.push({
       href: '/admin/moderation',

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
@@ -6,9 +6,20 @@ import { AdminEmpty, AdminPage } from '@/components/Admin/AdminChrome';
 import { TelemetryCards } from '@/components/Admin/TelemetryCards';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
-import { ADMIN_NAV_GROUPS, fetchAdminPlatformMetrics, type AdminPlatformMetrics } from '@/lib/admin';
-import { fetchAdminOpsInbox, type AdminOpsInbox } from '@/lib/adminCatalog';
+import { useAdminLens } from '@/context/AdminLensContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import {
+  buildAdminHealth,
+  fetchAdminPlatformMetrics,
+  fetchAdminReports,
+  navGroupsForLens,
+  overviewLedeForLens,
+  type AdminPlatformMetrics,
+  type AdminReports,
+} from '@/lib/admin';
+import { fetchAdminOpsInbox, type AdminOpsInbox } from '@/lib/adminCatalog';
+import { EMPTY_COMPANY_REVENUE, fetchCompanyRevenueSummary, type CompanyRevenueSummary } from '@/lib/finance';
+import { formatTipDollars } from '@/lib/reels';
 import { FOCAL } from '@/theme/motion';
 
 const EMPTY_INBOX: AdminOpsInbox = {
@@ -20,15 +31,29 @@ const EMPTY_INBOX: AdminOpsInbox = {
   hiddenDrip: 0,
   lowStock: 0,
   queuedPayouts: 0,
+  newFeedback: 0,
   items: [],
 };
 
+const EMPTY_REPORTS: AdminReports = {
+  generatedAt: null,
+  engagement: {},
+  money: {},
+  content: {},
+  audience: {},
+  live: {},
+  reliability: {},
+  leaders: { malo: [], hype: [], schools: [] },
+  series: { clips: [], malo: [], stalls: [] },
+};
+
 /**
- * @purpose Admin home: live metrics plus an inbox of production work (flags, verify, payouts, stock, live board).
- * @sideEffects `get_admin_platform_metrics` plus `fetchAdminOpsInbox`.
+ * @purpose Admin home: live metrics, owner revenue/health strip, inbox, and desks filtered by Marketing / Owner / Engineer lens.
+ * @sideEffects `get_admin_platform_metrics`, `get_company_revenue_summary`, `get_admin_reports`, `fetchAdminOpsInbox`.
  */
 export function AdminOverview() {
   const router = useRouter();
+  const { lens } = useAdminLens();
   const { dirty, pendingCount } = useAppRuntime();
   const [metrics, setMetrics] = useState<AdminPlatformMetrics>({
     highlightCount: 0,
@@ -38,6 +63,8 @@ export function AdminOverview() {
     telemetryEvents24h: 0,
   });
   const [inbox, setInbox] = useState<AdminOpsInbox>(EMPTY_INBOX);
+  const [revenue, setRevenue] = useState<CompanyRevenueSummary>(EMPTY_COMPANY_REVENUE);
+  const [reports, setReports] = useState<AdminReports>(EMPTY_REPORTS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,9 +72,16 @@ export function AdminOverview() {
     setLoading(true);
     setError(null);
     try {
-      const [nextMetrics, nextInbox] = await Promise.all([fetchAdminPlatformMetrics(), fetchAdminOpsInbox()]);
+      const [nextMetrics, nextInbox, nextRevenue, nextReports] = await Promise.all([
+        fetchAdminPlatformMetrics(),
+        fetchAdminOpsInbox(),
+        fetchCompanyRevenueSummary(),
+        fetchAdminReports(),
+      ]);
       setMetrics(nextMetrics);
       setInbox(nextInbox);
+      setRevenue(nextRevenue);
+      setReports(nextReports);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not load metrics.');
     } finally {
@@ -61,14 +95,56 @@ export function AdminOverview() {
     }, [refresh]),
   );
 
+  const navGroups = useMemo(() => navGroupsForLens(lens), [lens]);
+  const healthIssues = useMemo(() => {
+    return buildAdminHealth(reports, { dirty, pendingCount, lowStock: inbox.lowStock }).filter(
+      (check) => check.status !== 'ok',
+    ).length;
+  }, [dirty, inbox.lowStock, pendingCount, reports]);
+
   return (
     <AdminPage
       title="Overview"
-      lede="Needs attention, unpublished chrome, then every categorized desk."
+      lede={overviewLedeForLens(lens)}
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
     >
+      <View style={styles.ownerStrip}>
+        <Text style={styles.section}>Owner numbers</Text>
+        <View style={styles.grid}>
+          <OwnerStat
+            label="Gross volume"
+            value={formatTipDollars(revenue.gross_volume_cents)}
+            hint="Money desk"
+            onPress={() => router.push('/admin/money')}
+          />
+          <OwnerStat
+            label="Company net"
+            value={formatTipDollars(revenue.company_net_cents)}
+            hint="Keep after payouts"
+            onPress={() => router.push('/admin/money')}
+          />
+          <OwnerStat
+            label="Athlete & operator payouts"
+            value={formatTipDollars(revenue.payouts_cents)}
+            hint="Queued + booked"
+            onPress={() => router.push('/admin/money')}
+          />
+          <OwnerStat
+            label="Health issues"
+            value={String(healthIssues)}
+            hint="Reports fail / warn"
+            onPress={() => router.push('/admin/reports')}
+          />
+          <OwnerStat
+            label="New suggestions"
+            value={String(inbox.newFeedback)}
+            hint="Feedback inbox"
+            onPress={() => router.push('/admin/feedback')}
+          />
+        </View>
+      </View>
       <TelemetryCards metrics={metrics} />
       {dirty ? (
         <AnimatedButton
@@ -80,7 +156,7 @@ export function AdminOverview() {
           <Text style={styles.alertCount}>{pendingCount}</Text>
           <View style={styles.alertCopy}>
             <Text style={styles.alertTitle}>Unpublished chrome</Text>
-            <Text style={styles.alertHint}>Tab or button drafts waiting on Publish to app</Text>
+            <Text style={styles.alertHint}>Tab, copy, or look drafts waiting on Publish to app</Text>
           </View>
         </AnimatedButton>
       ) : null}
@@ -109,7 +185,7 @@ export function AdminOverview() {
         <Text style={styles.boardLine}>Parked matches · {inbox.parkedGames}</Text>
         <Text style={styles.boardLine}>Hidden Drip · {inbox.hiddenDrip}</Text>
       </View>
-      {ADMIN_NAV_GROUPS.map((group) => (
+      {navGroups.map((group) => (
         <View key={group.id} style={styles.group}>
           <Text style={styles.section}>{group.label}</Text>
           <View style={styles.grid}>
@@ -134,6 +210,26 @@ export function AdminOverview() {
   );
 }
 
+function OwnerStat({
+  label,
+  value,
+  hint,
+  onPress,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  onPress: () => void;
+}) {
+  return (
+    <AnimatedButton haptic="selection" accessibilityLabel={label} contentStyle={styles.card} onPress={onPress}>
+      <Text style={styles.cardHint}>{label}</Text>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.cardHint}>{hint}</Text>
+    </AnimatedButton>
+  );
+}
+
 const styles = StyleSheet.create({
   section: {
     color: FOCAL.neonJade,
@@ -144,6 +240,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   group: {
+    gap: 10,
+  },
+  ownerStrip: {
     gap: 10,
   },
   alert: {
@@ -215,5 +314,10 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     fontWeight: '600',
+  },
+  statValue: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: '800',
   },
 });

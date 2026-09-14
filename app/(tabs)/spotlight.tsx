@@ -68,9 +68,9 @@ export default function SpotlightTab() {
         }
       >
         <ScreenHeading
-          kicker="Player of the Week"
+          kicker={live.copy.spotlightKicker}
           title="Spotlight"
-          lede="Featured athletes from confirmed Game Play hype — week, month, and year."
+          lede={live.copy.spotlightLede}
         />
         {loading && awards.length === 0 ? (
           <View style={styles.boot}>
@@ -80,7 +80,7 @@ export default function SpotlightTab() {
         {featured ? (
           <SpotlightAwardCard featured award={featured} onPress={() => setSelected(featured)} />
         ) : (
-          <Text style={styles.empty}>No Spotlight awards yet. Check back after Friday night.</Text>
+          <Text style={styles.empty}>{live.copy.spotlightEmpty}</Text>
         )}
         {rest.length > 0 ? (
           <View style={styles.list}>

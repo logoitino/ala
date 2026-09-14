@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,11 +6,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AccessRestricted } from '@/components/Admin/AccessRestricted';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors } from '@/constants/theme';
+import { AdminLensProvider, useAdminLens } from '@/context/AdminLensContext';
 import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import {
-  ADMIN_NAV_GROUPS,
+  ADMIN_LENSES,
   isAdminNavActive,
+  navGroupsForLens,
+  type AdminNavGroup,
   type AdminNavGroupId,
   type AdminNavHref,
 } from '@/lib/admin';
@@ -21,12 +24,21 @@ type AdminShellProps = {
 };
 
 /**
- * @purpose Production control-plane chrome: grouped nav, Access Restricted, and Publish to app when chrome is drafted.
- * @sideEffects `publish_app_runtime` from the sidebar CTA.
+ * @purpose Production control-plane chrome: Marketing / Owner / Engineer lens, grouped nav, and Publish to app.
+ * @sideEffects AsyncStorage `tapuai.adminLens`; `publish_app_runtime` from the sidebar CTA.
  */
 export function AdminShell({ children }: AdminShellProps) {
+  return (
+    <AdminLensProvider>
+      <AdminShellInner>{children}</AdminShellInner>
+    </AdminLensProvider>
+  );
+}
+
+function AdminShellInner({ children }: AdminShellProps) {
   const { isAdmin, loading } = useAuth();
   const { dirty, pendingCount, publishLive } = useAppRuntime();
+  const { lens, setLens } = useAdminLens();
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -34,11 +46,13 @@ export function AdminShell({ children }: AdminShellProps) {
   const wide = Platform.OS === 'web' && width >= 900;
   const [groupId, setGroupId] = useState<AdminNavGroupId>('ship');
   const [publishing, setPublishing] = useState(false);
+  const navGroups = useMemo(() => navGroupsForLens(lens), [lens]);
 
   useEffect(() => {
-    const hit = ADMIN_NAV_GROUPS.find((group) => group.items.some((item) => isAdminNavActive(item.href, pathname)));
+    const hit = navGroups.find((group) => group.items.some((item) => isAdminNavActive(item.href, pathname)));
     if (hit) setGroupId(hit.id);
-  }, [pathname]);
+    else if (navGroups[0]) setGroupId(navGroups[0].id);
+  }, [pathname, navGroups]);
 
   if (loading) {
     return (
@@ -73,7 +87,7 @@ export function AdminShell({ children }: AdminShellProps) {
     </AnimatedButton>
   ) : null;
 
-  const navFor = (items: (typeof ADMIN_NAV_GROUPS)[number]['items']) =>
+  const navFor = (items: AdminNavGroup['items']) =>
     items.map((item) => {
       const on = isAdminNavActive(item.href, pathname);
       return (
@@ -94,7 +108,28 @@ export function AdminShell({ children }: AdminShellProps) {
       );
     });
 
-  const mobileGroup = ADMIN_NAV_GROUPS.find((group) => group.id === groupId) ?? ADMIN_NAV_GROUPS[0];
+  const mobileGroup = navGroups.find((group) => group.id === groupId) ?? navGroups[0];
+
+  const lensPills = (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+      {ADMIN_LENSES.map((item) => {
+        const on = item.id === lens;
+        return (
+          <AnimatedButton
+            key={item.id}
+            haptic="selection"
+            accessibilityRole="tab"
+            accessibilityLabel={item.label}
+            accessibilityState={{ selected: on }}
+            contentStyle={[styles.lensChip, on && styles.lensChipOn]}
+            onPress={() => setLens(item.id)}
+          >
+            <Text style={[styles.lensLabel, on && styles.lensLabelOn]}>{item.label}</Text>
+          </AnimatedButton>
+        );
+      })}
+    </ScrollView>
+  );
 
   return (
     <View style={[styles.root, wide && styles.rootWide]}>
@@ -102,10 +137,11 @@ export function AdminShell({ children }: AdminShellProps) {
         <View style={[styles.sidebar, { paddingTop: Math.max(insets.top, 20) }]}>
           <Text style={styles.brandKicker}>Tapua'i</Text>
           <Text style={styles.brand}>Admin portal</Text>
-          <Text style={styles.brandLede}>Catalog saves instantly. Tabs, colors, and Highlights layout wait on Publish to app.</Text>
+          <Text style={styles.brandLede}>Catalog saves instantly. Tabs, colors, copy, and Highlights layout wait on Publish to app.</Text>
+          {lensPills}
           {publishCta}
           <ScrollView contentContainerStyle={styles.sideList} showsVerticalScrollIndicator={false}>
-            {ADMIN_NAV_GROUPS.map((group) => (
+            {navGroups.map((group) => (
               <View key={group.id} style={styles.group}>
                 <Text style={styles.groupLabel}>{group.label}</Text>
                 {navFor(group.items)}
@@ -134,9 +170,10 @@ export function AdminShell({ children }: AdminShellProps) {
               <Text style={styles.homeLabel}>Open production</Text>
             </AnimatedButton>
           </View>
+          {lensPills}
           {publishCta}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-            {ADMIN_NAV_GROUPS.map((group) => {
+            {navGroups.map((group) => {
               const on = group.id === groupId;
               return (
                 <AnimatedButton
@@ -298,6 +335,29 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 4,
     paddingRight: 12,
+  },
+  lensChip: {
+    minHeight: 30,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lensChipOn: {
+    backgroundColor: FOCAL.electricGold,
+    borderColor: FOCAL.electricGold,
+  },
+  lensLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  lensLabelOn: {
+    color: FOCAL.backgroundBase,
   },
   chip: {
     minHeight: 36,

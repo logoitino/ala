@@ -35,15 +35,6 @@ export type AppRuntimeLayouts = {
   sponsorHq: boolean;
 };
 
-export type AppRuntimeConfig = {
-  tabs: AppRuntimeTabs;
-  buttons: AppRuntimeButtons;
-  layouts: AppRuntimeLayouts;
-  theme: AppRuntimeTheme;
-  profile: AppRuntimeProfile;
-  highlights: AppRuntimeHighlights;
-};
-
 export type AppRuntimeTheme = {
   background: string;
   surface: string;
@@ -70,6 +61,35 @@ export type AppRuntimeHighlights = {
   showCaption: boolean;
   railOrder: HighlightRailItem[];
 };
+
+export type AppRuntimeCopy = {
+  homeKicker: string;
+  homeLede: string;
+  homeEmpty: string;
+  homeBannerTitle: string;
+  homeBannerBody: string;
+  localKicker: string;
+  localLede: string;
+  localEmpty: string;
+  spotlightKicker: string;
+  spotlightLede: string;
+  spotlightEmpty: string;
+  dripKicker: string;
+  dripLede: string;
+  dripEmpty: string;
+};
+
+export type AppRuntimeConfig = {
+  tabs: AppRuntimeTabs;
+  buttons: AppRuntimeButtons;
+  layouts: AppRuntimeLayouts;
+  theme: AppRuntimeTheme;
+  profile: AppRuntimeProfile;
+  highlights: AppRuntimeHighlights;
+  copy: AppRuntimeCopy;
+};
+
+export type AppRuntimeCopyPath = `copy.${keyof AppRuntimeCopy}`;
 
 export type AppRuntimeFlagPath =
   | `tabs.${keyof AppRuntimeTabs}`
@@ -189,6 +209,22 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     showCaption: true,
     railOrder: ['seki', 'aura', 'flex', 'malo', 'more'],
   },
+  copy: {
+    homeKicker: 'Highlights ⚡',
+    homeLede: 'Home mix, All, and Seki — tagged to the athlete on the clip.',
+    homeEmpty: 'No Highlights ⚡ yet.',
+    homeBannerTitle: '',
+    homeBannerBody: '',
+    localKicker: 'Friday night',
+    localLede: 'Live matches, school polls, and Top Boosters.',
+    localEmpty: 'No live games here',
+    spotlightKicker: 'Player of the Week',
+    spotlightLede: 'Featured athletes from confirmed Game Play hype — week, month, and year.',
+    spotlightEmpty: 'No Spotlight awards yet. Check back after Friday night.',
+    dripKicker: 'Marketplace',
+    dripLede: 'Booster gear, Aura cards, and sideline merch.',
+    dripEmpty: 'Nothing in this rack yet.',
+  },
 };
 
 export const THEME_PRESETS: { id: string; label: string; hint: string; theme: AppRuntimeTheme }[] = [
@@ -248,6 +284,23 @@ export const HIGHLIGHT_RAIL_ITEMS: { id: HighlightRailItem; label: string }[] = 
   { id: 'flex', label: 'Flex' },
   { id: 'malo', label: 'Mālo' },
   { id: 'more', label: 'More' },
+];
+
+export const COPY_FIELDS: { key: keyof AppRuntimeCopy; label: string; hint: string; multiline?: boolean }[] = [
+  { key: 'homeKicker', label: 'Home kicker', hint: 'Small line above the Highlights ⚡ search row' },
+  { key: 'homeLede', label: 'Home lede', hint: 'Optional campaign line under the kicker' },
+  { key: 'homeEmpty', label: 'Home empty', hint: 'When the All feed has no clips' },
+  { key: 'homeBannerTitle', label: 'Home banner title', hint: 'Leave blank to hide the campaign bar' },
+  { key: 'homeBannerBody', label: 'Home banner body', hint: 'Shows under the title when the banner is on', multiline: true },
+  { key: 'localKicker', label: 'Local kicker', hint: 'Above Local' },
+  { key: 'localLede', label: 'Local lede', hint: 'Optional line under Local' },
+  { key: 'localEmpty', label: 'Local empty title', hint: 'No live games in the region' },
+  { key: 'spotlightKicker', label: 'Spotlight kicker', hint: 'Above Spotlight' },
+  { key: 'spotlightLede', label: 'Spotlight lede', hint: 'Board explanation' },
+  { key: 'spotlightEmpty', label: 'Spotlight empty', hint: 'No awards yet' },
+  { key: 'dripKicker', label: 'Drip kicker', hint: 'Above Drip' },
+  { key: 'dripLede', label: 'Drip lede', hint: 'Optional marketplace line' },
+  { key: 'dripEmpty', label: 'Drip empty', hint: 'Empty rack' },
 ];
 
 function asBool(value: unknown, fallback: boolean): boolean {
@@ -316,6 +369,17 @@ function parseHighlights(raw: unknown): AppRuntimeHighlights {
   };
 }
 
+function parseCopy(raw: unknown): AppRuntimeCopy {
+  const record = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const fallback = DEFAULT_APP_RUNTIME.copy;
+  const next = { ...fallback };
+  (Object.keys(fallback) as (keyof AppRuntimeCopy)[]).forEach((key) => {
+    const value = record[key];
+    next[key] = typeof value === 'string' ? value : fallback[key];
+  });
+  return next;
+}
+
 /**
  * @purpose Merge a stored jsonb blob onto the default chrome map so missing keys stay on.
  */
@@ -328,6 +392,7 @@ export function parseAppRuntimeConfig(raw: unknown): AppRuntimeConfig {
     theme: parseTheme(record.theme),
     profile: parseProfile(record.profile),
     highlights: parseHighlights(record.highlights),
+    copy: parseCopy(record.copy),
   };
 }
 
@@ -339,6 +404,7 @@ export function cloneAppRuntime(config: AppRuntimeConfig): AppRuntimeConfig {
     theme: { ...config.theme },
     profile: { ...config.profile },
     highlights: { ...config.highlights, railOrder: [...config.highlights.railOrder] },
+    copy: { ...config.copy },
   };
 }
 
@@ -387,7 +453,135 @@ export function countRuntimeChanges(draft: AppRuntimeConfig, published: AppRunti
   if (draft.highlights.showSchool !== published.highlights.showSchool) n += 1;
   if (draft.highlights.showCaption !== published.highlights.showCaption) n += 1;
   if (JSON.stringify(draft.highlights.railOrder) !== JSON.stringify(published.highlights.railOrder)) n += 1;
+  (Object.keys(draft.copy) as (keyof AppRuntimeCopy)[]).forEach((key) => {
+    if (draft.copy[key] !== published.copy[key]) n += 1;
+  });
   return n;
+}
+
+export type RuntimePatchPath = AppRuntimeFlagPath | AppRuntimeCopyPath | `theme.${keyof AppRuntimeTheme}`;
+
+/**
+ * @purpose Apply one typed chrome path from Engineer Lab or a triaged suggestion.
+ * @returns Next draft, or the original config when the path is unknown.
+ */
+export function applyRuntimePath(config: AppRuntimeConfig, path: string, value: unknown): AppRuntimeConfig {
+  const next = cloneAppRuntime(config);
+  const [group, key] = path.split('.') as [string, string];
+  if (!group || !key) return next;
+  if (group === 'tabs' || group === 'buttons' || group === 'layouts') {
+    const bag = next[group] as Record<string, boolean>;
+    if (!(key in bag)) return next;
+    bag[key] = value === true || value === 'true' || value === 'on';
+    return next;
+  }
+  if (group === 'theme') {
+    const bag = next.theme as Record<string, string>;
+    if (!(key in bag) || typeof value !== 'string') return next;
+    bag[key] = asHex(value, bag[key]);
+    return next;
+  }
+  if (group === 'copy') {
+    const bag = next.copy as Record<string, string>;
+    if (!(key in bag)) return next;
+    bag[key] = typeof value === 'string' ? value : String(value ?? '');
+    return next;
+  }
+  return next;
+}
+
+export function getRuntimePathValue(config: AppRuntimeConfig, path: string): unknown {
+  const [group, key] = path.split('.') as [string, string];
+  if (!group || !key) return undefined;
+  const bag = (config as unknown as Record<string, Record<string, unknown>>)[group];
+  return bag ? bag[key] : undefined;
+}
+
+const RUNTIME_ROOT_KEYS = ['tabs', 'buttons', 'layouts', 'theme', 'profile', 'highlights', 'copy'] as const;
+
+function assertKnownObjectKeys(record: Record<string, unknown>, allowed: string[], label: string) {
+  for (const key of Object.keys(record)) {
+    if (!allowed.includes(key)) throw new Error(`Unknown key ${label}.${key}`);
+  }
+}
+
+/**
+ * @purpose Parse Engineer Lab JSON onto the chrome map. Unknown keys and invalid hex are rejected.
+ */
+export function parseLabRuntimeJson(raw: string): AppRuntimeConfig {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error('JSON is invalid.');
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Root must be an object.');
+  }
+  const record = parsed as Record<string, unknown>;
+  assertKnownObjectKeys(record, [...RUNTIME_ROOT_KEYS], 'runtime');
+  const defaults = DEFAULT_APP_RUNTIME;
+  for (const group of ['tabs', 'buttons', 'layouts', 'profile'] as const) {
+    if (record[group] == null) continue;
+    if (typeof record[group] !== 'object' || Array.isArray(record[group])) {
+      throw new Error(`${group} must be an object.`);
+    }
+    assertKnownObjectKeys(record[group] as Record<string, unknown>, Object.keys(defaults[group]), group);
+  }
+  if (record.theme != null) {
+    if (typeof record.theme !== 'object' || Array.isArray(record.theme)) {
+      throw new Error('theme must be an object.');
+    }
+    const theme = record.theme as Record<string, unknown>;
+    assertKnownObjectKeys(theme, Object.keys(defaults.theme), 'theme');
+    for (const [key, value] of Object.entries(theme)) {
+      if (typeof value !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(value.trim())) {
+        throw new Error(`Invalid hex for theme.${key}`);
+      }
+    }
+  }
+  if (record.copy != null) {
+    if (typeof record.copy !== 'object' || Array.isArray(record.copy)) {
+      throw new Error('copy must be an object.');
+    }
+    assertKnownObjectKeys(record.copy as Record<string, unknown>, Object.keys(defaults.copy), 'copy');
+  }
+  if (record.highlights != null) {
+    if (typeof record.highlights !== 'object' || Array.isArray(record.highlights)) {
+      throw new Error('highlights must be an object.');
+    }
+    assertKnownObjectKeys(record.highlights as Record<string, unknown>, Object.keys(defaults.highlights), 'highlights');
+  }
+  return parseAppRuntimeConfig(record);
+}
+
+function inferRuntimePathValue(path: string, body: string): unknown {
+  if (path.startsWith('copy.') || path.startsWith('theme.')) return body;
+  const token = body.trim().toLowerCase();
+  if (token === 'off' || token === 'false' || token === '0') return false;
+  return true;
+}
+
+/**
+ * @purpose Patch a triaged suggestion onto the draft. Unknown paths become a Home campaign banner for marketing.
+ */
+export function applyFeedbackToDraft(
+  config: AppRuntimeConfig,
+  input: { body: string; runtime_path?: string },
+): AppRuntimeConfig {
+  const path = (input.runtime_path ?? '').trim();
+  if (path) {
+    const next = applyRuntimePath(config, path, inferRuntimePathValue(path, input.body));
+    if (!runtimeConfigsEqual(next, config)) return next;
+  }
+  return {
+    ...cloneAppRuntime(config),
+    copy: {
+      ...config.copy,
+      homeBannerTitle: config.copy.homeBannerTitle.trim() || 'Fan suggestion',
+      homeBannerBody: input.body,
+    },
+  };
 }
 
 export function moveHighlightRailItem(order: HighlightRailItem[], id: HighlightRailItem, dir: -1 | 1): HighlightRailItem[] {

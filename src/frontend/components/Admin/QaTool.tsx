@@ -40,6 +40,7 @@ const EMPTY_INBOX: AdminOpsInbox = {
   hiddenDrip: 0,
   lowStock: 0,
   queuedPayouts: 0,
+  newFeedback: 0,
   items: [],
 };
 

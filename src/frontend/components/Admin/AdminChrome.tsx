@@ -65,7 +65,7 @@ export function AdminPage({
       ) : null}
       {saveMode === 'publish' ? (
         <Text style={styles.saveCuePublish}>
-          Draft only. Hit Publish to app in the sidebar when you want fans to see tab, color, Profile, and Highlights layout changes.
+          Draft only. Hit Publish to app in the sidebar when you want fans to see tab, color, copy, Profile, and Highlights layout changes.
         </Text>
       ) : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -82,6 +82,8 @@ type AdminFieldProps = {
   accessibilityLabel?: string;
   keyboardType?: KeyboardTypeOptions;
   multiline?: boolean;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  autoCorrect?: boolean;
 };
 
 export function AdminField({
@@ -92,6 +94,8 @@ export function AdminField({
   accessibilityLabel,
   keyboardType,
   multiline,
+  autoCapitalize = 'none',
+  autoCorrect = false,
 }: AdminFieldProps) {
   return (
     <View style={styles.fieldWrap}>
@@ -104,8 +108,8 @@ export function AdminField({
         accessibilityLabel={accessibilityLabel ?? label}
         keyboardType={keyboardType}
         multiline={multiline}
-        autoCapitalize="none"
-        autoCorrect={false}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={autoCorrect}
         style={[styles.field, multiline && styles.fieldMulti]}
       />
     </View>

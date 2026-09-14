@@ -17,14 +17,15 @@ type ReelMoreSheetProps = {
   onShare: () => void;
   onToggleSave: () => void;
   onReport: () => void;
+  onSuggest?: () => void;
 };
 
 /**
- * @purpose Highlights ⚡ overflow sheet: Share, Save, and Report / Hide so the Reel rail stays Seki / Aura / Flex / Mālo / ⋯.
+ * @purpose Highlights ⚡ overflow sheet: Share, Save, Report / Hide, and app-level Suggest an improvement.
  * @param visible Opens over the focused clip.
  * @param saved Bookmark state for the Save row label.
- * @returns Bottom sheet over a dark blur. Report hands off to `ReportContentModal`.
- * @sideEffects None here — Share / `saved_reels` / `report_reel` stay in the parent.
+ * @returns Bottom sheet over a dark blur. Report hands off to `ReportContentModal`. Suggest is app-level, not `report_reel`.
+ * @sideEffects None here — Share / `saved_reels` / `report_reel` / `submit_app_feedback` stay in the parent.
  */
 export function ReelMoreSheet({
   visible,
@@ -35,6 +36,7 @@ export function ReelMoreSheet({
   onShare,
   onToggleSave,
   onReport,
+  onSuggest,
 }: ReelMoreSheetProps) {
   const insets = useSafeAreaInsets();
   const who = athleteName.trim() || 'this highlight';
@@ -95,6 +97,18 @@ export function ReelMoreSheet({
             <Ionicons name="flag-outline" size={20} color={colors.danger} />
             <Text style={[styles.rowLabel, styles.rowDanger]}>Report / Hide</Text>
           </AnimatedButton>
+
+          {onSuggest ? (
+            <AnimatedButton
+              accessibilityLabel="Suggest an improvement"
+              haptic="light"
+              onPress={onSuggest}
+              contentStyle={styles.row}
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.text} />
+              <Text style={styles.rowLabel}>Suggest an improvement</Text>
+            </AnimatedButton>
+          ) : null}
 
           <AnimatedButton
             accessibilityLabel="Close more options"

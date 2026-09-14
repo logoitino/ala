@@ -20,6 +20,7 @@ import Reanimated, {
 import { ReelActionOverlay } from '@/components/Reels/ReelActionOverlay';
 import { ReelMoreSheet } from '@/components/Reels/ReelMoreSheet';
 import { ReportContentModal } from '@/components/Reels/ReportContentModal';
+import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
 import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, palette, radii } from '@/constants/theme';
@@ -198,6 +199,7 @@ export function ReelCard({
   const [loopFlash, setLoopFlash] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [votes, setVotes] = useState<ReelVoteMap>({ seki: false, aura: false, flex: false });
   const burstId = useRef(0);
@@ -684,7 +686,12 @@ export function ReelCard({
           setMoreOpen(false);
           setReportOpen(true);
         }}
+        onSuggest={() => {
+          setMoreOpen(false);
+          setSuggestOpen(true);
+        }}
       />
+      <SuggestionSheet visible={suggestOpen} surface="home" onClose={() => setSuggestOpen(false)} />
       <ReportContentModal
         visible={reportOpen}
         athleteName={playerName}

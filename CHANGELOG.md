@@ -4,6 +4,14 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-14
 
+### Admin control plane — Marketing / Owner / Engineer
+
+- One `/admin` portal. Sidebar **All desks / Marketing / Owner / Engineer** pills filter the same routes (`tapuai.adminLens`). Marketing lands on Look / copy / Features; Owner on Overview / Money / Reports; Engineer on Lab / QA / flags.
+- Fans send app-level suggestions from Profile **Send a suggestion** and Highlights ⋯ **Suggest an improvement** (`submit_app_feedback`). That is not clip Report (`report_reel`). `/admin/feedback` triages `new → reviewing → planned → shipping → shipped | declined` and can pin a `runtime_path`.
+- Look gains a **Copy** tab (`app_runtime_config.copy`: Home / Local / Spotlight / Drip kickers, ledes, empty lines, optional Home campaign banner). Still draft until **Publish to app**.
+- `/admin/lab` edits the runtime **draft JSON** (unknown keys / invalid hex rejected), applies a triaged suggestion onto the draft, and uses the same Publish path. No in-app TypeScript, `eval`, or git.
+- Overview always shows Gross / net / payouts, Reports health fail-warn count, and new feedback. Incremental: `supabase/app_feedback.sql`.
+
 ### Admin Money — financial control plane
 
 - `/admin/money` is the revenue desk (Expo Router, not `app/finance/page.tsx`): Gross Platform Volume, Company Net Revenue, Athlete & Operator Payouts, plus a split table for Mālo (10/90), district boosters (15/85), and merch + Vault. Totals come from `get_company_revenue_summary`; the log list reads `company_revenue_logs`. Incremental: `supabase/company_revenue.sql`. Fan Mālo copy is still 100% to custodial until counsel updates `MALO_DISCLAIMER`.

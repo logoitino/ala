@@ -19,7 +19,7 @@ export function ScreenHeading({ kicker, title, lede, compact = false }: ScreenHe
       ) : null}
       <Text style={[styles.title, compact && styles.titleCompact, { color: live.theme.text }]}>{title}</Text>
       {compact ? null : <View style={[styles.underline, { backgroundColor: live.theme.jade }]} />}
-      {lede && !compact ? <Text style={styles.lede}>{lede}</Text> : null}
+      {lede ? <Text style={[styles.lede, compact && styles.ledeCompact]}>{lede}</Text> : null}
     </View>
   );
 }
@@ -65,5 +65,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: '600',
     color: colors.textMuted,
+  },
+  ledeCompact: {
+    fontSize: 12,
+    lineHeight: 16,
   },
 });

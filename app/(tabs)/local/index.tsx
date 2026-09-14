@@ -332,7 +332,7 @@ export default function LocalTab() {
     <TabScreen>
       <View style={styles.page}>
         <View style={styles.topChrome}>
-          <ScreenHeading compact kicker="Friday night" title="Local" />
+          <ScreenHeading compact kicker={live.copy.localKicker} title="Local" lede={live.copy.localLede} />
           {live.layouts.localSearch ? (
           <View style={styles.searchWrap}>
             <Text accessibilityElementsHidden importantForAccessibility="no" style={styles.searchGlyph}>
@@ -411,7 +411,7 @@ export default function LocalTab() {
                 </View>
               ) : filteredGames.length === 0 ? (
                 <View style={styles.empty}>
-                  <Text style={styles.emptyTitle}>No live games here</Text>
+                  <Text style={styles.emptyTitle}>{live.copy.localEmpty}</Text>
                   <Text style={styles.muted}>Try another regional tag.</Text>
                 </View>
               ) : (

@@ -14,9 +14,11 @@ import {
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { colors, radii } from '@/constants/theme';
 import {
+  COPY_FIELDS,
   HIGHLIGHT_RAIL_ITEMS,
   THEME_PRESETS,
   moveHighlightRailItem,
+  type AppRuntimeCopy,
   type AppRuntimeHighlights,
   type AppRuntimeProfile,
   type AppRuntimeTheme,
@@ -24,10 +26,10 @@ import {
 } from '@/lib/runtime';
 import { FOCAL } from '@/theme/motion';
 
-type LookTab = 'colors' | 'profile' | 'highlights';
+type LookTab = 'colors' | 'copy' | 'profile' | 'highlights';
 
 /**
- * @purpose Draft brand colors, Profile chrome, and Highlights ⚡ rail. Publish to app ships the look.
+ * @purpose Draft brand colors, fan-facing copy, Profile chrome, and Highlights ⚡ rail. Publish to app ships the look.
  * @sideEffects `patch_app_runtime_draft` on each change.
  */
 export function LookTool() {
@@ -35,6 +37,8 @@ export function LookTool() {
   const [tab, setTab] = useState<LookTab>('colors');
 
   const patchTheme = (theme: AppRuntimeTheme) => void saveDraft({ ...draft, theme });
+  const patchCopy = (key: keyof AppRuntimeCopy, value: string) =>
+    void saveDraft({ ...draft, copy: { ...draft.copy, [key]: value } });
   const patchProfile = (key: keyof AppRuntimeProfile, value: boolean) =>
     void saveDraft({ ...draft, profile: { ...draft.profile, [key]: value } });
   const patchHighlights = (next: Partial<AppRuntimeHighlights>) =>
@@ -43,7 +47,7 @@ export function LookTool() {
   return (
     <AdminPage
       title="Look"
-      lede="Brand colors, what sits on Profile, and where Highlights ⚡ buttons live. Draft until Publish to app."
+      lede="Brand colors, Home/Local/Spotlight/Drip copy, what sits on Profile, and where Highlights ⚡ buttons live. Draft until Publish to app."
       saveMode="publish"
     >
       <AdminPanel title={dirty ? `${pendingCount} unpublished change${pendingCount === 1 ? '' : 's'}` : 'Live with the fan app'}>
@@ -59,6 +63,7 @@ export function LookTool() {
         label="Desk"
         items={[
           { id: 'colors', label: 'Colors' },
+          { id: 'copy', label: 'Copy' },
           { id: 'profile', label: 'Profile' },
           { id: 'highlights', label: 'Highlights' },
         ]}
@@ -74,6 +79,8 @@ export function LookTool() {
           onHex={(key, value) => patchTheme({ ...draft.theme, [key]: value })}
         />
       ) : null}
+
+      {tab === 'copy' ? <CopyPane copy={draft.copy} live={published.copy} onChange={patchCopy} /> : null}
 
       {tab === 'profile' ? (
         <View style={styles.group}>
@@ -153,6 +160,37 @@ function ToggleRow({
     >
       <AdminBtn label={on ? 'On' : 'Off'} kind={on ? 'primary' : 'danger'} onPress={onPress} />
     </AdminRow>
+  );
+}
+
+function CopyPane({
+  copy,
+  live,
+  onChange,
+}: {
+  copy: AppRuntimeCopy;
+  live: AppRuntimeCopy;
+  onChange: (key: keyof AppRuntimeCopy, value: string) => void;
+}) {
+  return (
+    <View style={styles.group}>
+      <Text style={styles.section}>Fan headings</Text>
+      <Text style={styles.body}>Home, Local, Spotlight, and Drip kickers and empty lines. Leave the Home banner title blank to hide it.</Text>
+      {COPY_FIELDS.map((field) => (
+        <View key={field.key} style={styles.copyBlock}>
+          <AdminField
+            label={`${field.label}${copy[field.key] !== live[field.key] ? ' · unpublished' : ''}`}
+            value={copy[field.key]}
+            onChangeText={(value) => onChange(field.key, value)}
+            placeholder={field.hint}
+            multiline={field.multiline}
+            autoCapitalize="sentences"
+            autoCorrect
+          />
+          <Text style={styles.copyHint}>{field.hint}</Text>
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -404,5 +442,13 @@ const styles = StyleSheet.create({
     color: FOCAL.neonJade,
     fontSize: 10,
     fontWeight: '800',
+  },
+  copyBlock: {
+    gap: 4,
+  },
+  copyHint: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

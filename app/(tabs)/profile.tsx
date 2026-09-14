@@ -5,6 +5,7 @@ import { type Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
@@ -65,6 +66,7 @@ export default function MyHubTab() {
   const [tipsDropped, setTipsDropped] = useState(0);
   const [pollVotes, setPollVotes] = useState(0);
   const [roleSheetOpen, setRoleSheetOpen] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [vaultLockBusy, setVaultLockBusy] = useState(false);
   const [localOnboardTeam, setLocalOnboardTeam] = useState<SchoolTeam | null>(null);
 
@@ -321,6 +323,18 @@ export default function MyHubTab() {
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </AnimatedButton>
               <AnimatedButton
+                accessibilityLabel="Send a suggestion"
+                haptic="light"
+                onPress={() => setSuggestOpen(true)}
+                contentStyle={styles.capabilityRow}
+              >
+                <View style={styles.capabilityCopy}>
+                  <Text style={styles.capabilityLabel}>Send a suggestion</Text>
+                  <Text style={styles.capabilityValue}>Improve Tapua'i — goes to admin Feedback</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </AnimatedButton>
+              <AnimatedButton
                 accessibilityLabel="Tip History and Receipts"
                 haptic="none"
                 onPress={() => {
@@ -345,6 +359,7 @@ export default function MyHubTab() {
         />
       </ScrollView>
       <RoleSwitcherModal visible={roleSheetOpen} onClose={() => setRoleSheetOpen(false)} />
+      <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />
     </TabScreen>
   );
 }

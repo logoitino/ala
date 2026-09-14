@@ -281,7 +281,7 @@ export default function HighlightsTab() {
       ? 'No Seki plays in the feed yet.'
       : feedFilter === 'home'
         ? 'Your Home mix is quiet. Follow athletes in Crew, or switch to All.'
-        : 'No Highlights ⚡ yet.';
+        : runtime.copy.homeEmpty;
 
   return (
     <TabScreen dark>
@@ -364,6 +364,24 @@ export default function HighlightsTab() {
           onLayout={(event) => setChromeHeight(event.nativeEvent.layout.height)}
         >
           {runtime.layouts.liveMatches ? <LiveMatchBanner live={liveGame} playToasts={false} /> : null}
+          {runtime.copy.homeBannerTitle.trim() ? (
+            <View style={[styles.campaign, { borderColor: runtime.theme.jade }]}>
+              <Text style={[styles.campaignTitle, { color: runtime.theme.jade }]}>{runtime.copy.homeBannerTitle}</Text>
+              {runtime.copy.homeBannerBody.trim() ? (
+                <Text style={[styles.campaignBody, { color: runtime.theme.text }]}>{runtime.copy.homeBannerBody}</Text>
+              ) : null}
+            </View>
+          ) : null}
+          {runtime.copy.homeKicker.trim() || runtime.copy.homeLede.trim() ? (
+            <View style={styles.homeCopy}>
+              {runtime.copy.homeKicker.trim() ? (
+                <Text style={[styles.homeKicker, { color: runtime.theme.jade }]}>{runtime.copy.homeKicker}</Text>
+              ) : null}
+              {runtime.copy.homeLede.trim() ? (
+                <Text style={[styles.homeLede, { color: runtime.theme.text }]}>{runtime.copy.homeLede}</Text>
+              ) : null}
+            </View>
+          ) : null}
           <View style={styles.chromeRow}>
             {runtime.layouts.homeSearch ? (
             <AnimatedButton
@@ -482,6 +500,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  campaign: {
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: 'rgba(15,20,22,0.86)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 4,
+  },
+  campaignTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  campaignBody: {
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 16,
+  },
+  homeCopy: {
+    gap: 2,
+  },
+  homeKicker: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  homeLede: {
+    fontSize: 12,
+    fontWeight: '600',
+    opacity: 0.86,
   },
   searchBtn: {
     width: 36,

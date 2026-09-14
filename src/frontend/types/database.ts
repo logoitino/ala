@@ -301,6 +301,20 @@ export type ShopOrder = {
   created_at: string;
 };
 
+/** Fan suggestion / bug / look note (`public.app_feedback`). */
+export type AppFeedbackRow = {
+  id: string;
+  author_id: string | null;
+  body: string;
+  kind: 'suggestion' | 'bug' | 'look' | 'other' | string;
+  surface: 'home' | 'local' | 'spotlight' | 'drip' | 'profile' | 'other' | string;
+  status: 'new' | 'reviewing' | 'planned' | 'shipping' | 'shipped' | 'declined' | string;
+  runtime_path: string;
+  admin_note: string;
+  created_at: string;
+  updated_at: string;
+};
+
 /** Company ledger row (`public.company_revenue_logs`). */
 export type CompanyRevenueLogRow = {
   id: string;
@@ -561,6 +575,10 @@ export type Database = {
         Pick<CompanyRevenueLogRow, 'transaction_type' | 'gross_amount' | 'platform_cut_amount' | 'payout_amount'> &
           Partial<CompanyRevenueLogRow>
       >;
+      app_feedback: Table<
+        AppFeedbackRow,
+        Pick<AppFeedbackRow, 'body'> & Partial<AppFeedbackRow>
+      >;
       app_runtime_config: {
         Row: {
           id: string;
@@ -740,6 +758,23 @@ export type Database = {
       get_company_revenue_summary: {
         Args: Record<string, never>;
         Returns: Record<string, unknown>;
+      };
+      submit_app_feedback: {
+        Args: { p_body: string; p_kind?: string; p_surface?: string };
+        Returns: AppFeedbackRow;
+      };
+      get_app_feedback: {
+        Args: Record<string, never>;
+        Returns: AppFeedbackRow[];
+      };
+      triage_app_feedback: {
+        Args: {
+          target_id: string;
+          next_status: string;
+          next_note?: string;
+          next_runtime_path?: string;
+        };
+        Returns: AppFeedbackRow;
       };
       toggle_reel_vault_status: {
         Args: { target_reel_id: string };

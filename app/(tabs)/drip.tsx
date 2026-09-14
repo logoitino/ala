@@ -34,7 +34,7 @@ export default function DripTab() {
   return (
     <TabScreen>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeading compact kicker="Marketplace" title="Drip" />
+        <ScreenHeading compact kicker={live.copy.dripKicker} title="Drip" lede={live.copy.dripLede} />
         <FilterPills
           items={DRIP_FILTERS}
           value={filter}
@@ -42,7 +42,7 @@ export default function DripTab() {
           accessibilityLabel="Drip categories"
         />
         {items.length === 0 ? (
-          <Text style={styles.empty}>Nothing in this rack yet.</Text>
+          <Text style={styles.empty}>{live.copy.dripEmpty}</Text>
         ) : (
           items.map((item) => <GearCard key={item.id} item={item} onPress={setSelected} />)
         )}

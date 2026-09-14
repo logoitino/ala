@@ -9,6 +9,8 @@ export type AdminNavHref =
   | '/admin/features'
   | '/admin/look'
   | '/admin/qa'
+  | '/admin/lab'
+  | '/admin/feedback'
   | '/admin/spotlight'
   | '/admin/moderation'
   | '/admin/athletes'
@@ -45,9 +47,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: '/admin', label: 'Overview', hint: 'Inbox and shortcuts' },
       { href: '/admin/studio', label: 'Studio', hint: 'Preview roles and surfaces' },
       { href: '/admin/features', label: 'Features', hint: 'Tabs and buttons — needs Publish' },
-      { href: '/admin/look', label: 'Look', hint: 'Colors, profile, Highlights rail' },
+      { href: '/admin/look', label: 'Look', hint: 'Colors, copy, profile, Highlights rail' },
       { href: '/admin/publish', label: 'Publish', hint: 'Go-live queue' },
+      { href: '/admin/lab', label: 'Lab', hint: 'Runtime JSON and apply suggestions' },
       { href: '/admin/qa', label: 'QA', hint: 'Telemetry and empty states' },
+      { href: '/admin/feedback', label: 'Feedback', hint: 'Fan suggestions to ship' },
     ],
   },
   {
@@ -87,6 +91,60 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
 ];
 
 export const ADMIN_NAV: AdminNavItem[] = ADMIN_NAV_GROUPS.flatMap((group) => group.items);
+
+export type AdminLens = 'marketing' | 'owner' | 'engineer' | 'all';
+
+export const ADMIN_LENS_KEY = 'tapuai.adminLens';
+
+export const ADMIN_LENSES: { id: AdminLens; label: string; hint: string }[] = [
+  { id: 'all', label: 'All desks', hint: 'Every tool' },
+  { id: 'marketing', label: 'Marketing', hint: 'Look, copy, campaign chrome' },
+  { id: 'owner', label: 'Owner', hint: 'Numbers, people, Spotlight' },
+  { id: 'engineer', label: 'Engineer', hint: 'Lab, QA, flags, feedback' },
+];
+
+const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
+  marketing: [
+    '/admin/look',
+    '/admin/features',
+    '/admin/publish',
+    '/admin/spotlight',
+    '/admin/drip',
+    '/admin/boosters',
+    '/admin/polls',
+    '/admin/feedback',
+  ],
+  owner: ['/admin', '/admin/money', '/admin/reports', '/admin/people', '/admin/spotlight'],
+  engineer: [
+    '/admin',
+    '/admin/lab',
+    '/admin/qa',
+    '/admin/features',
+    '/admin/publish',
+    '/admin/feedback',
+    '/admin/moderation',
+    '/admin/highlights',
+  ],
+};
+
+/**
+ * @purpose Filter sidebar groups for Marketing / Owner / Engineer without hiding All desks.
+ */
+export function navGroupsForLens(lens: AdminLens): AdminNavGroup[] {
+  if (lens === 'all') return ADMIN_NAV_GROUPS;
+  const allowed = new Set(LENS_HREFS[lens]);
+  return ADMIN_NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => allowed.has(item.href)),
+  })).filter((group) => group.items.length > 0);
+}
+
+export function overviewLedeForLens(lens: AdminLens): string {
+  if (lens === 'marketing') return 'Look, copy, and campaign chrome. Draft until Publish to app.';
+  if (lens === 'owner') return 'Gross, net, payouts, health, and who needs a decision.';
+  if (lens === 'engineer') return 'Lab, QA, flags, and fan suggestions waiting to become a patch.';
+  return 'Needs attention, unpublished chrome, then every categorized desk.';
+}
 
 export type AdminProductionSurface = {
   href: string;
