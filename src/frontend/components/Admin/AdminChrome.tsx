@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -15,7 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { colors, radii } from '@/constants/theme';
-import { adminTrailForPath } from '@/lib/admin';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { adminTrailForPath, type AdminNavHref } from '@/lib/admin';
 import { FOCAL } from '@/theme/motion';
 
 type AdminPageProps = {
@@ -93,9 +94,10 @@ export function AdminPage({
   saveMode,
 }: AdminPageProps) {
   const insets = useSafeAreaInsets();
+  const { live } = useAppRuntime();
   return (
     <ScrollView
-      style={styles.page}
+      style={[styles.page, { backgroundColor: live.theme.background }]}
       contentContainerStyle={[
         styles.content,
         { paddingTop: Math.max(insets.top, 16), paddingBottom: Math.max(insets.bottom, 28) },
@@ -119,7 +121,7 @@ export function AdminPage({
       ) : null}
       {saveMode === 'publish' ? (
         <Text style={styles.saveCuePublish}>
-          Draft only. Hit Publish to app in the sidebar when you want fans to see tab, color, copy, Profile, and Highlights layout changes.
+          Draft only. Hit Publish to app in the sidebar when you want fans to see tab, Daylight color, copy, catalog, Profile, and Highlights layout changes.
         </Text>
       ) : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -244,7 +246,7 @@ export function AdminPanel({ title, children }: { title?: string; children: Reac
 export function AdminBusy() {
   return (
     <View style={styles.busy}>
-      <ActivityIndicator color={FOCAL.neonJade} />
+      <ActivityIndicator color={FOCAL.jadeInk} />
     </View>
   );
 }
@@ -301,6 +303,92 @@ export function AdminPills<T extends string>({ label, items, value, onChange }: 
         })}
       </View>
     </View>
+  );
+}
+
+/**
+ * @purpose Uppercase jade divider used by every desk that stacks more than one list.
+ */
+export function AdminSectionTitle({ children }: { children: string }) {
+  return <Text style={styles.section}>{children}</Text>;
+}
+
+/**
+ * @purpose Metric grid shared by QA, Money, and Reports so the numbers are styled once.
+ * @param items Big value, uppercase caption, and an optional line of context under it.
+ */
+export function AdminMetrics({ items }: { items: { label: string; value: string | number; hint?: string }[] }) {
+  return (
+    <View style={styles.metrics} accessibilityRole="summary">
+      {items.map((item) => (
+        <View key={item.label} style={styles.metric} accessibilityRole="summary" accessibilityLabel={`${item.label} ${item.value}`}>
+          <Text style={styles.metricLabel}>{item.label}</Text>
+          <Text style={styles.metricValue}>{item.value}</Text>
+          {item.hint ? <Text style={styles.metricHint}>{item.hint}</Text> : null}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * @purpose Hand a queue item to the desk that owns it instead of repeating that desk's controls.
+ */
+export function AdminDeskLink({
+  title,
+  meta,
+  href,
+  label = 'Open desk',
+  kind = 'primary',
+}: {
+  title: string;
+  meta?: string;
+  href: AdminNavHref;
+  label?: string;
+  kind?: 'primary' | 'ghost' | 'danger';
+}) {
+  const router = useRouter();
+  return (
+    <AdminRow title={title} meta={meta}>
+      <AdminBtn label={label} kind={kind} onPress={() => router.push(href)} />
+    </AdminRow>
+  );
+}
+
+/**
+ * @purpose The one Publish to app / Discard draft control, for any desk that writes the runtime draft.
+ * @param note Extra line explaining what stays hidden from fans until the ship.
+ * @sideEffects `publish_app_runtime` / `patch_app_runtime_draft` through AppRuntimeContext.
+ */
+export function AdminPublishBar({ note }: { note?: string }) {
+  const { dirty, pendingCount, publishedAt, publishLive, discardDraft } = useAppRuntime();
+  const [publishing, setPublishing] = useState(false);
+
+  const ship = async () => {
+    setPublishing(true);
+    try {
+      await publishLive();
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  return (
+    <AdminPanel title={dirty ? `${pendingCount} unpublished change${pendingCount === 1 ? '' : 's'}` : 'Live with the fan app'}>
+      <Text style={styles.publishBody}>
+        {publishedAt
+          ? `Last published ${publishedAt.replace('T', ' ').slice(0, 16)} UTC.`
+          : 'Nothing published yet — defaults are all on.'}
+      </Text>
+      <AdminBtn
+        label={publishing ? 'Publishing…' : dirty ? 'Publish to app' : 'Already live'}
+        kind="primary"
+        disabled={!dirty || publishing}
+        onPress={() => void ship()}
+      />
+      {dirty ? <AdminBtn label="Discard draft" kind="danger" onPress={() => void discardDraft()} /> : null}
+      <AdminNotice text={dirty ? note ?? 'Fans still see the previous chrome until you publish.' : null} tone="warn" />
+    </AdminPanel>
   );
 }
 
@@ -374,8 +462,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   trailHitOn: {
-    backgroundColor: FOCAL.neonJade,
-    borderColor: FOCAL.neonJade,
+    backgroundColor: FOCAL.jadeInk,
+    borderColor: FOCAL.jadeInk,
   },
   trailHitLabel: {
     color: colors.text,
@@ -383,7 +471,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   trailHitLabelOn: {
-    color: FOCAL.backgroundBase,
+    color: '#FFFFFF',
   },
   trailCrumb: {
     flexGrow: 1,
@@ -398,7 +486,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   saveCue: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 13,
     fontWeight: '700',
     lineHeight: 18,
@@ -477,8 +565,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   btnPrimary: {
-    backgroundColor: FOCAL.neonJade,
-    borderColor: FOCAL.neonJade,
+    backgroundColor: FOCAL.jadeInk,
+    borderColor: FOCAL.jadeInk,
   },
   btnDanger: {
     borderColor: colors.danger,
@@ -495,7 +583,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   btnLabelPrimary: {
-    color: FOCAL.backgroundBase,
+    color: '#FFFFFF',
   },
   btnLabelDanger: {
     color: colors.danger,
@@ -518,7 +606,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   notice: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -550,8 +638,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pillOn: {
-    backgroundColor: FOCAL.neonJade,
-    borderColor: FOCAL.neonJade,
+    backgroundColor: FOCAL.jadeInk,
+    borderColor: FOCAL.jadeInk,
   },
   pillLabel: {
     color: colors.textMuted,
@@ -559,7 +647,54 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   pillLabelOn: {
-    color: FOCAL.backgroundBase,
+    color: '#FFFFFF',
+  },
+  section: {
+    color: FOCAL.jadeInk,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginTop: 4,
+  },
+  metrics: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  metric: {
+    flexGrow: 1,
+    minWidth: 88,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12,
+    gap: 4,
+  },
+  metricValue: {
+    color: FOCAL.jadeInk,
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  metricLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  metricHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
+    lineHeight: 15,
+  },
+  publishBody: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
   },
   suggest: {
     alignItems: 'flex-start',

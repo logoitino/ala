@@ -76,6 +76,7 @@ export function CoverageTool() {
   }, [reports.issues]);
 
   const rows = surface === 'all' ? COVERAGE_CONTROLS : COVERAGE_CONTROLS.filter((item) => item.surface === surface);
+  const codeOwned = COVERAGE_CONTROLS.filter((item) => item.owner === 'code').length;
   const liveCount = COVERAGE_CONTROLS.filter((item) => !item.flag || getRuntimeFlag(live, item.flag)).length;
   const flaggedOff = COVERAGE_CONTROLS.filter((item) => item.flag && !getRuntimeFlag(live, item.flag)).length;
   const hottest = [...issueMap.entries()].sort((a, b) => b[1] - a[1])[0];
@@ -90,6 +91,14 @@ export function CoverageTool() {
       <AdminNotice
         text={`${liveCount} of ${COVERAGE_CONTROLS.length} controls live · ${flaggedOff} paused in Features · ${reports.usage.issues_24h ?? 0} issues in 24h`}
         tone={flaggedOff > 0 || (reports.usage.issues_24h ?? 0) > 0 ? 'warn' : 'ok'}
+      />
+      <AdminNotice
+        text={
+          codeOwned === 0
+            ? 'Every control on this board is desk-editable.'
+            : `${codeOwned} control${codeOwned === 1 ? '' : 's'} still ship values in code — the desk shows them, a release changes them.`
+        }
+        tone={codeOwned === 0 ? 'ok' : 'warn'}
       />
       {hottest ? (
         <AdminNotice text={`Hottest issue: ${hottest[0]} (${hottest[1]})`} tone="warn" />
@@ -115,7 +124,7 @@ export function CoverageTool() {
             <AdminRow
               key={item.id}
               title={item.label}
-              meta={`${item.hint} · ${on ? 'live' : 'paused'}${item.telemetry ? ` · ${taps} taps / ${issues} issues (7d)` : ''}`}
+              meta={`${item.hint} · ${on ? 'live' : 'paused'}${item.owner === 'code' ? ' · ships in code' : ''}${item.telemetry ? ` · ${taps} taps / ${issues} issues (7d)` : ''}`}
             >
               <View style={styles.actions}>
                 <View style={[styles.dot, on ? styles.dotOn : styles.dotOff]} />

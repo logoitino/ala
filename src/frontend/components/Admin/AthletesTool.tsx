@@ -15,6 +15,7 @@ import {
 import { formatTeamBadge, type SchoolTeam } from '@/data/teams';
 import { fetchAdminSchools, upsertAthlete } from '@/lib/adminCatalog';
 import { useRoster } from '@/hooks/useRoster';
+import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { setPlayerVaultLocked } from '@/lib/vault';
 import type { Player } from '@/types/database';
 
@@ -36,7 +37,9 @@ const empty = {
  */
 export function AthletesTool() {
   const { players, loading, error, refresh } = useRoster();
+  const { configs, configFor } = useSportConfigs();
   const [schools, setSchools] = useState<SchoolTeam[]>([]);
+  const [sport, setSport] = useState('Football');
   const [form, setForm] = useState(empty);
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -101,6 +104,8 @@ export function AthletesTool() {
     });
   };
 
+  const playbook = configFor(sport);
+
   return (
     <AdminPage
       title="Athletes"
@@ -114,19 +119,21 @@ export function AthletesTool() {
         <AdminField label="Name" value={form.name} onChangeText={(name) => setForm((c) => ({ ...c, name }))} placeholder="Marcus Rivera" />
         <AdminField label="Jersey" value={form.jersey_number} onChangeText={(jersey_number) => setForm((c) => ({ ...c, jersey_number }))} keyboardType="number-pad" />
         <AdminPills
-          label="Position"
-          items={[
-            { id: 'Quarterback', label: 'QB' },
-            { id: 'Running Back', label: 'RB' },
-            { id: 'Wide Receiver', label: 'WR' },
-            { id: 'Tight End', label: 'TE' },
-            { id: 'Linebacker', label: 'LB' },
-            { id: 'Defensive Back', label: 'DB' },
-            { id: 'Kicker', label: 'K' },
-          ]}
-          value={form.position}
-          onChange={(position) => setForm((c) => ({ ...c, position }))}
+          label="Sport"
+          items={configs
+            .filter((row) => row.isActive)
+            .map((row) => ({ id: row.sport, label: `${row.emoji} ${row.sport}` }))}
+          value={sport}
+          onChange={setSport}
         />
+        {playbook.positions.length > 0 ? (
+          <AdminPills
+            label="Position"
+            items={playbook.positions.map((row) => ({ id: row.full, label: row.short || row.full }))}
+            value={form.position}
+            onChange={(position) => setForm((c) => ({ ...c, position }))}
+          />
+        ) : null}
         <AdminField label="Position (full)" value={form.position} onChangeText={(position) => setForm((c) => ({ ...c, position }))} placeholder="Quarterback" />
         <AdminSuggest
           label="School"

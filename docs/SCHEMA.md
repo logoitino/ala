@@ -23,7 +23,7 @@ Auth (`auth.users`) must exist before `profiles.user_id` can reference it.
 | Lock Vault 🔒 / Open Vault 🌐 | `players.vault_locked` + `set_player_vault_locked(target_player_id, is_locked)` |
 | Serve Like Me / Train Like Me | `reels.category` (`game_play` \| `train_like_me` \| `serve_like_me`) |
 | The Crew ⚡ / Your Squad 🛡️ | `crew_follows` + `get_crew_graph` / `toggle_crew_follow` |
-| Admin portal | `/admin` control plane (`profiles.is_admin` or Studio unlock) writes `players`, `schools_and_teams`, `games`, `reels`, `shop_products`, `shop_orders`, `sponsorships`, `cheer_polls`, `spotlight_awards`, `profiles`, `app_runtime_config`, `company_revenue_logs`, `app_feedback`. Studio / Publish / QA / Features / Look / Lab / Feedback / Reports / Coverage / Money are client desks on the same tables (Coverage is a client catalog, not a table). Heavy chrome waits on `publish_app_runtime`. |
+| Admin portal | `/admin` control plane (`profiles.is_admin` or Studio unlock) writes `players`, `schools_and_teams`, `games`, `reels`, `shop_products`, `shop_orders`, `sponsorships`, `cheer_polls`, `spotlight_awards`, `profiles`, `app_runtime_config`, `company_revenue_logs`, `app_feedback`. Studio / Publish / Features / Look / Catalogs / Feedback / Reports / Coverage / Money are client desks on the same tables (Coverage is a client catalog, not a table). Lab / QA stay as hidden deep links. Heavy chrome waits on `publish_app_runtime`. |
 | Vault Flash Unlock | `reels.flash_unlock_until` + `set_reel_flash_unlock` → `crew_push_queue` |
 
 ---
@@ -355,6 +355,54 @@ Drip marketplace catalog. The fan Drip tab reads `is_active` rows (`useDripCatal
 
 **RLS (demo):** public SELECT; admin INSERT / UPDATE / DELETE (`anon` allowed in Expo Go). Client: `useDripCatalog` + `/admin/drip`. Fallback: `DRIP_ITEMS` when the table is missing.
 
+### `sport_configs`
+
+One playbook per sport, authored at `/admin/sports`. Drives the operator console (score buttons, period chips, clock, sideline callouts) and the athlete Stats 📊 pane (combine tiles, career rows). Any sport without a row falls back to `GENERIC_SPORT_CONFIG`, so nothing is unscoreable. Incremental: `supabase/sport_configs.sql`.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | uuid PK | |
+| `sport` | text | Unique on `lower(btrim(sport))` — `games.sport` and `athlete_career_stats.sport` join by name |
+| `emoji` | text | Console + Stats badge (`🏈`) |
+| `period_label` | text | Quarter / Half / Set / Inning / Period |
+| `periods` | jsonb | Ordered chips (`["Q1","Q2","Q3","Q4","OT"]`) |
+| `uses_clock` | boolean | False hides the operator clock (volleyball, baseball, track) |
+| `clock_seconds` | integer | Seconds per period seed for the console clock |
+| `scoring` | jsonb | `[{ id, label, points, eventType }]` — score buttons and player-tag macros |
+| `callouts` | jsonb | `[{ id, label, emoji, eventType }]` — Broadcast buttons, also the fan toast emoji |
+| `stat_fields` | jsonb | `[{ source: games \| scoring \| volume \| mvp, label, show }]` career rows |
+| `measurables` | jsonb | `[{ key: height \| weight \| fortyYard \| verticalJump, label, show }]` combine tiles |
+| `positions` | jsonb | `[{ short, full }]` roster pills on `/admin/athletes` (empty = free text) |
+| `is_active` | boolean | Paused playbooks stay off new game / athlete pickers |
+| `sort_order` | integer | Builder order |
+| `created_at` / `updated_at` | timestamptz | |
+
+`games.sport` (text, default `Football`) selects the playbook for a match. **RLS (demo):** public SELECT; admin INSERT / UPDATE / DELETE (`anon` allowed in Expo Go). Client: `src/frontend/lib/sports.ts` + `useSportConfigs` + `/admin/sports`. Fallback: `SPORT_CONFIG_SEEDS` (Football, Basketball, Rugby, Volleyball, Soccer, Baseball, Softball, Wrestling, Track & Field, Lacrosse, Ice Hockey, Tennis).
+
+### `get_sport_configs()`
+
+```
+get_sport_configs() returns setof sport_configs
+```
+
+Every playbook in builder order (`sort_order, sport`), limit 100.
+
+### `upsert_sport_config(payload)`
+
+```
+upsert_sport_config(payload jsonb) returns sport_configs
+```
+
+Create or update one playbook. Without an `id` it matches on `lower(sport)`, so re-running the seeder is idempotent. Blank names raise.
+
+### `delete_sport_config(target_id)`
+
+```
+delete_sport_config(target_id uuid) returns boolean
+```
+
+Drops a playbook. Games keep their `sport` text and fall back to the generic console.
+
 ### `wishlist_items`
 
 Locker Room Wishlist gear on the athlete Stats 📊 tab. Fans either buy the item outright through `buy_url` or drop Mālo toward the goal. Incremental: `supabase/locker_room_wishlist.sql`.
@@ -449,7 +497,7 @@ Single-row fan chrome map (`id = 'default'`). Admin **Features** writes `draft`.
 | `published_at` | timestamptz | Last Publish to app |
 | `updated_at` | timestamptz | Last draft write |
 
-JSON groups: `tabs` (home / local / spotlight / drip / profile / upload), `buttons` (seki / aura / flex / malo / more / subscribe / crew / vault / flashUnlock / **suggest**), `layouts` (liveMatches / cheerPolls / topBoosters / sponsorshipModal / spotlightModal / homeSearch / localSearch / operatorConsole / parentHq / boosterHq / sponsorHq / **slangGuide** / **receipts** / **wishlist**), `theme` (background / surface / jade / gold / text), `profile` (showCard / showCrew / showStats / showVault / actionsOnTop / statsFirst), `highlights` (railSide / namePlacement / showSchool / showCaption / railOrder), `copy` (Home / Local / Spotlight / Drip kickers and ledes, `slangLine`, Profile / Receipts kickers and ledes, Operator / Parent / Booster / Sponsor ledes, optional `homeBannerTitle` / `homeBannerBody`). Client desks: `/admin/features` (flags), `/admin/look` (colors, copy, Profile chrome, Highlights ⚡ rail), `/admin/lab` (JSON draft), `/admin/coverage` (client catalog of every fan control → desk / flag / telemetry; no extra table).
+JSON groups: `tabs` (home / local / spotlight / drip / profile / upload), `buttons` (seki / aura / flex / malo / more / subscribe / crew / vault / flashUnlock / **suggest**), `layouts` (liveMatches / cheerPolls / topBoosters / sponsorshipModal / spotlightModal / homeSearch / localSearch / operatorConsole / parentHq / boosterHq / sponsorHq / **slangGuide** / **receipts** / **wishlist**), `theme` (background / surface / jade / gold / text; default **Daylight** `#F4F7F5` / `#00733C`), `profile` (showCard / showCrew / showStats / showVault / actionsOnTop / statsFirst), `highlights` (railSide / namePlacement / showSchool / showCaption / railOrder), `copy` (Home / Local / Spotlight / Drip kickers and ledes, `slangLine`, Profile / Receipts kickers and ledes, Operator / Parent / Booster / Sponsor ledes, optional `homeBannerTitle` / `homeBannerBody`), **`catalog`** (`maloAmounts`, `maloFeeDollars`, `exclusiveDollars`, `exclusiveAura`, `classYears`, `localFilters`, `sponsorTiers`, `reelCategories`). Client desks: `/admin/features` (flags), `/admin/look` (colors, copy, Profile chrome, Highlights ⚡ rail), `/admin/catalog` (prices and chips), `/admin/lab` (JSON draft, hidden from the sidebar), `/admin/coverage` (client map of every fan control → desk / flag / telemetry; no extra table).
 
 **RLS (demo):** public SELECT; admin INSERT / UPDATE (`anon` in Expo Go). Incremental: `supabase/app_runtime.sql`. Client: `src/frontend/lib/runtime.ts` + `/admin/features`.
 

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AccessRestricted } from '@/components/Admin/AccessRestricted';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors } from '@/constants/theme';
+import { colors, isLightCanvas } from '@/constants/theme';
 import { AdminLensProvider, useAdminLens } from '@/context/AdminLensContext';
 import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -37,7 +37,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
 function AdminShellInner({ children }: AdminShellProps) {
   const { isAdmin, loading } = useAuth();
-  const { dirty, pendingCount, publishLive } = useAppRuntime();
+  const { dirty, pendingCount, publishLive, live } = useAppRuntime();
   const { lens, setLens } = useAdminLens();
   const pathname = usePathname();
   const router = useRouter();
@@ -57,7 +57,7 @@ function AdminShellInner({ children }: AdminShellProps) {
   if (loading) {
     return (
       <View style={styles.boot}>
-        <ActivityIndicator color={FOCAL.neonJade} />
+        <ActivityIndicator color={FOCAL.jadeInk} />
       </View>
     );
   }
@@ -87,6 +87,8 @@ function AdminShellInner({ children }: AdminShellProps) {
     </AnimatedButton>
   ) : null;
 
+  const jadeOn = isLightCanvas(live.theme.jade) ? FOCAL.ink : '#FFFFFF';
+
   const navFor = (items: AdminNavGroup['items']) =>
     items.map((item) => {
       const on = isAdminNavActive(item.href, pathname);
@@ -97,13 +99,25 @@ function AdminShellInner({ children }: AdminShellProps) {
           accessibilityRole="tab"
           accessibilityLabel={item.label}
           accessibilityState={{ selected: on }}
-          contentStyle={[wide ? styles.sideItem : styles.chip, on && (wide ? styles.sideItemOn : styles.chipOn)]}
+          contentStyle={[
+            wide ? styles.sideItem : styles.chip,
+            on && (wide ? styles.sideItemOn : styles.chipOn),
+            on && { backgroundColor: live.theme.jade, borderColor: live.theme.jade },
+          ]}
           onPress={() => router.push(item.href as AdminNavHref)}
         >
-          <Text style={[wide ? styles.sideLabel : styles.chipLabel, on && (wide ? styles.sideLabelOn : styles.chipLabelOn)]}>
+          <Text
+            style={[
+              wide ? styles.sideLabel : styles.chipLabel,
+              on && (wide ? styles.sideLabelOn : styles.chipLabelOn),
+              on && { color: jadeOn },
+            ]}
+          >
             {item.label}
           </Text>
-          {wide ? <Text style={[styles.sideHint, on && styles.sideHintOn]}>{item.hint}</Text> : null}
+          {wide ? (
+            <Text style={[styles.sideHint, on && styles.sideHintOn, on && { color: jadeOn }]}>{item.hint}</Text>
+          ) : null}
         </AnimatedButton>
       );
     });
@@ -111,58 +125,64 @@ function AdminShellInner({ children }: AdminShellProps) {
   const mobileGroup = navGroups.find((group) => group.id === groupId) ?? navGroups[0];
 
   const lensPills = (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-      {ADMIN_LENSES.map((item) => {
-        const on = item.id === lens;
-        return (
-          <AnimatedButton
-            key={item.id}
-            haptic="selection"
-            accessibilityRole="tab"
-            accessibilityLabel={item.label}
-            accessibilityState={{ selected: on }}
-            contentStyle={[styles.lensChip, on && styles.lensChipOn]}
-            onPress={() => setLens(item.id)}
-          >
-            <Text style={[styles.lensLabel, on && styles.lensLabelOn]}>{item.label}</Text>
-          </AnimatedButton>
-        );
-      })}
-    </ScrollView>
+    <View style={styles.lensWrap}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+        {ADMIN_LENSES.map((item) => {
+          const on = item.id === lens;
+          return (
+            <AnimatedButton
+              key={item.id}
+              haptic="selection"
+              accessibilityRole="tab"
+              accessibilityLabel={item.label}
+              accessibilityState={{ selected: on }}
+              contentStyle={[styles.lensChip, on && styles.lensChipOn]}
+              onPress={() => setLens(item.id)}
+            >
+              <Text style={[styles.lensLabel, on && styles.lensLabelOn]}>{item.label}</Text>
+            </AnimatedButton>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 
   return (
-    <View style={[styles.root, wide && styles.rootWide]}>
+    <View style={[styles.root, wide && styles.rootWide, { backgroundColor: live.theme.background }]}>
       {wide ? (
-        <View style={[styles.sidebar, { paddingTop: Math.max(insets.top, 20) }]}>
-          <Text style={styles.brandKicker}>Tapua'i</Text>
-          <AnimatedButton
-            haptic="selection"
-            accessibilityLabel="Admin home"
-            contentStyle={styles.brandHit}
-            onPress={() => router.push('/admin')}
-          >
-            <Text style={styles.brand}>Admin portal</Text>
-          </AnimatedButton>
-          <Text style={styles.brandLede}>Home always brings you back here. Catalog saves instantly. Tabs, colors, copy, and Highlights layout wait on Publish to app.</Text>
-          <AnimatedButton
-            haptic="selection"
-            accessibilityLabel="Admin home"
-            contentStyle={[styles.homeHit, isAdminNavActive('/admin', pathname) && styles.homeHitOn]}
-            onPress={() => router.push('/admin')}
-          >
-            <Text style={[styles.homeLabel, isAdminNavActive('/admin', pathname) && styles.homeLabelOn]}>Home</Text>
-          </AnimatedButton>
-          {lensPills}
-          {publishCta}
-          <ScrollView contentContainerStyle={styles.sideList} showsVerticalScrollIndicator={false}>
-            {navGroups.map((group) => (
-              <View key={group.id} style={styles.group}>
-                <Text style={styles.groupLabel}>{group.label}</Text>
-                {navFor(group.items)}
-              </View>
-            ))}
-          </ScrollView>
+        <View style={[styles.sidebar, { paddingTop: Math.max(insets.top, 20), backgroundColor: live.theme.background }]}>
+          <View style={styles.sideHead}>
+            <Text style={styles.brandKicker}>Tapua'i</Text>
+            <AnimatedButton
+              haptic="selection"
+              accessibilityLabel="Admin home"
+              contentStyle={styles.brandHit}
+              onPress={() => router.push('/admin')}
+            >
+              <Text style={styles.brand}>Admin portal</Text>
+            </AnimatedButton>
+            <Text style={styles.brandLede}>Home always brings you back here. Sports, Drip, and schools save instantly. Tabs, Daylight colors, copy, catalogs, and Highlights layout wait on Publish to app.</Text>
+            <AnimatedButton
+              haptic="selection"
+              accessibilityLabel="Admin home"
+              contentStyle={[styles.homeHit, isAdminNavActive('/admin', pathname) && styles.homeHitOn]}
+              onPress={() => router.push('/admin')}
+            >
+              <Text style={[styles.homeLabel, isAdminNavActive('/admin', pathname) && styles.homeLabelOn]}>Home</Text>
+            </AnimatedButton>
+            {lensPills}
+            {publishCta}
+          </View>
+          <View style={styles.sideNav}>
+            <ScrollView style={styles.sideNavScroll} contentContainerStyle={styles.sideList} showsVerticalScrollIndicator={false}>
+              {navGroups.map((group) => (
+                <View key={group.id} style={styles.group}>
+                  <Text style={styles.groupLabel}>{group.label}</Text>
+                  {navFor(group.items)}
+                </View>
+              ))}
+            </ScrollView>
+          </View>
           <AnimatedButton
             haptic="selection"
             accessibilityLabel="Open production app"
@@ -194,27 +214,31 @@ function AdminShellInner({ children }: AdminShellProps) {
           </View>
           {lensPills}
           {publishCta}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-            {navGroups.map((group) => {
-              const on = group.id === groupId;
-              return (
-                <AnimatedButton
-                  key={group.id}
-                  haptic="selection"
-                  accessibilityRole="tab"
-                  accessibilityLabel={group.label}
-                  accessibilityState={{ selected: on }}
-                  contentStyle={[styles.groupChip, on && styles.groupChipOn]}
-                  onPress={() => setGroupId(group.id)}
-                >
-                  <Text style={[styles.groupChipLabel, on && styles.groupChipLabelOn]}>{group.label}</Text>
-                </AnimatedButton>
-              );
-            })}
-          </ScrollView>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-            {navFor(mobileGroup.items)}
-          </ScrollView>
+          <View style={styles.lensWrap}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+              {navGroups.map((group) => {
+                const on = group.id === groupId;
+                return (
+                  <AnimatedButton
+                    key={group.id}
+                    haptic="selection"
+                    accessibilityRole="tab"
+                    accessibilityLabel={group.label}
+                    accessibilityState={{ selected: on }}
+                    contentStyle={[styles.groupChip, on && styles.groupChipOn]}
+                    onPress={() => setGroupId(group.id)}
+                  >
+                    <Text style={[styles.groupChipLabel, on && styles.groupChipLabelOn]}>{group.label}</Text>
+                  </AnimatedButton>
+                );
+              })}
+            </ScrollView>
+          </View>
+          <View style={styles.lensWrap}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+              {navFor(mobileGroup.items)}
+            </ScrollView>
+          </View>
         </View>
       )}
       <View style={styles.stage}>{children}</View>
@@ -238,6 +262,9 @@ const styles = StyleSheet.create({
   },
   sidebar: {
     width: 248,
+    flexShrink: 0,
+    zIndex: 2,
+    overflow: 'hidden',
     backgroundColor: FOCAL.backgroundBase,
     borderRightWidth: 1,
     borderRightColor: colors.border,
@@ -245,8 +272,20 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     gap: 8,
   },
+  sideHead: {
+    flexShrink: 0,
+    gap: 8,
+  },
+  sideNav: {
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  sideNavScroll: {
+    flex: 1,
+  },
   brandKicker: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.4,
@@ -303,7 +342,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   sideLabelOn: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
   },
   sideHint: {
     color: colors.textMuted,
@@ -324,15 +363,15 @@ const styles = StyleSheet.create({
   },
   homeHitOn: {
     backgroundColor: FOCAL.neonJade,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
   },
   homeLabel: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 13,
     fontWeight: '800',
   },
   homeLabelOn: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
   },
   publishHit: {
     minHeight: 44,
@@ -343,7 +382,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   publishLabel: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
     fontSize: 13,
     fontWeight: '800',
   },
@@ -365,10 +404,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
   },
+  lensWrap: {
+    flexGrow: 0,
+    flexShrink: 0,
+    maxHeight: 44,
+  },
   chips: {
     gap: 8,
     paddingVertical: 4,
     paddingRight: 12,
+    alignItems: 'center',
   },
   lensChip: {
     minHeight: 30,
@@ -391,7 +436,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   lensLabelOn: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
   },
   chip: {
     minHeight: 36,
@@ -405,7 +450,7 @@ const styles = StyleSheet.create({
   },
   chipOn: {
     backgroundColor: FOCAL.neonJade,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
   },
   chipLabel: {
     color: colors.textMuted,
@@ -413,7 +458,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   chipLabelOn: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
   },
   groupChip: {
     minHeight: 32,
@@ -434,10 +479,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   groupChipLabelOn: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
   },
   stage: {
     flex: 1,
     minWidth: 0,
+    zIndex: 1,
+    overflow: 'hidden',
   },
 });

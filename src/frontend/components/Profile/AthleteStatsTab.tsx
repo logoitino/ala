@@ -3,11 +3,20 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
 import type { AthleteStatsBundle } from '@/data/athleteStats';
+import {
+  sportConfigFor,
+  visibleMeasurables,
+  visibleStatFields,
+  type SportConfig,
+  type SportStatSource,
+} from '@/data/sports';
 import { FOCAL } from '@/theme/motion';
 
 type AthleteStatsTabProps = {
   stats: AthleteStatsBundle;
   loading?: boolean;
+  /** Playbook from `/admin/sports`. Decides which combine tiles and career rows render, and their labels. */
+  config?: SportConfig;
 };
 
 function formatLogDate(iso: string): string {
@@ -17,45 +26,61 @@ function formatLogDate(iso: string): string {
 }
 
 /**
- * @purpose Stats 📊 pane: combine measurables, sport-specific career table, recent game log.
+ * @purpose Stats 📊 pane: combine measurables, career table, recent game log — all shaped by the sport's playbook.
  * @param stats Bundle from `useAthleteStats`.
  * @param loading Shows a compact spinner over the table while the first fetch is in flight.
+ * @param config Sport playbook (`sport_configs`); falls back to the seeded catalog for this athlete's sport.
  */
-export function AthleteStatsTab({ stats, loading = false }: AthleteStatsTabProps) {
+export function AthleteStatsTab({ stats, loading = false, config }: AthleteStatsTabProps) {
   const { physicals, career, logs } = stats;
-  const rows = [
-    { label: 'Games Played', value: String(career.gamesPlayed) },
-    { label: career.columns.scoring, value: String(career.scoringValue) },
-    { label: career.columns.volume, value: String(career.volumeValue) },
-    { label: 'MVP Badges', value: String(career.mvpBadges) },
-  ];
+  const playbook = config ?? sportConfigFor(career.sport);
+  const combine = visibleMeasurables(playbook);
+  const careerValues: Record<SportStatSource, number> = {
+    games: career.gamesPlayed,
+    scoring: career.scoringValue,
+    volume: career.volumeValue,
+    mvp: career.mvpBadges,
+  };
+  const rows = visibleStatFields(playbook).map((field) => ({
+    label: field.label,
+    value: String(careerValues[field.source] ?? 0),
+  }));
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.kicker}>Combine</Text>
-      <View style={styles.metrics}>
-        <Metric label="Height" value={physicals.height} />
-        <Metric label="Weight" value={physicals.weight} />
-        <Metric label="40-Yard Dash" value={physicals.fortyYard} />
-        <Metric label="Vertical Jump" value={physicals.verticalJump} />
-      </View>
+      {combine.length > 0 ? (
+        <>
+          <Text style={styles.kicker}>Combine</Text>
+          <View style={styles.metrics}>
+            {combine.map((metric) => (
+              <Metric key={metric.key} label={metric.label} value={physicals[metric.key]} />
+            ))}
+          </View>
+        </>
+      ) : null}
 
       <View style={styles.tableHead}>
-        <Text style={styles.kicker}>Career summary · {career.sport}</Text>
+        <Text style={styles.kicker}>
+          Career summary · {playbook.emoji} {career.sport}
+        </Text>
         {loading ? <ActivityIndicator color={colors.primary} size="small" /> : null}
       </View>
-      <View style={styles.table}>
-        <View style={styles.tableRow}>
-          <Text style={[styles.cell, styles.cellHead]}>Stat</Text>
-          <Text style={[styles.cell, styles.cellHead, styles.cellRight]}>Value</Text>
-        </View>
-        {rows.map((row) => (
-          <View key={row.label} style={styles.tableRow}>
-            <Text style={styles.cell}>{row.label}</Text>
-            <Text style={[styles.cell, styles.cellRight, styles.cellValue]}>{row.value}</Text>
+      {rows.length === 0 ? (
+        <Text style={styles.empty}>No career stats published for this sport.</Text>
+      ) : (
+        <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={[styles.cell, styles.cellHead]}>Stat</Text>
+            <Text style={[styles.cell, styles.cellHead, styles.cellRight]}>Value</Text>
           </View>
-        ))}
-      </View>
+          {rows.map((row) => (
+            <View key={row.label} style={styles.tableRow}>
+              <Text style={styles.cell}>{row.label}</Text>
+              <Text style={[styles.cell, styles.cellRight, styles.cellValue]}>{row.value}</Text>
+            </View>
+          ))}
+        </View>
+      )}
 
       <Text style={styles.kicker}>Game log</Text>
       {logs.length === 0 ? (
@@ -112,7 +137,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metricValue: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 18,
     fontWeight: '800',
   },
@@ -161,7 +186,7 @@ const styles = StyleSheet.create({
     flex: 0.6,
   },
   cellValue: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontWeight: '800',
   },
   log: {
@@ -184,7 +209,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   logStat: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 13,
     fontWeight: '800',
   },

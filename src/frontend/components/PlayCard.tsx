@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   jerseyHash: {
-    color: 'rgba(15,20,22,0.55)',
+    color: colors.onAccent,
     fontSize: 10,
     fontWeight: '800',
     marginBottom: -4,

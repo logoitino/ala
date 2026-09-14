@@ -16,13 +16,24 @@ import {
 } from '@/lib/admin';
 import type { SpotlightAward } from '@/types/database';
 
+/** Which slices a desk actually renders, so Moderation and Spotlight stop refetching each other's data. */
+export type AdminDashboardSections = {
+  awards?: boolean;
+  flags?: boolean;
+  metrics?: boolean;
+};
+
+const ALL_SECTIONS: Required<AdminDashboardSections> = { awards: true, flags: true, metrics: true };
+
 /**
  * @purpose Web Admin Dashboard data: Spotlight awards, open flags, and platform metrics.
  * @param enabled Skip network when Access Restricted (`profiles.is_admin` / admin role is false).
+ * @param sections Opt into only the slices this desk shows (defaults to all three for Overview).
  * @returns Flags, metrics, awards, and publish / dismiss / remove actions.
  * @sideEffects `publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`; `spotlight_awards` / flagged `reels` / `telemetry_logs` SELECTs.
  */
-export function useAdminDashboard(enabled = true) {
+export function useAdminDashboard(enabled = true, sections: AdminDashboardSections = ALL_SECTIONS) {
+  const want = { ...ALL_SECTIONS, ...sections };
   const { players, loading: rosterLoading } = useRoster();
   const [awards, setAwards] = useState<SpotlightAward[]>([]);
   const [flags, setFlags] = useState<AdminFlagRow[]>([]);
@@ -46,19 +57,19 @@ export function useAdminDashboard(enabled = true) {
     setError(null);
     try {
       const [nextAwards, nextFlags, nextMetrics] = await Promise.all([
-        fetchAdminSpotlightAwards(),
-        fetchAdminFlags(),
-        fetchAdminPlatformMetrics(),
+        want.awards ? fetchAdminSpotlightAwards() : Promise.resolve(null),
+        want.flags ? fetchAdminFlags() : Promise.resolve(null),
+        want.metrics ? fetchAdminPlatformMetrics() : Promise.resolve(null),
       ]);
-      setAwards(nextAwards);
-      setFlags(nextFlags);
-      setMetrics(nextMetrics);
+      if (nextAwards) setAwards(nextAwards);
+      if (nextFlags) setFlags(nextFlags);
+      if (nextMetrics) setMetrics(nextMetrics);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not load the admin dashboard.');
     } finally {
       setLoading(false);
     }
-  }, [enabled]);
+  }, [enabled, want.awards, want.flags, want.metrics]);
 
   useFocusEffect(
     useCallback(() => {

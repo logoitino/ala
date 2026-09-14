@@ -7,8 +7,9 @@ import {
   AdminEmpty,
   AdminNotice,
   AdminPage,
-  AdminPanel,
+  AdminPublishBar,
   AdminRow,
+  AdminSectionTitle,
 } from '@/components/Admin/AdminChrome';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -28,7 +29,7 @@ export function LabTool() {
   const router = useRouter();
   const params = useLocalSearchParams<{ feedbackId?: string | string[] }>();
   const feedbackId = Array.isArray(params.feedbackId) ? params.feedbackId[0] : params.feedbackId;
-  const { draft, published, dirty, pendingCount, publishedAt, saveDraft, publishLive, discardDraft } = useAppRuntime();
+  const { draft, published, pendingCount, saveDraft } = useAppRuntime();
   const [json, setJson] = useState(() => JSON.stringify(draft, null, 2));
   const [parseError, setParseError] = useState<string | null>(null);
   const [queue, setQueue] = useState<AppFeedback[]>([]);
@@ -101,17 +102,11 @@ export function LabTool() {
       refreshing={loading}
       onRefresh={() => void refresh()}
     >
-      <AdminPanel title={dirty ? prettyDiff : 'Live with the fan app'}>
-        <Text style={styles.body}>
-          {publishedAt ? `Last published ${publishedAt.replace('T', ' ').slice(0, 16)} UTC.` : 'Defaults are on until the first publish.'}
-        </Text>
-        <AdminBtn label={dirty ? 'Publish to app' : 'Already live'} kind="primary" disabled={!dirty} onPress={() => void publishLive()} />
-        {dirty ? <AdminBtn label="Discard draft" kind="danger" onPress={() => void discardDraft()} /> : null}
-        <AdminNotice text={dirty ? 'Fans still see published until you hit Publish to app.' : null} tone="warn" />
-      </AdminPanel>
+      <AdminPublishBar note="Fans still see published until you hit Publish to app." />
+      <Text style={styles.body}>{prettyDiff}</Text>
 
       <View style={styles.health}>
-        <Text style={styles.section}>Health (read-only)</Text>
+        <AdminSectionTitle>Health (read-only)</AdminSectionTitle>
         <AdminRow title={`QA stalls · ${stalls}`} meta="Open QA for the stall table">
           <AdminBtn label="QA" onPress={() => router.push('/admin/qa')} />
         </AdminRow>
@@ -127,7 +122,7 @@ export function LabTool() {
       </View>
 
       <View style={styles.editor}>
-        <Text style={styles.section}>Draft JSON</Text>
+        <AdminSectionTitle>Draft JSON</AdminSectionTitle>
         <Text style={styles.body}>Unknown keys and invalid theme hex are rejected. Nested objects merge onto the default map.</Text>
         <TextInput
           value={json}
@@ -146,7 +141,7 @@ export function LabTool() {
       </View>
 
       <View style={styles.editor}>
-        <Text style={styles.section}>Apply this feedback</Text>
+        <AdminSectionTitle>Apply this feedback</AdminSectionTitle>
         {focused ? (
           <>
             <Text style={styles.body}>{focused.body}</Text>
@@ -183,13 +178,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  section: {
-    color: FOCAL.neonJade,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
   health: {
     gap: 10,
     backgroundColor: colors.surface,
@@ -211,8 +199,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: '#070A0B',
-    color: colors.text,
+    backgroundColor: colors.videoSurface,
+    color: colors.onVideo,
     padding: 12,
     fontSize: 12,
     fontWeight: '600',

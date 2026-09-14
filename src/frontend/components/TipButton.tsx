@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   sublabel: {
-    color: 'rgba(15,20,22,0.72)',
+    color: colors.onAccent,
     fontSize: 11,
     fontWeight: '700',
     textAlign: 'center',

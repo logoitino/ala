@@ -8,15 +8,49 @@ import { AuraToast } from '@/components/AuraToast';
 import { BackedCelebration } from '@/components/BackedCelebration';
 import { StudioPreviewBar } from '@/components/Admin/StudioPreviewBar';
 import { AuthProvider } from '@/context/AuthContext';
-import { AppRuntimeProvider } from '@/context/AppRuntimeContext';
+import { AppRuntimeProvider, useAppRuntime } from '@/context/AppRuntimeContext';
 import { CelebrationProvider } from '@/context/CelebrationContext';
 import { UploadSheetProvider } from '@/context/UploadSheetContext';
-import { colors } from '@/constants/theme';
+import { colors, isLightCanvas } from '@/constants/theme';
 import { StripeProvider } from '@/lib/stripe';
 import '@/services/OfflineQueue';
 import '@/services/TelemetryManager';
 
 LogBox.ignoreAllLogs();
+
+function RuntimeApp() {
+  const { live } = useAppRuntime();
+  const light = isLightCanvas(live.theme.background);
+  return (
+    <>
+      <StatusBar style={light ? 'dark' : 'light'} />
+      <View style={[styles.root, { backgroundColor: live.theme.background }]}>
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: live.theme.surface },
+            headerShadowVisible: false,
+            headerTintColor: live.theme.jade,
+            headerTitleStyle: { fontWeight: '700', color: live.theme.text },
+            contentStyle: { backgroundColor: live.theme.background },
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(guest)" options={{ headerShown: false }} />
+          <Stack.Screen name="(fan)" options={{ headerShown: false }} />
+          <Stack.Screen name="(athlete)" options={{ headerShown: false }} />
+          <Stack.Screen name="(parent)" options={{ headerShown: false }} />
+          <Stack.Screen name="operator" options={{ headerShown: false }} />
+          <Stack.Screen name="(booster)" options={{ headerShown: false }} />
+          <Stack.Screen name="(sponsor)" options={{ headerShown: false }} />
+          <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+        </Stack>
+        <StudioPreviewBar />
+        <BackedCelebration />
+        <AuraToast />
+      </View>
+    </>
+  );
+}
 
 export default function RootLayout() {
   return (
@@ -26,31 +60,7 @@ export default function RootLayout() {
         <CelebrationProvider>
           <UploadSheetProvider>
             <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}>
-              <StatusBar style="light" />
-              <View style={styles.root}>
-                <Stack
-                  screenOptions={{
-                    headerStyle: { backgroundColor: colors.surface },
-                    headerShadowVisible: false,
-                    headerTintColor: colors.accent,
-                    headerTitleStyle: { fontWeight: '700', color: colors.text },
-                    contentStyle: { backgroundColor: colors.background },
-                  }}
-                >
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(guest)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(fan)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(athlete)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(parent)" options={{ headerShown: false }} />
-                  <Stack.Screen name="operator" options={{ headerShown: false }} />
-                  <Stack.Screen name="(booster)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(sponsor)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-                </Stack>
-                <StudioPreviewBar />
-                <BackedCelebration />
-                <AuraToast />
-              </View>
+              <RuntimeApp />
             </StripeProvider>
           </UploadSheetProvider>
         </CelebrationProvider>

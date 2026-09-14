@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   },
   dim: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(7, 22, 15, 0.28)',
+    backgroundColor: colors.border,
   },
   sheet: {
     backgroundColor: colors.surface,

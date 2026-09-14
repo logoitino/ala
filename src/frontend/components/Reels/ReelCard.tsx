@@ -28,13 +28,11 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
 import {
-  EXCLUSIVE_AURA_GRANT,
-  EXCLUSIVE_MONTHLY_DOLLARS,
   flashUnlockChipLabel,
   isClipVaultOnly,
   isFlashUnlockActive,
   VAULT_BADGE_LABEL,
-  VAULT_UNLOCK_LABEL,
+  vaultUnlockLabel,
 } from '@/data/exclusive';
 import {
   displayValue,
@@ -437,13 +435,13 @@ export function ReelCard({
     }
     void startCheckout({
       player,
-      tipAmount: EXCLUSIVE_MONTHLY_DOLLARS,
+      tipAmount: live.catalog.exclusiveDollars,
       coverFees: false,
-      auraPoints: EXCLUSIVE_AURA_GRANT,
+      auraPoints: live.catalog.exclusiveAura,
       skipBacker: true,
       onPaid: grant,
     });
-  }, [grant, onOpenProfile, player, startCheckout, surface, unlocking]);
+  }, [grant, live.catalog.exclusiveAura, live.catalog.exclusiveDollars, onOpenProfile, player, startCheckout, surface, unlocking]);
 
   const onShare = useCallback(async () => {
     const url = formatReelDeepLink(clip.id, clip.playerId ?? player?.id ?? null);
@@ -591,7 +589,7 @@ export function ReelCard({
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={VAULT_UNLOCK_LABEL}
+              accessibilityLabel={vaultUnlockLabel(live.catalog.exclusiveDollars)}
               accessibilityState={{ disabled: unlocking }}
               disabled={unlocking}
               haptic="medium"
@@ -599,7 +597,7 @@ export function ReelCard({
               style={({ pressed }) => [styles.unlockBtn, pressed && styles.pressed, unlocking && styles.disabled]}
             >
               <Text style={styles.unlockLabel}>
-                {unlocking ? 'Opening PaymentSheet…' : VAULT_UNLOCK_LABEL}
+                {unlocking ? 'Opening PaymentSheet…' : vaultUnlockLabel(live.catalog.exclusiveDollars)}
               </Text>
             </Pressable>
           </View>
@@ -814,7 +812,7 @@ const styles = StyleSheet.create({
     maxWidth: 300,
   },
   vaultBadge: {
-    backgroundColor: 'rgba(15,20,22,0.55)',
+    backgroundColor: colors.videoScrimSoft,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: 'rgba(0,230,118,0.55)',
@@ -843,7 +841,7 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   unlockLabel: {
-    color: colors.onAccent,
+    color: FOCAL.ink,
     fontSize: 15,
     fontWeight: '800',
     textAlign: 'center',
@@ -917,7 +915,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: 'rgba(15,20,22,0.78)',
+    backgroundColor: colors.videoScrim,
     borderWidth: 1,
     borderColor: FOCAL.neonJade,
     alignItems: 'center',
@@ -944,7 +942,7 @@ const styles = StyleSheet.create({
   },
   categoryBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(15,20,22,0.82)',
+    backgroundColor: colors.videoScrim,
     borderWidth: 1,
     borderColor: 'rgba(243,251,247,0.35)',
     borderRadius: 999,
@@ -983,7 +981,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   categoryBadgeLabel: {
-    color: '#FFFFFF',
+    color: colors.onVideo,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.4,

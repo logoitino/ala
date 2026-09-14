@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
-import { FEE_AMOUNT } from '@/data/players';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 
 type FeeCheckboxProps = {
   playerName: string;
@@ -12,6 +12,8 @@ type FeeCheckboxProps = {
 };
 
 export function FeeCheckbox({ playerName, checked, onChange }: FeeCheckboxProps) {
+  const { live } = useAppRuntime();
+  const fee = live.catalog.maloFeeDollars;
   return (
     <Pressable
       accessibilityRole="checkbox"
@@ -27,7 +29,7 @@ export function FeeCheckbox({ playerName, checked, onChange }: FeeCheckboxProps)
       />
       <View style={styles.copy}>
         <Text style={styles.label}>
-          Add ${FEE_AMOUNT.toFixed(2)} to cover transaction fees so {playerName} gets 100% of your
+          Add ${fee.toFixed(2)} to cover transaction fees so {playerName} gets 100% of your
           Mālo.
         </Text>
       </View>

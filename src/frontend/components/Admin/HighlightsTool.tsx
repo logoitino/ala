@@ -11,8 +11,9 @@ import {
   AdminPills,
   AdminRow,
 } from '@/components/Admin/AdminChrome';
-import { parseReelCategory, REEL_CATEGORY_PILLS, type ReelCategory } from '@/data/highlights';
+import { labeledReelCategories, parseReelCategory, type ReelCategory } from '@/data/highlights';
 import { fetchAdminHighlights, patchHighlight, setHighlightRemoved, type AdminHighlightRow } from '@/lib/adminCatalog';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { userProfileHref } from '@/lib/navigation';
 import { formatTipDollars, toggleReelVaultStatus } from '@/lib/reels';
 
@@ -24,6 +25,8 @@ type ClipFilter = 'all' | 'public' | 'vault' | 'removed' | 'flagged' | 'pending'
  */
 export function HighlightsTool() {
   const router = useRouter();
+  const { live } = useAppRuntime();
+  const categoryPills = labeledReelCategories(live.catalog.reelCategories);
   const [rows, setRows] = useState<AdminHighlightRow[]>([]);
   const [filter, setFilter] = useState<ClipFilter>('all');
   const [query, setQuery] = useState('');
@@ -120,7 +123,7 @@ export function HighlightsTool() {
       {selected ? (
         <AdminPanel title="Edit clip">
           <AdminField label="Caption" value={title} onChangeText={setTitle} placeholder="Friday night pick-six" />
-          <AdminPills label="Tag" items={REEL_CATEGORY_PILLS} value={category} onChange={setCategory} />
+          <AdminPills label="Tag" items={categoryPills} value={category} onChange={(id) => setCategory(parseReelCategory(id))} />
           <AdminBtn label={busyId === selected.id ? 'Saving…' : 'Save caption'} kind="primary" disabled={busyId === selected.id} onPress={() => void saveMeta()} />
           <AdminBtn
             label={selected.is_removed ? 'Restore to Home' : 'Remove from Home'}

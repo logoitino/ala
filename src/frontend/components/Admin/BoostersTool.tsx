@@ -12,7 +12,7 @@ import {
   AdminRow,
   AdminSuggest,
 } from '@/components/Admin/AdminChrome';
-import { SPONSOR_TIERS, sponsorTierById } from '@/data/sponsorships';
+import { catalogSponsorTiers } from '@/data/sponsorships';
 import { formatTeamBadge, type SchoolTeam } from '@/data/teams';
 import {
   centsFromDollarsInput,
@@ -22,6 +22,7 @@ import {
   upsertBooster,
 } from '@/lib/adminCatalog';
 import { formatTipDollars } from '@/lib/reels';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import type { Sponsorship, SponsorshipTierId } from '@/types/database';
 
 const empty = {
@@ -42,6 +43,8 @@ type RailFilter = 'all' | 'active' | 'paused';
  */
 export function BoostersTool() {
   const router = useRouter();
+  const { live } = useAppRuntime();
+  const tiers = catalogSponsorTiers(live.catalog.sponsorTiers);
   const [rows, setRows] = useState<Sponsorship[]>([]);
   const [schools, setSchools] = useState<SchoolTeam[]>([]);
   const [form, setForm] = useState(empty);
@@ -83,11 +86,11 @@ export function BoostersTool() {
   }, [filter, rows]);
 
   const applyTier = (tier: SponsorshipTierId) => {
-    const pack = sponsorTierById(tier);
+    const pack = tiers.find((item) => item.id === tier) ?? tiers[0];
     setForm((current) => ({
       ...current,
       tier,
-      amount: (pack.dollars).toFixed(2),
+      amount: pack.dollars.toFixed(2),
     }));
   };
 
@@ -97,7 +100,7 @@ export function BoostersTool() {
     try {
       const amountCents = extra?.amount_cents ?? centsFromDollarsInput(extra?.amount ?? form.amount);
       const tier = extra?.tier === 'gold' || extra?.tier === 'platinum' ? extra.tier : extra?.tier === 'silver' ? 'silver' : form.tier;
-      const pack = sponsorTierById(tier);
+      const pack = tiers.find((item) => item.id === tier) ?? tiers[0];
       await upsertBooster({
         id: extra?.id ?? (form.id || undefined),
         business_name: extra?.business_name ?? form.business_name,
@@ -121,13 +124,14 @@ export function BoostersTool() {
   return (
     <AdminPage
       title="Boosters"
-      lede="Active boosters appear on Local. Pick a tier to fill the dollar amount, then pause to pull it off the rail."
+      lede="Active boosters appear on Local. Pick a tier to fill the dollar amount (tier prices live on Catalogs), then pause to pull it off the rail."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
       saveMode="instant"
     >
       <AdminBtn label="View Local boosters" onPress={() => router.push('/local' as Href)} />
+      <AdminBtn label="Edit tier prices" onPress={() => router.push('/admin/catalog' as Href)} />
       <AdminPills
         label="Rail"
         items={[
@@ -150,7 +154,7 @@ export function BoostersTool() {
         />
         <AdminPills
           label="Tier"
-          items={SPONSOR_TIERS.map((tier) => ({ id: tier.id, label: `${tier.name} · $${tier.dollars}` }))}
+          items={tiers.map((tier) => ({ id: tier.id, label: `${tier.name} · $${tier.dollars}` }))}
           value={form.tier}
           onChange={applyTier}
         />

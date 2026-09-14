@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { type Href, useFocusEffect, useRouter } from 'expo-router';
 
 import {
   AdminBtn,
   AdminEmpty,
   AdminField,
+  AdminMetrics,
   AdminNotice,
   AdminPage,
   AdminPanel,
@@ -44,6 +45,7 @@ const QUICK = [
  * @sideEffects `get_company_revenue_summary`; `company_revenue_logs` SELECT; `tips` SELECT; `disbursements` INSERT / UPDATE.
  */
 export function MoneyTool() {
+  const router = useRouter();
   const { players } = useRoster();
   const [summary, setSummary] = useState<CompanyRevenueSummary>(EMPTY_COMPANY_REVENUE);
   const [tips, setTips] = useState<TipLedgerEntry[]>([]);
@@ -130,26 +132,14 @@ export function MoneyTool() {
   return (
     <AdminPage
       title="Money"
-      lede="Gross in, company cut, athlete and operator share out. Confirmed Stripe volume — not a guess from inventory."
+      lede="Gross in, company cut, athlete and operator share out. Preset Mālo and exclusive prices live on Catalogs."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
       saveMode="instant"
     >
-      <View style={styles.metrics} accessibilityRole="summary">
-        {metrics.map((card) => (
-          <View
-            key={card.id}
-            style={styles.metric}
-            accessibilityRole="summary"
-            accessibilityLabel={`${card.label} ${card.value}`}
-          >
-            <Text style={styles.metricKicker}>{card.label}</Text>
-            <Text style={styles.metricValue}>{card.value}</Text>
-            <Text style={styles.metricHint}>{card.hint}</Text>
-          </View>
-        ))}
-      </View>
+      <AdminMetrics items={metrics} />
+      <AdminBtn label="Edit Mālo + exclusive prices" onPress={() => router.push('/admin/catalog' as Href)} />
 
       <AdminPanel title="Revenue streams">
         <View style={styles.table} accessibilityRole="summary">
@@ -257,40 +247,6 @@ export function MoneyTool() {
 }
 
 const styles = StyleSheet.create({
-  metrics: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  metric: {
-    flexGrow: 1,
-    minWidth: 180,
-    backgroundColor: FOCAL.backgroundBase,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: FOCAL.neonJade,
-    padding: 16,
-    gap: 8,
-  },
-  metricKicker: {
-    color: FOCAL.neonJade,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  metricValue: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.6,
-  },
-  metricHint: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
-    lineHeight: 16,
-  },
   table: {
     gap: 0,
     borderWidth: 1,
@@ -305,7 +261,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#161D20',
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -319,7 +275,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   th: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -331,7 +287,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   tdJade: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
   },
   colStream: {
     flex: 1.6,

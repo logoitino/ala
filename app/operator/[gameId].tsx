@@ -12,12 +12,10 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { SPRING_BOUNCE } from '@/theme/motion';
 import { displayValue, formatClock, type Player } from '@/data/players';
+import { useSportConfigs } from '@/hooks/useSportConfigs';
+import type { SportScoreAction } from '@/data/sports';
 import {
   GAME_EVENTS_BROADCAST_EVENT,
-  OPERATOR_ACTIONS,
-  OPERATOR_CALLOUTS,
-  OPERATOR_QUARTERS,
-  OPERATOR_SCORE_STEPS,
   clockSeconds,
   gameEventsChannelName,
   hasOperatorClaim,
@@ -29,7 +27,6 @@ import {
   updateOperatorQuarter,
   type OperatorAction,
   type OperatorCallout,
-  type OperatorQuarter,
 } from '@/lib/operator';
 import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
 import type { Game } from '@/types/database';
@@ -38,20 +35,21 @@ const CONFIG_ERROR =
   'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart Expo.';
 
 /**
- * @purpose Field Operator Control Center: Home/Away +1/+3/+6 via `update_game_score`, Start/Pause clock, and live callout broadcasts.
+ * @purpose Field Operator Control Center. Score buttons, period chips, clock, and callouts all come from the game's sport playbook (`sport_configs` via `/admin/sports`), so any sport is scoreable.
  * @returns Live scorekeeper for one claimed game.
- * @sideEffects Supabase `games` Realtime, Broadcast on `game_events_${gameId}`, optional `game_events` INSERT, `update_game_score` RPC, 1s clock interval, `Haptics.notificationAsync`.
+ * @sideEffects Supabase `games` Realtime, Broadcast on `game_events_${gameId}`, optional `game_events` INSERT, `update_game_score` RPC, `get_sport_configs`, 1s clock interval, `Haptics.notificationAsync`.
  */
 export default function OperatorScorekeeperScreen() {
   const router = useRouter();
   const { gameId: rawId } = useLocalSearchParams<{ gameId: string }>();
   const gameId = Array.isArray(rawId) ? rawId[0] : rawId;
 
+  const { configFor } = useSportConfigs();
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [game, setGame] = useState<Game | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [side, setSide] = useState<'home' | 'away'>('home');
-  const [selectedQuarter, setSelectedQuarter] = useState<OperatorQuarter>('Q1');
+  const [selectedQuarter, setSelectedQuarter] = useState<string>('');
   const [pendingAction, setPendingAction] = useState<OperatorAction | null>(null);
   const [toast, setToast] = useState('Play Event Sent!');
   const [loading, setLoading] = useState(true);
@@ -71,6 +69,23 @@ export default function OperatorScorekeeperScreen() {
   remainingRef.current = remaining;
   runningRef.current = running;
   gameRef.current = game;
+
+  const sport = configFor(game?.sport);
+  // Scoring plays tag a player for the box score; callouts tag one for the highlight feed.
+  const tagActions: OperatorAction[] = [
+    ...sport.scoring.map((action) => ({
+      id: action.id,
+      label: action.label,
+      eventType: action.eventType,
+      points: action.points,
+    })),
+    ...sport.callouts.map((callout) => ({
+      id: `callout-${callout.id}`,
+      label: `${callout.emoji} ${callout.label}`,
+      eventType: callout.eventType,
+      points: 0,
+    })),
+  ];
 
   useEffect(() => {
     if (!gameId) {
@@ -109,13 +124,12 @@ export default function OperatorScorekeeperScreen() {
     const nextGame = gameResult.data as Game;
     setGame(nextGame);
     setPlayers((playersResult.data as Player[] | null) ?? []);
-    setRemaining(clockSeconds(nextGame));
+    const playbook = configFor(nextGame.sport);
+    setRemaining(clockSeconds(nextGame, playbook.clockSeconds));
     setRunning(Boolean(nextGame.is_clock_running));
-    if (OPERATOR_QUARTERS.includes(nextGame.quarter as OperatorQuarter)) {
-      setSelectedQuarter(nextGame.quarter as OperatorQuarter);
-    }
+    setSelectedQuarter(nextGame.quarter?.trim() || playbook.periods[0] || '');
     setLoading(false);
-  }, [gameId]);
+  }, [configFor, gameId]);
 
   useEffect(() => {
     if (allowed) void loadGame();
@@ -132,18 +146,16 @@ export default function OperatorScorekeeperScreen() {
           if (!payload.new) return;
           const next = payload.new as Game;
           setGame(next);
-          if (!runningRef.current) setRemaining(clockSeconds(next));
+          if (!runningRef.current) setRemaining(clockSeconds(next, configFor(next.sport).clockSeconds));
           setRunning(Boolean(next.is_clock_running));
-          if (OPERATOR_QUARTERS.includes(next.quarter as OperatorQuarter)) {
-            setSelectedQuarter(next.quarter as OperatorQuarter);
-          }
+          if (next.quarter?.trim()) setSelectedQuarter(next.quarter.trim());
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [allowed, gameId]);
+  }, [allowed, configFor, gameId]);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !gameId || !allowed) return;
@@ -281,7 +293,7 @@ export default function OperatorScorekeeperScreen() {
     }
   };
 
-  const selectQuarter = async (quarter: OperatorQuarter) => {
+  const selectQuarter = async (quarter: string) => {
     if (!gameId) return;
     setSelectedQuarter(quarter);
     setRunning(false);
@@ -289,9 +301,9 @@ export default function OperatorScorekeeperScreen() {
     try {
       const next = await updateOperatorQuarter(gameId, quarter);
       setGame(next);
-      flashToast(`Quarter set to ${quarter}`);
+      flashToast(`${sport.periodLabel} set to ${quarter}`);
     } catch (caught) {
-      setSendError(caught instanceof Error ? caught.message : 'Could not update quarter.');
+      setSendError(caught instanceof Error ? caught.message : `Could not update ${sport.periodLabel.toLowerCase()}.`);
     }
   };
 
@@ -375,7 +387,9 @@ export default function OperatorScorekeeperScreen() {
         <Text style={styles.matchup} numberOfLines={2}>
           {displayValue(homeTeam)} vs {displayValue(awayTeam)}
         </Text>
-        <Text style={styles.venue}>{displayValue(game.venue)}</Text>
+        <Text style={styles.venue}>
+          {displayValue(game.venue)} · {sport.emoji} {sport.sport}
+        </Text>
 
         <View style={styles.scoreboard}>
           <ScoreColumn
@@ -383,36 +397,44 @@ export default function OperatorScorekeeperScreen() {
             team={homeTeam}
             value={Number(game.home_score) || 0}
             disabled={sending}
+            steps={sport.scoring}
             onBump={(points) => void bumpScore('home', points)}
           />
           <View style={styles.clockCol}>
             <Text style={styles.quarterMark}>{selectedQuarter}</Text>
-            <Text style={styles.clock}>{formatClock(remaining)}</Text>
-            <AnimatedPressable
-              haptic="medium"
-              scaleTo={0.96}
-              overshoot={false}
-              accessibilityLabel={running ? 'Pause clock' : 'Start clock'}
-              onPress={() => void toggleClock()}
-              contentStyle={[styles.clockToggle, running && styles.clockToggleOn]}
-            >
-              <Text style={[styles.clockToggleLabel, running && styles.clockToggleLabelOn]}>
-                {running ? 'Pause Clock' : 'Start Clock'}
-              </Text>
-            </AnimatedPressable>
+            {sport.usesClock ? (
+              <>
+                <Text style={styles.clock}>{formatClock(remaining)}</Text>
+                <AnimatedPressable
+                  haptic="medium"
+                  scaleTo={0.96}
+                  overshoot={false}
+                  accessibilityLabel={running ? 'Pause clock' : 'Start clock'}
+                  onPress={() => void toggleClock()}
+                  contentStyle={[styles.clockToggle, running && styles.clockToggleOn]}
+                >
+                  <Text style={[styles.clockToggleLabel, running && styles.clockToggleLabelOn]}>
+                    {running ? 'Pause Clock' : 'Start Clock'}
+                  </Text>
+                </AnimatedPressable>
+              </>
+            ) : (
+              <Text style={styles.venue}>{sport.periodLabel} play · no clock</Text>
+            )}
           </View>
           <ScoreColumn
             label="AWAY"
             team={awayTeam}
             value={Number(game.away_score) || 0}
             disabled={sending}
+            steps={sport.scoring}
             onBump={(points) => void bumpScore('away', points)}
           />
         </View>
 
         <Text style={styles.label}>Broadcast to fans</Text>
         <View style={styles.callouts}>
-          {OPERATOR_CALLOUTS.map((callout) => (
+          {sport.callouts.map((callout) => (
             <AnimatedPressable
               key={callout.id}
               haptic="none"
@@ -430,16 +452,16 @@ export default function OperatorScorekeeperScreen() {
           ))}
         </View>
 
-        <Text style={styles.label}>Quarter</Text>
+        <Text style={styles.label}>{sport.periodLabel}</Text>
         <View style={styles.row}>
-          {OPERATOR_QUARTERS.map((item) => {
+          {sport.periods.map((item) => {
             const selected = selectedQuarter === item;
             return (
               <Pressable
                 key={item}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                accessibilityLabel={`Set quarter ${item}`}
+                accessibilityLabel={`Set ${sport.periodLabel.toLowerCase()} ${item}`}
                 onPress={() => void selectQuarter(item)}
                 style={({ pressed }) => [styles.quarter, selected && styles.quarterOn, pressed && styles.pressed]}
               >
@@ -469,7 +491,7 @@ export default function OperatorScorekeeperScreen() {
           })}
         </View>
         <View style={styles.actions}>
-          {OPERATOR_ACTIONS.map((action) => (
+          {tagActions.map((action) => (
             <Pressable
               key={action.id}
               accessibilityRole="button"
@@ -503,17 +525,20 @@ export default function OperatorScorekeeperScreen() {
   );
 }
 
+/** @purpose One side of the scoreboard. `steps` are the sport's score buttons from `/admin/sports`. */
 function ScoreColumn({
   label,
   team,
   value,
   disabled,
+  steps,
   onBump,
 }: {
   label: string;
   team: string;
   value: number;
   disabled: boolean;
+  steps: SportScoreAction[];
   onBump: (points: number) => void;
 }) {
   const scale = useSharedValue(1);
@@ -533,18 +558,18 @@ function ScoreColumn({
       </Text>
       <Animated.Text style={[styles.score, scoreStyle]}>{value}</Animated.Text>
       <View style={styles.stepCol}>
-        {OPERATOR_SCORE_STEPS.map((step) => (
+        {steps.map((step) => (
           <AnimatedPressable
-            key={step.label}
+            key={step.id}
             haptic="light"
             scaleTo={0.92}
             disabled={disabled}
-            accessibilityLabel={`${label} ${step.label} ${step.hint}`}
+            accessibilityLabel={`${label} ${step.label}`}
             onPress={() => onBump(step.points)}
             contentStyle={[styles.step, disabled && styles.disabled]}
           >
-            <Text style={styles.stepLabel}>{step.label}</Text>
-            <Text style={styles.stepHint}>{step.hint}</Text>
+            <Text style={styles.stepLabel}>+{step.points}</Text>
+            <Text style={styles.stepHint}>{step.label}</Text>
           </AnimatedPressable>
         ))}
       </View>
@@ -591,7 +616,7 @@ const styles = StyleSheet.create({
   scoreboard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#161D20',
+    backgroundColor: colors.videoSurface,
     borderRadius: radii.lg,
     borderWidth: 2,
     borderColor: colors.primary,

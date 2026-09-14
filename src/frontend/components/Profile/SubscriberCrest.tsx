@@ -1,6 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { colors } from '@/constants/theme';
+
 const NEON_JADE = '#00E676';
 
 type SubscriberCrestProps = {
@@ -35,7 +37,7 @@ export function SubscriberCrest({ size = 11 }: SubscriberCrestProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    backgroundColor: '#0F1416',
+    backgroundColor: colors.videoSurface,
     borderWidth: 1,
     borderColor: NEON_JADE,
     alignItems: 'center',

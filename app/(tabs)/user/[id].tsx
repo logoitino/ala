@@ -6,8 +6,9 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
 import { ScreenShell } from '@/components/ScreenShell';
 import { colors, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useOptionalUploadSheet } from '@/context/UploadSheetContext';
-import { EXCLUSIVE_AURA_GRANT, EXCLUSIVE_MONTHLY_DOLLARS, markExclusiveClips } from '@/data/exclusive';
+import { markExclusiveClips } from '@/data/exclusive';
 import { displayValue, type Player } from '@/data/players';
 import { useAthleteStats } from '@/hooks/useAthleteStats';
 import { useAthleteSubscription } from '@/hooks/useAthleteSubscription';
@@ -58,6 +59,7 @@ export default function UserAthleteProfileScreen() {
   const { stats, loading: statsLoading } = useAthleteStats(playerId, player);
   const { subscribed, grant } = useAthleteSubscription(playerId);
   const { startCheckout, busy } = useTipCheckout();
+  const { live } = useAppRuntime();
   const uploadSheet = useOptionalUploadSheet();
 
   const load = useCallback(async () => {
@@ -127,9 +129,9 @@ export default function UserAthleteProfileScreen() {
     if (!player) return;
     void startCheckout({
       player,
-      tipAmount: EXCLUSIVE_MONTHLY_DOLLARS,
+      tipAmount: live.catalog.exclusiveDollars,
       coverFees: false,
-      auraPoints: EXCLUSIVE_AURA_GRANT,
+      auraPoints: live.catalog.exclusiveAura,
       skipBacker: true,
       onPaid: grant,
     });

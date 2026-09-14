@@ -7,7 +7,7 @@ import { useAdminDashboard } from '@/hooks/useAdminDashboard';
  * @sideEffects `moderate_flagged_reel`.
  */
 export function ModerationTool() {
-  const dashboard = useAdminDashboard(true);
+  const dashboard = useAdminDashboard(true, { awards: false, flags: true, metrics: false });
   return (
     <AdminPage
       title="Moderation"

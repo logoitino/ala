@@ -43,8 +43,8 @@ export function getPlayerFirstName(name: string): string {
   return name.split(' ')[0] ?? name;
 }
 
-export function formatTipTotal(amount: number, includeFee: boolean): string {
-  const fee = includeFee ? FEE_AMOUNT : 0;
+export function formatTipTotal(amount: number, includeFee: boolean, feeAmount = FEE_AMOUNT): string {
+  const fee = includeFee ? feeAmount : 0;
   const total = amount + fee;
   return `Total: $${total.toFixed(2)} ($${amount.toFixed(2)} Mālo + $${fee.toFixed(2)} fee)`;
 }
@@ -56,8 +56,8 @@ export function displayValue(value: string | number | null | undefined, fallback
   return String(value);
 }
 
-export function getTipCharge(tipAmount: number, coverFees: boolean) {
-  const fee = coverFees ? FEE_AMOUNT : 0;
+export function getTipCharge(tipAmount: number, coverFees: boolean, feeAmount = FEE_AMOUNT) {
+  const fee = coverFees ? feeAmount : 0;
   const total = tipAmount + fee;
   return {
     tipAmount,

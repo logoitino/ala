@@ -6,7 +6,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, palette, radii } from '@/constants/theme';
+import { colors, radii } from '@/constants/theme';
 import { useLocalSearch, useRecentLocalSearches } from '@/hooks/useLocalSearch';
 import type { LocalSearchHit, LocalSearchKind } from '@/types/database';
 import { SPRING_CARD } from '@/theme/motion';
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: palette.midnightObsidian,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     maxWidth: 180,
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: palette.midnightObsidian,
+    backgroundColor: colors.surface,
   },
   rowIcon: {
     width: 36,

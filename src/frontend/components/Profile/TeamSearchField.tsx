@@ -55,7 +55,7 @@ export function TeamSearchField({ query, onQueryChange, selected, onSelect, onCl
       )}
       {showList ? (
         <View style={styles.list} accessibilityRole="list">
-          {loading ? <ActivityIndicator color={FOCAL.neonJade} style={styles.spinner} /> : null}
+          {loading ? <ActivityIndicator color={FOCAL.jadeInk} style={styles.spinner} /> : null}
           {teams.map((team) => (
             <Pressable
               key={team.id}
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
     borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
     backgroundColor: colors.accentSoft,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   change: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 12,
     fontWeight: '800',
   },
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   badge: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 11,
     fontWeight: '800',
   },

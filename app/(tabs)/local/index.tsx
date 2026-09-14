@@ -22,13 +22,11 @@ import { TopAuraBoosters } from '@/components/TopAuraBoosters';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, palette, radii } from '@/constants/theme';
+import { colors, radii } from '@/constants/theme';
 import {
-  LOCAL_FILTERS,
   UTAH_REGIONS,
   gameInRegion,
   isRivalryGame,
-  type LocalFilterId,
 } from '@/data/regions';
 import { initialsForBusiness, sponsorTierById } from '@/data/sponsorships';
 import { useLiveScores } from '@/hooks/useLiveScores';
@@ -41,13 +39,7 @@ import type { Game, LocalSearchHit, Sponsorship } from '@/types/database';
 
 type LocalHubId = 'matches' | 'polls' | 'boosters';
 
-const LOCAL_HUB: { id: LocalHubId; label: string }[] = [
-  { id: 'matches', label: 'Live Matches' },
-  { id: 'polls', label: 'School Polls' },
-  { id: 'boosters', label: 'Top Boosters' },
-];
-
-const REGION_PILLS = LOCAL_FILTERS.map((filter) => ({ id: filter.id, label: filter.label }));
+const LOCAL_HUB_IDS: LocalHubId[] = ['matches', 'polls', 'boosters'];
 
 const TYPE_HAPTIC_MS = 110;
 
@@ -210,7 +202,7 @@ export default function LocalTab() {
   const { onScroll, trackFeature } = useSurfaceUsage('local');
   const [hub, setHub] = useState<LocalHubId>('matches');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterId, setFilterId] = useState<LocalFilterId | null>(null);
+  const [filterId, setFilterId] = useState<string | null>(null);
   const [sponsorSheetOpen, setSponsorSheetOpen] = useState(false);
   const [highlightedSponsorId, setHighlightedSponsorId] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
@@ -220,13 +212,33 @@ export default function LocalTab() {
 
   const hubs = useMemo(
     () =>
-      LOCAL_HUB.filter((item) => {
-        if (item.id === 'matches') return live.layouts.liveMatches;
-        if (item.id === 'polls') return live.layouts.cheerPolls;
-        if (item.id === 'boosters') return live.layouts.topBoosters;
+      LOCAL_HUB_IDS.filter((id) => {
+        if (id === 'matches') return live.layouts.liveMatches;
+        if (id === 'polls') return live.layouts.cheerPolls;
+        if (id === 'boosters') return live.layouts.topBoosters;
         return true;
-      }),
-    [live.layouts.cheerPolls, live.layouts.liveMatches, live.layouts.topBoosters],
+      }).map((id) => ({
+        id,
+        label:
+          id === 'matches'
+            ? live.copy.localMatchesLabel
+            : id === 'polls'
+              ? live.copy.localPollsLabel
+              : live.copy.localBoostersLabel,
+      })),
+    [
+      live.copy.localBoostersLabel,
+      live.copy.localMatchesLabel,
+      live.copy.localPollsLabel,
+      live.layouts.cheerPolls,
+      live.layouts.liveMatches,
+      live.layouts.topBoosters,
+    ],
+  );
+
+  const regionPills = useMemo(
+    () => live.catalog.localFilters.map((filter) => ({ id: filter.id, label: filter.label })),
+    [live.catalog.localFilters],
   );
 
   useEffect(() => {
@@ -388,7 +400,7 @@ export default function LocalTab() {
               pointerEvents={hub === 'matches' ? 'auto' : 'none'}
             >
               <FilterPills
-                items={REGION_PILLS}
+                items={regionPills}
                 value={filterId}
                 allowDeselect
                 onChange={setFilterId}
@@ -607,7 +619,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.primary,
-    backgroundColor: palette.midnightObsidian,
+    backgroundColor: colors.surface,
   },
   schoolChipLabel: {
     flexShrink: 1,
@@ -627,7 +639,7 @@ const styles = StyleSheet.create({
   },
   sponsorCard: {
     width: 168,
-    backgroundColor: palette.midnightObsidian,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,

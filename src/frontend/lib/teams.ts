@@ -12,10 +12,11 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export type AthleteOnboarding = {
   team: SchoolTeam;
-  sport: AthleteSport;
+  /** Any active sport from `sport_configs` (seeded names are the floor, not the ceiling). */
+  sport: AthleteSport | string;
   jersey: string;
   position: string;
-  classYear: AthleteClassYear;
+  classYear: AthleteClassYear | string;
 };
 
 function ilikeSafe(raw: string): string {

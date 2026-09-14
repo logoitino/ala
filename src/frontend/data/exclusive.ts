@@ -42,13 +42,41 @@ export const EXCLUSIVE_KIND_LABEL: Record<ExclusivePost['kind'], string> = {
 
 export const EXCLUSIVE_MONTHLY_DOLLARS = 4.99;
 export const EXCLUSIVE_AURA_GRANT = 100;
-export const EXCLUSIVE_SUBSCRIBE_LABEL = `Subscribe for $${EXCLUSIVE_MONTHLY_DOLLARS.toFixed(2)}/mo — Unlock Exclusive Clips ⚡`;
-export const EXCLUSIVE_UNLOCK_TOAST = 'Exclusive clips unlocked ⚡ +100 Aura Points earned!';
+
+/**
+ * @purpose Subscribe CTA. Catalogs desk can change the dollars after Publish to app.
+ */
+export function exclusiveSubscribeLabel(dollars = EXCLUSIVE_MONTHLY_DOLLARS): string {
+  return `Subscribe for $${dollars.toFixed(2)}/mo — Unlock Exclusive Clips ⚡`;
+}
+
+/**
+ * @purpose Vault-tab callout. Catalogs desk can change the dollars after Publish to app.
+ */
+export function exclusiveVaultCallout(dollars = EXCLUSIVE_MONTHLY_DOLLARS): string {
+  return `Unlock the Vault for $${dollars.toFixed(2)}/mo to see full game breakdowns and raw practice film.`;
+}
+
+/**
+ * @purpose Highlights ⚡ unlock chip. Catalogs desk can change the dollars after Publish to app.
+ */
+export function vaultUnlockLabel(dollars = EXCLUSIVE_MONTHLY_DOLLARS): string {
+  return `Unlock Vault ($${dollars.toFixed(2)}/mo)`;
+}
+
+/**
+ * @purpose PaymentSheet success toast. Catalogs desk can change the Aura grant after Publish to app.
+ */
+export function exclusiveUnlockToast(aura = EXCLUSIVE_AURA_GRANT): string {
+  return `Exclusive clips unlocked ⚡ +${aura} Aura Points earned!`;
+}
+
+export const EXCLUSIVE_SUBSCRIBE_LABEL = exclusiveSubscribeLabel();
+export const EXCLUSIVE_UNLOCK_TOAST = exclusiveUnlockToast();
 export const EXCLUSIVE_REQUEST_TOAST = 'Request sent to athlete! ⚡';
-export const EXCLUSIVE_VAULT_CALLOUT =
-  `Unlock the Vault for $${EXCLUSIVE_MONTHLY_DOLLARS.toFixed(2)}/mo to see full game breakdowns and raw practice film.`;
+export const EXCLUSIVE_VAULT_CALLOUT = exclusiveVaultCallout();
 export const VAULT_BADGE_LABEL = 'Subscriber Vault 🔒';
-export const VAULT_UNLOCK_LABEL = `Unlock Vault ($${EXCLUSIVE_MONTHLY_DOLLARS.toFixed(2)}/mo)`;
+export const VAULT_UNLOCK_LABEL = vaultUnlockLabel();
 export const VAULT_MOVE_TO_VAULT = 'Move to Subscriber Vault 🔒';
 export const VAULT_MOVE_TO_PUBLIC = 'Move to Free Public Feed 🌐';
 /** Athlete master switch: seal the Vault so fans must subscribe. */

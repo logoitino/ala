@@ -1,3 +1,10 @@
+import { EXCLUSIVE_AURA_GRANT, EXCLUSIVE_MONTHLY_DOLLARS } from '@/data/exclusive';
+import { REEL_CATEGORY_PILLS } from '@/data/highlights';
+import { FEE_AMOUNT, TIP_AMOUNTS } from '@/data/players';
+import { LOCAL_FILTERS } from '@/data/regions';
+import { SPONSOR_TIERS } from '@/data/sponsorships';
+import { ATHLETE_CLASS_YEARS } from '@/data/teams';
+import { DAYLIGHT_THEME } from '@/constants/theme';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export type AppRuntimeTabs = {
@@ -66,6 +73,31 @@ export type AppRuntimeHighlights = {
   railOrder: HighlightRailItem[];
 };
 
+export type AppRuntimeCatalogFilter = { id: string; label: string };
+
+export type AppRuntimeCatalogTier = {
+  id: string;
+  name: string;
+  dollars: number;
+  auraPoints: number;
+  badge: string;
+  perks: string;
+};
+
+export type AppRuntimeCatalogCategory = { id: string; label: string };
+
+/** Lists and prices the Catalogs desk edits. Missing keys fall back to the shipping constants. */
+export type AppRuntimeCatalog = {
+  maloAmounts: number[];
+  maloFeeDollars: number;
+  exclusiveDollars: number;
+  exclusiveAura: number;
+  classYears: string[];
+  localFilters: AppRuntimeCatalogFilter[];
+  sponsorTiers: AppRuntimeCatalogTier[];
+  reelCategories: AppRuntimeCatalogCategory[];
+};
+
 export type AppRuntimeCopy = {
   homeKicker: string;
   homeLede: string;
@@ -81,6 +113,13 @@ export type AppRuntimeCopy = {
   dripKicker: string;
   dripLede: string;
   dripEmpty: string;
+  dripAllLabel: string;
+  dripApparelLabel: string;
+  dripAuraCardsLabel: string;
+  dripMerchLabel: string;
+  localMatchesLabel: string;
+  localPollsLabel: string;
+  localBoostersLabel: string;
   slangLine: string;
   profileKicker: string;
   profileLede: string;
@@ -100,6 +139,7 @@ export type AppRuntimeConfig = {
   profile: AppRuntimeProfile;
   highlights: AppRuntimeHighlights;
   copy: AppRuntimeCopy;
+  catalog: AppRuntimeCatalog;
 };
 
 export type AppRuntimeCopyPath = `copy.${keyof AppRuntimeCopy}`;
@@ -148,7 +188,7 @@ export const APP_FLAG_GROUPS: AppFlagGroup[] = [
       { path: 'buttons.flex', label: 'Flex', hint: '💪 on Highlights ⚡' },
       { path: 'buttons.malo', label: 'Mālo', hint: 'Tip rail and Profile Drop Mālo' },
       { path: 'buttons.more', label: 'More sheet', hint: 'Share / Save / Report' },
-      { path: 'buttons.subscribe', label: 'Subscribe', hint: '$4.99 exclusive pass' },
+      { path: 'buttons.subscribe', label: 'Subscribe', hint: 'Exclusive pass (price on Catalogs)' },
       { path: 'buttons.crew', label: 'Join Crew', hint: 'The Crew ⚡' },
       { path: 'buttons.vault', label: 'Vault', hint: 'Lock / Open Vault' },
       { path: 'buttons.flashUnlock', label: 'Flash Unlock', hint: '2-hour Vault unlock' },
@@ -208,12 +248,23 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     receipts: true,
     wishlist: true,
   },
-  theme: {
-    background: '#0F1416',
-    surface: '#1E262B',
-    jade: '#00E676',
-    gold: '#FFD700',
-    text: '#F3FBF7',
+  theme: { ...DAYLIGHT_THEME },
+  catalog: {
+    maloAmounts: [...TIP_AMOUNTS],
+    maloFeeDollars: FEE_AMOUNT,
+    exclusiveDollars: EXCLUSIVE_MONTHLY_DOLLARS,
+    exclusiveAura: EXCLUSIVE_AURA_GRANT,
+    classYears: [...ATHLETE_CLASS_YEARS],
+    localFilters: LOCAL_FILTERS.map((row) => ({ id: row.id, label: row.label })),
+    sponsorTiers: SPONSOR_TIERS.map((row) => ({
+      id: row.id,
+      name: row.name,
+      dollars: row.dollars,
+      auraPoints: row.auraPoints,
+      badge: row.badge,
+      perks: row.perks,
+    })),
+    reelCategories: REEL_CATEGORY_PILLS.map((row) => ({ id: row.id, label: row.label })),
   },
   profile: {
     showCard: true,
@@ -245,6 +296,13 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     dripKicker: 'Marketplace',
     dripLede: 'Booster gear, Aura cards, and sideline merch.',
     dripEmpty: 'Nothing in this rack yet.',
+    dripAllLabel: 'All Drip',
+    dripApparelLabel: 'Team Apparel',
+    dripAuraCardsLabel: 'Custom Aura Cards',
+    dripMerchLabel: 'Athlete Merch',
+    localMatchesLabel: 'Live Matches',
+    localPollsLabel: 'School Polls',
+    localBoostersLabel: 'Top Boosters',
     slangLine: 'Mālo = Direct Support • Seki = Awesome Play',
     profileKicker: 'Your hub',
     profileLede: 'Trading card, Highlights ⚡, Stats, and Vault.',
@@ -259,9 +317,21 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
 
 export const THEME_PRESETS: { id: string; label: string; hint: string; theme: AppRuntimeTheme }[] = [
   {
+    id: 'daylight',
+    label: 'Daylight (default)',
+    hint: 'Shipping look — light canvas, deep jade. Reset here to leave night mode.',
+    theme: {
+      background: '#F4F7F5',
+      surface: '#FFFFFF',
+      jade: '#00733C',
+      gold: '#8A6400',
+      text: '#0F1416',
+    },
+  },
+  {
     id: 'tapuai',
-    label: "Tapua'i",
-    hint: 'Obsidian / Neon Jade / Electric Gold',
+    label: 'Night',
+    hint: 'Optional dark canvas — Obsidian / Neon Jade / Electric Gold',
     theme: {
       background: '#0F1416',
       surface: '#1E262B',
@@ -328,6 +398,13 @@ export const COPY_FIELDS: { key: keyof AppRuntimeCopy; label: string; hint: stri
   { key: 'spotlightKicker', label: 'Spotlight kicker', hint: 'Above Spotlight' },
   { key: 'spotlightLede', label: 'Spotlight lede', hint: 'Board explanation' },
   { key: 'spotlightEmpty', label: 'Spotlight empty', hint: 'No awards yet' },
+  { key: 'dripAllLabel', label: 'Drip chip · All', hint: 'First category chip on Drip' },
+  { key: 'dripApparelLabel', label: 'Drip chip · Apparel', hint: 'Team apparel category chip' },
+  { key: 'dripAuraCardsLabel', label: 'Drip chip · Aura cards', hint: 'Aura card category chip' },
+  { key: 'dripMerchLabel', label: 'Drip chip · Merch', hint: 'Athlete merch category chip' },
+  { key: 'localMatchesLabel', label: 'Local chip · Matches', hint: 'Live Matches board chip' },
+  { key: 'localPollsLabel', label: 'Local chip · Polls', hint: 'School Polls board chip' },
+  { key: 'localBoostersLabel', label: 'Local chip · Boosters', hint: 'Top Boosters board chip' },
   { key: 'dripKicker', label: 'Drip kicker', hint: 'Above Drip' },
   { key: 'dripLede', label: 'Drip lede', hint: 'Optional marketplace line' },
   { key: 'dripEmpty', label: 'Drip empty', hint: 'Empty rack' },
@@ -419,6 +496,85 @@ function parseCopy(raw: unknown): AppRuntimeCopy {
   return next;
 }
 
+function asAmountList(raw: unknown, fallback: number[]): number[] {
+  const rows = Array.isArray(raw)
+    ? raw.map((item) => Number(item)).filter((item) => Number.isFinite(item) && item > 0)
+    : [];
+  const unique = [...new Set(rows.map((item) => Math.round(item * 100) / 100))];
+  return unique.length > 0 ? unique.slice(0, 6) : [...fallback];
+}
+
+function asFilterList(raw: unknown, fallback: AppRuntimeCatalogFilter[]): AppRuntimeCatalogFilter[] {
+  if (!Array.isArray(raw)) return fallback.map((row) => ({ ...row }));
+  const next = raw
+    .map((item) => {
+      const row = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+      const id = typeof row.id === 'string' ? row.id.trim() : '';
+      const label = typeof row.label === 'string' ? row.label.trim() : '';
+      if (!id || !label) return null;
+      return { id, label };
+    })
+    .filter((row): row is AppRuntimeCatalogFilter => Boolean(row));
+  return next.length > 0 ? next.slice(0, 12) : fallback.map((row) => ({ ...row }));
+}
+
+function asTierList(raw: unknown, fallback: AppRuntimeCatalogTier[]): AppRuntimeCatalogTier[] {
+  if (!Array.isArray(raw)) return fallback.map((row) => ({ ...row }));
+  const next = raw
+    .map((item, index) => {
+      const row = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+      const seed = fallback[index] ?? fallback[0];
+      const dollars = Number(row.dollars);
+      const auraPoints = Number(row.auraPoints);
+      return {
+        id: typeof row.id === 'string' && row.id.trim() ? row.id.trim() : seed.id,
+        name: typeof row.name === 'string' && row.name.trim() ? row.name.trim() : seed.name,
+        dollars: Number.isFinite(dollars) && dollars > 0 ? dollars : seed.dollars,
+        auraPoints: Number.isFinite(auraPoints) && auraPoints >= 0 ? Math.round(auraPoints) : seed.auraPoints,
+        badge: typeof row.badge === 'string' && row.badge.trim() ? row.badge.trim() : seed.badge,
+        perks: typeof row.perks === 'string' && row.perks.trim() ? row.perks.trim() : seed.perks,
+      };
+    })
+    .slice(0, 6);
+  return next.length > 0 ? next : fallback.map((row) => ({ ...row }));
+}
+
+function asCategoryList(raw: unknown, fallback: AppRuntimeCatalogCategory[]): AppRuntimeCatalogCategory[] {
+  if (!Array.isArray(raw)) return fallback.map((row) => ({ ...row }));
+  const next = raw
+    .map((item, index) => {
+      const row = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+      const seed = fallback[index] ?? fallback[0];
+      return {
+        id: typeof row.id === 'string' && row.id.trim() ? row.id.trim() : seed.id,
+        label: typeof row.label === 'string' && row.label.trim() ? row.label.trim() : seed.label,
+      };
+    })
+    .slice(0, 8);
+  return next.length > 0 ? next : fallback.map((row) => ({ ...row }));
+}
+
+function parseCatalog(raw: unknown): AppRuntimeCatalog {
+  const record = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const fallback = DEFAULT_APP_RUNTIME.catalog;
+  const fee = Number(record.maloFeeDollars);
+  const exclusive = Number(record.exclusiveDollars);
+  const aura = Number(record.exclusiveAura);
+  const years = Array.isArray(record.classYears)
+    ? record.classYears.map((item) => String(item).replace(/^'+/, '').trim()).filter(Boolean)
+    : [];
+  return {
+    maloAmounts: asAmountList(record.maloAmounts, fallback.maloAmounts),
+    maloFeeDollars: Number.isFinite(fee) && fee >= 0 ? fee : fallback.maloFeeDollars,
+    exclusiveDollars: Number.isFinite(exclusive) && exclusive > 0 ? exclusive : fallback.exclusiveDollars,
+    exclusiveAura: Number.isFinite(aura) && aura >= 0 ? Math.round(aura) : fallback.exclusiveAura,
+    classYears: years.length > 0 ? years.slice(0, 8) : [...fallback.classYears],
+    localFilters: asFilterList(record.localFilters, fallback.localFilters),
+    sponsorTiers: asTierList(record.sponsorTiers, fallback.sponsorTiers),
+    reelCategories: asCategoryList(record.reelCategories, fallback.reelCategories),
+  };
+}
+
 /**
  * @purpose Merge a stored jsonb blob onto the default chrome map so missing keys stay on.
  */
@@ -432,6 +588,7 @@ export function parseAppRuntimeConfig(raw: unknown): AppRuntimeConfig {
     profile: parseProfile(record.profile),
     highlights: parseHighlights(record.highlights),
     copy: parseCopy(record.copy),
+    catalog: parseCatalog(record.catalog),
   };
 }
 
@@ -444,6 +601,14 @@ export function cloneAppRuntime(config: AppRuntimeConfig): AppRuntimeConfig {
     profile: { ...config.profile },
     highlights: { ...config.highlights, railOrder: [...config.highlights.railOrder] },
     copy: { ...config.copy },
+    catalog: {
+      ...config.catalog,
+      maloAmounts: [...config.catalog.maloAmounts],
+      classYears: [...config.catalog.classYears],
+      localFilters: config.catalog.localFilters.map((row) => ({ ...row })),
+      sponsorTiers: config.catalog.sponsorTiers.map((row) => ({ ...row })),
+      reelCategories: config.catalog.reelCategories.map((row) => ({ ...row })),
+    },
   };
 }
 
@@ -495,6 +660,7 @@ export function countRuntimeChanges(draft: AppRuntimeConfig, published: AppRunti
   (Object.keys(draft.copy) as (keyof AppRuntimeCopy)[]).forEach((key) => {
     if (draft.copy[key] !== published.copy[key]) n += 1;
   });
+  if (JSON.stringify(draft.catalog) !== JSON.stringify(published.catalog)) n += 1;
   return n;
 }
 
@@ -536,7 +702,7 @@ export function getRuntimePathValue(config: AppRuntimeConfig, path: string): unk
   return bag ? bag[key] : undefined;
 }
 
-const RUNTIME_ROOT_KEYS = ['tabs', 'buttons', 'layouts', 'theme', 'profile', 'highlights', 'copy'] as const;
+const RUNTIME_ROOT_KEYS = ['tabs', 'buttons', 'layouts', 'theme', 'profile', 'highlights', 'copy', 'catalog'] as const;
 
 function assertKnownObjectKeys(record: Record<string, unknown>, allowed: string[], label: string) {
   for (const key of Object.keys(record)) {
@@ -590,6 +756,12 @@ export function parseLabRuntimeJson(raw: string): AppRuntimeConfig {
       throw new Error('highlights must be an object.');
     }
     assertKnownObjectKeys(record.highlights as Record<string, unknown>, Object.keys(defaults.highlights), 'highlights');
+  }
+  if (record.catalog != null) {
+    if (typeof record.catalog !== 'object' || Array.isArray(record.catalog)) {
+      throw new Error('catalog must be an object.');
+    }
+    assertKnownObjectKeys(record.catalog as Record<string, unknown>, Object.keys(defaults.catalog), 'catalog');
   }
   return parseAppRuntimeConfig(record);
 }

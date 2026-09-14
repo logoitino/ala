@@ -117,10 +117,14 @@ export function gameEventsChannelName(gameId: string): string {
 /**
  * @purpose Fan overlay copy, e.g. "⚡ BIG PLAY: Westlake Thunder!".
  * @param payload Broadcast `{ type, team }`.
+ * @param callouts Sport playbook callouts (`sport_configs`); defaults to the football set.
  * @returns Uppercase callout line for the Reel banner.
  */
-export function formatGameEventHeadline(payload: Pick<GameEventBroadcastPayload, 'type' | 'team'>): string {
-  const callout = OPERATOR_CALLOUTS.find((item) => item.eventType === payload.type);
+export function formatGameEventHeadline(
+  payload: Pick<GameEventBroadcastPayload, 'type' | 'team'>,
+  callouts: OperatorCallout[] = OPERATOR_CALLOUTS,
+): string {
+  const callout = callouts.find((item) => item.eventType === payload.type);
   const emoji = callout?.emoji ?? '⚡';
   const label = (callout?.label ?? payload.type).toUpperCase();
   const team = displayValue(payload.team).trim();
@@ -225,8 +229,8 @@ export async function hasOperatorClaim(gameId: string): Promise<boolean> {
   return value === '1';
 }
 
-export function clockSeconds(game: Game | null | undefined): number {
-  return parseClockToSeconds(game?.clock) ?? 12 * 60;
+export function clockSeconds(game: Game | null | undefined, fallbackSeconds = 12 * 60): number {
+  return parseClockToSeconds(game?.clock) ?? fallbackSeconds;
 }
 
 export function rosterForScoringSide(
@@ -242,10 +246,7 @@ export function rosterForScoringSide(
   return matched.length > 0 ? matched : players;
 }
 
-export async function updateOperatorQuarter(
-  gameId: string,
-  quarter: OperatorQuarter,
-): Promise<Game> {
+export async function updateOperatorQuarter(gameId: string, quarter: string): Promise<Game> {
   if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
 
   const { data, error } = await supabase

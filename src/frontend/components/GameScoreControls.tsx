@@ -3,6 +3,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
 import { GAME_STATUSES, SCORE_MACROS, displayValue } from '@/data/players';
+import type { SportScoreAction } from '@/data/sports';
 import type { Game } from '@/types/database';
 
 type ScoreSide = 'home' | 'away';
@@ -11,15 +12,28 @@ type GameScoreControlsProps = {
   game: Game;
   side: ScoreSide;
   disabled?: boolean;
+  /** Score buttons from the sport playbook (`/admin/sports`). Defaults to the football macros. */
+  macros?: Pick<SportScoreAction, 'label' | 'points'>[];
+  /** Period chips plus terminal states. Defaults to football quarters. */
+  statuses?: string[];
+  /** What a segment is called for this sport. */
+  periodLabel?: string;
   onSelectSide: (side: ScoreSide) => void;
   onAddPoints: (points: number) => void;
-  onSetStatus: (status: (typeof GAME_STATUSES)[number]) => void;
+  onSetStatus: (status: string) => void;
 };
 
+/**
+ * @purpose Sideline score pad: scoring side, the sport's score buttons, and its period chips.
+ * @param macros / statuses / periodLabel Come from `sport_configs` so any sport is scoreable.
+ */
 export function GameScoreControls({
   game,
   side,
   disabled = false,
+  macros = SCORE_MACROS.map((row) => ({ label: row.label, points: row.points })),
+  statuses = [...GAME_STATUSES],
+  periodLabel = 'Quarter',
   onSelectSide,
   onAddPoints,
   onSetStatus,
@@ -52,7 +66,7 @@ export function GameScoreControls({
 
       <Text style={styles.label}>Score macros</Text>
       <View style={styles.grid}>
-        {SCORE_MACROS.map((macro) => (
+        {macros.map((macro) => (
           <Pressable
             key={macro.label}
             accessibilityRole="button"
@@ -65,9 +79,9 @@ export function GameScoreControls({
         ))}
       </View>
 
-      <Text style={styles.label}>Quarter / status</Text>
+      <Text style={styles.label}>{periodLabel} / status</Text>
       <View style={styles.grid}>
-        {GAME_STATUSES.map((status) => {
+        {statuses.map((status) => {
           const selected = (game.quarter ?? game.status) === status;
           return (
             <Pressable

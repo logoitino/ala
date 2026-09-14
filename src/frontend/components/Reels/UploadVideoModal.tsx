@@ -21,10 +21,11 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import {
   HIGHLIGHT_PUBLISH_LABEL,
+  labeledReelCategories,
   REEL_CATEGORY_GAME,
-  REEL_CATEGORY_PILLS,
   REEL_CATEGORY_SERVE,
   SERVE_LIKE_ME_BOOST_LABEL,
   type ReelCategory,
@@ -111,6 +112,9 @@ function ClipPreview({ uri }: { uri: string }) {
  */
 export function UploadVideoModal({ visible, players, onClose, onUploaded }: UploadVideoModalProps) {
   const insets = useSafeAreaInsets();
+  const { live } = useAppRuntime();
+  const categoryPills = labeledReelCategories(live.catalog.reelCategories);
+  const exclusiveDollars = live.catalog.exclusiveDollars;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(0.45)).current;
 
@@ -513,7 +517,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
             <View style={styles.field}>
               <Text style={styles.fieldLabel}>Category</Text>
               <View style={styles.categoryRow} accessibilityLabel="Video category">
-                {REEL_CATEGORY_PILLS.map((pill) => {
+                {categoryPills.map((pill) => {
                   const selected = pill.id === category;
                   const serve = pill.id === REEL_CATEGORY_SERVE;
                   return (
@@ -578,7 +582,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
                   Subscriber Vault 🔒
                 </Text>
                 <Text style={styles.exclusiveHint}>
-                  Off by default (free public feed). On: only $4.99/mo subscribers can watch.
+                  Off by default (free public feed). On: only ${exclusiveDollars.toFixed(2)}/mo subscribers can watch.
                 </Text>
               </View>
               <View style={[styles.exclusiveTrack, isExclusive && styles.exclusiveTrackOn]}>

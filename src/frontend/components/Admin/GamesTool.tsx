@@ -13,6 +13,8 @@ import {
   AdminSuggest,
 } from '@/components/Admin/AdminChrome';
 import { formatTeamBadge, type SchoolTeam } from '@/data/teams';
+import { sportClockLabel } from '@/data/sports';
+import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { fetchAdminGames, fetchAdminSchools, upsertGame } from '@/lib/adminCatalog';
 import { useAuth } from '@/context/AuthContext';
 import { updateGameScore } from '@/lib/operator';
@@ -20,6 +22,7 @@ import type { Game } from '@/types/database';
 
 const empty = {
   id: '',
+  sport: 'Football',
   home_team: '',
   away_team: '',
   home_school: '',
@@ -31,35 +34,16 @@ const empty = {
   away_score: '0',
 };
 
-const QUARTERS = [
-  { id: 'Q1', label: 'Q1' },
-  { id: 'Q2', label: 'Q2' },
-  { id: 'Q3', label: 'Q3' },
-  { id: 'Q3b', label: 'Half' },
-  { id: 'Q4', label: 'Q4' },
-  { id: 'Final', label: 'Final' },
-] as const;
-
 type BoardFilter = 'live' | 'parked' | 'all';
 
-function quarterValue(raw: string): (typeof QUARTERS)[number]['id'] {
-  if (raw === 'Halftime' || raw === 'Q3b') return 'Q3b';
-  if (raw === 'Final') return 'Final';
-  if (raw === 'Q2' || raw === 'Q3' || raw === 'Q4') return raw;
-  return 'Q1';
-}
-
-function quarterPersist(id: string): string {
-  return id === 'Q3b' ? 'Halftime' : id;
-}
-
 /**
- * @purpose Run the Local match board: school pickers, quarter chips, live +1, park / go live.
- * @sideEffects `games` INSERT / UPDATE; `update_game_score` for score nudges.
+ * @purpose Run the Local match board: sport picker, school pickers, period chips from that sport's playbook, live +1, park / go live.
+ * @sideEffects `games` INSERT / UPDATE (including `games.sport`); `get_sport_configs`; `update_game_score` for score nudges.
  */
 export function GamesTool() {
   const router = useRouter();
   const { previewAsRole } = useAuth();
+  const { configs, configFor } = useSportConfigs();
   const [rows, setRows] = useState<Game[]>([]);
   const [schools, setSchools] = useState<SchoolTeam[]>([]);
   const [form, setForm] = useState(empty);
@@ -74,6 +58,8 @@ export function GamesTool() {
     () => schools.map((row) => ({ id: row.id, title: row.name, meta: `${row.mascot} · ${formatTeamBadge(row)}` })),
     [schools],
   );
+
+  const formPlaybook = configFor(form.sport);
 
   const visible = useMemo(() => {
     if (filter === 'live') return rows.filter((game) => game.is_active !== false);
@@ -107,6 +93,7 @@ export function GamesTool() {
     try {
       await upsertGame({
         id: form.id || extra?.id || undefined,
+        sport: extra?.sport ?? form.sport,
         home_team: extra?.home_team ?? form.home_team,
         away_team: extra?.away_team ?? form.away_team,
         home_school: extra?.home_school ?? form.home_school,
@@ -194,12 +181,30 @@ export function GamesTool() {
         <AdminField label="Away name on the board" value={form.away_team} onChangeText={(away_team) => setForm((c) => ({ ...c, away_team }))} placeholder="Knights" />
         <AdminField label="Venue" value={form.venue} onChangeText={(venue) => setForm((c) => ({ ...c, venue }))} placeholder="Westlake Stadium" />
         <AdminPills
-          label="Period"
-          items={[...QUARTERS]}
-          value={quarterValue(form.quarter)}
-          onChange={(id) => setForm((c) => ({ ...c, quarter: quarterPersist(id) }))}
+          label="Sport"
+          items={configs
+            .filter((row) => row.isActive)
+            .map((row) => ({ id: row.sport, label: `${row.emoji} ${row.sport}` }))}
+          value={form.sport}
+          onChange={(sport) => {
+            const playbook = configFor(sport);
+            setForm((c) => ({
+              ...c,
+              sport,
+              quarter: playbook.periods[0] ?? c.quarter,
+              clock: sportClockLabel(playbook) || c.clock,
+            }));
+          }}
         />
-        <AdminField label="Clock" value={form.clock} onChangeText={(clock) => setForm((c) => ({ ...c, clock }))} />
+        <AdminPills
+          label={formPlaybook.periodLabel}
+          items={[...formPlaybook.periods, 'Final'].map((id) => ({ id, label: id }))}
+          value={form.quarter}
+          onChange={(quarter) => setForm((c) => ({ ...c, quarter }))}
+        />
+        {formPlaybook.usesClock ? (
+          <AdminField label="Clock" value={form.clock} onChangeText={(clock) => setForm((c) => ({ ...c, clock }))} />
+        ) : null}
         <AdminBtn
           label={busy ? 'Saving…' : form.id ? 'Save match' : 'Go live on Local'}
           kind="primary"
@@ -216,7 +221,7 @@ export function GamesTool() {
           <AdminRow
             key={game.id}
             title={`${game.home_team} ${game.home_score} – ${game.away_score} ${game.away_team}`}
-            meta={`${game.home_school || game.home_team} vs ${game.away_school || game.away_team} · ${game.quarter || game.status} ${game.clock || ''} · ${game.is_active ? 'On Local' : 'Parked'}`}
+            meta={`${configFor(game.sport).emoji} ${game.sport || 'Football'} · ${game.home_school || game.home_team} vs ${game.away_school || game.away_team} · ${game.quarter || game.status} ${game.clock || ''} · ${game.is_active ? 'On Local' : 'Parked'}`}
           >
             {game.is_active ? (
               <>
@@ -229,6 +234,7 @@ export function GamesTool() {
               onPress={() =>
                 setForm({
                   id: game.id,
+                  sport: game.sport || 'Football',
                   home_team: game.home_team,
                   away_team: game.away_team,
                   home_school: game.home_school,
@@ -247,6 +253,7 @@ export function GamesTool() {
               onPress={() =>
                 void persist({
                   id: game.id,
+                  sport: game.sport || 'Football',
                   home_team: game.home_team,
                   away_team: game.away_team,
                   home_school: game.home_school,

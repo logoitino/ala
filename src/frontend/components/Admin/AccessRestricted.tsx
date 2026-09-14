@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   kicker: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1.2,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ctaLabel: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
     fontSize: 15,
     fontWeight: '800',
   },

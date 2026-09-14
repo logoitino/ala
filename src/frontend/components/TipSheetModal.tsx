@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(7,22,15,0.28)',
+    backgroundColor: colors.border,
   },
   blur: {
     ...StyleSheet.absoluteFill,

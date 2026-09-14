@@ -7,9 +7,10 @@ import {
   AdminField,
   AdminNotice,
   AdminPage,
-  AdminPanel,
   AdminPills,
+  AdminPublishBar,
   AdminRow,
+  AdminSectionTitle,
 } from '@/components/Admin/AdminChrome';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { colors, radii } from '@/constants/theme';
@@ -33,7 +34,7 @@ type LookTab = 'colors' | 'copy' | 'profile' | 'highlights';
  * @sideEffects `patch_app_runtime_draft` on each change.
  */
 export function LookTool() {
-  const { draft, published, dirty, pendingCount, publishedAt, saveDraft, publishLive, discardDraft } = useAppRuntime();
+  const { draft, published, saveDraft } = useAppRuntime();
   const [tab, setTab] = useState<LookTab>('colors');
 
   const patchTheme = (theme: AppRuntimeTheme) => void saveDraft({ ...draft, theme });
@@ -50,14 +51,7 @@ export function LookTool() {
       lede="Brand colors, Home/Local/Spotlight/Drip copy, what sits on Profile, and where Highlights ⚡ buttons live. Draft until Publish to app."
       saveMode="publish"
     >
-      <AdminPanel title={dirty ? `${pendingCount} unpublished change${pendingCount === 1 ? '' : 's'}` : 'Live with the fan app'}>
-        <Text style={styles.body}>
-          {publishedAt ? `Last published ${publishedAt.replace('T', ' ').slice(0, 16)} UTC.` : 'Defaults are Tapua\'i Obsidian / Neon Jade / Electric Gold.'}
-        </Text>
-        <AdminBtn label={dirty ? 'Publish to app' : 'Already live'} kind="primary" disabled={!dirty} onPress={() => void publishLive()} />
-        {dirty ? <AdminBtn label="Discard draft" kind="danger" onPress={() => void discardDraft()} /> : null}
-        <AdminNotice text={dirty ? 'Fans still see the previous look until you publish.' : null} tone="warn" />
-      </AdminPanel>
+      <AdminPublishBar note="Fans still see the previous look until you publish." />
 
       <AdminPills
         label="Desk"
@@ -84,7 +78,7 @@ export function LookTool() {
 
       {tab === 'profile' ? (
         <View style={styles.group}>
-          <Text style={styles.section}>Athlete sheet</Text>
+          <AdminSectionTitle>Athlete sheet</AdminSectionTitle>
           <Text style={styles.body}>Hide a block for a campaign. Vault still respects the Features Vault switch.</Text>
           <ToggleRow
             title="Trading card"
@@ -174,7 +168,7 @@ function CopyPane({
 }) {
   return (
     <View style={styles.group}>
-      <Text style={styles.section}>Fan headings</Text>
+      <AdminSectionTitle>Fan headings</AdminSectionTitle>
       <Text style={styles.body}>Home, Local, Spotlight, and Drip kickers and empty lines. Leave the Home banner title blank to hide it.</Text>
       {COPY_FIELDS.map((field) => (
         <View key={field.key} style={styles.copyBlock}>
@@ -218,7 +212,10 @@ function ColorsPane({
   ];
   return (
     <View style={styles.group}>
-      <Text style={styles.section}>Presets</Text>
+      <AdminSectionTitle>Presets</AdminSectionTitle>
+      <AdminRow title="Daylight (default)" meta="Reset the live look to the shipping light canvas.">
+        <AdminBtn label="Reset to default" kind="primary" onPress={() => onPreset(THEME_PRESETS[0].theme)} />
+      </AdminRow>
       {THEME_PRESETS.map((preset) => (
         <AdminRow key={preset.id} title={preset.label} meta={preset.hint}>
           <View style={styles.swatchRow}>
@@ -229,7 +226,7 @@ function ColorsPane({
           <AdminBtn label="Use" kind="primary" onPress={() => onPreset(preset.theme)} />
         </AdminRow>
       ))}
-      <Text style={styles.section}>Hex</Text>
+      <AdminSectionTitle>Hex</AdminSectionTitle>
       <View style={[styles.preview, { backgroundColor: theme.background, borderColor: theme.jade }]}>
         <Text style={[styles.previewKicker, { color: theme.jade }]}>Highlights ⚡</Text>
         <Text style={[styles.previewTitle, { color: theme.text }]}>Friday night</Text>
@@ -250,7 +247,7 @@ function ColorsPane({
                 setDraftHex((current) => ({ ...current, [field.key]: next.toUpperCase() }));
                 if (/^#[0-9A-Fa-f]{6}$/.test(next)) onHex(field.key, next.toUpperCase());
               }}
-              placeholder="#00E676"
+              placeholder="#00733C"
             />
           </View>
         </View>
@@ -270,7 +267,7 @@ function HighlightsPane({
 }) {
   return (
     <View style={styles.group}>
-      <Text style={styles.section}>Clip overlay</Text>
+      <AdminSectionTitle>Clip overlay</AdminSectionTitle>
       <View style={[styles.phone, draft.railSide === 'left' && styles.phoneFlip]}>
         <View style={styles.phoneCopy}>
           <Text style={styles.phoneName}>Athlete</Text>
@@ -313,7 +310,7 @@ function HighlightsPane({
         live={live.showCaption}
         onPress={() => onPatch({ showCaption: !draft.showCaption })}
       />
-      <Text style={styles.section}>Button order</Text>
+      <AdminSectionTitle>Button order</AdminSectionTitle>
       {draft.railOrder.map((id, index) => (
         <AdminRow key={id} title={`${index + 1}. ${HIGHLIGHT_RAIL_ITEMS.find((item) => item.id === id)?.label ?? id}`} meta="Up / down on the rail">
           <AdminBtn label="Up" disabled={index === 0} onPress={() => onPatch({ railOrder: moveHighlightRailItem(draft.railOrder, id, -1) })} />
@@ -336,13 +333,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: 14,
-  },
-  section: {
-    color: FOCAL.neonJade,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
   },
   body: {
     color: colors.textMuted,
@@ -413,7 +403,7 @@ const styles = StyleSheet.create({
     gap: 10,
     minHeight: 160,
     borderRadius: radii.md,
-    backgroundColor: '#070A0B',
+    backgroundColor: colors.videoSurface,
     padding: 12,
   },
   phoneFlip: {
@@ -424,7 +414,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   phoneName: {
-    color: '#FFFFFF',
+    color: colors.onVideo,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -439,7 +429,7 @@ const styles = StyleSheet.create({
     width: 56,
   },
   phoneChip: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 10,
     fontWeight: '800',
   },

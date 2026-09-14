@@ -159,7 +159,7 @@ export function AthleteReelManager({
             <Text style={styles.body}>
               {vaultOnly
                 ? 'This clip is in Subscriber Vault. Move it to the free public Highlights ⚡ feed anytime.'
-                : 'This clip is on the free public feed. Vault it so only $4.99/mo subscribers can watch.'}
+                : `This clip is on the free public feed. Vault it so only $${live.catalog.exclusiveDollars.toFixed(2)}/mo subscribers can watch.`}
             </Text>
             {live.buttons.vault ? (
             <AnimatedButton
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   },
   dim: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(15,20,22,0.42)',
+    backgroundColor: colors.videoScrimSoft,
   },
   sheet: {
     backgroundColor: colors.surface,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   kicker: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   toggleLabel: {
-    color: colors.onAccent,
+    color: FOCAL.ink,
     fontSize: 14,
     fontWeight: '800',
     textAlign: 'center',
@@ -290,13 +290,13 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     backgroundColor: 'rgba(0,230,118,0.16)',
     borderWidth: 1,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
   flashLabel: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 14,
     fontWeight: '800',
     textAlign: 'center',

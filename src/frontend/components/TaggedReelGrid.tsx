@@ -201,7 +201,7 @@ function TaggedReelTile({
       ]}
     >
       <BlurTargetView ref={blurTarget} style={styles.poster}>
-        <Ionicons name="play" size={28} color={locked ? colors.textMuted : colors.primary} />
+        <Ionicons name="play" size={28} color={locked ? colors.onVideoMuted : colors.primary} />
       </BlurTargetView>
       {locked ? (
         <BlurView
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     gap: GAP,
   },
   tile: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.videoSurface,
     overflow: 'hidden',
     justifyContent: 'flex-end',
   },
@@ -256,13 +256,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   lockBadge: {
-    backgroundColor: 'rgba(15,20,22,0.72)',
+    backgroundColor: colors.videoScrim,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 5,
   },
   lockLabel: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.2,
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     left: 6,
-    backgroundColor: 'rgba(15,20,22,0.78)',
+    backgroundColor: colors.videoScrim,
     borderWidth: 1,
     borderColor: FOCAL.neonJade,
     borderRadius: 4,
@@ -301,16 +301,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   tag: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 11,
     fontWeight: '800',
     paddingHorizontal: 6,
     paddingVertical: 6,
-    backgroundColor: 'rgba(15,20,22,0.78)',
+    backgroundColor: colors.videoScrim,
     zIndex: 1,
   },
   empty: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 14,
     paddingVertical: 24,
     textAlign: 'center',

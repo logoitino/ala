@@ -13,7 +13,7 @@ export type SchoolTeam = {
   city?: string | null;
 };
 
-export const ATHLETE_SPORTS = ['Football', 'Basketball', 'Rugby', 'Volleyball'] as const;
+export const ATHLETE_SPORTS = ['Football', 'Basketball', 'Rugby', 'Volleyball', 'Soccer', 'Baseball', 'Softball', 'Wrestling', 'Track & Field', 'Lacrosse', 'Ice Hockey', 'Tennis'] as const;
 export type AthleteSport = (typeof ATHLETE_SPORTS)[number];
 
 export const ATHLETE_CLASS_YEARS = ['26', '27', '28'] as const;

@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 999,
     overflow: 'hidden',
-    backgroundColor: '#101618',
+    backgroundColor: colors.background,
   },
   homeFill: {
     height: 12,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1.5,
     borderColor: colors.border,
-    backgroundColor: '#101618',
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,

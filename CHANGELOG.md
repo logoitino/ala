@@ -4,6 +4,23 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-14
 
+### Admin audit — Catalogs, Daylight default, one builder per category
+
+- System sidebar is Features / Look / **Catalogs** / Studio. Lab and QA stay as hidden deep links (Feedback **Open in Lab**, Reports Reliability) so they are not a second Features or Reports desk.
+- New `/admin/catalog` (`Admin/CatalogTool`) drafts Mālo presets, cover-fee dollars, exclusive pass dollars + Aura, class years, Local region chips, booster tier prices, and upload category labels until **Publish to app**. Coverage maps every former `owner: code` list to this desk. Money, Boosters, and Feedback link here instead of duplicating the editors.
+- The fan app reads `live.catalog` for tip chips, exclusive copy, onboarding years, Local filters, sponsor checkout, Chip In, and upload / Highlights category labels. Sports playbooks, Drip SKUs, schools, games, and wishlist gear stay on their own instant-save desks.
+- **Daylight is the shipping canvas** (`LIGHT_COLORS`, `DAYLIGHT_THEME`, Look **Reset to default**). Status bar, tab shells, and payout chrome follow the published theme. Highlights ⚡ (and other video surfaces) stay Obsidian.
+
+### Sports builder — every sport, scored and shown its own way
+
+- New **`/admin/sports`** desk (`Admin/SportsTool`, Operations group) defines one playbook per sport: emoji, segment name (Quarter / Half / Set / Inning / Flight), period chips, clock on/off + minutes, score buttons (label / points / feed play type), sideline callouts, which **Stats 📊** career rows and combine tiles fans see, and roster position pills. Add, edit, pause, or delete any sport, with a live preview of the console and Stats table before saving.
+- Each row shows what rides on it — score buttons, periods, clock, positions, athletes, and games — so a change is never blind. **Install starter playbooks** writes the twelve seeded sports (Football, Basketball, Rugby, Volleyball, Soccer, Baseball, Softball, Wrestling, Track & Field, Lacrosse, Ice Hockey, Tennis) into Supabase; playbooks not yet saved are marked `starter`.
+- The operator console (`/operator/[gameId]`) and sideline scorer now build their score pad, period chips, clock, callouts, and player-tag macros from the match's playbook (`games.sport`). Untimed sports hide the clock entirely; unknown sports inherit `GENERIC_SPORT_CONFIG` instead of football.
+- Fan surfaces follow the same rows: the athlete **Stats 📊** pane renders the playbook's combine tiles and career labels (Kills / Digs, Tries / Tackles, Goals / Assists…), and live play toasts resolve their emoji from that sport's callouts.
+- `/admin/games` gains a sport picker that swaps its period chips and clock field to match; `/admin/athletes` shows position pills for the selected sport instead of football-only QB…K. Athlete onboarding offers every active sport.
+- New `public.sport_configs` + `get_sport_configs` / `upsert_sport_config` / `delete_sport_config`, plus `games.sport`. Incremental: `supabase/sport_configs.sql`. Expo Go without the table falls back to `SPORT_CONFIG_SEEDS`.
+- Coverage tracks the score buttons, period chips, callouts, and Stats rows against the Sports desk.
+
 ### Locker Room Wishlist — crowd-funded gear
 
 - Athlete **Stats 📊** tab gains **👟 Locker Room Wishlist**: a horizontal rack of gear cards with item photo, title, money line, and a spring-animated Neon Jade funding bar. **🎁 Gift Item Directly** opens the retailer link in `expo-web-browser`; **⚡ Chip In $5** opens the Mālo sheet and credits whatever the fan pays toward the goal.

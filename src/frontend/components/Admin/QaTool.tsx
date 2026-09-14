@@ -1,26 +1,26 @@
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { type Href, useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 
 import {
   AdminBtn,
+  AdminDeskLink,
   AdminEmpty,
+  AdminMetrics,
   AdminNotice,
   AdminPage,
   AdminPanel,
   AdminRow,
+  AdminSectionTitle,
 } from '@/components/Admin/AdminChrome';
-import { colors, radii } from '@/constants/theme';
-import { useAuth } from '@/context/AuthContext';
+import { colors } from '@/constants/theme';
 import {
-  ADMIN_PRODUCTION_SURFACES,
   dismissTelemetryIncident,
   fetchAdminTelemetryDigest,
   type AdminTelemetryDigest,
 } from '@/lib/admin';
 import { fetchAdminOpsInbox, type AdminOpsInbox } from '@/lib/adminCatalog';
 import { offlineQueue, type OfflineQueuedAction } from '@/services/OfflineQueue';
-import { FOCAL } from '@/theme/motion';
 
 const EMPTY_TELEM: AdminTelemetryDigest = {
   stalls: 0,
@@ -57,7 +57,6 @@ function queueLabel(row: OfflineQueuedAction): string {
  */
 export function QaTool() {
   const router = useRouter();
-  const { previewAsRole } = useAuth();
   const [telem, setTelem] = useState<AdminTelemetryDigest>(EMPTY_TELEM);
   const [inbox, setInbox] = useState<AdminOpsInbox>(EMPTY_INBOX);
   const [queue, setQueue] = useState<OfflineQueuedAction[]>([]);
@@ -155,26 +154,16 @@ export function QaTool() {
       onRefresh={() => void refresh()}
       error={error}
     >
-      <View style={styles.metrics}>
-        <View style={styles.metric}>
-          <Text style={styles.metricValue}>{telem.stalls}</Text>
-          <Text style={styles.metricLabel}>Stalls 24h</Text>
-        </View>
-        <View style={styles.metric}>
-          <Text style={styles.metricValue}>{telem.reconnects}</Text>
-          <Text style={styles.metricLabel}>Reconnects</Text>
-        </View>
-        <View style={styles.metric}>
-          <Text style={styles.metricValue}>{telem.avgCheckoutMs || '—'}</Text>
-          <Text style={styles.metricLabel}>Mālo ms</Text>
-        </View>
-        <View style={styles.metric}>
-          <Text style={styles.metricValue}>{queue.length}</Text>
-          <Text style={styles.metricLabel}>Offline</Text>
-        </View>
-      </View>
+      <AdminMetrics
+        items={[
+          { label: 'Stalls 24h', value: telem.stalls },
+          { label: 'Reconnects', value: telem.reconnects },
+          { label: 'Mālo ms', value: telem.avgCheckoutMs || '—' },
+          { label: 'Offline', value: queue.length },
+        ]}
+      />
 
-      <Text style={styles.section}>Production health</Text>
+      <AdminSectionTitle>Production health</AdminSectionTitle>
       {checks.map((item) => (
         <AdminRow key={item.label} title={item.label} meta={item.ok ? 'Ready' : 'Needs a pass'}>
           {item.ok ? null : <AdminBtn label="Fix" kind="primary" onPress={() => router.push(item.href)} />}
@@ -196,34 +185,13 @@ export function QaTool() {
         <AdminNotice text={message} />
       </AdminPanel>
 
-      <Text style={styles.section}>Walk production</Text>
-      {ADMIN_PRODUCTION_SURFACES.map((item) => (
-        <AdminRow key={item.href} title={item.label} meta={item.hint}>
-          <AdminBtn
-            label="Open"
-            kind="primary"
-            onPress={() => {
-              if (item.href === '/operator') {
-                void previewAsRole('operator');
-                return;
-              }
-              if (item.href === '/parent') {
-                void previewAsRole('parent');
-                return;
-              }
-              if (item.href === '/booster') {
-                void previewAsRole('booster');
-                return;
-              }
-              if (item.href === '/sponsor') {
-                void previewAsRole('sponsor');
-                return;
-              }
-              router.push(item.href as Href);
-            }}
-          />
-        </AdminRow>
-      ))}
+      <AdminSectionTitle>Walk production</AdminSectionTitle>
+      <AdminDeskLink
+        title="Open a fan surface as a role"
+        meta="Studio owns role preview for Home, Local, Drip, Spotlight, operator, and the HQs"
+        href="/admin/studio"
+        label="Studio"
+      />
 
       <AdminPanel title="Copy checklist">
         <Text style={styles.body}>Home / Local / Profile still say Mālo, Seki, and Highlights ⚡ — never tip / like / Reels in the UI.</Text>
@@ -231,7 +199,7 @@ export function QaTool() {
         <Text style={styles.body}>Operator PIN and scorekeeper stay on `/operator`. Publish scores from Live games or the operator console.</Text>
       </AdminPanel>
 
-      <Text style={styles.section}>Telemetry (24h)</Text>
+      <AdminSectionTitle>Telemetry (24h)</AdminSectionTitle>
       {telem.recent.length === 0 ? (
         <AdminEmpty text="No client events in the last day." />
       ) : (
@@ -257,41 +225,6 @@ export function QaTool() {
 }
 
 const styles = StyleSheet.create({
-  metrics: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  metric: {
-    flexGrow: 1,
-    minWidth: 88,
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 12,
-    gap: 4,
-  },
-  metricValue: {
-    color: FOCAL.neonJade,
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  metricLabel: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  section: {
-    color: FOCAL.neonJade,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginTop: 4,
-  },
   body: {
     color: colors.textMuted,
     fontSize: 13,

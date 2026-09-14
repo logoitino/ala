@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ctaLabel: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
     fontSize: 15,
     fontWeight: '800',
   },

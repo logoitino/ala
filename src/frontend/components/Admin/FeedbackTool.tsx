@@ -96,7 +96,7 @@ export function FeedbackTool() {
   return (
     <AdminPage
       title="Feedback"
-      lede="Fan suggestions become a shipped change: triage → planned → Engineer Lab → Publish to app → shipped."
+      lede="Fan suggestions become a shipped change: triage → planned → Catalogs / Look / Engineer Lab → Publish to app → shipped."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
@@ -168,6 +168,7 @@ export function FeedbackTool() {
             kind="primary"
             onPress={() => router.push(`/admin/lab?feedbackId=${selected.id}` as Href)}
           />
+          <AdminBtn label="Open Catalogs" onPress={() => router.push('/admin/catalog')} />
           <AdminBtn label="Open Look" onPress={() => router.push('/admin/look')} />
           <AdminNotice
             text="Shipping means an engineer applied this onto the draft. Mark shipped after Publish to app."
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   badgeOn: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
   },
   detail: {
     gap: 10,
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   section: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.8,

@@ -25,7 +25,7 @@ function emptyStandings(kind: SpotlightPeriodKind): SpotlightStandings {
  */
 export function SpotlightTool() {
   const router = useRouter();
-  const dashboard = useAdminDashboard(true);
+  const dashboard = useAdminDashboard(true, { awards: true, flags: false, metrics: false });
   const pending = usePendingPlayerTags();
   const [raceKind, setRaceKind] = useState<SpotlightPeriodKind>('week');
   const [standings, setStandings] = useState<SpotlightStandings>(emptyStandings('week'));

@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 16,
-    backgroundColor: '#101618',
+    backgroundColor: colors.videoSurface,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
@@ -586,12 +586,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   name: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 20,
     fontWeight: '800',
   },
   handle: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   teamLine: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 13,
     fontWeight: '800',
   },
@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   progressLabel: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 13,
     fontWeight: '800',
   },
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
   track: {
     height: 8,
     borderRadius: 999,
-    backgroundColor: '#101618',
+    backgroundColor: colors.videoSurface,
     overflow: 'hidden',
   },
   fill: {
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   backKicker: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
     width: '48%',
     flexGrow: 0,
     flexShrink: 0,
-    backgroundColor: '#101618',
+    backgroundColor: colors.videoSurface,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 8,
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#10261C',
   },
   statLabel: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 10,
     fontWeight: '700',
     textAlign: 'center',
@@ -699,14 +699,14 @@ const styles = StyleSheet.create({
     color: FOCAL.neonJade,
   },
   bioLabel: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   bio: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '600',
@@ -724,7 +724,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 5,
-    backgroundColor: '#101618',
+    backgroundColor: colors.videoSurface,
   },
   earnedOff: {
     opacity: 0.42,
@@ -733,12 +733,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   earnedLabel: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 10,
     fontWeight: '800',
   },
   earnedLabelOff: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
   },
   flipBtn: {
     minHeight: 44,

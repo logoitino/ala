@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   label: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   selected: {
     borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
     backgroundColor: FOCAL.backgroundBase,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   periodOn: {
     backgroundColor: FOCAL.neonJade,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
   },
   periodLabel: {
     color: colors.textMuted,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   periodLabelOn: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
   },
   dates: {
     flexDirection: 'row',
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   publishLabel: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
     fontSize: 15,
     fontWeight: '800',
   },

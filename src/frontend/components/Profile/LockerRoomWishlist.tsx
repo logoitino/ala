@@ -29,7 +29,6 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
 import { displayValue, type Player } from '@/data/players';
 import {
-  WISHLIST_CHIP_IN_ACTION,
   WISHLIST_EMPTY,
   WISHLIST_EQUIPPED_BADGE,
   WISHLIST_EQUIP_AURA,
@@ -38,6 +37,7 @@ import {
   WISHLIST_TITLE,
   WISHLIST_UNLOCKED_TOAST,
   isWishlistFunded,
+  wishlistChipInAction,
   wishlistFundedLabel,
   wishlistProgressPct,
 } from '@/data/wishlist';
@@ -58,7 +58,7 @@ type LockerRoomWishlistProps = {
 };
 
 /**
- * @purpose Gamified Locker Room Wishlist on the athlete Stats 📊 tab: horizontal gear cards with a jade funding bar, 🎁 Gift Item Directly, and ⚡ Chip In $5 Mālo. Hitting 100% fires confetti, brands the card EQUIPPED ⚡, and pays the athlete +500 Aura.
+ * @purpose Gamified Locker Room Wishlist on the athlete Stats 📊 tab: horizontal gear cards with a jade funding bar, 🎁 Gift Item Directly, and Chip In using the first Catalogs Mālo preset. Hitting 100% fires confetti, brands the card EQUIPPED ⚡, and pays the athlete +500 Aura.
  * @param player Athlete whose `wishlist_items` load and who receives Mālo + the equip bonus.
  * @param athleteName Name shown on the Gear Unlocked overlay.
  * @param onEquipped Host hook for a newly funded item (refresh stats, log, etc).
@@ -73,6 +73,7 @@ export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRo
   const [tipItem, setTipItem] = useState<WishlistItem | null>(null);
   const [unlocked, setUnlocked] = useState<WishlistItem | null>(null);
   const name = displayValue(athleteName ?? player.name, 'this athlete');
+  const chipInLabel = wishlistChipInAction(live.catalog.maloAmounts[0] ?? 5);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -139,7 +140,7 @@ export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRo
           <Text style={styles.title}>{WISHLIST_TITLE}</Text>
           <Text style={styles.lede}>{WISHLIST_LEDE}</Text>
         </View>
-        {loading ? <ActivityIndicator color={FOCAL.neonJade} size="small" /> : null}
+        {loading ? <ActivityIndicator color={FOCAL.jadeInk} size="small" /> : null}
       </View>
 
       {items.length === 0 && !loading ? (
@@ -156,6 +157,7 @@ export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRo
               key={item.id}
               item={item}
               chipping={tipItem?.id === item.id}
+              chipInLabel={chipInLabel}
               onGift={() => void openRetailer(item)}
               onChipIn={() => startChipIn(item)}
             />
@@ -185,11 +187,13 @@ export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRo
 function WishlistCard({
   item,
   chipping,
+  chipInLabel,
   onGift,
   onChipIn,
 }: {
   item: WishlistItem;
   chipping: boolean;
+  chipInLabel: string;
   onGift: () => void;
   onChipIn: () => void;
 }) {
@@ -220,7 +224,7 @@ function WishlistCard({
             accessibilityIgnoresInvertColors
           />
         ) : (
-          <Ionicons name="bag-handle-outline" size={30} color={FOCAL.neonJade} />
+          <Ionicons name="bag-handle-outline" size={30} color={FOCAL.jadeInk} />
         )}
         {funded ? <EquippedBadge /> : null}
       </View>
@@ -246,13 +250,13 @@ function WishlistCard({
       {funded ? null : (
         <AnimatedButton
           haptic="medium"
-          accessibilityLabel={`${WISHLIST_CHIP_IN_ACTION} toward ${item.title}`}
+          accessibilityLabel={`${chipInLabel} toward ${item.title}`}
           accessibilityState={{ disabled: chipping }}
           disabled={chipping}
           contentStyle={[styles.chipHit, chipping && styles.chipHitBusy]}
           onPress={onChipIn}
         >
-          <Text style={styles.chipLabel}>{chipping ? 'Mālo open…' : WISHLIST_CHIP_IN_ACTION}</Text>
+          <Text style={styles.chipLabel}>{chipping ? 'Mālo open…' : chipInLabel}</Text>
         </AnimatedButton>
       )}
     </View>
@@ -384,7 +388,7 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   cardFunded: {
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
   },
   photoWrap: {
     height: 104,
@@ -411,13 +415,13 @@ const styles = StyleSheet.create({
   equippedBadge: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: FOCAL.neonJade,
-    backgroundColor: 'rgba(15,20,22,0.82)',
+    borderColor: FOCAL.jadeInk,
+    backgroundColor: colors.videoScrim,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   equippedLabel: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -434,7 +438,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   moneyFunded: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
   },
   track: {
     height: 8,
@@ -456,13 +460,13 @@ const styles = StyleSheet.create({
     minHeight: 44,
     borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
   giftLabel: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 13,
     fontWeight: '800',
   },
@@ -478,13 +482,13 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   chipLabel: {
-    color: colors.onAccent,
+    color: FOCAL.ink,
     fontSize: 13,
     fontWeight: '800',
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15,20,22,0.88)',
+    backgroundColor: colors.videoScrim,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
@@ -495,7 +499,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
     paddingHorizontal: 22,
     paddingVertical: 26,
     gap: 10,
@@ -526,19 +530,19 @@ const styles = StyleSheet.create({
   unlockBadge: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
     backgroundColor: 'rgba(0,230,118,0.16)',
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   unlockBadgeLabel: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.4,
   },
   unlockAura: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 14,
     fontWeight: '800',
     textAlign: 'center',
@@ -554,7 +558,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   unlockCloseLabel: {
-    color: colors.onAccent,
+    color: FOCAL.ink,
     fontSize: 15,
     fontWeight: '800',
   },

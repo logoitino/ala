@@ -5,7 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, w
 
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, palette, radii } from '@/constants/theme';
+import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
 import { isOperatorPin, OPERATOR_TEST_PIN } from '@/lib/operator';
 import { SPRING_BOUNCE } from '@/theme/motion';
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   sheet: {
     zIndex: 4,
-    backgroundColor: palette.midnightObsidian,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     borderWidth: 1,

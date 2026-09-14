@@ -60,7 +60,7 @@ Prices below are generated from source (`npm run docs:sync`). Do not edit inside
 | Boosters | Silver $50 / Gold $150 / Platinum $500 first month | Silver / Gold / Platinum |
 | Aura | 10 points per tip dollar | 7-tier card (Slate Silver → Celestial Prism). Double-tap 1; Serve Like Me ×2. Not cash. |
 | Operator PIN | `1234` | Prototype. Demo RLS: tighten before production. |
-| Athlete roster | Same flow for HS + NCAA | Sports Football / Basketball / Rugby / Volleyball. Class '26 / '27 / '28. `profiles.school_id` + `athlete_division`. |
+| Athlete roster | Same flow for HS + NCAA | Sports Football / Basketball / Rugby / Volleyball / Soccer / Baseball / Softball / Wrestling / Track & Field / Lacrosse / Ice Hockey / Tennis. Class '26 / '27 / '28. `profiles.school_id` + `athlete_division`. |
 | Athlete profile | Unified sheet | Tabs Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar Home / Spotlight. Vault Lock Vault 🔒 (default locked). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. |
 <!-- product-facts:end -->
 

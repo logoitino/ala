@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 12,
-    backgroundColor: '#101618',
+    backgroundColor: colors.videoSurface,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
@@ -199,17 +199,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   name: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 18,
     fontWeight: '800',
   },
   meta: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 13,
     fontWeight: '700',
   },
   school: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   stat: {
     flex: 1,
-    backgroundColor: '#101618',
+    backgroundColor: colors.videoSurface,
     borderRadius: 10,
     paddingVertical: 8,
     alignItems: 'center',
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   statLabel: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 10,
     fontWeight: '700',
   },

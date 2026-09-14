@@ -259,11 +259,11 @@ function SpotlightVideo({ uri }: { uri: string }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: FOCAL.backgroundBase,
+    backgroundColor: FOCAL.videoBase,
   },
   videoFill: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: FOCAL.backgroundBase,
+    backgroundColor: FOCAL.videoBase,
   },
   scrimTop: {
     position: 'absolute',
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: '42%',
-    backgroundColor: 'rgba(15, 20, 22, 0.72)',
+    backgroundColor: colors.videoScrim,
   },
   scrimBottom: {
     position: 'absolute',
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: '58%',
-    backgroundColor: 'rgba(15, 20, 22, 0.88)',
+    backgroundColor: colors.videoScrim,
   },
   sheet: {
     flex: 1,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: FOCAL.neonJade,
     borderRadius: 999,
-    backgroundColor: 'rgba(15, 20, 22, 0.82)',
+    backgroundColor: colors.videoScrim,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: FOCAL.backgroundBase,
+    backgroundColor: FOCAL.videoBase,
     ...Platform.select({
       ios: {
         shadowOffset: { width: 0, height: 0 },
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     height: 114,
     borderRadius: 57,
     borderWidth: 1.5,
-    backgroundColor: '#161D20',
+    backgroundColor: colors.videoSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     bottom: 10,
     borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: FOCAL.backgroundBase,
+    backgroundColor: FOCAL.videoBase,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   name: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 28,
     fontWeight: '800',
     textAlign: 'center',
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   shotBy: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 13,
     fontWeight: '700',
     textAlign: 'center',
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   primaryLabel: {
-    color: colors.onAccent,
+    color: FOCAL.ink,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -435,14 +435,14 @@ const styles = StyleSheet.create({
     minHeight: 52,
     borderRadius: radii.md,
     borderWidth: 1.5,
-    borderColor: colors.text,
-    backgroundColor: 'rgba(15, 20, 22, 0.55)',
+    borderColor: colors.onVideo,
+    backgroundColor: colors.videoScrimSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
   },
   secondaryLabel: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 15,
     fontWeight: '800',
   },
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   dismissLabel: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 14,
     fontWeight: '700',
   },

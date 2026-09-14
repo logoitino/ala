@@ -151,6 +151,8 @@ export type Game = {
   quarter?: string | null;
   status: string;
   venue: string;
+  /** Playbook key into `sport_configs.sport`. Drives operator buttons and period chips. */
+  sport?: string | null;
   is_active: boolean;
   clock?: string | null;
   claimed_by?: string | null;
@@ -299,6 +301,26 @@ export type ShopOrder = {
   amount_cents: number;
   qty: number;
   created_at: string;
+};
+
+/** One sport playbook (`public.sport_configs`). JSON columns mirror `src/frontend/data/sports.ts`. */
+export type SportConfigRow = {
+  id: string;
+  sport: string;
+  emoji: string;
+  period_label: string;
+  periods: unknown;
+  uses_clock: boolean;
+  clock_seconds: number;
+  scoring: unknown;
+  callouts: unknown;
+  stat_fields: unknown;
+  measurables: unknown;
+  positions: unknown;
+  is_active: boolean;
+  sort_order: number;
+  created_at?: string;
+  updated_at?: string;
 };
 
 /** Crowd-funded gear on the athlete Stats tab (`public.wishlist_items`). */
@@ -603,6 +625,10 @@ export type Database = {
         WishlistItem,
         Pick<WishlistItem, 'title'> & Partial<WishlistItem>
       >;
+      sport_configs: Table<
+        SportConfigRow,
+        Pick<SportConfigRow, 'sport'> & Partial<SportConfigRow>
+      >;
       app_runtime_config: {
         Row: {
           id: string;
@@ -799,6 +825,18 @@ export type Database = {
           next_runtime_path?: string;
         };
         Returns: AppFeedbackRow;
+      };
+      get_sport_configs: {
+        Args: Record<string, never>;
+        Returns: SportConfigRow[];
+      };
+      upsert_sport_config: {
+        Args: { payload: Record<string, unknown> };
+        Returns: SportConfigRow;
+      };
+      delete_sport_config: {
+        Args: { target_id: string };
+        Returns: boolean;
       };
       get_wishlist_items: {
         Args: { target_player_id: string };

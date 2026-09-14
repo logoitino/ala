@@ -62,7 +62,7 @@ export function ModerationTable({ flags, busyId, onDismiss, onRemove }: Moderati
               <Text style={[styles.cell, styles.colWhen]}>{formatOpened(row.openedAt)}</Text>
               <View style={styles.colActions}>
                 {busy ? (
-                  <ActivityIndicator color={FOCAL.neonJade} />
+                  <ActivityIndicator color={FOCAL.jadeInk} />
                 ) : (
                   <>
                     <AnimatedButton
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   headCell: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,

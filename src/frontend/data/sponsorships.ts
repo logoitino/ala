@@ -78,6 +78,34 @@ export function sponsorTierById(id: string | null | undefined): SponsorTier {
   return SPONSOR_TIERS.find((tier) => tier.id === id) ?? SPONSOR_TIERS[0];
 }
 
+/**
+ * @purpose Overlay Catalogs-desk names, dollars, Aura, and perks onto Silver / Gold / Platinum. Accents stay in code.
+ */
+export function catalogSponsorTiers(
+  rows?: Array<{
+    id: string;
+    name: string;
+    dollars: number;
+    auraPoints: number;
+    badge: string;
+    perks: string;
+  }> | null,
+): SponsorTier[] {
+  if (!rows?.length) return SPONSOR_TIERS;
+  return SPONSOR_TIERS.map((seed) => {
+    const row = rows.find((item) => item.id === seed.id);
+    if (!row) return seed;
+    return {
+      ...seed,
+      name: row.name.trim() || seed.name,
+      dollars: Number.isFinite(row.dollars) && row.dollars > 0 ? row.dollars : seed.dollars,
+      auraPoints: Number.isFinite(row.auraPoints) && row.auraPoints >= 0 ? row.auraPoints : seed.auraPoints,
+      badge: row.badge.trim() || seed.badge,
+      perks: row.perks.trim() || seed.perks,
+    };
+  });
+}
+
 export function formatSponsorDollars(dollars: number): string {
   return `$${dollars}/mo`;
 }

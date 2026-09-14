@@ -1,3 +1,4 @@
+import { sportConfigFor, statLabelFor, type SportConfig } from '@/data/sports';
 import type { AthleteSport } from '@/data/teams';
 import type { Player } from '@/types/database';
 
@@ -46,15 +47,19 @@ export type AthleteStatsBundle = {
 const EMPTY = '—';
 
 /**
- * @purpose Map Football / Basketball / Rugby / Volleyball onto career-table headers.
+ * @purpose Career-table headers for any sport, read from the sport playbooks (`sport_configs` seeds).
  * @param sport Stored `athlete_career_stats.sport` or a roster position guess.
+ * @param configs Live playbooks when the caller has them; defaults to the seeded catalog.
  */
-export function careerColumnsForSport(sport: string | null | undefined): CareerColumns {
-  const key = (sport ?? '').trim().toLowerCase();
-  if (key.includes('basket')) return { scoring: 'Points', volume: 'Rebounds' };
-  if (key.includes('rugby')) return { scoring: 'Tries', volume: 'Tackles' };
-  if (key.includes('volley')) return { scoring: 'Kills', volume: 'Digs' };
-  return { scoring: 'Points', volume: 'Yards' };
+export function careerColumnsForSport(
+  sport: string | null | undefined,
+  configs?: SportConfig[],
+): CareerColumns {
+  const config = sportConfigFor(sport, configs);
+  return {
+    scoring: statLabelFor(config, 'scoring', 'Points'),
+    volume: statLabelFor(config, 'volume', 'Yards'),
+  };
 }
 
 /**
@@ -67,6 +72,10 @@ export function inferAthleteSport(position: string | null | undefined, stored?: 
   if (/(guard|forward|center|wing)/.test(pos) && !pos.includes('defensive')) return 'Basketball';
   if (/(flanker|hooker|scrum|fly-half|fullback)/.test(pos)) return 'Rugby';
   if (/(setter|libero|outside|opposite)/.test(pos)) return 'Volleyball';
+  if (/(keeper|striker|midfield|winger)/.test(pos)) return 'Soccer';
+  if (/(pitcher|catcher|shortstop|infield|outfield)/.test(pos)) return 'Baseball';
+  if (/(sprinter|distance|hurdler|thrower|jumper)/.test(pos)) return 'Track & Field';
+  if (/(goalie|defenseman|left wing|right wing)/.test(pos)) return 'Ice Hockey';
   return 'Football';
 }
 

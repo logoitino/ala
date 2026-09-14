@@ -4,6 +4,14 @@ export const WISHLIST_TITLE = '👟 Locker Room Wishlist';
 export const WISHLIST_LEDE = 'Gear this athlete needs. Chip in or buy it outright.';
 export const WISHLIST_GIFT_ACTION = '🎁 Gift Item Directly';
 export const WISHLIST_CHIP_IN_ACTION = '⚡ Chip In $5';
+
+/**
+ * @purpose Chip In label. Catalogs desk first Mālo preset can change the dollar amount after Publish to app.
+ */
+export function wishlistChipInAction(dollars = WISHLIST_CHIP_IN_DOLLARS): string {
+  const amount = Number.isInteger(dollars) ? String(dollars) : dollars.toFixed(2);
+  return `⚡ Chip In $${amount}`;
+}
 export const WISHLIST_EQUIPPED_BADGE = 'EQUIPPED ⚡';
 export const WISHLIST_UNLOCKED_TOAST = 'Gear Unlocked!';
 export const WISHLIST_EMPTY = 'No gear on the wishlist yet.';

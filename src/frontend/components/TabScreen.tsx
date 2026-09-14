@@ -17,7 +17,7 @@ export function TabScreen({ children, style, dark = false }: TabScreenProps) {
   return (
     <SafeAreaView
       edges={dark ? ['left', 'right'] : ['top', 'left', 'right']}
-      style={[styles.root, dark && styles.dark, { backgroundColor: live.theme.background }, style]}
+      style={[styles.root, { backgroundColor: dark ? colors.night : live.theme.background }, style]}
     >
       <Animated.View
         entering={FadeIn.duration(180)}
@@ -34,9 +34,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  dark: {
-    backgroundColor: colors.night,
   },
   scene: {
     flex: 1,

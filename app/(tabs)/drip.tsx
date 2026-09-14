@@ -29,6 +29,22 @@ export default function DripTab() {
     [catalog, filter],
   );
 
+  const categoryPills = useMemo(
+    () =>
+      DRIP_FILTERS.map((item) => ({
+        id: item.id,
+        label:
+          item.id === 'all'
+            ? live.copy.dripAllLabel
+            : item.id === 'apparel'
+              ? live.copy.dripApparelLabel
+              : item.id === 'aura_cards'
+                ? live.copy.dripAuraCardsLabel
+                : live.copy.dripMerchLabel,
+      })),
+    [live.copy.dripAllLabel, live.copy.dripApparelLabel, live.copy.dripAuraCardsLabel, live.copy.dripMerchLabel],
+  );
+
   if (!live.tabs.drip) {
     return <RuntimePaused title="Drip is paused" lede="Turn Drip back on in Admin → Features, then Publish to app." />;
   }
@@ -38,7 +54,7 @@ export default function DripTab() {
       <ScrollView contentContainerStyle={styles.content} onScroll={onScroll} scrollEventThrottle={400}>
         <ScreenHeading compact kicker={live.copy.dripKicker} title="Drip" lede={live.copy.dripLede} />
         <FilterPills
-          items={DRIP_FILTERS}
+          items={categoryPills}
           value={filter}
           onChange={(id) => {
             const next = id ?? 'all';

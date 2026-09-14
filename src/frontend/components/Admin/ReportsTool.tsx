@@ -297,7 +297,7 @@ export function ReportsTool() {
           <AdminMixChart
             title="Hype mix"
             slices={[
-              { label: 'Seki', value: reports.engagement.seki ?? 0, color: FOCAL.neonJade },
+              { label: 'Seki', value: reports.engagement.seki ?? 0, color: FOCAL.jadeInk },
               { label: 'Aura', value: reports.engagement.aura ?? 0, color: '#B388FF' },
               { label: 'Flex', value: reports.engagement.flex ?? 0, color: FOCAL.electricGold },
             ]}
@@ -311,7 +311,7 @@ export function ReportsTool() {
         <AdminMixChart
           title="Clip mix"
           slices={[
-            { label: 'Game Play', value: reports.content.game_play ?? 0, color: FOCAL.neonJade },
+            { label: 'Game Play', value: reports.content.game_play ?? 0, color: FOCAL.jadeInk },
             { label: 'Train Like Me', value: reports.content.train_like_me ?? 0, color: '#00E5FF' },
             { label: 'Serve Like Me', value: reports.content.serve_like_me ?? 0, color: FOCAL.electricGold },
           ]}
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   kicker: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
   },
   section: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.8,

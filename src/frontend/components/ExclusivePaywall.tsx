@@ -2,7 +2,8 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
-import { EXCLUSIVE_SUBSCRIBE_LABEL, EXCLUSIVE_VAULT_CALLOUT } from '@/data/exclusive';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { exclusiveSubscribeLabel, exclusiveVaultCallout } from '@/data/exclusive';
 import { displayValue } from '@/data/players';
 
 const NEON_JADE = '#00E676';
@@ -14,24 +15,27 @@ type ExclusivePaywallProps = {
 };
 
 /**
- * @purpose Prominent $4.99/mo subscribe banner on public athlete tagged-clip profiles.
+ * @purpose Prominent subscribe banner on public athlete tagged-clip profiles. Price comes from Catalogs after Publish to app.
  * @param athleteName Display name in the supporting copy.
  * @param busy Disables the banner while Stripe PaymentSheet is open.
  * @param onUnlock Starts exclusive checkout via `useTipCheckout`.
- * @returns Neon Jade action banner: "Subscribe for $4.99/mo — Unlock Exclusive Clips ⚡".
+ * @returns Jade action banner with the live exclusive dollars.
  */
 export function ExclusivePaywall({ athleteName, busy = false, onUnlock }: ExclusivePaywallProps) {
   const name = displayValue(athleteName, 'this athlete');
+  const { live } = useAppRuntime();
+  const subscribeLabel = exclusiveSubscribeLabel(live.catalog.exclusiveDollars);
+  const aura = live.catalog.exclusiveAura;
 
   return (
     <View style={styles.banner} accessibilityRole="summary">
       <Text style={styles.kicker}>Subscriber Exclusive 🔒</Text>
       <Text style={styles.body}>
-        Unlock {name}'s private clips. Successful checkout grants +100 Aura Points and unblurs exclusive
+        Unlock {name}'s private clips. Successful checkout grants +{aura} Aura Points and unblurs exclusive
         film immediately.
       </Text>
       <AnimatedButton
-        accessibilityLabel={EXCLUSIVE_SUBSCRIBE_LABEL}
+        accessibilityLabel={subscribeLabel}
         accessibilityState={{ disabled: busy }}
         disabled={busy}
         haptic="medium"
@@ -40,7 +44,7 @@ export function ExclusivePaywall({ athleteName, busy = false, onUnlock }: Exclus
         contentStyle={styles.button}
       >
         <Text style={styles.buttonLabel}>
-          {busy ? 'Opening PaymentSheet…' : EXCLUSIVE_SUBSCRIBE_LABEL}
+          {busy ? 'Opening PaymentSheet…' : subscribeLabel}
         </Text>
       </AnimatedButton>
     </View>
@@ -53,18 +57,21 @@ type VaultLockedCardProps = {
 };
 
 /**
- * @purpose Vault-tab callout for fans who have not purchased the $4.99/mo pass.
+ * @purpose Vault-tab callout for fans who have not purchased the exclusive pass. Price comes from Catalogs.
  * @param busy Disables the CTA while PaymentSheet is open.
  * @param onUnlock Starts exclusive checkout.
- * @returns Callout: "Unlock the Vault for $4.99/mo to see full game breakdowns and raw practice film."
+ * @returns Callout with the live exclusive dollars.
  */
 export function VaultLockedCard({ busy = false, onUnlock }: VaultLockedCardProps) {
+  const { live } = useAppRuntime();
+  const subscribeLabel = exclusiveSubscribeLabel(live.catalog.exclusiveDollars);
+  const callout = exclusiveVaultCallout(live.catalog.exclusiveDollars);
   return (
     <View style={styles.banner} accessibilityRole="summary">
       <Text style={styles.kicker}>Vault 🔒</Text>
-      <Text style={styles.body}>{EXCLUSIVE_VAULT_CALLOUT}</Text>
+      <Text style={styles.body}>{callout}</Text>
       <AnimatedButton
-        accessibilityLabel={EXCLUSIVE_SUBSCRIBE_LABEL}
+        accessibilityLabel={subscribeLabel}
         accessibilityState={{ disabled: busy }}
         disabled={busy}
         haptic="medium"
@@ -73,7 +80,7 @@ export function VaultLockedCard({ busy = false, onUnlock }: VaultLockedCardProps
         contentStyle={styles.button}
       >
         <Text style={styles.buttonLabel}>
-          {busy ? 'Opening PaymentSheet…' : EXCLUSIVE_SUBSCRIBE_LABEL}
+          {busy ? 'Opening PaymentSheet…' : subscribeLabel}
         </Text>
       </AnimatedButton>
     </View>

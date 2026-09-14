@@ -38,6 +38,7 @@ import {
 } from '@/data/highlights';
 import type { AthleteStatsBundle } from '@/data/athleteStats';
 import { useCrew } from '@/hooks/useCrew';
+import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { formatCompactCount } from '@/lib/hype';
 import type { Player, UserRole } from '@/types/database';
 import type { ReelHype } from '@/lib/reels';
@@ -141,6 +142,7 @@ export function AthleteProfileView({
   onVaultLockChange,
 }: AthleteProfileViewProps) {
   const { live } = useAppRuntime();
+  const { configFor } = useSportConfigs();
   const [tab, setTab] = useState<AthleteProfileTab>('highlights');
   const publicClips = useMemo(() => clips.filter((clip) => !isClipVaultOnly(clip)), [clips]);
   const vaultClips = useMemo(() => clips.filter((clip) => isClipVaultOnly(clip)), [clips]);
@@ -237,7 +239,7 @@ export function AthleteProfileView({
       ) : null}
       {tab === 'stats' ? (
         <View style={styles.statsPane}>
-          <AthleteStatsTab stats={stats} loading={statsLoading} />
+          <AthleteStatsTab stats={stats} loading={statsLoading} config={configFor(stats.career.sport)} />
           <LockerRoomWishlist player={player} athleteName={name} />
         </View>
       ) : null}
@@ -393,7 +395,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   crewLabel: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 12,
     fontWeight: '800',
     textAlign: 'center',
@@ -412,17 +414,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   joinCrewLabel: {
-    color: colors.onAccent,
+    color: FOCAL.ink,
     fontSize: 15,
     fontWeight: '800',
   },
   inCrew: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
   },
   inCrewLabel: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
   },
   teammatesWrap: {
     alignSelf: 'stretch',
@@ -440,13 +442,13 @@ const styles = StyleSheet.create({
   teammatesBadge: {
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
     backgroundColor: 'rgba(0,230,118,0.16)',
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
   teammatesLabel: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.3,

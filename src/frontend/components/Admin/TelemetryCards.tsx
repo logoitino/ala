@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   kicker: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.8,

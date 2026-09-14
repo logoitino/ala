@@ -22,16 +22,16 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useCelebration } from '@/context/CelebrationContext';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useSportConfigs } from '@/hooks/useSportConfigs';
 import {
-  ATHLETE_CLASS_YEARS,
   ATHLETE_SPORTS,
   classYearLabel,
   formatTeamBadge,
   formatTeamTitle,
-  type AthleteClassYear,
-  type AthleteSport,
   type SchoolTeam,
 } from '@/data/teams';
+import { activeSportNames } from '@/data/sports';
 import { SPRING_CARD } from '@/theme/motion';
 
 const SHEET_OFF = 720;
@@ -58,16 +58,22 @@ function fireMediumHaptic() {
  */
 export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) {
   const insets = useSafeAreaInsets();
+  const { live } = useAppRuntime();
+  const classYears = live.catalog.classYears.length > 0 ? live.catalog.classYears : ['26', '27', '28'];
   const { activeRole, isAthlete, profile, completeAthleteOnboarding, setActiveRole } = useAuth();
+  const { configs } = useSportConfigs();
+  const sportOptions = (activeSportNames(configs).length > 0 ? activeSportNames(configs) : [...ATHLETE_SPORTS]).map(
+    (item) => ({ id: item, label: item }),
+  );
   const { showToast } = useCelebration();
   const [open, setOpen] = useState(false);
   const [applying, setApplying] = useState(false);
   const [teamQuery, setTeamQuery] = useState('');
   const [team, setTeam] = useState<SchoolTeam | null>(null);
-  const [sport, setSport] = useState<AthleteSport | null>(null);
+  const [sport, setSport] = useState<string | null>(null);
   const [jersey, setJersey] = useState('');
   const [position, setPosition] = useState('');
-  const [classYear, setClassYear] = useState<AthleteClassYear | null>(null);
+  const [classYear, setClassYear] = useState<string | null>(null);
   const translateY = useSharedValue(0);
   const dim = useSharedValue(0);
   const toggleLayouts = useRef<Partial<Record<'fan' | 'athlete', { x: number; width: number }>>>({});
@@ -225,8 +231,8 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
             )}
           </View>
           <Text style={styles.cardBody}>
-            Claim a High School or NCAA roster, receive Mālo tips, set up Stripe Express payouts, and host a $4.99/mo
-            Subscriber Vault 🔒.
+            Claim a High School or NCAA roster, receive Mālo tips, set up Stripe Express payouts, and host a $
+            {live.catalog.exclusiveDollars.toFixed(2)}/mo Subscriber Vault 🔒.
           </Text>
           {savedTeam ? (
             <View style={styles.teamChip} accessibilityRole="summary">
@@ -257,7 +263,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
               <>
                 <Text style={styles.fieldLabel}>Sport</Text>
                 <FilterPills
-                  items={ATHLETE_SPORTS.map((item) => ({ id: item, label: item }))}
+                  items={sportOptions}
                   value={sport}
                   onChange={(id) => setSport(id)}
                   accessibilityLabel="Sport"
@@ -284,7 +290,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
                 />
                 <Text style={styles.fieldLabel}>Graduation class</Text>
                 <FilterPills
-                  items={ATHLETE_CLASS_YEARS.map((item) => ({ id: item, label: classYearLabel(item) }))}
+                  items={classYears.map((item) => ({ id: item, label: classYearLabel(item) }))}
                   value={classYear}
                   onChange={(id) => setClassYear(id)}
                   accessibilityLabel="Graduation class year"
@@ -382,7 +388,7 @@ const styles = StyleSheet.create({
   },
   dim: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(7, 22, 15, 0.28)',
+    backgroundColor: colors.border,
   },
   sheet: {
     backgroundColor: colors.surface,

@@ -5,7 +5,8 @@ import * as Haptics from 'expo-haptics';
 
 import { useAuth } from '@/context/AuthContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
-import { EXCLUSIVE_UNLOCK_TOAST } from '@/data/exclusive';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { exclusiveUnlockToast } from '@/data/exclusive';
 import { displayValue, getTipCharge, auraPointsForTip } from '@/data/players';
 import { addUserAura, emitPlayerAura, emitProfileAura } from '@/lib/aura';
 import { createPaymentIntent, incrementBackerCount } from '@/lib/payments';
@@ -65,9 +66,12 @@ function applyAuraAward(
  */
 export function useTipCheckout() {
   const { user, refreshProfile } = useAuth();
+  const { live } = useAppRuntime();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const celebration = useOptionalCelebration();
   const [busy, setBusy] = useState(false);
+  const feeAmount = live.catalog.maloFeeDollars;
+  const exclusiveAuraToast = exclusiveUnlockToast(live.catalog.exclusiveAura);
 
   const startCheckout = useCallback(
     async ({
@@ -90,7 +94,7 @@ export function useTipCheckout() {
       }
 
       const playerName = player ? displayValue(player.name, 'this athlete') : "Tapua'i";
-      const { amountCents } = getTipCharge(tipAmount, coverFees);
+      const { amountCents } = getTipCharge(tipAmount, coverFees, feeAmount);
 
       setBusy(true);
       const checkoutStartedAt = Date.now();
@@ -169,7 +173,7 @@ export function useTipCheckout() {
         if (successToast) {
           celebration?.celebrateAura(pointsToAdd, successToast);
         } else if (skipBacker) {
-          celebration?.celebrateAura(pointsToAdd, EXCLUSIVE_UNLOCK_TOAST);
+          celebration?.celebrateAura(pointsToAdd, exclusiveAuraToast);
         } else {
           celebration?.celebrate({ playerName, backerCount: nextCount, auraPointsEarned: pointsToAdd });
         }
@@ -182,7 +186,7 @@ export function useTipCheckout() {
         setBusy(false);
       }
     },
-    [busy, celebration, initPaymentSheet, presentPaymentSheet, refreshProfile, user?.id],
+    [busy, celebration, exclusiveAuraToast, feeAmount, initPaymentSheet, presentPaymentSheet, refreshProfile, user?.id],
   );
 
   return { startCheckout, busy };

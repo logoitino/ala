@@ -4,14 +4,8 @@ import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-nati
 import { FeeCheckbox } from '@/components/FeeCheckbox';
 import { TipButton } from '@/components/TipButton';
 import { colors, radii } from '@/constants/theme';
-import {
-  AURA_PER_DOLLAR,
-  MALO_DISCLAIMER,
-  TIP_AMOUNTS,
-  auraPointsForTip,
-  displayValue,
-  type Player,
-} from '@/data/players';
+import { AURA_PER_DOLLAR, MALO_DISCLAIMER, auraPointsForTip, displayValue, type Player } from '@/data/players';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 
 type TipCheckoutProps = {
@@ -48,6 +42,8 @@ export function TipCheckout({
   const [customOpen, setCustomOpen] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const { startCheckout, busy } = useTipCheckout();
+  const { live } = useAppRuntime();
+  const tipAmounts = live.catalog.maloAmounts.length > 0 ? live.catalog.maloAmounts : [5, 10, 25];
   const playerName = displayValue(player.name, 'this athlete');
   const customAmount = useMemo(() => parseCustomTip(customValue), [customValue]);
   const customAura = customAmount != null ? auraPointsForTip(customAmount) : null;
@@ -75,7 +71,7 @@ export function TipCheckout({
       </Text>
 
       <View style={styles.tipRow}>
-        {TIP_AMOUNTS.map((amount) => (
+        {tipAmounts.map((amount) => (
           <TipButton
             key={amount}
             amount={amount}

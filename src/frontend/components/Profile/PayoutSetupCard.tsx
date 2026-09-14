@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1.5,
     borderColor: colors.primary,
-    backgroundColor: colors.night,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,

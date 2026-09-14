@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors, palette, radii } from '@/constants/theme';
+import { colors, radii } from '@/constants/theme';
 import type { FanTipReceipt } from '@/types/database';
 
 type ReceiptCardProps = {
@@ -83,7 +83,7 @@ export function ReceiptCard({ receipt, onViewReel }: ReceiptCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: palette.midnightObsidian,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,

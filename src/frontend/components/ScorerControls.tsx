@@ -13,15 +13,22 @@ type ScorerControlsProps = {
   players: Player[];
   selectedPlayerId: string;
   sending?: boolean;
+  /** Play types from the sport playbook (`/admin/sports`). Defaults to the football set. */
+  actions?: (ScorerAction | string)[];
   onSelectPlayer: (playerId: string) => void;
-  onAction: (action: ScorerAction, player: Player) => void;
+  onAction: (action: ScorerAction | string, player: Player) => void;
   onPushLiveAlert: (player: Player) => void;
 };
 
+/**
+ * @purpose Tag a roster player with one of the sport's play types.
+ * @param actions Play buttons for this sport; falls back to `SCORER_ACTIONS`.
+ */
 export function ScorerControls({
   players,
   selectedPlayerId,
   sending = false,
+  actions = [...SCORER_ACTIONS],
   onSelectPlayer,
   onAction,
   onPushLiveAlert,
@@ -60,7 +67,7 @@ export function ScorerControls({
 
       <Text style={styles.label}>Actions</Text>
       <View style={styles.actionGrid}>
-        {SCORER_ACTIONS.map((action) => (
+        {actions.map((action) => (
           <Pressable
             key={action}
             accessibilityRole="button"

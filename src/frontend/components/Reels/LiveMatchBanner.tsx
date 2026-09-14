@@ -17,7 +17,7 @@ import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapp
 import { colors, palette, radii } from '@/constants/theme';
 import { displayValue, getQuarterCode } from '@/data/players';
 import { useLiveGame } from '@/hooks/useLiveGame';
-import { OPERATOR_CALLOUTS } from '@/lib/operator';
+import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { localGameHref } from '@/lib/navigation';
 import { telemetry } from '@/services/TelemetryManager';
 import { SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
@@ -63,6 +63,7 @@ export function LiveMatchBanner({
     lastPlay,
     clearLastPlay,
   } = liveFromParent ?? hooked;
+  const { configFor } = useSportConfigs();
   const insets = useSafeAreaInsets();
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -127,7 +128,7 @@ export function LiveMatchBanner({
 
   const quarterLabel = getQuarterCode(game);
   const callout = lastPlay
-    ? OPERATOR_CALLOUTS.find((item) => item.eventType === lastPlay.eventType)
+    ? configFor(game.sport).callouts.find((item) => item.eventType === lastPlay.eventType)
     : null;
   const toastTitle = callout
     ? `${callout.emoji} ${callout.label}`
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
   },
   badge: {
     alignSelf: 'stretch',
-    backgroundColor: 'rgba(15, 20, 22, 0.94)',
+    backgroundColor: colors.videoScrim,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: 'rgba(0, 230, 118, 0.5)',
@@ -251,7 +252,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F43F5E',
   },
   pulseIdle: {
-    backgroundColor: colors.textMuted,
+    backgroundColor: colors.onVideoMuted,
   },
   liveLabel: {
     color: colors.primary,
@@ -260,13 +261,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   quarter: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 11,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
   },
   matchup: {
-    color: colors.textMuted,
+    color: colors.onVideoMuted,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   toastDetail: {
-    color: colors.text,
+    color: colors.onVideo,
     fontSize: 13,
     fontWeight: '700',
     textAlign: 'center',

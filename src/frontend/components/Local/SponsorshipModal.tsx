@@ -18,11 +18,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, palette, radii } from '@/constants/theme';
+import { colors, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import {
+  catalogSponsorTiers,
   formatSponsorDollars,
   initialsForBusiness,
-  SPONSOR_TIERS,
   type SponsorTier,
 } from '@/data/sponsorships';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
@@ -67,7 +68,9 @@ export function SponsorshipModal({
   onSponsored,
 }: SponsorshipModalProps) {
   const insets = useSafeAreaInsets();
+  const { live } = useAppRuntime();
   const { startCheckout, busy } = useTipCheckout();
+  const tiers = catalogSponsorTiers(live.catalog.sponsorTiers);
   const [tierId, setTierId] = useState<SponsorshipTierId>('silver');
   const [businessName, setBusinessName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
@@ -81,7 +84,7 @@ export function SponsorshipModal({
     setSchoolTeam('');
   }, [visible]);
 
-  const tier = SPONSOR_TIERS.find((item) => item.id === tierId) ?? SPONSOR_TIERS[0];
+  const tier = tiers.find((item) => item.id === tierId) ?? tiers[0];
 
   const dismiss = () => {
     if (busy) return;
@@ -166,7 +169,7 @@ export function SponsorshipModal({
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.form}
             >
-              {SPONSOR_TIERS.map((option) => {
+              {tiers.map((option) => {
                 const selected = option.id === tierId;
                 return (
                   <AnimatedButton
@@ -319,7 +322,7 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(7,22,15,0.28)',
+    backgroundColor: colors.border,
   },
   blur: {
     ...StyleSheet.absoluteFill,
@@ -366,7 +369,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   tierCard: {
-    backgroundColor: palette.midnightObsidian,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -430,7 +433,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: palette.midnightObsidian,
+    backgroundColor: colors.surface,
     color: colors.text,
     paddingHorizontal: 12,
     fontSize: 15,
@@ -489,7 +492,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: palette.midnightObsidian,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     maxWidth: 180,

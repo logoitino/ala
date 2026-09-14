@@ -14,6 +14,7 @@ import {
   type ScorerAction,
   buildPlayEventPayload,
 } from '@/data/players';
+import { useSportConfigs } from '@/hooks/useSportConfigs';
 import type { Game } from '@/types/database';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
@@ -21,6 +22,7 @@ const CONFIG_ERROR =
   'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart Expo.';
 
 export default function ScorerScreen() {
+  const { configFor } = useSportConfigs();
   const [games, setGames] = useState<Game[]>([]);
   const [selectedGameId, setSelectedGameId] = useState('');
   const [scoreSide, setScoreSide] = useState<'home' | 'away'>('home');
@@ -34,6 +36,7 @@ export default function ScorerScreen() {
   const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const selectedGame = games.find((game) => game.id === selectedGameId) ?? games[0] ?? null;
+  const playbook = configFor(selectedGame?.sport);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -173,8 +176,8 @@ export default function ScorerScreen() {
     void updateGame({ [field]: selectedGame[field] + points });
   };
 
-  const handleAction = (action: ScorerAction, player: Player) => {
-    void insertPlayEvent(action, player);
+  const handleAction = (action: ScorerAction | string, player: Player) => {
+    void insertPlayEvent(action as ScorerAction, player);
   };
 
   const handlePushLiveAlert = (player: Player) => {
@@ -243,6 +246,9 @@ export default function ScorerScreen() {
                   game={selectedGame}
                   side={scoreSide}
                   disabled={sending}
+                  macros={playbook.scoring}
+                  statuses={[...playbook.periods, 'Final']}
+                  periodLabel={playbook.periodLabel}
                   onSelectSide={setScoreSide}
                   onAddPoints={handleAddPoints}
                   onSetStatus={(status) =>
@@ -258,6 +264,7 @@ export default function ScorerScreen() {
               ) : null}
 
               <ScorerControls
+                actions={playbook.callouts.map((callout) => callout.eventType)}
                 players={players}
                 selectedPlayerId={selectedPlayerId}
                 sending={sending}

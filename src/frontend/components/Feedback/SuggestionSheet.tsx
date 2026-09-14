@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   kicker: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   pillOn: {
     backgroundColor: FOCAL.neonJade,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
   },
   pillLabel: {
     color: colors.textMuted,
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   pillLabelOn: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
   },
   field: {
     minHeight: 96,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   sendLabel: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
     fontSize: 15,
     fontWeight: '800',
   },

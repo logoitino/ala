@@ -173,9 +173,10 @@ export default function MyHubTab() {
   };
 
   const dropMalo = () => {
+    const amount = live.catalog.maloAmounts[0] ?? 5;
     void startCheckout({
       player: athlete,
-      tipAmount: 5,
+      tipAmount: amount,
       coverFees: false,
       onBacked: (nextCount) => {
         applyBackerCount(athlete.id, nextCount);
@@ -261,20 +262,22 @@ export default function MyHubTab() {
               <View style={styles.actionRow}>
                 {live.buttons.malo ? (
                 <AnimatedButton
-                  accessibilityLabel="Drop five dollar Mālo"
+                  accessibilityLabel={`Drop ${live.catalog.maloAmounts[0] ?? 5} dollar Mālo`}
                   disabled={busy}
                   haptic="medium"
                   onPress={dropMalo}
                   style={styles.actionFlex}
                   contentStyle={[styles.primaryAction, busy && styles.disabled]}
                 >
-                  <Text style={styles.primaryActionLabel}>Drop $5 Mālo</Text>
+                  <Text style={styles.primaryActionLabel}>Drop ${live.catalog.maloAmounts[0] ?? 5} Mālo</Text>
                 </AnimatedButton>
                 ) : null}
                 {live.buttons.subscribe ? (
                 <AnimatedButton
                   accessibilityLabel={
-                    subscribed ? 'Subscribed to exclusive feed' : 'Subscribe for four dollars ninety-nine a month'
+                    subscribed
+                      ? 'Subscribed to exclusive feed'
+                      : `Subscribe for ${live.catalog.exclusiveDollars.toFixed(2)} a month`
                   }
                   disabled={subscribed}
                   onPress={subscribe}
@@ -282,7 +285,7 @@ export default function MyHubTab() {
                   contentStyle={[styles.secondaryAction, subscribed && styles.secondaryActionOn]}
                 >
                   <Text style={[styles.secondaryActionLabel, subscribed && styles.secondaryActionLabelOn]}>
-                    {subscribed ? 'Subscribed' : 'Subscribe ($4.99/mo)'}
+                    {subscribed ? 'Subscribed' : `Subscribe ($${live.catalog.exclusiveDollars.toFixed(2)}/mo)`}
                   </Text>
                 </AnimatedButton>
                 ) : null}

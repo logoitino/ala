@@ -131,7 +131,7 @@ export function ReelActionOverlay({
           onPress={onOpenMore}
           contentStyle={styles.more}
         >
-          <Ionicons name="ellipsis-horizontal" size={22} color="#FFFFFF" />
+          <Ionicons name="ellipsis-horizontal" size={22} color={colors.onVideo} />
         </AnimatedPressable>
       );
     }
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: 'rgba(15,20,22,0.72)',
+    backgroundColor: colors.videoScrim,
     ...Platform.select({
       ios: {
         shadowOffset: { width: 0, height: 0 },
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     }),
   },
   athleteName: {
-    color: '#FFFFFF',
+    color: colors.onVideo,
     fontSize: 16,
     fontWeight: '800',
     letterSpacing: 0.2,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   caption: {
-    color: '#FFFFFF',
+    color: colors.onVideo,
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 19,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(15,20,22,0.72)',
+    backgroundColor: colors.videoScrim,
     borderWidth: 1,
     borderColor: 'rgba(243,251,247,0.18)',
     alignItems: 'center',
@@ -365,19 +365,19 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   reactCount: {
-    color: '#FFFFFF',
+    color: colors.onVideo,
     fontSize: 10,
     fontWeight: '800',
     marginTop: -2,
   },
   reactCountOn: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
   },
   malo: {
     width: 48,
     minHeight: 48,
     borderRadius: 24,
-    backgroundColor: FOCAL.backgroundBase,
+    backgroundColor: FOCAL.videoBase,
     borderWidth: 2,
     borderColor: FOCAL.neonJade,
     alignItems: 'center',
@@ -399,13 +399,13 @@ const styles = StyleSheet.create({
     borderColor: FOCAL.neonJade,
   },
   maloLabelTipped: {
-    color: FOCAL.backgroundBase,
+    color: FOCAL.ink,
   },
   more: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(15,20,22,0.72)',
+    backgroundColor: colors.videoScrim,
     borderWidth: 1,
     borderColor: 'rgba(243,251,247,0.18)',
     alignItems: 'center',

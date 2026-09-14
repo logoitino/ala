@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   title: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.8,

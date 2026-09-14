@@ -2,8 +2,8 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import {
-  EXCLUSIVE_MONTHLY_DOLLARS,
   VAULT_LOCK_ACTION,
   VAULT_LOCKED_HINT,
   VAULT_OPEN_ACTION,
@@ -24,13 +24,15 @@ type VaultLockCardProps = {
  * @param onToggle Persists the next lock flag.
  */
 export function VaultLockCard({ locked, busy = false, onToggle }: VaultLockCardProps) {
+  const { live } = useAppRuntime();
+  const dollars = live.catalog.exclusiveDollars;
   return (
     <View style={styles.card} accessibilityRole="summary">
       <Text style={styles.kicker}>{locked ? 'Vault locked 🔒' : 'Vault open 🌐'}</Text>
       <Text style={styles.body}>{locked ? VAULT_LOCKED_HINT : VAULT_OPEN_HINT}</Text>
       <Text style={styles.meta}>
         {locked
-          ? `Subscribers pay $${EXCLUSIVE_MONTHLY_DOLLARS.toFixed(2)}/mo to watch Vault Highlights ⚡.`
+          ? `Subscribers pay $${dollars.toFixed(2)}/mo to watch Vault Highlights ⚡.`
           : 'Long-press a clip to move it into the Vault collection, then lock when you are ready.'}
       </Text>
       <AnimatedButton
@@ -51,12 +53,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
     padding: 14,
     gap: 8,
   },
   kicker: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 15,
     fontWeight: '800',
   },
@@ -84,7 +86,7 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   btnLabel: {
-    color: colors.onAccent,
+    color: FOCAL.ink,
     fontSize: 14,
     fontWeight: '800',
     textAlign: 'center',

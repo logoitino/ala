@@ -3,6 +3,7 @@ import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SCREEN_BOTTOM_GAP, colors } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 
 type ScreenShellProps = {
   children: ReactNode;
@@ -15,8 +16,9 @@ export function ScreenShell({
   style,
   edges = ['bottom', 'left', 'right'],
 }: ScreenShellProps) {
+  const { live } = useAppRuntime();
   return (
-    <SafeAreaView edges={edges} style={[styles.root, style]}>
+    <SafeAreaView edges={edges} style={[styles.root, { backgroundColor: live.theme.background }, style]}>
       {children}
     </SafeAreaView>
   );

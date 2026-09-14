@@ -40,6 +40,18 @@ export const REEL_CATEGORY_PILLS: { id: ReelCategory; label: string }[] = [
   { id: REEL_CATEGORY_SERVE, label: '🤝 Serve Like Me (2x Aura Boost)' },
 ];
 
+/**
+ * @purpose Overlay Catalogs-desk labels onto the three shipping category ids. Unknown ids stay Game Play / Train / Serve.
+ */
+export function labeledReelCategories(
+  rows?: { id: string; label: string }[] | null,
+): { id: ReelCategory; label: string }[] {
+  return REEL_CATEGORY_PILLS.map((pill) => ({
+    ...pill,
+    label: rows?.find((row) => row.id === pill.id)?.label?.trim() || pill.label,
+  }));
+}
+
 export const SERVE_LIKE_ME_BOOST_LABEL = 'Community Impact Boost ⚡';
 export const SERVE_LIKE_ME_FEED_BADGE = '🤝 SERVE LIKE ME • 2x AURA';
 export const TRAIN_LIKE_ME_FEED_BADGE = '💪 TRAIN LIKE ME';

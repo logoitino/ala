@@ -8,6 +8,7 @@ export type AdminNavHref =
   | '/admin/publish'
   | '/admin/features'
   | '/admin/look'
+  | '/admin/catalog'
   | '/admin/qa'
   | '/admin/lab'
   | '/admin/feedback'
@@ -17,9 +18,11 @@ export type AdminNavHref =
   | '/admin/athletes'
   | '/admin/schools'
   | '/admin/games'
+  | '/admin/sports'
   | '/admin/highlights'
   | '/admin/people'
   | '/admin/drip'
+  | '/admin/wishlist'
   | '/admin/boosters'
   | '/admin/money'
   | '/admin/polls'
@@ -46,6 +49,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: 'Operations',
     items: [
       { href: '/admin/games', label: 'Live games', hint: 'Local match board' },
+      { href: '/admin/sports', label: 'Sports', hint: 'Scoring, periods, stats per sport' },
       { href: '/admin/polls', label: 'Polls', hint: 'School cheer matchups' },
       { href: '/admin/boosters', label: 'Boosters', hint: 'Local sponsorships' },
       { href: '/admin/publish', label: 'Publish', hint: 'Go-live queue' },
@@ -65,6 +69,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: 'Commerce',
     items: [
       { href: '/admin/drip', label: 'Drip', hint: 'Marketplace catalog' },
+      { href: '/admin/wishlist', label: 'Locker Room', hint: 'Gear goals fans fund' },
       { href: '/admin/money', label: 'Money', hint: 'Revenue, Mālo, disbursements' },
     ],
   },
@@ -90,11 +95,10 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: 'system',
     label: 'System',
     items: [
-      { href: '/admin/features', label: 'Features', hint: 'Tabs and buttons — needs Publish' },
-      { href: '/admin/look', label: 'Look', hint: 'Colors, copy, profile, Highlights rail' },
+      { href: '/admin/features', label: 'Features', hint: 'Tabs, buttons, boards' },
+      { href: '/admin/look', label: 'Look', hint: 'Daylight colors, copy, profile, Highlights rail' },
+      { href: '/admin/catalog', label: 'Catalogs', hint: 'Mālo, exclusive, chips, tiers' },
       { href: '/admin/studio', label: 'Studio', hint: 'Preview roles and surfaces' },
-      { href: '/admin/lab', label: 'Lab', hint: 'Runtime JSON and apply suggestions' },
-      { href: '/admin/qa', label: 'QA', hint: 'Telemetry and empty states' },
     ],
   },
 ];
@@ -111,31 +115,44 @@ export const ADMIN_LENSES: { id: AdminLens; label: string; hint: string }[] = [
   { id: 'all', label: 'All desks', hint: 'Every tool' },
   { id: 'marketing', label: 'Marketing', hint: 'Look, copy, campaign chrome' },
   { id: 'owner', label: 'Owner', hint: 'Numbers, people, Spotlight' },
-  { id: 'engineer', label: 'Engineer', hint: 'Lab, QA, flags, feedback' },
+  { id: 'engineer', label: 'Engineer', hint: 'Flags, catalogs, feedback' },
 ];
 
 const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
   marketing: [
     '/admin/look',
     '/admin/features',
+    '/admin/catalog',
     '/admin/publish',
     '/admin/spotlight',
     '/admin/drip',
+    '/admin/wishlist',
     '/admin/boosters',
     '/admin/polls',
     '/admin/feedback',
     '/admin/coverage',
   ],
-  owner: ['/admin/money', '/admin/reports', '/admin/people', '/admin/spotlight', '/admin/coverage', '/admin/athletes'],
+  owner: [
+    '/admin/money',
+    '/admin/catalog',
+    '/admin/wishlist',
+    '/admin/reports',
+    '/admin/people',
+    '/admin/spotlight',
+    '/admin/coverage',
+    '/admin/athletes',
+    '/admin/sports',
+  ],
   engineer: [
-    '/admin/lab',
-    '/admin/qa',
     '/admin/features',
+    '/admin/catalog',
     '/admin/publish',
     '/admin/feedback',
     '/admin/moderation',
     '/admin/highlights',
     '/admin/coverage',
+    '/admin/sports',
+    '/admin/reports',
   ],
 };
 
@@ -154,7 +171,7 @@ export function navGroupsForLens(lens: AdminLens): AdminNavGroup[] {
 export function overviewLedeForLens(lens: AdminLens): string {
   if (lens === 'marketing') return 'Look, copy, and campaign chrome. Draft until Publish to app.';
   if (lens === 'owner') return 'Gross, net, payouts, health, and who needs a decision.';
-  if (lens === 'engineer') return 'Lab, QA, flags, and fan suggestions waiting to become a patch.';
+  if (lens === 'engineer') return 'Flags, catalogs, coverage, and fan suggestions waiting to become a patch.';
   return 'Home for the control plane. Inbox first, then every desk that ships the fan app.';
 }
 
@@ -162,12 +179,15 @@ const FAN_HREF_BY_DESK: Partial<Record<AdminNavHref, string>> = {
   '/admin/highlights': '/',
   '/admin/features': '/',
   '/admin/look': '/',
+  '/admin/catalog': '/',
   '/admin/games': '/local',
+  '/admin/sports': '/operator',
   '/admin/polls': '/local',
   '/admin/boosters': '/local',
   '/admin/publish': '/local',
   '/admin/spotlight': '/spotlight',
   '/admin/drip': '/drip',
+  '/admin/wishlist': '/profile',
   '/admin/money': '/receipts',
   '/admin/athletes': '/profile',
   '/admin/moderation': '/',
@@ -358,10 +378,11 @@ export async function publishSpotlightAward(input: PublishSpotlightInput): Promi
 }
 
 /**
- * @purpose Open Highlight flags plus recent telemetry incidents for the moderation table.
- * @sideEffects `reels` SELECT (`is_flagged`); `telemetry_logs` SELECT fallback.
+ * @purpose Open Highlight flags for the moderation table, optionally with recent telemetry incidents.
+ * @param withTelemetry Include stalls / reconnects. Moderation leaves these to QA, which owns the 24h table.
+ * @sideEffects `reels` SELECT (`is_flagged`); `telemetry_logs` SELECT when `withTelemetry`.
  */
-export async function fetchAdminFlags(): Promise<AdminFlagRow[]> {
+export async function fetchAdminFlags(withTelemetry = false): Promise<AdminFlagRow[]> {
   if (!isSupabaseConfigured) return [];
   const rows: AdminFlagRow[] = [];
 
@@ -398,6 +419,8 @@ export async function fetchAdminFlags(): Promise<AdminFlagRow[]> {
       });
     }
   }
+
+  if (!withTelemetry) return rows;
 
   const since = new Date(Date.now() - 24 * 3_600_000).toISOString();
   const telemetry = await supabase

@@ -116,7 +116,7 @@ export function StudioTool() {
 
 const styles = StyleSheet.create({
   section: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.8,

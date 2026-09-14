@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#101618',
+    backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: NEON_JADE,
     alignItems: 'center',
