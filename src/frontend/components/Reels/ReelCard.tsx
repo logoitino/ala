@@ -24,6 +24,7 @@ import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
 import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, palette, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
 import {
@@ -173,6 +174,7 @@ export function ReelCard({
   surface = 'home',
 }: ReelCardProps) {
   const insets = useSafeAreaInsets();
+  const { live } = useAppRuntime();
   const { user, profile, isAthlete } = useAuth();
   const celebration = useOptionalCelebration();
   const tabFocused = useIsFocused();
@@ -701,10 +703,14 @@ export function ReelCard({
           setMoreOpen(false);
           setReportOpen(true);
         }}
-        onSuggest={() => {
-          setMoreOpen(false);
-          setSuggestOpen(true);
-        }}
+        onSuggest={
+          live.buttons.suggest
+            ? () => {
+                setMoreOpen(false);
+                setSuggestOpen(true);
+              }
+            : undefined
+        }
       />
       <SuggestionSheet visible={suggestOpen} surface="home" onClose={() => setSuggestOpen(false)} />
       <ReportContentModal

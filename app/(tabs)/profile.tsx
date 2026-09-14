@@ -252,13 +252,7 @@ export default function MyHubTab() {
           leading={
             <ScreenHeading
               compact
-              kicker={
-                isAthlete && activeRole === 'athlete'
-                  ? 'Athlete management'
-                  : isAthlete
-                    ? 'Fan · Athlete hub'
-                    : 'Fan hub'
-              }
+              kicker={live.copy.profileKicker}
               title="Profile"
             />
           }
@@ -324,40 +318,45 @@ export default function MyHubTab() {
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </AnimatedButton>
-              <AnimatedButton
-                accessibilityLabel="Send a suggestion"
-                haptic="light"
-                onPress={() => {
-                  trackFeature('suggestion');
-                  setSuggestOpen(true);
-                }}
-                contentStyle={styles.capabilityRow}
-              >
-                <View style={styles.capabilityCopy}>
-                  <Text style={styles.capabilityLabel}>Send a suggestion</Text>
-                  <Text style={styles.capabilityValue}>Improve Tapua'i — goes to admin Feedback</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </AnimatedButton>
-              <AnimatedButton
-                accessibilityLabel="Tip History and Receipts"
-                haptic="none"
-                onPress={() => {
-                  try {
-                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  } catch {
-                    // Simulator / web may not expose haptics.
-                  }
-                  router.push('/receipts' as Href);
-                }}
-                contentStyle={styles.capabilityRow}
-              >
-                <View style={styles.capabilityCopy}>
-                  <Text style={styles.capabilityLabel}>Tip History & Receipts 🧾</Text>
-                  <Text style={styles.capabilityValue}>Your Mālo ledger</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </AnimatedButton>
+              {live.buttons.suggest ? (
+                <AnimatedButton
+                  accessibilityLabel="Send a suggestion"
+                  haptic="light"
+                  onPress={() => {
+                    trackFeature('suggestion');
+                    setSuggestOpen(true);
+                  }}
+                  contentStyle={styles.capabilityRow}
+                >
+                  <View style={styles.capabilityCopy}>
+                    <Text style={styles.capabilityLabel}>Send a suggestion</Text>
+                    <Text style={styles.capabilityValue}>Improve Tapua'i — goes to admin Feedback</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </AnimatedButton>
+              ) : null}
+              {live.layouts.receipts ? (
+                <AnimatedButton
+                  accessibilityLabel="Tip History and Receipts"
+                  haptic="none"
+                  onPress={() => {
+                    try {
+                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    } catch {
+                      // Simulator / web may not expose haptics.
+                    }
+                    trackFeature('receipts');
+                    router.push('/receipts' as Href);
+                  }}
+                  contentStyle={styles.capabilityRow}
+                >
+                  <View style={styles.capabilityCopy}>
+                    <Text style={styles.capabilityLabel}>Tip History & Receipts 🧾</Text>
+                    <Text style={styles.capabilityValue}>{live.copy.receiptsKicker}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </AnimatedButton>
+              ) : null}
               {isAthlete && activeRole === 'athlete' ? <PayoutSetupCard /> : null}
             </View>
           }

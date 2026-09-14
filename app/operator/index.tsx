@@ -17,7 +17,9 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { colors, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
+import { telemetry } from '@/services/TelemetryManager';
 import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import {
@@ -30,6 +32,7 @@ import type { Game } from '@/types/database';
 
 export default function OperatorPortalScreen() {
   const router = useRouter();
+  const { live } = useAppRuntime();
   const { profile } = useAuth();
   const pending = usePendingPlayerTags();
   const [games, setGames] = useState<Game[]>([]);
@@ -84,6 +87,7 @@ export default function OperatorPortalScreen() {
     if (!selectedGame) return;
     setClaiming(true);
     try {
+      telemetry.trackFeature('operator_claim', 'operator');
       await claimOperatorGame(selectedGame.id, profile?.id);
       const id = selectedGame.id;
       setSelectedGameId(null);
@@ -97,6 +101,7 @@ export default function OperatorPortalScreen() {
     if (checkingIn) return;
     setCheckingIn(true);
     try {
+      telemetry.trackFeature('operator_checkin', 'operator');
       const permission = await Location.requestForegroundPermissionsAsync();
       if (permission.status !== 'granted') {
         Alert.alert('Location needed', 'Enable location to check in at the field.');
@@ -122,7 +127,7 @@ export default function OperatorPortalScreen() {
         <ScreenHeading
           kicker="Tapua'i operator"
           title="Field Operator Portal"
-          lede="Select a live game, enter the 4-digit PIN, and confirm fan tags for your school."
+          lede={live.copy.operatorLede}
         />
         <TagConfirmList
           tags={pending.tags}
@@ -224,7 +229,10 @@ export default function OperatorPortalScreen() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open player-tagged sideline scorer"
-          onPress={() => router.push('/operator/scorer' as Href)}
+          onPress={() => {
+            telemetry.trackFeature('operator_scorer', 'operator');
+            router.push('/operator/scorer' as Href);
+          }}
           style={({ pressed }) => [styles.link, pressed && styles.pressed]}
         >
           <Text style={styles.linkLabel}>Open player-tagged macros</Text>

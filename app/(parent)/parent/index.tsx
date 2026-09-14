@@ -8,7 +8,9 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { colors, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
+import { telemetry } from '@/services/TelemetryManager';
 import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useRoster } from '@/hooks/useRoster';
@@ -16,6 +18,7 @@ import { requestPayout } from '@/lib/payouts';
 import { supabase } from '@/lib/supabase';
 
 export default function ParentHomeScreen() {
+  const { live } = useAppRuntime();
   const { profile } = useAuth();
   const { players, setPlayers } = useRoster();
   const pending = usePendingPlayerTags();
@@ -29,6 +32,7 @@ export default function ParentHomeScreen() {
         parental_consent_approved: approved,
       };
       if (approved && profile?.id) patch.guardian_id = profile.id;
+      telemetry.trackFeature('parent_consent', 'parent');
       const { error } = await supabase.from('players').update(patch).eq('id', playerId);
       if (error) {
         Alert.alert('Couldn’t update consent', error.message);
@@ -48,6 +52,7 @@ export default function ParentHomeScreen() {
     if (busy) return;
     setBusy(true);
     try {
+      telemetry.trackFeature('parent_payout', 'parent');
       const result = await requestPayout({
         amountCents: 2500,
         description: "Parent custodial payout setup",
@@ -67,7 +72,7 @@ export default function ParentHomeScreen() {
         <ScreenHeading
           kicker="Tapua'i parent"
           title="Parent Guardian"
-          lede="Consent, custodial payouts, and confirm that a fan tagged the right jersey."
+          lede={live.copy.parentLede}
         />
         <TagConfirmList
           tags={pending.tags}

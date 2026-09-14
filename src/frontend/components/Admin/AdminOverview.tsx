@@ -17,6 +17,7 @@ import {
   type AdminPlatformMetrics,
   type AdminReports,
 } from '@/lib/admin';
+import { coverageHealth } from '@/lib/adminCoverage';
 import { fetchAdminOpsInbox, type AdminOpsInbox } from '@/lib/adminCatalog';
 import { EMPTY_COMPANY_REVENUE, fetchCompanyRevenueSummary, type CompanyRevenueSummary } from '@/lib/finance';
 import { formatTipDollars } from '@/lib/reels';
@@ -59,7 +60,7 @@ const EMPTY_REPORTS: AdminReports = {
 export function AdminOverview() {
   const router = useRouter();
   const { lens } = useAdminLens();
-  const { dirty, pendingCount } = useAppRuntime();
+  const { dirty, pendingCount, live } = useAppRuntime();
   const [metrics, setMetrics] = useState<AdminPlatformMetrics>({
     highlightCount: 0,
     engagementCount: 0,
@@ -100,6 +101,7 @@ export function AdminOverview() {
     }, [refresh]),
   );
 
+  const coverage = useMemo(() => coverageHealth(live), [live]);
   const navGroups = useMemo(() => navGroupsForLens(lens), [lens]);
   const healthIssues = useMemo(() => {
     return buildAdminHealth(reports, { dirty, pendingCount, lowStock: inbox.lowStock }).filter(
@@ -147,6 +149,12 @@ export function AdminOverview() {
             value={String(inbox.newFeedback)}
             hint="Feedback inbox"
             onPress={() => router.push('/admin/feedback')}
+          />
+          <OwnerStat
+            label="Coverage"
+            value={`${coverage.liveCount}/${coverage.total}`}
+            hint={coverage.paused ? `${coverage.paused} paused` : 'All fan controls live'}
+            onPress={() => router.push('/admin/coverage')}
           />
         </View>
       </View>

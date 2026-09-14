@@ -9,11 +9,13 @@ import {
   View,
   type KeyboardTypeOptions,
 } from 'react-native';
+import { type Href, usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { colors, radii } from '@/constants/theme';
+import { adminTrailForPath } from '@/lib/admin';
 import { FOCAL } from '@/theme/motion';
 
 type AdminPageProps = {
@@ -26,6 +28,57 @@ type AdminPageProps = {
   /** Instant catalog edits vs chrome that waits for Publish to app. */
   saveMode?: 'instant' | 'publish';
 };
+
+/**
+ * @purpose Back / Home crumb plus optional Open in app so every desk can return to the portal home or the fan surface it manages.
+ */
+export function AdminTrail() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const trail = adminTrailForPath(pathname);
+  const crumb = trail.isHome
+    ? 'Home'
+    : ['Home', trail.group?.label, trail.desk.label].filter(Boolean).join(' / ');
+
+  return (
+    <View style={styles.trail} accessibilityRole="toolbar" accessibilityLabel={crumb}>
+      {trail.isHome ? null : (
+        <AnimatedButton
+          haptic="selection"
+          accessibilityLabel="Back"
+          contentStyle={styles.trailHit}
+          onPress={() => {
+            if (router.canGoBack()) router.back();
+            else router.push('/admin');
+          }}
+        >
+          <Text style={styles.trailHitLabel}>Back</Text>
+        </AnimatedButton>
+      )}
+      <AnimatedButton
+        haptic="selection"
+        accessibilityLabel="Admin home"
+        contentStyle={[styles.trailHit, trail.isHome && styles.trailHitOn]}
+        onPress={() => router.push('/admin')}
+      >
+        <Text style={[styles.trailHitLabel, trail.isHome && styles.trailHitLabelOn]}>Home</Text>
+      </AnimatedButton>
+      <Text style={styles.trailCrumb} numberOfLines={1}>
+        {crumb}
+      </Text>
+      {trail.fanHref ? (
+        <AnimatedButton
+          haptic="selection"
+          accessibilityLabel="Open in app"
+          contentStyle={styles.trailHit}
+          onPress={() => router.push(trail.fanHref as Href)}
+        >
+          <Text style={styles.trailHitLabel}>Open in app</Text>
+        </AnimatedButton>
+      ) : null}
+    </View>
+  );
+}
 
 /**
  * @purpose Shared scroll canvas for every `/admin` tool (heading, pull-to-refresh, error line).
@@ -59,6 +112,7 @@ export function AdminPage({
         ) : undefined
       }
     >
+      <AdminTrail />
       <ScreenHeading kicker="Tapua'i admin" title={title} lede={lede} />
       {saveMode === 'instant' ? (
         <Text style={styles.saveCue}>Saves instantly — spelling, stats, scores, and prices hit the fan app on Save.</Text>
@@ -302,6 +356,41 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     gap: 14,
+  },
+  trail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  trailHit: {
+    minHeight: 32,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  trailHitOn: {
+    backgroundColor: FOCAL.neonJade,
+    borderColor: FOCAL.neonJade,
+  },
+  trailHitLabel: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  trailHitLabelOn: {
+    color: FOCAL.backgroundBase,
+  },
+  trailCrumb: {
+    flexGrow: 1,
+    flexShrink: 1,
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
   },
   error: {
     color: colors.danger,

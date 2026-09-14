@@ -4,6 +4,19 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-14
 
+### Locker Room Wishlist — crowd-funded gear
+
+- Athlete **Stats 📊** tab gains **👟 Locker Room Wishlist**: a horizontal rack of gear cards with item photo, title, money line, and a spring-animated Neon Jade funding bar. **🎁 Gift Item Directly** opens the retailer link in `expo-web-browser`; **⚡ Chip In $5** opens the Mālo sheet and credits whatever the fan pays toward the goal.
+- Crossing 100% fires full-screen confetti + a **Gear Unlocked!** notification, stamps a glowing **EQUIPPED ⚡** badge on the card, and pays the athlete a one-time **+500 Aura** (`chip_in_wishlist_item` → `add_user_aura`, guarded by `aura_awarded`).
+- New `public.wishlist_items` + `get_wishlist_items` / `chip_in_wishlist_item`. Incremental: `supabase/locker_room_wishlist.sql`. Expo Go without the table falls back to `WISHLIST_DEMO_ITEMS`.
+- Managed from admin: `layouts.wishlist` pauses the whole rack (Features), and Coverage tracks `wishlist` / `wishlist_gift` / `wishlist_chip_in` taps against the Drip and Money desks.
+
+### Admin portal — business nav, trail, Coverage
+
+- `/admin` is organized like a production ops portal: pinned **Home**, then Operations / Content / Commerce / Audience / Growth / System. Every desk has **Back** (stack or Home), **Home**, a crumb, and **Open in app** when the desk maps to a fan surface.
+- `/admin/coverage` lists every fan-visible control (tabs, Highlights rail, Local boards, Drip, Profile, receipts, Upload, Operator / Parent / Booster / Sponsor actions), who manages it, live vs paused, and 7-day taps / issues. Overview shows live/paused coverage counts.
+- Features / Look can pause or rewrite slang guide, suggestions, receipts, and role-HQ ledes (`buttons.suggest`, `layouts.slangGuide`, `layouts.receipts`, copy keys). Missing JSON keys stay on.
+
 ### Usage reports + live scoreboard tap
 
 - `/admin/reports` **Usage** desk: time on tabs, deepest scroll, features fans tap (Seki / Mālo / polls / Drip), hottest control issues (failed checkout, Report, upload, open bugs). Still one Expo `/admin` — no second admin app.

@@ -19,6 +19,7 @@ export type AppRuntimeButtons = {
   crew: boolean;
   vault: boolean;
   flashUnlock: boolean;
+  suggest: boolean;
 };
 
 export type AppRuntimeLayouts = {
@@ -33,6 +34,9 @@ export type AppRuntimeLayouts = {
   parentHq: boolean;
   boosterHq: boolean;
   sponsorHq: boolean;
+  slangGuide: boolean;
+  receipts: boolean;
+  wishlist: boolean;
 };
 
 export type AppRuntimeTheme = {
@@ -77,6 +81,15 @@ export type AppRuntimeCopy = {
   dripKicker: string;
   dripLede: string;
   dripEmpty: string;
+  slangLine: string;
+  profileKicker: string;
+  profileLede: string;
+  receiptsKicker: string;
+  receiptsLede: string;
+  operatorLede: string;
+  parentLede: string;
+  boosterLede: string;
+  sponsorLede: string;
 };
 
 export type AppRuntimeConfig = {
@@ -139,6 +152,7 @@ export const APP_FLAG_GROUPS: AppFlagGroup[] = [
       { path: 'buttons.crew', label: 'Join Crew', hint: 'The Crew ⚡' },
       { path: 'buttons.vault', label: 'Vault', hint: 'Lock / Open Vault' },
       { path: 'buttons.flashUnlock', label: 'Flash Unlock', hint: '2-hour Vault unlock' },
+      { path: 'buttons.suggest', label: 'Suggestions', hint: 'Profile + Highlights ⋯ feedback' },
     ],
   },
   {
@@ -153,6 +167,9 @@ export const APP_FLAG_GROUPS: AppFlagGroup[] = [
       { path: 'layouts.spotlightModal', label: 'Player of the Week modal', hint: 'Home launch Spotlight' },
       { path: 'layouts.homeSearch', label: 'Home search', hint: 'Highlights ⚡ clip search' },
       { path: 'layouts.localSearch', label: 'Local Explore', hint: 'Players, schools, sponsors' },
+      { path: 'layouts.slangGuide', label: 'Slang guide', hint: 'Mālo / Seki explainer on Home' },
+      { path: 'layouts.receipts', label: 'Receipts', hint: 'Profile Tip History & Receipts' },
+      { path: 'layouts.wishlist', label: 'Locker Room Wishlist', hint: 'Gear funding on Stats 📊' },
       { path: 'layouts.operatorConsole', label: 'Operator console', hint: '/operator scorekeeper' },
       { path: 'layouts.parentHq', label: 'Parent HQ', hint: '/parent' },
       { path: 'layouts.boosterHq', label: 'Booster HQ', hint: '/booster' },
@@ -173,6 +190,7 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     crew: true,
     vault: true,
     flashUnlock: true,
+    suggest: true,
   },
   layouts: {
     liveMatches: true,
@@ -186,6 +204,9 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     parentHq: true,
     boosterHq: true,
     sponsorHq: true,
+    slangGuide: true,
+    receipts: true,
+    wishlist: true,
   },
   theme: {
     background: '#0F1416',
@@ -224,6 +245,15 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     dripKicker: 'Marketplace',
     dripLede: 'Booster gear, Aura cards, and sideline merch.',
     dripEmpty: 'Nothing in this rack yet.',
+    slangLine: 'Mālo = Direct Support • Seki = Awesome Play',
+    profileKicker: 'Your hub',
+    profileLede: 'Trading card, Highlights ⚡, Stats, and Vault.',
+    receiptsKicker: 'Mālo ledger',
+    receiptsLede: 'Tips this device dropped, with PaymentSheet receipts.',
+    operatorLede: 'Claim a game, keep the clock, and call the big play.',
+    parentLede: 'Consent, custodial payouts, and confirm that a fan tagged the right jersey.',
+    boosterLede: 'Upload a roster and keep jerseys honest for Friday night.',
+    sponsorLede: 'Sideline boards and rivalry banners for live Tapua\'i games.',
   },
 };
 
@@ -301,6 +331,15 @@ export const COPY_FIELDS: { key: keyof AppRuntimeCopy; label: string; hint: stri
   { key: 'dripKicker', label: 'Drip kicker', hint: 'Above Drip' },
   { key: 'dripLede', label: 'Drip lede', hint: 'Optional marketplace line' },
   { key: 'dripEmpty', label: 'Drip empty', hint: 'Empty rack' },
+  { key: 'slangLine', label: 'Slang guide', hint: 'Home Mālo / Seki explainer' },
+  { key: 'profileKicker', label: 'Profile kicker', hint: 'Above Profile' },
+  { key: 'profileLede', label: 'Profile lede', hint: 'Optional line under Profile' },
+  { key: 'receiptsKicker', label: 'Receipts kicker', hint: 'Above Tip History' },
+  { key: 'receiptsLede', label: 'Receipts lede', hint: 'Ledger explanation' },
+  { key: 'operatorLede', label: 'Operator lede', hint: '/operator' },
+  { key: 'parentLede', label: 'Parent lede', hint: '/parent' },
+  { key: 'boosterLede', label: 'Booster lede', hint: '/booster' },
+  { key: 'sponsorLede', label: 'Sponsor lede', hint: '/sponsor' },
 ];
 
 function asBool(value: unknown, fallback: boolean): boolean {

@@ -7,10 +7,13 @@ import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { colors, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { telemetry } from '@/services/TelemetryManager';
 import { supabase } from '@/lib/supabase';
 import type { SponsorAd } from '@/types/database';
 
 export default function SponsorHomeScreen() {
+  const { live } = useAppRuntime();
   const [ads, setAds] = useState<SponsorAd[]>([]);
   const [title, setTitle] = useState('Friday Lights presented by Alpine Credit Union');
   const [rivalry, setRivalry] = useState('Westlake vs Lone Peak');
@@ -29,6 +32,7 @@ export default function SponsorHomeScreen() {
     if (busy) return;
     setBusy(true);
     try {
+      telemetry.trackFeature(placement === 'rivalry-banner' ? 'sponsor_rivalry' : 'sponsor_sideline', 'sponsor');
       const { error } = await supabase.from('sponsor_ads').insert({
         title,
         placement,
@@ -72,7 +76,7 @@ export default function SponsorHomeScreen() {
         <ScreenHeading
           kicker="Tapua'i sponsor"
           title="Sponsor Studio"
-          lede="Sideline boards and rivalry banners for live Tapua'i games."
+          lede={live.copy.sponsorLede}
         />
         <DashboardPanel title="Digital stadium ad manager">
           <TextInput value={title} onChangeText={setTitle} style={styles.input} />

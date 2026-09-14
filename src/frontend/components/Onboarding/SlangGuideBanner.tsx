@@ -5,17 +5,25 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { telemetry } from '@/services/TelemetryManager';
 
 const STORAGE_KEY = 'tapuai.slangGuideDismissed';
-const GUIDE_COPY = 'Mālo = Direct Support • Seki = Awesome Play';
 
 type SlangGuideBannerProps = {
   overlay?: boolean;
 };
 
+/**
+ * @purpose Home Mālo / Seki explainer. Copy and visibility come from Look / Features (`copy.slangLine`, `layouts.slangGuide`).
+ * @param overlay When true, sits over Highlights chrome instead of in the feed header.
+ * @sideEffects AsyncStorage dismiss key; `feature_tap` slang.
+ */
 export function SlangGuideBanner({ overlay = false }: SlangGuideBannerProps) {
   const insets = useSafeAreaInsets();
+  const { live } = useAppRuntime();
   const [visible, setVisible] = useState(false);
+  const copy = live.copy.slangLine.trim() || 'Mālo = Direct Support • Seki = Awesome Play';
 
   useEffect(() => {
     let active = true;
@@ -33,10 +41,11 @@ export function SlangGuideBanner({ overlay = false }: SlangGuideBannerProps) {
 
   const dismiss = () => {
     setVisible(false);
+    telemetry.trackFeature('slang', 'home');
     void AsyncStorage.setItem(STORAGE_KEY, '1');
   };
 
-  if (!visible) return null;
+  if (!visible || !live.layouts.slangGuide) return null;
 
   return (
     <View
@@ -46,8 +55,8 @@ export function SlangGuideBanner({ overlay = false }: SlangGuideBannerProps) {
         overlay && { paddingTop: insets.top + 8 },
       ]}
     >
-      <View style={styles.banner} accessibilityRole="summary" accessibilityLabel={GUIDE_COPY}>
-        <Text style={styles.copy}>{GUIDE_COPY}</Text>
+      <View style={styles.banner} accessibilityRole="summary" accessibilityLabel={copy}>
+        <Text style={styles.copy}>{copy}</Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Dismiss slang guide"

@@ -301,6 +301,26 @@ export type ShopOrder = {
   created_at: string;
 };
 
+/** Crowd-funded gear on the athlete Stats tab (`public.wishlist_items`). */
+export type WishlistItem = {
+  id: string;
+  player_id: string | null;
+  title: string;
+  photo_url: string;
+  /** External retailer link for 🎁 Gift Item Directly. */
+  buy_url: string;
+  target_amount_cents: number;
+  current_amount_cents: number;
+  is_equipped: boolean;
+  equipped_at?: string | null;
+  /** True once the +500 Aura equip bonus has been paid, so it never double-awards. */
+  aura_awarded?: boolean;
+  is_active?: boolean;
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+};
+
 /** Fan suggestion / bug / look note (`public.app_feedback`). */
 export type AppFeedbackRow = {
   id: string;
@@ -579,6 +599,10 @@ export type Database = {
         AppFeedbackRow,
         Pick<AppFeedbackRow, 'body'> & Partial<AppFeedbackRow>
       >;
+      wishlist_items: Table<
+        WishlistItem,
+        Pick<WishlistItem, 'title'> & Partial<WishlistItem>
+      >;
       app_runtime_config: {
         Row: {
           id: string;
@@ -775,6 +799,14 @@ export type Database = {
           next_runtime_path?: string;
         };
         Returns: AppFeedbackRow;
+      };
+      get_wishlist_items: {
+        Args: { target_player_id: string };
+        Returns: WishlistItem[];
+      };
+      chip_in_wishlist_item: {
+        Args: { item_id: string; amount_cents: number };
+        Returns: Record<string, unknown>;
       };
       toggle_reel_vault_status: {
         Args: { target_reel_id: string };

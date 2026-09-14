@@ -7,6 +7,8 @@ import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { colors, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { telemetry } from '@/services/TelemetryManager';
 import { displayValue } from '@/data/players';
 import { useRoster } from '@/hooks/useRoster';
 import { supabase } from '@/lib/supabase';
@@ -33,6 +35,7 @@ function parseRosterCsv(raw: string) {
 }
 
 export default function BoosterHomeScreen() {
+  const { live } = useAppRuntime();
   const { players, refresh, setPlayers } = useRoster();
   const [csv, setCsv] = useState('name,jersey_number,position,school_name\nJane Doe,12,WR,Westlake High');
   const [queue, setQueue] = useState<VerificationRequest[]>([]);
@@ -59,6 +62,7 @@ export default function BoosterHomeScreen() {
     }
     setBusy(true);
     try {
+      telemetry.trackFeature('booster_csv', 'booster');
       const { error } = await supabase.from('players').insert(rows);
       if (error) {
         Alert.alert('Upload failed', error.message);
@@ -88,6 +92,7 @@ export default function BoosterHomeScreen() {
     if (busy) return;
     setBusy(true);
     try {
+      telemetry.trackFeature('booster_verify', 'booster');
       const { error } = await supabase.from('verification_requests').update({ status }).eq('id', id);
       if (error) {
         Alert.alert('Verification failed', error.message);
@@ -106,7 +111,7 @@ export default function BoosterHomeScreen() {
         <ScreenHeading
           kicker="Tapua'i booster"
           title="Booster Tools"
-          lede="Roster uploads, jersey edits, and verification — ready for Friday night."
+          lede={live.copy.boosterLede}
         />
         <DashboardPanel title="CSV bulk roster upload" body="Columns: name, jersey_number, position, school_name">
           <TextInput

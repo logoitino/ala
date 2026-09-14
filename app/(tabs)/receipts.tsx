@@ -3,10 +3,12 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ReceiptCard } from '@/components/Profile/ReceiptCard';
+import { RuntimePaused } from '@/components/RuntimePaused';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useFanTipHistory } from '@/hooks/useFanTipHistory';
 import { userProfileHref } from '@/lib/navigation';
 import type { FanTipReceipt } from '@/types/database';
@@ -21,7 +23,17 @@ function formatDollars(cents: number): string {
  */
 export default function ReceiptsScreen() {
   const router = useRouter();
+  const { live } = useAppRuntime();
   const { receipts, summary, loading, signedIn } = useFanTipHistory();
+
+  if (!live.layouts.receipts) {
+    return (
+      <RuntimePaused
+        title="Receipts are paused"
+        lede="Turn Tip History back on in Admin → Features, then Publish to app."
+      />
+    );
+  }
 
   const goBack = () => {
     router.push('/profile' as Href);
@@ -44,7 +56,11 @@ export default function ReceiptsScreen() {
             <Ionicons name="chevron-back" size={20} color={colors.primary} />
           </AnimatedButton>
           <View style={styles.headingWrap}>
-            <ScreenHeading compact kicker="Mālo ledger" title="Tip History & Receipts" />
+            <ScreenHeading
+              compact
+              kicker={live.copy.receiptsKicker}
+              title="Tip History & Receipts"
+            />
           </View>
         </View>
 

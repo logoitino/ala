@@ -11,6 +11,7 @@ export type AdminNavHref =
   | '/admin/qa'
   | '/admin/lab'
   | '/admin/feedback'
+  | '/admin/coverage'
   | '/admin/spotlight'
   | '/admin/moderation'
   | '/admin/athletes'
@@ -30,7 +31,7 @@ export type AdminNavItem = {
   hint: string;
 };
 
-export type AdminNavGroupId = 'ship' | 'content' | 'catalog' | 'people' | 'insights';
+export type AdminNavGroupId = 'operations' | 'content' | 'commerce' | 'audience' | 'growth' | 'system';
 
 export type AdminNavGroup = {
   id: AdminNavGroupId;
@@ -38,59 +39,69 @@ export type AdminNavGroup = {
   items: AdminNavItem[];
 };
 
-/** Sidebar groups for the production control plane (`/admin/*`). */
+/** Sidebar groups for the production control plane (`/admin/*`). Home (`/admin`) is pinned outside these groups. */
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
-    id: 'ship',
-    label: 'Ship',
+    id: 'operations',
+    label: 'Operations',
     items: [
-      { href: '/admin', label: 'Overview', hint: 'Inbox and shortcuts' },
-      { href: '/admin/studio', label: 'Studio', hint: 'Preview roles and surfaces' },
-      { href: '/admin/features', label: 'Features', hint: 'Tabs and buttons — needs Publish' },
-      { href: '/admin/look', label: 'Look', hint: 'Colors, copy, profile, Highlights rail' },
+      { href: '/admin/games', label: 'Live games', hint: 'Local match board' },
+      { href: '/admin/polls', label: 'Polls', hint: 'School cheer matchups' },
+      { href: '/admin/boosters', label: 'Boosters', hint: 'Local sponsorships' },
       { href: '/admin/publish', label: 'Publish', hint: 'Go-live queue' },
-      { href: '/admin/lab', label: 'Lab', hint: 'Runtime JSON and apply suggestions' },
-      { href: '/admin/qa', label: 'QA', hint: 'Telemetry and empty states' },
-      { href: '/admin/feedback', label: 'Feedback', hint: 'Fan suggestions to ship' },
     ],
   },
   {
     id: 'content',
     label: 'Content',
     items: [
-      { href: '/admin/spotlight', label: 'Spotlight', hint: 'Auto Player of the Week' },
       { href: '/admin/highlights', label: 'Highlights', hint: 'Vault, remove, restore' },
+      { href: '/admin/spotlight', label: 'Spotlight', hint: 'Auto Player of the Week' },
       { href: '/admin/moderation', label: 'Moderation', hint: 'Flags and takedowns' },
     ],
   },
   {
-    id: 'catalog',
-    label: 'Catalog',
+    id: 'commerce',
+    label: 'Commerce',
     items: [
-      { href: '/admin/athletes', label: 'Athletes', hint: 'Roster that fans tag' },
-      { href: '/admin/schools', label: 'Schools', hint: 'HS + NCAA catalog' },
-      { href: '/admin/games', label: 'Live games', hint: 'Local match board' },
       { href: '/admin/drip', label: 'Drip', hint: 'Marketplace catalog' },
-      { href: '/admin/boosters', label: 'Boosters', hint: 'Local sponsorships' },
-      { href: '/admin/polls', label: 'Polls', hint: 'School cheer matchups' },
-    ],
-  },
-  {
-    id: 'people',
-    label: 'People & money',
-    items: [
-      { href: '/admin/people', label: 'People', hint: 'Verify and admin access' },
       { href: '/admin/money', label: 'Money', hint: 'Revenue, Mālo, disbursements' },
     ],
   },
   {
-    id: 'insights',
-    label: 'Insights',
-    items: [{ href: '/admin/reports', label: 'Reports', hint: 'Tab time, taps, issues, money, leaders' }],
+    id: 'audience',
+    label: 'Audience',
+    items: [
+      { href: '/admin/athletes', label: 'Athletes', hint: 'Roster that fans tag' },
+      { href: '/admin/schools', label: 'Schools', hint: 'HS + NCAA catalog' },
+      { href: '/admin/people', label: 'People', hint: 'Verify and admin access' },
+    ],
+  },
+  {
+    id: 'growth',
+    label: 'Growth',
+    items: [
+      { href: '/admin/reports', label: 'Reports', hint: 'Tab time, taps, issues, money' },
+      { href: '/admin/feedback', label: 'Feedback', hint: 'Fan suggestions to ship' },
+      { href: '/admin/coverage', label: 'Coverage', hint: 'Every fan control → this portal' },
+    ],
+  },
+  {
+    id: 'system',
+    label: 'System',
+    items: [
+      { href: '/admin/features', label: 'Features', hint: 'Tabs and buttons — needs Publish' },
+      { href: '/admin/look', label: 'Look', hint: 'Colors, copy, profile, Highlights rail' },
+      { href: '/admin/studio', label: 'Studio', hint: 'Preview roles and surfaces' },
+      { href: '/admin/lab', label: 'Lab', hint: 'Runtime JSON and apply suggestions' },
+      { href: '/admin/qa', label: 'QA', hint: 'Telemetry and empty states' },
+    ],
   },
 ];
 
-export const ADMIN_NAV: AdminNavItem[] = ADMIN_NAV_GROUPS.flatMap((group) => group.items);
+export const ADMIN_HOME: AdminNavItem = { href: '/admin', label: 'Home', hint: 'Dashboard and inbox' };
+
+export const ADMIN_NAV: AdminNavItem[] = [ADMIN_HOME, ...ADMIN_NAV_GROUPS.flatMap((group) => group.items)];
 
 export type AdminLens = 'marketing' | 'owner' | 'engineer' | 'all';
 
@@ -113,10 +124,10 @@ const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
     '/admin/boosters',
     '/admin/polls',
     '/admin/feedback',
+    '/admin/coverage',
   ],
-  owner: ['/admin', '/admin/money', '/admin/reports', '/admin/people', '/admin/spotlight'],
+  owner: ['/admin/money', '/admin/reports', '/admin/people', '/admin/spotlight', '/admin/coverage', '/admin/athletes'],
   engineer: [
-    '/admin',
     '/admin/lab',
     '/admin/qa',
     '/admin/features',
@@ -124,6 +135,7 @@ const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
     '/admin/feedback',
     '/admin/moderation',
     '/admin/highlights',
+    '/admin/coverage',
   ],
 };
 
@@ -143,7 +155,51 @@ export function overviewLedeForLens(lens: AdminLens): string {
   if (lens === 'marketing') return 'Look, copy, and campaign chrome. Draft until Publish to app.';
   if (lens === 'owner') return 'Gross, net, payouts, health, and who needs a decision.';
   if (lens === 'engineer') return 'Lab, QA, flags, and fan suggestions waiting to become a patch.';
-  return 'Needs attention, unpublished chrome, then every categorized desk.';
+  return 'Home for the control plane. Inbox first, then every desk that ships the fan app.';
+}
+
+const FAN_HREF_BY_DESK: Partial<Record<AdminNavHref, string>> = {
+  '/admin/highlights': '/',
+  '/admin/features': '/',
+  '/admin/look': '/',
+  '/admin/games': '/local',
+  '/admin/polls': '/local',
+  '/admin/boosters': '/local',
+  '/admin/publish': '/local',
+  '/admin/spotlight': '/spotlight',
+  '/admin/drip': '/drip',
+  '/admin/money': '/receipts',
+  '/admin/athletes': '/profile',
+  '/admin/moderation': '/',
+  '/admin/feedback': '/',
+  '/admin/lab': '/',
+  '/admin/schools': '/local',
+  '/admin/reports': '/',
+  '/admin/people': '/profile',
+  '/admin/studio': '/',
+  '/admin/coverage': '/',
+  '/admin/qa': '/',
+};
+
+/**
+ * @purpose Resolve sidebar group + fan surface for the current `/admin` path so Back / Home / Open in app always have a target.
+ */
+export function adminTrailForPath(pathname: string): {
+  isHome: boolean;
+  group: AdminNavGroup | null;
+  desk: AdminNavItem;
+  fanHref: string | null;
+} {
+  const path = pathname.replace(/\/$/, '') || '/admin';
+  const isHome = path === '/admin';
+  const desk = ADMIN_NAV.find((item) => isAdminNavActive(item.href, path)) ?? ADMIN_HOME;
+  const group = ADMIN_NAV_GROUPS.find((item) => item.items.some((entry) => entry.href === desk.href)) ?? null;
+  return {
+    isHome,
+    group,
+    desk,
+    fanHref: FAN_HREF_BY_DESK[desk.href] ?? null,
+  };
 }
 
 export type AdminProductionSurface = {

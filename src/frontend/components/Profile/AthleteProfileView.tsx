@@ -11,6 +11,7 @@ import { VaultLockedCard } from '@/components/ExclusivePaywall';
 import { AthleteReelManager } from '@/components/Profile/AthleteReelManager';
 import { AthleteStatsTab } from '@/components/Profile/AthleteStatsTab';
 import { AuraTradingCard } from '@/components/Profile/AuraTradingCard';
+import { LockerRoomWishlist } from '@/components/Profile/LockerRoomWishlist';
 import { SubscriberQnA } from '@/components/Profile/SubscriberQnA';
 import { VaultLockCard } from '@/components/Profile/VaultLockCard';
 import { TaggedReelGrid } from '@/components/TaggedReelGrid';
@@ -234,7 +235,12 @@ export function AthleteProfileView({
           grid(publicClips)
         )
       ) : null}
-      {tab === 'stats' ? <AthleteStatsTab stats={stats} loading={statsLoading} /> : null}
+      {tab === 'stats' ? (
+        <View style={styles.statsPane}>
+          <AthleteStatsTab stats={stats} loading={statsLoading} />
+          <LockerRoomWishlist player={player} athleteName={name} />
+        </View>
+      ) : null}
       {tab === 'vault' && live.buttons.vault && live.profile.showVault ? (
         <View style={styles.vault}>
           {manageVault ? (
@@ -353,6 +359,9 @@ const styles = StyleSheet.create({
   },
   vault: {
     gap: 12,
+  },
+  statsPane: {
+    gap: 16,
   },
   empty: {
     color: colors.textMuted,

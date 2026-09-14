@@ -44,7 +44,7 @@ function AdminShellInner({ children }: AdminShellProps) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const wide = Platform.OS === 'web' && width >= 900;
-  const [groupId, setGroupId] = useState<AdminNavGroupId>('ship');
+  const [groupId, setGroupId] = useState<AdminNavGroupId>('operations');
   const [publishing, setPublishing] = useState(false);
   const navGroups = useMemo(() => navGroupsForLens(lens), [lens]);
 
@@ -136,8 +136,23 @@ function AdminShellInner({ children }: AdminShellProps) {
       {wide ? (
         <View style={[styles.sidebar, { paddingTop: Math.max(insets.top, 20) }]}>
           <Text style={styles.brandKicker}>Tapua'i</Text>
-          <Text style={styles.brand}>Admin portal</Text>
-          <Text style={styles.brandLede}>Catalog saves instantly. Tabs, colors, copy, and Highlights layout wait on Publish to app.</Text>
+          <AnimatedButton
+            haptic="selection"
+            accessibilityLabel="Admin home"
+            contentStyle={styles.brandHit}
+            onPress={() => router.push('/admin')}
+          >
+            <Text style={styles.brand}>Admin portal</Text>
+          </AnimatedButton>
+          <Text style={styles.brandLede}>Home always brings you back here. Catalog saves instantly. Tabs, colors, copy, and Highlights layout wait on Publish to app.</Text>
+          <AnimatedButton
+            haptic="selection"
+            accessibilityLabel="Admin home"
+            contentStyle={[styles.homeHit, isAdminNavActive('/admin', pathname) && styles.homeHitOn]}
+            onPress={() => router.push('/admin')}
+          >
+            <Text style={[styles.homeLabel, isAdminNavActive('/admin', pathname) && styles.homeLabelOn]}>Home</Text>
+          </AnimatedButton>
           {lensPills}
           {publishCta}
           <ScrollView contentContainerStyle={styles.sideList} showsVerticalScrollIndicator={false}>
@@ -160,7 +175,14 @@ function AdminShellInner({ children }: AdminShellProps) {
       ) : (
         <View style={[styles.top, { paddingTop: Math.max(insets.top, 10) }]}>
           <View style={styles.mobileHead}>
-            <Text style={styles.mobileTitle}>Admin portal</Text>
+            <AnimatedButton
+              haptic="selection"
+              accessibilityLabel="Admin home"
+              contentStyle={styles.homeHit}
+              onPress={() => router.push('/admin')}
+            >
+              <Text style={styles.mobileTitle}>Admin</Text>
+            </AnimatedButton>
             <AnimatedButton
               haptic="selection"
               accessibilityLabel="Open production app"
@@ -236,6 +258,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.4,
   },
+  brandHit: {
+    alignItems: 'flex-start',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+  },
   brandLede: {
     color: colors.textMuted,
     fontSize: 12,
@@ -295,10 +322,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
+  homeHitOn: {
+    backgroundColor: FOCAL.neonJade,
+    borderColor: FOCAL.neonJade,
+  },
   homeLabel: {
     color: FOCAL.neonJade,
     fontSize: 13,
     fontWeight: '800',
+  },
+  homeLabelOn: {
+    color: FOCAL.backgroundBase,
   },
   publishHit: {
     minHeight: 44,

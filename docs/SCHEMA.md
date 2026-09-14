@@ -23,7 +23,7 @@ Auth (`auth.users`) must exist before `profiles.user_id` can reference it.
 | Lock Vault 🔒 / Open Vault 🌐 | `players.vault_locked` + `set_player_vault_locked(target_player_id, is_locked)` |
 | Serve Like Me / Train Like Me | `reels.category` (`game_play` \| `train_like_me` \| `serve_like_me`) |
 | The Crew ⚡ / Your Squad 🛡️ | `crew_follows` + `get_crew_graph` / `toggle_crew_follow` |
-| Admin portal | `/admin` control plane (`profiles.is_admin` or Studio unlock) writes `players`, `schools_and_teams`, `games`, `reels`, `shop_products`, `shop_orders`, `sponsorships`, `cheer_polls`, `spotlight_awards`, `profiles`, `app_runtime_config`, `company_revenue_logs`, `app_feedback`. Studio / Publish / QA / Features / Look / Lab / Feedback / Reports / Money are client desks on the same tables. Heavy chrome waits on `publish_app_runtime`. |
+| Admin portal | `/admin` control plane (`profiles.is_admin` or Studio unlock) writes `players`, `schools_and_teams`, `games`, `reels`, `shop_products`, `shop_orders`, `sponsorships`, `cheer_polls`, `spotlight_awards`, `profiles`, `app_runtime_config`, `company_revenue_logs`, `app_feedback`. Studio / Publish / QA / Features / Look / Lab / Feedback / Reports / Coverage / Money are client desks on the same tables (Coverage is a client catalog, not a table). Heavy chrome waits on `publish_app_runtime`. |
 | Vault Flash Unlock | `reels.flash_unlock_until` + `set_reel_flash_unlock` → `crew_push_queue` |
 
 ---
@@ -313,7 +313,7 @@ Successful Mālo (`useTipCheckout`, `!skipBacker`) **inserts** a `tips` row. Pro
 
 ### Related
 
-`players` (roster + hype + `aura_points` + combine measurables), `athlete_career_stats`, `athlete_game_logs`, `subscriptions`, `subscriber_requests`, `game_events`, `cheer_polls`, `operator_gigs`, `operator_checkins`, `sponsor_ads`, `sponsorships`, `shop_products`, `shop_orders`, `company_revenue_logs`, `telemetry_logs`, `verification_requests`, `disbursements`, `schools_and_teams`, `crew_follows`, `crew_push_queue`, `app_runtime_config`, `app_feedback`. See canonical `schema.sql`.
+`players` (roster + hype + `aura_points` + combine measurables), `athlete_career_stats`, `athlete_game_logs`, `subscriptions`, `subscriber_requests`, `game_events`, `cheer_polls`, `operator_gigs`, `operator_checkins`, `sponsor_ads`, `sponsorships`, `shop_products`, `shop_orders`, `wishlist_items`, `company_revenue_logs`, `telemetry_logs`, `verification_requests`, `disbursements`, `schools_and_teams`, `crew_follows`, `crew_push_queue`, `app_runtime_config`, `app_feedback`. See canonical `schema.sql`.
 
 ### `sponsorships`
 
@@ -354,6 +354,44 @@ Drip marketplace catalog. The fan Drip tab reads `is_active` rows (`useDripCatal
 | `created_at` | timestamptz | |
 
 **RLS (demo):** public SELECT; admin INSERT / UPDATE / DELETE (`anon` allowed in Expo Go). Client: `useDripCatalog` + `/admin/drip`. Fallback: `DRIP_ITEMS` when the table is missing.
+
+### `wishlist_items`
+
+Locker Room Wishlist gear on the athlete Stats 📊 tab. Fans either buy the item outright through `buy_url` or drop Mālo toward the goal. Incremental: `supabase/locker_room_wishlist.sql`.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | uuid PK | |
+| `player_id` | uuid | → `players.id` on delete cascade |
+| `title` | text | Card headline (`Speed Cleats — Size 12`) |
+| `photo_url` | text | Remote item photo; falls back to a jade glyph |
+| `buy_url` | text | 🎁 Gift Item Directly opens this in `expo-web-browser` |
+| `target_amount_cents` | integer | Funding goal |
+| `current_amount_cents` | integer | Mālo credited so far |
+| `is_equipped` | boolean | True once funded — stamps EQUIPPED ⚡ |
+| `equipped_at` | timestamptz | Crossing time |
+| `aura_awarded` | boolean | Guards the one-time +500 Aura equip bonus |
+| `is_active` | boolean | Hidden from the rack when false |
+| `sort_order` | integer | Rack order (unfunded first) |
+| `created_at` / `updated_at` | timestamptz | |
+
+**RLS (demo):** public SELECT; admin INSERT / UPDATE / DELETE (`anon` allowed in Expo Go). Client: `src/frontend/lib/wishlist.ts` + `components/Profile/LockerRoomWishlist.tsx` + `/admin/drip`. Fallback: `WISHLIST_DEMO_ITEMS` when the table is missing.
+
+### `get_wishlist_items(target_player_id)`
+
+```
+get_wishlist_items(target_player_id uuid) returns setof wishlist_items
+```
+
+Active items for one athlete, unfunded first (`order by is_equipped, sort_order, created_at`, limit 20).
+
+### `chip_in_wishlist_item(item_id, amount_cents)`
+
+```
+chip_in_wishlist_item(item_id uuid, amount_cents integer) returns jsonb
+```
+
+Adds a Mālo contribution to `current_amount_cents`. When the row crosses `target_amount_cents` for the first time it sets `is_equipped` / `equipped_at` / `aura_awarded` and calls `add_user_aura(player_id, 500)`. Returns `{ item, newly_equipped, aura_points, athlete_aura_points }` — the client uses `newly_equipped` for confetti and `athlete_aura_points` to restyle the Aura card. **v2:** like `add_user_aura` / `increment_backer_count`, this RPC trusts the client-supplied amount under demo RLS. Move the credit behind the Stripe webhook before real money.
 
 ### `shop_orders`
 
@@ -411,7 +449,7 @@ Single-row fan chrome map (`id = 'default'`). Admin **Features** writes `draft`.
 | `published_at` | timestamptz | Last Publish to app |
 | `updated_at` | timestamptz | Last draft write |
 
-JSON groups: `tabs` (home / local / spotlight / drip / profile / upload), `buttons` (seki / aura / flex / malo / more / subscribe / crew / vault / flashUnlock), `layouts` (liveMatches / cheerPolls / topBoosters / sponsorshipModal / spotlightModal / homeSearch / localSearch / operatorConsole / parentHq / boosterHq / sponsorHq), `theme` (background / surface / jade / gold / text), `profile` (showCard / showCrew / showStats / showVault / actionsOnTop / statsFirst), `highlights` (railSide / namePlacement / showSchool / showCaption / railOrder), `copy` (Home / Local / Spotlight / Drip kickers, ledes, empty lines, optional `homeBannerTitle` / `homeBannerBody`). Client desks: `/admin/features` (flags), `/admin/look` (colors, copy, Profile chrome, Highlights ⚡ rail), `/admin/lab` (JSON draft).
+JSON groups: `tabs` (home / local / spotlight / drip / profile / upload), `buttons` (seki / aura / flex / malo / more / subscribe / crew / vault / flashUnlock / **suggest**), `layouts` (liveMatches / cheerPolls / topBoosters / sponsorshipModal / spotlightModal / homeSearch / localSearch / operatorConsole / parentHq / boosterHq / sponsorHq / **slangGuide** / **receipts** / **wishlist**), `theme` (background / surface / jade / gold / text), `profile` (showCard / showCrew / showStats / showVault / actionsOnTop / statsFirst), `highlights` (railSide / namePlacement / showSchool / showCaption / railOrder), `copy` (Home / Local / Spotlight / Drip kickers and ledes, `slangLine`, Profile / Receipts kickers and ledes, Operator / Parent / Booster / Sponsor ledes, optional `homeBannerTitle` / `homeBannerBody`). Client desks: `/admin/features` (flags), `/admin/look` (colors, copy, Profile chrome, Highlights ⚡ rail), `/admin/lab` (JSON draft), `/admin/coverage` (client catalog of every fan control → desk / flag / telemetry; no extra table).
 
 **RLS (demo):** public SELECT; admin INSERT / UPDATE (`anon` in Expo Go). Incremental: `supabase/app_runtime.sql`. Client: `src/frontend/lib/runtime.ts` + `/admin/features`.
 
