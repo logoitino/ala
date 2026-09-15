@@ -121,7 +121,7 @@ export type TapuaiRpcMap = {
 };
 
 /** Soft-Wall auth gate kinds (browse-first guests; signed-in fans skip the wall). */
-export type SoftWallKind = 'malo' | 'crew' | 'wishlist';
+export type SoftWallKind = 'malo' | 'crew' | 'wishlist' | 'exclusive';
 
 export type SoftWallGate = {
   id: SoftWallKind;
@@ -139,14 +139,14 @@ export type SoftWallGate = {
 
 /**
  * @purpose Shared Soft-Wall oversight map for Expo Coverage + Next admin portal.
- * Guests browse Highlights / cards / wishlist view; these three actions require auth then resume.
+ * Guests browse Highlights / cards / wishlist view; these actions require auth then resume.
  */
 export const SOFT_WALL_GATES: SoftWallGate[] = [
   {
     id: 'malo',
     label: 'Mālo Soft Wall',
     hint: 'Tip / Drop Mālo — Apple, Google, or Magic Link, then PaymentSheet resumes',
-    fanSurface: 'Home · Profile · Spotlight · Reel pager',
+    fanSurface: 'Home · Profile · Spotlight · Reel pager · Local game',
     adminDesk: '/admin/money',
     flagPath: 'buttons.malo',
     telemetry: 'soft_wall.malo',
@@ -169,14 +169,23 @@ export const SOFT_WALL_GATES: SoftWallGate[] = [
     flagPath: 'layouts.wishlist',
     telemetry: 'soft_wall.wishlist',
   },
+  {
+    id: 'exclusive',
+    label: 'Exclusive Soft Wall',
+    hint: 'Vault unlock / Subscribe — Apple, Google, or Magic Link, then exclusive PaymentSheet resumes',
+    fanSurface: 'Highlights Vault lock · /user/[id] · Profile Subscribe',
+    adminDesk: '/admin/features',
+    flagPath: 'buttons.subscribe',
+    telemetry: 'soft_wall.exclusive',
+  },
 ];
 
 /** Auth providers shown on SoftWallModal (Supabase Dashboard must enable each). */
 export const SOFT_WALL_AUTH_PROVIDERS = [
-  { id: 'demo', label: 'Continue as Demo Fan', redirect: 'demo@tapuai.app' },
   { id: 'apple', label: 'Continue with Apple', redirect: 'alasports://auth/callback' },
   { id: 'google', label: 'Continue with Google', redirect: 'alasports://auth/callback' },
   { id: 'magic_link', label: 'Send Magic Link Email', redirect: 'alasports://auth/callback' },
+  { id: 'demo', label: 'Continue as Demo Fan', redirect: 'demo@tapuai.app' },
 ] as const;
 
 export type SoftWallAuthProviderId = (typeof SOFT_WALL_AUTH_PROVIDERS)[number]['id'];
@@ -191,6 +200,7 @@ export type SoftWallOversight = {
   maloLive: boolean;
   crewLive: boolean;
   wishlistLive: boolean;
+  exclusiveLive: boolean;
   publishedAt: string | null;
   softWallGates: SoftWallGate[];
   authProviders: typeof SOFT_WALL_AUTH_PROVIDERS;

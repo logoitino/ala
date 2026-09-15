@@ -2,6 +2,14 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-09-15
+
+### Soft-Wall Daylight polish + guest gates
+
+- `SoftWallModal` and first-open `WelcomeOverlay` sit on Daylight surfaces: gold kickers + mist gold hero, jade Magic Link, outlined Google, ink Apple, Demo Fan as a gold-mist QA row. Light blur (Highlights ⚡ stay Obsidian).
+- Guests no longer skip Soft-Wall into Stripe: Local play Mālo (`TipCheckout`), Local roster tip sheet, Reel Vault unlock, `/user/[id]` exclusive, and Profile Subscribe now `requireAuth` then resume. Profile Subscribe uses the same exclusive PaymentSheet path as athlete Vault (still caches `tapuai.exclusiveSub` for the hub crest).
+- New intent `exclusive` (`soft_wall.exclusive`). Provider order is Apple → Google → Magic Link → Demo Fan (`SOFT_WALL_AUTH_PROVIDERS`).
+
 ## 2026-09-14
 
 ### Soft-Wall admin oversight (Expo + Next portal)

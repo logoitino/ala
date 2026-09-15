@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -9,7 +10,7 @@ import { ONBOARDING_SEEN_KEY } from '@/lib/auth';
 import { FOCAL } from '@/theme/motion';
 
 /**
- * @purpose One-time first-open welcome for guests — brand + support story, then Watch highlights (no account wall).
+ * @purpose One-time first-open Daylight welcome for guests — brand + support story, then Watch highlights (no account wall).
  * @sideEffects AsyncStorage `tapuai.onboardingSeen`.
  */
 export function WelcomeOverlay() {
@@ -38,9 +39,13 @@ export function WelcomeOverlay() {
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={() => void dismiss()}>
       <View style={[styles.backdrop, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
+        <BlurView intensity={28} tint="light" pointerEvents="none" style={StyleSheet.absoluteFill} />
         <View style={styles.card}>
-          <Text style={styles.brand}>Tapua&apos;i</Text>
+          <View style={styles.brandChip}>
+            <Text style={styles.brand}>Tapua&apos;i</Text>
+          </View>
           <Text style={styles.title}>Back every athlete.</Text>
+          <View style={styles.goldRule} />
           <Text style={styles.body}>
             Families capture awesome moments, cheer the school, and send a Mālo when a play hits home — so our kids feel
             believed in.
@@ -63,7 +68,7 @@ export function WelcomeOverlay() {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15,20,22,0.72)',
+    backgroundColor: 'rgba(243,250,246,0.72)',
     justifyContent: 'center',
     paddingHorizontal: 22,
   },
@@ -73,7 +78,14 @@ const styles = StyleSheet.create({
     padding: 22,
     gap: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: FOCAL.electricGold,
+  },
+  brandChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: FOCAL.mistGold,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   brand: {
     fontSize: 12,
@@ -87,6 +99,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.5,
+  },
+  goldRule: {
+    width: 48,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: FOCAL.electricGold,
   },
   body: {
     fontSize: 16,

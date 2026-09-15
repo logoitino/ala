@@ -22,7 +22,7 @@ import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
 
 /**
- * @purpose High-impact auth sheet when a guest hits Mālo / Crew / Chip In. Resumes the stashed action after sign-in.
+ * @purpose High-impact Daylight auth sheet when a guest hits Mālo / Crew / Chip In / exclusive Vault. Resumes the stashed action after sign-in.
  * @sideEffects Apple / Google / Magic Link / Demo Fan via AuthContext; telemetry `auth.*`.
  */
 export function SoftWallModal() {
@@ -49,9 +49,11 @@ export function SoftWallModal() {
       ? 'Sign in with one tap to join The Crew ⚡ and stay close to the season.'
       : intent?.kind === 'wishlist'
         ? 'Sign in with one tap to Chip In and help fund the gear they need.'
-        : intent?.kind === 'signin'
-          ? 'Sign in with one tap to tip Mālo, join Crew, and Chip In — or continue as Demo Fan for QA.'
-          : 'Sign in with one tap to drop a Mālo tip and power their season.';
+        : intent?.kind === 'exclusive'
+          ? 'Sign in with one tap to unlock exclusive Vault clips and power their season.'
+          : intent?.kind === 'signin'
+            ? 'Sign in with one tap to tip Mālo, join Crew, and Chip In — or continue as Demo Fan for QA.'
+            : 'Sign in with one tap to drop a Mālo tip and power their season.';
   const title =
     intent?.kind === 'signin'
       ? "Sign in to Tapua'i"
@@ -95,31 +97,19 @@ export function SoftWallModal() {
         style={styles.backdropWrap}
       >
         <Pressable haptic="none" style={styles.backdrop} onPress={busy ? undefined : close}>
-          <BlurView intensity={48} tint="dark" pointerEvents="none" style={styles.blur} />
+          <BlurView intensity={36} tint="light" pointerEvents="none" style={styles.blur} />
           <Pressable
             haptic="none"
             style={[styles.sheet, { paddingBottom: 24 + insets.bottom }]}
             onPress={() => undefined}
           >
             <View style={styles.handle} />
-            <Text style={styles.kicker}>Tapua&apos;i</Text>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>{body}</Text>
-
-            <AnimatedButton
-              accessibilityLabel="Continue as Demo Fan"
-              disabled={Boolean(busy)}
-              haptic="medium"
-              onPress={() => void run('demo', signInWithDemoAccount)}
-              contentStyle={[styles.providerBtn, styles.demoBtn, busy && styles.disabled]}
-            >
-              {busy === 'demo' ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.demoLabel}>Continue as Demo Fan</Text>
-              )}
-            </AnimatedButton>
-            <Text style={styles.demoHint}>{DEMO_FAN_EMAIL} · instant session for QA</Text>
+            <View style={styles.hero}>
+              <Text style={styles.kicker}>Tapua&apos;i</Text>
+              <Text style={styles.title}>{title}</Text>
+              <View style={styles.goldRule} />
+              <Text style={styles.subtitle}>{body}</Text>
+            </View>
 
             <AnimatedButton
               accessibilityLabel="Continue with Apple"
@@ -183,6 +173,21 @@ export function SoftWallModal() {
             {message ? <Text style={styles.message}>{message}</Text> : null}
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
+            <AnimatedButton
+              accessibilityLabel="Continue as Demo Fan"
+              disabled={Boolean(busy)}
+              haptic="medium"
+              onPress={() => void run('demo', signInWithDemoAccount)}
+              contentStyle={[styles.providerBtn, styles.demoBtn, busy && styles.disabled]}
+            >
+              {busy === 'demo' ? (
+                <ActivityIndicator color={FOCAL.goldInk} />
+              ) : (
+                <Text style={styles.demoLabel}>Continue as Demo Fan</Text>
+              )}
+            </AnimatedButton>
+            <Text style={styles.demoHint}>{DEMO_FAN_EMAIL} · instant session for QA</Text>
+
             <Pressable accessibilityRole="button" disabled={Boolean(busy)} onPress={close} style={styles.close}>
               <Text style={styles.closeLabel}>Keep browsing</Text>
             </Pressable>
@@ -198,13 +203,15 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(15,20,22,0.35)',
+    backgroundColor: 'rgba(243,250,246,0.42)',
   },
   blur: { ...StyleSheet.absoluteFill },
   sheet: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
+    borderTopWidth: 3,
+    borderTopColor: FOCAL.electricGold,
     paddingHorizontal: 20,
     paddingTop: 10,
     gap: 12,
@@ -214,8 +221,15 @@ const styles = StyleSheet.create({
     width: 44,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.border,
+    backgroundColor: FOCAL.electricGold,
     marginBottom: 4,
+  },
+  hero: {
+    backgroundColor: FOCAL.mistGold,
+    borderRadius: radii.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 8,
   },
   kicker: {
     fontSize: 11,
@@ -230,12 +244,17 @@ const styles = StyleSheet.create({
     color: colors.text,
     letterSpacing: -0.4,
   },
+  goldRule: {
+    width: 48,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: FOCAL.electricGold,
+  },
   subtitle: {
     fontSize: 15,
     lineHeight: 21,
     fontWeight: '600',
     color: colors.textMuted,
-    marginBottom: 4,
   },
   providerBtn: {
     borderRadius: 14,
@@ -244,10 +263,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 50,
   },
-  appleBtn: { backgroundColor: '#0F1416' },
+  appleBtn: { backgroundColor: FOCAL.ink },
   appleLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
-  demoBtn: { backgroundColor: FOCAL.goldInk },
-  demoLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  googleBtn: {
+    backgroundColor: FOCAL.mistSlate,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  googleLabel: { color: colors.text, fontSize: 16, fontWeight: '800' },
+  magicBtn: { backgroundColor: FOCAL.jadeInk },
+  magicLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  demoBtn: {
+    backgroundColor: FOCAL.mistGold,
+    borderWidth: 1,
+    borderColor: FOCAL.electricGold,
+  },
+  demoLabel: { color: FOCAL.goldInk, fontSize: 16, fontWeight: '800' },
   demoHint: {
     marginTop: -6,
     marginBottom: 2,
@@ -256,14 +287,6 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
   },
-  googleBtn: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  googleLabel: { color: colors.text, fontSize: 16, fontWeight: '800' },
-  magicBtn: { backgroundColor: FOCAL.jadeInk },
-  magicLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 2 },
   orLine: { flex: 1, height: 1, backgroundColor: colors.border },
   orLabel: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },
@@ -276,7 +299,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    backgroundColor: colors.background,
+    backgroundColor: FOCAL.mistJade,
   },
   message: { color: FOCAL.jadeInk, fontWeight: '700', fontSize: 13, lineHeight: 18 },
   error: { color: FOCAL.ember, fontWeight: '700', fontSize: 13, lineHeight: 18 },

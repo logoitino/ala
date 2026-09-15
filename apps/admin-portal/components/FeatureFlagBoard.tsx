@@ -15,6 +15,7 @@ type FlagRow = {
 const FLAG_ROWS: FlagRow[] = [
   { group: 'Soft-Wall related', path: 'buttons.malo', label: 'Mālo', hint: 'Soft wall when On' },
   { group: 'Soft-Wall related', path: 'buttons.crew', label: 'Join Crew', hint: 'Soft wall when On' },
+  { group: 'Soft-Wall related', path: 'buttons.subscribe', label: 'Subscribe / Vault exclusive', hint: 'Exclusive Soft Wall when On' },
   { group: 'Soft-Wall related', path: 'layouts.wishlist', label: 'Locker Room Wishlist', hint: 'Chip In Soft Wall when On' },
   {
     group: 'Soft-Wall related',

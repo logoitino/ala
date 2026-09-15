@@ -19,6 +19,7 @@ type RuntimeLayouts = {
 type RuntimeButtons = {
   malo?: boolean;
   crew?: boolean;
+  subscribe?: boolean;
 };
 
 type RuntimeBag = {
@@ -49,6 +50,7 @@ export async function fetchSoftWallOversight(): Promise<SoftWallOversight> {
     maloLive: true,
     crewLive: true,
     wishlistLive: true,
+    exclusiveLive: true,
     publishedAt: null,
     softWallGates: SOFT_WALL_GATES,
     authProviders: SOFT_WALL_AUTH_PROVIDERS,
@@ -85,6 +87,7 @@ export async function fetchSoftWallOversight(): Promise<SoftWallOversight> {
     maloLive: asBool(published.buttons?.malo, true),
     crewLive: asBool(published.buttons?.crew, true),
     wishlistLive: asBool(published.layouts?.wishlist, true),
+    exclusiveLive: asBool(published.buttons?.subscribe, true),
     publishedAt: typeof runtimeRes.data?.published_at === 'string' ? runtimeRes.data.published_at : null,
     softWallGates: SOFT_WALL_GATES,
     authProviders: SOFT_WALL_AUTH_PROVIDERS,

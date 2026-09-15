@@ -6,6 +6,7 @@ import { TipButton } from '@/components/TipButton';
 import { colors, radii } from '@/constants/theme';
 import { AURA_PER_DOLLAR, MALO_DISCLAIMER, auraPointsForTip, displayValue, type Player } from '@/data/players';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 
 type TipCheckoutProps = {
@@ -27,7 +28,7 @@ function parseCustomTip(value: string): number | null {
 /**
  * @purpose Mālo amount picker ($5 / $10 / $25 / Custom) wired to Stripe PaymentSheet.
  * @param onBusyChange Lets the tip sheet lock Close/backdrop while PaymentSheet is presenting.
- * @sideEffects `useTipCheckout` → PaymentIntent, optional backer/reel counters, `add_user_aura`.
+ * @sideEffects Soft-Wall for guests; `useTipCheckout` → PaymentIntent, optional backer/reel counters, `add_user_aura`.
  */
 export function TipCheckout({
   player,
@@ -42,6 +43,7 @@ export function TipCheckout({
   const [customOpen, setCustomOpen] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const { startCheckout, busy } = useTipCheckout();
+  const { requireAuth } = useSoftWall();
   const { live } = useAppRuntime();
   const tipAmounts = live.catalog.maloAmounts.length > 0 ? live.catalog.maloAmounts : [5, 10, 25];
   const playerName = displayValue(player.name, 'this athlete');
@@ -54,7 +56,14 @@ export function TipCheckout({
   }, [busy, onBusyChange]);
 
   const pay = (tipAmount: number) => {
-    void startCheckout({ player, tipAmount, coverFees, reelId, onBacked, onTipped });
+    requireAuth({
+      kind: 'malo',
+      athleteName: player.name,
+      athleteId: player.id,
+      resume: () => {
+        void startCheckout({ player, tipAmount, coverFees, reelId, onBacked, onTipped });
+      },
+    });
   };
 
   return (

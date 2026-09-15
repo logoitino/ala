@@ -27,7 +27,7 @@ apps/admin-portal ─┘
 - **Mobile (Expo):** Highlights ⚡, Local, Spotlight, Drip, Profile, Mālo PaymentSheet, Soft-Wall auth (browse-first guests), operator console (Features-gated), and the live **Admin** desks under `app/(admin)/admin` (Coverage Soft-Wall surface, Features Soft-Wall board, People Fans filter).
 - **Admin portal (Next):** Soft-Wall control plane at `pnpm admin` — Overview / Soft-Wall / Features / People read Supabase `app_runtime_config` + fan profiles; Features can draft Soft-Wall related flags and Publish. Full desks still live in Expo `/admin` until ported.
 - **Shared types:** Import `@tapuai/shared-types` (or `@shared/*`) for cross-app domain types, including `SOFT_WALL_GATES` / `SoftWallOversight`. Mobile keeps the full generated `Database` helpers in `apps/mobile/src/frontend/types/database.ts`.
-- **Auth:** Supabase session + `alasports://auth/callback`. Soft wall on Mālo / Crew / Chip In only; fan profile via `handle_new_auth_user` + `ensureFanProfile`.
+- **Auth:** Supabase session + `alasports://auth/callback`. Soft wall on Mālo / Crew / Chip In / exclusive Vault; fan profile via `handle_new_auth_user` + `ensureFanProfile`.
 
 ## Data model (ERD pointer)
 

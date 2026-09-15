@@ -167,7 +167,7 @@ export function AdminOverview() {
           <OwnerStat
             label="Browse-first gates"
             value={String(SOFT_WALL_GATES.length)}
-            hint="Mālo · Crew · Chip In"
+            hint="Mālo · Crew · Chip In · Exclusive"
             onPress={() => router.push('/admin/coverage')}
           />
           <OwnerStat

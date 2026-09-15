@@ -52,7 +52,7 @@ STRIPE_SECRET_KEY=sk_test_your_secret_key
 
 ### Soft-Wall auth (Supabase Dashboard)
 
-Browse-first guests can open Highlights, cards, and Locker Room without an account. **Mālo**, **Join Crew**, and **Chip In** open `SoftWallModal` (Apple / Google / Magic Link), then resume the intercepted action.
+Browse-first guests can open Highlights, cards, and Locker Room without an account. **Mālo**, **Join Crew**, **Chip In**, and **exclusive Vault / Subscribe** open `SoftWallModal` (Apple / Google / Magic Link, then Demo Fan for QA), then resume the intercepted action.
 
 1. Authentication → Providers: enable **Email** (magic link), **Apple**, and **Google**.
 2. Authentication → URL Configuration: add redirect `alasports://auth/callback` (and the Expo Go / web redirect AuthSession prints if you test those hosts).

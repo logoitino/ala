@@ -17,6 +17,7 @@ import { ScreenShell } from '@/components/ScreenShell';
 import { TabSwitcher } from '@/components/TabSwitcher';
 import { TipSheetModal } from '@/components/TipSheetModal';
 import { colors, radii } from '@/constants/theme';
+import { useSoftWall } from '@/context/SoftWallContext';
 import {
   displayValue,
   eventMatchesNotificationPref,
@@ -44,6 +45,7 @@ function mergeEvent(
 }
 
 export default function GameOverviewScreen() {
+  const { requireAuth } = useSoftWall();
   const { id } = useLocalSearchParams<{ id: string }>();
   const gameId = Array.isArray(id) ? id[0] : id;
   const mountedRef = useRef(true);
@@ -236,7 +238,14 @@ export default function GameOverviewScreen() {
               player={player}
               favorited={favoriteIds.includes(player.id)}
               onToggleFavorite={() => toggleFavorite(player.id)}
-              onPress={() => setTipPlayer(player)}
+              onPress={() =>
+                requireAuth({
+                  kind: 'malo',
+                  athleteName: player.name,
+                  athleteId: player.id,
+                  resume: () => setTipPlayer(player),
+                })
+              }
             />
           ))}
         </View>

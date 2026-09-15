@@ -15,7 +15,7 @@ import { APP_FLAG_GROUPS, getRuntimeFlag, setRuntimeFlag, type AppRuntimeFlagPat
 import { SOFT_WALL_AUTH_PROVIDERS, SOFT_WALL_GATES } from '@tapuai/shared-types';
 
 /**
- * @purpose Draft fan-bar tabs, hype buttons, and boards. Publish to app is the ship step. Soft-Wall auth gates are code-owned; Features pauses the underlying Mālo / Crew / Wishlist / Operator controls.
+ * @purpose Draft fan-bar tabs, hype buttons, and boards. Publish to app is the ship step. Soft-Wall auth gates are code-owned; Features pauses the underlying Mālo / Crew / Wishlist / Subscribe / Operator controls.
  * @sideEffects `patch_app_runtime_draft` on each toggle; `publish_app_runtime` from this desk or the sidebar.
  */
 export function FeaturesTool() {
@@ -34,8 +34,9 @@ export function FeaturesTool() {
       <View style={styles.group}>
         <AdminSectionTitle>Soft-Wall auth</AdminSectionTitle>
         <Text style={styles.body}>
-          Guests browse Highlights, trading cards, and Locker Room without an account. Mālo, Join Crew, and Chip In open
-          SoftWallModal (Apple / Google / Magic Link) then resume. Coverage → Soft-Wall auth tracks wall opens.
+          Guests browse Highlights, trading cards, and Locker Room without an account. Mālo, Join Crew, Chip In, and
+          exclusive Vault / Subscribe open SoftWallModal (Apple / Google / Magic Link, then Demo Fan for QA) then resume.
+          Coverage → Soft-Wall auth tracks wall opens.
         </Text>
         {SOFT_WALL_GATES.map((gate) => {
           const path = gate.flagPath as AppRuntimeFlagPath | undefined;

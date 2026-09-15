@@ -52,7 +52,7 @@ export default async function AdminHomePage() {
         <StatCard
           label="Soft-Wall gates"
           value={String(oversight.softWallGates.length)}
-          hint="Mālo · Crew · Chip In"
+            hint="Mālo · Crew · Chip In · Exclusive"
           tone="ok"
         />
       </div>
@@ -60,8 +60,8 @@ export default async function AdminHomePage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title="Browse-first Soft Wall" kicker="Auth">
           <p className="text-sm leading-6 text-slate-600">
-            Guests open Highlights, trading cards, and Locker Room without an account. These three actions open
-            SoftWallModal, then resume after Apple / Google / Magic Link.
+            Guests open Highlights, trading cards, and Locker Room without an account. Gated actions open
+            SoftWallModal, then resume after Apple / Google / Magic Link. Expo `/admin` is the live control plane.
           </p>
           <ul className="space-y-3">
             {oversight.softWallGates.map((gate) => {
@@ -70,7 +70,9 @@ export default async function AdminHomePage() {
                   ? oversight.maloLive
                   : gate.id === 'crew'
                     ? oversight.crewLive
-                    : oversight.wishlistLive;
+                    : gate.id === 'exclusive'
+                      ? oversight.exclusiveLive
+                      : oversight.wishlistLive;
               return (
                 <li
                   key={gate.id}

@@ -7,6 +7,7 @@ import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
 import { ScreenShell } from '@/components/ScreenShell';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { useOptionalUploadSheet } from '@/context/UploadSheetContext';
 import { markExclusiveClips } from '@/data/exclusive';
 import { displayValue, type Player } from '@/data/players';
@@ -46,7 +47,7 @@ function mergeUploadedReel(
 
 /**
  * @purpose Public athlete profile from any name tap: 3D trading card, Highlights ⚡ / Stats 📊 / Vault 🔒.
- * @sideEffects Loads player + reels + career stats; Stripe PaymentSheet for Vault; `add_user_aura` +100.
+ * @sideEffects Loads player + reels + career stats; Soft-Wall then Stripe PaymentSheet for Vault; `add_user_aura` +100.
  */
 export default function UserAthleteProfileScreen() {
   const router = useRouter();
@@ -59,6 +60,7 @@ export default function UserAthleteProfileScreen() {
   const { stats, loading: statsLoading } = useAthleteStats(playerId, player);
   const { subscribed, grant } = useAthleteSubscription(playerId);
   const { startCheckout, busy } = useTipCheckout();
+  const { requireAuth } = useSoftWall();
   const { live } = useAppRuntime();
   const uploadSheet = useOptionalUploadSheet();
 
@@ -127,13 +129,20 @@ export default function UserAthleteProfileScreen() {
 
   const unlockExclusive = () => {
     if (!player) return;
-    void startCheckout({
-      player,
-      tipAmount: live.catalog.exclusiveDollars,
-      coverFees: false,
-      auraPoints: live.catalog.exclusiveAura,
-      skipBacker: true,
-      onPaid: grant,
+    requireAuth({
+      kind: 'exclusive',
+      athleteName: player.name,
+      athleteId: player.id,
+      resume: () => {
+        void startCheckout({
+          player,
+          tipAmount: live.catalog.exclusiveDollars,
+          coverFees: false,
+          auraPoints: live.catalog.exclusiveAura,
+          skipBacker: true,
+          onPaid: grant,
+        });
+      },
     });
   };
 

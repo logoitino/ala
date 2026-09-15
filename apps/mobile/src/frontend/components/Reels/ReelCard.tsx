@@ -28,6 +28,7 @@ import { colors, palette, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import {
   flashUnlockChipLabel,
   isClipVaultOnly,
@@ -98,7 +99,7 @@ const OVERLAY_BOTTOM_INSET = 8;
  * @param clip Highlight including `isVaultOnly` from `reels.is_vault_only` (default false), optional `gameId`, `category`, and `flashUnlockUntil`.
  * @param onOpenProfile Opens `/user/[id]` so the fan can subscribe when Stripe is unavailable.
  * @param playbackActive When true, play the focused page even if the Expo route is unfocused (profile modal).
- * @sideEffects expo-video; optimistic `reels` hype + `increment_reel_hype` (OfflineQueue when `NetInfo.isConnected === false`); double-tap `add_user_aura` (2× on Serve Like Me) + Medium haptic + `HypeBurst`; mute toggle; `saved_reels`; Expo `Share.share`; `report_reel`; Broadcast subscribe on `game_events_${gameId}`; `TelemetryManager` TTFF + stall + feature taps / report issues; vault unlock via PaymentSheet.
+ * @sideEffects expo-video; optimistic `reels` hype + `increment_reel_hype` (OfflineQueue when `NetInfo.isConnected === false`); double-tap `add_user_aura` (2× on Serve Like Me) + Medium haptic + `HypeBurst`; mute toggle; `saved_reels`; Expo `Share.share`; `report_reel`; Broadcast subscribe on `game_events_${gameId}`; `TelemetryManager` TTFF + stall + feature taps / report issues; Soft-Wall then vault unlock via PaymentSheet.
  */
 export function ReelCard({
   clip,
@@ -118,6 +119,7 @@ export function ReelCard({
   const insets = useSafeAreaInsets();
   const { live } = useAppRuntime();
   const { user, profile, isAthlete } = useAuth();
+  const { requireAuth } = useSoftWall();
   const celebration = useOptionalCelebration();
   const tabFocused = useIsFocused();
   const isFocused = (playbackActive ?? tabFocused) && active;
@@ -377,15 +379,22 @@ export function ReelCard({
       onOpenProfile?.();
       return;
     }
-    void startCheckout({
-      player,
-      tipAmount: live.catalog.exclusiveDollars,
-      coverFees: false,
-      auraPoints: live.catalog.exclusiveAura,
-      skipBacker: true,
-      onPaid: grant,
+    requireAuth({
+      kind: 'exclusive',
+      athleteName: player.name,
+      athleteId: player.id,
+      resume: () => {
+        void startCheckout({
+          player,
+          tipAmount: live.catalog.exclusiveDollars,
+          coverFees: false,
+          auraPoints: live.catalog.exclusiveAura,
+          skipBacker: true,
+          onPaid: grant,
+        });
+      },
     });
-  }, [grant, live.catalog.exclusiveAura, live.catalog.exclusiveDollars, onOpenProfile, player, startCheckout, surface, unlocking]);
+  }, [grant, live.catalog.exclusiveAura, live.catalog.exclusiveDollars, onOpenProfile, player, requireAuth, startCheckout, surface, unlocking]);
 
   const onShare = useCallback(async () => {
     const url = formatReelDeepLink(clip.id, clip.playerId ?? player?.id ?? null);

@@ -52,7 +52,7 @@ const FALLBACK_ATHLETE: Player = {
 
 /**
  * @purpose Profile hub: unified `AthleteProfileView` (3D card + Highlights ⚡ / Stats 📊 / Vault 🔒), Account Capability, payouts, receipts.
- * @sideEffects `AuraTradingCard` flip + Medium haptic at 90°; `RoleSwitcherModal` `add_user_role` / `active_role`; `PayoutSetupCard` Stripe Express; Light haptic → `/receipts`; `toggle_reel_vault_status` / `set_player_vault_locked`.
+ * @sideEffects `AuraTradingCard` flip + Medium haptic at 90°; `RoleSwitcherModal` `add_user_role` / `active_role`; `PayoutSetupCard` Stripe Express; Light haptic → `/receipts`; `toggle_reel_vault_status` / `set_player_vault_locked`. Fan Subscribe uses the exclusive PaymentSheet path (same as `/user/[id]`) after Soft-Wall; `tapuai.exclusiveSub` still caches the hub crest.
  */
 export default function MyHubTab() {
   const router = useRouter();
@@ -171,8 +171,24 @@ export default function MyHubTab() {
   const cardJersey = profile?.athlete_jersey || athlete.jersey_number;
 
   const subscribe = () => {
-    setSubscribed(true);
-    void AsyncStorage.setItem(SUB_KEY, '1');
+    requireAuth({
+      kind: 'exclusive',
+      athleteName: athlete.name,
+      athleteId: athlete.id,
+      resume: () => {
+        void startCheckout({
+          player: athlete,
+          tipAmount: live.catalog.exclusiveDollars,
+          coverFees: false,
+          auraPoints: live.catalog.exclusiveAura,
+          skipBacker: true,
+          onPaid: () => {
+            setSubscribed(true);
+            void AsyncStorage.setItem(SUB_KEY, '1');
+          },
+        });
+      },
+    });
   };
 
   const dropMalo = () => {
@@ -223,6 +239,7 @@ export default function MyHubTab() {
           vaultLocked={athlete.vault_locked}
           vaultLockBusy={vaultLockBusy}
           tipping={busy}
+          vaultBusy={busy}
           onOpenAthlete={(playerId) => router.push(userProfileHref(playerId))}
           onBacked={(nextCount) => applyBackerCount(athlete.id, nextCount)}
           onUnlockVault={subscribe}
@@ -290,7 +307,7 @@ export default function MyHubTab() {
                       ? 'Subscribed to exclusive feed'
                       : `Subscribe for ${live.catalog.exclusiveDollars.toFixed(2)} a month`
                   }
-                  disabled={subscribed}
+                  disabled={subscribed || busy}
                   onPress={subscribe}
                   style={styles.actionFlex}
                   contentStyle={[styles.secondaryAction, subscribed && styles.secondaryActionOn]}

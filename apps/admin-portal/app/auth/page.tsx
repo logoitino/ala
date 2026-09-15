@@ -12,7 +12,7 @@ export default async function SoftWallAuthPage() {
 
   return (
     <PortalShell active="/auth">
-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Mālo Soft Wall" value={oversight.maloLive ? 'Armed' : 'Paused'} hint="buttons.malo" tone={oversight.maloLive ? 'ok' : 'warn'} />
         <StatCard label="Crew Soft Wall" value={oversight.crewLive ? 'Armed' : 'Paused'} hint="buttons.crew" tone={oversight.crewLive ? 'ok' : 'warn'} />
         <StatCard
@@ -21,13 +21,19 @@ export default async function SoftWallAuthPage() {
           hint="layouts.wishlist"
           tone={oversight.wishlistLive ? 'ok' : 'warn'}
         />
+        <StatCard
+          label="Exclusive Soft Wall"
+          value={oversight.exclusiveLive ? 'Armed' : 'Paused'}
+          hint="buttons.subscribe"
+          tone={oversight.exclusiveLive ? 'ok' : 'warn'}
+        />
       </div>
 
       <Panel title="Zero lost context" kicker="Product lock">
         <p className="text-sm leading-6 text-slate-600">
           After SoftWallModal completes Apple / Google / Magic Link, SoftWallContext replays the stashed resume
-          (open tip sheet, Crew toggle, or Chip In). Telemetry ids: soft_wall.malo · soft_wall.crew · soft_wall.wishlist
-          (Coverage desk in Expo).
+          (open tip sheet, Crew toggle, Chip In, or exclusive Vault). Telemetry ids: soft_wall.malo · soft_wall.crew ·
+          soft_wall.wishlist · soft_wall.exclusive (Coverage desk in Expo). Live desks stay in Expo `/admin`.
         </p>
       </Panel>
 

@@ -8,11 +8,12 @@ import {
   useRef,
   useState,
 } from 'react';
+import type { SoftWallKind as SharedSoftWallKind } from '@tapuai/shared-types';
 
 import { useAuth } from '@/context/AuthContext';
 import { telemetry } from '@/services/TelemetryManager';
 
-export type SoftWallKind = 'malo' | 'crew' | 'wishlist' | 'signin';
+export type SoftWallKind = SharedSoftWallKind | 'signin';
 
 export type SoftWallIntent = {
   kind: SoftWallKind;
@@ -34,7 +35,7 @@ type SoftWallContextValue = {
 const SoftWallContext = createContext<SoftWallContextValue | null>(null);
 
 /**
- * @purpose Browse-first soft wall: guests can watch; Mālo / Crew / Chip In require auth then resume.
+ * @purpose Browse-first soft wall: guests can watch; Mālo / Crew / Chip In / exclusive Vault require auth then resume.
  * @sideEffects Stashes intent until SoftWallModal completes Apple / Google / Magic Link; telemetry `soft_wall.*`.
  */
 export function SoftWallProvider({ children }: { children: ReactNode }) {
