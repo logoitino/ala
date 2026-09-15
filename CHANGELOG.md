@@ -11,6 +11,14 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 - Paused tabs / role HQs (`RuntimePaused`) and empty Local / Drip / Spotlight / receipts / Vault / Stats boards deep-link operators into the matching Expo `/admin` desk. Features Soft-Wall board opens Coverage / People; Catalogs / Look / Publish sit at the bottom of Features. Profile admins get Features + Catalogs rows.
 - Athlete HQ **Save name** writes `profiles.full_name`. Sponsor rail cards peek the booster. Local empty games distinguish “no matches” vs a region miss.
 
+### Stripe PaymentIntent + payout JWT gate
+
+- Removed `EXPO_PUBLIC_STRIPE_SECRET_KEY` fallback from Expo PaymentIntent and custodial payouts. Server secret is `STRIPE_SECRET_KEY` only (`sk_` never in `src/frontend/`).
+- `POST /api/create-payment-intent` and Edge `create-payment-intent` require `Authorization: Bearer` session JWT (`supabase.auth.getUser`). Amount must be integer cents, min 50. Edge function fails clearly when `STRIPE_SECRET_KEY` is missing and uses the same Stripe Deno client style as Connect.
+- `POST /api/create-payout` requires the same JWT. Destination is `profiles.stripe_connect_id` for `auth.uid()` (service role or user-scoped read). Client `destinationAccountId` is ignored. Stripe configured + no linked account or `payouts_enabled` is false → 400. Queue-for-admin only when `STRIPE_SECRET_KEY` is missing.
+- Connect `create-stripe-account` (Accounts v2 + Account Links) is unchanged.
+- CI `pnpm/action-setup` no longer pins `version: 9` next to `packageManager: pnpm@9.15.0` (action-setup v4 rejects the dual pin).
+
 ## 2026-09-14
 
 ### Soft-Wall admin oversight (Expo + Next portal)
