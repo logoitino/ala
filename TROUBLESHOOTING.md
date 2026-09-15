@@ -71,9 +71,9 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 
 ## 6. PaymentSheet never opens / payment 500
 
-**Cause:** Web stub (`stripe.web.ts`); missing `STRIPE_SECRET_KEY` in `apps/mobile/.env.local`; amount &lt; 50 cents.
+**Cause:** Web stub (`stripe.web.ts`); missing `STRIPE_SECRET_KEY` in `apps/mobile/.env.local`; amount &lt; 50 cents; missing or expired session JWT (401).
 
-**Fix:** Expo Go on iOS/Android. Secret in `apps/mobile/.env.local` (not under `apps/mobile/src/frontend/`). Client calls `POST /api/create-payment-intent` — not the unused `supabase/functions/create-payment-intent` Edge Function.
+**Fix:** Expo Go on iOS/Android. Sign in (Soft-Wall). Secret in `apps/mobile/.env.local` as `STRIPE_SECRET_KEY` only (not `EXPO_PUBLIC_STRIPE_SECRET_KEY`, not under `apps/mobile/src/frontend/`). Client calls JWT `POST /api/create-payment-intent`. Edge `create-payment-intent` is the same JWT + amount gate if invoked.
 
 ---
 

@@ -29,7 +29,7 @@ pnpm docs:check      # front-of-house facts vs code
 
 Never commit `.env`, `.env.local`, or `.env.production`.
 
-- **Mobile:** `apps/mobile/.env.local` — `EXPO_PUBLIC_*`, `STRIPE_SECRET_KEY` for API routes
+- **Mobile:** `apps/mobile/.env.local` — `EXPO_PUBLIC_*`, server `STRIPE_SECRET_KEY` for JWT-gated API routes
 - **Admin portal:** `apps/admin-portal/.env.local` — `NEXT_PUBLIC_SUPABASE_*`
 
 ## Workspace scripts

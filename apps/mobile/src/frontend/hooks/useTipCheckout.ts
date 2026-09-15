@@ -62,7 +62,7 @@ function applyAuraAward(
 /**
  * @purpose Native Stripe PaymentSheet for Mālo, exclusive subscribe, Drip, or booster sponsorships. Mālo grants Aura to the tipper and the athlete.
  * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may tip a reel.
- * @sideEffects Stripe PaymentIntent, optional backer/reel counters, `tips` INSERT on Mālo, `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
+ * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on Mālo, `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
  */
 export function useTipCheckout() {
   const { user, refreshProfile } = useAuth();
