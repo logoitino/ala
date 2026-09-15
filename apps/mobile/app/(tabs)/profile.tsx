@@ -18,7 +18,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { markExclusiveClips } from '@/data/exclusive';
 import { displayValue, type Player } from '@/data/players';
-import { useHasSubscriberPass } from '@/hooks/useAthleteSubscription';
+import { useAthleteSubscription, useHasSubscriberPass } from '@/hooks/useAthleteSubscription';
 import { useAthleteStats } from '@/hooks/useAthleteStats';
 import { countStoredCheerVotes } from '@/hooks/useCheerPoll';
 import { useRoster } from '@/hooks/useRoster';
@@ -52,7 +52,7 @@ const FALLBACK_ATHLETE: Player = {
 
 /**
  * @purpose Profile hub: unified `AthleteProfileView` (3D card + Highlights ⚡ / Stats 📊 / Vault 🔒), Account Capability, payouts, receipts.
- * @sideEffects `AuraTradingCard` flip + Medium haptic at 90°; `RoleSwitcherModal` `add_user_role` / `active_role`; `PayoutSetupCard` Stripe Express; Light haptic → `/receipts`; `toggle_reel_vault_status` / `set_player_vault_locked`. Fan Subscribe uses the exclusive PaymentSheet path (same as `/user/[id]`) after Soft-Wall; `tapuai.exclusiveSub` still caches the hub crest.
+ * @sideEffects `AuraTradingCard` flip + Medium haptic at 90°; `RoleSwitcherModal` `add_user_role` / `active_role`; `PayoutSetupCard` Stripe Express; Light haptic → `/receipts`; `toggle_reel_vault_status` / `set_player_vault_locked`. Fan Subscribe Soft-Wall-gates guests then uses the same exclusive PaymentSheet + `useAthleteSubscription.grant` path as `/user/[id]` (`/athlete/[id]` redirect); `tapuai.exclusiveSub` still caches the hub crest.
  */
 export default function MyHubTab() {
   const router = useRouter();
@@ -118,6 +118,7 @@ export default function MyHubTab() {
   }, [auraById, rosterAthlete]);
 
   const { stats, loading: statsLoading } = useAthleteStats(athlete.id, athlete);
+  const { subscribed: athletePass, grant: grantExclusive } = useAthleteSubscription(athlete.id);
 
   const hubAuraPoints = useMemo(() => {
     if (typeof profile?.aura_points === 'number') return profile.aura_points;
@@ -182,7 +183,8 @@ export default function MyHubTab() {
           coverFees: false,
           auraPoints: live.catalog.exclusiveAura,
           skipBacker: true,
-          onPaid: () => {
+          onPaid: async () => {
+            await grantExclusive();
             setSubscribed(true);
             void AsyncStorage.setItem(SUB_KEY, '1');
           },
@@ -229,12 +231,12 @@ export default function MyHubTab() {
           teamName={cardTeamName}
           mascot={cardMascot}
           divisionBadge={cardDivision}
-          subscriberCrest={hasSubscriberPass || subscribed}
+          subscriberCrest={hasSubscriberPass || subscribed || athletePass}
           totalTipsReceived={malosReceived}
           totalTipsDropped={tipsDropped}
           pollVotes={pollVotes}
           sekiCount={athlete.seki_count ?? 0}
-          subscribed={hasSubscriberPass || subscribed}
+          subscribed={hasSubscriberPass || subscribed || athletePass}
           manageVault={isAthlete && activeRole === 'athlete'}
           vaultLocked={athlete.vault_locked}
           vaultLockBusy={vaultLockBusy}
