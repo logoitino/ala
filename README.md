@@ -5,7 +5,7 @@ Polynesian-inspired fan & athlete hub. **pnpm monorepo.**
 | Package | What it is |
 | --- | --- |
 | [`apps/mobile`](apps/mobile) | Expo Router SDK 57 app (Highlights ⚡, Local, Spotlight, Drip, Profile) + production Expo Admin |
-| [`apps/admin-portal`](apps/admin-portal) | Next.js App Router **scaffold** (Tailwind + Supabase). Live desks still in Expo `/admin` |
+| [`apps/admin-portal`](apps/admin-portal) | Next.js Soft-Wall **+ Profile** oversight (Overview / Soft-Wall / Profile / Features / People). Live desks still in Expo `/admin` |
 | [`packages/shared-types`](packages/shared-types) | `@tapuai/shared-types` — Profile, ActionStats, Spotlight, RPC shapes |
 
 Docs: [ARCHITECTURE](docs/ARCHITECTURE.md) · [ONBOARDING](docs/ONBOARDING.md) · [SCHEMA](docs/SCHEMA.md) · [DOCUMENTATION](DOCUMENTATION.md)

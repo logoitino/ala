@@ -34,7 +34,7 @@ College NIL marketplaces do not fit. High-school athletes are usually minors, am
 - **Local** — search, live matches, school cheer polls, booster rail (first-month dollars in product facts)
 - **Upload** — camera FAB, optional Subscriber Exclusive lock
 - **Drip** — merch checkout (same PaymentSheet engine)
-- **Profile** — flippable Aura trading card, dual Fan / Athlete, receipts, Connect Bank (Stripe Express, JWT Edge Function)
+- **Profile** — large avatar hero + hamburger settings; Flip Aura trading card secondary; slim Crew · Squad; Highlights collage + Active Team Roster; dual Fan / Athlete; receipts; Connect Bank (Stripe Express, JWT Edge Function)
 - **Operator** — PIN claim, live clock, score, play callouts to the fan feed
 - **Parent** — consent toggle + custodial payout stub
 

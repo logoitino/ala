@@ -5,7 +5,7 @@ import { fetchPortalRuntime } from '@/lib/softWall';
 export const dynamic = 'force-dynamic';
 
 /**
- * @purpose Dynamic Features desk on Next — Soft-Wall related flags + fan bar, draft/publish via Supabase RPCs.
+ * @purpose Dynamic Features desk on Next — Soft-Wall + Profile chrome + fan bar; draft/publish via Supabase RPCs.
  * @sideEffects `fetchPortalRuntime`; client toggles call patch/publish RPCs.
  */
 export default async function FeaturesPage() {
@@ -15,9 +15,9 @@ export default async function FeaturesPage() {
     <PortalShell active="/features">
       <Panel title="Features" kicker="Live chrome">
         <p className="text-sm leading-6 text-slate-600">
-          Draft Soft-Wall related controls and fan-bar tabs here. Publish to app copies draft onto{' '}
-          <code className="rounded bg-emerald-50 px-1.5">published</code> so Expo fans see the change. Look / Catalogs /
-          full desks remain in Expo <code className="rounded bg-emerald-50 px-1.5">/admin</code>.
+          Draft Soft-Wall gates, Profile chrome (Flip card / Crew strip / tabs), and fan-bar tabs here. Publish to app
+          copies draft onto <code className="rounded bg-emerald-50 px-1.5">published</code> so Expo fans see the change.
+          Look / Catalogs / full desks remain in Expo <code className="rounded bg-emerald-50 px-1.5">/admin</code>.
         </p>
         {!runtime.configured ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">

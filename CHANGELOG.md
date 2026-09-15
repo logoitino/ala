@@ -9,6 +9,8 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 - Profile hero is a large avatar (tier ring + jersey); Flip Aura card opens from the hamburger or a slim control — not a full-width card blocking the scroll.
 - Account Settings (Sign in/out, Capability, Receipts, Suggest, Admin, Flip, Payouts) move into a **menu-outline** `ProfileMenuSheet`.
 - Crew / Squad slim into one compact strip with a small Join CTA. Highlights collage stays the next big beat; **Active Team Roster** lists school teammates (tap to open). Athletes see Claimed / Unclaimed via `profiles.player_id`. Hub athlete pick prefers `profile.player_id`.
+- **Admin portal Profile desk:** Next `/profile` + Features · Profile chrome flags (`PROFILE_CHROME_FLAGS` in shared-types); Overview shows claimed-athlete count. Expo Look · Profile copy matches hamburger / collage-first hierarchy. Coverage maps hamburger + Flip card to Look (`profile.showCard`).
+- Grok Bot ALA team brief: [`docs/ALA_TEAM_BRIEF.md`](docs/ALA_TEAM_BRIEF.md) (Facilitator / Mobile / Backend / Ship QA).
 
 ### Soft-Wall admin oversight (Expo + Next portal)
 

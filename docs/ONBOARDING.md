@@ -64,7 +64,7 @@ Browse-first guests can open Highlights, cards, and Locker Room without an accou
 
 Client entry points: `apps/mobile/src/frontend/lib/auth.ts`, `AuthContext`, `SoftWallContext`, route `apps/mobile/app/auth/callback.tsx`.
 
-Admin oversight: Expo Coverage → Soft-Wall auth, Features Soft-Wall board, People Fans filter. Next portal (`pnpm admin`) Overview / Soft-Wall / Features / People mirrors live flags + fan counts (`SOFT_WALL_GATES` in `@tapuai/shared-types`).
+Admin oversight: Expo Coverage → Soft-Wall auth + Profile hamburger/roster, Features Soft-Wall board, Look Profile chrome, People Fans filter. Next portal (`pnpm admin`) Overview / Soft-Wall / Profile / Features / People mirrors live flags + fan/claim counts (`SOFT_WALL_GATES` + `PROFILE_CHROME_FLAGS` in `@tapuai/shared-types`). Grok Bot ALA roles: [`docs/ALA_TEAM_BRIEF.md`](ALA_TEAM_BRIEF.md).
 
 ### Operator console (paused by default)
 
@@ -81,7 +81,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
 
-Then `pnpm admin` → http://localhost:3001 — Overview, Soft-Wall, Features (draft Soft-Wall related flags + Publish), People (recent Soft-Wall fans).
+Then `pnpm admin` → http://localhost:3001 — Overview, Soft-Wall, Profile (claimed athletes + Look chrome), Features (draft Soft-Wall + Profile flags + Publish), People (recent Soft-Wall fans).
 ---
 
 ## 4. Run

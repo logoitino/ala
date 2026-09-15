@@ -1,18 +1,19 @@
 import Link from 'next/link';
 
 import { Panel, PortalShell, StatCard } from '@/components/PortalShell';
+import { fetchProfileOversight } from '@/lib/profile';
 import { fetchSoftWallOversight } from '@/lib/softWall';
 import { isAdminPortalConfigured } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * @purpose Next Soft-Wall oversight home — live fan counts, operator pause, gate map from Supabase.
- * @sideEffects Server SELECT via `fetchSoftWallOversight`.
+ * @purpose Next Soft-Wall + Profile oversight home — fan counts, claim signal, gate + chrome map.
+ * @sideEffects Server SELECT via `fetchSoftWallOversight` + `fetchProfileOversight`.
  */
 export default async function AdminHomePage() {
   const configured = isAdminPortalConfigured();
-  const oversight = await fetchSoftWallOversight();
+  const [oversight, profile] = await Promise.all([fetchSoftWallOversight(), fetchProfileOversight()]);
 
   return (
     <PortalShell active="/">
@@ -40,6 +41,12 @@ export default async function AdminHomePage() {
           tone={oversight.fansLast7d > 0 ? 'ok' : 'neutral'}
         />
         <StatCard
+          label="Claimed athletes"
+          value={String(profile.claimedAthletes)}
+          hint="profiles.player_id · Active Team Roster Claimed"
+          tone={profile.claimedAthletes > 0 ? 'ok' : 'neutral'}
+        />
+        <StatCard
           label="Operator console"
           value={oversight.operatorConsoleLive ? 'Live' : 'Paused'}
           hint={
@@ -48,12 +55,6 @@ export default async function AdminHomePage() {
               : 'Features → Operator console + Publish'
           }
           tone={oversight.operatorConsoleLive ? 'warn' : 'ok'}
-        />
-        <StatCard
-          label="Soft-Wall gates"
-          value={String(oversight.softWallGates.length)}
-          hint="Mālo · Crew · Chip In"
-          tone="ok"
         />
       </div>
 
@@ -123,12 +124,58 @@ export default async function AdminHomePage() {
               Features
             </Link>
             <Link
+              href="/profile"
+              className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
+            >
+              Profile
+            </Link>
+            <Link
               href="/people"
               className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
             >
               People
             </Link>
           </div>
+        </Panel>
+      </div>
+
+      <div className="mt-6">
+        <Panel title="Clean Profile chrome" kicker="Look · Profile">
+          <p className="text-sm leading-6 text-slate-600">
+            Hero avatar + hamburger settings; Flip Aura card gated by{' '}
+            <code className="rounded bg-emerald-50 px-1.5">profile.showCard</code>. Slim Crew strip, Highlights collage,
+            then Active Team Roster (Claimed = <code className="rounded bg-emerald-50 px-1.5">profiles.player_id</code>
+            ). Draft on Features · Profile chrome or Expo Look, then Publish.
+          </p>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { label: 'Flip Aura card', on: profile.showCard },
+              { label: 'Crew strip', on: profile.showCrew },
+              { label: 'Stats tab', on: profile.showStats },
+              { label: 'Vault tab', on: profile.showVault },
+              { label: 'Actions on top', on: profile.actionsOnTop },
+              { label: 'Open on Stats', on: profile.statsFirst },
+            ].map((row) => (
+              <li
+                key={row.label}
+                className="flex items-center justify-between rounded-xl border border-emerald-900/10 bg-[var(--canvas)] px-4 py-3 text-sm"
+              >
+                <span className="font-bold">{row.label}</span>
+                <span
+                  className={
+                    row.on
+                      ? 'rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-[var(--jade)]'
+                      : 'rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800'
+                  }
+                >
+                  {row.on ? 'On' : 'Off'}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <Link href="/profile" className="mt-3 inline-flex text-sm font-extrabold text-[var(--jade)]">
+            Open Profile desk →
+          </Link>
         </Panel>
       </div>
     </PortalShell>

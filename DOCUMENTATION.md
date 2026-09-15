@@ -1,8 +1,8 @@
 # Tapua'i — System Architecture Overview
 
 **Product:** Tapua'i (“Back Every Athlete.”)  
-**Repo:** pnpm monorepo — `@tapuai/mobile` (Expo) · `@tapuai/admin-portal` (Next Soft-Wall plane) · `@tapuai/shared-types`
-**Runtime:** Expo SDK 57 · React Native · TypeScript (fan app); Next.js Soft-Wall / Features / People oversight for web admin
+**Repo:** pnpm monorepo — `@tapuai/mobile` (Expo) · `@tapuai/admin-portal` (Next Soft-Wall + Profile plane) · `@tapuai/shared-types`
+**Runtime:** Expo SDK 57 · React Native · TypeScript (fan app); Next.js Soft-Wall / Profile / Features / People oversight for web admin
 **Companions:** [Architecture](docs/ARCHITECTURE.md) · [Onboarding](docs/ONBOARDING.md) · [Schema](docs/SCHEMA.md) · [Product facts](docs/PRODUCT_FACTS.md) · [Public one-pager](docs/PUBLIC.md) · [Investor briefing](docs/INVESTOR.md) · [Legal briefing](docs/LEGAL_BRIEFING.md) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](CHANGELOG.md) · [Conventions](AGENTS.md) · [Audit](docs/AUDIT_REPORT.md)
 
 ---
@@ -26,8 +26,8 @@ Roles: `guest`, `fan`, `athlete`, `parent`, `operator`, `booster`, `sponsor`, `a
 | Layer | Spec |
 | --- | --- |
 | Mobile | **Expo (React Native)** Router in `apps/mobile/`, SDK 57, StyleSheet + `apps/mobile/src/frontend/constants/theme.ts` (Daylight default; springs + focal colors in `apps/mobile/src/frontend/theme/motion.ts`) |
-| Admin portal | **Next Soft-Wall control plane** in `apps/admin-portal/` (Overview / Soft-Wall / Features / People). Production desks remain Expo `/admin` until fully ported |
-| Shared | `@tapuai/shared-types` — Profile / ActionStats / Spotlight / common RPC shapes |
+| Admin portal | **Next Soft-Wall + Profile control plane** in `apps/admin-portal/` (Overview / Soft-Wall / Profile / Features / People). Production desks remain Expo `/admin` until fully ported |
+| Shared | `@tapuai/shared-types` — Profile / Soft-Wall gates / Profile chrome / Spotlight / common RPC shapes |
 | Graphics | **`@shopify/react-native-skia`** 2.6.2 — `Effects/GlowingNeonBorder` SweepGradient + BlurMask on the Aura trading card (Expo web loads CanvasKit via `WithSkiaWeb` + `apps/mobile/public/canvaskit.wasm`) |
 | Video | **`expo-video` only** (do not use `expo-av` for the feed; do not set `useCaching: true`) |
 | Backend | **Supabase** — Auth, Postgres, Realtime WebSockets (`games`, `game_events`, `cheer_polls`), Storage (`game_highlights`) |
@@ -69,7 +69,7 @@ apps/mobile/app/                  Expo Router
       index.tsx                   Explore search + Live Matches / School Polls / Top Boosters
       game/[id].tsx               Live match feed + rosters (same UI as public `/game/[id]`)
     drip.tsx                      Drip marketplace (shop.tsx redirects here)
-    profile.tsx                   Own hub via `AthleteProfileView` (trading card + Highlights / Stats / Vault)
+    profile.tsx                   Own hub via `AthleteProfileView` (avatar hero + hamburger menu + Highlights / roster / Stats / Vault)
     receipts.tsx                  Fan Tip History & Receipts (hidden tab; fan bar stays)
     user/[id].tsx                 Public athlete sheet (hidden tab; fan bar stays)
     athlete/[id].tsx              Redirect → `/user/[id]`
@@ -77,15 +77,15 @@ apps/mobile/app/                  Expo Router
   (admin)/admin                   Production control plane (`/admin`). Marketing / Owner / Engineer / All lens. Pinned **Home** plus business groups: Operations (games / sports / polls / boosters / publish), Content (highlights / spotlight / moderation), Commerce (drip / wishlist / money), Audience (athletes / schools / people), Growth (reports Health + Usage, feedback, **coverage** — every fan control mapped to a desk / flag / taps), System (features / look / **catalogs** / studio; lab / qa stay as hidden deep links). Every desk has Back / Home / Open in app. `profiles.is_admin` or Studio unlock. Fan chrome has no Dev role bar. Tabs, Daylight colors, copy, catalogs, Profile layout, and Highlights rail wait on **Publish to app**; sports, Drip, schools, games, and wishlist save instantly. Engineer Lab is the JSON power editor — not a git IDE.
   api/*+api.ts                    Stripe
 
-apps/mobile/src/frontend/components/  AuraCard, AuraTradingCard, Profile/GlowingCardWrapper, Effects/GlowingNeonBorder, Effects/HypeBurst, AthleteProfileView, AthleteStatsTab, Profile/LockerRoomWishlist, VaultLockCard, PayoutSetupCard, ReceiptCard, RoleSwitcherModal, TeamSearchField, AthleteReelManager, SwipeableBannerWrapper, GearCard, ProductSheet, MaloTipModal, Local/CheerPollCard, Local/SearchResultsOverlay, Local/SponsorshipModal, TopAuraBoosters, Operator/PINClaimModal, Reels/*, Feedback/SuggestionSheet, Spotlight/*, Admin/*, RuntimePaused, …
+apps/mobile/src/frontend/components/  AuraCard, AuraTradingCard, Profile/ProfileHeroAvatar, Profile/ProfileMenuSheet, Profile/TeamRosterStrip, Profile/GlowingCardWrapper, Effects/GlowingNeonBorder, Effects/HypeBurst, AthleteProfileView, AthleteStatsTab, Profile/LockerRoomWishlist, VaultLockCard, PayoutSetupCard, ReceiptCard, RoleSwitcherModal, TeamSearchField, AthleteReelManager, SwipeableBannerWrapper, GearCard, ProductSheet, MaloTipModal, Local/CheerPollCard, Local/SearchResultsOverlay, Local/SponsorshipModal, TopAuraBoosters, Operator/PINClaimModal, Reels/*, Feedback/SuggestionSheet, Spotlight/*, Admin/*, RuntimePaused, …
 apps/mobile/src/frontend/hooks/       useTipCheckout, useFanTipHistory, useSponsorships, useStripeConnect, useAthleteSubscription, useSubscriberRequests, useSavedReel, useLocalSearch, useTeamSearch, useAthleteStats, useLiveScores, useLiveGame, useGameEventBroadcast, useRoster, useReels, useActiveSpotlight, useSpotlightBoard, usePendingPlayerTags, useAdminDashboard, useDripCatalog, useSurfaceUsage, …
 apps/mobile/src/frontend/context/     AuthContext, SoftWallContext, CelebrationContext, RoleGate, UploadSheetContext, AppRuntimeContext, AdminLensContext
-apps/mobile/src/frontend/lib/         supabase.ts, stripe*.ts, aura.ts, haptics.ts, teams.ts, athleteStats.ts, vault.ts, spotlight.ts, tags.ts, finance.ts, admin.ts, adminCatalog.ts, adminCoverage.ts, runtime.ts, feedback.ts, wishlist.ts
+apps/mobile/src/frontend/lib/         supabase.ts, stripe*.ts, aura.ts, haptics.ts, teams.ts, roster.ts, athleteStats.ts, vault.ts, spotlight.ts, tags.ts, finance.ts, admin.ts, adminCatalog.ts, adminCoverage.ts, runtime.ts, feedback.ts, wishlist.ts
 apps/mobile/src/frontend/theme/       motion.ts (`SPRING_*`, Island FOCAL + TAB_ACCENTS, mist washes); hypeFx.ts (Seki / Aura / Flex)
 apps/mobile/src/frontend/services/    TelemetryManager (batched `telemetry_logs`); OfflineQueue (AsyncStorage + NetInfo flush)
 apps/mobile/src/backend/db/schema.sql Canonical Postgres + RLS
 
-apps/admin-portal/                Next Soft-Wall plane (Overview / Soft-Wall / Features / People). Full desks still Expo `/admin`
+apps/admin-portal/                Next Soft-Wall + Profile plane (Overview / Soft-Wall / Profile / Features / People). Full desks still Expo `/admin`
 packages/shared-types/            @tapuai/shared-types
 scripts/                          Node generators (`sync-front-docs.mjs` → product facts; reads apps/mobile constants)
 supabase/                         Incremental SQL (DROP FUNCTION before return-type changes)
@@ -137,7 +137,7 @@ The elevated **center camera uploader** is a FAB (`UploadSheetContext`), not a t
 - Vault tab + Direct Request: `subscriber_requests`, Subscriber Crest on Profile / Q&A avatars. Athlete Management (`VaultLockCard`) is the master lock; long-press (`toggle_reel_vault_status`) still moves clips between Highlights ⚡ and Vault 🔒.
 - Upload FAB (`+` camera button): `UploadVideoModal` ImagePicker URI + paused expo-video thumbnail; category pills **⚡ Game Play** / **💪 Train Like Me** / **🤝 Serve Like Me (2x Aura Boost)** write `reels.category`; **Subscriber Vault 🔒** is off by default and writes `reels.is_vault_only` / `is_exclusive`; **Publish Reel** shows a Storage progress bar, Success haptic, then refreshes the active Reel feed via `UploadSheetContext`. Serve Like Me double-taps grant 2 Aura. Athlete profiles show **The Crew ⚡** / **Your Squad 🛡️** and **Join Crew ⚡** (Teammates 🤝 when mutual). Vault management can **🔓 Flash Unlock (2 Hours)** a clip for the Crew.
 - **👟 Locker Room Wishlist** on the athlete Stats 📊 tab (`Profile/LockerRoomWishlist`): horizontal gear cards with photo, goal line, and a spring-animated Neon Jade funding bar. **🎁 Gift Item Directly** opens the retailer link (`expo-web-browser`); **⚡ Chip In $5** runs the Mālo sheet and credits the charge through `chip_in_wishlist_item`. Full funding fires confetti + a **Gear Unlocked!** toast, stamps **EQUIPPED ⚡**, and pays the athlete a one-time **+500 Aura**. Paused by `layouts.wishlist`; taps land in Coverage as `wishlist_gift` / `wishlist_chip_in`. Incremental: `supabase/locker_room_wishlist.sql`.
-- Stripe Connect Express for athlete payouts: Profile **Account Settings** (`PayoutSetupCard`) when Athlete Mode is unlocked and **Athlete Management** is the active view. `useStripeConnect` → Edge Function `create-stripe-account` with `Authorization: Bearer` session JWT (`auth.uid()` owns the Express account). Hosted Account Links are never created on device. Metro `POST /api/create-stripe-account` is a JWT-gated local fallback only. Return refreshes `stripe_onboarding_complete` + `payouts_enabled` from the server write.
+- Stripe Connect Express for athlete payouts: Profile hamburger → **PayoutSetupCard** when Athlete Mode is unlocked and **Athlete Management** is the active view. `useStripeConnect` → Edge Function `create-stripe-account` with `Authorization: Bearer` session JWT (`auth.uid()` owns the Express account). Hosted Account Links are never created on device. Metro `POST /api/create-stripe-account` is a JWT-gated local fallback only. Return refreshes `stripe_onboarding_complete` + `payouts_enabled` from the server write.
 - Stripe **test mode** only
 - Client telemetry: `TelemetryManager` batches `video_stall` / `video_first_frame` / `socket_reconnect` / `checkout_latency` plus product usage (`tab_dwell`, `surface_scroll`, `feature_tap`, `ui_issue`) into `public.telemetry_logs` every 10s or at 15 events. `useSurfaceUsage` on Home / Local / Spotlight / Drip / Profile. Incremental: `supabase/telemetry_logs.sql` + `supabase/usage_reports.sql`. `/admin/reports` **Usage** desk reads `get_admin_reports` (`usage`, `tabs`, `features`, `issues`, `scroll`, `series.dwell`). `/admin/coverage` maps each fan control to those ids plus a Features flag and managing desk.
 - Local booster sponsorships: first month through PaymentSheet (same engine as exclusive subscribe / Drip). `public.sponsorships` stores `tier`, `billing_interval = month`. Incremental: `supabase/sponsorships.sql`.

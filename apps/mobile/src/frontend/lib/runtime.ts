@@ -147,7 +147,8 @@ export type AppRuntimeCopyPath = `copy.${keyof AppRuntimeCopy}`;
 export type AppRuntimeFlagPath =
   | `tabs.${keyof AppRuntimeTabs}`
   | `buttons.${keyof AppRuntimeButtons}`
-  | `layouts.${keyof AppRuntimeLayouts}`;
+  | `layouts.${keyof AppRuntimeLayouts}`
+  | `profile.${keyof AppRuntimeProfile}`;
 
 export type AppRuntimeBundle = {
   draft: AppRuntimeConfig;
@@ -174,7 +175,7 @@ export const APP_FLAG_GROUPS: AppFlagGroup[] = [
       { path: 'tabs.local', label: 'Local', hint: 'Matches, polls, boosters' },
       { path: 'tabs.spotlight', label: 'Spotlight', hint: 'Player of the Week board' },
       { path: 'tabs.drip', label: 'Drip', hint: 'Marketplace' },
-      { path: 'tabs.profile', label: 'Profile', hint: 'Trading card hub' },
+      { path: 'tabs.profile', label: 'Profile', hint: 'Avatar hero + hamburger hub' },
       { path: 'tabs.upload', label: 'Upload +', hint: 'Center plus on the fan bar' },
     ],
   },

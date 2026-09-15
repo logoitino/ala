@@ -154,8 +154,8 @@ export const SOFT_WALL_GATES: SoftWallGate[] = [
   {
     id: 'crew',
     label: 'Join Crew Soft Wall',
-    hint: 'Crew toggle on athlete profile — resume join after sign-in',
-    fanSurface: 'Athlete profile · The Crew ⚡',
+    hint: 'Crew toggle on athlete profile (slim Crew · Squad strip) — resume join after sign-in',
+    fanSurface: 'Athlete profile · slim Crew strip',
     adminDesk: '/admin/features',
     flagPath: 'buttons.crew',
     telemetry: 'soft_wall.crew',
@@ -195,4 +195,86 @@ export type SoftWallOversight = {
   publishedAt: string | null;
   softWallGates: SoftWallGate[];
   authProviders: typeof SOFT_WALL_AUTH_PROVIDERS;
+};
+
+/** Look · Profile chrome flags — hamburger / hero / collage hierarchy. */
+export type ProfileChromeFlag = {
+  id: string;
+  path: string;
+  label: string;
+  hint: string;
+  /** Fan surface that disappears when the flag is Off. */
+  fanSurface: string;
+  /** Expo desk that drafts the flag (Look Profile pane). */
+  adminDesk: string;
+};
+
+/**
+ * @purpose Shared Profile chrome map for Expo Look / Coverage + Next admin portal Profile desk.
+ * showCard gates Flip Aura card in the hamburger; hero avatar always shows.
+ */
+export const PROFILE_CHROME_FLAGS: ProfileChromeFlag[] = [
+  {
+    id: 'showCard',
+    path: 'profile.showCard',
+    label: 'Flip Aura card',
+    hint: 'Hamburger + Flip control open AuraTradingCard — not the default hero',
+    fanSurface: 'Profile · ProfileMenuSheet · Flip Aura card',
+    adminDesk: '/admin/look',
+  },
+  {
+    id: 'showCrew',
+    path: 'profile.showCrew',
+    label: 'Crew · Squad strip',
+    hint: 'Slim Crew · N | Squad · N row under the avatar hero',
+    fanSurface: 'Profile · AthleteProfileView',
+    adminDesk: '/admin/look',
+  },
+  {
+    id: 'showStats',
+    path: 'profile.showStats',
+    label: 'Stats tab',
+    hint: 'Stats 📊 pill under Highlights collage + roster',
+    fanSurface: 'Profile · FilterPills',
+    adminDesk: '/admin/look',
+  },
+  {
+    id: 'showVault',
+    path: 'profile.showVault',
+    label: 'Vault tab',
+    hint: 'Vault 🔒 pill (also needs Features buttons.vault)',
+    fanSurface: 'Profile · FilterPills',
+    adminDesk: '/admin/look',
+  },
+  {
+    id: 'actionsOnTop',
+    path: 'profile.actionsOnTop',
+    label: 'Actions on top',
+    hint: 'Drop Mālo / Subscribe sit above Highlights when On',
+    fanSurface: 'Profile · actions row',
+    adminDesk: '/admin/look',
+  },
+  {
+    id: 'statsFirst',
+    path: 'profile.statsFirst',
+    label: 'Open on Stats',
+    hint: 'Land on Stats instead of Highlights collage (default Off keeps collage first)',
+    fanSurface: 'Profile · default tab',
+    adminDesk: '/admin/look',
+  },
+];
+
+/** Snapshot used by Next admin portal Profile oversight desk. */
+export type ProfileOversight = {
+  configured: boolean;
+  claimedAthletes: number;
+  athleteProfiles: number;
+  publishedAt: string | null;
+  showCard: boolean;
+  showCrew: boolean;
+  showStats: boolean;
+  showVault: boolean;
+  actionsOnTop: boolean;
+  statsFirst: boolean;
+  chromeFlags: ProfileChromeFlag[];
 };

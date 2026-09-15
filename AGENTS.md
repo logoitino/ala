@@ -11,8 +11,8 @@ This repo is a **pnpm monorepo**.
 | Package | Path |
 | --- | --- |
 | `@tapuai/mobile` | `apps/mobile/` — Expo Router SDK 57 fan app + Expo `/admin` |
-| `@tapuai/admin-portal` | `apps/admin-portal/` — Next Soft-Wall control plane (Overview / Soft-Wall / Features / People); full desks still in Expo `/admin` |
-| `@tapuai/shared-types` | `packages/shared-types/` — Profile / ActionStats / Spotlight / RPC shapes |
+| `@tapuai/admin-portal` | `apps/admin-portal/` — Next Soft-Wall + Profile control plane (Overview / Soft-Wall / Profile / Features / People); full desks still in Expo `/admin` |
+| `@tapuai/shared-types` | `packages/shared-types/` — Profile / ActionStats / Spotlight / Soft-Wall + Profile chrome / RPC shapes |
 
 Root keeps `supabase/`, `docs/`, `scripts/`, `AGENTS.md`, `DOCUMENTATION.md`. Playground `my-app/` is outside the workspace.
 

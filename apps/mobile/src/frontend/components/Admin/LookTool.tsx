@@ -93,21 +93,21 @@ export function LookTool() {
           <Text style={styles.body}>Hide a block for a campaign. Vault still respects the Features Vault switch.</Text>
           <ToggleRow
             title="Trading card"
-            meta="3D Aura card at the top of Profile"
+            meta="Flip Aura card from hamburger / Flip control (not the default hero)"
             on={draft.profile.showCard}
             live={published.profile.showCard}
             onPress={() => patchProfile('showCard', !draft.profile.showCard)}
           />
           <ToggleRow
             title="Crew counters"
-            meta="The Crew ⚡ / Your Squad 🛡️"
+            meta="Slim Crew · Squad strip under the avatar"
             on={draft.profile.showCrew}
             live={published.profile.showCrew}
             onPress={() => patchProfile('showCrew', !draft.profile.showCrew)}
           />
           <ToggleRow
             title="Stats tab"
-            meta="Combine + career + game log"
+            meta="Combine + career + game log (pill under Highlights + roster)"
             on={draft.profile.showStats}
             live={published.profile.showStats}
             onPress={() => patchProfile('showStats', !draft.profile.showStats)}
@@ -121,14 +121,14 @@ export function LookTool() {
           />
           <ToggleRow
             title="Actions on top"
-            meta="Mālo / Subscribe sit above the card"
+            meta="Drop Mālo / Subscribe sit above Highlights"
             on={draft.profile.actionsOnTop}
             live={published.profile.actionsOnTop}
             onPress={() => patchProfile('actionsOnTop', !draft.profile.actionsOnTop)}
           />
           <ToggleRow
             title="Open on Stats"
-            meta="Land on Stats 📊 instead of Highlights ⚡"
+            meta="Land on Stats 📊 instead of Highlights collage (default Off)"
             on={draft.profile.statsFirst}
             live={published.profile.statsFirst}
             onPress={() => patchProfile('statsFirst', !draft.profile.statsFirst)}

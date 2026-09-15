@@ -22,11 +22,42 @@ const FLAG_ROWS: FlagRow[] = [
     label: 'Operator console',
     hint: 'Paused at launch — On + Publish opens /operator',
   },
+  {
+    group: 'Profile chrome',
+    path: 'profile.showCard',
+    label: 'Flip Aura card',
+    hint: 'Hamburger Flip · not the default hero',
+  },
+  {
+    group: 'Profile chrome',
+    path: 'profile.showCrew',
+    label: 'Crew · Squad strip',
+    hint: 'Slim counters under the avatar',
+  },
+  { group: 'Profile chrome', path: 'profile.showStats', label: 'Stats tab', hint: 'Pill under Highlights + roster' },
+  {
+    group: 'Profile chrome',
+    path: 'profile.showVault',
+    label: 'Vault tab',
+    hint: 'Also needs Features Vault button',
+  },
+  {
+    group: 'Profile chrome',
+    path: 'profile.actionsOnTop',
+    label: 'Actions on top',
+    hint: 'Drop Mālo / Subscribe above Highlights',
+  },
+  {
+    group: 'Profile chrome',
+    path: 'profile.statsFirst',
+    label: 'Open on Stats',
+    hint: 'Off keeps Highlights collage first',
+  },
   { group: 'Fan bar', path: 'tabs.home', label: 'Home', hint: 'Highlights ⚡' },
   { group: 'Fan bar', path: 'tabs.local', label: 'Local', hint: 'Scores + polls' },
   { group: 'Fan bar', path: 'tabs.spotlight', label: 'Spotlight', hint: 'Awards' },
   { group: 'Fan bar', path: 'tabs.drip', label: 'Drip', hint: 'Gear shop' },
-  { group: 'Fan bar', path: 'tabs.profile', label: 'Profile', hint: 'Card + Crew' },
+  { group: 'Fan bar', path: 'tabs.profile', label: 'Profile', hint: 'Avatar hero + hamburger' },
 ];
 
 function readFlag(bag: Record<string, unknown>, path: string): boolean {
@@ -49,7 +80,8 @@ function setFlag(bag: Record<string, unknown>, path: string, value: boolean): Re
 }
 
 /**
- * @purpose Interactive Soft-Wall + fan-bar Features toggles on the Next portal. Drafts via RPC; Publish ships to the fan app.
+ * @purpose Interactive Soft-Wall + Profile chrome + fan-bar Features toggles on the Next portal.
+ * Drafts via RPC; Publish ships to the fan app.
  * @sideEffects `patch_app_runtime_draft`, `publish_app_runtime`.
  */
 export function FeatureFlagBoard({
