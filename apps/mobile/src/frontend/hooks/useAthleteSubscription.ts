@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -23,6 +23,8 @@ export function useAthleteSubscription(playerId: string | undefined) {
   const { user } = useAuth();
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(Boolean(playerId));
+  const userIdRef = useRef<string | null>(user?.id ?? null);
+  userIdRef.current = user?.id ?? null;
 
   const refresh = useCallback(async () => {
     if (!playerId) {
@@ -72,17 +74,22 @@ export function useAthleteSubscription(playerId: string | undefined) {
 
   /**
    * @purpose Insert an active exclusive pass and unblur exclusive tiles without waiting on Stripe/RPC.
-   * @sideEffects Sets local `subscribed`; AsyncStorage write; `subscriptions` insert (`subscriber_id`, `athlete_id`).
+   * @sideEffects Sets local `subscribed`; AsyncStorage write; `subscriptions` insert (`subscriber_id`, `athlete_id`). Reads `supabase.auth.getSession()` so a Soft-Wall resume after guest sign-in still persists the row.
    */
   const grant = useCallback(async () => {
     if (!playerId) return;
+    let subscriberId = userIdRef.current;
+    if (isSupabaseConfigured) {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user.id) subscriberId = data.session.user.id;
+    }
     setSubscribed(true);
-    await AsyncStorage.setItem(storageKey(playerId, user?.id), '1');
+    await AsyncStorage.setItem(storageKey(playerId, subscriberId), '1');
 
-    if (!user?.id || !isSupabaseConfigured || !isPlayerUuid(playerId)) return;
+    if (!subscriberId || !isSupabaseConfigured || !isPlayerUuid(playerId)) return;
 
     const { error } = await supabase.from('subscriptions').insert({
-      subscriber_id: user.id,
+      subscriber_id: subscriberId,
       athlete_id: playerId,
       status: 'active',
     });
@@ -90,7 +97,7 @@ export function useAthleteSubscription(playerId: string | undefined) {
     if (error && error.code !== '23505') {
       // Table may be missing until `supabase/subscriptions.sql` is applied; local grant still stands.
     }
-  }, [playerId, user?.id]);
+  }, [playerId]);
 
   return { subscribed, grant, loading, refresh };
 }

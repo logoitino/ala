@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
@@ -60,9 +60,20 @@ function applyAuraAward(
 }
 
 /**
+ * @purpose Live Auth user id at call time (Soft-Wall resume may invoke a pre-login `startCheckout` closure).
+ */
+async function resolveFanId(fallback: string | null): Promise<string | null> {
+  if (isSupabaseConfigured) {
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user.id) return data.session.user.id;
+  }
+  return fallback;
+}
+
+/**
  * @purpose Native Stripe PaymentSheet for Mālo, exclusive subscribe, Drip, or booster sponsorships. Mālo grants Aura to the tipper and the athlete.
  * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may tip a reel.
- * @sideEffects Stripe PaymentIntent, optional backer/reel counters, `tips` INSERT on Mālo, `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
+ * @sideEffects Stripe PaymentIntent, optional backer/reel counters, `tips` INSERT on Mālo, `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`. Fan id is resolved from the live session so Soft-Wall resume after guest sign-in still writes `tips.fan_id` and payer Aura.
  */
 export function useTipCheckout() {
   const { user, refreshProfile } = useAuth();
@@ -72,6 +83,10 @@ export function useTipCheckout() {
   const [busy, setBusy] = useState(false);
   const feeAmount = live.catalog.maloFeeDollars;
   const exclusiveAuraToast = exclusiveUnlockToast(live.catalog.exclusiveAura);
+  const userIdRef = useRef<string | null>(user?.id ?? null);
+  userIdRef.current = user?.id ?? null;
+  const refreshProfileRef = useRef(refreshProfile);
+  refreshProfileRef.current = refreshProfile;
 
   const startCheckout = useCallback(
     async ({
@@ -139,7 +154,7 @@ export function useTipCheckout() {
         }
 
         const pointsToAdd = auraPoints ?? auraPointsForTip(tipAmount);
-        const tipperId = user?.id ?? null;
+        const tipperId = await resolveFanId(userIdRef.current);
         const recipientId = !skipBacker && player?.id ? player.id : null;
 
         if (!skipBacker && player && isSupabaseConfigured) {
@@ -161,7 +176,7 @@ export function useTipCheckout() {
             const athleteAward = await addUserAura(recipientId, pointsToAdd);
             applyAuraAward(recipientId, athleteAward);
           }
-          await refreshProfile();
+          await refreshProfileRef.current();
         }
 
         try {
@@ -186,7 +201,7 @@ export function useTipCheckout() {
         setBusy(false);
       }
     },
-    [busy, celebration, exclusiveAuraToast, feeAmount, initPaymentSheet, presentPaymentSheet, refreshProfile, user?.id],
+    [busy, celebration, exclusiveAuraToast, feeAmount, initPaymentSheet, presentPaymentSheet],
   );
 
   return { startCheckout, busy };
