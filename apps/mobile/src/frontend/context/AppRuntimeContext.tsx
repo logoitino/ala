@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   cloneAppRuntime,
@@ -22,6 +22,7 @@ type AppRuntimeContextValue = {
   dirty: boolean;
   pendingCount: number;
   loading: boolean;
+  saveError: string | null;
   saveDraft: (next: AppRuntimeConfig) => Promise<void>;
   publishLive: () => Promise<void>;
   discardDraft: () => Promise<void>;
@@ -31,8 +32,8 @@ type AppRuntimeContextValue = {
 const AppRuntimeContext = createContext<AppRuntimeContextValue | null>(null);
 
 /**
- * @purpose Fan chrome reads `live` (published). Admin Features writes `draft` until Publish to app.
- * @sideEffects `app_runtime_config` SELECT + Realtime UPDATE.
+ * @purpose Fan chrome reads `live` (published). Admin Features / Look writes `draft` until Publish to app.
+ * @sideEffects `app_runtime_config` SELECT + Realtime UPDATE; serializes draft writes so Look copy typing cannot race.
  */
 export function AppRuntimeProvider({ children }: { children: ReactNode }) {
   const [bundle, setBundle] = useState<AppRuntimeBundle>({
@@ -42,6 +43,9 @@ export function AppRuntimeProvider({ children }: { children: ReactNode }) {
     updatedAt: null,
   });
   const [loading, setLoading] = useState(true);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const pendingDraft = useRef<AppRuntimeConfig | null>(null);
+  const draftChain = useRef(Promise.resolve());
 
   const refresh = useCallback(async () => {
     const next = await fetchAppRuntimeBundle();
@@ -78,18 +82,48 @@ export function AppRuntimeProvider({ children }: { children: ReactNode }) {
 
   const saveDraft = useCallback(async (next: AppRuntimeConfig) => {
     setBundle((current) => ({ ...current, draft: next }));
-    const saved = await saveAppRuntimeDraft(next);
-    setBundle(saved);
+    pendingDraft.current = next;
+    const run = draftChain.current.then(async () => {
+      while (pendingDraft.current) {
+        const toSave = pendingDraft.current;
+        pendingDraft.current = null;
+        try {
+          const saved = await saveAppRuntimeDraft(toSave);
+          setBundle(saved);
+          setSaveError(null);
+        } catch (caught) {
+          setSaveError(caught instanceof Error ? caught.message : 'Could not save Look / Features draft.');
+          throw caught;
+        }
+      }
+    });
+    draftChain.current = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    await run;
   }, []);
 
   const publishLive = useCallback(async () => {
-    const saved = await publishAppRuntime();
-    setBundle(saved);
+    try {
+      const saved = await publishAppRuntime();
+      setBundle(saved);
+      setSaveError(null);
+    } catch (caught) {
+      setSaveError(caught instanceof Error ? caught.message : 'Could not publish to the fan app.');
+      throw caught;
+    }
   }, []);
 
   const discardDraft = useCallback(async () => {
-    const saved = await saveAppRuntimeDraft(bundle.published);
-    setBundle(saved);
+    try {
+      const saved = await saveAppRuntimeDraft(bundle.published);
+      setBundle(saved);
+      setSaveError(null);
+    } catch (caught) {
+      setSaveError(caught instanceof Error ? caught.message : 'Could not discard the draft.');
+      throw caught;
+    }
   }, [bundle.published]);
 
   const dirty = !runtimeConfigsEqual(bundle.draft, bundle.published);
@@ -104,12 +138,13 @@ export function AppRuntimeProvider({ children }: { children: ReactNode }) {
       dirty,
       pendingCount,
       loading,
+      saveError,
       saveDraft,
       publishLive,
       discardDraft,
       refresh,
     }),
-    [bundle, dirty, discardDraft, loading, pendingCount, publishLive, refresh, saveDraft],
+    [bundle, dirty, discardDraft, loading, pendingCount, publishLive, refresh, saveDraft, saveError],
   );
 
   return <AppRuntimeContext.Provider value={value}>{children}</AppRuntimeContext.Provider>;

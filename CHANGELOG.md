@@ -4,6 +4,11 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-14
 
+### Admin Look + People desks
+
+- Look: serialize `app_runtime_config` draft writes so copy/hex typing cannot race; surface draft/publish errors on the Look desk and Publish bar; drop duplicate Daylight preset row.
+- People: Approve verifies matching `profiles` (by `player_id` and name); grant/revoke admin keeps `roles` in sync with `is_admin`; pending queue errors and busy-state buttons.
+
 ### Monorepo audit + path retarget
 
 - Re-verified `pnpm typecheck`, `pnpm docs:check`, shared-types imports, and zero Stripe secrets under `apps/mobile/src/frontend/`. Updated [AUDIT_REPORT](docs/AUDIT_REPORT.md) §0, [TROUBLESHOOTING](TROUBLESHOOTING.md), SCHEMA body paths, INVESTOR / LEGAL `pnpm docs:sync` wording.

@@ -545,17 +545,44 @@ export async function fetchAdminPeople(): Promise<AdminPerson[]> {
 
 /**
  * @purpose Verify a person or grant / revoke admin access on the production app.
- * @sideEffects `profiles` UPDATE.
+ * @sideEffects `profiles` UPDATE (`is_verified` / `is_admin` / `roles`).
  */
 export async function patchAdminPerson(
   id: string,
   patch: { is_verified?: boolean; is_admin?: boolean; role?: UserRole },
 ): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-  const body: { is_verified?: boolean; is_admin?: boolean; role?: UserRole } = {};
+  const body: {
+    is_verified?: boolean;
+    is_admin?: boolean;
+    role?: UserRole;
+    roles?: string[];
+  } = {};
   if (typeof patch.is_verified === 'boolean') body.is_verified = patch.is_verified;
-  if (typeof patch.is_admin === 'boolean') body.is_admin = patch.is_admin;
   if (patch.role) body.role = patch.role;
+
+  if (typeof patch.is_admin === 'boolean') {
+    body.is_admin = patch.is_admin;
+    const { data: row, error: readError } = await supabase
+      .from('profiles')
+      .select('roles, role')
+      .eq('id', id)
+      .maybeSingle();
+    throwIf(readError, 'Could not load this person.');
+    const roles = Array.isArray(row?.roles) ? row.roles.map(String).filter(Boolean) : [];
+    if (patch.is_admin) {
+      if (!roles.includes('admin')) roles.push('admin');
+      body.roles = roles.length > 0 ? roles : ['admin'];
+      if (!body.role && row?.role !== 'admin') {
+        // Keep their fan/athlete role as primary; admin is a capability on `roles` + `is_admin`.
+      }
+    } else {
+      body.roles = roles.filter((item) => item !== 'admin');
+      if (body.roles.length === 0) body.roles = [asText(row?.role, 'fan') === 'admin' ? 'fan' : asText(row?.role, 'fan')];
+    }
+  }
+
+  if (Object.keys(body).length === 0) return;
   const { error } = await supabase.from('profiles').update(body).eq('id', id);
   throwIf(error, 'Could not update this person.');
 }
@@ -569,15 +596,17 @@ export async function fetchVerificationQueue(): Promise<VerificationRequest[]> {
   const { data, error } = await supabase
     .from('verification_requests')
     .select('*')
+    .eq('status', 'pending')
     .order('id', { ascending: false })
     .limit(40);
-  if (error || !Array.isArray(data)) return [];
+  throwIf(error, 'Could not load verification requests.');
+  if (!Array.isArray(data)) return [];
   return data as VerificationRequest[];
 }
 
 /**
  * @purpose Approve or reject a verification request and stamp the matching profile when possible.
- * @sideEffects `verification_requests` UPDATE; optional `profiles` / `players` verify.
+ * @sideEffects `verification_requests` UPDATE; `profiles.is_verified`; optional `players` consent.
  */
 export async function setVerificationStatus(id: string, status: 'approved' | 'rejected'): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
@@ -588,8 +617,26 @@ export async function setVerificationStatus(id: string, status: 'approved' | 're
     .select('player_id, full_name')
     .single();
   throwIf(error, 'Could not update this request.');
-  if (status === 'approved' && data?.player_id) {
-    await supabase.from('players').update({ parental_consent_approved: true }).eq('id', data.player_id);
+  if (status !== 'approved' || !data) return;
+
+  if (data.player_id) {
+    const { error: playerError } = await supabase
+      .from('players')
+      .update({ parental_consent_approved: true })
+      .eq('id', data.player_id);
+    throwIf(playerError, 'Verified the request, but could not update the player row.');
+
+    const { error: linkedError } = await supabase
+      .from('profiles')
+      .update({ is_verified: true })
+      .eq('player_id', data.player_id);
+    throwIf(linkedError, 'Verified the request, but could not update the linked profile.');
+  }
+
+  const name = asText(data.full_name).trim();
+  if (name) {
+    const { error: nameError } = await supabase.from('profiles').update({ is_verified: true }).eq('full_name', name);
+    throwIf(nameError, 'Verified the request, but could not match a profile by name.');
   }
 }
 

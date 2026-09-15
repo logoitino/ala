@@ -34,22 +34,33 @@ type LookTab = 'colors' | 'copy' | 'profile' | 'highlights';
  * @sideEffects `patch_app_runtime_draft` on each change.
  */
 export function LookTool() {
-  const { draft, published, saveDraft } = useAppRuntime();
+  const { draft, published, saveDraft, saveError } = useAppRuntime();
   const [tab, setTab] = useState<LookTab>('colors');
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const patchTheme = (theme: AppRuntimeTheme) => void saveDraft({ ...draft, theme });
+  const persist = async (next: typeof draft) => {
+    setLocalError(null);
+    try {
+      await saveDraft(next);
+    } catch (caught) {
+      setLocalError(caught instanceof Error ? caught.message : 'Could not save this Look draft.');
+    }
+  };
+
+  const patchTheme = (theme: AppRuntimeTheme) => void persist({ ...draft, theme });
   const patchCopy = (key: keyof AppRuntimeCopy, value: string) =>
-    void saveDraft({ ...draft, copy: { ...draft.copy, [key]: value } });
+    void persist({ ...draft, copy: { ...draft.copy, [key]: value } });
   const patchProfile = (key: keyof AppRuntimeProfile, value: boolean) =>
-    void saveDraft({ ...draft, profile: { ...draft.profile, [key]: value } });
+    void persist({ ...draft, profile: { ...draft.profile, [key]: value } });
   const patchHighlights = (next: Partial<AppRuntimeHighlights>) =>
-    void saveDraft({ ...draft, highlights: { ...draft.highlights, ...next } });
+    void persist({ ...draft, highlights: { ...draft.highlights, ...next } });
 
   return (
     <AdminPage
       title="Look"
       lede="Brand colors, Home/Local/Spotlight/Drip copy, what sits on Profile, and where Highlights ⚡ buttons live. Draft until Publish to app."
       saveMode="publish"
+      error={localError || saveError}
     >
       <AdminPublishBar note="Fans still see the previous look until you publish." />
 
@@ -213,9 +224,6 @@ function ColorsPane({
   return (
     <View style={styles.group}>
       <AdminSectionTitle>Presets</AdminSectionTitle>
-      <AdminRow title="Daylight (default)" meta="Reset the live look to the shipping light canvas.">
-        <AdminBtn label="Reset to default" kind="primary" onPress={() => onPreset(THEME_PRESETS[0].theme)} />
-      </AdminRow>
       {THEME_PRESETS.map((preset) => (
         <AdminRow key={preset.id} title={preset.label} meta={preset.hint}>
           <View style={styles.swatchRow}>
@@ -223,7 +231,11 @@ function ColorsPane({
             <View style={[styles.swatch, { backgroundColor: preset.theme.jade }]} />
             <View style={[styles.swatch, { backgroundColor: preset.theme.gold }]} />
           </View>
-          <AdminBtn label="Use" kind="primary" onPress={() => onPreset(preset.theme)} />
+          <AdminBtn
+            label={preset.id === 'daylight' ? 'Reset to default' : 'Use'}
+            kind="primary"
+            onPress={() => onPreset(preset.theme)}
+          />
         </AdminRow>
       ))}
       <AdminSectionTitle>Hex</AdminSectionTitle>

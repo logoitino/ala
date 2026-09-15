@@ -33,6 +33,7 @@ export function PeopleTool() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -66,21 +67,24 @@ export function PeopleTool() {
     });
   }, [filter, people, query]);
 
-  const act = async (work: () => Promise<void>, ok: string) => {
+  const act = async (id: string, work: () => Promise<void>, ok: string) => {
     setMessage(null);
+    setBusyId(id);
     try {
       await work();
       setMessage(ok);
       await refresh();
     } catch (caught) {
       setMessage(caught instanceof Error ? caught.message : 'Could not update this person.');
+    } finally {
+      setBusyId(null);
     }
   };
 
   return (
     <AdminPage
       title="People"
-      lede="Verify athletes and grant admin so they can open this portal."
+      lede="Verify athletes and grant admin so they can open this portal. Approving a request also stamps the matching profile."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
@@ -91,14 +95,18 @@ export function PeopleTool() {
         pending.map((row) => (
           <AdminRow key={row.id} title={row.full_name} meta={`Verification · ${row.notes || 'Pending'}`}>
             <AdminBtn
-              label="Approve"
+              label={busyId === row.id ? '…' : 'Approve'}
               kind="primary"
-              onPress={() => void act(() => setVerificationStatus(row.id, 'approved'), `${row.full_name} verified.`)}
+              disabled={busyId === row.id}
+              onPress={() =>
+                void act(row.id, () => setVerificationStatus(row.id, 'approved'), `${row.full_name} verified.`)
+              }
             />
             <AdminBtn
-              label="Reject"
+              label={busyId === row.id ? '…' : 'Reject'}
               kind="danger"
-              onPress={() => void act(() => setVerificationStatus(row.id, 'rejected'), 'Rejected.')}
+              disabled={busyId === row.id}
+              onPress={() => void act(row.id, () => setVerificationStatus(row.id, 'rejected'), 'Rejected.')}
             />
           </AdminRow>
         ))
@@ -129,15 +137,27 @@ export function PeopleTool() {
               .join(' · ')}
           >
             <AdminBtn
-              label={person.is_verified ? 'Unverify' : 'Verify'}
+              label={busyId === person.id ? '…' : person.is_verified ? 'Unverify' : 'Verify'}
+              disabled={busyId === person.id}
               onPress={() =>
-                void act(() => patchAdminPerson(person.id, { is_verified: !person.is_verified }), 'Saved.')
+                void act(
+                  person.id,
+                  () => patchAdminPerson(person.id, { is_verified: !person.is_verified }),
+                  person.is_verified ? 'Unverified.' : 'Verified.',
+                )
               }
             />
             <AdminBtn
-              label={person.is_admin ? 'Revoke admin' : 'Grant admin'}
+              label={busyId === person.id ? '…' : person.is_admin ? 'Revoke admin' : 'Grant admin'}
               kind={person.is_admin ? 'danger' : 'primary'}
-              onPress={() => void act(() => patchAdminPerson(person.id, { is_admin: !person.is_admin }), 'Saved.')}
+              disabled={busyId === person.id}
+              onPress={() =>
+                void act(
+                  person.id,
+                  () => patchAdminPerson(person.id, { is_admin: !person.is_admin }),
+                  person.is_admin ? 'Admin revoked.' : 'Admin granted.',
+                )
+              }
             />
           </AdminRow>
         ))

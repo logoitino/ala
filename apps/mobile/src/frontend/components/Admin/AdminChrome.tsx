@@ -361,13 +361,17 @@ export function AdminDeskLink({
  * @sideEffects `publish_app_runtime` / `patch_app_runtime_draft` through AppRuntimeContext.
  */
 export function AdminPublishBar({ note }: { note?: string }) {
-  const { dirty, pendingCount, publishedAt, publishLive, discardDraft } = useAppRuntime();
+  const { dirty, pendingCount, publishedAt, publishLive, discardDraft, saveError } = useAppRuntime();
   const [publishing, setPublishing] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const ship = async () => {
     setPublishing(true);
+    setLocalError(null);
     try {
       await publishLive();
+    } catch (caught) {
+      setLocalError(caught instanceof Error ? caught.message : 'Could not publish.');
     } finally {
       setPublishing(false);
     }
@@ -386,7 +390,18 @@ export function AdminPublishBar({ note }: { note?: string }) {
         disabled={!dirty || publishing}
         onPress={() => void ship()}
       />
-      {dirty ? <AdminBtn label="Discard draft" kind="danger" onPress={() => void discardDraft()} /> : null}
+      {dirty ? (
+        <AdminBtn
+          label="Discard draft"
+          kind="danger"
+          onPress={() =>
+            void discardDraft().catch((caught) =>
+              setLocalError(caught instanceof Error ? caught.message : 'Could not discard.'),
+            )
+          }
+        />
+      ) : null}
+      <AdminNotice text={localError || saveError} tone="warn" />
       <AdminNotice text={dirty ? note ?? 'Fans still see the previous chrome until you publish.' : null} tone="warn" />
     </AdminPanel>
   );
