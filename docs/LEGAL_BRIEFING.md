@@ -45,9 +45,10 @@ Still true, maintained by hand when those flows change:
 | Fact | Where it lives |
 | --- | --- |
 | Target users include high-school athletes and fans | Product copy, roster, Local schools |
-| Mālo is a PaymentIntent (test mode today) | `useTipCheckout`, Stripe PaymentSheet |
+| Mālo is a JWT-gated PaymentIntent (test mode today) | `useTipCheckout`, Stripe PaymentSheet |
 | Parent screen toggles `parental_consent_approved` on `players` | `app/(parent)/parent/index.tsx` |
 | Athletes can open Stripe Express (JWT Edge Function) | `PayoutSetupCard` / `create-stripe-account` |
+| Custodial payouts require JWT; destination is `profiles.stripe_connect_id` | `createPayout.ts` |
 | Exclusive access is a **one-time PaymentIntent**, not a Stripe Subscription | `docs/SCHEMA.md` |
 | Cheer polls are vote counts only — no stake, no payout | `cast_cheer_vote` |
 | Aura is a points / card cosmetic system | `aura.ts` |

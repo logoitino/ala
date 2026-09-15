@@ -1,21 +1,33 @@
 import Stripe from 'stripe';
 
+import { requireAuthedUser } from './session';
+
 type PaymentIntentBody = {
   amount?: number;
 };
 
+function jsonError(message: string, status: number): Response {
+  return Response.json({ error: message }, { status });
+}
+
+/**
+ * @purpose Mint a Stripe PaymentIntent (test mode) for Mālo / exclusive / Drip / booster checkout.
+ * @param request JSON `{ amount }` in integer cents (min 50) plus `Authorization: Bearer <access_token>`.
+ * @returns `{ clientSecret }` for PaymentSheet.
+ * @sideEffects Stripe `paymentIntents.create`; `supabase.auth.getUser` for the JWT gate. Secret is `STRIPE_SECRET_KEY` only.
+ */
 export async function createPaymentIntentHandler(request: Request): Promise<Response> {
   try {
-    const secretKey =
-      process.env.STRIPE_SECRET_KEY ?? process.env.EXPO_PUBLIC_STRIPE_SECRET_KEY;
+    const auth = await requireAuthedUser(request, 'Sign in to complete payment.');
+    if (!auth.ok) {
+      return jsonError(auth.message, auth.status);
+    }
 
+    const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
-      return Response.json(
-        {
-          error:
-            'Missing STRIPE_SECRET_KEY (or EXPO_PUBLIC_STRIPE_SECRET_KEY). Add it to .env.local and restart Expo.',
-        },
-        { status: 500 },
+      return jsonError(
+        'Missing STRIPE_SECRET_KEY. Add it to .env.local (server only) and restart Expo.',
+        500,
       );
     }
 
@@ -23,10 +35,7 @@ export async function createPaymentIntentHandler(request: Request): Promise<Resp
     const amount = Number(body.amount);
 
     if (!Number.isInteger(amount) || amount < 50) {
-      return Response.json(
-        { error: 'amount must be an integer number of cents (min 50).' },
-        { status: 400 },
-      );
+      return jsonError('amount must be an integer number of cents (min 50).', 400);
     }
 
     const stripe = new Stripe(secretKey);
@@ -34,6 +43,7 @@ export async function createPaymentIntentHandler(request: Request): Promise<Resp
       amount,
       currency: 'usd',
       payment_method_types: ['card'],
+      metadata: { tapuai_user_id: auth.user.id },
     });
 
     return Response.json({ clientSecret: paymentIntent.client_secret });
