@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { cardShadow, colors, radii } from '@/constants/theme';
+import { FOCAL } from '@/theme/motion';
 
 type DashboardPanelProps = {
   title: string;
@@ -25,6 +26,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    borderLeftWidth: 3,
+    borderLeftColor: FOCAL.electricGold,
     padding: 16,
     gap: 10,
     ...cardShadow,

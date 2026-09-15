@@ -50,6 +50,8 @@ EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
 STRIPE_SECRET_KEY=sk_test_your_secret_key
 ```
 
+`STRIPE_SECRET_KEY` is server-only for JWT-gated `POST /api/create-payment-intent` and `POST /api/create-payout` (and Connect). Do not set `EXPO_PUBLIC_STRIPE_SECRET_KEY`. Sign in before Mālo or payouts — handlers call `supabase.auth.getUser` on the Bearer token.
+
 ### Soft-Wall auth (Supabase Dashboard)
 
 Browse-first guests can open Highlights, cards, and Locker Room without an account. **Mālo**, **Join Crew**, and **Chip In** open `SoftWallModal` (Apple / Google / Magic Link), then resume the intercepted action.

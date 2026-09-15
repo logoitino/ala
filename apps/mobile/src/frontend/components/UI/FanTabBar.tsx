@@ -3,7 +3,7 @@ import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors } from '@/constants/theme';
+import { colors, radii } from '@/constants/theme';
 import { HIGHLIGHT_NAV_LABEL, SPOTLIGHT_NAV_LABEL } from '@/data/highlights';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -100,7 +100,7 @@ export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
             contentStyle={[styles.fab, { backgroundColor: FOCAL.neonJade, shadowColor: FOCAL.neonJade }]}
             onPress={openUpload}
           >
-            <Ionicons name="add" size={22} color={FOCAL.ink} />
+            <Ionicons name="add" size={24} color={FOCAL.ink} />
           </AnimatedButton>
         </View>
         ) : null}
@@ -121,8 +121,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     width: '100%',
-    minHeight: 56,
-    paddingHorizontal: 2,
+    minHeight: 58,
+    paddingHorizontal: 4,
+    paddingTop: 4,
   },
   tabHit: {
     flex: 1,
@@ -134,15 +135,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 2,
     paddingTop: 6,
-    paddingHorizontal: 1,
-    borderRadius: 14,
+    paddingHorizontal: 2,
+    borderRadius: radii.md,
     marginHorizontal: 2,
     marginVertical: 2,
   },
   tabLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
-    letterSpacing: -0.15,
+    letterSpacing: -0.1,
     textAlign: 'center',
   },
   tabDot: {
@@ -157,15 +158,15 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   fabSlot: {
-    width: 48,
+    width: 52,
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
   },
   fab: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: FOCAL.neonJade,
     alignItems: 'center',
     justifyContent: 'center',

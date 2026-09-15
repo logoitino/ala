@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
+import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { displayValue, formatQuarterClock, isGameClockLive } from '@/data/players';
 import { FOCAL } from '@/theme/motion';
@@ -23,6 +23,14 @@ function teamInitials(name: string): string {
   return `${first}${last}`.toUpperCase();
 }
 
+/**
+ * @purpose Local matchup card: live chip, score, school names, Mālo CTA. Press opens `/local/game/[id]`.
+ * @param game Live `games` row.
+ * @param onPress Opens the in-tab match sheet.
+ * @param sponsors Silver+ booster logos tagged to this matchup.
+ * @returns Gold-mist scoreboard with a jade roster CTA.
+ * @sideEffects Light haptic via `AnimatedPressable`.
+ */
 export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
   const home = displayValue(game.home_team);
   const away = displayValue(game.away_team);
@@ -31,11 +39,14 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
   const live = isGameClockLive(game);
 
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={`${home} ${homeScore} against ${away} ${awayScore}. View roster and drop a Mālo.`}
+      haptic="light"
+      overshoot={false}
+      scaleTo={0.97}
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      contentStyle={styles.card}
     >
       <View style={styles.topRow}>
         <View style={[styles.statusTag, live ? styles.statusLive : styles.statusIdle]}>
@@ -99,7 +110,7 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
           ))}
         </View>
       ) : null}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -112,9 +123,6 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 14,
     ...cardShadow,
-  },
-  pressed: {
-    opacity: 0.94,
   },
   topRow: {
     flexDirection: 'row',
@@ -213,13 +221,10 @@ const styles = StyleSheet.create({
   cta: {
     minHeight: 48,
     borderRadius: radii.md,
-    backgroundColor: FOCAL.goldInk,
+    backgroundColor: FOCAL.jadeInk,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
-  },
-  ctaPressed: {
-    backgroundColor: FOCAL.emberInk,
   },
   ctaLabel: {
     color: '#FFFFFF',

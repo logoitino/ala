@@ -1,27 +1,40 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, type Href, useRouter } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
+import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useRoster } from '@/hooks/useRoster';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { TipLedgerEntry } from '@/types/database';
 
+/**
+ * @purpose Athlete HQ: confirm pending tags, private Mālo ledger, and display name that writes `profiles.full_name`.
+ * @sideEffects `tips` SELECT; `profiles` UPDATE on Save name; tag confirm RPCs via `usePendingPlayerTags`.
+ */
 export default function AthleteHomeScreen() {
-  const { profile } = useAuth();
+  const router = useRouter();
+  const { profile, refreshProfile, user, isAdmin } = useAuth();
   const { players } = useRoster();
   const pending = usePendingPlayerTags();
   const [tips, setTips] = useState<TipLedgerEntry[]>([]);
   const [headline, setHeadline] = useState(profile?.full_name ?? '');
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   const athlete = players[0] ?? null;
+
+  useEffect(() => {
+    if (profile?.full_name) setHeadline(profile.full_name);
+  }, [profile?.full_name]);
 
   const loadTips = useCallback(async () => {
     if (!athlete) {
@@ -40,6 +53,28 @@ export default function AthleteHomeScreen() {
   useEffect(() => {
     void loadTips();
   }, [loadTips]);
+
+  const saveHeadline = async () => {
+    const next = headline.trim();
+    if (!next) {
+      setSaveMsg('Add a display name first.');
+      return;
+    }
+    if (!user?.id || !isSupabaseConfigured) {
+      setSaveMsg('Sign in to save your name to Profile.');
+      return;
+    }
+    setSaving(true);
+    setSaveMsg(null);
+    const { error } = await supabase.from('profiles').update({ full_name: next }).eq('user_id', user.id);
+    if (error) {
+      setSaveMsg(error.message);
+    } else {
+      await refreshProfile();
+      setSaveMsg('Saved to Profile.');
+    }
+    setSaving(false);
+  };
 
   const total = tips.reduce((sum, tip) => sum + tip.amount_cents, 0);
 
@@ -65,11 +100,19 @@ export default function AthleteHomeScreen() {
           body={
             athlete
               ? `${displayValue(athlete.name)} has received $${(total / 100).toFixed(2)} from fans.`
-              : 'No linked athlete profile yet.'
+              : 'No linked athlete profile yet. Unlock Athlete from Profile → Account Capability.'
           }
         >
           {tips.length === 0 ? (
-            <Text style={styles.muted}>Mālo will appear here after PaymentSheet checkouts.</Text>
+            <EmptyState
+              kicker="Mālo"
+              title="No Mālo yet"
+              lede="Tips land here after PaymentSheet checkouts on your tagged clips."
+              actionLabel="Open Profile"
+              onAction={() => router.push('/profile' as Href)}
+              adminHref="/admin/money"
+              adminLabel="Open Money"
+            />
           ) : (
             tips.map((tip) => (
               <Text key={tip.id} style={styles.row}>
@@ -83,15 +126,45 @@ export default function AthleteHomeScreen() {
           <Text style={styles.badge}>Community Backer Magnet</Text>
           <Text style={styles.badge}>Friday Night Lights</Text>
         </DashboardPanel>
-        <DashboardPanel title="Profile customization">
+        <DashboardPanel title="Profile customization" body="Display name writes to your fan Profile. Roster (sport, team, class year) lives on Account Capability.">
           <TextInput
             value={headline}
-            onChangeText={setHeadline}
+            onChangeText={(value) => {
+              setHeadline(value);
+              setSaveMsg(null);
+            }}
             placeholder="Display name / headline"
             placeholderTextColor={colors.textMuted}
             style={styles.input}
           />
-          <Text style={styles.muted}>Saved locally for this device until account linking ships.</Text>
+          <AnimatedButton
+            accessibilityLabel="Save display name"
+            haptic="medium"
+            disabled={saving}
+            onPress={() => void saveHeadline()}
+            contentStyle={[styles.saveBtn, saving && styles.saveBtnOff]}
+          >
+            <Text style={styles.saveLabel}>{saving ? 'Saving…' : 'Save name'}</Text>
+          </AnimatedButton>
+          {saveMsg ? <Text style={styles.muted}>{saveMsg}</Text> : null}
+          <AnimatedButton
+            accessibilityLabel="Edit roster on Profile"
+            haptic="light"
+            onPress={() => router.push('/profile' as Href)}
+            contentStyle={styles.secondaryBtn}
+          >
+            <Text style={styles.secondaryLabel}>Edit roster on Profile</Text>
+          </AnimatedButton>
+          {isAdmin ? (
+            <AnimatedButton
+              accessibilityLabel="Open Athletes desk"
+              haptic="light"
+              onPress={() => router.push('/admin/athletes' as Href)}
+              contentStyle={styles.secondaryBtn}
+            >
+              <Text style={styles.secondaryLabel}>Open Athletes desk</Text>
+            </AnimatedButton>
+          ) : null}
         </DashboardPanel>
       </ScrollView>
     </ScreenShell>
@@ -126,5 +199,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     backgroundColor: colors.background,
+  },
+  saveBtn: {
+    minHeight: 44,
+    borderRadius: radii.md,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  saveBtnOff: {
+    opacity: 0.55,
+  },
+  saveLabel: {
+    color: colors.onAccent,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  secondaryBtn: {
+    minHeight: 40,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  secondaryLabel: {
+    color: colors.gold,
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

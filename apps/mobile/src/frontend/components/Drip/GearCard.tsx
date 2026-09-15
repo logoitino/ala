@@ -64,8 +64,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: FOCAL.mistEmber,
     borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
+    borderColor: FOCAL.ember,
     padding: 14,
     gap: 6,
     ...cardShadow,
