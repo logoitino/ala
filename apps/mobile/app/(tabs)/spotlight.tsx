@@ -15,6 +15,7 @@ import { SpotlightModal } from '@/components/Spotlight/SpotlightModal';
 import { RuntimePaused } from '@/components/RuntimePaused';
 import { TabScreen } from '@/components/TabScreen';
 import { MaloTipModal } from '@/components/TipSheetModal';
+import { EmptyState } from '@/components/UI/EmptyState';
 import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
@@ -91,7 +92,14 @@ export default function SpotlightTab() {
             setSelected(featured);
           }} />
         ) : (
-          <Text style={styles.empty}>{live.copy.spotlightEmpty}</Text>
+          <EmptyState
+            kicker="Spotlight"
+            title={live.copy.spotlightEmpty}
+            lede="Publish Player of the Week from the Spotlight desk, then it lands here and on Home."
+            adminHref="/admin/spotlight"
+            adminLabel="Open Spotlight desk"
+            accent={TAB_ACCENTS.spotlight.color}
+          />
         )}
         {rest.length > 0 ? (
           <View style={styles.list}>
@@ -155,12 +163,6 @@ const styles = StyleSheet.create({
     minHeight: 80,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  empty: {
-    color: colors.textMuted,
-    fontSize: 14,
-    textAlign: 'center',
-    paddingVertical: 24,
   },
   list: {
     gap: 10,

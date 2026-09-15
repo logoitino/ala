@@ -62,8 +62,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
   },
   titleCompact: {
-    fontSize: 18,
-    letterSpacing: -0.2,
+    fontSize: 22,
+    letterSpacing: -0.3,
   },
   underline: {
     width: 48,

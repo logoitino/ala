@@ -1,5 +1,6 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
+import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
 import type { AthleteStatsBundle } from '@/data/athleteStats';
@@ -66,7 +67,13 @@ export function AthleteStatsTab({ stats, loading = false, config }: AthleteStats
         {loading ? <ActivityIndicator color={colors.primary} size="small" /> : null}
       </View>
       {rows.length === 0 ? (
-        <Text style={styles.empty}>No career stats published for this sport.</Text>
+        <EmptyState
+          kicker="Career"
+          title="No career stats published for this sport"
+          lede="The Sports playbook decides which rows fans see. Add stats fields, then they land here."
+          adminHref="/admin/sports"
+          adminLabel="Open Sports"
+        />
       ) : (
         <View style={styles.table}>
           <View style={styles.tableRow}>
@@ -84,7 +91,13 @@ export function AthleteStatsTab({ stats, loading = false, config }: AthleteStats
 
       <Text style={styles.kicker}>Game log</Text>
       {logs.length === 0 ? (
-        <Text style={styles.empty}>No games logged yet.</Text>
+        <EmptyState
+          kicker="Game log"
+          title="No games logged yet"
+          lede="Recent matches for this sport show here once game logs are published."
+          adminHref="/admin/athletes"
+          adminLabel="Open Athletes"
+        />
       ) : (
         logs.map((row) => (
           <View key={row.id} style={styles.log}>

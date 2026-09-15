@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
 import { GearCard } from '@/components/Drip/GearCard';
 import { ProductSheet } from '@/components/Drip/ProductSheet';
 import { RuntimePaused } from '@/components/RuntimePaused';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
+import { EmptyState } from '@/components/UI/EmptyState';
 import { FilterPills } from '@/components/UI/FilterPills';
-import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { DRIP_FILTERS, type DripFilter, type DripItem } from '@/data/shop';
 import { useDripCatalog } from '@/hooks/useDripCatalog';
@@ -73,7 +73,14 @@ export default function DripTab() {
           mist={FOCAL.mistEmber}
         />
         {items.length === 0 ? (
-          <Text style={styles.empty}>{live.copy.dripEmpty}</Text>
+          <EmptyState
+            kicker="Drip"
+            title={live.copy.dripEmpty}
+            lede="Add SKUs on the Drip desk, then they land on this rack after Save."
+            adminHref="/admin/drip"
+            adminLabel="Open Drip desk"
+            accent={TAB_ACCENTS.drip.color}
+          />
         ) : (
           items.map((item) => (
             <GearCard
@@ -98,12 +105,5 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 28,
     gap: 12,
-  },
-  empty: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    paddingVertical: 24,
   },
 });

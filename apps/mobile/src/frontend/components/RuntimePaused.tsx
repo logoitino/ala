@@ -1,31 +1,49 @@
-import { StyleSheet, Text, View } from 'react-native';
 import { type Href, useRouter } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
-import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors, radii } from '@/constants/theme';
+import { EmptyState } from '@/components/UI/EmptyState';
+import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import type { AdminNavHref } from '@/lib/admin';
 import { firstEnabledFanHref } from '@/lib/runtime';
 import { FOCAL } from '@/theme/motion';
 
+type RuntimePausedProps = {
+  title: string;
+  lede: string;
+  /** Expo `/admin` desk that owns this flag. Defaults to Features. */
+  adminHref?: AdminNavHref;
+  adminLabel?: string;
+};
+
 /**
- * @purpose Full-screen pause when admin published a layout or tab flag off.
+ * @purpose Full-screen pause when admin published a layout or tab flag off. Fans see a calm empty card; operators get a live Expo `/admin` desk link.
+ * @param title Paused surface name.
+ * @param lede Operator instruction (Features + Publish).
+ * @param adminHref Desk that turns the flag back on (Features unless a more specific desk owns it).
+ * @returns Centered EmptyState with Back to Home plus Open Features for admins.
  */
-export function RuntimePaused({ title, lede }: { title: string; lede: string }) {
+export function RuntimePaused({
+  title,
+  lede,
+  adminHref = '/admin/features',
+  adminLabel = 'Open Features',
+}: RuntimePausedProps) {
   const router = useRouter();
   const { live } = useAppRuntime();
+  const { isAdmin } = useAuth();
   return (
     <View style={styles.wrap} accessibilityRole="text" accessibilityLabel={title}>
-      <Text style={styles.kicker}>Paused from admin</Text>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.body}>{lede}</Text>
-      <AnimatedButton
-        haptic="medium"
-        accessibilityLabel="Back to Home"
-        contentStyle={styles.cta}
-        onPress={() => router.replace(firstEnabledFanHref(live) as Href)}
-      >
-        <Text style={styles.ctaLabel}>Back to Home</Text>
-      </AnimatedButton>
+      <EmptyState
+        kicker={isAdmin ? 'Paused from admin' : 'Paused'}
+        title={title}
+        lede={isAdmin ? lede : 'This surface is off right now. It comes back after Admin publishes it live.'}
+        actionLabel="Back to Home"
+        onAction={() => router.replace(firstEnabledFanHref(live) as Href)}
+        adminHref={adminHref}
+        adminLabel={adminLabel}
+        accent={FOCAL.goldInk}
+      />
     </View>
   );
 }
@@ -37,41 +55,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 28,
-    gap: 12,
-  },
-  kicker: {
-    color: FOCAL.electricGold,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  body: {
-    color: colors.textMuted,
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: '600',
-    textAlign: 'center',
-    maxWidth: 420,
-  },
-  cta: {
-    marginTop: 8,
-    minHeight: 44,
-    paddingHorizontal: 22,
-    borderRadius: radii.md,
-    backgroundColor: FOCAL.neonJade,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaLabel: {
-    color: FOCAL.ink,
-    fontSize: 15,
-    fontWeight: '800',
   },
 });

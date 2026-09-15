@@ -172,8 +172,20 @@ export function paletteFromTheme(theme: ThemeTokens): ThemeColors {
 }
 
 export const radii = {
+  sm: 10,
   md: 12,
   lg: 16,
+  xl: 20,
+  pill: 999,
+};
+
+/** Shared padding rhythm for fan cards, sheets, and empty states. */
+export const space = {
+  xs: 8,
+  sm: 12,
+  md: 16,
+  lg: 20,
+  xl: 24,
 };
 
 export const SCREEN_BOTTOM_GAP = 52;

@@ -7,8 +7,10 @@ import { RuntimePaused } from '@/components/RuntimePaused';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { useFanTipHistory } from '@/hooks/useFanTipHistory';
 import { userProfileHref } from '@/lib/navigation';
 import type { FanTipReceipt } from '@/types/database';
@@ -24,6 +26,7 @@ function formatDollars(cents: number): string {
 export default function ReceiptsScreen() {
   const router = useRouter();
   const { live } = useAppRuntime();
+  const { requireAuth } = useSoftWall();
   const { receipts, summary, loading, signedIn } = useFanTipHistory();
 
   if (!live.layouts.receipts) {
@@ -84,9 +87,30 @@ export default function ReceiptsScreen() {
         {loading ? (
           <ActivityIndicator color={colors.primary} style={styles.spinner} />
         ) : !signedIn ? (
-          <Text style={styles.empty}>Sign in to see your Mālo receipts.</Text>
+          <EmptyState
+            kicker="Receipts"
+            title="Sign in to see your Mālo receipts"
+            lede="Guest browse stays open. Sign in to keep a ledger of every tip."
+            actionLabel="Sign in"
+            onAction={() =>
+              requireAuth({
+                kind: 'signin',
+                resume: () => undefined,
+              })
+            }
+            adminHref="/admin/money"
+            adminLabel="Open Money"
+          />
         ) : receipts.length === 0 ? (
-          <Text style={styles.empty}>No Mālo receipts yet. Drop a tip on a Reel to build your ledger.</Text>
+          <EmptyState
+            kicker="Receipts"
+            title="No Mālo receipts yet"
+            lede="Drop a tip on a Highlights ⚡ clip to build your ledger."
+            actionLabel="Watch Highlights ⚡"
+            onAction={() => router.push('/' as Href)}
+            adminHref="/admin/money"
+            adminLabel="Open Money"
+          />
         ) : (
           receipts.map((receipt) => (
             <ReceiptCard key={receipt.id} receipt={receipt} onViewReel={onViewReel} />
@@ -158,14 +182,5 @@ const styles = StyleSheet.create({
   },
   spinner: {
     marginTop: 24,
-  },
-  empty: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
-    textAlign: 'center',
-    paddingHorizontal: 12,
-    paddingTop: 16,
   },
 });
