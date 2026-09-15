@@ -4,10 +4,14 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-14
 
+### Fun hype bursts — Seki / Aura / Flex
+
+- Highlights rail chips each have their own color (Seki cyan, Aura jade, Flex gold) and fire `Effects/HypeBurst`: flying emoji, a shout (`SEKI!` / `AURA!` / `FLEX!`), and a spring ring. Double-tap Aura on the clip uses the same burst (2× on Serve Like Me). Local play cards use the same palette. Fan bar active tab gets a jade wash + dot; Aura toasts pick up a gold rim.
+
 ### Skia neon sweep on the Aura trading card
 
 - New `Effects/GlowingNeonBorder`: Skia `SweepGradient` (Neon Jade → Cyber Gold → Electric Violet → Jade) with a solid `BlurMask` (12) behind a crisp stroke. Reanimated spins the sweep 0→2π every 3s (`withRepeat` + linear `withTiming`). Celestial Prism or a funded Locker Room item pulses stroke thickness 3↔7 (`withSequence`).
-- `Profile/GlowingCardWrapper` measures the 3D card and sits the canvas 16px outside each edge so the blur is not clipped. `AuraTradingCard` wraps the flip stage in it; Flip Card 🔄 stays outside the glow. Studio **aura_legend** (Celestial Prism) is the preview; Profile lights it from tier 7 or `get_wishlist_items` when any gear is equipped. Expo web loads CanvasKit (`public/canvaskit.wasm`, `npm run skia:web`) before the Skia module mounts.
+- `Profile/GlowingCardWrapper` measures the 3D card and sits the canvas 16px outside each edge so the blur is not clipped. `AuraTradingCard` wraps the flip stage in it; Flip Card 🔄 stays outside the glow. Studio **aura_legend** (Celestial Prism) is the preview; Profile lights it from tier 7 or `get_wishlist_items` when any gear is equipped. Native uses `GlowingCardWrapper.tsx` (Skia in the binary). Expo web uses `GlowingCardWrapper.web.tsx` so CanvasKit (`public/canvaskit.wasm`, `npm run skia:web`) is never pulled into the iOS/Android bundle.
 
 ### Admin audit — Catalogs, Daylight default, one builder per category
 

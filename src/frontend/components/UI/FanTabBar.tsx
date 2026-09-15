@@ -56,7 +56,7 @@ export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
         accessibilityLabel={meta.label}
         accessibilityState={{ selected: focused }}
         style={styles.tabHit}
-        contentStyle={styles.tabInner}
+            contentStyle={[styles.tabInner, focused && { backgroundColor: `${live.theme.jade}18` }]}
         onPress={() => {
           const event = navigation.emit({
             type: 'tabPress',
@@ -75,6 +75,7 @@ export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
         <Text style={[styles.tabLabel, { color }]} numberOfLines={1}>
           {meta.label}
         </Text>
+        {focused ? <View style={[styles.tabDot, { backgroundColor: live.theme.jade }]} /> : <View style={styles.tabDotSpacer} />}
       </AnimatedButton>
     );
   };
@@ -127,12 +128,26 @@ const styles = StyleSheet.create({
     gap: 2,
     paddingTop: 6,
     paddingHorizontal: 1,
+    borderRadius: 14,
+    marginHorizontal: 2,
+    marginVertical: 2,
   },
   tabLabel: {
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: -0.15,
     textAlign: 'center',
+  },
+  tabDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    marginTop: 1,
+  },
+  tabDotSpacer: {
+    width: 5,
+    height: 5,
+    marginTop: 1,
   },
   fabSlot: {
     width: 48,

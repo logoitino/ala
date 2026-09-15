@@ -1,13 +1,16 @@
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useState } from 'react';
 
+import { HypeBurst } from '@/components/Effects/HypeBurst';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors } from '@/constants/theme';
 import { formatCompactCount } from '@/lib/hype';
 import { formatTipDollars, type ReelHype } from '@/lib/reels';
 import type { PlayReactionId } from '@/data/players';
+import { HYPE_FX } from '@/theme/hypeFx';
 import { FOCAL } from '@/theme/motion';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 
@@ -42,7 +45,7 @@ type ReelActionOverlayProps = {
  * @param hype Live clip counters (optimistic local state).
  * @param onReact Increments the tapped hype kind immediately; `reels` updates in the background.
  * @returns Overlay copy + action rail. Pointer-events box-none so video taps pass through.
- * @sideEffects Chip springs (0.88 → 1.15 → 1.0); ⋯ opens `ReelMoreSheet`.
+ * @sideEffects Chip springs (0.88 → 1.15 → 1.0) plus `HypeBurst` particles; ⋯ opens `ReelMoreSheet`.
  */
 export function ReelActionOverlay({
   athleteName,
@@ -78,12 +81,12 @@ export function ReelActionOverlay({
       return (
         <ReactionChip
           key={reaction.id}
+          kind={reaction.id}
           emoji={reaction.emoji}
           label={reaction.label}
           count={value}
           selected={Boolean(voted?.[reaction.id])}
           disabled={reacting || !onReact || Boolean(voted?.[reaction.id])}
-          jade={jade}
           ink={ink}
           onPress={() => onReact?.(reaction.id)}
         />
@@ -195,24 +198,26 @@ export function ReelActionOverlay({
 }
 
 function ReactionChip({
+  kind,
   emoji,
   label,
   count,
   selected,
   disabled,
-  jade,
   ink,
   onPress,
 }: {
+  kind: PlayReactionId;
   emoji: string;
   label: string;
   count: number;
   selected: boolean;
   disabled: boolean;
-  jade: string;
   ink: string;
   onPress: () => void;
 }) {
+  const fx = HYPE_FX[kind];
+  const [burstKey, setBurstKey] = useState(0);
   const rise = useSharedValue(0);
   const fade = useSharedValue(0);
   const badgeStyle = useAnimatedStyle(() => ({
@@ -224,33 +229,41 @@ function ReactionChip({
     if (disabled) return;
     rise.value = 0;
     fade.value = 1;
-    rise.value = withTiming(-28, { duration: 460 });
-    fade.value = withTiming(0, { duration: 460 });
+    rise.value = withTiming(-36, { duration: 520 });
+    fade.value = withTiming(0, { duration: 520 });
+    setBurstKey((current) => current + 1);
     onPress();
   };
 
   return (
     <View style={styles.chipWrap}>
-      <Animated.Text pointerEvents="none" style={[styles.plusOne, { color: jade }, badgeStyle]}>
-        +1
+      {burstKey > 0 ? (
+        <View pointerEvents="none" style={styles.burstLayer}>
+          <HypeBurst key={burstKey} kind={kind} onDone={() => setBurstKey(0)} />
+        </View>
+      ) : null}
+      <Animated.Text pointerEvents="none" style={[styles.plusOne, { color: fx.color }, badgeStyle]}>
+        {fx.shout}
       </Animated.Text>
       <AnimatedPressable
         accessibilityLabel={`${label} ${count}`}
-        accessibilityState={{ disabled }}
+        accessibilityState={{ disabled, selected }}
         disabled={disabled}
-        scaleTo={0.88}
+        haptic="medium"
+        scaleTo={0.84}
         overshoot
         onPress={fire}
         contentStyle={[
           styles.react,
-          selected && { backgroundColor: jade, borderColor: jade },
+          { borderColor: selected ? fx.color : `${fx.color}55` },
+          selected && { backgroundColor: fx.color, shadowColor: fx.color },
           disabled && !selected && styles.disabled,
         ]}
       >
         <Text style={styles.reactEmoji}>{emoji}</Text>
         <Text style={[styles.reactCount, selected && { color: ink }]}>{formatCompactCount(count)}</Text>
       </AnimatedPressable>
-      <Text style={styles.reactLabel}>{label}</Text>
+      <Text style={[styles.reactLabel, selected && { color: fx.color }]}>{label}</Text>
     </View>
   );
 }
@@ -264,6 +277,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingBottom: 4,
     gap: 10,
+    overflow: 'visible',
   },
   wrapTop: {
     justifyContent: 'flex-start',
@@ -328,14 +342,24 @@ const styles = StyleSheet.create({
   chipWrap: {
     width: 56,
     alignItems: 'center',
+    overflow: 'visible',
+    zIndex: 2,
+  },
+  burstLayer: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    left: -32,
+    top: -36,
+    zIndex: 4,
   },
   plusOne: {
     position: 'absolute',
-    top: -6,
-    zIndex: 2,
-    color: FOCAL.neonJade,
-    fontSize: 14,
-    fontWeight: '800',
+    top: -10,
+    zIndex: 5,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.4,
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -345,10 +369,19 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     backgroundColor: colors.videoScrim,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: 'rgba(243,251,247,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.85,
+        shadowRadius: 10,
+      },
+      android: { elevation: 4 },
+      default: {},
+    }),
   },
   reactOn: {
     backgroundColor: FOCAL.neonJade,

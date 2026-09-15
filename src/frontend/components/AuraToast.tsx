@@ -4,11 +4,12 @@ import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useCelebration } from '@/context/CelebrationContext';
-import { colors, radii } from '@/constants/theme';
+import { radii } from '@/constants/theme';
+import { FOCAL } from '@/theme/motion';
 
 /**
  * @purpose Top-of-screen toast for Aura grants and exclusive subscribe unlocks.
- * @returns Floating banner; custom `message` when set (subscribe, Q&A), else `+N Aura Points Earned! ⚡`.
+ * @returns Floating jade banner; custom `message` when set (subscribe, Q&A), else `+N Aura Points Earned!`.
  * @sideEffects Auto-dismisses after ~2.4s via CelebrationContext.
  */
 export function AuraToast() {
@@ -26,8 +27,9 @@ export function AuraToast() {
   return (
     <View pointerEvents="none" style={[styles.wrap, { top: insets.top + 10 }]}>
       <Animated.View entering={FadeInUp.duration(180)} exiting={FadeOutUp.duration(160)} style={styles.toast}>
+        <Text style={styles.spark}>⚡</Text>
         <Text style={styles.label}>
-          {auraToast.message ?? `+${auraToast.points} Aura Points Earned! ⚡`}
+          {auraToast.message ?? `+${auraToast.points} Aura Points Earned!`}
         </Text>
       </Animated.View>
     </View>
@@ -43,15 +45,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toast: {
-    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: FOCAL.neonJade,
     borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: FOCAL.electricGold,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    minHeight: 40,
+    minHeight: 44,
     justifyContent: 'center',
+    shadowColor: FOCAL.neonJade,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  spark: {
+    fontSize: 16,
   },
   label: {
-    color: colors.onAccent,
+    color: FOCAL.ink,
     fontSize: 14,
     fontWeight: '800',
     textAlign: 'center',

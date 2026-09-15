@@ -22,6 +22,7 @@ import { ReelMoreSheet } from '@/components/Reels/ReelMoreSheet';
 import { ReportContentModal } from '@/components/Reels/ReportContentModal';
 import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
 import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
+import { HypeBurst } from '@/components/Effects/HypeBurst';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, palette, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -80,81 +81,24 @@ export type ReelCardProps = {
   surface?: UsageSurface;
 };
 
-type AuraBurst = {
+type HypePop = {
   id: number;
   x: number;
   y: number;
+  kind: PlayReactionId;
   boosted?: boolean;
 };
-
-function AuraTouchBurst({
-  x,
-  y,
-  boosted = false,
-  onDone,
-}: {
-  x: number;
-  y: number;
-  boosted?: boolean;
-  onDone: () => void;
-}) {
-  const scale = useSharedValue(0.35);
-  const translateY = useSharedValue(0);
-  const opacity = useSharedValue(1);
-  const spark = useSharedValue(0.4);
-  const size = boosted ? 96 : 56;
-  const half = size / 2;
-
-  useEffect(() => {
-    scale.value = withSpring(boosted ? 1.42 : 1.28, SPRING_BOUNCE);
-    translateY.value = withTiming(-80, { duration: 620 });
-    opacity.value = withTiming(0, { duration: 680 });
-    spark.value = withTiming(1, { duration: 420 });
-    const timer = setTimeout(onDone, boosted ? 780 : 680);
-    return () => clearTimeout(timer);
-    // Mount-only burst; `onDone` removes this instance.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const style = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }, { scale: scale.value }],
-  }));
-
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value * 0.85,
-    transform: [{ scale: 0.7 + spark.value * 0.55 }],
-  }));
-
-  return (
-    <Reanimated.View
-      pointerEvents="none"
-      style={[styles.auraBurst, boosted && styles.auraBurstBoost, { left: x - half, top: y - half }, style]}
-    >
-      {boosted ? <Reanimated.View style={[styles.serveBurstGlow, glowStyle]} /> : null}
-      {boosted ? (
-        <>
-          <Text style={[styles.serveSpark, styles.serveSparkTL]}>✨</Text>
-          <Text style={[styles.serveSpark, styles.serveSparkTR]}>⚡</Text>
-          <Text style={[styles.serveSpark, styles.serveSparkBL]}>🤝</Text>
-          <Text style={[styles.serveSpark, styles.serveSparkBR]}>✨</Text>
-        </>
-      ) : null}
-      <Text style={[styles.auraBurstLabel, boosted && styles.auraBurstLabelBoost]}>{boosted ? '⚡2×' : '⚡'}</Text>
-    </Reanimated.View>
-  );
-}
 
 const LIVE_BANNER_RESERVE = 108;
 /** Scene already ends at the fan bar; keep chrome on the clip, just above the nav. */
 const OVERLAY_BOTTOM_INSET = 8;
 
 /**
- * @purpose Full-screen Reel feed card: Exclusive mute vs double-tap Aura ⚡, TikTok-style name + caption on the clip just above the fan bar, Train/Serve / Flash Unlock chips, one Seki / Aura / Flex per fan, Mālo fills after a tip, ⋯ for Share / Save / Report. Vault clips lock when `players.vault_locked` (default) unless the fan is subscribed or a Flash Unlock window is live. Serve Like Me doubles double-tap Aura and fires a jade particle burst.
+ * @purpose Full-screen Reel feed card: Exclusive mute vs double-tap Aura ⚡, TikTok-style name + caption on the clip just above the fan bar, Train/Serve / Flash Unlock chips, one Seki / Aura / Flex per fan, Mālo fills after a tip, ⋯ for Share / Save / Report. Vault clips lock when `players.vault_locked` (default) unless the fan is subscribed or a Flash Unlock window is live. Serve Like Me doubles double-tap Aura. Seki / Aura / Flex fire a colored `HypeBurst`.
  * @param clip Highlight including `isVaultOnly` from `reels.is_vault_only` (default false), optional `gameId`, `category`, and `flashUnlockUntil`.
  * @param onOpenProfile Opens `/user/[id]` so the fan can subscribe when Stripe is unavailable.
  * @param playbackActive When true, play the focused page even if the Expo route is unfocused (profile modal).
- * @sideEffects expo-video; optimistic `reels` hype + `increment_reel_hype` (OfflineQueue when `NetInfo.isConnected === false`); double-tap `add_user_aura` (2× on Serve Like Me) + Medium haptic; mute toggle; `saved_reels`; Expo `Share.share`; `report_reel`; Broadcast subscribe on `game_events_${gameId}`; `TelemetryManager` TTFF + stall + feature taps / report issues; vault unlock via PaymentSheet.
+ * @sideEffects expo-video; optimistic `reels` hype + `increment_reel_hype` (OfflineQueue when `NetInfo.isConnected === false`); double-tap `add_user_aura` (2× on Serve Like Me) + Medium haptic + `HypeBurst`; mute toggle; `saved_reels`; Expo `Share.share`; `report_reel`; Broadcast subscribe on `game_events_${gameId}`; `TelemetryManager` TTFF + stall + feature taps / report issues; vault unlock via PaymentSheet.
  */
 export function ReelCard({
   clip,
@@ -199,7 +143,7 @@ export function ReelCard({
     }),
   );
   const [muted, setMuted] = useState(true);
-  const [bursts, setBursts] = useState<AuraBurst[]>([]);
+  const [bursts, setBursts] = useState<HypePop[]>([]);
   const [loopFlash, setLoopFlash] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -398,7 +342,7 @@ export function ReelCard({
       const id = burstId.current + 1;
       burstId.current = id;
       const boosted = clip.category === REEL_CATEGORY_SERVE;
-      setBursts((current) => [...current.slice(-4), { id, x, y, boosted }]);
+      setBursts((current) => [...current.slice(-4), { id, x, y, kind: 'aura', boosted }]);
       try {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       } catch {
@@ -605,13 +549,21 @@ export function ReelCard({
       ) : null}
 
       {bursts.map((burst) => (
-        <AuraTouchBurst
+        <View
           key={burst.id}
-          x={burst.x}
-          y={burst.y}
-          boosted={burst.boosted}
-          onDone={() => setBursts((current) => current.filter((item) => item.id !== burst.id))}
-        />
+          pointerEvents="none"
+          style={[
+            styles.hypePop,
+            burst.boosted && styles.hypePopBoost,
+            { left: burst.x - (burst.boosted ? 64 : 48), top: burst.y - (burst.boosted ? 64 : 48) },
+          ]}
+        >
+          <HypeBurst
+            kind={burst.kind}
+            boosted={burst.boosted}
+            onDone={() => setBursts((current) => current.filter((item) => item.id !== burst.id))}
+          />
+        </View>
       ))}
 
       <Reanimated.View pointerEvents="none" style={[styles.muteBadge, muteBadgeStyle]}>
@@ -850,60 +802,15 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(7,22,15,0.28)',
   },
-  auraBurst: {
+  hypePop: {
     position: 'absolute',
-    width: 56,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 6,
-  },
-  auraBurstBoost: {
     width: 96,
     height: 96,
+    zIndex: 6,
   },
-  serveBurstGlow: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: 48,
-    backgroundColor: 'rgba(0,230,118,0.32)',
-    shadowColor: FOCAL.neonJade,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 22,
-    elevation: 8,
-  },
-  serveSpark: {
-    position: 'absolute',
-    fontSize: 16,
-  },
-  serveSparkTL: {
-    top: 6,
-    left: 10,
-  },
-  serveSparkTR: {
-    top: 10,
-    right: 8,
-  },
-  serveSparkBL: {
-    bottom: 10,
-    left: 12,
-  },
-  serveSparkBR: {
-    bottom: 8,
-    right: 10,
-  },
-  auraBurstLabel: {
-    color: FOCAL.neonJade,
-    fontSize: 44,
-    fontWeight: '800',
-    textShadowColor: 'rgba(0,230,118,0.55)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
-  },
-  auraBurstLabelBoost: {
-    fontSize: 36,
-    textShadowColor: 'rgba(0,230,118,0.95)',
-    textShadowRadius: 18,
+  hypePopBoost: {
+    width: 128,
+    height: 128,
   },
   muteBadge: {
     ...StyleSheet.absoluteFill,

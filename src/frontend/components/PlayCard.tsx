@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { TipCheckout } from '@/components/TipCheckout';
+import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import {
   PLAY_REACTIONS,
@@ -14,6 +14,7 @@ import {
 } from '@/data/players';
 import { bumpPlayerHype } from '@/lib/hype';
 import type { GameEventWithPlayer } from '@/types/database';
+import { HYPE_FX } from '@/theme/hypeFx';
 
 type PlayCardProps = {
   event: GameEventWithPlayer;
@@ -46,6 +47,13 @@ function actionTone(eventType: string): 'td' | 'tackle' | 'sack' | 'play' {
   return 'play';
 }
 
+/**
+ * @purpose Local play-by-play card: jersey, action tag, and Seki / Aura / Flex taps that bump `increment_player_hype`.
+ * @param event `game_events` row with optional joined player.
+ * @param onBacked Fires after a compact Mālo on this athlete.
+ * @returns Surface card with colored reaction chips.
+ * @sideEffects Optimistic local counts plus `bumpPlayerHype` RPC when a player is tagged.
+ */
 export function PlayCard({ event, onBacked }: PlayCardProps) {
   const player = resolveEventPlayer(event);
   const [counts, setCounts] = useState(() => getCounts(event.id));
@@ -113,43 +121,45 @@ export function PlayCard({ event, onBacked }: PlayCardProps) {
       </Text>
 
       <View style={styles.reactions}>
-        {PLAY_REACTIONS.map((reaction) => (
-          <Pressable
-            key={reaction.id}
-            accessibilityRole="button"
-            accessibilityLabel={`${reaction.label} ${reaction.emoji}, ${counts[reaction.id]} taps`}
-            accessibilityHint={reaction.id === 'seki' ? 'Awesome' : undefined}
-            onPress={() => bump(reaction.id)}
-            disabled={reacting}
-            onHoverIn={() => {
-              if (reaction.id === 'seki') revealSekiHint(true);
-            }}
-            onHoverOut={() => {
-              if (reaction.id === 'seki') setSekiHint(false);
-            }}
-            style={({ pressed }) => [
-              styles.reaction,
-              reaction.id === 'seki' && styles.sekiReaction,
-              pressed && styles.reactionPressed,
-            ]}
-          >
-            {reaction.id === 'seki' && sekiHint ? (
-              <View style={styles.tooltip} pointerEvents="none">
-                <Text style={styles.tooltipLabel}>Awesome</Text>
-              </View>
-            ) : null}
-            <Text style={styles.reactionEmoji}>{reaction.emoji}</Text>
-            <Text style={styles.reactionLabel}>{reaction.label}</Text>
-            <Text
-              style={[
-                styles.reactionCount,
-                reaction.id === 'seki' && sekiHint && styles.reactionHint,
+        {PLAY_REACTIONS.map((reaction) => {
+          const fx = HYPE_FX[reaction.id];
+          const tapped = counts[reaction.id] > 0;
+          return (
+            <AnimatedPressable
+              key={reaction.id}
+              accessibilityLabel={`${reaction.label} ${reaction.emoji}, ${counts[reaction.id]} taps`}
+              accessibilityState={{ disabled: reacting }}
+              disabled={reacting}
+              haptic="medium"
+              scaleTo={0.92}
+              overshoot
+              onPress={() => bump(reaction.id)}
+              style={styles.reactionHit}
+              contentStyle={[
+                styles.reaction,
+                { borderColor: fx.color },
+                tapped && { backgroundColor: `${fx.color}22` },
               ]}
             >
-              {reaction.id === 'seki' && sekiHint ? 'Awesome' : counts[reaction.id]}
-            </Text>
-          </Pressable>
-        ))}
+              {reaction.id === 'seki' && sekiHint ? (
+                <View style={styles.tooltip} pointerEvents="none">
+                  <Text style={styles.tooltipLabel}>Awesome</Text>
+                </View>
+              ) : null}
+              <Text style={styles.reactionEmoji}>{reaction.emoji}</Text>
+              <Text style={[styles.reactionLabel, { color: fx.color }]}>{reaction.label}</Text>
+              <Text
+                style={[
+                  styles.reactionCount,
+                  { color: fx.color },
+                  reaction.id === 'seki' && sekiHint && styles.reactionHint,
+                ]}
+              >
+                {reaction.id === 'seki' && sekiHint ? 'Awesome' : counts[reaction.id]}
+              </Text>
+            </AnimatedPressable>
+          );
+        })}
       </View>
 
       {player ? (
@@ -242,27 +252,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  reaction: {
+  reactionHit: {
     flex: 1,
+  },
+  reaction: {
     minHeight: 52,
     borderRadius: radii.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
     gap: 2,
-    overflow: 'visible',
-  },
-  reactionPressed: {
-    backgroundColor: colors.accentSoft,
-    borderColor: colors.primary,
-    transform: [{ scale: 0.98 }],
-  },
-  sekiReaction: {
-    borderColor: colors.gold,
-    backgroundColor: colors.accentSoft,
     overflow: 'visible',
   },
   tooltip: {
