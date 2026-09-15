@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+
+:root {
+  --canvas: #f3faf6;
+  --ink: #0f1416;
+  --jade: #00733c;
+  --gold: #8a6400;
+  --ember: #c4002b;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}

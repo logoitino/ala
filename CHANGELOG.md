@@ -4,9 +4,23 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-14
 
+### A + Full monorepo (pnpm)
+
+- Repo root is workspace orchestration: `pnpm-workspace.yaml`, root scripts (`pnpm mobile`, `pnpm admin`, `pnpm docs:sync`). Expo app moved to `apps/mobile/` (`@tapuai/mobile`). Next.js App Router **stub** at `apps/admin-portal/` (`@tapuai/admin-portal`) with Tailwind + Supabase JS — Expo `/admin` desks stay in mobile. Shared contracts in `packages/shared-types` (`@tapuai/shared-types`).
+- Docs: new [ARCHITECTURE](docs/ARCHITECTURE.md), rewritten [ONBOARDING](docs/ONBOARDING.md) + root [README](README.md); `AGENTS.md` / `DOCUMENTATION.md` / `SCHEMA.md` / `docs:sync` paths retargeted to `apps/mobile/…`. Env: `apps/mobile/.env.local` (`EXPO_PUBLIC_*`) and `apps/admin-portal/.env.local` (`NEXT_PUBLIC_*`).
+
+### Island Daylight tab scheme (gold + ember)
+
+- Shared scheme: Jade · Cyan · Gold · Ember · Violet. `ScreenHeading` kickers/underlines use gold; fan bar paints each tab its own accent (`TAB_ACCENTS`). LIVE chips and cheer LIVE pills are Ember red; Spotlight award cards sit on gold mist; Drip tiles pick up ember mist with gold price badges; Local section titles get a gold rule and sponsor Gold/Platinum cards sit on gold mist.
+- Deeper pass: Highlights chrome (Home / All / Seki, search, campaign) uses gold + ember; Local hubs / Game / Play / Cheer / ScoreHeader / alerts match Spotlight gold-mist cards; Profile Crew, Flip Card, Vault lock, settings rows, and roster jersey chips pick up gold / ember. Guest `/game/[id]` Realtime uses `nextRealtimeTopic` so `postgres_changes` is never attached after `subscribe()`.
+
+### Island Daylight card palette
+
+- Aura collectibles (`AuraTradingCard`, `AuraCard`, `TopAuraBoosters`) sit on per-tier light `face` washes with readable `ink` instead of charcoal `#161D20`. Local Game / Play / Cheer cards, Drip Gear, and Locker Room tiles share jade mist; away / Seki sides pick up Island Cyan. Highlights ⚡ overlays stay Obsidian.
+
 ### Fun hype bursts — Seki / Aura / Flex
 
-- Highlights rail chips each have their own color (Seki cyan, Aura jade, Flex gold) and fire `Effects/HypeBurst`: flying emoji, a shout (`SEKI!` / `AURA!` / `FLEX!`), and a spring ring. Double-tap Aura on the clip uses the same burst (2× on Serve Like Me). Local play cards use the same palette. Fan bar active tab gets a jade wash + dot; Aura toasts pick up a gold rim.
+- Highlights rail chips each have their own color (Seki cyan, Aura jade, Flex gold) and fire `Effects/HypeBurst`: flying emoji, a shout (`SEKI!` / `AURA!` / `FLEX!`), and a spring ring. Double-tap Aura on the clip uses the same burst (2× on Serve Like Me). Local play cards use the same palette. Fan bar active tab gets a per-tab mist wash + glow dot; Aura toasts pick up a gold rim.
 
 ### Skia neon sweep on the Aura trading card
 

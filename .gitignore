@@ -2,12 +2,18 @@
 
 # dependencies
 node_modules/
+package-lock.json
+yarn.lock
 
 # Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+
+# Next.js
+.next/
+out/
 
 # Native
 .kotlin/
@@ -25,22 +31,27 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+pnpm-debug.log*
 
 # macOS
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# local env files (all apps)
 .env
+.env.local
+.env.production
+.env*.local
 aladb.env
 
 # typescript
 *.tsbuildinfo
 
-# Skia web WASM (copied by npm postinstall / npm run skia:web)
-public/canvaskit.wasm
+# Skia web WASM (copied by postinstall / skia:web)
+**/public/canvaskit.wasm
 
 # generated native folders
 /ios
 /android
+apps/mobile/ios
+apps/mobile/android

@@ -11,25 +11,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          cache: pnpm
 
       - name: Install Dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
-      - name: Run TypeScript Type Checks (Architect Bot)
-        run: npx tsc --noEmit
+      - name: Typecheck mobile
+        run: pnpm --filter @tapuai/mobile typecheck
+
+      - name: Typecheck admin portal
+        run: pnpm --filter @tapuai/admin-portal typecheck
 
       - name: Check front-of-house docs match product constants
-        run: npm run docs:check
+        run: pnpm docs:check
 
       - name: Check for Leaked Backend Keys (Security Bot)
         run: |
-          if grep -rn "sk_test_" src/frontend/; then
+          if grep -rn "sk_test_" apps/mobile/src/frontend/; then
             echo "ERROR: Stripe Secret Key found in frontend code!"
             exit 1
           fi

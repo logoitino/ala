@@ -1,9 +1,9 @@
 # Tapua'i database schema
 
-Canonical SQL: [`src/backend/db/schema.sql`](../src/backend/db/schema.sql)  
+Canonical SQL: [`apps/mobile/src/backend/db/schema.sql`](../apps/mobile/src/backend/db/schema.sql)  
 Incremental scripts: [`supabase/`](../supabase/)  
-Types: [`src/frontend/types/database.ts`](../src/frontend/types/database.ts)  
-Client palette: [`src/frontend/lib/aura.ts`](../src/frontend/lib/aura.ts)
+Types: [`apps/mobile/src/frontend/types/database.ts`](../apps/mobile/src/frontend/types/database.ts) · shared contracts [`packages/shared-types`](../packages/shared-types/)  
+Client palette: [`apps/mobile/src/frontend/lib/aura.ts`](../apps/mobile/src/frontend/lib/aura.ts)
 
 Auth (`auth.users`) must exist before `profiles.user_id` can reference it.
 
@@ -497,7 +497,7 @@ Single-row fan chrome map (`id = 'default'`). Admin **Features** writes `draft`.
 | `published_at` | timestamptz | Last Publish to app |
 | `updated_at` | timestamptz | Last draft write |
 
-JSON groups: `tabs` (home / local / spotlight / drip / profile / upload), `buttons` (seki / aura / flex / malo / more / subscribe / crew / vault / flashUnlock / **suggest**), `layouts` (liveMatches / cheerPolls / topBoosters / sponsorshipModal / spotlightModal / homeSearch / localSearch / operatorConsole / parentHq / boosterHq / sponsorHq / **slangGuide** / **receipts** / **wishlist**), `theme` (background / surface / jade / gold / text; default **Daylight** `#F4F7F5` / `#00733C`), `profile` (showCard / showCrew / showStats / showVault / actionsOnTop / statsFirst), `highlights` (railSide / namePlacement / showSchool / showCaption / railOrder), `copy` (Home / Local / Spotlight / Drip kickers and ledes, `slangLine`, Profile / Receipts kickers and ledes, Operator / Parent / Booster / Sponsor ledes, optional `homeBannerTitle` / `homeBannerBody`), **`catalog`** (`maloAmounts`, `maloFeeDollars`, `exclusiveDollars`, `exclusiveAura`, `classYears`, `localFilters`, `sponsorTiers`, `reelCategories`). Client desks: `/admin/features` (flags), `/admin/look` (colors, copy, Profile chrome, Highlights ⚡ rail), `/admin/catalog` (prices and chips), `/admin/lab` (JSON draft, hidden from the sidebar), `/admin/coverage` (client map of every fan control → desk / flag / telemetry; no extra table).
+JSON groups: `tabs` (home / local / spotlight / drip / profile / upload), `buttons` (seki / aura / flex / malo / more / subscribe / crew / vault / flashUnlock / **suggest**), `layouts` (liveMatches / cheerPolls / topBoosters / sponsorshipModal / spotlightModal / homeSearch / localSearch / operatorConsole / parentHq / boosterHq / sponsorHq / **slangGuide** / **receipts** / **wishlist**), `theme` (background / surface / jade / gold / text; default **Daylight** `#F3FAF6` / `#00733C`), `profile` (showCard / showCrew / showStats / showVault / actionsOnTop / statsFirst), `highlights` (railSide / namePlacement / showSchool / showCaption / railOrder), `copy` (Home / Local / Spotlight / Drip kickers and ledes, `slangLine`, Profile / Receipts kickers and ledes, Operator / Parent / Booster / Sponsor ledes, optional `homeBannerTitle` / `homeBannerBody`), **`catalog`** (`maloAmounts`, `maloFeeDollars`, `exclusiveDollars`, `exclusiveAura`, `classYears`, `localFilters`, `sponsorTiers`, `reelCategories`). Client desks: `/admin/features` (flags), `/admin/look` (colors, copy, Profile chrome, Highlights ⚡ rail), `/admin/catalog` (prices and chips), `/admin/lab` (JSON draft, hidden from the sidebar), `/admin/coverage` (client map of every fan control → desk / flag / telemetry; no extra table).
 
 **RLS (demo):** public SELECT; admin INSERT / UPDATE (`anon` in Expo Go). Incremental: `supabase/app_runtime.sql`. Client: `src/frontend/lib/runtime.ts` + `/admin/features`.
 
@@ -783,17 +783,17 @@ Insert-on-miss seeds `home_name` / `away_name` at 0–0. Featured rivalry `westl
 
 Tier = highest band whose minimum the balance meets. Source of truth: `AURA_TIERS` in `src/frontend/lib/aura.ts` and `get_aura_tier` in SQL.
 
-| Tier | Title | Min pts | Hex | Notes |
-| --- | --- | --- | --- | --- |
-| 1 | **Slate Silver** | 0 | `#94A3B8` | Entry border |
-| 2 | **Island Cyan** | 8 | `#00E5FF` | |
-| 3 | **Neon Jade** | 20 | `#00E676` | Brand jade |
-| 4 | **Electric Violet** | 40 | `#B388FF` | |
-| 5 | **Crimson Ember** | 70 | `#FF1744` | |
-| 6 | **Polished Gold** | 110 | `#FFD700` | |
-| 7 | **Celestial Prism** | 170 | `#00E676` / `#00E5FF` | Jade border, cyan glow |
+| Tier | Title | Min pts | Hex | Face | Ink | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | **Slate Silver** | 0 | `#94A3B8` | `#F1F5F9` | `#334155` | Entry border |
+| 2 | **Island Cyan** | 8 | `#00E5FF` | `#CFF7FF` | `#007A8A` | Seki / away |
+| 3 | **Neon Jade** | 20 | `#00E676` | `#E8FBF0` | `#00733C` | Brand jade |
+| 4 | **Electric Violet** | 40 | `#B388FF` | `#F3EDFF` | `#4C1D95` | Flex-adjacent |
+| 5 | **Crimson Ember** | 70 | `#FF1744` | `#FFE8EC` | `#C4002B` | Heat |
+| 6 | **Polished Gold** | 110 | `#FFD700` | `#FFF8DC` | `#8A6400` | |
+| 7 | **Celestial Prism** | 170 | `#00E676` / `#00E5FF` | `#EEFFF6` | `#00733C` | Jade border, cyan glow; Skia sweep |
 
-Badge: `Tier {n} • {title}`. Card face `#161D20`. `AuraCard` (public athlete) / `AuraTradingCard` (Profile hub, both faces) / `TopAuraBoosters`. Progress fill uses `auraProgressTowardNext` (band min → next min; Celestial Prism is full). Focal motion tokens: Neon Jade `#00E676` (tips / Aura / active roles), Electric Gold `#FFD700` (Gold / Platinum boosters and `#1` rank). Source: `src/frontend/theme/motion.ts`.
+Badge: `Tier {n} • {title}`. Collectible cards use per-tier `face` + `ink` on Daylight (`AURA_TIERS` in `aura.ts`). `AuraCard` (public athlete) / `AuraTradingCard` (Profile hub, both faces) / `TopAuraBoosters`. Progress fill uses `auraProgressTowardNext` (band min → next min; Celestial Prism is full). Standard Island scheme (`FOCAL` + `TAB_ACCENTS`): Daylight `#F3FAF6`, Jade `#00E676` / `#00733C` (Home / Mālo), Cyan `#00E5FF` (Local / Seki), Gold `#FFD700` / `#8A6400` (kickers / Spotlight / ranks), Ember `#FF1744` (LIVE / Drip), Violet `#7C4DFF` (Profile). Video chrome stays Obsidian `#0F1416`. Source: `src/frontend/theme/motion.ts`.
 
 If `aura_points` is unset on a player, the client falls back to `aura_count + seki_count + flex_count`.
 
