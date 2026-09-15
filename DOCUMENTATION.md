@@ -32,7 +32,7 @@ Roles: `guest`, `fan`, `athlete`, `parent`, `operator`, `booster`, `sponsor`, `a
 | Video | **`expo-video` only** (do not use `expo-av` for the feed; do not set `useCaching: true`) |
 | Backend | **Supabase** — Auth, Postgres, Realtime WebSockets (`games`, `game_events`, `cheer_polls`), Storage (`game_highlights`) |
 | Payments | **Stripe Connect Express / PaymentSheet, test mode** (`pk_test_` / `sk_test_`). Native: `stripe.native.ts`. Web PaymentSheet is stubbed; Connect uses `expo-web-browser`. Express Account Links are minted only by Edge Function `create-stripe-account` with the session JWT — never on device. |
-| API | `POST /api/create-payment-intent`, `POST /api/create-payout`, JWT `POST /api/create-stripe-account` (Metro fallback). Production Connect: `supabase.functions.invoke('create-stripe-account')`. |
+| API | JWT `POST /api/create-payment-intent`, JWT `POST /api/create-payout` (destination from `profiles.stripe_connect_id`, never the request body), JWT `POST /api/create-stripe-account` (Metro fallback). Production Connect: `supabase.functions.invoke('create-stripe-account')`. Server secret is `STRIPE_SECRET_KEY` only. |
 | Env | Mobile: `EXPO_PUBLIC_*` in `apps/mobile/.env.local`. Admin portal: `NEXT_PUBLIC_*` in `apps/admin-portal/.env.local`. |
 | Workspace | `pnpm install` at repo root. `pnpm mobile` / `pnpm admin` / `pnpm docs:sync`. |
 
@@ -43,7 +43,7 @@ flowchart LR
     Ops[Operator console]
   end
   subgraph api [Expo API]
-    PI["/api/create-payment-intent"]
+    PI["/api/create-payment-intent JWT"]
   end
   subgraph edge [Supabase Edge]
     CA["create-stripe-account JWT"]
@@ -89,7 +89,7 @@ apps/admin-portal/                Next Soft-Wall plane (Overview / Soft-Wall / F
 packages/shared-types/            @tapuai/shared-types
 scripts/                          Node generators (`sync-front-docs.mjs` → product facts; reads apps/mobile constants)
 supabase/                         Incremental SQL (DROP FUNCTION before return-type changes)
-supabase/functions/               Edge Functions (`create-stripe-account` JWT Connect, `create-payment-intent`)
+supabase/functions/               Edge Functions (`create-stripe-account` JWT Connect, `create-payment-intent` JWT)
 ```
 
 The elevated **center camera uploader** is a FAB (`UploadSheetContext`), not a tab route. `apps/mobile/babel.config.js` must include `babel-preset-expo`.

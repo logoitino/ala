@@ -8,9 +8,16 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 - `SoftWallModal` and first-open `WelcomeOverlay` sit on Daylight surfaces: gold kickers + mist gold hero, jade Magic Link, outlined Google, ink Apple, Demo Fan as a gold-mist QA row. Light blur (Highlights ⚡ stay Obsidian).
 - Guests no longer skip Soft-Wall into Stripe: Local play Mālo (`TipCheckout`), Local roster tip sheet, guest `/player/[id]`, Reel Vault unlock, `/user/[id]` exclusive (`/athlete/[id]` redirects here), and Profile Subscribe now `requireAuth` then resume. Profile Subscribe uses the same exclusive PaymentSheet + `useAthleteSubscription.grant` path as athlete Vault (still caches `tapuai.exclusiveSub` for the hub crest).
-- Soft-Wall resume reads the **live** session in `startCheckout` / `grant` so a pre-login callback still writes `tips.fan_id`, payer Aura, and `subscriptions` after SIGNED_IN.
-- CI: `pnpm/action-setup@v4` reads `packageManager` from `package.json` (drops duplicate `version: 9` so Setup pnpm can run).
+- Soft-Wall resume reads the **live** session in `startCheckout` / `grant` so a pre-login callback still writes `tips.fan_id`, payer Aura, and `subscriptions` after SIGNED_IN. PaymentIntent still uses main's JWT Bearer gate (`requireAccessToken`) after that session exists.
 - New intent `exclusive` (`soft_wall.exclusive`). Provider order is Apple → Google → Magic Link → Demo Fan (`SOFT_WALL_AUTH_PROVIDERS`).
+
+### Stripe PaymentIntent + payout JWT gate
+
+- Removed `EXPO_PUBLIC_STRIPE_SECRET_KEY` fallback from Expo PaymentIntent and custodial payouts. Server secret is `STRIPE_SECRET_KEY` only (`sk_` never in `src/frontend/`).
+- `POST /api/create-payment-intent` and Edge `create-payment-intent` require `Authorization: Bearer` session JWT (`supabase.auth.getUser`). Amount must be integer cents, min 50. Edge function fails clearly when `STRIPE_SECRET_KEY` is missing and uses the same Stripe Deno client style as Connect.
+- `POST /api/create-payout` requires the same JWT. Destination is `profiles.stripe_connect_id` for `auth.uid()` (service role or user-scoped read). Client `destinationAccountId` is ignored. Stripe configured + no linked account or `payouts_enabled` is false → 400. Queue-for-admin only when `STRIPE_SECRET_KEY` is missing.
+- Connect `create-stripe-account` (Accounts v2 + Account Links) is unchanged.
+- CI `pnpm/action-setup` no longer pins `version: 9` next to `packageManager: pnpm@9.15.0` (action-setup v4 rejects the dual pin).
 
 ## 2026-09-14
 

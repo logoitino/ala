@@ -34,7 +34,7 @@ apps/admin-portal ─┘
 Canonical tables and RPCs live in `apps/mobile/src/backend/db/schema.sql` and are documented in [SCHEMA.md](SCHEMA.md). Core loops:
 
 1. `reels` + `game_highlights` Storage → Highlights feed.
-2. `tips` + Stripe PaymentIntent → Mālo → `add_user_aura`.
+2. `tips` + JWT-gated Stripe PaymentIntent → Mālo → `add_user_aura`.
 3. `profiles.aura_points` → 7-tier Aura card + Top Boosters.
 4. `games` / `game_events` Realtime → Local live scores.
 5. `spotlight_awards` → Spotlight tab / launch modal.
@@ -43,7 +43,7 @@ Canonical tables and RPCs live in `apps/mobile/src/backend/db/schema.sql` and ar
 
 | App | File | Prefix |
 | --- | --- | --- |
-| Mobile | `apps/mobile/.env.local` | `EXPO_PUBLIC_*` (+ server `STRIPE_SECRET_KEY` for Expo API routes) |
+| Mobile | `apps/mobile/.env.local` | `EXPO_PUBLIC_*` (+ server `STRIPE_SECRET_KEY` for JWT-gated Expo API routes; never `EXPO_PUBLIC_STRIPE_SECRET_KEY`) |
 | Admin portal | `apps/admin-portal/.env.local` | `NEXT_PUBLIC_SUPABASE_*` |
 
 Never commit `.env`, `.env.local`, or `.env.production`.
