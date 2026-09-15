@@ -1,12 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { telemetry } from '@/services/TelemetryManager';
+import { FOCAL } from '@/theme/motion';
 
 const STORAGE_KEY = 'tapuai.slangGuideDismissed';
 
@@ -57,15 +57,14 @@ export function SlangGuideBanner({ overlay = false }: SlangGuideBannerProps) {
     >
       <View style={styles.banner} accessibilityRole="summary" accessibilityLabel={copy}>
         <Text style={styles.copy}>{copy}</Text>
-        <Pressable
-          accessibilityRole="button"
+        <AnimatedButton
+          haptic="selection"
           accessibilityLabel="Dismiss slang guide"
-          hitSlop={8}
           onPress={dismiss}
-          style={({ pressed }) => [styles.dismiss, pressed && styles.pressed]}
+          contentStyle={styles.dismiss}
         >
           <Text style={styles.dismissLabel}>OK</Text>
-        </Pressable>
+        </AnimatedButton>
       </View>
     </View>
   );
@@ -88,10 +87,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: colors.surface,
+    backgroundColor: FOCAL.mistGold,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.gold,
+    borderWidth: 1.5,
+    borderColor: FOCAL.electricGold,
     paddingVertical: 10,
     paddingHorizontal: 12,
   },
@@ -103,10 +102,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   dismiss: {
-    minHeight: 32,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: colors.gold,
+    minHeight: 36,
+    paddingHorizontal: 12,
+    borderRadius: radii.sm,
+    backgroundColor: FOCAL.goldInk,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -114,8 +113,5 @@ const styles = StyleSheet.create({
     color: colors.onAccent,
     fontSize: 12,
     fontWeight: '800',
-  },
-  pressed: {
-    opacity: 0.88,
   },
 });

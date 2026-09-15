@@ -2,6 +2,15 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-09-15
+
+### Fan polish, dead controls, Expo `/admin` links
+
+- Shared Daylight `EmptyState` plus `radii.sm` / `xl` / `pill` and `space` tokens. Fan bar, ScreenHeading, GameCard, GearCard, slang guide, exclusive paywall, and Profile settings rows sit on Island accents (jade Mālo, gold Subscribe, violet Account Settings) with spring presses instead of opacity.
+- Profile **Subscribe** is PaymentSheet + `subscriptions` (same path as `/user/[id]`), not a local AsyncStorage flag. Guests hit Soft-Wall first.
+- Paused tabs / role HQs (`RuntimePaused`) and empty Local / Drip / Spotlight / receipts / Vault / Stats boards deep-link operators into the matching Expo `/admin` desk. Features Soft-Wall board opens Coverage / People; Catalogs / Look / Publish sit at the bottom of Features. Profile admins get Features + Catalogs rows.
+- Athlete HQ **Save name** writes `profiles.full_name`. Sponsor rail cards peek the booster. Local empty games distinguish “no matches” vs a region miss.
+
 ## 2026-09-14
 
 ### Soft-Wall admin oversight (Expo + Next portal)

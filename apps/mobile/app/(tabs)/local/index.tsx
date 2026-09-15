@@ -20,6 +20,7 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { TopAuraBoosters } from '@/components/TopAuraBoosters';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { EmptyState } from '@/components/UI/EmptyState';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
@@ -141,41 +142,46 @@ function SponsorRailCard({
   sponsor,
   highlighted,
   onLayoutX,
+  onPress,
 }: {
   sponsor: Sponsorship;
   highlighted: boolean;
   onLayoutX: (x: number) => void;
+  onPress: () => void;
 }) {
   const pack = sponsorTierById(sponsor.tier);
   return (
-    <View
-      accessibilityRole="summary"
-      accessibilityLabel={`${sponsor.business_name}, ${pack.badge}, ${sponsor.school_team}`}
-      onLayout={(event) => onLayoutX(event.nativeEvent.layout.x)}
-      style={[
-        styles.sponsorCard,
-        sponsor.tier === 'gold' || sponsor.tier === 'platinum' ? styles.sponsorCardGold : undefined,
-        highlighted ? styles.sponsorCardOn : undefined,
-      ]}
-    >
-      <View style={styles.sponsorLogo}>
-        {sponsor.logo_url ? (
-          <Image source={{ uri: sponsor.logo_url }} style={styles.sponsorLogoImage} />
-        ) : (
-          <Text style={styles.sponsorInitials}>{initialsForBusiness(sponsor.business_name)}</Text>
-        )}
-      </View>
-      <Text style={styles.sponsorName} numberOfLines={2}>
-        {sponsor.business_name}
-      </Text>
-      {sponsor.school_team ? (
-        <Text style={styles.sponsorSchool} numberOfLines={1}>
-          {sponsor.school_team}
+    <View onLayout={(event) => onLayoutX(event.nativeEvent.layout.x)}>
+      <AnimatedButton
+        accessibilityRole="button"
+        accessibilityLabel={`${sponsor.business_name}, ${pack.badge}, ${sponsor.school_team}`}
+        haptic="selection"
+        onPress={onPress}
+        contentStyle={[
+          styles.sponsorCard,
+          sponsor.tier === 'gold' || sponsor.tier === 'platinum' ? styles.sponsorCardGold : undefined,
+          highlighted ? styles.sponsorCardOn : undefined,
+        ]}
+      >
+        <View style={styles.sponsorLogo}>
+          {sponsor.logo_url ? (
+            <Image source={{ uri: sponsor.logo_url }} style={styles.sponsorLogoImage} />
+          ) : (
+            <Text style={styles.sponsorInitials}>{initialsForBusiness(sponsor.business_name)}</Text>
+          )}
+        </View>
+        <Text style={styles.sponsorName} numberOfLines={2}>
+          {sponsor.business_name}
         </Text>
-      ) : null}
-      <View style={[styles.tierBadge, { borderColor: pack.accent }]}>
-        <Text style={[styles.tierBadgeLabel, { color: pack.accent }]}>{pack.badge}</Text>
-      </View>
+        {sponsor.school_team ? (
+          <Text style={styles.sponsorSchool} numberOfLines={1}>
+            {sponsor.school_team}
+          </Text>
+        ) : null}
+        <View style={[styles.tierBadge, { borderColor: pack.accent }]}>
+          <Text style={[styles.tierBadgeLabel, { color: pack.accent }]}>{pack.badge}</Text>
+        </View>
+      </AnimatedButton>
     </View>
   );
 }
@@ -402,10 +408,14 @@ export default function LocalTab() {
               mist={FOCAL.mistGold}
             />
             {hubs.length === 0 ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyTitle}>Local boards are paused</Text>
-                <Text style={styles.muted}>Turn Live Matches, School Polls, or Top Boosters on in Admin → Features, then Publish to app.</Text>
-              </View>
+              <EmptyState
+                kicker="Local"
+                title="Local boards are paused"
+                lede="Turn Live Matches, School Polls, or Top Boosters on in Features, then Publish to app."
+                adminHref="/admin/features"
+                adminLabel="Open Features"
+                accent={TAB_ACCENTS.local.color}
+              />
             ) : null}
 
             <View
@@ -432,22 +442,29 @@ export default function LocalTab() {
                   <MatchupSkeleton />
                 </View>
               ) : error ? (
-                <View style={styles.empty}>
-                  <Text style={styles.emptyTitle}>Couldn’t load games</Text>
-                  <Text style={styles.muted}>{error}</Text>
-                  <AnimatedButton
-                    accessibilityLabel="Try again"
-                    onPress={() => void refresh()}
-                    contentStyle={styles.retry}
-                  >
-                    <Text style={styles.retryLabel}>Try again</Text>
-                  </AnimatedButton>
-                </View>
+                <EmptyState
+                  kicker="Local"
+                  title="Couldn’t load games"
+                  lede={error}
+                  actionLabel="Try again"
+                  onAction={() => void refresh()}
+                  adminHref="/admin/games"
+                  adminLabel="Open Live games"
+                  accent={TAB_ACCENTS.local.color}
+                />
               ) : filteredGames.length === 0 ? (
-                <View style={styles.empty}>
-                  <Text style={styles.emptyTitle}>{live.copy.localEmpty}</Text>
-                  <Text style={styles.muted}>Try another regional tag.</Text>
-                </View>
+                <EmptyState
+                  kicker="Live matchups"
+                  title={games.length === 0 ? live.copy.localEmpty : 'No games in this region'}
+                  lede={
+                    games.length === 0
+                      ? 'Publish a match on Live games so Friday night lands here.'
+                      : 'Try another regional tag, or clear the chip.'
+                  }
+                  adminHref="/admin/games"
+                  adminLabel="Open Live games"
+                  accent={TAB_ACCENTS.local.color}
+                />
               ) : (
                 <View style={styles.list}>
                   {filteredGames.map((game) => (
@@ -494,6 +511,7 @@ export default function LocalTab() {
                     onLayoutX={(x) => {
                       sponsorX.current[sponsor.id] = x;
                     }}
+                    onPress={() => selectBooster(sponsor.id)}
                   />
                 ))}
               </ScrollView>
@@ -513,10 +531,18 @@ export default function LocalTab() {
               </View>
               <Text style={styles.hubCopy}>Tap a side to lock in your cheer. Bars spring to the live share.</Text>
               {visiblePolls.length === 0 ? (
-                <View style={styles.empty}>
-                  <Text style={styles.emptyTitle}>No polls for {schoolFilter}</Text>
-                  <Text style={styles.muted}>Clear the school chip or search another high school.</Text>
-                </View>
+                <EmptyState
+                  kicker="School polls"
+                  title={schoolFilter ? `No polls for ${schoolFilter}` : 'No school polls yet'}
+                  lede={
+                    schoolFilter
+                      ? 'Clear the school chip or search another high school.'
+                      : 'Create a cheer matchup on the Polls desk to fill this board.'
+                  }
+                  adminHref="/admin/polls"
+                  adminLabel="Open Polls"
+                  accent={TAB_ACCENTS.local.color}
+                />
               ) : (
                 visiblePolls.map((poll) => (
                   <CheerPollCard

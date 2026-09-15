@@ -16,6 +16,7 @@ import { SubscriberQnA } from '@/components/Profile/SubscriberQnA';
 import { VaultLockCard } from '@/components/Profile/VaultLockCard';
 import { TaggedReelGrid } from '@/components/TaggedReelGrid';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { EmptyState } from '@/components/UI/EmptyState';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -250,7 +251,17 @@ export function AthleteProfileView({
       />
       {tab === 'highlights' ? (
         publicClips.length === 0 ? (
-          <Text style={styles.empty}>No Highlights ⚡ tagged yet.</Text>
+          <EmptyState
+            kicker="Highlights ⚡"
+            title="No Highlights ⚡ tagged yet"
+            lede={
+              manageVault
+                ? 'Publish from the + button on the fan bar, then tag yourself so clips land here.'
+                : 'When this athlete is tagged in a clip, it shows on this tab.'
+            }
+            adminHref="/admin/highlights"
+            adminLabel="Open Highlights"
+          />
         ) : (
           grid(publicClips)
         )
@@ -267,23 +278,31 @@ export function AthleteProfileView({
       ) : null}
       {tab === 'vault' && live.buttons.vault && live.profile.showVault ? (
         <View style={styles.vault}>
-          {manageVault ? (
-            <Text style={styles.empty}>
-              Long-press a clip on Highlights ⚡ or here to move it into the Vault. Lock the Vault so fans
-              subscribe to watch.
-            </Text>
-          ) : sealed && !subscribed ? (
+          {manageVault && vaultClips.length === 0 ? (
+            <EmptyState
+              kicker="Vault 🔒"
+              title="Move clips into the Vault"
+              lede="Long-press a clip on Highlights ⚡ or here to vault it. Lock the Vault so fans subscribe to watch."
+              adminHref="/admin/highlights"
+              adminLabel="Open Highlights"
+            />
+          ) : null}
+          {!manageVault && sealed && !subscribed ? (
             <VaultLockedCard busy={vaultBusy} onUnlock={() => onUnlockVault?.()} />
-          ) : subscribed ? (
+          ) : null}
+          {!manageVault && subscribed ? (
             <SubscriberQnA athleteId={player.id} athleteName={player.name} />
           ) : null}
-          {vaultClips.length === 0 ? (
-            <Text style={styles.empty}>
-              {manageVault ? 'No Vault 🔒 clips yet. Long-press a Highlight to vault it.' : 'No Vault 🔒 clips yet.'}
-            </Text>
-          ) : (
-            grid(vaultClips, { vaultBadge: true, lock: sealed })
-          )}
+          {vaultClips.length === 0 && !manageVault && (!sealed || subscribed) ? (
+            <EmptyState
+              kicker="Vault 🔒"
+              title="No Vault 🔒 clips yet"
+              lede="Private clips show here after this athlete vaults them."
+              adminHref="/admin/highlights"
+              adminLabel="Open Highlights"
+            />
+          ) : null}
+          {vaultClips.length > 0 ? grid(vaultClips, { vaultBadge: true, lock: sealed }) : null}
         </View>
       ) : null}
     </View>
@@ -390,12 +409,6 @@ const styles = StyleSheet.create({
   },
   statsPane: {
     gap: 16,
-  },
-  empty: {
-    color: colors.textMuted,
-    fontSize: 14,
-    textAlign: 'center',
-    paddingVertical: 18,
   },
   crewBlock: {
     gap: 10,

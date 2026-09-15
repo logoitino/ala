@@ -157,8 +157,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   pill: {
-    minHeight: 36,
-    paddingHorizontal: 12,
+    minHeight: 40,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
     alignItems: 'center',

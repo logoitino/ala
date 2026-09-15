@@ -1,3 +1,4 @@
+import { type Href, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -19,6 +20,7 @@ import { SOFT_WALL_AUTH_PROVIDERS, SOFT_WALL_GATES } from '@tapuai/shared-types'
  * @sideEffects `patch_app_runtime_draft` on each toggle; `publish_app_runtime` from this desk or the sidebar.
  */
 export function FeaturesTool() {
+  const router = useRouter();
   const { draft, published, saveDraft } = useAppRuntime();
   const operatorLive = getRuntimeFlag(published, 'layouts.operatorConsole');
   const operatorDraft = getRuntimeFlag(draft, 'layouts.operatorConsole');
@@ -62,6 +64,10 @@ export function FeaturesTool() {
           }
           tone={operatorLive ? 'warn' : 'ok'}
         />
+        <View style={styles.linkRow}>
+          <AdminBtn label="Open Coverage" onPress={() => router.push('/admin/coverage' as Href)} />
+          <AdminBtn label="Open People" onPress={() => router.push('/admin/people' as Href)} />
+        </View>
       </View>
 
       {APP_FLAG_GROUPS.map((group) => (
@@ -89,6 +95,11 @@ export function FeaturesTool() {
       ))}
 
       <AdminEmpty text="School names, player stats, captions, Drip prices, and scores save instantly on their own desks. Mālo amounts, exclusive dollars, class years, Local chips, booster tiers, and upload labels live on Catalogs. Soft-Wall gates stay in code; pause Mālo / Crew / Wishlist / Operator here." />
+      <View style={styles.linkRow}>
+        <AdminBtn label="Open Catalogs" onPress={() => router.push('/admin/catalog' as Href)} />
+        <AdminBtn label="Open Look" onPress={() => router.push('/admin/look' as Href)} />
+        <AdminBtn label="Open Publish" onPress={() => router.push('/admin/publish' as Href)} />
+      </View>
     </AdminPage>
   );
 }
@@ -107,5 +118,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 18,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
 });

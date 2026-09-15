@@ -5,8 +5,7 @@ import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { exclusiveSubscribeLabel, exclusiveVaultCallout } from '@/data/exclusive';
 import { displayValue } from '@/data/players';
-
-const NEON_JADE = '#00E676';
+import { FOCAL } from '@/theme/motion';
 
 type ExclusivePaywallProps = {
   athleteName?: string | null;
@@ -89,15 +88,15 @@ export function VaultLockedCard({ busy = false, onUnlock }: VaultLockedCardProps
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: colors.surface,
+    backgroundColor: FOCAL.mistJade,
     borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: NEON_JADE,
+    borderWidth: 1.5,
+    borderColor: FOCAL.jadeInk,
     padding: 16,
     gap: 8,
   },
   kicker: {
-    color: NEON_JADE,
+    color: FOCAL.jadeInk,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.4,
@@ -115,7 +114,7 @@ const styles = StyleSheet.create({
   button: {
     minHeight: 52,
     borderRadius: radii.md,
-    backgroundColor: NEON_JADE,
+    backgroundColor: FOCAL.jadeInk,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,

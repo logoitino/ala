@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';
@@ -18,7 +17,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { markExclusiveClips } from '@/data/exclusive';
 import { displayValue, type Player } from '@/data/players';
-import { useHasSubscriberPass } from '@/hooks/useAthleteSubscription';
+import { useAthleteSubscription, useHasSubscriberPass } from '@/hooks/useAthleteSubscription';
 import { useAthleteStats } from '@/hooks/useAthleteStats';
 import { countStoredCheerVotes } from '@/hooks/useCheerPoll';
 import { useRoster } from '@/hooks/useRoster';
@@ -36,8 +35,6 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
 
-const SUB_KEY = 'tapuai.exclusiveSub';
-
 const FALLBACK_ATHLETE: Player = {
   id: 'demo-marcus-rivera',
   name: 'Marcus Rivera',
@@ -52,7 +49,7 @@ const FALLBACK_ATHLETE: Player = {
 
 /**
  * @purpose Profile hub: unified `AthleteProfileView` (3D card + Highlights ⚡ / Stats 📊 / Vault 🔒), Account Capability, payouts, receipts.
- * @sideEffects `AuraTradingCard` flip + Medium haptic at 90°; `RoleSwitcherModal` `add_user_role` / `active_role`; `PayoutSetupCard` Stripe Express; Light haptic → `/receipts`; `toggle_reel_vault_status` / `set_player_vault_locked`.
+ * @sideEffects `AuraTradingCard` flip + Medium haptic at 90°; `RoleSwitcherModal` `add_user_role` / `active_role`; `PayoutSetupCard` Stripe Express; Light haptic → `/receipts`; exclusive Subscribe PaymentSheet + `subscriptions` insert; `toggle_reel_vault_status` / `set_player_vault_locked`.
  */
 export default function MyHubTab() {
   const router = useRouter();
@@ -65,7 +62,6 @@ export default function MyHubTab() {
   const hasSubscriberPass = useHasSubscriberPass();
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [tips, setTips] = useState<TipLedgerEntry[]>([]);
-  const [subscribed, setSubscribed] = useState(false);
   const [taggedRows, setTaggedRows] = useState<ReelWithPlayer[]>([]);
   const [auraById, setAuraById] = useState<Record<string, number>>({});
   const [tipsDropped, setTipsDropped] = useState(0);
@@ -77,12 +73,6 @@ export default function MyHubTab() {
 
   useEffect(() => {
     void loadFavoritePlayerIds().then(setFavoriteIds);
-  }, []);
-
-  useEffect(() => {
-    void AsyncStorage.getItem(SUB_KEY).then((value) => {
-      if (value === '1') setSubscribed(true);
-    });
   }, []);
 
   useEffect(() => {
@@ -118,6 +108,8 @@ export default function MyHubTab() {
   }, [auraById, rosterAthlete]);
 
   const { stats, loading: statsLoading } = useAthleteStats(athlete.id, athlete);
+  const { subscribed: athletePass, grant } = useAthleteSubscription(athlete.id);
+  const subscribed = hasSubscriberPass || athletePass;
 
   const hubAuraPoints = useMemo(() => {
     if (typeof profile?.aura_points === 'number') return profile.aura_points;
@@ -171,8 +163,21 @@ export default function MyHubTab() {
   const cardJersey = profile?.athlete_jersey || athlete.jersey_number;
 
   const subscribe = () => {
-    setSubscribed(true);
-    void AsyncStorage.setItem(SUB_KEY, '1');
+    requireAuth({
+      kind: 'malo',
+      athleteName: athlete.name,
+      athleteId: athlete.id,
+      resume: () => {
+        void startCheckout({
+          player: athlete,
+          tipAmount: live.catalog.exclusiveDollars,
+          coverFees: false,
+          auraPoints: live.catalog.exclusiveAura,
+          skipBacker: true,
+          onPaid: grant,
+        });
+      },
+    });
   };
 
   const dropMalo = () => {
@@ -290,7 +295,7 @@ export default function MyHubTab() {
                       ? 'Subscribed to exclusive feed'
                       : `Subscribe for ${live.catalog.exclusiveDollars.toFixed(2)} a month`
                   }
-                  disabled={subscribed}
+                  disabled={subscribed || busy}
                   onPress={subscribe}
                   style={styles.actionFlex}
                   contentStyle={[styles.secondaryAction, subscribed && styles.secondaryActionOn]}
@@ -350,6 +355,34 @@ export default function MyHubTab() {
                   <View style={styles.capabilityCopy}>
                     <Text style={styles.capabilityLabel}>Admin portal</Text>
                     <Text style={styles.capabilityValue}>Publish, moderate, and preview production</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </AnimatedButton>
+              ) : null}
+              {isAdmin ? (
+                <AnimatedButton
+                  accessibilityLabel="Features desk"
+                  haptic="light"
+                  onPress={() => router.push('/admin/features' as Href)}
+                  contentStyle={styles.capabilityRow}
+                >
+                  <View style={styles.capabilityCopy}>
+                    <Text style={styles.capabilityLabel}>Features</Text>
+                    <Text style={styles.capabilityValue}>Tabs, Soft-Wall, pause boards — then Publish</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </AnimatedButton>
+              ) : null}
+              {isAdmin ? (
+                <AnimatedButton
+                  accessibilityLabel="Catalogs desk"
+                  haptic="light"
+                  onPress={() => router.push('/admin/catalog' as Href)}
+                  contentStyle={styles.capabilityRow}
+                >
+                  <View style={styles.capabilityCopy}>
+                    <Text style={styles.capabilityLabel}>Catalogs</Text>
+                    <Text style={styles.capabilityValue}>Mālo presets, exclusive pass, class years</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                 </AnimatedButton>
@@ -518,9 +551,9 @@ const styles = StyleSheet.create({
   capabilityRow: {
     minHeight: 56,
     borderRadius: radii.md,
-    backgroundColor: FOCAL.mistGold,
+    backgroundColor: TAB_ACCENTS.profile.mist,
     borderWidth: 1.5,
-    borderColor: FOCAL.electricGold,
+    borderColor: TAB_ACCENTS.profile.glow,
     paddingHorizontal: 14,
     paddingVertical: 10,
     flexDirection: 'row',
@@ -533,13 +566,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   capabilityLabel: {
-    color: FOCAL.goldInk,
+    color: TAB_ACCENTS.profile.color,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.3,
   },
   capabilityValue: {
-    color: FOCAL.emberInk,
+    color: colors.text,
     fontSize: 15,
     fontWeight: '800',
   },
@@ -547,7 +580,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 52,
     borderRadius: radii.md,
-    backgroundColor: FOCAL.goldInk,
+    backgroundColor: FOCAL.jadeInk,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
@@ -561,9 +594,9 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 52,
     borderRadius: radii.md,
-    backgroundColor: FOCAL.mistEmber,
+    backgroundColor: FOCAL.mistGold,
     borderWidth: 1.5,
-    borderColor: FOCAL.ember,
+    borderColor: FOCAL.electricGold,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
@@ -572,7 +605,7 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.mistGold,
   },
   secondaryActionLabel: {
-    color: FOCAL.emberInk,
+    color: FOCAL.goldInk,
     fontSize: 13,
     fontWeight: '800',
     textAlign: 'center',
