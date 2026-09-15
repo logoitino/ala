@@ -4,6 +4,11 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-14
 
+### Skia neon sweep on the Aura trading card
+
+- New `Effects/GlowingNeonBorder`: Skia `SweepGradient` (Neon Jade → Cyber Gold → Electric Violet → Jade) with a solid `BlurMask` (12) behind a crisp stroke. Reanimated spins the sweep 0→2π every 3s (`withRepeat` + linear `withTiming`). Celestial Prism or a funded Locker Room item pulses stroke thickness 3↔7 (`withSequence`).
+- `Profile/GlowingCardWrapper` measures the 3D card and sits the canvas 16px outside each edge so the blur is not clipped. `AuraTradingCard` wraps the flip stage in it; Flip Card 🔄 stays outside the glow. Studio **aura_legend** (Celestial Prism) is the preview; Profile lights it from tier 7 or `get_wishlist_items` when any gear is equipped. Expo web loads CanvasKit (`public/canvaskit.wasm`, `npm run skia:web`) before the Skia module mounts.
+
 ### Admin audit — Catalogs, Daylight default, one builder per category
 
 - System sidebar is Features / Look / **Catalogs** / Studio. Lab and QA stay as hidden deep links (Feedback **Open in Lab**, Reports Reliability) so they are not a second Features or Reports desk.

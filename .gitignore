@@ -38,6 +38,9 @@ aladb.env
 # typescript
 *.tsbuildinfo
 
+# Skia web WASM (copied by npm postinstall / npm run skia:web)
+public/canvaskit.wasm
+
 # generated native folders
 /ios
 /android

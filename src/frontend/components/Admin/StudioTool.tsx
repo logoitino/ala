@@ -77,7 +77,8 @@ export function StudioTool() {
 
       <AdminPanel title="Aura personas">
         <Text style={styles.hint}>
-          Flip every tier of the trading card here. Profile no longer ships these chips to fans.
+          Flip every tier of the trading card here. Profile no longer ships these chips to fans. Pick Lani Storm
+          (Celestial Prism) to light the Skia neon sweep.
         </Text>
         <AdminPills
           label="Tier"
@@ -131,7 +132,8 @@ const styles = StyleSheet.create({
   },
   cardWrap: {
     borderRadius: radii.lg,
-    overflow: 'hidden',
+    overflow: 'visible',
     backgroundColor: colors.background,
+    padding: 16,
   },
 });

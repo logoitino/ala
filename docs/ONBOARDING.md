@@ -21,6 +21,8 @@ cd ala-sports
 npm install
 ```
 
+`postinstall` copies `canvaskit.wasm` into `public/` so Expo web can paint the Skia neon border. Native Expo Go does not need that file.
+
 Confirm `babel.config.js` at the **repo root** has `presets: ['babel-preset-expo']`.
 
 ---

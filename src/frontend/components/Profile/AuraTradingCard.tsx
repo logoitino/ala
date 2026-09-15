@@ -13,6 +13,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
+import { GlowingCardWrapper } from '@/components/Profile/GlowingCardWrapper';
 import { SubscriberCrest } from '@/components/Profile/SubscriberCrest';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
@@ -64,6 +65,10 @@ export type AuraTradingCardProps = {
   divisionBadge?: string | null;
   /** Compact Games / scoring / volume preview on the back face (Stats 📊). */
   careerPreview?: { label: string; value: string | number }[];
+  /** Force the Skia sweep on (Celestial Prism). Defaults to Aura tier 7. */
+  isAuraMaxed?: boolean;
+  /** Locker Room item fully funded — same pulse as max Aura. */
+  wishlistFulfilled?: boolean;
 };
 
 export type RoleBadge = {
@@ -158,8 +163,9 @@ function CardChrome({ tier, children }: { tier: AuraTier; children: ReactNode })
  * @param auraPoints Drives the dynamic border, progress bar, and default MVP badge.
  * @param teamName / mascot / divisionBadge HS or NCAA identity from `schools_and_teams` (both faces).
  * @param careerPreview Top 3 career stats (Games / Points or Tries / Yards or Tackles) on the back face.
+ * @param isAuraMaxed / wishlistFulfilled Lights the Skia neon sweep (`GlowingNeonBorder`) and pulses stroke thickness.
  * @returns Flippable card plus **Flip Card 🔄**. Tap the body or the button to flip.
- * @sideEffects Reanimated `withSpring` `rotateY` 0↔180 (`SPRING_FLIP`, `perspective: 1000`); `Haptics.impactAsync(Medium)` exactly when the rotation crosses 90°; back-face Season Points / Total Tipped fade in with `withDelay`.
+ * @sideEffects Reanimated `withSpring` `rotateY` 0↔180 (`SPRING_FLIP`, `perspective: 1000`); `Haptics.impactAsync(Medium)` exactly when the rotation crosses 90°; back-face Season Points / Total Tipped fade in with `withDelay`; Skia canvas when the glow is on.
  */
 export function AuraTradingCard({
   name,
@@ -186,9 +192,12 @@ export function AuraTradingCard({
   mascot,
   divisionBadge,
   careerPreview,
+  isAuraMaxed,
+  wishlistFulfilled = false,
 }: AuraTradingCardProps) {
   const tier = auraTierForPoints(auraPoints);
   const progress = auraProgressTowardNext(auraPoints);
+  const auraMaxed = isAuraMaxed ?? progress.next == null;
   const rotateY = useSharedValue(0);
   const seasonFade = useSharedValue(0);
   const tippedFade = useSharedValue(0);
@@ -279,7 +288,8 @@ export function AuraTradingCard({
 
   return (
     <View style={styles.wrap}>
-      <GestureDetector gesture={tapToFlip}>
+      <GlowingCardWrapper isAuraMaxed={auraMaxed} isWishlistFulfilled={wishlistFulfilled}>
+        <GestureDetector gesture={tapToFlip}>
         <View
           accessibilityRole="button"
           accessibilityLabel={`${name}, ${auraBadgeLabel(tier)}, ${flipped ? 'season stats' : 'identity'} face. Tap to flip.`}
@@ -422,7 +432,8 @@ export function AuraTradingCard({
             </View>
           </Animated.View>
         </View>
-      </GestureDetector>
+        </GestureDetector>
+      </GlowingCardWrapper>
 
       <AnimatedButton
         accessibilityLabel={flipped ? 'Show identity face' : 'Flip card'}
@@ -473,6 +484,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 440,
     alignSelf: 'center',
+    overflow: 'visible',
   },
   stage: {
     position: 'relative',

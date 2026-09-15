@@ -37,12 +37,14 @@ import {
   type HighlightClip,
 } from '@/data/highlights';
 import type { AthleteStatsBundle } from '@/data/athleteStats';
+import { isWishlistFunded } from '@/data/wishlist';
 import { useCrew } from '@/hooks/useCrew';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { formatCompactCount } from '@/lib/hype';
 import type { Player, UserRole } from '@/types/database';
 import type { ReelHype } from '@/lib/reels';
 import { isVaultSealed } from '@/lib/vault';
+import { fetchWishlistItems } from '@/lib/wishlist';
 import { FOCAL } from '@/theme/motion';
 
 export type AthleteProfileTab = 'highlights' | 'stats' | 'vault';
@@ -102,7 +104,7 @@ type AthleteProfileViewProps = {
  * @param vaultLocked Master seal. When true, non-subscribers see the subscribe wall on Vault 🔒.
  * @param leading / actions / trailing Own-profile chrome (heading, Mālo, Account Settings).
  * @returns Card + Crew counters + Join Crew / Teammates + segmented tabs + the active pane. Parent owns the ScrollView.
- * @sideEffects Child grids / vault manager / Q&A / `useCrew` hit Supabase and Stripe via their own hooks.
+ * @sideEffects Child grids / vault manager / Q&A / `useCrew` hit Supabase and Stripe via their own hooks. `get_wishlist_items` lights the trading-card Skia sweep when any gear is funded.
  */
 export function AthleteProfileView({
   player,
@@ -144,6 +146,7 @@ export function AthleteProfileView({
   const { live } = useAppRuntime();
   const { configFor } = useSportConfigs();
   const [tab, setTab] = useState<AthleteProfileTab>('highlights');
+  const [wishlistFulfilled, setWishlistFulfilled] = useState(false);
   const publicClips = useMemo(() => clips.filter((clip) => !isClipVaultOnly(clip)), [clips]);
   const vaultClips = useMemo(() => clips.filter((clip) => isClipVaultOnly(clip)), [clips]);
   const sealed = isVaultSealed(vaultLocked);
@@ -162,6 +165,19 @@ export function AthleteProfileView({
   useEffect(() => {
     if (live.profile.statsFirst && live.profile.showStats) setTab('stats');
   }, [live.profile.showStats, live.profile.statsFirst]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchWishlistItems(player.id).then((items) => {
+      if (cancelled) return;
+      setWishlistFulfilled(
+        items.some((item) => item.player_id === player.id && isWishlistFunded(item)),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [player.id]);
 
   const grid = (rows: HighlightClip[], opts?: { vaultBadge?: boolean; lock?: boolean }) =>
     manageVault ? (
@@ -216,6 +232,7 @@ export function AthleteProfileView({
         sekiCount={sekiCount}
         highlightViews={player.view_count ?? 0}
         careerPreview={stats.topThree}
+        wishlistFulfilled={wishlistFulfilled}
       />
       ) : null}
       {live.profile.showCrew ? <CrewStatsBar player={player} /> : null}
@@ -240,7 +257,11 @@ export function AthleteProfileView({
       {tab === 'stats' ? (
         <View style={styles.statsPane}>
           <AthleteStatsTab stats={stats} loading={statsLoading} config={configFor(stats.career.sport)} />
-          <LockerRoomWishlist player={player} athleteName={name} />
+          <LockerRoomWishlist
+            player={player}
+            athleteName={name}
+            onEquipped={() => setWishlistFulfilled(true)}
+          />
         </View>
       ) : null}
       {tab === 'vault' && live.buttons.vault && live.profile.showVault ? (
@@ -358,6 +379,7 @@ function TeammatesBadge({ onPress, disabled }: { onPress: () => void; disabled: 
 const styles = StyleSheet.create({
   root: {
     gap: 12,
+    overflow: 'visible',
   },
   vault: {
     gap: 12,

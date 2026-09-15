@@ -41,6 +41,7 @@ export const FOCAL = {
   neonJade: '#00E676',
   jadeInk: '#00733C',
   electricGold: '#FFD700',
+  electricViolet: '#7C4DFF',
   goldInk: '#8A6400',
   videoBase: '#0F1416',
 } as const;
