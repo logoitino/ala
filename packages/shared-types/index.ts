@@ -173,6 +173,7 @@ export const SOFT_WALL_GATES: SoftWallGate[] = [
 
 /** Auth providers shown on SoftWallModal (Supabase Dashboard must enable each). */
 export const SOFT_WALL_AUTH_PROVIDERS = [
+  { id: 'password', label: 'Sign in with email & password', redirect: 'email/password' },
   { id: 'demo', label: 'Continue as Demo Fan', redirect: 'demo@tapuai.app' },
   { id: 'apple', label: 'Continue with Apple', redirect: 'alasports://auth/callback' },
   { id: 'google', label: 'Continue with Google', redirect: 'alasports://auth/callback' },

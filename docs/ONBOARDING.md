@@ -58,7 +58,7 @@ Browse-first guests can open Highlights, cards, and Locker Room without an accou
 2. Authentication → URL Configuration: add redirect `alasports://auth/callback` (and the Expo Go / web redirect AuthSession prints if you test those hosts).
 3. Run fan profile bootstrap SQL once: `supabase/auth_fan_profile.sql` (also inlined at the end of `apps/mobile/src/backend/db/schema.sql`).
 4. Native Apple Sign In needs a build with the `expo-apple-authentication` plugin (`apps/mobile/app.json`).
-5. **Demo Fan (QA):** SoftWall / Profile → **Continue as Demo Fan** signs in as `demo@tapuai.app` (password `TapuaiDemoFan1!`, overridable via `EXPO_PUBLIC_DEMO_FAN_EMAIL` / `EXPO_PUBLIC_DEMO_FAN_PASSWORD`). Enable Email provider and disable **Confirm email** so first tap can create the user; or run `supabase/demo_fan_account.sql` / create that user in Authentication → Users.
+5. **Demo Fan (QA):** SoftWall / Profile → email + password **Sign in**, or **Continue as Demo Fan**. Credentials: `demo@tapuai.app` / `TapuaiDemoFan1!` (overridable via `EXPO_PUBLIC_DEMO_FAN_EMAIL` / `EXPO_PUBLIC_DEMO_FAN_PASSWORD`). Enable Email provider (password). Disable **Confirm email** for first-tap create, or run `supabase/demo_fan_account.sql`.
 
 Client entry points: `apps/mobile/src/frontend/lib/auth.ts`, `AuthContext`, `SoftWallContext`, route `apps/mobile/app/auth/callback.tsx`.
 

@@ -18,6 +18,7 @@ import {
   signInWithApple as appleSignIn,
   signInWithGoogle as googleSignIn,
   signInWithMagicLink as magicLinkSignIn,
+  signInWithEmailPassword as passwordSignIn,
   signInWithDemoAccount as demoSignIn,
   signOutRemote,
   subscribeAuthDeepLinks,
@@ -66,6 +67,7 @@ type AuthContextValue = {
   refreshProfile: () => Promise<Profile | null>;
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmailPassword: (email: string, password: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<void>;
   signInWithDemoAccount: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -257,6 +259,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await hydrateSession(next);
   }, [hydrateSession]);
 
+  const signInWithEmailPassword = useCallback(
+    async (email: string, password: string) => {
+      const next = await passwordSignIn(email, password);
+      await hydrateSession(next);
+    },
+    [hydrateSession],
+  );
+
   const signInWithMagicLink = useCallback(async (email: string) => {
     await magicLinkSignIn(email);
   }, []);
@@ -387,6 +397,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfile,
       signInWithApple,
       signInWithGoogle,
+      signInWithEmailPassword,
       signInWithMagicLink,
       signInWithDemoAccount,
       signOut,
@@ -411,6 +422,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setActiveRole,
       signInWithApple,
       signInWithGoogle,
+      signInWithEmailPassword,
       signInWithMagicLink,
       signInWithDemoAccount,
       signOut,

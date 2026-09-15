@@ -10,8 +10,10 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
 import { PayoutSetupCard } from '@/components/Profile/PayoutSetupCard';
+import { ProfileMenuSheet } from '@/components/Profile/ProfileMenuSheet';
 import { RoleSwitcherModal } from '@/components/Profile/RoleSwitcherModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -51,8 +53,8 @@ const FALLBACK_ATHLETE: Player = {
 };
 
 /**
- * @purpose Profile hub: unified `AthleteProfileView` (3D card + Highlights ⚡ / Stats 📊 / Vault 🔒), Account Capability, payouts, receipts.
- * @sideEffects `AuraTradingCard` flip + Medium haptic at 90°; `RoleSwitcherModal` `add_user_role` / `active_role`; `PayoutSetupCard` Stripe Express; Light haptic → `/receipts`; `toggle_reel_vault_status` / `set_player_vault_locked`.
+ * @purpose Profile hub: hero avatar, slim Crew/Squad, Highlights collage, Active Team Roster; settings in hamburger.
+ * @sideEffects Soft-Wall sign-in; `RoleSwitcherModal`; `PayoutSetupCard`; receipts; vault lock; roster claim map.
  */
 export default function MyHubTab() {
   const router = useRouter();
@@ -72,6 +74,8 @@ export default function MyHubTab() {
   const [pollVotes, setPollVotes] = useState(0);
   const [roleSheetOpen, setRoleSheetOpen] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [flipOpen, setFlipOpen] = useState(false);
   const [vaultLockBusy, setVaultLockBusy] = useState(false);
   const [localOnboardTeam, setLocalOnboardTeam] = useState<SchoolTeam | null>(null);
 
@@ -102,6 +106,10 @@ export default function MyHubTab() {
   }, []);
 
   const rosterAthlete = useMemo(() => {
+    if (profile?.player_id) {
+      const claimed = players.find((player) => player.id === profile.player_id);
+      if (claimed) return claimed;
+    }
     const named = players.find(
       (player) => player.name.trim().toLowerCase() === (profile?.full_name ?? '').trim().toLowerCase(),
     );
@@ -109,7 +117,7 @@ export default function MyHubTab() {
     const favorite = players.find((player) => favoriteIds.includes(player.id));
     if (favorite) return favorite;
     return players[0] ?? FALLBACK_ATHLETE;
-  }, [favoriteIds, players, profile?.full_name]);
+  }, [favoriteIds, players, profile?.full_name, profile?.player_id]);
 
   const athlete = useMemo(() => {
     const base = rosterAthlete;
@@ -195,6 +203,104 @@ export default function MyHubTab() {
     });
   };
 
+  const openReceipts = () => {
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {
+      // Simulator / web may not expose haptics.
+    }
+    trackFeature('receipts');
+    router.push('/receipts' as Href);
+  };
+
+  const menuItems = useMemo(() => {
+    const items: {
+      id: string;
+      label: string;
+      hint?: string;
+      danger?: boolean;
+      onPress: () => void;
+    }[] = [];
+    if (isGuest) {
+      items.push({
+        id: 'signin',
+        label: 'Sign in',
+        hint: 'Email + password · Demo Fan · Apple · Google',
+        onPress: () =>
+          requireAuth({
+            kind: 'signin',
+            resume: () => undefined,
+          }),
+      });
+    } else {
+      items.push({
+        id: 'signout',
+        label: 'Sign out',
+        hint: profile?.full_name?.trim() || profile?.username || 'Return to guest browse',
+        danger: true,
+        onPress: () => {
+          void signOut();
+        },
+      });
+    }
+    if (isAdmin) {
+      items.push({
+        id: 'admin',
+        label: 'Admin portal',
+        hint: 'Publish, moderate, and preview production',
+        onPress: () => router.push('/admin' as Href),
+      });
+    }
+    items.push({
+      id: 'capability',
+      label: 'Account Capability',
+      hint: formatCapabilityLine(roles),
+      onPress: () => setRoleSheetOpen(true),
+    });
+    if (live.profile.showCard) {
+      items.push({
+        id: 'flip',
+        label: 'Flip Aura card',
+        hint: '3D trading card',
+        onPress: () => setFlipOpen(true),
+      });
+    }
+    if (live.buttons.suggest) {
+      items.push({
+        id: 'suggest',
+        label: 'Send a suggestion',
+        hint: 'Improve Tapua\'i — goes to admin Feedback',
+        onPress: () => {
+          trackFeature('suggestion');
+          setSuggestOpen(true);
+        },
+      });
+    }
+    if (live.layouts.receipts) {
+      items.push({
+        id: 'receipts',
+        label: 'Tip History & Receipts',
+        hint: live.copy.receiptsKicker,
+        onPress: openReceipts,
+      });
+    }
+    return items;
+  }, [
+    isAdmin,
+    isGuest,
+    live.buttons.suggest,
+    live.copy.receiptsKicker,
+    live.layouts.receipts,
+    live.profile.showCard,
+    profile?.full_name,
+    profile?.username,
+    requireAuth,
+    roles,
+    router,
+    signOut,
+    trackFeature,
+  ]);
+
   return (
     <TabScreen>
       <ScrollView contentContainerStyle={styles.content} onScroll={onScroll} scrollEventThrottle={400}>
@@ -223,6 +329,10 @@ export default function MyHubTab() {
           vaultLocked={athlete.vault_locked}
           vaultLockBusy={vaultLockBusy}
           tipping={busy}
+          rosterPlayers={players}
+          showClaimBadges={isAthlete}
+          auraCardOpen={flipOpen}
+          onAuraCardOpenChange={setFlipOpen}
           onOpenAthlete={(playerId) => router.push(userProfileHref(playerId))}
           onBacked={(nextCount) => applyBackerCount(athlete.id, nextCount)}
           onUnlockVault={subscribe}
@@ -261,155 +371,75 @@ export default function MyHubTab() {
             );
           }}
           leading={
-            <ScreenHeading
-              compact
-              kicker={live.copy.profileKicker}
-              title="Profile"
-              accent={TAB_ACCENTS.profile.color}
-            />
+            <View style={styles.headingRow}>
+              <View style={styles.headingCopy}>
+                <ScreenHeading
+                  compact
+                  kicker={live.copy.profileKicker}
+                  title="Profile"
+                  accent={TAB_ACCENTS.profile.color}
+                />
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Open account settings"
+                haptic="selection"
+                onPress={() => setMenuOpen(true)}
+                style={styles.menuHit}
+              >
+                <Ionicons name="menu-outline" size={26} color={FOCAL.jadeInk} />
+              </Pressable>
+            </View>
           }
           actions={
             activeRole === 'fan' && (live.buttons.malo || live.buttons.subscribe) ? (
               <View style={styles.actionRow}>
                 {live.buttons.malo ? (
-                <AnimatedButton
-                  accessibilityLabel={`Drop ${live.catalog.maloAmounts[0] ?? 5} dollar Mālo`}
-                  disabled={busy}
-                  haptic="medium"
-                  onPress={dropMalo}
-                  style={styles.actionFlex}
-                  contentStyle={[styles.primaryAction, busy && styles.disabled]}
-                >
-                  <Text style={styles.primaryActionLabel}>Drop ${live.catalog.maloAmounts[0] ?? 5} Mālo</Text>
-                </AnimatedButton>
+                  <AnimatedButton
+                    accessibilityLabel={`Drop ${live.catalog.maloAmounts[0] ?? 5} dollar Mālo`}
+                    disabled={busy}
+                    haptic="medium"
+                    onPress={dropMalo}
+                    style={styles.actionFlex}
+                    contentStyle={[styles.primaryAction, busy && styles.disabled]}
+                  >
+                    <Text style={styles.primaryActionLabel}>Drop ${live.catalog.maloAmounts[0] ?? 5} Mālo</Text>
+                  </AnimatedButton>
                 ) : null}
                 {live.buttons.subscribe ? (
-                <AnimatedButton
-                  accessibilityLabel={
-                    subscribed
-                      ? 'Subscribed to exclusive feed'
-                      : `Subscribe for ${live.catalog.exclusiveDollars.toFixed(2)} a month`
-                  }
-                  disabled={subscribed}
-                  onPress={subscribe}
-                  style={styles.actionFlex}
-                  contentStyle={[styles.secondaryAction, subscribed && styles.secondaryActionOn]}
-                >
-                  <Text style={[styles.secondaryActionLabel, subscribed && styles.secondaryActionLabelOn]}>
-                    {subscribed ? 'Subscribed' : `Subscribe ($${live.catalog.exclusiveDollars.toFixed(2)}/mo)`}
-                  </Text>
-                </AnimatedButton>
+                  <AnimatedButton
+                    accessibilityLabel={
+                      subscribed
+                        ? 'Subscribed to exclusive feed'
+                        : `Subscribe for ${live.catalog.exclusiveDollars.toFixed(2)} a month`
+                    }
+                    disabled={subscribed}
+                    onPress={subscribe}
+                    style={styles.actionFlex}
+                    contentStyle={[styles.secondaryAction, subscribed && styles.secondaryActionOn]}
+                  >
+                    <Text style={[styles.secondaryActionLabel, subscribed && styles.secondaryActionLabelOn]}>
+                      {subscribed ? 'Subscribed' : `Subscribe ($${live.catalog.exclusiveDollars.toFixed(2)}/mo)`}
+                    </Text>
+                  </AnimatedButton>
                 ) : null}
               </View>
             ) : null
           }
-          trailing={
-            <View style={styles.settingsBlock}>
-              <Text style={styles.devKicker}>Account Settings</Text>
-              {isGuest ? (
-                <AnimatedButton
-                  accessibilityLabel="Sign in or Demo Fan"
-                  haptic="medium"
-                  onPress={() =>
-                    requireAuth({
-                      kind: 'signin',
-                      resume: () => undefined,
-                    })
-                  }
-                  contentStyle={styles.capabilityRow}
-                >
-                  <View style={styles.capabilityCopy}>
-                    <Text style={styles.capabilityLabel}>Sign in</Text>
-                    <Text style={styles.capabilityValue}>Demo Fan · Apple · Google · Magic Link</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                </AnimatedButton>
-              ) : (
-                <AnimatedButton
-                  accessibilityLabel="Sign out"
-                  haptic="light"
-                  onPress={() => void signOut()}
-                  contentStyle={styles.capabilityRow}
-                >
-                  <View style={styles.capabilityCopy}>
-                    <Text style={styles.capabilityLabel}>Sign out</Text>
-                    <Text style={styles.capabilityValue}>
-                      {profile?.full_name?.trim() || profile?.username || 'Return to guest browse'}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                </AnimatedButton>
-              )}
-              {isAdmin ? (
-                <AnimatedButton
-                  accessibilityLabel="Admin portal"
-                  haptic="light"
-                  onPress={() => router.push('/admin' as Href)}
-                  contentStyle={styles.capabilityRow}
-                >
-                  <View style={styles.capabilityCopy}>
-                    <Text style={styles.capabilityLabel}>Admin portal</Text>
-                    <Text style={styles.capabilityValue}>Publish, moderate, and preview production</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                </AnimatedButton>
-              ) : null}
-              <AnimatedButton
-                accessibilityLabel="Account Capability"
-                haptic="light"
-                onPress={() => setRoleSheetOpen(true)}
-                contentStyle={styles.capabilityRow}
-              >
-                <View style={styles.capabilityCopy}>
-                  <Text style={styles.capabilityLabel}>Account Capability</Text>
-                  <Text style={styles.capabilityValue}>{formatCapabilityLine(roles)}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </AnimatedButton>
-              {live.buttons.suggest ? (
-                <AnimatedButton
-                  accessibilityLabel="Send a suggestion"
-                  haptic="light"
-                  onPress={() => {
-                    trackFeature('suggestion');
-                    setSuggestOpen(true);
-                  }}
-                  contentStyle={styles.capabilityRow}
-                >
-                  <View style={styles.capabilityCopy}>
-                    <Text style={styles.capabilityLabel}>Send a suggestion</Text>
-                    <Text style={styles.capabilityValue}>Improve Tapua'i — goes to admin Feedback</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                </AnimatedButton>
-              ) : null}
-              {live.layouts.receipts ? (
-                <AnimatedButton
-                  accessibilityLabel="Tip History and Receipts"
-                  haptic="none"
-                  onPress={() => {
-                    try {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    } catch {
-                      // Simulator / web may not expose haptics.
-                    }
-                    trackFeature('receipts');
-                    router.push('/receipts' as Href);
-                  }}
-                  contentStyle={styles.capabilityRow}
-                >
-                  <View style={styles.capabilityCopy}>
-                    <Text style={styles.capabilityLabel}>Tip History & Receipts 🧾</Text>
-                    <Text style={styles.capabilityValue}>{live.copy.receiptsKicker}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                </AnimatedButton>
-              ) : null}
-              {isAthlete && activeRole === 'athlete' ? <PayoutSetupCard /> : null}
-            </View>
-          }
         />
       </ScrollView>
+      <ProfileMenuSheet
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        items={menuItems}
+        footer={
+          isAthlete && activeRole === 'athlete' ? (
+            <View style={styles.menuFooter}>
+              <PayoutSetupCard />
+            </View>
+          ) : null
+        }
+      />
       <RoleSwitcherModal visible={roleSheetOpen} onClose={() => setRoleSheetOpen(false)} />
       <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />
     </TabScreen>
@@ -423,15 +453,27 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
     gap: 12,
   },
-  devBlock: {
-    gap: 6,
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
   },
-  devKicker: {
-    color: FOCAL.goldInk,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.7,
-    textTransform: 'uppercase',
+  headingCopy: {
+    flex: 1,
+  },
+  menuHit: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: FOCAL.mistJade,
+    borderWidth: 1,
+    borderColor: 'rgba(0,115,60,0.18)',
+  },
+  menuFooter: {
+    marginTop: 4,
   },
   actionFlex: {
     flex: 1,

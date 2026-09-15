@@ -2,14 +2,20 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
-## 2026-09-14
+## 2026-09-15
+
+### Clean Profile hierarchy
+
+- Profile hero is a large avatar (tier ring + jersey); Flip Aura card opens from the hamburger or a slim control — not a full-width card blocking the scroll.
+- Account Settings (Sign in/out, Capability, Receipts, Suggest, Admin, Flip, Payouts) move into a **menu-outline** `ProfileMenuSheet`.
+- Crew / Squad slim into one compact strip with a small Join CTA. Highlights collage stays the next big beat; **Active Team Roster** lists school teammates (tap to open). Athletes see Claimed / Unclaimed via `profiles.player_id`. Hub athlete pick prefers `profile.player_id`.
 
 ### Soft-Wall admin oversight (Expo + Next portal)
 
 - Expo Coverage adds Soft-Wall auth surface (`soft_wall.*`, providers, welcome overlay, guest browse). Features desk documents Soft-Wall gates + Operator pause; People adds Fans filter and Soft-Wall signup counts; Overview Soft-Wall strip.
 - Next `@tapuai/admin-portal` is dynamic: Overview / Soft-Wall / Features / People read `app_runtime_config` + fan `profiles`. Features toggles Soft-Wall related flags via `patch_app_runtime_draft` + Publish. Shared gate map in `@tapuai/shared-types` (`SOFT_WALL_GATES`).
-- Soft-Wall telemetry: `soft_wall.malo|crew|wishlist`, `auth.apple|google|magic_link|demo`.
-- **Demo Fan:** SoftWall / Profile **Continue as Demo Fan** → `demo@tapuai.app` / `TapuaiDemoFan1!` (env override). Creates the Auth user on first tap when Confirm email is off.
+- Soft-Wall telemetry: `soft_wall.malo|crew|wishlist`, `auth.password|apple|google|magic_link|demo`.
+- **Demo Fan:** SoftWall / Profile **Continue as Demo Fan** → `demo@tapuai.app` / `TapuaiDemoFan1!` (env override). Creates the Auth user on first tap when Confirm email is off. SoftWall also has email + password **Sign in**.
 
 ### Browse-first Soft-Wall auth
 

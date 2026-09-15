@@ -7,11 +7,13 @@ import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
 import { ScreenShell } from '@/components/ScreenShell';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useAuth } from '@/context/AuthContext';
 import { useOptionalUploadSheet } from '@/context/UploadSheetContext';
 import { markExclusiveClips } from '@/data/exclusive';
 import { displayValue, type Player } from '@/data/players';
 import { useAthleteStats } from '@/hooks/useAthleteStats';
 import { useAthleteSubscription } from '@/hooks/useAthleteSubscription';
+import { useRoster } from '@/hooks/useRoster';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst, type ReelHype } from '@/lib/reels';
 import { hydratePlayerHype } from '@/lib/hype';
@@ -60,6 +62,8 @@ export default function UserAthleteProfileScreen() {
   const { subscribed, grant } = useAthleteSubscription(playerId);
   const { startCheckout, busy } = useTipCheckout();
   const { live } = useAppRuntime();
+  const { isAthlete } = useAuth();
+  const { players: rosterPlayers } = useRoster();
   const uploadSheet = useOptionalUploadSheet();
 
   const load = useCallback(async () => {
@@ -211,6 +215,8 @@ export default function UserAthleteProfileScreen() {
           vaultLocked={player.vault_locked}
           tipping={busy}
           vaultBusy={busy}
+          rosterPlayers={rosterPlayers}
+          showClaimBadges={isAthlete}
           onOpenAthlete={(nextId) => router.push(userProfileHref(nextId))}
           onHypeChange={applyHype}
           onUnlockVault={unlockExclusive}

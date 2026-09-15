@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -21,22 +22,32 @@ import { DEMO_FAN_EMAIL } from '@/lib/auth';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
 
+type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | null;
+
 /**
  * @purpose High-impact auth sheet when a guest hits Mālo / Crew / Chip In. Resumes the stashed action after sign-in.
- * @sideEffects Apple / Google / Magic Link / Demo Fan via AuthContext; telemetry `auth.*`.
+ * @sideEffects Email/password, Apple / Google / Magic Link / Demo Fan via AuthContext; telemetry `auth.*`.
  */
 export function SoftWallModal() {
   const insets = useSafeAreaInsets();
   const { visible, intent, close } = useSoftWall();
-  const { signInWithApple, signInWithGoogle, signInWithMagicLink, signInWithDemoAccount } = useAuth();
+  const {
+    signInWithApple,
+    signInWithGoogle,
+    signInWithMagicLink,
+    signInWithEmailPassword,
+    signInWithDemoAccount,
+  } = useAuth();
   const [email, setEmail] = useState('');
-  const [busy, setBusy] = useState<'apple' | 'google' | 'magic' | 'demo' | null>(null);
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState<AuthBusy>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!visible) {
       setEmail('');
+      setPassword('');
       setBusy(null);
       setMessage(null);
       setError(null);
@@ -50,7 +61,7 @@ export function SoftWallModal() {
       : intent?.kind === 'wishlist'
         ? 'Sign in with one tap to Chip In and help fund the gear they need.'
         : intent?.kind === 'signin'
-          ? 'Sign in with one tap to tip Mālo, join Crew, and Chip In — or continue as Demo Fan for QA.'
+          ? 'Use email + password, Demo Fan, Apple, Google, or a Magic Link — then tip Mālo, join Crew, and Chip In.'
           : 'Sign in with one tap to drop a Mālo tip and power their season.';
   const title =
     intent?.kind === 'signin'
@@ -59,23 +70,24 @@ export function SoftWallModal() {
         ? `Support ${athlete}'s Journey!`
         : 'Support their Journey!';
 
-  const run = async (
-    kind: 'apple' | 'google' | 'magic' | 'demo',
-    work: () => Promise<void>,
-  ) => {
+  const canPassword = Boolean(email.trim() && password);
+  const canMagic = Boolean(email.trim());
+
+  const run = async (kind: Exclude<AuthBusy, null>, work: () => Promise<void>) => {
     setBusy(kind);
     setError(null);
     setMessage(null);
-    telemetry.trackFeature(
+    const telemetryId =
       kind === 'magic'
         ? 'auth.magic_link'
         : kind === 'apple'
           ? 'auth.apple'
           : kind === 'google'
             ? 'auth.google'
-            : 'auth.demo',
-      'auth',
-    );
+            : kind === 'password'
+              ? 'auth.password'
+              : 'auth.demo';
+    telemetry.trackFeature(telemetryId, 'auth');
     try {
       await work();
       if (kind === 'magic') {
@@ -98,94 +110,135 @@ export function SoftWallModal() {
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={styles.blur} />
           <Pressable
             haptic="none"
-            style={[styles.sheet, { paddingBottom: 24 + insets.bottom }]}
+            style={[styles.sheet, { paddingBottom: 16 + insets.bottom, maxHeight: '92%' }]}
             onPress={() => undefined}
           >
             <View style={styles.handle} />
-            <Text style={styles.kicker}>Tapua&apos;i</Text>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>{body}</Text>
-
-            <AnimatedButton
-              accessibilityLabel="Continue as Demo Fan"
-              disabled={Boolean(busy)}
-              haptic="medium"
-              onPress={() => void run('demo', signInWithDemoAccount)}
-              contentStyle={[styles.providerBtn, styles.demoBtn, busy && styles.disabled]}
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.sheetInner}
             >
-              {busy === 'demo' ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.demoLabel}>Continue as Demo Fan</Text>
-              )}
-            </AnimatedButton>
-            <Text style={styles.demoHint}>{DEMO_FAN_EMAIL} · instant session for QA</Text>
+              <Text style={styles.kicker}>Tapua&apos;i</Text>
+              <Text style={styles.title}>{title}</Text>
+              <Text style={styles.subtitle}>{body}</Text>
 
-            <AnimatedButton
-              accessibilityLabel="Continue with Apple"
-              disabled={Boolean(busy)}
-              haptic="medium"
-              onPress={() => void run('apple', signInWithApple)}
-              contentStyle={[styles.providerBtn, styles.appleBtn, busy && styles.disabled]}
-            >
-              {busy === 'apple' ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.appleLabel}>Continue with Apple</Text>
-              )}
-            </AnimatedButton>
+              <Text style={styles.sectionLabel}>Email & password</Text>
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
+                keyboardType="email-address"
+                placeholder="you@family.com"
+                placeholderTextColor={colors.textMuted}
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                editable={!busy}
+              />
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="password"
+                placeholder="Password"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                editable={!busy}
+                onSubmitEditing={() => {
+                  if (canPassword) {
+                    void run('password', () => signInWithEmailPassword(email, password));
+                  }
+                }}
+              />
+              <AnimatedButton
+                accessibilityLabel="Sign in with email and password"
+                disabled={Boolean(busy) || !canPassword}
+                haptic="medium"
+                onPress={() => void run('password', () => signInWithEmailPassword(email, password))}
+                contentStyle={[styles.providerBtn, styles.magicBtn, (busy || !canPassword) && styles.disabled]}
+              >
+                {busy === 'password' ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.magicLabel}>Sign in</Text>
+                )}
+              </AnimatedButton>
+              <Text style={styles.demoHint}>
+                Demo Fan: {DEMO_FAN_EMAIL} · or tap Continue as Demo Fan below
+              </Text>
 
-            <AnimatedButton
-              accessibilityLabel="Continue with Google"
-              disabled={Boolean(busy)}
-              haptic="medium"
-              onPress={() => void run('google', signInWithGoogle)}
-              contentStyle={[styles.providerBtn, styles.googleBtn, busy && styles.disabled]}
-            >
-              {busy === 'google' ? (
-                <ActivityIndicator color={FOCAL.ink} />
-              ) : (
-                <Text style={styles.googleLabel}>Continue with Google</Text>
-              )}
-            </AnimatedButton>
+              <AnimatedButton
+                accessibilityLabel="Send magic link email"
+                disabled={Boolean(busy) || !canMagic}
+                haptic="selection"
+                onPress={() => void run('magic', () => signInWithMagicLink(email))}
+                contentStyle={[styles.providerBtn, styles.secondaryBtn, (busy || !canMagic) && styles.disabled]}
+              >
+                {busy === 'magic' ? (
+                  <ActivityIndicator color={FOCAL.jadeInk} />
+                ) : (
+                  <Text style={styles.secondaryLabel}>Send Magic Link instead</Text>
+                )}
+              </AnimatedButton>
 
-            <View style={styles.orRow}>
-              <View style={styles.orLine} />
-              <Text style={styles.orLabel}>or</Text>
-              <View style={styles.orLine} />
-            </View>
+              <View style={styles.orRow}>
+                <View style={styles.orLine} />
+                <Text style={styles.orLabel}>or</Text>
+                <View style={styles.orLine} />
+              </View>
 
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              placeholder="you@family.com"
-              placeholderTextColor={colors.textMuted}
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              editable={!busy}
-            />
-            <AnimatedButton
-              accessibilityLabel="Send magic link email"
-              disabled={Boolean(busy) || !email.trim()}
-              haptic="medium"
-              onPress={() => void run('magic', () => signInWithMagicLink(email))}
-              contentStyle={[styles.providerBtn, styles.magicBtn, (busy || !email.trim()) && styles.disabled]}
-            >
-              {busy === 'magic' ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.magicLabel}>Send Magic Link Email</Text>
-              )}
-            </AnimatedButton>
+              <AnimatedButton
+                accessibilityLabel="Continue as Demo Fan"
+                disabled={Boolean(busy)}
+                haptic="medium"
+                onPress={() => void run('demo', signInWithDemoAccount)}
+                contentStyle={[styles.providerBtn, styles.demoBtn, busy && styles.disabled]}
+              >
+                {busy === 'demo' ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.demoLabel}>Continue as Demo Fan</Text>
+                )}
+              </AnimatedButton>
 
-            {message ? <Text style={styles.message}>{message}</Text> : null}
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+              <AnimatedButton
+                accessibilityLabel="Continue with Apple"
+                disabled={Boolean(busy)}
+                haptic="medium"
+                onPress={() => void run('apple', signInWithApple)}
+                contentStyle={[styles.providerBtn, styles.appleBtn, busy && styles.disabled]}
+              >
+                {busy === 'apple' ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.appleLabel}>Continue with Apple</Text>
+                )}
+              </AnimatedButton>
 
-            <Pressable accessibilityRole="button" disabled={Boolean(busy)} onPress={close} style={styles.close}>
-              <Text style={styles.closeLabel}>Keep browsing</Text>
-            </Pressable>
+              <AnimatedButton
+                accessibilityLabel="Continue with Google"
+                disabled={Boolean(busy)}
+                haptic="medium"
+                onPress={() => void run('google', signInWithGoogle)}
+                contentStyle={[styles.providerBtn, styles.googleBtn, busy && styles.disabled]}
+              >
+                {busy === 'google' ? (
+                  <ActivityIndicator color={FOCAL.ink} />
+                ) : (
+                  <Text style={styles.googleLabel}>Continue with Google</Text>
+                )}
+              </AnimatedButton>
+
+              {message ? <Text style={styles.message}>{message}</Text> : null}
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+
+              <Pressable accessibilityRole="button" disabled={Boolean(busy)} onPress={close} style={styles.close}>
+                <Text style={styles.closeLabel}>Keep browsing</Text>
+              </Pressable>
+            </ScrollView>
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
@@ -207,7 +260,10 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radii.lg,
     paddingHorizontal: 20,
     paddingTop: 10,
+  },
+  sheetInner: {
     gap: 12,
+    paddingBottom: 8,
   },
   handle: {
     alignSelf: 'center',
@@ -237,6 +293,13 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginBottom: 4,
   },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: FOCAL.jadeInk,
+  },
   providerBtn: {
     borderRadius: 14,
     paddingVertical: 14,
@@ -249,8 +312,7 @@ const styles = StyleSheet.create({
   demoBtn: { backgroundColor: FOCAL.goldInk },
   demoLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   demoHint: {
-    marginTop: -6,
-    marginBottom: 2,
+    marginTop: -4,
     fontSize: 12,
     fontWeight: '600',
     color: colors.textMuted,
@@ -264,6 +326,12 @@ const styles = StyleSheet.create({
   googleLabel: { color: colors.text, fontSize: 16, fontWeight: '800' },
   magicBtn: { backgroundColor: FOCAL.jadeInk },
   magicLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  secondaryBtn: {
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: FOCAL.jadeInk,
+  },
+  secondaryLabel: { color: FOCAL.jadeInk, fontSize: 15, fontWeight: '800' },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 2 },
   orLine: { flex: 1, height: 1, backgroundColor: colors.border },
   orLabel: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },

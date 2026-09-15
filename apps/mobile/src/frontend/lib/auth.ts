@@ -168,6 +168,26 @@ export async function signInWithGoogle(): Promise<Session> {
 }
 
 /**
+ * @purpose Email + password Soft-Wall sign-in (normal credentials).
+ * @sideEffects `signInWithPassword`; `ensureFanProfile`.
+ */
+export async function signInWithEmailPassword(email: string, password: string): Promise<Session> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed.includes('@')) throw new Error('Enter a valid email.');
+  if (!password) throw new Error('Enter your password.');
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: trimmed,
+    password,
+  });
+  if (error) throw new Error(error.message);
+  if (!data.session?.user) throw new Error('Sign-in did not create a session.');
+  await ensureFanProfile(data.session.user);
+  return data.session;
+}
+
+/**
  * @purpose Email magic link. User returns via `alasports://auth/callback`.
  * @sideEffects `signInWithOtp`.
  */
