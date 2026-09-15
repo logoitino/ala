@@ -11,7 +11,8 @@ export type AuthedRequest =
  */
 export function readBearerToken(request: Request): string {
   const header = request.headers.get('Authorization') ?? request.headers.get('authorization') ?? '';
-  return header.replace(/^Bearer\s+/i, '').trim();
+  const match = header.match(/^Bearer\s+(\S+)/i);
+  return match?.[1]?.trim() ?? '';
 }
 
 /**
