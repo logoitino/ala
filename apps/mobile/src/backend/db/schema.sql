@@ -2281,6 +2281,11 @@ create policy "Users read own crew push"
 drop policy if exists "Insert crew push" on public.crew_push_queue;
 create policy "Insert crew push" on public.crew_push_queue for insert with check (true);
 
+drop policy if exists "Users insert own profile" on public.profiles;
+create policy "Users insert own profile"
+  on public.profiles for insert
+  with check (user_id = auth.uid() or auth.role() = 'anon');
+
 drop policy if exists "Users update own profile" on public.profiles;
 create policy "Users update own profile"
   on public.profiles for update
@@ -2751,8 +2756,8 @@ create table if not exists public.app_runtime_config (
 insert into public.app_runtime_config (id, draft, published, published_at)
 values (
   'default',
-  '{"tabs":{"home":true,"local":true,"spotlight":true,"drip":true,"profile":true,"upload":true},"buttons":{"seki":true,"aura":true,"flex":true,"malo":true,"more":true,"subscribe":true,"crew":true,"vault":true,"flashUnlock":true},"layouts":{"liveMatches":true,"cheerPolls":true,"topBoosters":true,"sponsorshipModal":true,"spotlightModal":true,"operatorConsole":true,"parentHq":true,"boosterHq":true,"sponsorHq":true}}'::jsonb,
-  '{"tabs":{"home":true,"local":true,"spotlight":true,"drip":true,"profile":true,"upload":true},"buttons":{"seki":true,"aura":true,"flex":true,"malo":true,"more":true,"subscribe":true,"crew":true,"vault":true,"flashUnlock":true},"layouts":{"liveMatches":true,"cheerPolls":true,"topBoosters":true,"sponsorshipModal":true,"spotlightModal":true,"operatorConsole":true,"parentHq":true,"boosterHq":true,"sponsorHq":true}}'::jsonb,
+  '{"tabs":{"home":true,"local":true,"spotlight":true,"drip":true,"profile":true,"upload":true},"buttons":{"seki":true,"aura":true,"flex":true,"malo":true,"more":true,"subscribe":true,"crew":true,"vault":true,"flashUnlock":true},"layouts":{"liveMatches":true,"cheerPolls":true,"topBoosters":true,"sponsorshipModal":true,"spotlightModal":true,"operatorConsole":false,"parentHq":true,"boosterHq":true,"sponsorHq":true}}'::jsonb,
+  '{"tabs":{"home":true,"local":true,"spotlight":true,"drip":true,"profile":true,"upload":true},"buttons":{"seki":true,"aura":true,"flex":true,"malo":true,"more":true,"subscribe":true,"crew":true,"vault":true,"flashUnlock":true},"layouts":{"liveMatches":true,"cheerPolls":true,"topBoosters":true,"sponsorshipModal":true,"spotlightModal":true,"operatorConsole":false,"parentHq":true,"boosterHq":true,"sponsorHq":true}}'::jsonb,
   timezone('utc', now())
 )
 on conflict (id) do nothing;
@@ -4084,3 +4089,37 @@ grant insert, update, delete on public.sport_configs to anon, authenticated;
 grant execute on function public.get_sport_configs() to anon, authenticated;
 grant execute on function public.upsert_sport_config(jsonb) to anon, authenticated;
 grant execute on function public.delete_sport_config(uuid) to anon, authenticated;
+
+-- Soft-Wall auth: fan profile on first signup (Apple / Google / Magic Link).
+-- Incremental twin: supabase/auth_fan_profile.sql
+create or replace function public.handle_new_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (user_id, full_name, role, roles, is_verified, spirit_points, active_role)
+  values (
+    new.id,
+    coalesce(
+      nullif(trim(new.raw_user_meta_data->>'full_name'), ''),
+      nullif(trim(new.raw_user_meta_data->>'name'), ''),
+      split_part(coalesce(new.email, 'fan'), '@', 1),
+      'Fan'
+    ),
+    'fan',
+    array['fan']::text[],
+    false,
+    0,
+    'fan'
+  )
+  on conflict (user_id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_auth_user();

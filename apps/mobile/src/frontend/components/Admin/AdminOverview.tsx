@@ -21,7 +21,9 @@ import { coverageHealth } from '@/lib/adminCoverage';
 import { fetchAdminOpsInbox, type AdminOpsInbox } from '@/lib/adminCatalog';
 import { EMPTY_COMPANY_REVENUE, fetchCompanyRevenueSummary, type CompanyRevenueSummary } from '@/lib/finance';
 import { formatTipDollars } from '@/lib/reels';
+import { SOFT_WALL_GATES } from '@tapuai/shared-types';
 import { FOCAL } from '@/theme/motion';
+import { getRuntimeFlag } from '@/lib/runtime';
 
 const EMPTY_INBOX: AdminOpsInbox = {
   flags: 0,
@@ -159,6 +161,35 @@ export function AdminOverview() {
         </View>
       </View>
       <TelemetryCards metrics={metrics} />
+      <View style={styles.ownerStrip}>
+        <Text style={styles.section}>Soft-Wall auth</Text>
+        <View style={styles.grid}>
+          <OwnerStat
+            label="Browse-first gates"
+            value={String(SOFT_WALL_GATES.length)}
+            hint="Mālo · Crew · Chip In"
+            onPress={() => router.push('/admin/coverage')}
+          />
+          <OwnerStat
+            label="Operator console"
+            value={getRuntimeFlag(live, 'layouts.operatorConsole') ? 'Live' : 'Paused'}
+            hint="Features → Publish"
+            onPress={() => router.push('/admin/features')}
+          />
+          <OwnerStat
+            label="Mālo control"
+            value={getRuntimeFlag(live, 'buttons.malo') ? 'On' : 'Off'}
+            hint="Soft wall when On"
+            onPress={() => router.push('/admin/features')}
+          />
+          <OwnerStat
+            label="People / fans"
+            value={String(inbox.pendingVerify)}
+            hint="Verify queue · Soft-Wall fans"
+            onPress={() => router.push('/admin/people')}
+          />
+        </View>
+      </View>
       {dirty ? (
         <AnimatedButton
           haptic="medium"

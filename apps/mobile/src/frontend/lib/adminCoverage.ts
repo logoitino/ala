@@ -12,7 +12,8 @@ export type CoverageSurface =
   | 'operator'
   | 'parent'
   | 'booster'
-  | 'sponsor';
+  | 'sponsor'
+  | 'auth';
 
 export type CoverageControl = {
   id: string;
@@ -35,6 +36,7 @@ export const COVERAGE_SURFACES: { id: CoverageSurface; label: string }[] = [
   { id: 'profile', label: 'Profile' },
   { id: 'upload', label: 'Upload +' },
   { id: 'receipts', label: 'Receipts' },
+  { id: 'auth', label: 'Soft-Wall auth' },
   { id: 'operator', label: 'Operator' },
   { id: 'parent', label: 'Parent HQ' },
   { id: 'booster', label: 'Booster HQ' },
@@ -124,6 +126,16 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'receipts', label: 'Tip History & Receipts', hint: '/receipts', surface: 'receipts', fanHref: '/receipts', adminHref: '/admin/money', flag: 'layouts.receipts', telemetry: 'receipts' },
   { id: 'receipt_open_clip', label: 'Receipt → highlight', hint: 'Jump from a receipt to the clip', surface: 'receipts', fanHref: '/receipts', adminHref: '/admin/highlights', flag: 'layouts.receipts' },
   { id: 'malo_amounts', label: 'Mālo amount presets', hint: 'Tip chips + cover fee — Catalogs', surface: 'receipts', fanHref: '/receipts', adminHref: '/admin/catalog' },
+
+  { id: 'soft_wall.malo', label: 'Mālo Soft Wall', hint: 'Guest tip → SoftWallModal → resume tip sheet', surface: 'auth', fanHref: '/', adminHref: '/admin/features', flag: 'buttons.malo', telemetry: 'soft_wall.malo', owner: 'code' },
+  { id: 'soft_wall.crew', label: 'Crew Soft Wall', hint: 'Guest Join Crew → SoftWallModal → resume toggle', surface: 'auth', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.crew', telemetry: 'soft_wall.crew', owner: 'code' },
+  { id: 'soft_wall.wishlist', label: 'Chip In Soft Wall', hint: 'Guest Chip In → SoftWallModal → resume Mālo', surface: 'auth', fanHref: '/profile', adminHref: '/admin/wishlist', flag: 'layouts.wishlist', telemetry: 'soft_wall.wishlist', owner: 'code' },
+  { id: 'welcome_overlay', label: 'Welcome overlay', hint: 'First-open Watch highlights (no account wall)', surface: 'auth', fanHref: '/', adminHref: '/admin/features', telemetry: 'welcome_overlay', owner: 'code' },
+  { id: 'auth.apple', label: 'Continue with Apple', hint: 'SoftWallModal · alasports://auth/callback', surface: 'auth', fanHref: '/', adminHref: '/admin/people', telemetry: 'auth.apple', owner: 'code' },
+  { id: 'auth.google', label: 'Continue with Google', hint: 'SoftWallModal · OAuth browser', surface: 'auth', fanHref: '/', adminHref: '/admin/people', telemetry: 'auth.google', owner: 'code' },
+  { id: 'auth.magic_link', label: 'Send Magic Link', hint: 'SoftWallModal · email OTP', surface: 'auth', fanHref: '/', adminHref: '/admin/people', telemetry: 'auth.magic_link', owner: 'code' },
+  { id: 'auth.demo', label: 'Continue as Demo Fan', hint: 'demo@tapuai.app password session · QA', surface: 'auth', fanHref: '/', adminHref: '/admin/people', telemetry: 'auth.demo', owner: 'code' },
+  { id: 'browse_guest', label: 'Guest browse hub', hint: 'Highlights / cards / wishlist view without session', surface: 'auth', fanHref: '/', adminHref: '/admin/coverage', owner: 'code' },
 
   { id: 'tab.upload', label: 'Upload +', hint: 'Center FAB', surface: 'upload', fanHref: '/', adminHref: '/admin/features', flag: 'tabs.upload', telemetry: 'tab.upload' },
   { id: 'upload', label: 'Publish Reel', hint: 'game_highlights Storage', surface: 'upload', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'upload' },

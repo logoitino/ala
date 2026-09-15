@@ -119,3 +119,79 @@ export type TapuaiRpcMap = {
     Returns: FanTipHistoryRpc[];
   };
 };
+
+/** Soft-Wall auth gate kinds (browse-first guests; signed-in fans skip the wall). */
+export type SoftWallKind = 'malo' | 'crew' | 'wishlist';
+
+export type SoftWallGate = {
+  id: SoftWallKind;
+  label: string;
+  hint: string;
+  /** Fan surface where the gated action lives. */
+  fanSurface: string;
+  /** Expo admin desk that owns the related feature flag / money. */
+  adminDesk: string;
+  /** Optional `app_runtime_config` flag path that can pause the underlying control. */
+  flagPath?: string;
+  /** Telemetry feature id when the Soft Wall opens. */
+  telemetry: string;
+};
+
+/**
+ * @purpose Shared Soft-Wall oversight map for Expo Coverage + Next admin portal.
+ * Guests browse Highlights / cards / wishlist view; these three actions require auth then resume.
+ */
+export const SOFT_WALL_GATES: SoftWallGate[] = [
+  {
+    id: 'malo',
+    label: 'Mālo Soft Wall',
+    hint: 'Tip / Drop Mālo — Apple, Google, or Magic Link, then PaymentSheet resumes',
+    fanSurface: 'Home · Profile · Spotlight · Reel pager',
+    adminDesk: '/admin/money',
+    flagPath: 'buttons.malo',
+    telemetry: 'soft_wall.malo',
+  },
+  {
+    id: 'crew',
+    label: 'Join Crew Soft Wall',
+    hint: 'Crew toggle on athlete profile — resume join after sign-in',
+    fanSurface: 'Athlete profile · The Crew ⚡',
+    adminDesk: '/admin/features',
+    flagPath: 'buttons.crew',
+    telemetry: 'soft_wall.crew',
+  },
+  {
+    id: 'wishlist',
+    label: 'Chip In Soft Wall',
+    hint: 'Locker Room Chip In — resume Mālo chip toward gear after sign-in',
+    fanSurface: 'Profile · Stats · Locker Room',
+    adminDesk: '/admin/wishlist',
+    flagPath: 'layouts.wishlist',
+    telemetry: 'soft_wall.wishlist',
+  },
+];
+
+/** Auth providers shown on SoftWallModal (Supabase Dashboard must enable each). */
+export const SOFT_WALL_AUTH_PROVIDERS = [
+  { id: 'demo', label: 'Continue as Demo Fan', redirect: 'demo@tapuai.app' },
+  { id: 'apple', label: 'Continue with Apple', redirect: 'alasports://auth/callback' },
+  { id: 'google', label: 'Continue with Google', redirect: 'alasports://auth/callback' },
+  { id: 'magic_link', label: 'Send Magic Link Email', redirect: 'alasports://auth/callback' },
+] as const;
+
+export type SoftWallAuthProviderId = (typeof SOFT_WALL_AUTH_PROVIDERS)[number]['id'];
+
+/** Snapshot used by Next admin portal + Expo Overview Soft-Wall strip. */
+export type SoftWallOversight = {
+  configured: boolean;
+  fanProfiles: number;
+  fansLast7d: number;
+  operatorConsoleLive: boolean;
+  operatorConsoleDraft: boolean | null;
+  maloLive: boolean;
+  crewLive: boolean;
+  wishlistLive: boolean;
+  publishedAt: string | null;
+  softWallGates: SoftWallGate[];
+  authProviders: typeof SOFT_WALL_AUTH_PROVIDERS;
+};

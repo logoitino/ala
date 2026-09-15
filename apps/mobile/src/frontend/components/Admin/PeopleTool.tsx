@@ -19,10 +19,10 @@ import {
 } from '@/lib/adminCatalog';
 import type { VerificationRequest } from '@/types/database';
 
-type PeopleFilter = 'all' | 'admin' | 'unverified' | 'verified';
+type PeopleFilter = 'all' | 'admin' | 'unverified' | 'verified' | 'fans';
 
 /**
- * @purpose Verify people and grant admin. Filter the roster instead of scrolling a raw dump.
+ * @purpose Verify people, grant admin, and oversee Soft-Wall fan signups. Filter the roster instead of scrolling a raw dump.
  * @sideEffects `profiles` UPDATE; `verification_requests` UPDATE.
  */
 export function PeopleTool() {
@@ -56,12 +56,18 @@ export function PeopleTool() {
   );
 
   const pending = queue.filter((row) => row.status === 'pending');
+  const fanCount = people.filter((row) => row.is_fan).length;
+  const fansWeek = people.filter((row) => {
+    if (!row.is_fan || !row.created_at) return false;
+    return Date.now() - new Date(row.created_at).getTime() < 7 * 24 * 60 * 60 * 1000;
+  }).length;
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return people.filter((row) => {
       if (filter === 'admin' && !row.is_admin) return false;
       if (filter === 'unverified' && row.is_verified) return false;
       if (filter === 'verified' && !row.is_verified) return false;
+      if (filter === 'fans' && !row.is_fan) return false;
       if (!needle) return true;
       return `${row.full_name} ${row.username ?? ''} ${row.role}`.toLowerCase().includes(needle);
     });
@@ -84,12 +90,16 @@ export function PeopleTool() {
   return (
     <AdminPage
       title="People"
-      lede="Verify athletes and grant admin so they can open this portal. Approving a request also stamps the matching profile."
+      lede="Verify athletes and grant admin so they can open this portal. Soft-Wall fans appear here after Apple / Google / Magic Link."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
       saveMode="instant"
     >
+      <AdminNotice
+        text={`${fanCount} fan profiles · ${fansWeek} Soft-Wall signups in 7d. Guests browse without a row until they hit Mālo / Crew / Chip In.`}
+        tone="ok"
+      />
       <AdminNotice text={message} />
       {pending.length > 0 ? (
         pending.map((row) => (
@@ -117,6 +127,7 @@ export function PeopleTool() {
         label="Roster"
         items={[
           { id: 'all', label: `All (${people.length})` },
+          { id: 'fans', label: `Fans (${fanCount})` },
           { id: 'unverified', label: 'Unverified' },
           { id: 'verified', label: 'Verified' },
           { id: 'admin', label: 'Admins' },
@@ -126,13 +137,20 @@ export function PeopleTool() {
       />
       <AdminField label="Search" value={query} onChangeText={setQuery} placeholder="Name, handle, role" />
       {visible.length === 0 ? (
-        <AdminEmpty text={people.length === 0 ? 'No profiles yet. They appear after someone signs in.' : 'No people match this filter.'} />
+        <AdminEmpty text={people.length === 0 ? 'No profiles yet. Soft-Wall sign-in creates the first fan row.' : 'No people match this filter.'} />
       ) : (
         visible.map((person) => (
           <AdminRow
             key={person.id}
             title={person.full_name}
-            meta={[person.username, person.role, person.is_verified ? 'Verified' : 'Unverified', person.is_admin ? 'Admin' : '']
+            meta={[
+              person.username,
+              person.role,
+              person.is_fan ? 'Soft-Wall fan' : '',
+              person.is_verified ? 'Verified' : 'Unverified',
+              person.is_admin ? 'Admin' : '',
+              person.created_at ? new Date(person.created_at).toLocaleDateString() : '',
+            ]
               .filter(Boolean)
               .join(' · ')}
           >

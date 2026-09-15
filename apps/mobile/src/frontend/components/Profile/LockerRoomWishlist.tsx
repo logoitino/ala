@@ -27,6 +27,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { displayValue, type Player } from '@/data/players';
 import {
   WISHLIST_EMPTY,
@@ -68,6 +69,7 @@ type LockerRoomWishlistProps = {
 export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRoomWishlistProps) {
   const { live } = useAppRuntime();
   const celebration = useOptionalCelebration();
+  const { requireAuth } = useSoftWall();
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [tipItem, setTipItem] = useState<WishlistItem | null>(null);
@@ -105,8 +107,15 @@ export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRo
   };
 
   const startChipIn = (item: WishlistItem) => {
-    telemetry.trackFeature('wishlist_chip_in', 'profile');
-    setTipItem(item);
+    requireAuth({
+      kind: 'wishlist',
+      athleteName: name,
+      athleteId: player.id,
+      resume: () => {
+        telemetry.trackFeature('wishlist_chip_in', 'profile');
+        setTipItem(item);
+      },
+    });
   };
 
   const creditChipIn = async (amountCents: number) => {

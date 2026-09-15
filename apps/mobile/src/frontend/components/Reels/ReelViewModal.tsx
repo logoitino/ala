@@ -8,6 +8,7 @@ import { ReelCard } from '@/components/Reels/ReelCard';
 import { MaloTipModal } from '@/components/TipSheetModal';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { useSoftWall } from '@/context/SoftWallContext';
 import type { HighlightClip } from '@/data/highlights';
 import type { Player } from '@/data/players';
 import { type ReelHype, readHiddenReelIds } from '@/lib/reels';
@@ -85,6 +86,7 @@ function ReelViewPager({
   onTipped?: (reelId: string, amountCents: number) => void;
 }) {
   const insets = useSafeAreaInsets();
+  const { requireAuth } = useSoftWall();
   const listRef = useRef<FlatList<HighlightClip>>(null);
   const [pageHeight, setPageHeight] = useState(0);
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
@@ -145,9 +147,14 @@ function ReelViewPager({
   const openTip = useCallback(
     (reelId: string) => {
       if (!player) return;
-      setTipTarget({ player, reelId });
+      requireAuth({
+        kind: 'malo',
+        athleteName: player.name,
+        athleteId: player.id,
+        resume: () => setTipTarget({ player, reelId }),
+      });
     },
-    [player],
+    [player, requireAuth],
   );
 
   return (

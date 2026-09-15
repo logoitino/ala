@@ -50,7 +50,25 @@ EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
 STRIPE_SECRET_KEY=sk_test_your_secret_key
 ```
 
-### Admin portal (Next stub)
+### Soft-Wall auth (Supabase Dashboard)
+
+Browse-first guests can open Highlights, cards, and Locker Room without an account. **Mālo**, **Join Crew**, and **Chip In** open `SoftWallModal` (Apple / Google / Magic Link), then resume the intercepted action.
+
+1. Authentication → Providers: enable **Email** (magic link), **Apple**, and **Google**.
+2. Authentication → URL Configuration: add redirect `alasports://auth/callback` (and the Expo Go / web redirect AuthSession prints if you test those hosts).
+3. Run fan profile bootstrap SQL once: `supabase/auth_fan_profile.sql` (also inlined at the end of `apps/mobile/src/backend/db/schema.sql`).
+4. Native Apple Sign In needs a build with the `expo-apple-authentication` plugin (`apps/mobile/app.json`).
+5. **Demo Fan (QA):** SoftWall / Profile → **Continue as Demo Fan** signs in as `demo@tapuai.app` (password `TapuaiDemoFan1!`, overridable via `EXPO_PUBLIC_DEMO_FAN_EMAIL` / `EXPO_PUBLIC_DEMO_FAN_PASSWORD`). Enable Email provider and disable **Confirm email** so first tap can create the user; or run `supabase/demo_fan_account.sql` / create that user in Authentication → Users.
+
+Client entry points: `apps/mobile/src/frontend/lib/auth.ts`, `AuthContext`, `SoftWallContext`, route `apps/mobile/app/auth/callback.tsx`.
+
+Admin oversight: Expo Coverage → Soft-Wall auth, Features Soft-Wall board, People Fans filter. Next portal (`pnpm admin`) Overview / Soft-Wall / Features / People mirrors live flags + fan counts (`SOFT_WALL_GATES` in `@tapuai/shared-types`).
+
+### Operator console (paused by default)
+
+`layouts.operatorConsole` defaults to **off** in `DEFAULT_APP_RUNTIME`. `/operator` stays in the binary but shows `RuntimePaused` until Admin → **Features** turns it on and you **Publish to app**. Existing remotes that already published `true` keep that value until you flip Features off + Publish.
+
+### Admin portal (Next Soft-Wall plane)
 
 ```bash
 cp apps/admin-portal/.env.example apps/admin-portal/.env.local
@@ -61,6 +79,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
 
+Then `pnpm admin` → http://localhost:3001 — Overview, Soft-Wall, Features (draft Soft-Wall related flags + Publish), People (recent Soft-Wall fans).
 ---
 
 ## 4. Run

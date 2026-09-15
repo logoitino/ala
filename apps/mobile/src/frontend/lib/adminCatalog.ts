@@ -85,6 +85,8 @@ export type AdminPerson = {
   role: string;
   is_verified: boolean;
   is_admin: boolean;
+  created_at: string | null;
+  is_fan: boolean;
 };
 
 function asText(value: unknown, fallback = ''): string {
@@ -525,13 +527,14 @@ export async function fetchAdminPeople(): Promise<AdminPerson[]> {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, username, role, is_verified, is_admin, roles')
-    .order('full_name', { ascending: true })
+    .select('id, full_name, username, role, is_verified, is_admin, roles, created_at')
+    .order('created_at', { ascending: false })
     .limit(80);
   throwIf(error, 'Could not load people.');
   if (!Array.isArray(data)) return [];
   return data.map((row) => {
     const roles = Array.isArray(row.roles) ? row.roles.map(String) : [];
+    const isFan = row.role === 'fan' || roles.includes('fan');
     return {
       id: asText(row.id),
       full_name: asText(row.full_name, 'Unnamed'),
@@ -539,6 +542,8 @@ export async function fetchAdminPeople(): Promise<AdminPerson[]> {
       role: asText(row.role, 'fan'),
       is_verified: asBool(row.is_verified),
       is_admin: asBool(row.is_admin) || roles.includes('admin') || row.role === 'admin',
+      created_at: typeof row.created_at === 'string' ? row.created_at : null,
+      is_fan: isFan,
     };
   });
 }

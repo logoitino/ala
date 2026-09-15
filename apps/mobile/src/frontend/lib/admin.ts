@@ -79,7 +79,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { href: '/admin/athletes', label: 'Athletes', hint: 'Roster that fans tag' },
       { href: '/admin/schools', label: 'Schools', hint: 'HS + NCAA catalog' },
-      { href: '/admin/people', label: 'People', hint: 'Verify and admin access' },
+      { href: '/admin/people', label: 'People', hint: 'Soft-Wall fans, verify, admin' },
     ],
   },
   {
@@ -88,14 +88,14 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { href: '/admin/reports', label: 'Reports', hint: 'Tab time, taps, issues, money' },
       { href: '/admin/feedback', label: 'Feedback', hint: 'Fan suggestions to ship' },
-      { href: '/admin/coverage', label: 'Coverage', hint: 'Every fan control → this portal' },
+      { href: '/admin/coverage', label: 'Coverage', hint: 'Every fan control + Soft-Wall' },
     ],
   },
   {
     id: 'system',
     label: 'System',
     items: [
-      { href: '/admin/features', label: 'Features', hint: 'Tabs, buttons, boards' },
+      { href: '/admin/features', label: 'Features', hint: 'Tabs, Soft-Wall, boards' },
       { href: '/admin/look', label: 'Look', hint: 'Daylight colors, copy, profile, Highlights rail' },
       { href: '/admin/catalog', label: 'Catalogs', hint: 'Mālo, exclusive, chips, tiers' },
       { href: '/admin/studio', label: 'Studio', hint: 'Preview roles and surfaces' },

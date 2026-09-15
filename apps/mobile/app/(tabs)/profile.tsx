@@ -15,6 +15,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { markExclusiveClips } from '@/data/exclusive';
 import { displayValue, type Player } from '@/data/players';
 import { useHasSubscriberPass } from '@/hooks/useAthleteSubscription';
@@ -55,8 +56,9 @@ const FALLBACK_ATHLETE: Player = {
  */
 export default function MyHubTab() {
   const router = useRouter();
-  const { profile, role, roles, isAthlete, isAdmin, activeRole } = useAuth();
+  const { profile, role, roles, isAthlete, isAdmin, activeRole, isGuest, signOut } = useAuth();
   const { live } = useAppRuntime();
+  const { requireAuth } = useSoftWall();
   const { players, applyBackerCount, applyVaultLocked } = useRoster();
   const { startCheckout, busy } = useTipCheckout();
   const { onScroll, trackFeature } = useSurfaceUsage('profile');
@@ -175,13 +177,20 @@ export default function MyHubTab() {
 
   const dropMalo = () => {
     const amount = live.catalog.maloAmounts[0] ?? 5;
-    void startCheckout({
-      player: athlete,
-      tipAmount: amount,
-      coverFees: false,
-      onBacked: (nextCount) => {
-        applyBackerCount(athlete.id, nextCount);
-        void readMaloDroppedCount().then(setTipsDropped);
+    requireAuth({
+      kind: 'malo',
+      athleteName: athlete.name,
+      athleteId: athlete.id,
+      resume: () => {
+        void startCheckout({
+          player: athlete,
+          tipAmount: amount,
+          coverFees: false,
+          onBacked: (nextCount) => {
+            applyBackerCount(athlete.id, nextCount);
+            void readMaloDroppedCount().then(setTipsDropped);
+          },
+        });
       },
     });
   };
@@ -297,6 +306,40 @@ export default function MyHubTab() {
           trailing={
             <View style={styles.settingsBlock}>
               <Text style={styles.devKicker}>Account Settings</Text>
+              {isGuest ? (
+                <AnimatedButton
+                  accessibilityLabel="Sign in or Demo Fan"
+                  haptic="medium"
+                  onPress={() =>
+                    requireAuth({
+                      kind: 'signin',
+                      resume: () => undefined,
+                    })
+                  }
+                  contentStyle={styles.capabilityRow}
+                >
+                  <View style={styles.capabilityCopy}>
+                    <Text style={styles.capabilityLabel}>Sign in</Text>
+                    <Text style={styles.capabilityValue}>Demo Fan · Apple · Google · Magic Link</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </AnimatedButton>
+              ) : (
+                <AnimatedButton
+                  accessibilityLabel="Sign out"
+                  haptic="light"
+                  onPress={() => void signOut()}
+                  contentStyle={styles.capabilityRow}
+                >
+                  <View style={styles.capabilityCopy}>
+                    <Text style={styles.capabilityLabel}>Sign out</Text>
+                    <Text style={styles.capabilityValue}>
+                      {profile?.full_name?.trim() || profile?.username || 'Return to guest browse'}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </AnimatedButton>
+              )}
               {isAdmin ? (
                 <AnimatedButton
                   accessibilityLabel="Admin portal"

@@ -17,6 +17,7 @@ import { TabScreen } from '@/components/TabScreen';
 import { MaloTipModal } from '@/components/TipSheetModal';
 import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { useRoster } from '@/hooks/useRoster';
 import { useSpotlightBoard } from '@/hooks/useSpotlightBoard';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
@@ -31,6 +32,7 @@ import type { Player, SpotlightAward } from '@/types/database';
 export default function SpotlightTab() {
   const router = useRouter();
   const { live } = useAppRuntime();
+  const { requireAuth } = useSoftWall();
   const { players, applyBackerCount } = useRoster();
   const { awards, loading, refresh } = useSpotlightBoard(players);
   const { onScroll, trackFeature } = useSurfaceUsage('spotlight');
@@ -109,9 +111,16 @@ export default function SpotlightTab() {
         replay
         onDismiss={() => setSelected(null)}
         onSupport={(player, reelId) => {
-          trackFeature('malo');
-          setSelected(null);
-          setTimeout(() => setTipTarget({ player, reelId }), 320);
+          requireAuth({
+            kind: 'malo',
+            athleteName: player.name,
+            athleteId: player.id,
+            resume: () => {
+              trackFeature('malo');
+              setSelected(null);
+              setTimeout(() => setTipTarget({ player, reelId }), 320);
+            },
+          });
         }}
         onWatch={(_reelId, playerId) => {
           const id = playerId || selected?.player_id;

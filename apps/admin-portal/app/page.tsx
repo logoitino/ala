@@ -1,47 +1,136 @@
-import type { SpotlightAward, UserRole } from '@tapuai/shared-types';
+import Link from 'next/link';
 
-const DEMO_ROLES: UserRole[] = ['admin', 'operator', 'booster'];
+import { Panel, PortalShell, StatCard } from '@/components/PortalShell';
+import { fetchSoftWallOversight } from '@/lib/softWall';
+import { isAdminPortalConfigured } from '@/lib/supabase';
 
-const DEMO_SPOTLIGHT: Pick<SpotlightAward, 'title' | 'headline' | 'school_name'> = {
-  title: 'Player of the Week',
-  headline: 'Shared types are wired through @tapuai/shared-types.',
-  school_name: 'Westlake High',
-};
+export const dynamic = 'force-dynamic';
 
 /**
- * @purpose Next.js admin portal landing stub. Production desks still ship in Expo `/admin` until the web port lands.
+ * @purpose Next Soft-Wall oversight home — live fan counts, operator pause, gate map from Supabase.
+ * @sideEffects Server SELECT via `fetchSoftWallOversight`.
  */
-export default function AdminHomePage() {
+export default async function AdminHomePage() {
+  const configured = isAdminPortalConfigured();
+  const oversight = await fetchSoftWallOversight();
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-8 px-6 py-16">
-      <p className="text-xs font-extrabold tracking-[0.18em] uppercase text-[var(--gold)]">
-        Tapua&apos;i monorepo
-      </p>
-      <h1 className="text-4xl font-extrabold tracking-tight text-[var(--ink)]">Admin portal scaffold</h1>
-      <p className="text-base leading-7 text-slate-600">
-        This Next.js App Router app is the future web control plane. The live production desks still run inside
-        the Expo mobile package at <code className="rounded bg-white px-1.5 py-0.5">/admin</code> until screens
-        are ported here.
-      </p>
-      <section className="rounded-2xl border border-amber-300 bg-[#fff8dc] p-5 shadow-sm">
-        <h2 className="text-sm font-extrabold tracking-wide text-[var(--gold)] uppercase">Shared types check</h2>
-        <p className="mt-2 text-sm text-slate-700">
-          Roles: {DEMO_ROLES.join(' · ')}
-        </p>
-        <p className="mt-1 text-sm text-slate-700">
-          Spotlight sample: {DEMO_SPOTLIGHT.title} — {DEMO_SPOTLIGHT.headline} ({DEMO_SPOTLIGHT.school_name})
-        </p>
-      </section>
-      <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-700">
-        <li>
-          Copy <code>.env.example</code> to <code>.env.local</code> and set{' '}
-          <code>NEXT_PUBLIC_SUPABASE_*</code>.
-        </li>
-        <li>
-          Run <code>pnpm admin</code> from the repo root.
-        </li>
-        <li>Keep publishing the Expo admin until this portal owns a desk.</li>
-      </ol>
-    </main>
+    <PortalShell active="/">
+      {!configured || !oversight.configured ? (
+        <Panel title="Connect Supabase" kicker="Setup">
+          <p className="text-sm leading-6 text-slate-600">
+            Copy <code className="rounded bg-emerald-50 px-1.5">apps/admin-portal/.env.example</code> to{' '}
+            <code className="rounded bg-emerald-50 px-1.5">.env.local</code> with the same project URL and anon key as
+            the mobile app. Then reload — this page reads <code>app_runtime_config</code> and Soft-Wall fan profiles.
+          </p>
+        </Panel>
+      ) : null}
+
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Fan profiles"
+          value={String(oversight.fanProfiles)}
+          hint="Soft-Wall sign-ins with a profiles row"
+          tone="ok"
+        />
+        <StatCard
+          label="Fans · 7 days"
+          value={String(oversight.fansLast7d)}
+          hint="New Soft-Wall accounts this week"
+          tone={oversight.fansLast7d > 0 ? 'ok' : 'neutral'}
+        />
+        <StatCard
+          label="Operator console"
+          value={oversight.operatorConsoleLive ? 'Live' : 'Paused'}
+          hint={
+            oversight.operatorConsoleDraft === true && !oversight.operatorConsoleLive
+              ? 'Draft ON — Publish from Features'
+              : 'Features → Operator console + Publish'
+          }
+          tone={oversight.operatorConsoleLive ? 'warn' : 'ok'}
+        />
+        <StatCard
+          label="Soft-Wall gates"
+          value={String(oversight.softWallGates.length)}
+          hint="Mālo · Crew · Chip In"
+          tone="ok"
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Panel title="Browse-first Soft Wall" kicker="Auth">
+          <p className="text-sm leading-6 text-slate-600">
+            Guests open Highlights, trading cards, and Locker Room without an account. These three actions open
+            SoftWallModal, then resume after Apple / Google / Magic Link.
+          </p>
+          <ul className="space-y-3">
+            {oversight.softWallGates.map((gate) => {
+              const live =
+                gate.id === 'malo'
+                  ? oversight.maloLive
+                  : gate.id === 'crew'
+                    ? oversight.crewLive
+                    : oversight.wishlistLive;
+              return (
+                <li
+                  key={gate.id}
+                  className="rounded-xl border border-emerald-900/10 bg-[var(--canvas)] px-4 py-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-extrabold">{gate.label}</p>
+                    <span
+                      className={
+                        live
+                          ? 'rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-[var(--jade)]'
+                          : 'rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800'
+                      }
+                    >
+                      {live ? 'Control live' : 'Control paused'}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-600">{gate.hint}</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-500">
+                    {gate.fanSurface} · Expo {gate.adminDesk}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+          <Link href="/auth" className="inline-flex text-sm font-extrabold text-[var(--jade)]">
+            Open Soft-Wall desk →
+          </Link>
+        </Panel>
+
+        <Panel title="Providers + publish" kicker="Ops">
+          <ul className="space-y-2 text-sm text-slate-700">
+            {oversight.authProviders.map((provider) => (
+              <li key={provider.id} className="rounded-xl border border-emerald-900/10 px-4 py-3">
+                <p className="font-bold">{provider.label}</p>
+                <p className="text-xs text-slate-500">Redirect {provider.redirect}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="text-sm leading-6 text-slate-600">
+            Last Publish to app:{' '}
+            {oversight.publishedAt ? new Date(oversight.publishedAt).toLocaleString() : 'Never / unknown'}. Toggle Soft-Wall
+            related flags on the Features desk, then Publish.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/features"
+              className="rounded-full bg-[var(--jade)] px-4 py-2 text-sm font-extrabold text-white"
+            >
+              Features
+            </Link>
+            <Link
+              href="/people"
+              className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
+            >
+              People
+            </Link>
+          </div>
+        </Panel>
+      </div>
+    </PortalShell>
   );
 }

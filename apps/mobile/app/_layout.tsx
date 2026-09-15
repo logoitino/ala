@@ -7,8 +7,11 @@ import { StatusBar } from 'expo-status-bar';
 import { AuraToast } from '@/components/AuraToast';
 import { BackedCelebration } from '@/components/BackedCelebration';
 import { StudioPreviewBar } from '@/components/Admin/StudioPreviewBar';
+import { SoftWallModal } from '@/components/Auth/SoftWallModal';
+import { WelcomeOverlay } from '@/components/Onboarding/WelcomeOverlay';
 import { AuthProvider } from '@/context/AuthContext';
 import { AppRuntimeProvider, useAppRuntime } from '@/context/AppRuntimeContext';
+import { SoftWallProvider } from '@/context/SoftWallContext';
 import { CelebrationProvider } from '@/context/CelebrationContext';
 import { UploadSheetProvider } from '@/context/UploadSheetContext';
 import { colors, isLightCanvas } from '@/constants/theme';
@@ -43,10 +46,13 @@ function RuntimeApp() {
           <Stack.Screen name="(booster)" options={{ headerShown: false }} />
           <Stack.Screen name="(sponsor)" options={{ headerShown: false }} />
           <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+          <Stack.Screen name="auth/callback" options={{ headerShown: false, presentation: 'modal' }} />
         </Stack>
         <StudioPreviewBar />
         <BackedCelebration />
         <AuraToast />
+        <SoftWallModal />
+        <WelcomeOverlay />
       </View>
     </>
   );
@@ -57,6 +63,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <AuthProvider>
         <AppRuntimeProvider>
+        <SoftWallProvider>
         <CelebrationProvider>
           <UploadSheetProvider>
             <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}>
@@ -64,6 +71,7 @@ export default function RootLayout() {
             </StripeProvider>
           </UploadSheetProvider>
         </CelebrationProvider>
+        </SoftWallProvider>
         </AppRuntimeProvider>
       </AuthProvider>
     </GestureHandlerRootView>

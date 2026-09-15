@@ -1,8 +1,8 @@
 # Tapua'i — System Architecture Overview
 
 **Product:** Tapua'i (“Back Every Athlete.”)  
-**Repo:** pnpm monorepo — `@tapuai/mobile` (Expo) · `@tapuai/admin-portal` (Next stub) · `@tapuai/shared-types`  
-**Runtime:** Expo SDK 57 · React Native · TypeScript (fan app); Next.js App Router stub for web admin  
+**Repo:** pnpm monorepo — `@tapuai/mobile` (Expo) · `@tapuai/admin-portal` (Next Soft-Wall plane) · `@tapuai/shared-types`
+**Runtime:** Expo SDK 57 · React Native · TypeScript (fan app); Next.js Soft-Wall / Features / People oversight for web admin
 **Companions:** [Architecture](docs/ARCHITECTURE.md) · [Onboarding](docs/ONBOARDING.md) · [Schema](docs/SCHEMA.md) · [Product facts](docs/PRODUCT_FACTS.md) · [Public one-pager](docs/PUBLIC.md) · [Investor briefing](docs/INVESTOR.md) · [Legal briefing](docs/LEGAL_BRIEFING.md) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](CHANGELOG.md) · [Conventions](AGENTS.md) · [Audit](docs/AUDIT_REPORT.md)
 
 ---
@@ -26,14 +26,14 @@ Roles: `guest`, `fan`, `athlete`, `parent`, `operator`, `booster`, `sponsor`, `a
 | Layer | Spec |
 | --- | --- |
 | Mobile | **Expo (React Native)** Router in `apps/mobile/`, SDK 57, StyleSheet + `apps/mobile/src/frontend/constants/theme.ts` (Daylight default; springs + focal colors in `apps/mobile/src/frontend/theme/motion.ts`) |
-| Admin portal | **Next.js App Router stub** in `apps/admin-portal/` (Tailwind + Supabase JS). Production desks remain Expo `/admin` until ported |
+| Admin portal | **Next Soft-Wall control plane** in `apps/admin-portal/` (Overview / Soft-Wall / Features / People). Production desks remain Expo `/admin` until fully ported |
 | Shared | `@tapuai/shared-types` — Profile / ActionStats / Spotlight / common RPC shapes |
 | Graphics | **`@shopify/react-native-skia`** 2.6.2 — `Effects/GlowingNeonBorder` SweepGradient + BlurMask on the Aura trading card (Expo web loads CanvasKit via `WithSkiaWeb` + `apps/mobile/public/canvaskit.wasm`) |
 | Video | **`expo-video` only** (do not use `expo-av` for the feed; do not set `useCaching: true`) |
 | Backend | **Supabase** — Auth, Postgres, Realtime WebSockets (`games`, `game_events`, `cheer_polls`), Storage (`game_highlights`) |
 | Payments | **Stripe Connect Express / PaymentSheet, test mode** (`pk_test_` / `sk_test_`). Native: `stripe.native.ts`. Web PaymentSheet is stubbed; Connect uses `expo-web-browser`. Express Account Links are minted only by Edge Function `create-stripe-account` with the session JWT — never on device. |
 | API | `POST /api/create-payment-intent`, `POST /api/create-payout`, JWT `POST /api/create-stripe-account` (Metro fallback). Production Connect: `supabase.functions.invoke('create-stripe-account')`. |
-| Env | Mobile: `EXPO_PUBLIC_*` in `apps/mobile/.env.local`. Admin stub: `NEXT_PUBLIC_*` in `apps/admin-portal/.env.local`. |
+| Env | Mobile: `EXPO_PUBLIC_*` in `apps/mobile/.env.local`. Admin portal: `NEXT_PUBLIC_*` in `apps/admin-portal/.env.local`. |
 | Workspace | `pnpm install` at repo root. `pnpm mobile` / `pnpm admin` / `pnpm docs:sync`. |
 
 ```mermaid
@@ -79,13 +79,13 @@ apps/mobile/app/                  Expo Router
 
 apps/mobile/src/frontend/components/  AuraCard, AuraTradingCard, Profile/GlowingCardWrapper, Effects/GlowingNeonBorder, Effects/HypeBurst, AthleteProfileView, AthleteStatsTab, Profile/LockerRoomWishlist, VaultLockCard, PayoutSetupCard, ReceiptCard, RoleSwitcherModal, TeamSearchField, AthleteReelManager, SwipeableBannerWrapper, GearCard, ProductSheet, MaloTipModal, Local/CheerPollCard, Local/SearchResultsOverlay, Local/SponsorshipModal, TopAuraBoosters, Operator/PINClaimModal, Reels/*, Feedback/SuggestionSheet, Spotlight/*, Admin/*, RuntimePaused, …
 apps/mobile/src/frontend/hooks/       useTipCheckout, useFanTipHistory, useSponsorships, useStripeConnect, useAthleteSubscription, useSubscriberRequests, useSavedReel, useLocalSearch, useTeamSearch, useAthleteStats, useLiveScores, useLiveGame, useGameEventBroadcast, useRoster, useReels, useActiveSpotlight, useSpotlightBoard, usePendingPlayerTags, useAdminDashboard, useDripCatalog, useSurfaceUsage, …
-apps/mobile/src/frontend/context/     AuthContext, CelebrationContext, RoleGate, UploadSheetContext, AppRuntimeContext, AdminLensContext
+apps/mobile/src/frontend/context/     AuthContext, SoftWallContext, CelebrationContext, RoleGate, UploadSheetContext, AppRuntimeContext, AdminLensContext
 apps/mobile/src/frontend/lib/         supabase.ts, stripe*.ts, aura.ts, haptics.ts, teams.ts, athleteStats.ts, vault.ts, spotlight.ts, tags.ts, finance.ts, admin.ts, adminCatalog.ts, adminCoverage.ts, runtime.ts, feedback.ts, wishlist.ts
 apps/mobile/src/frontend/theme/       motion.ts (`SPRING_*`, Island FOCAL + TAB_ACCENTS, mist washes); hypeFx.ts (Seki / Aura / Flex)
 apps/mobile/src/frontend/services/    TelemetryManager (batched `telemetry_logs`); OfflineQueue (AsyncStorage + NetInfo flush)
 apps/mobile/src/backend/db/schema.sql Canonical Postgres + RLS
 
-apps/admin-portal/                Next.js stub (Tailwind + Supabase). Not a desk port yet
+apps/admin-portal/                Next Soft-Wall plane (Overview / Soft-Wall / Features / People). Full desks still Expo `/admin`
 packages/shared-types/            @tapuai/shared-types
 scripts/                          Node generators (`sync-front-docs.mjs` → product facts; reads apps/mobile constants)
 supabase/                         Incremental SQL (DROP FUNCTION before return-type changes)
@@ -111,6 +111,7 @@ The elevated **center camera uploader** is a FAB (`UploadSheetContext`), not a t
 - Live matchups, tagged 3×3 clips, slang banner, hype reactions
 - `__DEV__` Aura personas on Profile
 - Dual Fan/Athlete: `AuthContext` tracks `roles`, `activeRole`, `isAthlete`, `canReceiveTips`, `isVerified`. Profile **Account Capability** opens `RoleSwitcherModal` (`expo-blur`). Fan-only: unified team search (`schools_and_teams` ILIKE) then sport / jersey / position / class year — same for High School and NCAA — then `add_user_role` writes `profiles.school_id` + `athlete_division`. Dual: Fan View / Athlete Management toggle writes `active_role` with Medium haptic. **Tip History & Receipts 🧾** Light haptic → `/receipts`. Studio **Athlete** preview stays on the fan hub (`ROLE_HOME.athlete = '/'`). Dev role chips and Aura personas live only under `/admin/studio`.
+- **Browse-first Soft-Wall:** no session = guest browse. Mālo / Join Crew / Chip In call `SoftWallContext.requireAuth` → `SoftWallModal` (Apple / Google / Magic Link) → resume. First-open `WelcomeOverlay`. Operator monetization stays Features-gated (`layouts.operatorConsole` default off). Expo Coverage Soft-Wall surface + Next `pnpm admin` oversight.
 - Profile 3D Aura trading card (`AuraTradingCard`): `SPRING_FLIP` `rotateY` 0↔180 with `perspective: 1000`, tap the card or **Flip Card 🔄**, Medium `impactAsync` exactly at 90°. Front is the 7-tier Aura border (active roles in Neon Jade) plus selected team name, mascot, and division badge; back highlights Season Points, Total Tipped, and the same team line. Celestial Prism or a funded Locker Room item lights `Effects/GlowingNeonBorder` (Skia SweepGradient Jade → Gold → Violet, BlurMask 12, 3s linear spin, stroke pulse).
 - Drip marketplace: category pills with a sliding jade indicator, `GearCard` press 0.96 → `ProductSheet` (`expo-blur` backdrop, sliding S–2XL indicator, qty clamped to inventory, Aura banner + live total). **Buy Now** → `useTipCheckout` PaymentSheet; success grants order dollars × 10 Aura to the payer.
 

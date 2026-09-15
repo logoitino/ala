@@ -20,12 +20,11 @@ import { FilterPills } from '@/components/UI/FilterPills';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
-import { useOptionalCelebration } from '@/context/CelebrationContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import {
   CREW_COUNTER_LABEL,
   IN_CREW_LABEL,
   JOIN_CREW_LABEL,
-  JOIN_CREW_SIGN_IN,
   SQUAD_COUNTER_LABEL,
   TEAMMATES_BADGE,
 } from '@/data/crew';
@@ -300,18 +299,21 @@ export function AthleteProfileView({
 function CrewStatsBar({ player }: { player: Player }) {
   const { profile } = useAuth();
   const { live } = useAppRuntime();
-  const celebration = useOptionalCelebration();
+  const { requireAuth } = useSoftWall();
   const crew = useCrew(player.id);
   const isOwn =
     Boolean(profile?.full_name?.trim()) &&
     player.name.trim().toLowerCase() === profile!.full_name.trim().toLowerCase();
 
   const onJoin = () => {
-    if (!crew.signedIn) {
-      celebration?.showToast(JOIN_CREW_SIGN_IN);
-      return;
-    }
-    void crew.toggle();
+    requireAuth({
+      kind: 'crew',
+      athleteName: player.name,
+      athleteId: player.id,
+      resume: () => {
+        void crew.toggle();
+      },
+    });
   };
 
   return (

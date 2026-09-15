@@ -4,6 +4,19 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-14
 
+### Soft-Wall admin oversight (Expo + Next portal)
+
+- Expo Coverage adds Soft-Wall auth surface (`soft_wall.*`, providers, welcome overlay, guest browse). Features desk documents Soft-Wall gates + Operator pause; People adds Fans filter and Soft-Wall signup counts; Overview Soft-Wall strip.
+- Next `@tapuai/admin-portal` is dynamic: Overview / Soft-Wall / Features / People read `app_runtime_config` + fan `profiles`. Features toggles Soft-Wall related flags via `patch_app_runtime_draft` + Publish. Shared gate map in `@tapuai/shared-types` (`SOFT_WALL_GATES`).
+- Soft-Wall telemetry: `soft_wall.malo|crew|wishlist`, `auth.apple|google|magic_link|demo`.
+- **Demo Fan:** SoftWall / Profile **Continue as Demo Fan** → `demo@tapuai.app` / `TapuaiDemoFan1!` (env override). Creates the Auth user on first tap when Confirm email is off.
+
+### Browse-first Soft-Wall auth
+
+- Guests browse Highlights, trading cards, and Locker Room without an account. **Mālo**, **Join Crew**, and **Chip In** open `SoftWallModal` (Continue with Apple / Google + Magic Link email), then resume the intercepted action after `SIGNED_IN`.
+- `AuthContext` exposes `isGuest`, Apple / Google / Magic Link helpers, sign-out, guest AsyncStorage markers, and fan profile bootstrap (`ensureFanProfile` + SQL trigger `handle_new_auth_user`). Deep link: `alasports://auth/callback`.
+- First-open `WelcomeOverlay` (no account wall). Operator console stays shipped but paused: `layouts.operatorConsole` defaults to **false** until Features + Publish.
+
 ### Admin Look + People desks
 
 - Look: serialize `app_runtime_config` draft writes so copy/hex typing cannot race; surface draft/publish errors on the Look desk and Publish bar; drop duplicate Daylight preset row.

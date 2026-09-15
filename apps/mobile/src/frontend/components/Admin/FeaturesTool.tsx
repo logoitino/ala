@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import {
   AdminBtn,
   AdminEmpty,
+  AdminNotice,
   AdminPage,
   AdminPublishBar,
   AdminRow,
@@ -10,14 +11,17 @@ import {
 } from '@/components/Admin/AdminChrome';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { colors, radii } from '@/constants/theme';
-import { APP_FLAG_GROUPS, getRuntimeFlag, setRuntimeFlag } from '@/lib/runtime';
+import { APP_FLAG_GROUPS, getRuntimeFlag, setRuntimeFlag, type AppRuntimeFlagPath } from '@/lib/runtime';
+import { SOFT_WALL_AUTH_PROVIDERS, SOFT_WALL_GATES } from '@tapuai/shared-types';
 
 /**
- * @purpose Draft fan-bar tabs, hype buttons, and boards. Publish to app is the ship step.
+ * @purpose Draft fan-bar tabs, hype buttons, and boards. Publish to app is the ship step. Soft-Wall auth gates are code-owned; Features pauses the underlying Mālo / Crew / Wishlist / Operator controls.
  * @sideEffects `patch_app_runtime_draft` on each toggle; `publish_app_runtime` from this desk or the sidebar.
  */
 export function FeaturesTool() {
   const { draft, published, saveDraft } = useAppRuntime();
+  const operatorLive = getRuntimeFlag(published, 'layouts.operatorConsole');
+  const operatorDraft = getRuntimeFlag(draft, 'layouts.operatorConsole');
 
   return (
     <AdminPage
@@ -26,6 +30,39 @@ export function FeaturesTool() {
       saveMode="publish"
     >
       <AdminPublishBar />
+
+      <View style={styles.group}>
+        <AdminSectionTitle>Soft-Wall auth</AdminSectionTitle>
+        <Text style={styles.body}>
+          Guests browse Highlights, trading cards, and Locker Room without an account. Mālo, Join Crew, and Chip In open
+          SoftWallModal (Apple / Google / Magic Link) then resume. Coverage → Soft-Wall auth tracks wall opens.
+        </Text>
+        {SOFT_WALL_GATES.map((gate) => {
+          const path = gate.flagPath as AppRuntimeFlagPath | undefined;
+          const live = path ? getRuntimeFlag(published, path) : true;
+          return (
+            <AdminRow
+              key={gate.id}
+              title={gate.label}
+              meta={`${gate.hint}${live ? ' · control live' : ' · control paused in Features'}`}
+            />
+          );
+        })}
+        <AdminNotice
+          text={`Providers: ${SOFT_WALL_AUTH_PROVIDERS.map((p) => p.label).join(' · ')}. Redirect ${SOFT_WALL_AUTH_PROVIDERS[0]?.redirect ?? 'alasports://auth/callback'}.`}
+          tone="ok"
+        />
+        <AdminNotice
+          text={
+            operatorLive
+              ? 'Operator console is LIVE. Flip Operator console Off + Publish to pause sideline monetization.'
+              : operatorDraft
+                ? 'Operator console draft ON, live OFF — Publish to open /operator.'
+                : 'Operator console paused (default). Flip Operator console On + Publish when you want sideline ops.'
+          }
+          tone={operatorLive ? 'warn' : 'ok'}
+        />
+      </View>
 
       {APP_FLAG_GROUPS.map((group) => (
         <View key={group.id} style={styles.group}>
@@ -51,7 +88,7 @@ export function FeaturesTool() {
         </View>
       ))}
 
-      <AdminEmpty text="School names, player stats, captions, Drip prices, and scores save instantly on their own desks. Mālo amounts, exclusive dollars, class years, Local chips, booster tiers, and upload labels live on Catalogs." />
+      <AdminEmpty text="School names, player stats, captions, Drip prices, and scores save instantly on their own desks. Mālo amounts, exclusive dollars, class years, Local chips, booster tiers, and upload labels live on Catalogs. Soft-Wall gates stay in code; pause Mālo / Crew / Wishlist / Operator here." />
     </AdminPage>
   );
 }

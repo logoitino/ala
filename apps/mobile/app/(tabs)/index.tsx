@@ -16,6 +16,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { FOCAL } from '@/theme/motion';
 import {
@@ -61,6 +62,7 @@ export default function HighlightsTab() {
   const pendingClipId = useRef<string | null>(null);
   const { user, profile, loading: authLoading } = useAuth();
   const { live: runtime } = useAppRuntime();
+  const { requireAuth } = useSoftWall();
   const { subscribeUploaded } = useUploadSheet();
   const { players, applyBackerCount } = useRoster();
   const { reels, refresh, setReels, applyReelHype, applyReelTips } = useReels();
@@ -225,9 +227,16 @@ export default function HighlightsTab() {
 
   const tipPlayer = useCallback(async (player: Player | null, reelId?: string) => {
     if (!player) return;
-    trackFeature('malo');
-    setTipTarget({ player, reelId });
-  }, [trackFeature]);
+    requireAuth({
+      kind: 'malo',
+      athleteName: player.name,
+      athleteId: player.id,
+      resume: () => {
+        trackFeature('malo');
+        setTipTarget({ player, reelId });
+      },
+    });
+  }, [requireAuth, trackFeature]);
 
   const switchFeed = useCallback((id: HighlightFeedFilter) => {
     closeSearch();

@@ -11,6 +11,17 @@ import {
   useState,
 } from 'react';
 
+import {
+  completeAuthRedirect,
+  ensureFanProfile,
+  ensureGuestId,
+  signInWithApple as appleSignIn,
+  signInWithGoogle as googleSignIn,
+  signInWithMagicLink as magicLinkSignIn,
+  signInWithDemoAccount as demoSignIn,
+  signOutRemote,
+  subscribeAuthDeepLinks,
+} from '@/lib/auth';
 import { deriveRoles, isAdminAccess, isUserRole, ROLE_HOME, addUserRoleRemote, parseRoles } from '@/lib/roles';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { subscribeProfileAura } from '@/lib/aura';
@@ -34,6 +45,8 @@ type AuthContextValue = {
   activeRole: 'fan' | 'athlete';
   isAthlete: boolean;
   isAdmin: boolean;
+  /** True when there is no Supabase session (browse-first guest). Studio `guest` role is separate. */
+  isGuest: boolean;
   /** Local Studio session so `/admin` stays open while previewing Fan / Operator. */
   studioUnlocked: boolean;
   canReceiveTips: boolean;
@@ -51,14 +64,19 @@ type AuthContextValue = {
   addUserRole: (role: UserRole) => Promise<void>;
   completeAthleteOnboarding: (onboard: AthleteOnboarding) => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
+  signInWithApple: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithMagicLink: (email: string) => Promise<void>;
+  signInWithDemoAccount: () => Promise<void>;
+  signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 /**
- * @purpose Session, `profiles` row, dual Fan/Athlete flags, Studio unlock, and Account Capability conversion.
- * @returns Auth bag including `roles`, `activeRole`, `isAthlete`, `isAdmin`, `studioUnlocked`, `canReceiveTips`, and `isVerified`.
- * @sideEffects Supabase Auth + `profiles` SELECT/UPDATE; `add_user_role` RPC; `schools_and_teams` hydrate; AsyncStorage `tapuai.devRole` / `tapuai.studioUnlocked` / `tapuai.athleteOnboarding`; `subscribeProfileAura`.
+ * @purpose Session, guest browse markers, Soft-Wall auth (Apple / Google / Magic Link), dual Fan/Athlete, Studio unlock.
+ * @returns Auth bag including `isGuest`, `roles`, `activeRole`, sign-in helpers, and Studio flags.
+ * @sideEffects Supabase Auth + `profiles`; AsyncStorage guest/dev/studio keys; deep-link session recovery.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -93,10 +111,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return next;
   }, []);
 
+  const hydrateSession = useCallback(
+    async (nextSession: Session | null) => {
+      setSession(nextSession);
+      if (nextSession?.user) {
+        await ensureFanProfile(nextSession.user);
+        await loadProfile(nextSession.user.id);
+      } else {
+        setProfile(null);
+      }
+    },
+    [loadProfile],
+  );
+
   useEffect(() => {
     let active = true;
 
     const bootstrap = async () => {
+      await ensureGuestId();
       const [storedRole, storedStudio] = await Promise.all([
         AsyncStorage.getItem(DEV_ROLE_KEY),
         AsyncStorage.getItem(STUDIO_KEY),
@@ -107,6 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!active) return;
 
+      if (nextSession?.user) {
+        await ensureFanProfile(nextSession.user);
+      }
       setSession(nextSession);
       const nextProfile = await loadProfile(nextSession?.user.id);
       if (!active) return;
@@ -138,14 +173,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
-      void loadProfile(nextSession?.user.id);
+      if (nextSession?.user) {
+        void ensureFanProfile(nextSession.user).then(() => loadProfile(nextSession.user.id));
+      } else {
+        setProfile(null);
+      }
+    });
+
+    const stopDeepLinks = subscribeAuthDeepLinks((url) => {
+      if (!url.includes('auth/callback') && !url.includes('access_token') && !url.includes('code=')) {
+        return;
+      }
+      void completeAuthRedirect(url)
+        .then((next) => {
+          if (next) void hydrateSession(next);
+        })
+        .catch(() => undefined);
     });
 
     return () => {
       active = false;
       data.subscription.unsubscribe();
+      stopDeepLinks();
     };
-  }, [loadProfile]);
+  }, [hydrateSession, loadProfile]);
 
   const switchRole = useCallback(
     async (nextRole: UserRole) => {
@@ -196,12 +247,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return loadProfile(session?.user.id);
   }, [loadProfile, session?.user.id]);
 
+  const signInWithApple = useCallback(async () => {
+    const next = await appleSignIn();
+    await hydrateSession(next);
+  }, [hydrateSession]);
+
+  const signInWithGoogle = useCallback(async () => {
+    const next = await googleSignIn();
+    await hydrateSession(next);
+  }, [hydrateSession]);
+
+  const signInWithMagicLink = useCallback(async (email: string) => {
+    await magicLinkSignIn(email);
+  }, []);
+
+  const signInWithDemoAccount = useCallback(async () => {
+    const next = await demoSignIn();
+    await hydrateSession(next);
+  }, [hydrateSession]);
+
+  const signOut = useCallback(async () => {
+    await signOutRemote();
+    setSession(null);
+    setProfile(null);
+    setExtraRoles([]);
+    setActiveRoleOverride(null);
+    setRole('fan');
+    await AsyncStorage.setItem(DEV_ROLE_KEY, 'fan');
+  }, []);
+
   const roles = useMemo(() => {
     const merged = [...parseRoles(profile?.roles), ...extraRoles];
     return deriveRoles(role, { role: profile?.role, roles: merged });
   }, [extraRoles, profile, role]);
   const isAthlete = roles.includes('athlete');
   const isAdmin = studioUnlocked || isAdminAccess({ role, roles, profile });
+  const isGuest = !session;
   const isVerified = Boolean(profile?.is_verified) || isAthlete;
   const canReceiveTips = isAthlete;
   const activeRole: 'fan' | 'athlete' = useMemo(() => {
@@ -288,6 +369,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       activeRole,
       isAthlete,
       isAdmin,
+      isGuest,
       studioUnlocked,
       canReceiveTips,
       isVerified,
@@ -303,6 +385,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       addUserRole,
       completeAthleteOnboarding,
       refreshProfile,
+      signInWithApple,
+      signInWithGoogle,
+      signInWithMagicLink,
+      signInWithDemoAccount,
+      signOut,
     }),
     [
       activeRole,
@@ -311,6 +398,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       completeAthleteOnboarding,
       isAthlete,
       isAdmin,
+      isGuest,
       isVerified,
       loading,
       lockStudio,
@@ -321,6 +409,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       roles,
       session,
       setActiveRole,
+      signInWithApple,
+      signInWithGoogle,
+      signInWithMagicLink,
+      signInWithDemoAccount,
+      signOut,
       studioUnlocked,
       switchRole,
       unlockStudio,
