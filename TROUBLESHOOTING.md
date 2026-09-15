@@ -4,6 +4,21 @@ Pair with [docs/ONBOARDING.md](docs/ONBOARDING.md). Prefer running [`apps/mobile
 
 ---
 
+## 0. Unable to resolve `../../App` from `expo/AppEntry.js`
+
+**Cause:** Metro was started from the **repo root** (`npx expo start`) after the monorepo move. Root has no Expo Router `main`; Expo falls back to `AppEntry` looking for a root `App` file.
+
+**Fix:** Stop that Metro process (Ctrl+C). From the repo root:
+
+```bash
+cp -n .env.local apps/mobile/.env.local   # once, if you still have a root env
+pnpm mobile
+```
+
+Or `cd apps/mobile && pnpm start`. Reload Expo Go. Do not use `npx expo start` at the workspace root.
+
+---
+
 ## 1. Empty roster / “No player found”
 
 **Cause:** RLS without a public `SELECT` on `players`, missing seed rows, or the wrong athlete route (`/player/:id` vs `/athlete/:id`).

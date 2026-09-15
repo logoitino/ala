@@ -17,9 +17,10 @@ corepack enable
 pnpm install
 
 cp apps/mobile/.env.example apps/mobile/.env.local
+# or: cp -n .env.local apps/mobile/.env.local  if you still have a pre-monorepo root env
 # fill EXPO_PUBLIC_SUPABASE_* and Stripe test keys
 
-pnpm mobile          # Expo
+pnpm mobile          # Expo — NOT `npx expo start` from repo root
 pnpm admin           # Next stub on :3001
 pnpm docs:check      # front-of-house facts vs code
 ```

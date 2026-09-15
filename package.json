@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
+    "start": "pnpm mobile",
     "mobile": "pnpm --filter @tapuai/mobile start",
     "mobile:ios": "pnpm --filter @tapuai/mobile ios",
     "mobile:android": "pnpm --filter @tapuai/mobile android",

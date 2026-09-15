@@ -65,9 +65,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
 ## 4. Run
 
+**Do not** run `npx expo start` from the repo root. After the monorepo move there is no root `App` / `app.json` — that yields `Unable to resolve module ../../App from …/expo/AppEntry.js`.
+
 ```bash
-# Expo (fan app + Expo /admin)
+# Expo (fan app + Expo /admin) — always via workspace filter
 pnpm mobile
+# same as: pnpm start
 
 # or
 pnpm mobile:ios
