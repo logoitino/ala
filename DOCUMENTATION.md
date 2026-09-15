@@ -161,5 +161,5 @@ await supabase.rpc('add_user_aura', {
 1. Expo 57 docs: https://docs.expo.dev/versions/v57.0.0/
 2. Do not delete operator, payouts, schema, or API routes.
 3. Changing RPC return types: `DROP FUNCTION …` first (`42P13`).
-4. After Babel / env changes: `npx expo start --clear`.
+4. After Babel / env changes: `pnpm --filter @tapuai/mobile start -- --clear` (or stop Metro and `pnpm mobile`).
 5. After Mālo / exclusive / booster / Aura / PIN / Connect / athlete-sport constant changes: `pnpm docs:sync` so PUBLIC / INVESTOR / LEGAL fact blocks match code. CI runs `pnpm docs:check` (SCHEMA must name every table and RPC in `apps/mobile/src/backend/db/schema.sql`).

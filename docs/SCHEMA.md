@@ -289,7 +289,7 @@ update_game_score(
 ) returns jsonb
 ```
 
-Atomic increment of scores plus optional clock fields. Re-run `supabase/games_operator.sql`. Client: `updateGameScore` in `src/frontend/lib/operator.ts` (falls back to a direct `games` UPDATE if the RPC is missing).
+Atomic increment of scores plus optional clock fields. Re-run `supabase/games_operator.sql`. Client: `updateGameScore` in `apps/mobile/src/frontend/lib/operator.ts` (falls back to a direct `games` UPDATE if the RPC is missing).
 
 ### `video_tips` → `public.tips`
 
@@ -377,7 +377,7 @@ One playbook per sport, authored at `/admin/sports`. Drives the operator console
 | `sort_order` | integer | Builder order |
 | `created_at` / `updated_at` | timestamptz | |
 
-`games.sport` (text, default `Football`) selects the playbook for a match. **RLS (demo):** public SELECT; admin INSERT / UPDATE / DELETE (`anon` allowed in Expo Go). Client: `src/frontend/lib/sports.ts` + `useSportConfigs` + `/admin/sports`. Fallback: `SPORT_CONFIG_SEEDS` (Football, Basketball, Rugby, Volleyball, Soccer, Baseball, Softball, Wrestling, Track & Field, Lacrosse, Ice Hockey, Tennis).
+`games.sport` (text, default `Football`) selects the playbook for a match. **RLS (demo):** public SELECT; admin INSERT / UPDATE / DELETE (`anon` allowed in Expo Go). Client: `apps/mobile/src/frontend/lib/sports.ts` + `useSportConfigs` + `/admin/sports`. Fallback: `SPORT_CONFIG_SEEDS` (Football, Basketball, Rugby, Volleyball, Soccer, Baseball, Softball, Wrestling, Track & Field, Lacrosse, Ice Hockey, Tennis).
 
 ### `get_sport_configs()`
 
@@ -423,7 +423,7 @@ Locker Room Wishlist gear on the athlete Stats 📊 tab. Fans either buy the ite
 | `sort_order` | integer | Rack order (unfunded first) |
 | `created_at` / `updated_at` | timestamptz | |
 
-**RLS (demo):** public SELECT; admin INSERT / UPDATE / DELETE (`anon` allowed in Expo Go). Client: `src/frontend/lib/wishlist.ts` + `components/Profile/LockerRoomWishlist.tsx` + `/admin/drip`. Fallback: `WISHLIST_DEMO_ITEMS` when the table is missing.
+**RLS (demo):** public SELECT; admin INSERT / UPDATE / DELETE (`anon` allowed in Expo Go). Client: `apps/mobile/src/frontend/lib/wishlist.ts` + `components/Profile/LockerRoomWishlist.tsx` + `/admin/drip`. Fallback: `WISHLIST_DEMO_ITEMS` when the table is missing.
 
 ### `get_wishlist_items(target_player_id)`
 
@@ -458,7 +458,7 @@ Paid Drip checkout rows. ProductSheet inserts after PaymentSheet succeeds. A tri
 
 ### `company_revenue_logs`
 
-Admin finance ledger for `/admin/money`. One row per paid Mālo (`tips`), booster (`sponsorships`), Vault pass (`subscriptions` at $4.99), or Drip order (`shop_orders`). Splits (keep in lockstep with `src/frontend/data/finance.ts` + `company_revenue_bps`):
+Admin finance ledger for `/admin/money`. One row per paid Mālo (`tips`), booster (`sponsorships`), Vault pass (`subscriptions` at $4.99), or Drip order (`shop_orders`). Splits (keep in lockstep with `apps/mobile/src/frontend/data/finance.ts` + `company_revenue_bps`):
 
 | Source | Platform | Payout |
 | --- | --- | --- |
@@ -499,11 +499,11 @@ Single-row fan chrome map (`id = 'default'`). Admin **Features** writes `draft`.
 
 JSON groups: `tabs` (home / local / spotlight / drip / profile / upload), `buttons` (seki / aura / flex / malo / more / subscribe / crew / vault / flashUnlock / **suggest**), `layouts` (liveMatches / cheerPolls / topBoosters / sponsorshipModal / spotlightModal / homeSearch / localSearch / operatorConsole / parentHq / boosterHq / sponsorHq / **slangGuide** / **receipts** / **wishlist**), `theme` (background / surface / jade / gold / text; default **Daylight** `#F3FAF6` / `#00733C`), `profile` (showCard / showCrew / showStats / showVault / actionsOnTop / statsFirst), `highlights` (railSide / namePlacement / showSchool / showCaption / railOrder), `copy` (Home / Local / Spotlight / Drip kickers and ledes, `slangLine`, Profile / Receipts kickers and ledes, Operator / Parent / Booster / Sponsor ledes, optional `homeBannerTitle` / `homeBannerBody`), **`catalog`** (`maloAmounts`, `maloFeeDollars`, `exclusiveDollars`, `exclusiveAura`, `classYears`, `localFilters`, `sponsorTiers`, `reelCategories`). Client desks: `/admin/features` (flags), `/admin/look` (colors, copy, Profile chrome, Highlights ⚡ rail), `/admin/catalog` (prices and chips), `/admin/lab` (JSON draft, hidden from the sidebar), `/admin/coverage` (client map of every fan control → desk / flag / telemetry; no extra table).
 
-**RLS (demo):** public SELECT; admin INSERT / UPDATE (`anon` in Expo Go). Incremental: `supabase/app_runtime.sql`. Client: `src/frontend/lib/runtime.ts` + `/admin/features`.
+**RLS (demo):** public SELECT; admin INSERT / UPDATE (`anon` in Expo Go). Incremental: `supabase/app_runtime.sql`. Client: `apps/mobile/src/frontend/lib/runtime.ts` + `/admin/features`.
 
 ### `app_feedback`
 
-Fan suggestions for the admin improvement queue. Distinct from `report_reel` (clip Report / Hide). Incremental: `supabase/app_feedback.sql`. Client: `src/frontend/lib/feedback.ts` + `/admin/feedback` + `/admin/lab`.
+Fan suggestions for the admin improvement queue. Distinct from `report_reel` (clip Report / Hide). Incremental: `supabase/app_feedback.sql`. Client: `apps/mobile/src/frontend/lib/feedback.ts` + `/admin/feedback` + `/admin/lab`.
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -582,7 +582,7 @@ Batched client performance **and** product-usage events (Reel stalls, Realtime r
 | `payload` | jsonb | Extra context |
 | `created_at` | timestamptz | |
 
-**RLS (demo):** INSERT anyone; SELECT authenticated. Aggregates still reach `/admin/reports` through `get_admin_reports()` (security definer). Incremental: `supabase/telemetry_logs.sql` then `supabase/usage_reports.sql` (adds `duration_ms` / `channel` / `step` on remotes that still store checkout time in `metric_value`). Client: `src/frontend/services/TelemetryManager.ts` + `useSurfaceUsage` (flush every 10s or queue size 15).
+**RLS (demo):** INSERT anyone; SELECT authenticated. Aggregates still reach `/admin/reports` through `get_admin_reports()` (security definer). Incremental: `supabase/telemetry_logs.sql` then `supabase/usage_reports.sql` (adds `duration_ms` / `channel` / `step` on remotes that still store checkout time in `metric_value`). Client: `apps/mobile/src/frontend/services/TelemetryManager.ts` + `useSurfaceUsage` (flush every 10s or queue size 15).
 
 ---
 
@@ -606,7 +606,7 @@ Any authenticated user, including verified athletes, may drop Mālo.
 - Increments `profiles.aura_points` where `user_id` or `id` matches
 - Returns `{ aura_points, player_aura_points, profile_aura_points, points_added }`
 
-Grant: `EXECUTE` to `anon`, `authenticated`. Client: `src/frontend/hooks/useTipCheckout.ts` via `addUserAura`.
+Grant: `EXECUTE` to `anon`, `authenticated`. Client: `apps/mobile/src/frontend/hooks/useTipCheckout.ts` via `addUserAura`.
 
 ### `add_user_role(new_role)`
 
@@ -724,7 +724,7 @@ sync_company_revenue_logs() returns integer
 company_revenue_after_source_insert() returns trigger
 ```
 
-BPS stay in lockstep with `src/frontend/data/finance.ts`. Triggers on `tips`, `sponsorships`, `subscriptions`, `shop_orders` call `record_company_revenue`. `sync_company_revenue_logs` backfills unique `(source, source_id)` rows. Booster gross reads `amount_cents` or, on older remotes, `monthly_amount`. Incremental: `supabase/company_revenue.sql`.
+BPS stay in lockstep with `apps/mobile/src/frontend/data/finance.ts`. Triggers on `tips`, `sponsorships`, `subscriptions`, `shop_orders` call `record_company_revenue`. `sync_company_revenue_logs` backfills unique `(source, source_id)` rows. Booster gross reads `amount_cents` or, on older remotes, `monthly_amount`. Incremental: `supabase/company_revenue.sql`.
 
 ### `get_company_revenue_summary()`
 
@@ -781,7 +781,7 @@ Insert-on-miss seeds `home_name` / `away_name` at 0–0. Featured rivalry `westl
 
 **Earn rate:** `aura_points += tip_dollars × 10` (`$5` Mālo → `+50`).
 
-Tier = highest band whose minimum the balance meets. Source of truth: `AURA_TIERS` in `src/frontend/lib/aura.ts` and `get_aura_tier` in SQL.
+Tier = highest band whose minimum the balance meets. Source of truth: `AURA_TIERS` in `apps/mobile/src/frontend/lib/aura.ts` and `get_aura_tier` in SQL.
 
 | Tier | Title | Min pts | Hex | Face | Ink | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -793,7 +793,7 @@ Tier = highest band whose minimum the balance meets. Source of truth: `AURA_TIER
 | 6 | **Polished Gold** | 110 | `#FFD700` | `#FFF8DC` | `#8A6400` | |
 | 7 | **Celestial Prism** | 170 | `#00E676` / `#00E5FF` | `#EEFFF6` | `#00733C` | Jade border, cyan glow; Skia sweep |
 
-Badge: `Tier {n} • {title}`. Collectible cards use per-tier `face` + `ink` on Daylight (`AURA_TIERS` in `aura.ts`). `AuraCard` (public athlete) / `AuraTradingCard` (Profile hub, both faces) / `TopAuraBoosters`. Progress fill uses `auraProgressTowardNext` (band min → next min; Celestial Prism is full). Standard Island scheme (`FOCAL` + `TAB_ACCENTS`): Daylight `#F3FAF6`, Jade `#00E676` / `#00733C` (Home / Mālo), Cyan `#00E5FF` (Local / Seki), Gold `#FFD700` / `#8A6400` (kickers / Spotlight / ranks), Ember `#FF1744` (LIVE / Drip), Violet `#7C4DFF` (Profile). Video chrome stays Obsidian `#0F1416`. Source: `src/frontend/theme/motion.ts`.
+Badge: `Tier {n} • {title}`. Collectible cards use per-tier `face` + `ink` on Daylight (`AURA_TIERS` in `aura.ts`). `AuraCard` (public athlete) / `AuraTradingCard` (Profile hub, both faces) / `TopAuraBoosters`. Progress fill uses `auraProgressTowardNext` (band min → next min; Celestial Prism is full). Standard Island scheme (`FOCAL` + `TAB_ACCENTS`): Daylight `#F3FAF6`, Jade `#00E676` / `#00733C` (Home / Mālo), Cyan `#00E5FF` (Local / Seki), Gold `#FFD700` / `#8A6400` (kickers / Spotlight / ranks), Ember `#FF1744` (LIVE / Drip), Violet `#7C4DFF` (Profile). Video chrome stays Obsidian `#0F1416`. Source: `apps/mobile/src/frontend/theme/motion.ts`.
 
 If `aura_points` is unset on a player, the client falls back to `aura_count + seki_count + flex_count`.
 
@@ -844,7 +844,7 @@ Created in `supabase/reels.sql`:
 | --- | --- |
 | Bucket id / name | `game_highlights` |
 | Public | `true` |
-| Client constant | `HIGHLIGHTS_BUCKET` in `src/frontend/lib/reels.ts` |
+| Client constant | `HIGHLIGHTS_BUCKET` in `apps/mobile/src/frontend/lib/reels.ts` |
 | Object path | `reels/{timestamp}.{ext}`; booster logos at `sponsors/{timestamp}.{ext}` |
 | RLS SELECT | `storage.objects` where `bucket_id = 'game_highlights'` |
 | RLS INSERT | same `bucket_id` |

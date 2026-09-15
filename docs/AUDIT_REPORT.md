@@ -1,10 +1,39 @@
 # Tapua'i interaction audit
 
 **Role:** Lead QA & Mobile Systems  
-**Date:** 2026-09-12  
-**Verdict:** Fan hub UI is **ready** for Expo Go smoke. No missing product `onPress` handlers. Every real tap fires `Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)`.
+**Dates:** 2026-09-12 (fan hub haptics) · **2026-09-14 (pnpm monorepo audit)**  
+**Verdict:** Fan hub UI remains **ready** for Expo Go smoke. Monorepo layout is **shipped locally** (`apps/mobile`, `apps/admin-portal` stub, `packages/shared-types`). No missing product `onPress` handlers. Every real tap fires `Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)` unless noted.
 
-**Method:** Full static pass over `app/` and `src/frontend/`. RPC and PaymentSheet paths traced in source (`bumpReelHype`, `useTipCheckout`, Realtime `removeChannel`). Not run on a physical device here (Stripe test mode is native-only).
+**Method (2026-09-14):** Static pass over `apps/mobile/app/` + `apps/mobile/src/frontend/`; `pnpm typecheck` (mobile + admin); `pnpm docs:check`; shared-types import smoke; `sk_test_` / `sk_live_` grep under `apps/mobile/src/frontend/` (clean); stale path sweep of docs / troubleshooting / CI. Not re-run on a physical device here.
+
+---
+
+## 0. Monorepo audit (2026-09-14)
+
+| Check | Result |
+| --- | --- |
+| Layout | Pass — Expo under `apps/mobile/` (`@tapuai/mobile`); Next stub `apps/admin-portal/`; `@tapuai/shared-types`; root `supabase/` + `scripts/` |
+| Package manager | Pass — `pnpm-workspace.yaml`, `pnpm-lock.yaml`; root `package-lock.json` removed |
+| Typecheck | Pass — `pnpm typecheck` (mobile `tsc` + admin `tsc`) |
+| Docs sync | Pass — `pnpm docs:check` |
+| Shared types | Pass — mobile `database.ts` re-exports; admin stub page imports `UserRole` / `SpotlightAward` |
+| Metro monorepo | Pass — `apps/mobile/metro.config.js` watchFolders + dual `nodeModulesPaths` |
+| Secrets in client | Pass — no `sk_test_` / `sk_live_` under `apps/mobile/src/frontend/` |
+| Env convention | Pass — `apps/mobile/.env.local` (`EXPO_PUBLIC_*`); `apps/admin-portal/.env.example` (`NEXT_PUBLIC_*`); root `.env.local` gitignored |
+| Expo `/admin` | Pass — desks remain in mobile; Next portal is scaffold only (by design) |
+| Stale root paths | Fixed this pass — `TROUBLESHOOTING.md`, `docs/SCHEMA.md` body refs, `docs/INVESTOR.md` / `LEGAL_BRIEFING.md` (`pnpm docs:sync`), `DOCUMENTATION.md` clear command |
+| Touchables | Pass — **0** `TouchableOpacity` / `TouchableHighlight` / `TouchableWithoutFeedback` under `apps/mobile/app` + `apps/mobile/src/frontend` |
+| Push to origin | **Blocked in agent** — HTTPS remote needs interactive GitHub auth (`gh auth login` or IDE Source Control push). Local `main` stays ahead until pushed |
+
+Day-to-day:
+
+```bash
+pnpm install
+pnpm mobile          # Expo fan app + Expo /admin
+pnpm admin           # Next stub :3001
+pnpm typecheck
+pnpm docs:check
+```
 
 ---
 
@@ -12,7 +41,7 @@
 
 | Primitive | Count / rule | Result |
 | --- | --- | --- |
-| `TouchableOpacity` / `TouchableHighlight` / `TouchableWithoutFeedback` | Search of `app/` + `src/frontend/` | **0** |
+| `TouchableOpacity` / `TouchableHighlight` / `TouchableWithoutFeedback` | Search of `apps/mobile/app/` + `apps/mobile/src/frontend/` | **0** |
 | Product `Pressable` | Aliased to `HapticPressable as Pressable` | Pass — Light impact, `disabled` short-circuits `onPress` |
 | Raw RN `Pressable` | Only inside `HapticPressable`, `AnimatedButton`, and `AnimatedPressable` | Pass — those are the haptic engines |
 | `AnimatedButton` | Tabs, Upload FAB, FilterPills, ExclusivePaywall, Profile Mālo, Local retry | Pass — default haptic Light (`medium`/`selection` aliases) |
@@ -20,7 +49,7 @@
 | Reel double-tap | `ReelCard` Aura burst | Medium `impactAsync` (explicit exception to Light) |
 | Cheer poll vote | `Local/CheerPollCard` option tap | Medium `impactAsync` (`haptic="none"` on `AnimatedPressable` so Light does not double-fire) |
 | Profile card flip | `AuraTradingCard` **Flip Card 🔄** / double-tap | Medium `impactAsync` at 90° (`haptic="none"` on the button so Light does not double-fire) |
-| Operator callout | `app/operator/[gameId].tsx` **⚡ Big Play** / TD / Big Hit / Turnover | `notificationAsync(Success)` (`haptic="none"` on `AnimatedPressable`) |
+| Operator callout | `apps/mobile/app/operator/[gameId].tsx` **⚡ Big Play** / TD / Big Hit / Turnover | `notificationAsync(Success)` (`haptic="none"` on `AnimatedPressable`) |
 | Live play toast | `Reels/LiveMatchBanner` on `game_events` INSERT (`/game/[id]`) | `notificationAsync(Success)` (not a button; no Light impact) |
 | Reel broadcast banner | `ReelCard` on Broadcast `play` | Light `impactAsync` (subtle fan burst) |
 | Non-buttons | Tip-sheet backdrop/body | No CTA by design; body uses `haptic="none"` + swallow `onPress` so the sheet does not dismiss when tapping checkout |
@@ -48,11 +77,11 @@ ReelCard Broadcast banner → Haptics.impactAsync(Light)
 | File | Callbacks | Pending disable | Notes |
 | --- | --- | --- | --- |
 | `FanTabBar.tsx` | Reel / Local / Drip / Profile `navigate`; FAB `openUpload` | N/A (local nav) | FAB is **not** a tab route |
-| `app/(tabs)/_layout.tsx` | Hosts `UploadVideoModal` | Upload Close blocked while uploading | `freezeOnBlur` + `detachInactiveScreens={false}` |
-| `app/(tabs)/index.tsx` | Overlay react / Mālo | `reacting` / `tipping` | UUID reels hit Supabase |
-| `app/(tabs)/local/index.tsx` | Hub pills, GameCard, cheer vote, booster peek, retry | Same-side cheer no-ops | Live Matches / School Polls / Top Boosters; game tap stays in-tab |
-| `app/(tabs)/drip.tsx` | Filter pills, GearCard → ProductSheet, Buy Now | PaymentSheet `busy` | `/shop` redirects here. Stripe native-only. |
-| `app/(tabs)/profile.tsx` | Drop $5 Mālo, Subscribe stub, hub filters, Flip Card | Mālo `busy` | Subscribe is local AsyncStorage, not Stripe. Flip haptic is Medium at 90° |
+| `apps/mobile/app/(tabs)/_layout.tsx` | Hosts `UploadVideoModal` | Upload Close blocked while uploading | `freezeOnBlur` + `detachInactiveScreens={false}` |
+| `apps/mobile/app/(tabs)/index.tsx` | Overlay react / Mālo | `reacting` / `tipping` | UUID reels hit Supabase |
+| `apps/mobile/app/(tabs)/local/index.tsx` | Hub pills, GameCard, cheer vote, booster peek, retry | Same-side cheer no-ops | Live Matches / School Polls / Top Boosters; game tap stays in-tab |
+| `apps/mobile/app/(tabs)/drip.tsx` | Filter pills, GearCard → ProductSheet, Buy Now | PaymentSheet `busy` | `/shop` redirects here. Stripe native-only. |
+| `apps/mobile/app/(tabs)/profile.tsx` | Drop $5 Mālo, Subscribe stub, hub filters, Flip Card | Mālo `busy` | Subscribe is local AsyncStorage, not Stripe. Flip haptic is Medium at 90° |
 
 ### Reels, Mālo, upload
 
@@ -73,11 +102,11 @@ ReelCard Broadcast banner → Haptics.impactAsync(Light)
 
 | File | Pending disable |
 | --- | --- |
-| `app/operator/index.tsx` | Game row opens PIN sheet; GPS `checkingIn` | Claim `claiming` | `PINClaimModal` Light impact per digit |
-| `app/operator/[gameId].tsx` | +1/+3/+6, clock, callouts, roster | `sending` | RPC `update_game_score`; `/operator/console/[gameId]` redirects here |
-| `app/operator/scorer.tsx` | Macros | `sending` | |
+| `apps/mobile/app/operator/index.tsx` | Game row opens PIN sheet; GPS `checkingIn` | Claim `claiming` | `PINClaimModal` Light impact per digit |
+| `apps/mobile/app/operator/[gameId].tsx` | +1/+3/+6, clock, callouts, roster | `sending` | RPC `update_game_score`; `/operator/console/[gameId]` redirects here |
+| `apps/mobile/app/operator/scorer.tsx` | Macros | `sending` | |
 | `OperatorRosterModal.tsx` | Close + rows `busy` |
-| `app/(admin)/admin/index.tsx` | Verify / Pay `busyId` |
+| `apps/mobile/app/(admin)/admin/index.tsx` | Verify / Pay `busyId` |
 | `app/(booster)/booster/index.tsx` | Upload / Verify `busy` |
 | `app/(sponsor)/sponsor/index.tsx` | Place / Publish / Pause `busy` |
 | `app/(parent)/parent/index.tsx` | Consent + payout `busy` |

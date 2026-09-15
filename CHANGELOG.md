@@ -4,6 +4,10 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-14
 
+### Monorepo audit + path retarget
+
+- Re-verified `pnpm typecheck`, `pnpm docs:check`, shared-types imports, and zero Stripe secrets under `apps/mobile/src/frontend/`. Updated [AUDIT_REPORT](docs/AUDIT_REPORT.md) §0, [TROUBLESHOOTING](TROUBLESHOOTING.md), SCHEMA body paths, INVESTOR / LEGAL `pnpm docs:sync` wording.
+
 ### A + Full monorepo (pnpm)
 
 - Repo root is workspace orchestration: `pnpm-workspace.yaml`, root scripts (`pnpm mobile`, `pnpm admin`, `pnpm docs:sync`). Expo app moved to `apps/mobile/` (`@tapuai/mobile`). Next.js App Router **stub** at `apps/admin-portal/` (`@tapuai/admin-portal`) with Tailwind + Supabase JS — Expo `/admin` desks stay in mobile. Shared contracts in `packages/shared-types` (`@tapuai/shared-types`).

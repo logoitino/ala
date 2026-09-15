@@ -16,7 +16,7 @@ import {
  * @param isWishlistFulfilled At least one wishlist item is fully funded / equipped.
  * @param isAuraMaxed Aura tier 7 — Celestial Prism.
  * @returns Same layout as native; `LoadSkiaWeb` runs via `WithSkiaWeb` then mounts `GlowingNeonBorder`.
- * @sideEffects Fetches `/canvaskit.wasm` (copied by `npm run skia:web`). Never imported by the iOS/Android bundle.
+ * @sideEffects Fetches `/canvaskit.wasm` (copied by `pnpm --filter @tapuai/mobile skia:web` / mobile `postinstall`). Never imported by the iOS/Android bundle.
  */
 export function GlowingCardWrapper({
   children,

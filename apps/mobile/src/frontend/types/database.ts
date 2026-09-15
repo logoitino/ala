@@ -297,7 +297,7 @@ export type ShopOrder = {
   created_at: string;
 };
 
-/** One sport playbook (`public.sport_configs`). JSON columns mirror `src/frontend/data/sports.ts`. */
+/** One sport playbook (`public.sport_configs`). JSON columns mirror `apps/mobile/src/frontend/data/sports.ts`. */
 export type SportConfigRow = {
   id: string;
   sport: string;

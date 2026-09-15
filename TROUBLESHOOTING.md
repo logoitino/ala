@@ -1,6 +1,6 @@
 # Tapua'i Diagnostic & Troubleshooting Playbook
 
-Pair with [docs/ONBOARDING.md](docs/ONBOARDING.md). Prefer running [`src/backend/db/schema.sql`](src/backend/db/schema.sql) over one-off policies when the project is empty.
+Pair with [docs/ONBOARDING.md](docs/ONBOARDING.md). Prefer running [`apps/mobile/src/backend/db/schema.sql`](apps/mobile/src/backend/db/schema.sql) over one-off policies when the project is empty. This is a **pnpm monorepo** — run Expo from the repo root with `pnpm mobile`.
 
 ---
 
@@ -24,7 +24,7 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 
 ## 2. Empty Local games
 
-**Cause:** Missing `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `games` not seeded, or `is_active = false`.
+**Cause:** Missing `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` in `apps/mobile/.env.local`, `games` not seeded, or `is_active = false`.
 
 **Fix:** Restart Expo after `.env.local` edits. Seed from `schema.sql` or `supabase/games.sql`. Realtime: add `public.games` to `supabase_realtime`.
 
@@ -32,9 +32,9 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 
 ## 3. Metro `transformFile` undefined
 
-**Cause:** Babel cannot resolve `babel-preset-expo` from the repo root.
+**Cause:** Babel cannot resolve `babel-preset-expo` from `apps/mobile/`.
 
-**Fix:** Root `babel.config.js` with `presets: ['babel-preset-expo']`, dependency installed, then `npx expo start --clear`.
+**Fix:** Confirm `apps/mobile/babel.config.js` has `presets: ['babel-preset-expo']`, run `pnpm install` at the repo root, then `pnpm mobile` (or `pnpm --filter @tapuai/mobile start -- --clear`).
 
 ---
 
@@ -56,9 +56,9 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 
 ## 6. PaymentSheet never opens / payment 500
 
-**Cause:** Web stub (`stripe.web.ts`); missing `STRIPE_SECRET_KEY`; amount &lt; 50 cents.
+**Cause:** Web stub (`stripe.web.ts`); missing `STRIPE_SECRET_KEY` in `apps/mobile/.env.local`; amount &lt; 50 cents.
 
-**Fix:** Expo Go on iOS/Android. Secret in `.env.local` (not `src/frontend/`). Client calls `POST /api/create-payment-intent` — not the unused `supabase/functions/create-payment-intent` Edge Function.
+**Fix:** Expo Go on iOS/Android. Secret in `apps/mobile/.env.local` (not under `apps/mobile/src/frontend/`). Client calls `POST /api/create-payment-intent` — not the unused `supabase/functions/create-payment-intent` Edge Function.
 
 ---
 
@@ -98,4 +98,4 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 
 **Cause:** RLS blocking `games` UPDATE, or not on `/operator/console/[gameId]`.
 
-**Fix:** Demo policies allow `anon` updates (see `schema.sql`). Confirm `EXPO_PUBLIC_SUPABASE_*` and that the claimed game `id` matches. PIN is `OPERATOR_TEST_PIN` in `src/frontend/lib/operator.ts`.
+**Fix:** Demo policies allow `anon` updates (see `schema.sql`). Confirm `EXPO_PUBLIC_SUPABASE_*` and that the claimed game `id` matches. PIN is `OPERATOR_TEST_PIN` in `apps/mobile/src/frontend/lib/operator.ts`.

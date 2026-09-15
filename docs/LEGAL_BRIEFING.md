@@ -18,7 +18,7 @@ The honest investor question is not “is there a lawsuit someday?” It is: **c
 
 ## 2. Facts counsel should treat as true (from the product, not a pitch)
 
-Prices, PIN, Connect identity, RLS, and the Mālo disclaimer are generated from source (`npm run docs:sync`). Do not edit inside the markers. Do not auto-generate legal conclusions.
+Prices, PIN, Connect identity, RLS, and the Mālo disclaimer are generated from source (`pnpm docs:sync`). Do not edit inside the markers. Do not auto-generate legal conclusions.
 
 <!-- product-facts:start -->
 | Fact | Where it lives |

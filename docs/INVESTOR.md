@@ -49,7 +49,7 @@ Copy in the UI is Mālo / Seki. Ledgers stay `tips`.
 
 ## 4. Business model (designed, not live)
 
-Prices below are generated from source (`npm run docs:sync`). Do not edit inside the markers.
+Prices below are generated from source (`pnpm docs:sync`). Do not edit inside the markers.
 
 <!-- product-facts:start -->
 | Line | Price (as coded) | Notes |
@@ -64,7 +64,7 @@ Prices below are generated from source (`npm run docs:sync`). Do not edit inside
 | Athlete profile | Unified sheet | Tabs Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar Home / Spotlight. Vault Lock Vault 🔒 (default locked). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. |
 <!-- product-facts:end -->
 
-Drip SKUs stay in `src/frontend/data/shop.ts` (payer Aura only). **Not a model:** selling Aura, listing athletes as securities, or taking a rake on Mālo until counsel signs off. A platform fee is a product decision and a regulatory one.
+Drip SKUs stay in `apps/mobile/src/frontend/data/shop.ts` (payer Aura only). **Not a model:** selling Aura, listing athletes as securities, or taking a rake on Mālo until counsel signs off. A platform fee is a product decision and a regulatory one.
 
 Payments are **test mode**. There is no live GMV.
 
