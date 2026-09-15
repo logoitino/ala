@@ -4,6 +4,12 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-15
 
+### Athlete HQ training badges
+
+- Replaced static Athlete HQ chips (**Film Room · Starter**, **Community Backer Magnet**, **Friday Night Lights**) with a real catalog in `@tapuai/shared-types` (`TRAINING_BADGES`). Unlocks persist in `athlete_training_badge_unlocks`; `sync_athlete_training_badges` evaluates live predicates and stamps `unlocked_at`.
+- Earn rules (first action only): That's me confirmed tag → Film Room; Mālo received (`tips`) → Community Backer Magnet; claimed `profiles.player_id` → Friday Night Lights. Locked chips show the rule; operators deep-link to Expo `/admin/spotlight`, `/admin/money`, `/admin/athletes` (not the Next Soft-Wall stub).
+- Athlete HQ Mālo ledger and badges now use the signed-in `profiles.player_id`, not `players[0]`.
+
 ### Clean Profile hierarchy
 
 - Profile hero is a large avatar (tier ring + jersey); Flip Aura card opens from the hamburger or a slim control — not a full-width card blocking the scroll.

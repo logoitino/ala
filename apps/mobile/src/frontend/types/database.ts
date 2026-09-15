@@ -488,6 +488,13 @@ export type AthleteGameLog = {
   created_at?: string;
 };
 
+/** Row from `athlete_training_badge_unlocks`. Catalog ids live in `@tapuai/shared-types`. */
+export type AthleteTrainingBadgeUnlock = {
+  player_id: string;
+  badge_id: string;
+  unlocked_at: string;
+};
+
 export type LocalSearchKind = 'all' | 'athlete' | 'school' | 'booster';
 
 /** Row from `search_local_entities(search_query, entity_kind)`. */
@@ -592,6 +599,10 @@ export type Database = {
       athlete_game_logs: Table<
         AthleteGameLog,
         Pick<AthleteGameLog, 'player_id' | 'played_on'> & Partial<AthleteGameLog>
+      >;
+      athlete_training_badge_unlocks: Table<
+        AthleteTrainingBadgeUnlock,
+        Pick<AthleteTrainingBadgeUnlock, 'player_id' | 'badge_id'> & Partial<AthleteTrainingBadgeUnlock>
       >;
       spotlight_awards: Table<
         SpotlightAwardRow,
@@ -921,6 +932,10 @@ export type Database = {
       current_user_role: {
         Args: Record<string, never>;
         Returns: string;
+      };
+      sync_athlete_training_badges: {
+        Args: { target_player_id?: string | null };
+        Returns: Record<string, unknown>;
       };
       upsert_cheer_poll: {
         Args: {

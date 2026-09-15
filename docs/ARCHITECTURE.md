@@ -8,7 +8,7 @@ System overview for the pnpm monorepo. Schema detail: [SCHEMA.md](SCHEMA.md). Pr
 | --- | --- | --- |
 | `@tapuai/mobile` | `apps/mobile/` | Expo Router SDK 57 fan app + production Expo `/admin` control plane |
 | `@tapuai/admin-portal` | `apps/admin-portal/` | Next.js App Router Soft-Wall + Profile control plane (Overview / Soft-Wall / Profile / Features / People). Full desks still in Expo `/admin` |
-| `@tapuai/shared-types` | `packages/shared-types/` | Shared TypeScript contracts (Profile / Soft-Wall gates / Profile chrome / Spotlight / RPC shapes) |
+| `@tapuai/shared-types` | `packages/shared-types/` | Shared TypeScript contracts (Profile / Soft-Wall gates / Profile chrome / TRAINING_BADGES / Spotlight / RPC shapes) |
 | SQL / Edge | `supabase/` | Migrations, Edge Functions, seed SQL (shared backend) |
 
 ```text
@@ -26,7 +26,7 @@ apps/admin-portal ─┘
 
 - **Mobile (Expo):** Highlights ⚡, Local, Spotlight, Drip, Profile (avatar hero + hamburger + Active Team Roster), Mālo PaymentSheet, Soft-Wall auth (browse-first guests), operator console (Features-gated), and the live **Admin** desks under `app/(admin)/admin` (Coverage Soft-Wall + Profile surfaces, Features Soft-Wall board, Look Profile chrome, People Fans filter).
 - **Admin portal (Next):** Soft-Wall + Profile control plane at `pnpm admin` — Overview / Soft-Wall / Profile / Features / People read Supabase `app_runtime_config` + fan/claim profiles; Features drafts Soft-Wall + Profile chrome flags and Publish. Full desks still live in Expo `/admin` until ported.
-- **Shared types:** Import `@tapuai/shared-types` (or `@shared/*`) for cross-app domain types, including `SOFT_WALL_GATES` / `SoftWallOversight`. Mobile keeps the full generated `Database` helpers in `apps/mobile/src/frontend/types/database.ts`.
+- **Shared types:** Import `@tapuai/shared-types` (or `@shared/*`) for cross-app domain types, including `SOFT_WALL_GATES` / `SoftWallOversight` / `PROFILE_CHROME_FLAGS` / `TRAINING_BADGES`. Mobile keeps the full generated `Database` helpers in `apps/mobile/src/frontend/types/database.ts`.
 - **Auth:** Supabase session + `alasports://auth/callback`. Soft wall on Mālo / Crew / Chip In only; fan profile via `handle_new_auth_user` + `ensureFanProfile`.
 
 ## Data model (ERD pointer)
@@ -38,6 +38,7 @@ Canonical tables and RPCs live in `apps/mobile/src/backend/db/schema.sql` and ar
 3. `profiles.aura_points` → 7-tier Aura card + Top Boosters.
 4. `games` / `game_events` Realtime → Local live scores.
 5. `spotlight_awards` → Spotlight tab / launch modal.
+6. `athlete_training_badge_unlocks` → Athlete HQ training badges (`sync_athlete_training_badges`).
 
 ## Env boundaries
 

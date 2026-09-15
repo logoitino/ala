@@ -1,6 +1,7 @@
 /**
  * @purpose Cross-app TypeScript contracts for Tapua'i (mobile Expo + admin portal).
  * Keep this package free of React Native / Next imports so both apps can share it.
+ * Includes Soft-Wall gates, Profile chrome flags, and Athlete HQ `TRAINING_BADGES` catalog.
  */
 
 export type UserRole =
@@ -278,3 +279,116 @@ export type ProfileOversight = {
   statsFirst: boolean;
   chromeFlags: ProfileChromeFlag[];
 };
+
+/**
+ * Athlete HQ training badges. Not Spotlight (`spotlight_awards`) and not
+ * `athlete_career_stats.mvp_badges` (a career integer). Catalog + earn rules live
+ * here; unlocks persist in `athlete_training_badge_unlocks`.
+ */
+export const TRAINING_BADGE_IDS = [
+  'film_room_starter',
+  'community_backer_magnet',
+  'friday_night_lights',
+] as const;
+
+export type TrainingBadgeId = (typeof TRAINING_BADGE_IDS)[number];
+
+export type TrainingBadgeDef = {
+  id: TrainingBadgeId;
+  label: string;
+  emoji: string;
+  /** Locked-chip copy: the real product action that earns this. */
+  rule: string;
+  /** Athlete CTA. Omit when the action already lives on Athlete HQ. */
+  fanLabel?: string;
+  fanHref?: string;
+  /** Expo `/admin` desk — never a Next portal page. */
+  adminDesk: string;
+  adminLabel: string;
+};
+
+/**
+ * @purpose Ship the three Athlete HQ chips that were static placeholders, with
+ * honest first-action thresholds (count ≥ 1). Names are the existing UI copy.
+ */
+export const TRAINING_BADGES: TrainingBadgeDef[] = [
+  {
+    id: 'film_room_starter',
+    label: 'Film Room · Starter',
+    emoji: '🎬',
+    rule: "Confirm a That's me tag on a Highlight ⚡ that names you.",
+    adminDesk: '/admin/spotlight',
+    adminLabel: 'Open Spotlight tags',
+  },
+  {
+    id: 'community_backer_magnet',
+    label: 'Community Backer Magnet',
+    emoji: '⚡',
+    rule: 'Receive your first Mālo tip on a tagged clip.',
+    fanLabel: 'Open Profile',
+    fanHref: '/profile',
+    adminDesk: '/admin/money',
+    adminLabel: 'Open Money',
+  },
+  {
+    id: 'friday_night_lights',
+    label: 'Friday Night Lights',
+    emoji: '🌙',
+    rule: 'Claim your roster from Profile → Account Capability.',
+    fanLabel: 'Edit roster on Profile',
+    fanHref: '/profile',
+    adminDesk: '/admin/athletes',
+    adminLabel: 'Open Athletes desk',
+  },
+];
+
+/** Live counters the RPC / client fallback use to evaluate earn rules. */
+export type TrainingBadgeFacts = {
+  playerId: string | null;
+  confirmedTags: number;
+  maloCents: number;
+  rosterClaimed: boolean;
+  unlocks?: { badgeId: string; unlockedAt: string | null }[];
+};
+
+export type TrainingBadgeView = TrainingBadgeDef & {
+  earned: boolean;
+  unlockedAt: string | null;
+  progress: number;
+  threshold: number;
+};
+
+/**
+ * @purpose Merge live Athlete HQ facts with persisted unlocks (sticky once earned).
+ * @param facts Confirmed tags, Mālo cents, roster claim, optional unlock rows.
+ * @returns Catalog rows with locked vs unlocked state for Athlete HQ.
+ */
+export function evaluateTrainingBadges(facts: TrainingBadgeFacts): TrainingBadgeView[] {
+  const unlockById = new Map(
+    (facts.unlocks ?? []).map((row) => [row.badgeId, row.unlockedAt] as const),
+  );
+  return TRAINING_BADGES.map((def) => {
+    const live = liveTrainingBadge(def.id, facts);
+    const unlockedAt = unlockById.get(def.id) ?? null;
+    const earned = live || unlockById.has(def.id);
+    return {
+      ...def,
+      earned,
+      unlockedAt: unlockedAt ?? null,
+      progress: trainingBadgeProgress(def.id, facts),
+      threshold: 1,
+    };
+  });
+}
+
+function liveTrainingBadge(id: TrainingBadgeId, facts: TrainingBadgeFacts): boolean {
+  if (id === 'film_room_starter') return facts.confirmedTags >= 1;
+  if (id === 'community_backer_magnet') return facts.maloCents >= 1;
+  return facts.rosterClaimed;
+}
+
+function trainingBadgeProgress(id: TrainingBadgeId, facts: TrainingBadgeFacts): number {
+  if (id === 'film_room_starter') return Math.max(0, facts.confirmedTags);
+  if (id === 'community_backer_magnet') return facts.maloCents >= 1 ? 1 : 0;
+  return facts.rosterClaimed ? 1 : 0;
+}

@@ -13,7 +13,8 @@ export type CoverageSurface =
   | 'parent'
   | 'booster'
   | 'sponsor'
-  | 'auth';
+  | 'auth'
+  | 'athlete';
 
 export type CoverageControl = {
   id: string;
@@ -41,6 +42,7 @@ export const COVERAGE_SURFACES: { id: CoverageSurface; label: string }[] = [
   { id: 'parent', label: 'Parent HQ' },
   { id: 'booster', label: 'Booster HQ' },
   { id: 'sponsor', label: 'Sponsor HQ' },
+  { id: 'athlete', label: 'Athlete HQ' },
 ];
 
 /**
@@ -157,6 +159,11 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'operator_clock', label: 'Start / pause clock', hint: 'Only for sports that use a clock', surface: 'operator', fanHref: '/operator', adminHref: '/admin/sports', flag: 'layouts.operatorConsole' },
   { id: 'operator_leave', label: 'Leave console', hint: 'Hands the game back', surface: 'operator', fanHref: '/operator', adminHref: '/admin/games', flag: 'layouts.operatorConsole' },
   { id: 'operator_status', label: 'Match status', hint: 'Scheduled / live / halftime / Final', surface: 'operator', fanHref: '/operator', adminHref: '/admin/games', flag: 'layouts.operatorConsole' },
+  { id: 'athlete_hq', label: 'Athlete HQ', hint: 'Tags, Mālo ledger, training badges', surface: 'athlete', fanHref: '/athlete', adminHref: '/admin/athletes' },
+  { id: 'athlete_hq_badges', label: 'Training badges', hint: 'Film Room / Backer Magnet / Friday Night Lights', surface: 'athlete', fanHref: '/athlete', adminHref: '/admin/athletes' },
+  { id: 'athlete_hq_film_room', label: 'Film Room · Starter', hint: "That's me confirmed tag", surface: 'athlete', fanHref: '/athlete', adminHref: '/admin/spotlight' },
+  { id: 'athlete_hq_backer', label: 'Community Backer Magnet', hint: 'First Mālo received', surface: 'athlete', fanHref: '/athlete', adminHref: '/admin/money' },
+  { id: 'athlete_hq_lights', label: 'Friday Night Lights', hint: 'Claimed roster `profiles.player_id`', surface: 'athlete', fanHref: '/athlete', adminHref: '/admin/athletes' },
   { id: 'parent', label: 'Parent HQ', hint: 'Consent and tags', surface: 'parent', fanHref: '/parent', adminHref: '/admin/people', flag: 'layouts.parentHq' },
   { id: 'parent_consent', label: 'Approve / revoke consent', hint: 'players.parental_consent_approved', surface: 'parent', fanHref: '/parent', adminHref: '/admin/people', flag: 'layouts.parentHq', telemetry: 'parent_consent' },
   { id: 'parent_payout', label: 'Custodial payout', hint: 'Stripe Connect', surface: 'parent', fanHref: '/parent', adminHref: '/admin/money', flag: 'layouts.parentHq', telemetry: 'parent_payout' },

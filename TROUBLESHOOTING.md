@@ -95,9 +95,9 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 
 ## 8. Athlete HQ Mālo list stays empty
 
-**Cause:** `useTipCheckout` never inserts `public.tips`. Profile/HQ `select * from tips` will not grow.
+**Cause:** HQ reads `tips` for the signed-in `profiles.player_id` (not `players[0]`). Empty when the roster is unclaimed, or when `useTipCheckout` never inserted `public.tips`.
 
-**Workaround:** Treat `players.backer_count` and `reels.total_tips_cents` as the live counters until a ledger insert is added.
+**Workaround:** Claim roster from Profile → Account Capability. Treat `players.backer_count` and `reels.total_tips_cents` as live counters until a ledger insert is added. Training badge **Community Backer Magnet** uses the same `tips` sum.
 
 ---
 

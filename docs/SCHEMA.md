@@ -25,6 +25,7 @@ Auth (`auth.users`) must exist before `profiles.user_id` can reference it.
 | The Crew ⚡ / Your Squad 🛡️ | `crew_follows` + `get_crew_graph` / `toggle_crew_follow` |
 | Admin portal | `/admin` control plane (`profiles.is_admin` or Studio unlock) writes `players`, `schools_and_teams`, `games`, `reels`, `shop_products`, `shop_orders`, `sponsorships`, `cheer_polls`, `spotlight_awards`, `profiles`, `app_runtime_config`, `company_revenue_logs`, `app_feedback`. Studio / Publish / Features / Look / Catalogs / Feedback / Reports / Coverage / Money are client desks on the same tables (Coverage is a client catalog, not a table). Lab / QA stay as hidden deep links. Heavy chrome waits on `publish_app_runtime`. |
 | Vault Flash Unlock | `reels.flash_unlock_until` + `set_reel_flash_unlock` → `crew_push_queue` |
+| Athlete HQ training badges | `athlete_training_badge_unlocks` + `sync_athlete_training_badges` (catalog in `@tapuai/shared-types` `TRAINING_BADGES`). Not `spotlight_awards` and not `athlete_career_stats.mvp_badges`. |
 
 ---
 
@@ -93,12 +94,43 @@ Roster identity lives on `players`. Combine fields and career engine:
 | `players.forty_yard` | 40-yard dash (`4.58s`) |
 | `players.vertical_jump` | Vertical (`34 in`) |
 | `players.vault_locked` | Master Vault seal. Default **true**: fans must subscribe ($4.99/mo) to watch Vault clips. Athlete can Open Vault 🌐. Incremental: `supabase/player_vault_lock.sql`. RPC `set_player_vault_locked`. |
-| `athlete_career_stats` | One row per player: `sport`, `games_played`, `scoring_value`, `volume_value`, `mvp_badges` |
+| `athlete_career_stats` | One row per player: `sport`, `games_played`, `scoring_value`, `volume_value`, `mvp_badges` (career integer — not Athlete HQ training badges) |
 | `athlete_game_logs` | Recent games: `played_on`, `opponent_school`, `stat_line`, scoring/volume |
+| `athlete_training_badge_unlocks` | First-unlock rows for Athlete HQ chips (`film_room_starter`, `community_backer_magnet`, `friday_night_lights`) |
 
 Sport-specific career headers (client `careerColumnsForSport`): Football Points/Yards, Basketball Points/Rebounds, Rugby Tries/Tackles, Volleyball Kills/Digs. Trading-card back face shows Games / scoring / volume. Incremental: `supabase/athlete_stats.sql`. Client: `useAthleteStats` / `AthleteStatsTab`.
 
 **RLS (demo):** public SELECT on both stats tables. Writes are seed-only.
+
+### `athlete_training_badge_unlocks`
+
+Athlete HQ training chips. The three names were already on the HQ screen as static placeholders; earn rules are first-action thresholds (count ≥ 1) tied to data that screen already loads.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `player_id` | uuid PK (composite) FK → `players` ON DELETE CASCADE | Claimed roster row |
+| `badge_id` | text PK (composite) | `film_room_starter` \| `community_backer_magnet` \| `friday_night_lights` |
+| `unlocked_at` | timestamptz | First time the live predicate was true. Sticky — later zeros do not revoke. |
+
+**Earn rules (catalog `TRAINING_BADGES` in `@tapuai/shared-types`):**
+
+| Badge | Live predicate | Athlete action | Expo `/admin` desk |
+| --- | --- | --- | --- |
+| Film Room · Starter | `reels.tag_status = confirmed` for this player (unremoved) | That's me on Athlete HQ | `/admin/spotlight` |
+| Community Backer Magnet | `sum(tips.amount_cents) > 0` | Receive Mālo on a tagged clip | `/admin/money` |
+| Friday Night Lights | A `profiles.player_id` points at this roster row | Profile → Account Capability | `/admin/athletes` |
+
+Client: `useAthleteTrainingBadges` / `TrainingBadgeBoard`. Operators deep-link to those Expo desks — not the Next Soft-Wall stub.
+
+**RLS (demo):** public SELECT. Writes go through `sync_athlete_training_badges` (security definer). Incremental: `supabase/athlete_training_badges.sql`.
+
+### `sync_athlete_training_badges(target_player_id)`
+
+```sql
+sync_athlete_training_badges(target_player_id uuid default null) returns jsonb
+```
+
+When `target_player_id` is omitted, uses `profiles.player_id` for `auth.uid()`. Re-evaluates the three predicates, upserts unlock rows, returns `{ player_id, confirmed_tags, malo_cents, roster_claimed, unlocks: [{ badge_id, unlocked_at }] }`. Grant: `EXECUTE` to `anon`, `authenticated`. Athlete HQ hydrates labels from `TRAINING_BADGES`. If the RPC is not applied yet, the client counts `reels` / `tips` / `profiles` directly.
 
 ### `search_schools_and_teams(search_query)`
 
@@ -771,7 +803,7 @@ get_aura_tier(points integer) returns jsonb  -- { tier, title, min_points, color
 
 Matches `AURA_TIERS` in `aura.ts`. The app also computes locally (`auraTierForPoints`) so the card does not wait on the network. Keep SQL and TypeScript in lockstep.
 
-Other RPCs: `increment_backer_count`, `increment_player_hype`, `increment_reel_hype` (returns `applied`; no-ops a second Seki / Aura / Flex from the same `auth.uid()`; then `sync_live_spotlight_awards`), `increment_reel_tips`, `cast_cheer_vote`, `upsert_cheer_poll`, `update_game_score`, `current_user_role` (returns `admin` when `is_admin` or `roles` includes admin), `get_fan_tip_history`, `search_local_entities`, `search_schools_and_teams`, `report_reel`, `publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`, `patch_app_runtime_draft`, `publish_app_runtime`, `get_admin_reports`, `company_revenue_bps`, `record_company_revenue`, `sync_company_revenue_logs`, `company_revenue_after_source_insert`, `get_company_revenue_summary`, `submit_app_feedback`, `get_app_feedback`, `triage_app_feedback`, `toggle_reel_vault_status`, `set_player_vault_locked`, `get_active_spotlight_award`, `get_crew_graph`, `toggle_crew_follow`, `set_reel_flash_unlock`, `spotlight_normalize_kind`, `spotlight_window`, `can_confirm_player_tag`, `reels_apply_tag_defaults`, `confirm_reel_player_tag`, `get_pending_player_tags`, `get_spotlight_standings`, `sync_spotlight_period`, `sync_live_spotlight_awards`, `unlock_spotlight_period`. Cheer votes go through `cast_cheer_vote`; admin label edits go through `upsert_cheer_poll`. Re-run `supabase/cheer_polls.sql` after this signature change (`DROP FUNCTION` first):
+Other RPCs: `increment_backer_count`, `increment_player_hype`, `increment_reel_hype` (returns `applied`; no-ops a second Seki / Aura / Flex from the same `auth.uid()`; then `sync_live_spotlight_awards`), `increment_reel_tips`, `cast_cheer_vote`, `upsert_cheer_poll`, `update_game_score`, `current_user_role` (returns `admin` when `is_admin` or `roles` includes admin), `get_fan_tip_history`, `search_local_entities`, `search_schools_and_teams`, `report_reel`, `publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`, `patch_app_runtime_draft`, `publish_app_runtime`, `get_admin_reports`, `company_revenue_bps`, `record_company_revenue`, `sync_company_revenue_logs`, `company_revenue_after_source_insert`, `get_company_revenue_summary`, `submit_app_feedback`, `get_app_feedback`, `triage_app_feedback`, `toggle_reel_vault_status`, `set_player_vault_locked`, `get_active_spotlight_award`, `get_crew_graph`, `toggle_crew_follow`, `set_reel_flash_unlock`, `sync_athlete_training_badges`, `spotlight_normalize_kind`, `spotlight_window`, `can_confirm_player_tag`, `reels_apply_tag_defaults`, `confirm_reel_player_tag`, `get_pending_player_tags`, `get_spotlight_standings`, `sync_spotlight_period`, `sync_live_spotlight_awards`, `unlock_spotlight_period`. Cheer votes go through `cast_cheer_vote`; admin label edits go through `upsert_cheer_poll`. Re-run `supabase/cheer_polls.sql` after this signature change (`DROP FUNCTION` first):
 
 ```sql
 cast_cheer_vote(
@@ -834,6 +866,7 @@ Policies in `schema.sql` allow Expo Go without login. **Tighten before productio
 | `schools_and_teams` | Public | Admin INSERT / UPDATE / DELETE |
 | `athlete_career_stats` | Public | Seed-only |
 | `athlete_game_logs` | Public | Seed-only |
+| `athlete_training_badge_unlocks` | Public | Writes via `sync_athlete_training_badges` |
 | `spotlight_awards` | Public | Admin INSERT / UPDATE / DELETE |
 | `crew_follows` | Public | INSERT / DELETE own `follower_id` |
 | `crew_push_queue` | Own `recipient_id` | INSERT anyone (RPC writes) |
@@ -875,4 +908,4 @@ Prefer full `schema.sql` on a blank project (includes `profiles` / `tips` / oper
 
 1. `players.sql` → `game_events.sql` → `games.sql` (+ `games_clock.sql` + `games_operator.sql`)
 2. `increment_backer.sql` → `increment_hype.sql` (`increment_player_hype`)
-3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql`
+3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `athlete_stats.sql` → `athlete_training_badges.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql`

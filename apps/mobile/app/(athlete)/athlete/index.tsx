@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import { Stack, type Href, useRouter } from 'expo-router';
 
+import { TrainingBadgeBoard } from '@/components/Athlete/TrainingBadgeBoard';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
@@ -11,44 +12,46 @@ import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { displayValue } from '@/data/players';
+import { useAthleteTrainingBadges } from '@/hooks/useAthleteTrainingBadges';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useRoster } from '@/hooks/useRoster';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { TipLedgerEntry } from '@/types/database';
 
 /**
- * @purpose Athlete HQ: confirm pending tags, private Mālo ledger, and display name that writes `profiles.full_name`.
- * @sideEffects `tips` SELECT; `profiles` UPDATE on Save name; tag confirm RPCs via `usePendingPlayerTags`.
+ * @purpose Athlete HQ: confirm pending tags, private Mālo ledger, training badges, and display name that writes `profiles.full_name`.
+ * @sideEffects `tips` SELECT; `profiles` UPDATE on Save name; tag confirm RPCs via `usePendingPlayerTags`; `sync_athlete_training_badges`.
  */
 export default function AthleteHomeScreen() {
   const router = useRouter();
   const { profile, refreshProfile, user, isAdmin } = useAuth();
   const { players } = useRoster();
   const pending = usePendingPlayerTags();
+  const claimedId = profile?.player_id ?? null;
+  const athlete = claimedId ? (players.find((item) => item.id === claimedId) ?? null) : null;
+  const training = useAthleteTrainingBadges(claimedId);
   const [tips, setTips] = useState<TipLedgerEntry[]>([]);
   const [headline, setHeadline] = useState(profile?.full_name ?? '');
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
-
-  const athlete = players[0] ?? null;
 
   useEffect(() => {
     if (profile?.full_name) setHeadline(profile.full_name);
   }, [profile?.full_name]);
 
   const loadTips = useCallback(async () => {
-    if (!athlete) {
+    if (!claimedId) {
       setTips([]);
       return;
     }
     const { data } = await supabase
       .from('tips')
       .select('*')
-      .eq('player_id', athlete.id)
+      .eq('player_id', claimedId)
       .order('created_at', { ascending: false })
       .limit(20);
     setTips((data as TipLedgerEntry[] | null) ?? []);
-  }, [athlete]);
+  }, [claimedId]);
 
   useEffect(() => {
     void loadTips();
@@ -76,6 +79,11 @@ export default function AthleteHomeScreen() {
     setSaving(false);
   };
 
+  const resolveTag = async (id: string, action: 'confirm' | 'reject') => {
+    await pending.resolve(id, action);
+    if (action === 'confirm') void training.refresh();
+  };
+
   const total = tips.reduce((sum, tip) => sum + tip.amount_cents, 0);
 
   return (
@@ -92,15 +100,17 @@ export default function AthleteHomeScreen() {
           busyId={pending.busyId}
           error={pending.error}
           emptyText="No one has tagged you in a clip that still needs That's me."
-          onConfirm={(id) => void pending.resolve(id, 'confirm')}
-          onReject={(id) => void pending.resolve(id, 'reject')}
+          onConfirm={(id) => void resolveTag(id, 'confirm')}
+          onReject={(id) => void resolveTag(id, 'reject')}
         />
         <DashboardPanel
           title="Private Mālo ledger"
           body={
             athlete
               ? `${displayValue(athlete.name)} has received $${(total / 100).toFixed(2)} from fans.`
-              : 'No linked athlete profile yet. Unlock Athlete from Profile → Account Capability.'
+              : claimedId
+                ? 'Roster row is claimed. Tips for that athlete land here after PaymentSheet checkouts.'
+                : 'No linked athlete profile yet. Unlock Athlete from Profile → Account Capability.'
           }
         >
           {tips.length === 0 ? (
@@ -121,10 +131,15 @@ export default function AthleteHomeScreen() {
             ))
           )}
         </DashboardPanel>
-        <DashboardPanel title="Training badges" body="Unlocked by live-game volume and fan backing.">
-          <Text style={styles.badge}>Film Room · Starter</Text>
-          <Text style={styles.badge}>Community Backer Magnet</Text>
-          <Text style={styles.badge}>Friday Night Lights</Text>
+        <DashboardPanel
+          title="Training badges"
+          body="Earned from That's me, Mālo received, and a claimed roster — not placeholder chips."
+        >
+          <TrainingBadgeBoard
+            badges={training.badges}
+            rosterClaimed={training.rosterClaimed}
+            loading={training.loading}
+          />
         </DashboardPanel>
         <DashboardPanel title="Profile customization" body="Display name writes to your fan Profile. Roster (sport, team, class year) lives on Account Capability.">
           <TextInput
@@ -184,11 +199,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.text,
-  },
-  badge: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.deepGreen,
   },
   input: {
     borderWidth: 1,

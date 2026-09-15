@@ -73,6 +73,18 @@ create table if not exists public.athlete_game_logs (
 create index if not exists athlete_game_logs_player_played_on_idx
   on public.athlete_game_logs (player_id, played_on desc);
 
+create table if not exists public.athlete_training_badge_unlocks (
+  player_id uuid not null references public.players (id) on delete cascade,
+  badge_id text not null check (
+    badge_id in ('film_room_starter', 'community_backer_magnet', 'friday_night_lights')
+  ),
+  unlocked_at timestamptz not null default timezone('utc', now()),
+  primary key (player_id, badge_id)
+);
+
+create index if not exists athlete_training_badge_unlocks_player_idx
+  on public.athlete_training_badge_unlocks (player_id, unlocked_at desc);
+
 create table if not exists public.schools_and_teams (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -2230,6 +2242,7 @@ alter table public.telemetry_logs enable row level security;
 alter table public.schools_and_teams enable row level security;
 alter table public.athlete_career_stats enable row level security;
 alter table public.athlete_game_logs enable row level security;
+alter table public.athlete_training_badge_unlocks enable row level security;
 alter table public.spotlight_awards enable row level security;
 alter table public.crew_follows enable row level security;
 alter table public.crew_push_queue enable row level security;
@@ -2251,6 +2264,11 @@ create policy "Public read athlete career stats"
 drop policy if exists "Public read athlete game logs" on public.athlete_game_logs;
 create policy "Public read athlete game logs"
   on public.athlete_game_logs for select
+  using (true);
+
+drop policy if exists "Public read athlete training badges" on public.athlete_training_badge_unlocks;
+create policy "Public read athlete training badges"
+  on public.athlete_training_badge_unlocks for select
   using (true);
 
 drop policy if exists "Public read spotlight awards" on public.spotlight_awards;
@@ -2467,6 +2485,7 @@ grant select, insert, update, delete on public.profiles to anon, authenticated;
 grant select on public.schools_and_teams to anon, authenticated;
 grant select on public.athlete_career_stats to anon, authenticated;
 grant select on public.athlete_game_logs to anon, authenticated;
+grant select on public.athlete_training_badge_unlocks to anon, authenticated;
 grant select, insert, update, delete on public.spotlight_awards to anon, authenticated;
 grant select, insert, delete on public.crew_follows to anon, authenticated;
 grant select, insert on public.crew_push_queue to anon, authenticated;
@@ -4089,6 +4108,91 @@ grant insert, update, delete on public.sport_configs to anon, authenticated;
 grant execute on function public.get_sport_configs() to anon, authenticated;
 grant execute on function public.upsert_sport_config(jsonb) to anon, authenticated;
 grant execute on function public.delete_sport_config(uuid) to anon, authenticated;
+
+-- Athlete HQ training badges. Incremental twin: supabase/athlete_training_badges.sql
+-- Catalog + earn rules live in @tapuai/shared-types (`TRAINING_BADGES`).
+create or replace function public.sync_athlete_training_badges(target_player_id uuid default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  player uuid := target_player_id;
+  confirmed_tags integer := 0;
+  malo_cents integer := 0;
+  roster_claimed boolean := false;
+begin
+  if player is null then
+    select pr.player_id into player
+    from public.profiles pr
+    where pr.user_id = auth.uid()
+    limit 1;
+  end if;
+
+  if player is null then
+    return jsonb_build_object(
+      'player_id', null,
+      'confirmed_tags', 0,
+      'malo_cents', 0,
+      'roster_claimed', false,
+      'unlocks', '[]'::jsonb
+    );
+  end if;
+
+  select count(*)::integer into confirmed_tags
+  from public.reels r
+  where r.player_id = player
+    and r.tag_status = 'confirmed'
+    and coalesce(r.is_removed, false) = false;
+
+  select coalesce(sum(t.amount_cents), 0)::integer into malo_cents
+  from public.tips t
+  where t.player_id = player;
+
+  select exists (
+    select 1 from public.profiles pr where pr.player_id = player
+  ) into roster_claimed;
+
+  if confirmed_tags > 0 then
+    insert into public.athlete_training_badge_unlocks (player_id, badge_id)
+    values (player, 'film_room_starter')
+    on conflict (player_id, badge_id) do nothing;
+  end if;
+
+  if malo_cents > 0 then
+    insert into public.athlete_training_badge_unlocks (player_id, badge_id)
+    values (player, 'community_backer_magnet')
+    on conflict (player_id, badge_id) do nothing;
+  end if;
+
+  if roster_claimed then
+    insert into public.athlete_training_badge_unlocks (player_id, badge_id)
+    values (player, 'friday_night_lights')
+    on conflict (player_id, badge_id) do nothing;
+  end if;
+
+  return jsonb_build_object(
+    'player_id', player,
+    'confirmed_tags', confirmed_tags,
+    'malo_cents', malo_cents,
+    'roster_claimed', roster_claimed,
+    'unlocks', coalesce((
+      select jsonb_agg(
+        jsonb_build_object(
+          'badge_id', u.badge_id,
+          'unlocked_at', u.unlocked_at
+        )
+        order by u.unlocked_at
+      )
+      from public.athlete_training_badge_unlocks u
+      where u.player_id = player
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+grant execute on function public.sync_athlete_training_badges(uuid) to anon, authenticated;
 
 -- Soft-Wall auth: fan profile on first signup (Apple / Google / Magic Link).
 -- Incremental twin: supabase/auth_fan_profile.sql
