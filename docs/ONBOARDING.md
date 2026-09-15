@@ -70,6 +70,14 @@ Admin oversight: Expo Coverage → Soft-Wall auth + Profile hamburger/roster, Fe
 
 `layouts.operatorConsole` defaults to **off** in `DEFAULT_APP_RUNTIME`. `/operator` stays in the binary but shows `RuntimePaused` until Admin → **Features** turns it on and you **Publish to app**. Existing remotes that already published `true` keep that value until you flip Features off + Publish.
 
+### Remote leftover `app_feature_flags` (Supabase Dashboard)
+
+Product chrome is **`app_runtime_config`**. A founder screenshot showed **RLS disabled** on `public.app_feature_flags`, which this repo does not define.
+
+1. SQL Editor: run [`supabase/app_feature_flags.sql`](../supabase/app_feature_flags.sql) (after `current_user_role()` exists — it is in `schema.sql` / `profile_roles.sql`).
+2. Table Editor → `app_feature_flags` → confirm **RLS** is enabled. Policies should be admin-only.
+3. Inspect columns. This app does not read the table. If it is unused, drop it. Do **not** copy Features / Look flags into it.
+
 ### Admin portal (Next Soft-Wall plane)
 
 ```bash

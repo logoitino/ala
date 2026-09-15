@@ -6,6 +6,7 @@ import { SPONSOR_TIERS } from '@/data/sponsorships';
 import { ATHLETE_CLASS_YEARS } from '@/data/teams';
 import { DAYLIGHT_THEME } from '@/constants/theme';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import type { ProfileChromeFlagId } from '@tapuai/shared-types';
 
 export type AppRuntimeTabs = {
   home: boolean;
@@ -54,14 +55,7 @@ export type AppRuntimeTheme = {
   text: string;
 };
 
-export type AppRuntimeProfile = {
-  showCard: boolean;
-  showCrew: boolean;
-  showStats: boolean;
-  showVault: boolean;
-  actionsOnTop: boolean;
-  statsFirst: boolean;
-};
+export type AppRuntimeProfile = Record<ProfileChromeFlagId, boolean>;
 
 export type HighlightRailItem = 'seki' | 'aura' | 'flex' | 'malo' | 'more';
 
@@ -665,7 +659,11 @@ export function countRuntimeChanges(draft: AppRuntimeConfig, published: AppRunti
   return n;
 }
 
-export type RuntimePatchPath = AppRuntimeFlagPath | AppRuntimeCopyPath | `theme.${keyof AppRuntimeTheme}`;
+export type RuntimePatchPath =
+  | AppRuntimeFlagPath
+  | AppRuntimeCopyPath
+  | `theme.${keyof AppRuntimeTheme}`
+  | `profile.${keyof AppRuntimeProfile}`;
 
 /**
  * @purpose Apply one typed chrome path from Engineer Lab or a triaged suggestion.
@@ -691,6 +689,12 @@ export function applyRuntimePath(config: AppRuntimeConfig, path: string, value: 
     const bag = next.copy as Record<string, string>;
     if (!(key in bag)) return next;
     bag[key] = typeof value === 'string' ? value : String(value ?? '');
+    return next;
+  }
+  if (group === 'profile') {
+    const bag = next.profile as Record<string, boolean>;
+    if (!(key in bag)) return next;
+    bag[key] = value === true || value === 'true' || value === 'on';
     return next;
   }
   return next;

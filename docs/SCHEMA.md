@@ -24,6 +24,7 @@ Auth (`auth.users`) must exist before `profiles.user_id` can reference it.
 | Serve Like Me / Train Like Me | `reels.category` (`game_play` \| `train_like_me` \| `serve_like_me`) |
 | The Crew ⚡ / Your Squad 🛡️ | `crew_follows` + `get_crew_graph` / `toggle_crew_follow` |
 | Admin portal | `/admin` control plane (`profiles.is_admin` or Studio unlock) writes `players`, `schools_and_teams`, `games`, `reels`, `shop_products`, `shop_orders`, `sponsorships`, `cheer_polls`, `spotlight_awards`, `profiles`, `app_runtime_config`, `company_revenue_logs`, `app_feedback`. Studio / Publish / Features / Look / Catalogs / Feedback / Reports / Coverage / Money are client desks on the same tables (Coverage is a client catalog, not a table). Lab / QA stay as hidden deep links. Heavy chrome waits on `publish_app_runtime`. |
+| `app_feature_flags` | **Not a product table.** Fan chrome is `app_runtime_config`. A remote leftover may exist with RLS off — lock it with `supabase/app_feature_flags.sql`; do not treat it as a second flag store. |
 | Vault Flash Unlock | `reels.flash_unlock_until` + `set_reel_flash_unlock` → `crew_push_queue` |
 
 ---
@@ -489,7 +490,7 @@ Fan `MALO_DISCLAIMER` still says 100% to custodial until counsel updates it. Thi
 
 ### `app_runtime_config`
 
-Single-row fan chrome map (`id = 'default'`). Admin **Features** writes `draft`. **Publish to app** copies `draft` onto `published`. The fan app reads `published` (`AppRuntimeContext.live`). Missing keys stay **on**.
+Single-row fan chrome map (`id = 'default'`). Admin **Features** writes `draft`. **Publish to app** copies `draft` onto `published`. The fan app reads `published` (`AppRuntimeContext.live`). Missing keys fall back to `DEFAULT_APP_RUNTIME` (most **on**; `layouts.operatorConsole`, `profile.actionsOnTop`, and `profile.statsFirst` **off**).
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -501,7 +502,22 @@ Single-row fan chrome map (`id = 'default'`). Admin **Features** writes `draft`.
 
 JSON groups: `tabs` (home / local / spotlight / drip / profile / upload), `buttons` (seki / aura / flex / malo / more / subscribe / crew / vault / flashUnlock / **suggest**), `layouts` (liveMatches / cheerPolls / topBoosters / sponsorshipModal / spotlightModal / homeSearch / localSearch / **operatorConsole** (default **off** until Features + Publish) / parentHq / boosterHq / sponsorHq / **slangGuide** / **receipts** / **wishlist**), `theme` (background / surface / jade / gold / text; default **Daylight** `#F3FAF6` / `#00733C`), `profile` (showCard = Flip Aura card from hamburger — not the default hero / showCrew = slim Crew · Squad strip / showStats / showVault / actionsOnTop / statsFirst; Next portal + Expo Look draft these via `PROFILE_CHROME_FLAGS`), `highlights` (railSide / namePlacement / showSchool / showCaption / railOrder), `copy` (Home / Local / Spotlight / Drip kickers and ledes, `slangLine`, Profile / Receipts kickers and ledes, Operator / Parent / Booster / Sponsor ledes, optional `homeBannerTitle` / `homeBannerBody`), **`catalog`** (`maloAmounts`, `maloFeeDollars`, `exclusiveDollars`, `exclusiveAura`, `classYears`, `localFilters`, `sponsorTiers`, `reelCategories`). Client desks: `/admin/features` (flags + Soft-Wall board), `/admin/look` (colors, copy, Profile chrome, Highlights ⚡ rail), `/admin/catalog` (prices and chips), `/admin/lab` (JSON draft, hidden from the sidebar), `/admin/coverage` (client map of every fan control → desk / flag / telemetry, including Soft-Wall auth surface; no extra table). Next portal (`pnpm admin`) also reads published Soft-Wall flags + fan counts via `SOFT_WALL_GATES`.
 
-**RLS (demo):** public SELECT; admin INSERT / UPDATE (`anon` in Expo Go). Incremental: `supabase/app_runtime.sql`. Client: `apps/mobile/src/frontend/lib/runtime.ts` + `/admin/features`.
+**RLS (demo):** public SELECT; admin INSERT / UPDATE (`anon` in Expo Go). `patch_app_runtime_draft` / `publish_app_runtime` are `SECURITY DEFINER` and now match other admin RPCs: `current_user_role() = 'admin'` **or** `auth.role() = 'anon'` (Expo Go / Next portal anon key). Incremental: `supabase/app_runtime.sql`. Client: `apps/mobile/src/frontend/lib/runtime.ts` + `/admin/features` + `/admin/look`. Soft-Wall gates: `SOFT_WALL_GATES`. Profile chrome: `PROFILE_CHROME_FLAGS`.
+
+### `app_feature_flags` (remote leftover — not created here)
+
+Founder Table Editor shot: **RLS disabled** on `public.app_feature_flags`. This repo never defined that table and no client, RPC, or Edge Function reads it. Product flags live on `app_runtime_config`.
+
+`schema.sql` and `supabase/app_feature_flags.sql` **do not `CREATE` the table** (that would be a duplicate flag system). If the leftover exists on Ian’s project, the script:
+
+1. `ENABLE ROW LEVEL SECURITY`
+2. Drops existing policies
+3. Adds **admin-only** `FOR ALL` (`current_user_role() = 'admin'`; service role still bypasses)
+4. `REVOKE ALL` from `public` / `anon`; `GRANT` DML to `authenticated` (RLS still blocks non-admins)
+
+Fresh installs skip the block. Columns are unknown without the live project — inspect in Table Editor before dropping.
+
+**Dashboard remaining:** SQL Editor → run `supabase/app_feature_flags.sql`. Table Editor → confirm RLS is on. If unused after inspect, **drop** `app_feature_flags` (optional). Do not copy Features/Look flags into it.
 
 ### `app_feedback`
 
@@ -696,7 +712,7 @@ Admin dashboard Telemetry cards. Engagement is Seki + Aura + Flex on live clips.
 patch_app_runtime_draft(next_draft jsonb) returns jsonb  -- { draft, published, published_at, updated_at }
 ```
 
-Writes Features draft. Fans still see `published` until `publish_app_runtime`. Incremental: `supabase/app_runtime.sql`. Client: `saveAppRuntimeDraft`.
+Writes Features / Look / Catalogs draft. Fans still see `published` until `publish_app_runtime`. Admin or Expo Go `anon` (same gate as `upsert_cheer_poll`). Incremental: `supabase/app_runtime.sql`. Client: `saveAppRuntimeDraft`.
 
 ### `publish_app_runtime()`
 
@@ -704,7 +720,7 @@ Writes Features draft. Fans still see `published` until `publish_app_runtime`. I
 publish_app_runtime() returns jsonb  -- copies draft onto published, sets published_at
 ```
 
-Gold **Publish to app** in the admin sidebar. Incremental: `supabase/app_runtime.sql`. Client: `publishAppRuntime`.
+Gold **Publish to app** in the admin sidebar. Admin or Expo Go `anon`. Incremental: `supabase/app_runtime.sql`. Client: `publishAppRuntime`.
 
 ### `get_admin_reports()`
 
@@ -826,7 +842,8 @@ Policies in `schema.sql` allow Expo Go without login. **Tighten before productio
 | `shop_products` | Public | Admin INSERT / UPDATE / DELETE |
 | `shop_orders` | Public | INSERT anyone; admin UPDATE / DELETE |
 | `company_revenue_logs` | Admin or `anon` | Admin or `anon` writes (Expo Go) |
-| `app_runtime_config` | Public | Admin INSERT / UPDATE |
+| `app_runtime_config` | Public | Admin INSERT / UPDATE (`anon` in Expo Go) |
+| `app_feature_flags` | Admin only (if table exists) | Admin only; leftover is not created by `schema.sql` |
 | `app_feedback` | Admin or `anon` | INSERT anyone; admin or `anon` UPDATE |
 | `telemetry_logs` | Authenticated | INSERT anyone |
 | `saved_reels` | Own rows | INSERT / DELETE own rows |
@@ -875,4 +892,4 @@ Prefer full `schema.sql` on a blank project (includes `profiles` / `tips` / oper
 
 1. `players.sql` → `game_events.sql` → `games.sql` (+ `games_clock.sql` + `games_operator.sql`)
 2. `increment_backer.sql` → `increment_hype.sql` (`increment_player_hype`)
-3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql`
+3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `app_feature_flags.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql`

@@ -2,22 +2,19 @@
  * Profile hierarchy oversight for the Next admin portal (Clean Profile + Look chrome).
  */
 
-import { PROFILE_CHROME_FLAGS, type ProfileOversight } from '@tapuai/shared-types';
+import { PROFILE_CHROME_FLAGS, type ProfileChromeFlagId, type ProfileOversight } from '@tapuai/shared-types';
 
 import { getSupabaseServerClient } from '@/lib/supabase';
 
-type RuntimeProfile = {
-  showCard?: boolean;
-  showCrew?: boolean;
-  showStats?: boolean;
-  showVault?: boolean;
-  actionsOnTop?: boolean;
-  statsFirst?: boolean;
-};
+type RuntimeProfile = Partial<Record<ProfileChromeFlagId, boolean>>;
 
 type RuntimeBag = {
   profile?: RuntimeProfile;
 };
+
+function chromeDefault(id: ProfileChromeFlagId): boolean {
+  return PROFILE_CHROME_FLAGS.find((flag) => flag.id === id)?.defaultOn ?? true;
+}
 
 function asBool(value: unknown, fallback = true): boolean {
   return typeof value === 'boolean' ? value : fallback;
@@ -38,12 +35,12 @@ export async function fetchProfileOversight(): Promise<ProfileOversight> {
     claimedAthletes: 0,
     athleteProfiles: 0,
     publishedAt: null,
-    showCard: true,
-    showCrew: true,
-    showStats: true,
-    showVault: true,
-    actionsOnTop: false,
-    statsFirst: false,
+    showCard: chromeDefault('showCard'),
+    showCrew: chromeDefault('showCrew'),
+    showStats: chromeDefault('showStats'),
+    showVault: chromeDefault('showVault'),
+    actionsOnTop: chromeDefault('actionsOnTop'),
+    statsFirst: chromeDefault('statsFirst'),
     chromeFlags: PROFILE_CHROME_FLAGS,
   };
 
@@ -67,12 +64,12 @@ export async function fetchProfileOversight(): Promise<ProfileOversight> {
     claimedAthletes: asInt(claimedRes.count),
     athleteProfiles: asInt(athleteRes.count),
     publishedAt: typeof runtimeRes.data?.published_at === 'string' ? runtimeRes.data.published_at : null,
-    showCard: asBool(profile.showCard, true),
-    showCrew: asBool(profile.showCrew, true),
-    showStats: asBool(profile.showStats, true),
-    showVault: asBool(profile.showVault, true),
-    actionsOnTop: asBool(profile.actionsOnTop, false),
-    statsFirst: asBool(profile.statsFirst, false),
+    showCard: asBool(profile.showCard, chromeDefault('showCard')),
+    showCrew: asBool(profile.showCrew, chromeDefault('showCrew')),
+    showStats: asBool(profile.showStats, chromeDefault('showStats')),
+    showVault: asBool(profile.showVault, chromeDefault('showVault')),
+    actionsOnTop: asBool(profile.actionsOnTop, chromeDefault('actionsOnTop')),
+    statsFirst: asBool(profile.statsFirst, chromeDefault('statsFirst')),
     chromeFlags: PROFILE_CHROME_FLAGS,
   };
 }

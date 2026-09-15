@@ -25,6 +25,7 @@ import {
   type AppRuntimeTheme,
   type HighlightRailItem,
 } from '@/lib/runtime';
+import { PROFILE_CHROME_FLAGS } from '@tapuai/shared-types';
 import { FOCAL } from '@/theme/motion';
 
 type LookTab = 'colors' | 'copy' | 'profile' | 'highlights';
@@ -91,48 +92,19 @@ export function LookTool() {
         <View style={styles.group}>
           <AdminSectionTitle>Athlete sheet</AdminSectionTitle>
           <Text style={styles.body}>Hide a block for a campaign. Vault still respects the Features Vault switch.</Text>
-          <ToggleRow
-            title="Trading card"
-            meta="Flip Aura card from hamburger / Flip control (not the default hero)"
-            on={draft.profile.showCard}
-            live={published.profile.showCard}
-            onPress={() => patchProfile('showCard', !draft.profile.showCard)}
-          />
-          <ToggleRow
-            title="Crew counters"
-            meta="Slim Crew · Squad strip under the avatar"
-            on={draft.profile.showCrew}
-            live={published.profile.showCrew}
-            onPress={() => patchProfile('showCrew', !draft.profile.showCrew)}
-          />
-          <ToggleRow
-            title="Stats tab"
-            meta="Combine + career + game log (pill under Highlights + roster)"
-            on={draft.profile.showStats}
-            live={published.profile.showStats}
-            onPress={() => patchProfile('showStats', !draft.profile.showStats)}
-          />
-          <ToggleRow
-            title="Vault tab"
-            meta="Subscriber Vault 🔒 pane"
-            on={draft.profile.showVault}
-            live={published.profile.showVault}
-            onPress={() => patchProfile('showVault', !draft.profile.showVault)}
-          />
-          <ToggleRow
-            title="Actions on top"
-            meta="Drop Mālo / Subscribe sit above Highlights"
-            on={draft.profile.actionsOnTop}
-            live={published.profile.actionsOnTop}
-            onPress={() => patchProfile('actionsOnTop', !draft.profile.actionsOnTop)}
-          />
-          <ToggleRow
-            title="Open on Stats"
-            meta="Land on Stats 📊 instead of Highlights collage (default Off)"
-            on={draft.profile.statsFirst}
-            live={published.profile.statsFirst}
-            onPress={() => patchProfile('statsFirst', !draft.profile.statsFirst)}
-          />
+          {PROFILE_CHROME_FLAGS.map((flag) => {
+            const key = flag.id;
+            return (
+              <ToggleRow
+                key={flag.id}
+                title={flag.label}
+                meta={flag.hint}
+                on={draft.profile[key]}
+                live={published.profile[key]}
+                onPress={() => patchProfile(key, !draft.profile[key])}
+              />
+            );
+          })}
         </View>
       ) : null}
 

@@ -27,7 +27,7 @@ Guests browse Highlights / cards / wishlist. **Mālo · Join Crew · Chip In** �
 5. **Highlights collage** first (default tab); Stats / Vault pills under collage + roster.
 6. **Active Team Roster** — schoolmates; athletes see Claimed / Unclaimed via `profiles.player_id`.
 
-**Admin oversight:** Next `/profile` + Features · Profile chrome + Expo Look · Profile. Shared map: `PROFILE_CHROME_FLAGS`. Claimed count = `profiles.player_id IS NOT NULL`.
+**Admin oversight:** Next `/profile` + Features · Profile chrome + Expo Look · Profile. Shared map: `PROFILE_CHROME_FLAGS` on `app_runtime_config` (not `app_feature_flags`). Claimed count = `profiles.player_id IS NOT NULL`.
 
 ## Docs of record
 

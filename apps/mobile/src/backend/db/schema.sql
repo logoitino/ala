@@ -2744,6 +2744,8 @@ grant update, delete on public.sponsorships to anon, authenticated;
 grant execute on function public.upsert_cheer_poll(text, text, text, boolean) to anon, authenticated;
 
 -- App chrome flags (draft vs published) + admin reports. Safe to re-run.
+-- Source of truth for Features / Look / Soft-Wall / PROFILE_CHROME_FLAGS.
+-- Do not create public.app_feature_flags here (remote leftover only — lock RLS below).
 
 create table if not exists public.app_runtime_config (
   id text primary key default 'default',
@@ -2756,8 +2758,8 @@ create table if not exists public.app_runtime_config (
 insert into public.app_runtime_config (id, draft, published, published_at)
 values (
   'default',
-  '{"tabs":{"home":true,"local":true,"spotlight":true,"drip":true,"profile":true,"upload":true},"buttons":{"seki":true,"aura":true,"flex":true,"malo":true,"more":true,"subscribe":true,"crew":true,"vault":true,"flashUnlock":true},"layouts":{"liveMatches":true,"cheerPolls":true,"topBoosters":true,"sponsorshipModal":true,"spotlightModal":true,"operatorConsole":false,"parentHq":true,"boosterHq":true,"sponsorHq":true}}'::jsonb,
-  '{"tabs":{"home":true,"local":true,"spotlight":true,"drip":true,"profile":true,"upload":true},"buttons":{"seki":true,"aura":true,"flex":true,"malo":true,"more":true,"subscribe":true,"crew":true,"vault":true,"flashUnlock":true},"layouts":{"liveMatches":true,"cheerPolls":true,"topBoosters":true,"sponsorshipModal":true,"spotlightModal":true,"operatorConsole":false,"parentHq":true,"boosterHq":true,"sponsorHq":true}}'::jsonb,
+  '{"tabs":{"home":true,"local":true,"spotlight":true,"drip":true,"profile":true,"upload":true},"buttons":{"seki":true,"aura":true,"flex":true,"malo":true,"more":true,"subscribe":true,"crew":true,"vault":true,"flashUnlock":true,"suggest":true},"layouts":{"liveMatches":true,"cheerPolls":true,"topBoosters":true,"sponsorshipModal":true,"spotlightModal":true,"homeSearch":true,"localSearch":true,"operatorConsole":false,"parentHq":true,"boosterHq":true,"sponsorHq":true,"slangGuide":true,"receipts":true,"wishlist":true},"profile":{"showCard":true,"showCrew":true,"showStats":true,"showVault":true,"actionsOnTop":false,"statsFirst":false}}'::jsonb,
+  '{"tabs":{"home":true,"local":true,"spotlight":true,"drip":true,"profile":true,"upload":true},"buttons":{"seki":true,"aura":true,"flex":true,"malo":true,"more":true,"subscribe":true,"crew":true,"vault":true,"flashUnlock":true,"suggest":true},"layouts":{"liveMatches":true,"cheerPolls":true,"topBoosters":true,"sponsorshipModal":true,"spotlightModal":true,"homeSearch":true,"localSearch":true,"operatorConsole":false,"parentHq":true,"boosterHq":true,"sponsorHq":true,"slangGuide":true,"receipts":true,"wishlist":true},"profile":{"showCard":true,"showCrew":true,"showStats":true,"showVault":true,"actionsOnTop":false,"statsFirst":false}}'::jsonb,
   timezone('utc', now())
 )
 on conflict (id) do nothing;
@@ -2786,6 +2788,9 @@ as $$
 declare
   result public.app_runtime_config;
 begin
+  if public.current_user_role() <> 'admin' and auth.role() <> 'anon' then
+    raise exception 'Access restricted';
+  end if;
   if next_draft is null then
     raise exception 'next_draft is required';
   end if;
@@ -2815,6 +2820,9 @@ as $$
 declare
   result public.app_runtime_config;
 begin
+  if public.current_user_role() <> 'admin' and auth.role() <> 'anon' then
+    raise exception 'Access restricted';
+  end if;
   update public.app_runtime_config
   set published = draft,
       published_at = timezone('utc', now()),
@@ -3093,6 +3101,45 @@ begin
 exception
   when duplicate_object then null;
   when undefined_object then null;
+end $$;
+
+-- Residual remote leftover (not a product table). Incremental: supabase/app_feature_flags.sql.
+-- Product chrome stays on app_runtime_config. No-op when the table is absent.
+do $$
+declare
+  pol record;
+begin
+  if to_regclass('public.app_feature_flags') is null then
+    raise notice 'public.app_feature_flags is absent — fan chrome lives in app_runtime_config';
+    return;
+  end if;
+
+  alter table public.app_feature_flags enable row level security;
+
+  for pol in
+    select policyname
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'app_feature_flags'
+  loop
+    execute format('drop policy if exists %I on public.app_feature_flags', pol.policyname);
+  end loop;
+
+  execute $p$
+    create policy "Admin only app feature flags"
+      on public.app_feature_flags for all
+      using (public.current_user_role() = 'admin')
+      with check (public.current_user_role() = 'admin')
+  $p$;
+
+  revoke all on table public.app_feature_flags from public;
+  revoke all on table public.app_feature_flags from anon;
+  grant select, insert, update, delete on table public.app_feature_flags to authenticated;
+exception
+  when undefined_table then
+    null;
+  when undefined_function then
+    raise exception 'current_user_role() is required before locking app_feature_flags';
 end $$;
 
 -- Company revenue control plane for /admin/money. Incremental: supabase/company_revenue.sql.

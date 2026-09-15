@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { PROFILE_CHROME_FLAGS, SOFT_WALL_GATES } from '@tapuai/shared-types';
+
 import { getSupabaseBrowserClient } from '@/lib/supabase';
 
 type FlagRow = {
@@ -10,63 +12,51 @@ type FlagRow = {
   label: string;
   hint: string;
   group: string;
+  defaultOn: boolean;
 };
 
 const FLAG_ROWS: FlagRow[] = [
-  { group: 'Soft-Wall related', path: 'buttons.malo', label: 'Mālo', hint: 'Soft wall when On' },
-  { group: 'Soft-Wall related', path: 'buttons.crew', label: 'Join Crew', hint: 'Soft wall when On' },
-  { group: 'Soft-Wall related', path: 'layouts.wishlist', label: 'Locker Room Wishlist', hint: 'Chip In Soft Wall when On' },
+  ...SOFT_WALL_GATES.flatMap((gate) =>
+    gate.flagPath
+      ? [
+          {
+            group: 'Soft-Wall related',
+            path: gate.flagPath,
+            label: gate.label,
+            hint: gate.hint,
+            defaultOn: true,
+          },
+        ]
+      : [],
+  ),
   {
     group: 'Soft-Wall related',
     path: 'layouts.operatorConsole',
     label: 'Operator console',
     hint: 'Paused at launch — On + Publish opens /operator',
+    defaultOn: false,
   },
-  {
+  ...PROFILE_CHROME_FLAGS.map((flag) => ({
     group: 'Profile chrome',
-    path: 'profile.showCard',
-    label: 'Flip Aura card',
-    hint: 'Hamburger Flip · not the default hero',
-  },
-  {
-    group: 'Profile chrome',
-    path: 'profile.showCrew',
-    label: 'Crew · Squad strip',
-    hint: 'Slim counters under the avatar',
-  },
-  { group: 'Profile chrome', path: 'profile.showStats', label: 'Stats tab', hint: 'Pill under Highlights + roster' },
-  {
-    group: 'Profile chrome',
-    path: 'profile.showVault',
-    label: 'Vault tab',
-    hint: 'Also needs Features Vault button',
-  },
-  {
-    group: 'Profile chrome',
-    path: 'profile.actionsOnTop',
-    label: 'Actions on top',
-    hint: 'Drop Mālo / Subscribe above Highlights',
-  },
-  {
-    group: 'Profile chrome',
-    path: 'profile.statsFirst',
-    label: 'Open on Stats',
-    hint: 'Off keeps Highlights collage first',
-  },
-  { group: 'Fan bar', path: 'tabs.home', label: 'Home', hint: 'Highlights ⚡' },
-  { group: 'Fan bar', path: 'tabs.local', label: 'Local', hint: 'Scores + polls' },
-  { group: 'Fan bar', path: 'tabs.spotlight', label: 'Spotlight', hint: 'Awards' },
-  { group: 'Fan bar', path: 'tabs.drip', label: 'Drip', hint: 'Gear shop' },
-  { group: 'Fan bar', path: 'tabs.profile', label: 'Profile', hint: 'Avatar hero + hamburger' },
+    path: flag.path,
+    label: flag.label,
+    hint: flag.hint,
+    defaultOn: flag.defaultOn,
+  })),
+  { group: 'Fan bar', path: 'tabs.home', label: 'Home', hint: 'Highlights ⚡', defaultOn: true },
+  { group: 'Fan bar', path: 'tabs.local', label: 'Local', hint: 'Scores + polls', defaultOn: true },
+  { group: 'Fan bar', path: 'tabs.spotlight', label: 'Spotlight', hint: 'Awards', defaultOn: true },
+  { group: 'Fan bar', path: 'tabs.drip', label: 'Drip', hint: 'Gear shop', defaultOn: true },
+  { group: 'Fan bar', path: 'tabs.profile', label: 'Profile', hint: 'Avatar hero + hamburger', defaultOn: true },
 ];
 
-function readFlag(bag: Record<string, unknown>, path: string): boolean {
+function readFlag(bag: Record<string, unknown>, path: string, fallback = true): boolean {
   const [root, key] = path.split('.');
-  if (!root || !key) return true;
+  if (!root || !key) return fallback;
   const group = bag[root];
-  if (!group || typeof group !== 'object') return true;
+  if (!group || typeof group !== 'object') return fallback;
   const value = (group as Record<string, unknown>)[key];
-  return typeof value === 'boolean' ? value : true;
+  return typeof value === 'boolean' ? value : fallback;
 }
 
 function setFlag(bag: Record<string, unknown>, path: string, value: boolean): Record<string, unknown> {
@@ -106,7 +96,7 @@ export function FeatureFlagBoard({
       setMessage('Add NEXT_PUBLIC_SUPABASE_* to apps/admin-portal/.env.local');
       return;
     }
-    const nextValue = !readFlag(draft, path);
+    const nextValue = !readFlag(draft, path, FLAG_ROWS.find((row) => row.path === path)?.defaultOn ?? true);
     const nextDraft = setFlag(draft, path, nextValue);
     setBusy(path);
     setMessage(null);
@@ -171,8 +161,8 @@ export function FeatureFlagBoard({
         <div key={group} className="space-y-3">
           <h3 className="text-sm font-extrabold tracking-wide text-[var(--gold)] uppercase">{group}</h3>
           {FLAG_ROWS.filter((row) => row.group === group).map((row) => {
-            const on = readFlag(draft, row.path);
-            const live = readFlag(published, row.path);
+            const on = readFlag(draft, row.path, row.defaultOn);
+            const live = readFlag(published, row.path, row.defaultOn);
             return (
               <div
                 key={row.path}

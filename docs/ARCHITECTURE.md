@@ -25,8 +25,8 @@ apps/admin-portal ─┘
 ## Runtime responsibilities
 
 - **Mobile (Expo):** Highlights ⚡, Local, Spotlight, Drip, Profile (avatar hero + hamburger + Active Team Roster), Mālo PaymentSheet, Soft-Wall auth (browse-first guests), operator console (Features-gated), and the live **Admin** desks under `app/(admin)/admin` (Coverage Soft-Wall + Profile surfaces, Features Soft-Wall board, Look Profile chrome, People Fans filter).
-- **Admin portal (Next):** Soft-Wall + Profile control plane at `pnpm admin` — Overview / Soft-Wall / Profile / Features / People read Supabase `app_runtime_config` + fan/claim profiles; Features drafts Soft-Wall + Profile chrome flags and Publish. Full desks still live in Expo `/admin` until ported.
-- **Shared types:** Import `@tapuai/shared-types` (or `@shared/*`) for cross-app domain types, including `SOFT_WALL_GATES` / `SoftWallOversight`. Mobile keeps the full generated `Database` helpers in `apps/mobile/src/frontend/types/database.ts`.
+- **Admin portal (Next):** Soft-Wall + Profile control plane at `pnpm admin` — Overview / Soft-Wall / Profile / Features / People read Supabase `app_runtime_config` + fan/claim profiles; Features drafts Soft-Wall + Profile chrome flags and Publish. Full desks still live in Expo `/admin` until ported. A remote leftover `app_feature_flags` table is not used; lock RLS with `supabase/app_feature_flags.sql` if it exists.
+- **Shared types:** Import `@tapuai/shared-types` (or `@shared/*`) for cross-app domain types, including `SOFT_WALL_GATES` / `PROFILE_CHROME_FLAGS` / `SoftWallOversight`. Mobile keeps the full generated `Database` helpers in `apps/mobile/src/frontend/types/database.ts`.
 - **Auth:** Supabase session + `alasports://auth/callback`. Soft wall on Mālo / Crew / Chip In only; fan profile via `handle_new_auth_user` + `ensureFanProfile`.
 
 ## Data model (ERD pointer)

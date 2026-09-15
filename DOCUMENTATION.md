@@ -83,12 +83,12 @@ apps/mobile/src/frontend/context/     AuthContext, SoftWallContext, CelebrationC
 apps/mobile/src/frontend/lib/         supabase.ts, stripe*.ts, aura.ts, haptics.ts, teams.ts, roster.ts, athleteStats.ts, vault.ts, spotlight.ts, tags.ts, finance.ts, admin.ts, adminCatalog.ts, adminCoverage.ts, runtime.ts, feedback.ts, wishlist.ts
 apps/mobile/src/frontend/theme/       motion.ts (`SPRING_*`, Island FOCAL + TAB_ACCENTS, mist washes); hypeFx.ts (Seki / Aura / Flex)
 apps/mobile/src/frontend/services/    TelemetryManager (batched `telemetry_logs`); OfflineQueue (AsyncStorage + NetInfo flush)
-apps/mobile/src/backend/db/schema.sql Canonical Postgres + RLS
+apps/mobile/src/backend/db/schema.sql Canonical Postgres + RLS (fan chrome = `app_runtime_config`; leftover `app_feature_flags` is locked only if present)
 
 apps/admin-portal/                Next Soft-Wall + Profile plane (Overview / Soft-Wall / Profile / Features / People). Full desks still Expo `/admin`
-packages/shared-types/            @tapuai/shared-types
+packages/shared-types/            @tapuai/shared-types (`SOFT_WALL_GATES` + `PROFILE_CHROME_FLAGS`)
 scripts/                          Node generators (`sync-front-docs.mjs` → product facts; reads apps/mobile constants)
-supabase/                         Incremental SQL (DROP FUNCTION before return-type changes)
+supabase/                         Incremental SQL (DROP FUNCTION before return-type changes; `app_feature_flags.sql` locks leftover RLS)
 supabase/functions/               Edge Functions (`create-stripe-account` JWT Connect, `create-payment-intent` JWT)
 ```
 

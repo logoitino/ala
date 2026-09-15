@@ -197,21 +197,33 @@ export type SoftWallOversight = {
   authProviders: typeof SOFT_WALL_AUTH_PROVIDERS;
 };
 
+/** Keys stored on `app_runtime_config.{draft,published}.profile`. */
+export type ProfileChromeFlagId =
+  | 'showCard'
+  | 'showCrew'
+  | 'showStats'
+  | 'showVault'
+  | 'actionsOnTop'
+  | 'statsFirst';
+
 /** Look · Profile chrome flags — hamburger / hero / collage hierarchy. */
 export type ProfileChromeFlag = {
-  id: string;
-  path: string;
+  id: ProfileChromeFlagId;
+  path: `profile.${ProfileChromeFlagId}`;
   label: string;
   hint: string;
   /** Fan surface that disappears when the flag is Off. */
   fanSurface: string;
   /** Expo desk that drafts the flag (Look Profile pane). */
   adminDesk: string;
+  /** Missing jsonb keys fall back to this (matches `DEFAULT_APP_RUNTIME.profile`). */
+  defaultOn: boolean;
 };
 
 /**
  * @purpose Shared Profile chrome map for Expo Look / Coverage + Next admin portal Profile desk.
  * showCard gates Flip Aura card in the hamburger; hero avatar always shows.
+ * Persistence is `app_runtime_config`, not a separate `app_feature_flags` table.
  */
 export const PROFILE_CHROME_FLAGS: ProfileChromeFlag[] = [
   {
@@ -221,6 +233,7 @@ export const PROFILE_CHROME_FLAGS: ProfileChromeFlag[] = [
     hint: 'Hamburger + Flip control open AuraTradingCard — not the default hero',
     fanSurface: 'Profile · ProfileMenuSheet · Flip Aura card',
     adminDesk: '/admin/look',
+    defaultOn: true,
   },
   {
     id: 'showCrew',
@@ -229,6 +242,7 @@ export const PROFILE_CHROME_FLAGS: ProfileChromeFlag[] = [
     hint: 'Slim Crew · N | Squad · N row under the avatar hero',
     fanSurface: 'Profile · AthleteProfileView',
     adminDesk: '/admin/look',
+    defaultOn: true,
   },
   {
     id: 'showStats',
@@ -237,6 +251,7 @@ export const PROFILE_CHROME_FLAGS: ProfileChromeFlag[] = [
     hint: 'Stats 📊 pill under Highlights collage + roster',
     fanSurface: 'Profile · FilterPills',
     adminDesk: '/admin/look',
+    defaultOn: true,
   },
   {
     id: 'showVault',
@@ -245,6 +260,7 @@ export const PROFILE_CHROME_FLAGS: ProfileChromeFlag[] = [
     hint: 'Vault 🔒 pill (also needs Features buttons.vault)',
     fanSurface: 'Profile · FilterPills',
     adminDesk: '/admin/look',
+    defaultOn: true,
   },
   {
     id: 'actionsOnTop',
@@ -253,6 +269,7 @@ export const PROFILE_CHROME_FLAGS: ProfileChromeFlag[] = [
     hint: 'Drop Mālo / Subscribe sit above Highlights when On',
     fanSurface: 'Profile · actions row',
     adminDesk: '/admin/look',
+    defaultOn: false,
   },
   {
     id: 'statsFirst',
@@ -261,6 +278,7 @@ export const PROFILE_CHROME_FLAGS: ProfileChromeFlag[] = [
     hint: 'Land on Stats instead of Highlights collage (default Off keeps collage first)',
     fanSurface: 'Profile · default tab',
     adminDesk: '/admin/look',
+    defaultOn: false,
   },
 ];
 

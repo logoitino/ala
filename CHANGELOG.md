@@ -4,6 +4,13 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-15
 
+### `app_feature_flags` RLS leftover vs `app_runtime_config`
+
+- Confirmed: no in-repo client, RPC, or Edge Function uses `app_feature_flags`. Features / Look / Soft-Wall / Profile chrome persist on `app_runtime_config` (`SOFT_WALL_GATES` + `PROFILE_CHROME_FLAGS`).
+- Added `supabase/app_feature_flags.sql` (also inlined in `schema.sql`): if the remote leftover exists, enable RLS and lock DML to `current_user_role() = 'admin'`. Does **not** `CREATE` a second flag table.
+- Aligned `app_runtime.sql` seed with `DEFAULT_APP_RUNTIME` (`operatorConsole` **false**, `suggest` / search / slang / receipts / wishlist / `profile` keys). `patch_app_runtime_draft` / `publish_app_runtime` now require admin or Expo Go `anon`, matching other admin RPCs.
+- Next Features board and Expo Look Profile pane read the shared maps instead of duplicated flag rows. Lab `applyRuntimePath` can patch `profile.*`.
+
 ### Clean Profile hierarchy
 
 - Profile hero is a large avatar (tier ring + jersey); Flip Aura card opens from the hamburger or a slim control — not a full-width card blocking the scroll.
