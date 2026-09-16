@@ -29,6 +29,7 @@ export type Profile = {
   full_name: string;
   username?: string | null;
   is_verified: boolean;
+  verification_status?: 'unverified' | 'pending' | 'verified' | string | null;
   spirit_points: number;
   aura_points?: number;
   current_tier?: number | null;

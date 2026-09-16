@@ -40,8 +40,7 @@ begin
       when normalized = 'athlete' then 'athlete'
       when normalized in ('fan', 'athlete') then normalized
       else coalesce(nullif(active_role, ''), 'fan')
-    end,
-    is_verified = case when normalized = 'athlete' then true else is_verified end
+    end
   where user_id = auth.uid()
   returning roles into next_roles;
 

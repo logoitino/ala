@@ -6,6 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { useAuth } from '@/context/AuthContext';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { hasLegalAck } from '@/lib/legal';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -105,7 +106,7 @@ async function requestConnect(
 /**
  * @purpose Stripe Connect Express onboarding for athlete Mālo / subscription payouts. Links are minted server-side only.
  * @returns `{ createStripeExpressAccount, busy, stripeOnboardingComplete, payoutsEnabled }` — opens the Express URL in `WebBrowser.openAuthSessionAsync`.
- * @sideEffects JWT Edge Function `create-stripe-account` (Metro fallback), `WebBrowser.openAuthSessionAsync`, AsyncStorage cache, `refreshProfile`.
+ * @sideEffects JWT Edge Function `create-stripe-account` (Metro fallback), `WebBrowser.openAuthSessionAsync`, AsyncStorage cache, `refreshProfile`. First onboarding requires `hasLegalAck`.
  */
 export function useStripeConnect() {
   const { session, user, profile, refreshProfile } = useAuth();
@@ -155,6 +156,19 @@ export function useStripeConnect() {
     if (!accessToken) {
       Alert.alert('Stripe Connect', 'Sign in to connect payouts.');
       return;
+    }
+
+    const alreadyOnboarded = Boolean(profile?.stripe_onboarding_complete || local.stripe_onboarding_complete);
+    if (!alreadyOnboarded) {
+      const agreed = await hasLegalAck(
+        session.user.id,
+        profile?.legal_terms_accepted_at,
+        profile?.legal_terms_version,
+      );
+      if (!agreed) {
+        Alert.alert('Terms required', 'Agree to Terms of Service & NIL Compliance before connecting a bank.');
+        return;
+      }
     }
 
     setBusy(true);
@@ -208,7 +222,17 @@ export function useStripeConnect() {
     } finally {
       setBusy(false);
     }
-  }, [busy, persistFlags, session?.access_token, stripeOnboardingComplete]);
+  }, [
+    busy,
+    local.stripe_onboarding_complete,
+    persistFlags,
+    profile?.legal_terms_accepted_at,
+    profile?.legal_terms_version,
+    profile?.stripe_onboarding_complete,
+    session?.access_token,
+    session?.user.id,
+    stripeOnboardingComplete,
+  ]);
 
   return {
     createStripeExpressAccount,

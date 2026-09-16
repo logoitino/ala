@@ -6,12 +6,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
+import { LegalModal } from '@/components/Legal/LegalModal';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
 import { PayoutSetupCard } from '@/components/Profile/PayoutSetupCard';
 import { ProfileMenuSheet } from '@/components/Profile/ProfileMenuSheet';
 import { RoleSwitcherModal } from '@/components/Profile/RoleSwitcherModal';
+import { CLAIM_VERIFY_CTA, VerifyAthleteModal } from '@/components/Profile/VerifyAthleteModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
@@ -31,6 +33,8 @@ import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst }
 import { formatCapabilityLine } from '@/lib/roles';
 import { handleFromName, resolveAuraPoints, subscribePlayerAura } from '@/lib/aura';
 import { formatTeamBadge, classYearLabel, type SchoolTeam } from '@/data/teams';
+import { LEGAL_MENU_LABEL } from '@/data/legal';
+import { resolveVerificationStatus } from '@/data/verification';
 import { readAthleteOnboarding } from '@/lib/teams';
 import { userProfileHref } from '@/lib/navigation';
 import { setPlayerVaultLocked } from '@/lib/vault';
@@ -54,7 +58,7 @@ const FALLBACK_ATHLETE: Player = {
 
 /**
  * @purpose Profile hub: hero avatar, slim Crew/Squad, Highlights collage, Active Team Roster; settings in hamburger.
- * @sideEffects Soft-Wall sign-in; `RoleSwitcherModal`; `PayoutSetupCard`; receipts; vault lock; roster claim map.
+ * @sideEffects Soft-Wall sign-in; `RoleSwitcherModal`; `LegalModal`; `VerifyAthleteModal`; `PayoutSetupCard`; receipts; vault lock; roster claim map.
  */
 export default function MyHubTab() {
   const router = useRouter();
@@ -74,6 +78,8 @@ export default function MyHubTab() {
   const [pollVotes, setPollVotes] = useState(0);
   const [roleSheetOpen, setRoleSheetOpen] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
+  const [verifyOpen, setVerifyOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [flipOpen, setFlipOpen] = useState(false);
   const [vaultLockBusy, setVaultLockBusy] = useState(false);
@@ -177,6 +183,9 @@ export default function MyHubTab() {
   const cardMascot = cardTeam?.mascot ?? null;
   const cardDivision = cardTeam ? formatTeamBadge(cardTeam) : null;
   const cardJersey = profile?.athlete_jersey || athlete.jersey_number;
+  const verifyStatus = resolveVerificationStatus(profile);
+  const schoolClaimed = Boolean(cardTeam);
+  const showVarsityChrome = isAthlete || schoolClaimed || verifyStatus !== 'unverified';
 
   const subscribe = () => {
     setSubscribed(true);
@@ -257,6 +266,29 @@ export default function MyHubTab() {
       hint: formatCapabilityLine(roles),
       onPress: () => setRoleSheetOpen(true),
     });
+    items.push({
+      id: 'legal',
+      label: LEGAL_MENU_LABEL,
+      hint: 'ToS, high-school NIL, minor safety',
+      onPress: () => {
+        trackFeature('legal_terms');
+        setLegalOpen(true);
+      },
+    });
+    if (!isGuest) {
+      items.push({
+        id: 'verify',
+        label: CLAIM_VERIFY_CTA,
+        hint:
+          resolveVerificationStatus(profile) === 'verified'
+            ? '⚡ VERIFIED VARSITY'
+            : 'Team code or coach/parent — profile stays public',
+        onPress: () => {
+          trackFeature('athlete_verify');
+          setVerifyOpen(true);
+        },
+      });
+    }
     if (live.profile.showCard) {
       items.push({
         id: 'flip',
@@ -292,8 +324,7 @@ export default function MyHubTab() {
     live.copy.receiptsKicker,
     live.layouts.receipts,
     live.profile.showCard,
-    profile?.full_name,
-    profile?.username,
+    profile,
     requireAuth,
     roles,
     router,
@@ -333,6 +364,19 @@ export default function MyHubTab() {
           showClaimBadges={isAthlete}
           auraCardOpen={flipOpen}
           onAuraCardOpenChange={setFlipOpen}
+          verificationStatus={showVarsityChrome ? verifyStatus : 'unverified'}
+          schoolClaimed={schoolClaimed}
+          onClaimVerification={
+            !showVarsityChrome
+              ? undefined
+              : isGuest
+                ? () =>
+                    requireAuth({
+                      kind: 'signin',
+                      resume: () => setVerifyOpen(true),
+                    })
+                : () => setVerifyOpen(true)
+          }
           onOpenAthlete={(playerId) => router.push(userProfileHref(playerId))}
           onBacked={(nextCount) => applyBackerCount(athlete.id, nextCount)}
           onUnlockVault={subscribe}
@@ -441,6 +485,8 @@ export default function MyHubTab() {
         }
       />
       <RoleSwitcherModal visible={roleSheetOpen} onClose={() => setRoleSheetOpen(false)} />
+      <LegalModal visible={legalOpen} onClose={() => setLegalOpen(false)} />
+      <VerifyAthleteModal visible={verifyOpen} onClose={() => setVerifyOpen(false)} />
       <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />
     </TabScreen>
   );

@@ -21,7 +21,7 @@ export function localGameHref(gameId: string): Href {
 
 /**
  * @purpose Public athlete sheet inside the fan tabs (`FanTabBar` stays visible).
- * @param playerId `players.id`.
+ * @param playerId `players.id` UUID.
  * @returns `/user/{id}`.
  */
 export function userProfileHref(playerId: string): Href {

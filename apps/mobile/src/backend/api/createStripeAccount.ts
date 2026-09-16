@@ -62,7 +62,7 @@ function readBearerToken(request: Request): string {
  * @param stripe Stripe SDK (secret key only on the server).
  * @param input Authenticated user + hosted return URLs. Never uses client `accountId` / `profileId`.
  * @returns `{ url, accountId, stripe_onboarding_complete, payouts_enabled }`.
- * @sideEffects Stripe `v2.core.accounts` / Account Links; service-role UPDATE of `profiles.stripe_*`.
+ * @sideEffects Stripe `v2.core.accounts` / Account Links; service-role UPDATE of `profiles.stripe_*`. First onboarding requires `profiles.legal_terms_accepted_at`.
  */
 export async function runStripeConnectForUser(
   stripe: Stripe,
@@ -210,7 +210,7 @@ export async function createStripeAccountHandler(request: Request): Promise<Resp
 
     const { data: profile } = await db
       .from('profiles')
-      .select('id, stripe_connect_id')
+      .select('id, stripe_connect_id, legal_terms_accepted_at, legal_terms_version')
       .eq('user_id', authData.user.id)
       .maybeSingle();
 
@@ -218,6 +218,10 @@ export async function createStripeAccountHandler(request: Request): Promise<Resp
       typeof profile?.stripe_connect_id === 'string' && profile.stripe_connect_id.trim()
         ? profile.stripe_connect_id.trim()
         : null;
+
+    if (mode === 'onboarding' && !storedAccountId && !profile?.legal_terms_accepted_at) {
+      return jsonError('Agree to Terms of Service & NIL Compliance before connecting a bank.', 403);
+    }
 
     if ((mode === 'dashboard' || mode === 'status') && !storedAccountId) {
       return jsonError('No Stripe Express account is linked to this athlete yet.', 400);

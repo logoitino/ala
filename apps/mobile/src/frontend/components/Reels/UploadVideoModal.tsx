@@ -20,6 +20,8 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import Constants from 'expo-constants';
+
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import {
@@ -53,10 +55,31 @@ type PickedVideo = {
 type OpenSelect = 'game' | 'player' | null;
 type PickSource = 'library' | 'camera';
 
-const VIDEO_OPTIONS: ImagePicker.ImagePickerOptions = {
+const MAX_CLIP_MS = 45_000;
+
+/**
+ * @purpose Detect iOS Simulator so we never open UIImagePickerController for video.
+ * Expo Go 57 aborts (`setMediaTypes:`) because the sim camera has no `public.movie` types.
+ * @returns True only on iOS Simulator (Expo Go or a native sim build).
+ */
+function isIosSimulator(): boolean {
+  if (Platform.OS !== 'ios') return false;
+  const extras = Constants as { isDevice?: boolean };
+  if (typeof extras.isDevice === 'boolean') return extras.isDevice === false;
+  return Constants.deviceYearClass == null;
+}
+
+const IOS_SIMULATOR = isIosSimulator();
+
+/** Library uses PHPicker (no `allowsEditing`). Camera still needs the legacy picker on a phone. */
+const LIBRARY_VIDEO_OPTIONS: ImagePicker.ImagePickerOptions = {
   mediaTypes: ['videos'],
   allowsEditing: false,
   quality: 1,
+};
+
+const CAMERA_VIDEO_OPTIONS: ImagePicker.ImagePickerOptions = {
+  ...LIBRARY_VIDEO_OPTIONS,
   videoMaxDuration: 45,
 };
 
@@ -108,7 +131,7 @@ function ClipPreview({ uri }: { uri: string }) {
  * @param players Roster for the player tag picker.
  * @param onClose Dismiss (blocked while uploading).
  * @param onUploaded Pushes the new reel onto the active feed via `UploadSheetContext`.
- * @sideEffects ImagePicker URI + expo-video thumbnail; Storage upload with progress bar; `reels` insert including `is_vault_only` / `is_exclusive` / `category` (default public Game Play); Success haptic on Publish Highlight ⚡.
+ * @sideEffects ImagePicker URI + expo-video thumbnail; Storage upload with progress bar; `reels` insert including `is_vault_only` / `is_exclusive` / `category` (default public Game Play); Success haptic on Publish Highlight ⚡. iOS Simulator never calls `launchCameraAsync` (native abort).
  */
 export function UploadVideoModal({ visible, players, onClose, onUploaded }: UploadVideoModalProps) {
   const insets = useSafeAreaInsets();
@@ -243,6 +266,21 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     setPlayerId((current) => current || marcus?.id || players[0]?.id || '');
   }, [visible, players]);
 
+  const applyPickedAsset = (source: PickSource, next: ImagePicker.ImagePickerAsset) => {
+    if (next.duration && next.duration > MAX_CLIP_MS) {
+      Alert.alert('Clip too long', 'Pick a highlight 45 seconds or shorter.');
+      return;
+    }
+    setAsset({
+      uri: next.uri,
+      mimeType: next.mimeType,
+      fileName: next.fileName,
+      durationMs: next.duration,
+    });
+    setPickSource(source);
+    setUploadError(null);
+  };
+
   const pickVideo = async (source: 'library' | 'camera') => {
     if (uploading) return;
 
@@ -253,17 +291,17 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
           Alert.alert('Permission needed', 'Allow photo library access to pick a Seki play.');
           return;
         }
-        const result = await ImagePicker.launchImageLibraryAsync(VIDEO_OPTIONS);
+        const result = await ImagePicker.launchImageLibraryAsync(LIBRARY_VIDEO_OPTIONS);
         if (result.canceled || !result.assets[0]) return;
-        const next = result.assets[0];
-        setAsset({
-          uri: next.uri,
-          mimeType: next.mimeType,
-          fileName: next.fileName,
-          durationMs: next.duration,
-        });
-        setPickSource(source);
-        setUploadError(null);
+        applyPickedAsset(source, result.assets[0]);
+        return;
+      }
+
+      if (IOS_SIMULATOR) {
+        Alert.alert(
+          'Record needs a phone',
+          'iOS Simulator cannot record video (Expo Go crashes if we open the camera picker). Drag a clip into the Simulator Photos app, then tap Library — or open Expo Go on a device.',
+        );
         return;
       }
 
@@ -272,17 +310,9 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         Alert.alert('Permission needed', 'Allow camera access to record a Seki play.');
         return;
       }
-      const result = await ImagePicker.launchCameraAsync(VIDEO_OPTIONS);
+      const result = await ImagePicker.launchCameraAsync(CAMERA_VIDEO_OPTIONS);
       if (result.canceled || !result.assets[0]) return;
-      const next = result.assets[0];
-      setAsset({
-        uri: next.uri,
-        mimeType: next.mimeType,
-        fileName: next.fileName,
-        durationMs: next.duration,
-      });
-      setPickSource(source);
-      setUploadError(null);
+      applyPickedAsset(source, result.assets[0]);
     } catch (caught) {
       Alert.alert(
         source === 'camera' ? 'Could not open camera' : 'Could not open library',
@@ -412,7 +442,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
                   />
                 </View>
                 <Text style={styles.sourceTitle}>Record</Text>
-                <Text style={styles.sourceHint}>Capture live</Text>
+                <Text style={styles.sourceHint}>{IOS_SIMULATOR ? 'Phone only' : 'Capture live'}</Text>
               </AnimatedButton>
             </View>
 
@@ -433,7 +463,9 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
                 <>
                   <Text style={styles.videoLabel}>No video selected</Text>
                   <Text style={styles.videoMeta} numberOfLines={2}>
-                    Pick from your library or record a new Seki play.
+                    {IOS_SIMULATOR
+                      ? 'Pick a clip from Library. Record is phone-only (Simulator has no video camera).'
+                      : 'Pick from your library or record a new Seki play.'}
                   </Text>
                 </>
               )}

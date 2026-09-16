@@ -1,8 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { SubscriberCrest } from '@/components/Profile/SubscriberCrest';
+import { VarsityBadge } from '@/components/Profile/VarsityBadge';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
+import { CLAIM_VERIFY_CTA, type VerificationStatus } from '@/data/verification';
 import { auraBadgeLabel, auraProgressTowardNext, auraTierForPoints } from '@/lib/aura';
 import { FOCAL } from '@/theme/motion';
 
@@ -14,6 +16,9 @@ type ProfileHeroAvatarProps = {
   subscriberCrest?: boolean;
   showFlipControl?: boolean;
   onFlipAura?: () => void;
+  verificationStatus?: VerificationStatus;
+  schoolClaimed?: boolean;
+  onClaimVerification?: () => void;
 };
 
 function initialsFromName(name: string): string {
@@ -28,6 +33,7 @@ function initialsFromName(name: string): string {
  * @param name Display name under the circle.
  * @param auraPoints Drives tier ring color + slim progress.
  * @param onFlipAura Opens the Aura trading card sheet (menu or control).
+ * @param verificationStatus Viewer-facing Varsity chip next to the name.
  */
 export function ProfileHeroAvatar({
   name,
@@ -37,6 +43,9 @@ export function ProfileHeroAvatar({
   subscriberCrest = false,
   showFlipControl = false,
   onFlipAura,
+  verificationStatus = 'unverified',
+  schoolClaimed = false,
+  onClaimVerification,
 }: ProfileHeroAvatarProps) {
   const tier = auraTierForPoints(auraPoints);
   const progress = auraProgressTowardNext(auraPoints);
@@ -60,6 +69,12 @@ export function ProfileHeroAvatar({
         </View>
       </View>
       <Text style={styles.name}>{name}</Text>
+      <VarsityBadge
+        compact
+        status={verificationStatus}
+        schoolClaimed={schoolClaimed}
+        onPress={onClaimVerification}
+      />
       {school ? <Text style={styles.school}>{school}</Text> : null}
       <Text style={[styles.tier, { color: tier.ink }]}>
         {auraBadgeLabel(tier)} · {Math.round(auraPoints)} Aura
@@ -87,6 +102,16 @@ export function ProfileHeroAvatar({
           contentStyle={styles.flipHit}
         >
           <Text style={styles.flipLabel}>Flip Aura card</Text>
+        </AnimatedButton>
+      ) : null}
+      {onClaimVerification && verificationStatus !== 'verified' ? (
+        <AnimatedButton
+          accessibilityLabel={CLAIM_VERIFY_CTA}
+          haptic="selection"
+          onPress={onClaimVerification}
+          contentStyle={styles.verifyHit}
+        >
+          <Text style={styles.verifyLabel}>{CLAIM_VERIFY_CTA}</Text>
         </AnimatedButton>
       ) : null}
     </View>
@@ -180,5 +205,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: FOCAL.jadeInk,
+  },
+  verifyHit: {
+    marginTop: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  verifyLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: FOCAL.goldInk,
   },
 });

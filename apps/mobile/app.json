@@ -43,6 +43,14 @@
         }
       ],
       [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Tapua'i to save a flyer-ready QR so family can support this athlete.",
+          "savePhotosPermission": "Allow Tapua'i to save a flyer-ready QR to your camera roll.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
         "@stripe/stripe-react-native",
         {
           "merchantIdentifier": "merchant.com.alasports.tapuai",

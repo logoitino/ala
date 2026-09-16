@@ -17,9 +17,10 @@ import { useRoster } from '@/hooks/useRoster';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst, type ReelHype } from '@/lib/reels';
 import { hydratePlayerHype } from '@/lib/hype';
-import { handleFromName, resolveAuraPoints, subscribePlayerAura } from '@/lib/aura';
+import { handleFromName, isAuraUuid, resolveAuraPoints, subscribePlayerAura } from '@/lib/aura';
 import { userProfileHref } from '@/lib/navigation';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { fetchPlayerVerification } from '@/lib/verification';
 import type { Reel, ReelWithPlayer } from '@/types/database';
 
 const CONFIG_ERROR =
@@ -48,16 +49,19 @@ function mergeUploadedReel(
 
 /**
  * @purpose Public athlete profile from any name tap: 3D trading card, Highlights ⚡ / Stats 📊 / Vault 🔒.
- * @sideEffects Loads player + reels + career stats; Stripe PaymentSheet for Vault; `add_user_aura` +100.
+ * @sideEffects Loads player + reels + career stats; Stripe PaymentSheet for Vault; `add_user_aura` +100. Ignores non-UUID ids (Spotlight used to pass `spotlight-{award.id}`).
  */
 export default function UserAthleteProfileScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const playerId = Array.isArray(id) ? id[0] : id;
+  const rawId = Array.isArray(id) ? id[0] : id;
+  const playerId = rawId && isAuraUuid(rawId) ? rawId : undefined;
   const [player, setPlayer] = useState<Player | null>(null);
   const [reels, setReels] = useState<ReelWithPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [verificationStatus, setVerificationStatus] = useState<'unverified' | 'pending' | 'verified'>('unverified');
+  const [schoolClaimed, setSchoolClaimed] = useState(false);
   const { stats, loading: statsLoading } = useAthleteStats(playerId, player);
   const { subscribed, grant } = useAthleteSubscription(playerId);
   const { startCheckout, busy } = useTipCheckout();
@@ -68,7 +72,11 @@ export default function UserAthleteProfileScreen() {
 
   const load = useCallback(async () => {
     if (!playerId) {
-      setError('Missing athlete id.');
+      setError(
+        rawId
+          ? 'This Spotlight highlight is not linked to an athlete profile yet. Watch the clip from Spotlight instead.'
+          : 'Missing athlete id.',
+      );
       setLoading(false);
       return;
     }
@@ -94,8 +102,11 @@ export default function UserAthleteProfileScreen() {
     setPlayer(nextPlayer);
     const tagged = await fetchReelsForPlayer(playerId);
     setReels(mergeUploadedReel(tagged, uploadSheet?.lastUploaded, playerId, nextPlayer));
+    const verification = await fetchPlayerVerification(playerId, nextPlayer.name);
+    setVerificationStatus(verification.status);
+    setSchoolClaimed(verification.schoolClaimed);
     setLoading(false);
-  }, [playerId, uploadSheet?.lastUploaded]);
+  }, [playerId, rawId, uploadSheet?.lastUploaded]);
 
   useFocusEffect(
     useCallback(() => {
@@ -217,6 +228,8 @@ export default function UserAthleteProfileScreen() {
           vaultBusy={busy}
           rosterPlayers={rosterPlayers}
           showClaimBadges={isAthlete}
+          verificationStatus={verificationStatus}
+          schoolClaimed={schoolClaimed}
           onOpenAthlete={(nextId) => router.push(userProfileHref(nextId))}
           onHypeChange={applyHype}
           onUnlockVault={unlockExclusive}

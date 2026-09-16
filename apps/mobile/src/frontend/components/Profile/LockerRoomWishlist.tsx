@@ -23,6 +23,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 
 import { MaloTipModal } from '@/components/TipSheetModal';
+import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -42,6 +43,7 @@ import {
   wishlistFundedLabel,
   wishlistProgressPct,
 } from '@/data/wishlist';
+import { SHARE_FUND_CTA } from '@/data/share';
 import { emitPlayerAura } from '@/lib/aura';
 import { chipInWishlistItem, fetchWishlistItems } from '@/lib/wishlist';
 import { telemetry } from '@/services/TelemetryManager';
@@ -54,19 +56,22 @@ type LockerRoomWishlistProps = {
   player: Player;
   /** Display name for the Gear Unlocked card. Falls back to `player.name`. */
   athleteName?: string;
+  /** Handle encoded in the Share & Fund gift URL. */
+  username?: string | null;
   /** Fires once per item the moment it crosses 100%. */
   onEquipped?: (item: WishlistItem) => void;
 };
 
 /**
- * @purpose Gamified Locker Room Wishlist on the athlete Stats 📊 tab: horizontal gear cards with a jade funding bar, 🎁 Gift Item Directly, and Chip In using the first Catalogs Mālo preset. Hitting 100% fires confetti, brands the card EQUIPPED ⚡, and pays the athlete +500 Aura.
+ * @purpose Gamified Locker Room Wishlist on the athlete Stats 📊 tab: horizontal gear cards with a jade funding bar, 🎁 Gift Item Directly, Chip In, and Share & Fund ⚡ QR flyer.
  * @param player Athlete whose `wishlist_items` load and who receives Mālo + the equip bonus.
- * @param athleteName Name shown on the Gear Unlocked overlay.
+ * @param athleteName Name shown on the Gear Unlocked overlay and QR sheet.
+ * @param username Gift-link handle for `ShareQrModal`.
  * @param onEquipped Host hook for a newly funded item (refresh stats, log, etc).
- * @returns Horizontal card row plus the Mālo sheet and the full-screen unlock celebration.
+ * @returns Horizontal card row plus the Mālo sheet, Share QR sheet, and the full-screen unlock celebration.
  * @sideEffects `get_wishlist_items` on focus; `MaloTipModal` PaymentSheet; `chip_in_wishlist_item` (which calls `add_user_aura`); `expo-web-browser` for retailer links; Success haptic; `feature_tap` / `ui_issue` telemetry; paused by `layouts.wishlist`.
  */
-export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRoomWishlistProps) {
+export function LockerRoomWishlist({ player, athleteName, username, onEquipped }: LockerRoomWishlistProps) {
   const { live } = useAppRuntime();
   const celebration = useOptionalCelebration();
   const { requireAuth } = useSoftWall();
@@ -74,6 +79,7 @@ export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRo
   const [loading, setLoading] = useState(true);
   const [tipItem, setTipItem] = useState<WishlistItem | null>(null);
   const [unlocked, setUnlocked] = useState<WishlistItem | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const name = displayValue(athleteName ?? player.name, 'this athlete');
   const chipInLabel = wishlistChipInAction(live.catalog.maloAmounts[0] ?? 5);
 
@@ -149,6 +155,17 @@ export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRo
           <Text style={styles.title}>{WISHLIST_TITLE}</Text>
           <Text style={styles.lede}>{WISHLIST_LEDE}</Text>
         </View>
+        <AnimatedButton
+          haptic="selection"
+          accessibilityLabel={SHARE_FUND_CTA}
+          onPress={() => {
+            telemetry.trackFeature('share_qr', 'profile');
+            setShareOpen(true);
+          }}
+          contentStyle={styles.headShare}
+        >
+          <Text style={styles.headShareLabel}>{SHARE_FUND_CTA}</Text>
+        </AnimatedButton>
         {loading ? <ActivityIndicator color={FOCAL.jadeInk} size="small" /> : null}
       </View>
 
@@ -169,6 +186,10 @@ export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRo
               chipInLabel={chipInLabel}
               onGift={() => void openRetailer(item)}
               onChipIn={() => startChipIn(item)}
+              onShare={() => {
+                telemetry.trackFeature('share_qr', 'profile');
+                setShareOpen(true);
+              }}
             />
           ))}
         </ScrollView>
@@ -178,6 +199,13 @@ export function LockerRoomWishlist({ player, athleteName, onEquipped }: LockerRo
         player={tipItem ? player : null}
         onClose={() => setTipItem(null)}
         onTipped={(amountCents) => void creditChipIn(amountCents)}
+      />
+
+      <ShareQrModal
+        visible={shareOpen}
+        athleteName={name}
+        username={username}
+        onClose={() => setShareOpen(false)}
       />
 
       <GearUnlockedOverlay
@@ -199,12 +227,14 @@ function WishlistCard({
   chipInLabel,
   onGift,
   onChipIn,
+  onShare,
 }: {
   item: WishlistItem;
   chipping: boolean;
   chipInLabel: string;
   onGift: () => void;
   onChipIn: () => void;
+  onShare: () => void;
 }) {
   const pct = wishlistProgressPct(item);
   const funded = isWishlistFunded(item);
@@ -254,6 +284,15 @@ function WishlistCard({
         onPress={onGift}
       >
         <Text style={styles.giftLabel}>{WISHLIST_GIFT_ACTION}</Text>
+      </AnimatedButton>
+
+      <AnimatedButton
+        haptic="selection"
+        accessibilityLabel={`${SHARE_FUND_CTA} — ${item.title}`}
+        contentStyle={styles.shareHit}
+        onPress={onShare}
+      >
+        <Text style={styles.shareLabel}>{SHARE_FUND_CTA}</Text>
       </AnimatedButton>
 
       {funded ? null : (
@@ -361,10 +400,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 10,
+    flexWrap: 'wrap',
   },
   headCopy: {
     flex: 1,
+    minWidth: 140,
     gap: 2,
+  },
+  headShare: {
+    minHeight: 36,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    borderColor: FOCAL.neonJade,
+    backgroundColor: FOCAL.mistJade,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headShareLabel: {
+    color: FOCAL.jadeInk,
+    fontSize: 12,
+    fontWeight: '800',
   },
   title: {
     color: colors.text,
@@ -475,6 +532,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   giftLabel: {
+    color: FOCAL.jadeInk,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  shareHit: {
+    minHeight: 44,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    borderColor: FOCAL.neonJade,
+    backgroundColor: FOCAL.mistJade,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  shareLabel: {
     color: FOCAL.jadeInk,
     fontSize: 13,
     fontWeight: '800',

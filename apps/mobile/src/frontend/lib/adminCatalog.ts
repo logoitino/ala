@@ -550,7 +550,7 @@ export async function fetchAdminPeople(): Promise<AdminPerson[]> {
 
 /**
  * @purpose Verify a person or grant / revoke admin access on the production app.
- * @sideEffects `profiles` UPDATE (`is_verified` / `is_admin` / `roles`).
+ * @sideEffects `profiles` UPDATE (`is_verified` / `verification_status` / `is_admin` / `roles`).
  */
 export async function patchAdminPerson(
   id: string,
@@ -559,11 +559,15 @@ export async function patchAdminPerson(
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
   const body: {
     is_verified?: boolean;
+    verification_status?: 'unverified' | 'verified';
     is_admin?: boolean;
     role?: UserRole;
     roles?: string[];
   } = {};
-  if (typeof patch.is_verified === 'boolean') body.is_verified = patch.is_verified;
+  if (typeof patch.is_verified === 'boolean') {
+    body.is_verified = patch.is_verified;
+    body.verification_status = patch.is_verified ? 'verified' : 'unverified';
+  }
   if (patch.role) body.role = patch.role;
 
   if (typeof patch.is_admin === 'boolean') {
@@ -611,7 +615,7 @@ export async function fetchVerificationQueue(): Promise<VerificationRequest[]> {
 
 /**
  * @purpose Approve or reject a verification request and stamp the matching profile when possible.
- * @sideEffects `verification_requests` UPDATE; `profiles.is_verified`; optional `players` consent.
+ * @sideEffects `verification_requests` UPDATE; `profiles.is_verified` + `verification_status`; optional `players` consent.
  */
 export async function setVerificationStatus(id: string, status: 'approved' | 'rejected'): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
@@ -622,7 +626,25 @@ export async function setVerificationStatus(id: string, status: 'approved' | 're
     .select('player_id, full_name')
     .single();
   throwIf(error, 'Could not update this request.');
-  if (status !== 'approved' || !data) return;
+  if (!data) return;
+
+  if (status === 'rejected') {
+    if (data.player_id) {
+      await supabase
+        .from('profiles')
+        .update({ is_verified: false, verification_status: 'unverified' })
+        .eq('player_id', data.player_id);
+    }
+    const rejectedName = asText(data.full_name).trim();
+    if (rejectedName) {
+      await supabase
+        .from('profiles')
+        .update({ is_verified: false, verification_status: 'unverified' })
+        .eq('full_name', rejectedName);
+    }
+    return;
+  }
+  if (status !== 'approved') return;
 
   if (data.player_id) {
     const { error: playerError } = await supabase
@@ -633,14 +655,17 @@ export async function setVerificationStatus(id: string, status: 'approved' | 're
 
     const { error: linkedError } = await supabase
       .from('profiles')
-      .update({ is_verified: true })
+      .update({ is_verified: true, verification_status: 'verified' })
       .eq('player_id', data.player_id);
     throwIf(linkedError, 'Verified the request, but could not update the linked profile.');
   }
 
   const name = asText(data.full_name).trim();
   if (name) {
-    const { error: nameError } = await supabase.from('profiles').update({ is_verified: true }).eq('full_name', name);
+    const { error: nameError } = await supabase
+      .from('profiles')
+      .update({ is_verified: true, verification_status: 'verified' })
+      .eq('full_name', name);
     throwIf(nameError, 'Verified the request, but could not match a profile by name.');
   }
 }

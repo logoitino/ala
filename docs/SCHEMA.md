@@ -15,7 +15,8 @@ Auth (`auth.users`) must exist before `profiles.user_id` can reference it.
 | --- | --- |
 | `video_tips` | `public.tips` (Mālo ledger) + `reels.total_tips_cents` |
 | `add_user_aura(target_user_id, points_to_add)` | Postgres `add_user_aura(uuid, integer)` |
-| `add_user_role(new_role)` | Postgres `add_user_role(text)` → `profiles.roles` |
+| `add_user_role(new_role)` | Postgres `add_user_role(text)` → `profiles.roles` (does not mint Varsity) |
+| `redeem_team_code(raw_code)` | Postgres `redeem_team_code(text)` → ⚡ VERIFIED VARSITY |
 | `get_fan_tip_history(fan_user_id)` | Postgres `get_fan_tip_history(uuid)` → Mālo receipts for the tipper |
 | `search_local_entities(search_query, entity_kind)` | Postgres `search_local_entities(text, text)` → athlete / school / booster hits |
 | `search_schools_and_teams(search_query)` | Postgres `search_schools_and_teams(text)` → HS + NCAA catalog |
@@ -43,12 +44,15 @@ Identity for signed-in users.
 | `active_role` | text default `fan` | Fan View vs Athlete Management View (`fan` \| `athlete`). Incremental: `supabase/add_user_role.sql`. |
 | `full_name` | text not null | |
 | `username` | text | Optional; client slugs `full_name` if null |
-| `is_verified` | boolean | |
+| `is_verified` | boolean default false | Varsity badge. **Not** set by claiming athlete/school. True only after team code (`redeem_team_code`) or staff/coach approval. |
+| `verification_status` | text default `unverified` | `unverified` \| `pending` \| `verified`. Claimed school stays public while pending. Incremental: `supabase/athlete_verification.sql`. |
 | `spirit_points` | integer | |
 | `aura_points` | integer default 0 | Ranking currency |
 | `stripe_connect_id` | text | Stripe Connect Express account id (`acct_…`) from Accounts v2 |
 | `stripe_onboarding_complete` | boolean default false | Recipient applied and no user-due requirements after Express return. Incremental: `supabase/stripe_connect.sql`. |
 | `payouts_enabled` | boolean default false | Recipient `stripe_transfers` / `payouts` capability is `active`. |
+| `legal_terms_accepted_at` | timestamptz | In-app Terms / NIL / minor-safety acknowledgement. Incremental: `supabase/legal_terms_ack.sql`. |
+| `legal_terms_version` | text | Matches `LEGAL_TERMS_VERSION` in `data/legal.ts` (`2026-09-16`). |
 
 **Stripe HTTP (JWT):** Mālo PaymentIntent (`POST /api/create-payment-intent` and Edge `create-payment-intent`) and custodial payouts (`POST /api/create-payout`) require a valid Supabase session JWT (`Authorization: Bearer` → `auth.getUser`). Payout destination is the signed-in row's `stripe_connect_id` (service role or user-scoped read); a client `destinationAccountId` is ignored. Transfers require `payouts_enabled`. Missing `STRIPE_SECRET_KEY` queues for admin disbursement — it never transfers to an arbitrary id. Connect Account Links stay on JWT `create-stripe-account`. Server secret is `STRIPE_SECRET_KEY` only (never `EXPO_PUBLIC_STRIPE_SECRET_KEY`).
 | `school_id` | uuid FK → `schools_and_teams` ON DELETE SET NULL | Athlete onboarding pick (HS or NCAA). Incremental: `supabase/schools_and_teams.sql`. |
@@ -76,6 +80,7 @@ Universal High School + college catalog for Athlete onboarding. Fuzzy search is 
 | `division` | text | `High School` or `NCAA D1` (also D2+ later) |
 | `region` | text | HS state (`UT`) or conference (`Big 12`) |
 | `city` | text | |
+| `team_code` | text unique (case-insensitive) | Coach-issued season code, e.g. `WSTLK-2026`. Athletes may type `WSTLK-RUG-2026` (sport token in the middle). Incremental: `supabase/athlete_verification.sql`. |
 | `created_at` | timestamptz | |
 
 Badge copy: `[ High School • UT ]` vs `[ NCAA D1 • Big 12 ]` (`formatTeamBadge`). Client: `useTeamSearch` / `TeamSearchField`. Trading card shows name, mascot, and badge on both faces.
@@ -257,7 +262,7 @@ A fan tag is a claim, not proof. `reels.tag_status` stays `pending` until the ta
 
 ### `get_spotlight_standings` / `sync_spotlight_period` / `sync_live_spotlight_awards` / `unlock_spotlight_period` / `spotlight_normalize_kind` / `spotlight_window`
 
-Clip energy = Seki + Aura + Flex on **confirmed**, public, unflagged **Game Play** clips in the UTC week / month / year. Player of the Week/Month/Year is the tagged `players.id` with the most energy; `highlight_reel_id` is that player's hottest clip (`Clip by` when `uploaded_by` is not the athlete). `increment_reel_hype` and Highlights launch call `sync_live_spotlight_awards`. Admin **Let hype decide** calls `unlock_spotlight_period`. Manual publish sets `source=manual` and `locked=true`.
+Clip energy = Seki + Aura + Flex on **confirmed**, public, unflagged **Game Play** clips in the UTC week / month / year. Player of the Week/Month/Year is the tagged `players.id` with the most energy **and** a Varsity-verified claimed profile (`athlete_is_varsity_verified`). Unverified athletes keep public Highlights. `highlight_reel_id` is that player's hottest clip (`Clip by` when `uploaded_by` is not the athlete). `increment_reel_hype` and Highlights launch call `sync_live_spotlight_awards`. Admin **Let hype decide** calls `unlock_spotlight_period`. Manual publish sets `source=manual` and `locked=true`.
 
 ### `games`
 
@@ -616,7 +621,20 @@ Grant: `EXECUTE` to `anon`, `authenticated`. Client: `apps/mobile/src/frontend/h
 add_user_role(new_role text) returns text[]
 ```
 
-Unions `new_role` onto the signed-in `profiles.roles` (`auth.uid()`). Adding `athlete` also keeps `fan`, sets `role` + `active_role` to `athlete`, and sets `is_verified`. Incremental: `supabase/add_user_role.sql`. Client: `addUserRoleRemote` / `AuthContext.addUserRole`.
+Unions `new_role` onto the signed-in `profiles.roles` (`auth.uid()`). Adding `athlete` also keeps `fan` and sets `role` + `active_role` to `athlete`. It does **not** set `is_verified` — school claim is not Varsity. Incremental: `supabase/add_user_role.sql`. Client: `addUserRoleRemote` / `AuthContext.addUserRole`.
+
+### `redeem_team_code` / `request_athlete_verification` / `athlete_is_varsity_verified`
+
+```sql
+redeem_team_code(raw_code text) returns jsonb
+request_athlete_verification(request_notes text default null) returns jsonb
+athlete_is_varsity_verified(target_player_id uuid) returns boolean
+normalize_team_code(raw_code text) returns text
+team_code_school_key(raw_code text) returns text
+sport_from_team_code_token(token text) returns text
+```
+
+`redeem_team_code` matches `schools_and_teams.team_code` (`WSTLK-2026` or `WSTLK-RUG-2026`), requires `legal_terms_accepted_at`, sets `is_verified` + `verification_status = verified`, and writes an approved `verification_requests` row. `request_athlete_verification` queues a pending request (profile stays public). Helpers parse sport tokens (`RUG` → Rugby). `athlete_is_varsity_verified` gates Player of the Week. Incremental: `supabase/athlete_verification.sql`. Client: `VerifyAthleteModal` / `lib/verification.ts`.
 
 Grant: `EXECUTE` to `anon`, `authenticated`.
 
@@ -771,7 +789,7 @@ get_aura_tier(points integer) returns jsonb  -- { tier, title, min_points, color
 
 Matches `AURA_TIERS` in `aura.ts`. The app also computes locally (`auraTierForPoints`) so the card does not wait on the network. Keep SQL and TypeScript in lockstep.
 
-Other RPCs: `increment_backer_count`, `increment_player_hype`, `increment_reel_hype` (returns `applied`; no-ops a second Seki / Aura / Flex from the same `auth.uid()`; then `sync_live_spotlight_awards`), `increment_reel_tips`, `cast_cheer_vote`, `upsert_cheer_poll`, `update_game_score`, `current_user_role` (returns `admin` when `is_admin` or `roles` includes admin), `get_fan_tip_history`, `search_local_entities`, `search_schools_and_teams`, `report_reel`, `publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`, `patch_app_runtime_draft`, `publish_app_runtime`, `get_admin_reports`, `company_revenue_bps`, `record_company_revenue`, `sync_company_revenue_logs`, `company_revenue_after_source_insert`, `get_company_revenue_summary`, `submit_app_feedback`, `get_app_feedback`, `triage_app_feedback`, `toggle_reel_vault_status`, `set_player_vault_locked`, `get_active_spotlight_award`, `get_crew_graph`, `toggle_crew_follow`, `set_reel_flash_unlock`, `spotlight_normalize_kind`, `spotlight_window`, `can_confirm_player_tag`, `reels_apply_tag_defaults`, `confirm_reel_player_tag`, `get_pending_player_tags`, `get_spotlight_standings`, `sync_spotlight_period`, `sync_live_spotlight_awards`, `unlock_spotlight_period`. Cheer votes go through `cast_cheer_vote`; admin label edits go through `upsert_cheer_poll`. Re-run `supabase/cheer_polls.sql` after this signature change (`DROP FUNCTION` first):
+Other RPCs: `increment_backer_count`, `increment_player_hype`, `increment_reel_hype` (returns `applied`; no-ops a second Seki / Aura / Flex from the same `auth.uid()`; then `sync_live_spotlight_awards`), `increment_reel_tips`, `cast_cheer_vote`, `upsert_cheer_poll`, `update_game_score`, `current_user_role` (returns `admin` when `is_admin` or `roles` includes admin), `get_fan_tip_history`, `search_local_entities`, `search_schools_and_teams`, `report_reel`, `publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`, `patch_app_runtime_draft`, `publish_app_runtime`, `get_admin_reports`, `company_revenue_bps`, `record_company_revenue`, `sync_company_revenue_logs`, `company_revenue_after_source_insert`, `get_company_revenue_summary`, `submit_app_feedback`, `get_app_feedback`, `triage_app_feedback`, `toggle_reel_vault_status`, `set_player_vault_locked`, `get_active_spotlight_award`, `get_crew_graph`, `toggle_crew_follow`, `set_reel_flash_unlock`, `spotlight_normalize_kind`, `spotlight_window`, `can_confirm_player_tag`, `reels_apply_tag_defaults`, `confirm_reel_player_tag`, `get_pending_player_tags`, `get_spotlight_standings`, `sync_spotlight_period`, `sync_live_spotlight_awards`, `unlock_spotlight_period`, `redeem_team_code`, `request_athlete_verification`, `athlete_is_varsity_verified`, `normalize_team_code`, `team_code_school_key`, `sport_from_team_code_token`. Cheer votes go through `cast_cheer_vote`; admin label edits go through `upsert_cheer_poll`. Re-run `supabase/cheer_polls.sql` after this signature change (`DROP FUNCTION` first):
 
 ```sql
 cast_cheer_vote(
@@ -875,4 +893,4 @@ Prefer full `schema.sql` on a blank project (includes `profiles` / `tips` / oper
 
 1. `players.sql` → `game_events.sql` → `games.sql` (+ `games_clock.sql` + `games_operator.sql`)
 2. `increment_backer.sql` → `increment_hype.sql` (`increment_player_hype`)
-3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql`
+3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `legal_terms_ack.sql` → `athlete_verification.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql`

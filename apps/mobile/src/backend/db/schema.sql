@@ -48,6 +48,8 @@ alter table public.profiles add column if not exists roles text[] not null defau
 alter table public.profiles add column if not exists stripe_onboarding_complete boolean not null default false;
 alter table public.profiles add column if not exists payouts_enabled boolean not null default false;
 alter table public.profiles add column if not exists active_role text not null default 'fan';
+alter table public.profiles add column if not exists legal_terms_accepted_at timestamptz;
+alter table public.profiles add column if not exists legal_terms_version text;
 
 create table if not exists public.athlete_career_stats (
   player_id uuid primary key references public.players (id) on delete cascade,
@@ -90,6 +92,11 @@ alter table public.schools_and_teams add column if not exists division text not 
 alter table public.schools_and_teams add column if not exists region text not null default 'UT';
 alter table public.schools_and_teams add column if not exists city text not null default '';
 alter table public.schools_and_teams add column if not exists created_at timestamptz not null default now();
+alter table public.schools_and_teams add column if not exists team_code text;
+
+create unique index if not exists schools_and_teams_team_code_key
+  on public.schools_and_teams (upper(btrim(team_code)))
+  where team_code is not null and btrim(team_code) <> '';
 
 create unique index if not exists schools_and_teams_name_key on public.schools_and_teams (name);
 
@@ -113,6 +120,17 @@ on conflict (id) do update set
   region = excluded.region,
   city = excluded.city;
 
+update public.schools_and_teams set team_code = 'WSTLK-2026' where id = 'a1000000-0000-4000-8000-000000000001' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'LPKHS-2026' where id = 'a1000000-0000-4000-8000-000000000002' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'ALAHS-2026' where id = 'a1000000-0000-4000-8000-000000000003' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'SKYRG-2026' where id = 'a1000000-0000-4000-8000-000000000004' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'AFORK-2026' where id = 'a1000000-0000-4000-8000-000000000005' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'TIMP-2026' where id = 'a1000000-0000-4000-8000-000000000006' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'BYU-2026' where id = 'a1000000-0000-4000-8000-000000000011' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'UTAH-2026' where id = 'a1000000-0000-4000-8000-000000000012' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'USU-2026' where id = 'a1000000-0000-4000-8000-000000000013' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'WEBER-2026' where id = 'a1000000-0000-4000-8000-000000000014' and coalesce(team_code, '') = '';
+
 alter table public.profiles add column if not exists school_id uuid references public.schools_and_teams (id) on delete set null;
 alter table public.profiles add column if not exists athlete_division text;
 alter table public.profiles add column if not exists athlete_sport text;
@@ -121,6 +139,16 @@ alter table public.profiles add column if not exists athlete_position text;
 alter table public.profiles add column if not exists athlete_class_year text;
 alter table public.profiles add column if not exists is_admin boolean not null default false;
 alter table public.profiles add column if not exists player_id uuid references public.players (id) on delete set null;
+alter table public.profiles add column if not exists verification_status text not null default 'unverified';
+
+do $$
+begin
+  alter table public.profiles
+    add constraint profiles_verification_status_check
+    check (verification_status in ('unverified', 'pending', 'verified'));
+exception
+  when duplicate_object then null;
+end $$;
 
 update public.profiles
 set is_admin = true
@@ -496,6 +524,15 @@ create table if not exists public.verification_requests (
   notes text
 );
 
+alter table public.verification_requests
+  add column if not exists requester_user_id uuid references public.profiles (id) on delete set null;
+alter table public.verification_requests
+  add column if not exists school_id uuid references public.schools_and_teams (id) on delete set null;
+alter table public.verification_requests
+  add column if not exists team_code text;
+alter table public.verification_requests
+  add column if not exists created_at timestamptz not null default now();
+
 create table if not exists public.disbursements (
   id uuid primary key default gen_random_uuid(),
   player_id uuid references public.players (id) on delete set null,
@@ -587,12 +624,229 @@ begin
       when normalized = 'athlete' then 'athlete'
       when normalized in ('fan', 'athlete') then normalized
       else coalesce(nullif(active_role, ''), 'fan')
-    end,
-    is_verified = case when normalized = 'athlete' then true else is_verified end
+    end
   where user_id = auth.uid()
   returning roles into next_roles;
 
   return next_roles;
+end;
+$$;
+
+create or replace function public.normalize_team_code(raw_code text)
+returns text
+language sql
+immutable
+as $$
+  select upper(regexp_replace(btrim(coalesce(raw_code, '')), '\s+', '', 'g'));
+$$;
+
+create or replace function public.team_code_school_key(raw_code text)
+returns text
+language plpgsql
+immutable
+as $$
+declare
+  n text := public.normalize_team_code(raw_code);
+  parts text[];
+begin
+  if n = '' then
+    return '';
+  end if;
+  parts := string_to_array(n, '-');
+  if coalesce(array_length(parts, 1), 0) >= 3 then
+    return parts[1] || '-' || parts[array_length(parts, 1)];
+  end if;
+  return n;
+end;
+$$;
+
+create or replace function public.sport_from_team_code_token(token text)
+returns text
+language plpgsql
+immutable
+as $$
+declare
+  t text := upper(btrim(coalesce(token, '')));
+begin
+  return case t
+    when 'FB' then 'Football'
+    when 'FOOT' then 'Football'
+    when 'BKB' then 'Basketball'
+    when 'BK' then 'Basketball'
+    when 'BBALL' then 'Basketball'
+    when 'RUG' then 'Rugby'
+    when 'VB' then 'Volleyball'
+    when 'VBALL' then 'Volleyball'
+    when 'SOC' then 'Soccer'
+    when 'BB' then 'Baseball'
+    when 'SB' then 'Softball'
+    when 'WR' then 'Wrestling'
+    when 'TF' then 'Track & Field'
+    when 'LAX' then 'Lacrosse'
+    when 'HK' then 'Ice Hockey'
+    when 'TEN' then 'Tennis'
+    else null
+  end;
+end;
+$$;
+
+create or replace function public.athlete_is_varsity_verified(target_player_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles cl
+    where coalesce(cl.is_verified, false) = true
+      and coalesce(cl.verification_status, 'unverified') = 'verified'
+      and (
+        cl.player_id = target_player_id
+        or (
+          cl.player_id is null
+          and exists (
+            select 1
+            from public.players p
+            where p.id = target_player_id
+              and lower(btrim(p.name)) = lower(btrim(cl.full_name))
+          )
+        )
+      )
+  );
+$$;
+
+create or replace function public.redeem_team_code(raw_code text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  n text := public.normalize_team_code(raw_code);
+  school_key text := public.team_code_school_key(raw_code);
+  parts text[];
+  sport_token text;
+  sport_name text;
+  me public.profiles%rowtype;
+  school public.schools_and_teams%rowtype;
+begin
+  if auth.uid() is null then
+    raise exception 'Sign in required';
+  end if;
+  if n = '' then
+    raise exception 'Team code required';
+  end if;
+
+  select * into me from public.profiles where user_id = auth.uid() limit 1;
+  if me.id is null then
+    raise exception 'Profile required';
+  end if;
+  if me.legal_terms_accepted_at is null then
+    raise exception 'legal acknowledgement required';
+  end if;
+
+  select * into school
+  from public.schools_and_teams s
+  where upper(btrim(coalesce(s.team_code, ''))) in (n, school_key)
+  limit 1;
+
+  if school.id is null then
+    raise exception 'Unknown team code';
+  end if;
+
+  parts := string_to_array(n, '-');
+  if coalesce(array_length(parts, 1), 0) >= 3 then
+    sport_token := parts[2];
+    sport_name := public.sport_from_team_code_token(sport_token);
+  end if;
+
+  update public.profiles
+  set
+    school_id = school.id,
+    athlete_division = coalesce(nullif(athlete_division, ''), school.division),
+    athlete_sport = coalesce(sport_name, athlete_sport),
+    is_verified = true,
+    verification_status = 'verified',
+    roles = (
+      select coalesce(array_agg(distinct r), array['fan', 'athlete']::text[])
+      from unnest(coalesce(roles, array['fan']::text[]) || array['athlete', 'fan']::text[]) as r
+    ),
+    role = case when role in ('admin', 'athlete') then role else 'athlete' end,
+    active_role = 'athlete'
+  where id = me.id;
+
+  insert into public.verification_requests (
+    player_id, full_name, status, notes, requester_user_id, school_id, team_code
+  )
+  values (
+    me.player_id,
+    me.full_name,
+    'approved',
+    'Team code ' || n,
+    me.id,
+    school.id,
+    n
+  );
+
+  return jsonb_build_object(
+    'ok', true,
+    'verification_status', 'verified',
+    'school_id', school.id,
+    'school_name', school.name,
+    'team_code', school.team_code,
+    'sport', sport_name
+  );
+end;
+$$;
+
+create or replace function public.request_athlete_verification(request_notes text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  me public.profiles%rowtype;
+  note text := nullif(btrim(coalesce(request_notes, '')), '');
+begin
+  if auth.uid() is null then
+    raise exception 'Sign in required';
+  end if;
+
+  select * into me from public.profiles where user_id = auth.uid() limit 1;
+  if me.id is null then
+    raise exception 'Profile required';
+  end if;
+  if me.legal_terms_accepted_at is null then
+    raise exception 'legal acknowledgement required';
+  end if;
+  if coalesce(me.is_verified, false) or coalesce(me.verification_status, 'unverified') = 'verified' then
+    return jsonb_build_object('ok', true, 'verification_status', 'verified', 'already', true);
+  end if;
+
+  update public.profiles
+  set verification_status = 'pending'
+  where id = me.id;
+
+  insert into public.verification_requests (
+    player_id, full_name, status, notes, requester_user_id, school_id
+  )
+  values (
+    me.player_id,
+    me.full_name,
+    'pending',
+    coalesce(note, 'Coach / parent approval requested'),
+    me.id,
+    me.school_id
+  );
+
+  return jsonb_build_object(
+    'ok', true,
+    'verification_status', 'pending',
+    'school_id', me.school_id
+  );
 end;
 $$;
 
@@ -1187,6 +1441,7 @@ begin
       from public.reels r
       join public.players p on p.id = r.player_id
       where r.tag_status = 'confirmed'
+        and public.athlete_is_varsity_verified(p.id)
         and coalesce(r.is_removed, false) = false
         and coalesce(r.is_vault_only, false) = false
         and coalesce(r.is_flagged, false) = false
@@ -2378,6 +2633,11 @@ create policy "Boosters write verification"
   using (auth.role() = 'anon' or public.current_user_role() in ('booster', 'admin'))
   with check (auth.role() = 'anon' or public.current_user_role() in ('booster', 'admin'));
 
+drop policy if exists "Athletes insert verification" on public.verification_requests;
+create policy "Athletes insert verification"
+  on public.verification_requests for insert
+  with check (true);
+
 drop policy if exists "Admin read disbursements" on public.disbursements;
 create policy "Admin read disbursements" on public.disbursements for select using (true);
 
@@ -2498,6 +2758,12 @@ grant execute on function public.cast_cheer_vote(text, text, text, text, text) t
 grant execute on function public.update_game_score(uuid, integer, integer, boolean, text) to anon, authenticated;
 grant execute on function public.current_user_role() to anon, authenticated;
 grant execute on function public.add_user_role(text) to anon, authenticated;
+grant execute on function public.normalize_team_code(text) to anon, authenticated;
+grant execute on function public.team_code_school_key(text) to anon, authenticated;
+grant execute on function public.sport_from_team_code_token(text) to anon, authenticated;
+grant execute on function public.athlete_is_varsity_verified(uuid) to anon, authenticated;
+grant execute on function public.redeem_team_code(text) to authenticated;
+grant execute on function public.request_athlete_verification(text) to authenticated;
 grant execute on function public.get_fan_tip_history(uuid) to anon, authenticated;
 grant execute on function public.search_local_entities(text, text) to anon, authenticated;
 grant execute on function public.search_schools_and_teams(text) to anon, authenticated;
@@ -2884,7 +3150,7 @@ as $$
     'audience', jsonb_build_object(
       'profiles', (select count(*)::int from public.profiles),
       'athletes', (select count(*)::int from public.players),
-      'verified', (select count(*)::int from public.profiles where coalesce(is_verified_athlete, false) = true or role = 'athlete'),
+      'verified', (select count(*)::int from public.profiles where coalesce(is_verified, false) = true or coalesce(verification_status, '') = 'verified'),
       'admins', (select count(*)::int from public.profiles where coalesce(is_admin, false) = true),
       'schools', (select count(*)::int from public.schools_and_teams),
       'pending_verify', (select count(*)::int from public.verification_requests where status = 'pending')

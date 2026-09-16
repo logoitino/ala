@@ -47,6 +47,7 @@ function RuntimeApp() {
           <Stack.Screen name="(sponsor)" options={{ headerShown: false }} />
           <Stack.Screen name="(admin)" options={{ headerShown: false }} />
           <Stack.Screen name="auth/callback" options={{ headerShown: false, presentation: 'modal' }} />
+          <Stack.Screen name="gift/[handle]" options={{ title: 'Share & Fund ⚡' }} />
         </Stack>
         <StudioPreviewBar />
         <BackedCelebration />

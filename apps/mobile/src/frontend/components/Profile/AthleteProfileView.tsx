@@ -14,6 +14,7 @@ import { AthleteStatsTab } from '@/components/Profile/AthleteStatsTab';
 import { AuraTradingCard } from '@/components/Profile/AuraTradingCard';
 import { LockerRoomWishlist } from '@/components/Profile/LockerRoomWishlist';
 import { ProfileHeroAvatar } from '@/components/Profile/ProfileHeroAvatar';
+import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { SubscriberQnA } from '@/components/Profile/SubscriberQnA';
 import { TeamRosterStrip } from '@/components/Profile/TeamRosterStrip';
 import { VaultLockCard } from '@/components/Profile/VaultLockCard';
@@ -39,8 +40,10 @@ import {
   VAULT_TAB_LABEL,
   type HighlightClip,
 } from '@/data/highlights';
+import { SHARE_FUND_CTA } from '@/data/share';
 import type { AthleteStatsBundle } from '@/data/athleteStats';
 import { isWishlistFunded } from '@/data/wishlist';
+import type { VerificationStatus } from '@/data/verification';
 import { useCrew } from '@/hooks/useCrew';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { formatCompactCount } from '@/lib/hype';
@@ -91,6 +94,9 @@ type AthleteProfileViewProps = {
   /** Controlled Aura trading-card flip sheet (hamburger / hero control). */
   auraCardOpen?: boolean;
   onAuraCardOpenChange?: (open: boolean) => void;
+  verificationStatus?: VerificationStatus;
+  schoolClaimed?: boolean;
+  onClaimVerification?: () => void;
   leading?: ReactNode;
   actions?: ReactNode;
   trailing?: ReactNode;
@@ -107,8 +113,9 @@ type AthleteProfileViewProps = {
  * @purpose Clean athlete sheet: hero avatar, slim Crew/Squad, Highlights collage, Active Team Roster, then Stats / Vault.
  * @param rosterPlayers Schoolmates for the roster strip; empty skips the section.
  * @param auraCardOpen When controlled, parent (hamburger) opens the Flip Aura card modal.
+ * @param verificationStatus Varsity chip on the hero name and 3D card.
  * @returns Hero + slim counters + collage-first chrome. Parent owns the ScrollView.
- * @sideEffects Child grids / vault / Q&A / `useCrew`; wishlist lights Flip-card glow when opened.
+ * @sideEffects Child grids / vault / Q&A / `useCrew`; wishlist lights Flip-card glow when opened; `ShareQrModal` Camera Roll / clipboard / native share.
  */
 export function AthleteProfileView({
   player,
@@ -140,6 +147,9 @@ export function AthleteProfileView({
   showClaimBadges = false,
   auraCardOpen,
   onAuraCardOpenChange,
+  verificationStatus = 'unverified',
+  schoolClaimed = false,
+  onClaimVerification,
   leading,
   actions,
   trailing,
@@ -156,6 +166,7 @@ export function AthleteProfileView({
   const { configFor } = useSportConfigs();
   const [tab, setTab] = useState<AthleteProfileTab>('highlights');
   const [wishlistFulfilled, setWishlistFulfilled] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [internalFlip, setInternalFlip] = useState(false);
   const flipOpen = auraCardOpen ?? internalFlip;
   const setFlipOpen = onAuraCardOpenChange ?? setInternalFlip;
@@ -243,6 +254,9 @@ export function AthleteProfileView({
       highlightViews={player.view_count ?? 0}
       careerPreview={stats.topThree}
       wishlistFulfilled={wishlistFulfilled}
+      verificationStatus={verificationStatus}
+      schoolClaimed={schoolClaimed}
+      onClaimVerification={onClaimVerification}
     />
   ) : null;
 
@@ -257,9 +271,20 @@ export function AthleteProfileView({
         subscriberCrest={subscriberCrest}
         showFlipControl={live.profile.showCard}
         onFlipAura={() => setFlipOpen(true)}
+        verificationStatus={verificationStatus}
+        schoolClaimed={schoolClaimed}
+        onClaimVerification={onClaimVerification}
       />
       {live.profile.showCrew ? <CrewStatsBar player={player} /> : null}
       {actions}
+      <AnimatedButton
+        accessibilityLabel={SHARE_FUND_CTA}
+        haptic="selection"
+        onPress={() => setShareOpen(true)}
+        contentStyle={styles.shareHit}
+      >
+        <Text style={styles.shareLabel}>{SHARE_FUND_CTA}</Text>
+      </AnimatedButton>
       {trailing}
       {manageVault && live.buttons.vault ? (
         <VaultLockCard locked={sealed} busy={vaultLockBusy} onToggle={(next) => onVaultLockChange?.(next)} />
@@ -297,6 +322,7 @@ export function AthleteProfileView({
           <LockerRoomWishlist
             player={player}
             athleteName={name}
+            username={username}
             onEquipped={() => setWishlistFulfilled(true)}
           />
         </View>
@@ -344,6 +370,12 @@ export function AthleteProfileView({
           </View>
         </View>
       </Modal>
+      <ShareQrModal
+        visible={shareOpen}
+        athleteName={name}
+        username={username}
+        onClose={() => setShareOpen(false)}
+      />
     </View>
   );
 }
@@ -464,6 +496,21 @@ const styles = StyleSheet.create({
   },
   statsPane: {
     gap: 16,
+  },
+  shareHit: {
+    minHeight: 48,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    borderColor: FOCAL.neonJade,
+    backgroundColor: FOCAL.mistJade,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+  },
+  shareLabel: {
+    color: FOCAL.jadeInk,
+    fontSize: 15,
+    fontWeight: '800',
   },
   empty: {
     color: colors.textMuted,

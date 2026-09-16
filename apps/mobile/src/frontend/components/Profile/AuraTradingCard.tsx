@@ -15,8 +15,10 @@ import Animated, {
 
 import { GlowingCardWrapper } from '@/components/Profile/GlowingCardWrapper';
 import { SubscriberCrest } from '@/components/Profile/SubscriberCrest';
+import { VarsityBadge } from '@/components/Profile/VarsityBadge';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
+import { CLAIM_VERIFY_CTA, type VerificationStatus } from '@/data/verification';
 import { formatCompactCount } from '@/lib/hype';
 import {
   auraBadgeLabel,
@@ -68,6 +70,9 @@ export type AuraTradingCardProps = {
   isAuraMaxed?: boolean;
   /** Locker Room item fully funded — same pulse as max Aura. */
   wishlistFulfilled?: boolean;
+  verificationStatus?: VerificationStatus;
+  schoolClaimed?: boolean;
+  onClaimVerification?: () => void;
 };
 
 export type RoleBadge = {
@@ -164,6 +169,7 @@ function CardChrome({ tier, children }: { tier: AuraTier; children: ReactNode })
  * @param teamName / mascot / divisionBadge HS or NCAA identity from `schools_and_teams` (both faces).
  * @param careerPreview Top 3 career stats (Games / Points or Tries / Yards or Tackles) on the back face.
  * @param isAuraMaxed / wishlistFulfilled Lights the Skia neon sweep (`GlowingNeonBorder`) and pulses stroke thickness.
+ * @param verificationStatus Neon jade ⚡ VERIFIED VARSITY on the identity face when Varsity is earned.
  * @returns Flippable card plus **Flip Card 🔄**. Tap the body or the button to flip.
  * @sideEffects Reanimated `withSpring` `rotateY` 0↔180 (`SPRING_FLIP`, `perspective: 1000`); `Haptics.impactAsync(Medium)` exactly when the rotation crosses 90°; back-face Season Points / Total Tipped fade in with `withDelay`; Skia canvas when the glow is on.
  */
@@ -194,6 +200,9 @@ export function AuraTradingCard({
   careerPreview,
   isAuraMaxed,
   wishlistFulfilled = false,
+  verificationStatus = 'unverified',
+  schoolClaimed = false,
+  onClaimVerification,
 }: AuraTradingCardProps) {
   const tier = auraTierForPoints(auraPoints);
   const progress = auraProgressTowardNext(auraPoints);
@@ -322,6 +331,12 @@ export function AuraTradingCard({
                   </View>
                   <View style={styles.copy}>
                     <Text style={styles.name}>{name}</Text>
+                    <VarsityBadge
+                      compact
+                      status={verificationStatus}
+                      schoolClaimed={schoolClaimed}
+                      onPress={onClaimVerification}
+                    />
                     <Text style={styles.handle}>@{handle}</Text>
                     <View style={styles.roleRow}>
                       {roleBadges.map((badge) => (
@@ -443,6 +458,16 @@ export function AuraTradingCard({
       >
         <Text style={styles.flipLabel}>Flip Card 🔄</Text>
       </AnimatedButton>
+      {onClaimVerification && verificationStatus !== 'verified' ? (
+        <AnimatedButton
+          accessibilityLabel={CLAIM_VERIFY_CTA}
+          haptic="selection"
+          onPress={onClaimVerification}
+          contentStyle={styles.verifyBtn}
+        >
+          <Text style={styles.verifyLabel}>{CLAIM_VERIFY_CTA}</Text>
+        </AnimatedButton>
+      ) : null}
     </View>
   );
 }
@@ -763,6 +788,20 @@ const styles = StyleSheet.create({
   flipLabel: {
     color: FOCAL.goldInk,
     fontSize: 14,
+    fontWeight: '800',
+  },
+  verifyBtn: {
+    minHeight: 40,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    borderColor: FOCAL.neonJade,
+    backgroundColor: FOCAL.mistJade,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verifyLabel: {
+    color: FOCAL.jadeInk,
+    fontSize: 13,
     fontWeight: '800',
   },
 });

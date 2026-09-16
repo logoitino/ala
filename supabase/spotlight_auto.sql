@@ -445,6 +445,7 @@ begin
       from public.reels r
       join public.players p on p.id = r.player_id
       where r.tag_status = 'confirmed'
+        and public.athlete_is_varsity_verified(p.id)
         and coalesce(r.is_removed, false) = false
         and coalesce(r.is_vault_only, false) = false
         and coalesce(r.is_flagged, false) = false

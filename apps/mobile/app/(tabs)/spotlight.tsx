@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -12,6 +12,7 @@ import {
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { SpotlightAwardCard } from '@/components/Spotlight/SpotlightAwardCard';
 import { SpotlightModal } from '@/components/Spotlight/SpotlightModal';
+import { ReelViewModal } from '@/components/Reels/ReelViewModal';
 import { RuntimePaused } from '@/components/RuntimePaused';
 import { TabScreen } from '@/components/TabScreen';
 import { MaloTipModal } from '@/components/TipSheetModal';
@@ -19,16 +20,19 @@ import { EmptyState } from '@/components/UI/EmptyState';
 import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
+import { displayValue } from '@/data/players';
+import type { HighlightClip } from '@/data/highlights';
 import { useRoster } from '@/hooks/useRoster';
 import { useSpotlightBoard } from '@/hooks/useSpotlightBoard';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
+import { isAuraUuid } from '@/lib/aura';
 import { userProfileHref } from '@/lib/navigation';
 import { TAB_ACCENTS, FOCAL } from '@/theme/motion';
 import type { Player, SpotlightAward } from '@/types/database';
 
 /**
  * @purpose Fan-bar Spotlight tab: reopen Player of the Week/Month after the Highlights launch popup is dismissed.
- * @sideEffects `useSpotlightBoard` on focus; `SpotlightModal` replay; `MaloTipModal` PaymentSheet; `useSurfaceUsage` dwell / taps.
+ * @sideEffects `useSpotlightBoard` on focus; `SpotlightModal` replay; `ReelViewModal` for Watch Full Highlight; `MaloTipModal` PaymentSheet; `useSurfaceUsage` dwell / taps.
  */
 export default function SpotlightTab() {
   const router = useRouter();
@@ -39,7 +43,12 @@ export default function SpotlightTab() {
   const { onScroll, trackFeature } = useSurfaceUsage('spotlight');
   const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState<SpotlightAward | null>(null);
+  const [watchClip, setWatchClip] = useState<HighlightClip | null>(null);
   const [tipTarget, setTipTarget] = useState<{ player: Player; reelId?: string } | null>(null);
+  const watchPlayer = useMemo(
+    () => (watchClip?.playerId ? players.find((player) => player.id === watchClip.playerId) ?? null : null),
+    [players, watchClip?.playerId],
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -130,14 +139,40 @@ export default function SpotlightTab() {
             },
           });
         }}
-        onWatch={(_reelId, playerId) => {
-          const id = playerId || selected?.player_id;
+        onWatch={(reelId, playerId) => {
+          const award = selected;
           setSelected(null);
+          const videoUrl = award?.video_url?.trim();
+          const id = [playerId, award?.player?.id, award?.player_id].find(
+            (value): value is string => typeof value === 'string' && isAuraUuid(value),
+          );
+          if (videoUrl) {
+            setWatchClip({
+              id: reelId || award?.reel_id || award?.id || 'spotlight-clip',
+              athleteName: displayValue(award?.player?.name, 'Spotlight athlete'),
+              school: award?.school_name ?? '',
+              tag: award?.headline ?? 'Spotlight',
+              videoUrl,
+              sekiPlay: true,
+              playerId: id ?? null,
+            });
+            return;
+          }
           if (id) {
             setTimeout(() => router.push(userProfileHref(id)), 280);
             return;
           }
           setTimeout(() => router.push('/'), 280);
+        }}
+      />
+      <ReelViewModal
+        clips={watchClip ? [watchClip] : []}
+        initialClipId={watchClip?.id ?? null}
+        player={watchPlayer}
+        onClose={() => setWatchClip(null)}
+        onOpenAthlete={(nextId) => {
+          setWatchClip(null);
+          if (isAuraUuid(nextId)) router.push(userProfileHref(nextId));
         }}
       />
       <MaloTipModal

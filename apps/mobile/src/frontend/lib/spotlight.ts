@@ -48,6 +48,17 @@ function asText(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+/**
+ * @purpose `players.id` only. Never invent `spotlight-{award.id}` — that string is not a UUID and `/user/[id]` 400s Postgres.
+ */
+function asPlayerId(...candidates: unknown[]): string {
+  for (const value of candidates) {
+    const text = asText(value);
+    if (isAuraUuid(text)) return text;
+  }
+  return '';
+}
+
 function asPeriod(value: unknown): SpotlightPeriodKind {
   const raw = String(value ?? '').toLowerCase();
   if (raw.includes('year')) return 'year';
@@ -93,7 +104,8 @@ export function parseSpotlightAward(raw: unknown): SpotlightAward | null {
   const row = raw as Record<string, unknown>;
   const id = asText(row.id);
   const player = parsePlayer(row.player) ?? parsePlayer(row.players);
-  const player_id = asText(row.player_id) || asText(row.athlete_id) || player?.id || `spotlight-${id}`;
+  // `athlete_id` is `profiles.id`, not `players.id` — do not treat it as a roster key.
+  const player_id = asPlayerId(row.player_id, player?.id);
   if (!id) return null;
   const period_kind = asPeriod(row.period_kind ?? row.award_type);
   return {
@@ -162,6 +174,7 @@ export function hydrateSpotlightPlayer(award: SpotlightAward, roster: Player[]):
   if (!live) return award;
   return {
     ...award,
+    player_id: live.id,
     player: { ...award.player, ...live },
     school_name: award.school_name || live.school_name,
   };
@@ -215,23 +228,32 @@ async function attachReelVideos(awards: SpotlightAward[]): Promise<SpotlightAwar
   const ids = [
     ...new Set(
       awards
-        .filter((award) => !award.video_url && award.reel_id && isAuraUuid(award.reel_id))
+        .filter(
+          (award) =>
+            Boolean(award.reel_id && isAuraUuid(award.reel_id)) &&
+            (!award.video_url || !isAuraUuid(award.player_id)),
+        )
         .map((award) => award.reel_id as string),
     ),
   ];
   if (ids.length === 0 || !isSupabaseConfigured) return awards;
 
-  const { data, error } = await supabase.from('reels').select('id, video_url').in('id', ids);
+  const { data, error } = await supabase.from('reels').select('id, video_url, player_id').in('id', ids);
   if (error || !Array.isArray(data)) return awards;
-  const urls = new Map(
-    data
-      .filter((row): row is { id: string; video_url: string } => Boolean(row?.id && row?.video_url))
-      .map((row) => [row.id, row.video_url]),
-  );
+  const clips = new Map<string, { video_url: string | null; player_id: string | null }>();
+  for (const row of data) {
+    if (!row?.id) continue;
+    clips.set(row.id, {
+      video_url: row.video_url ?? null,
+      player_id: row.player_id ?? null,
+    });
+  }
   return awards.map((award) => {
-    if (award.video_url || !award.reel_id) return award;
-    const video_url = urls.get(award.reel_id);
-    return video_url ? { ...award, video_url } : award;
+    const clip = award.reel_id ? clips.get(award.reel_id) : undefined;
+    const player_id = asPlayerId(award.player_id, clip?.player_id);
+    const video_url = award.video_url || clip?.video_url || null;
+    if (player_id === award.player_id && video_url === award.video_url) return award;
+    return { ...award, player_id, video_url };
   });
 }
 
@@ -269,7 +291,7 @@ export async function fetchSpotlightBoard(roster: Player[] = []): Promise<Spotli
   }
 
   const withVideo = await attachReelVideos(merged);
-  const board = withVideo.map(withDemoVideo);
+  const board = withVideo.map((award) => withDemoVideo(hydrateSpotlightPlayer(award, roster)));
   if (board.length === 0) return [withDemoVideo(hydrateSpotlightPlayer(demoSpotlightAward(roster), roster))];
   return board;
 }

@@ -18,6 +18,11 @@ alter table public.schools_and_teams add column if not exists division text not 
 alter table public.schools_and_teams add column if not exists region text not null default 'UT';
 alter table public.schools_and_teams add column if not exists city text not null default '';
 alter table public.schools_and_teams add column if not exists created_at timestamptz not null default now();
+alter table public.schools_and_teams add column if not exists team_code text;
+
+create unique index if not exists schools_and_teams_team_code_key
+  on public.schools_and_teams (upper(btrim(team_code)))
+  where team_code is not null and btrim(team_code) <> '';
 
 create unique index if not exists schools_and_teams_name_key on public.schools_and_teams (name);
 
@@ -40,6 +45,17 @@ on conflict (id) do update set
   division = excluded.division,
   region = excluded.region,
   city = excluded.city;
+
+update public.schools_and_teams set team_code = 'WSTLK-2026' where id = 'a1000000-0000-4000-8000-000000000001' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'LPKHS-2026' where id = 'a1000000-0000-4000-8000-000000000002' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'ALAHS-2026' where id = 'a1000000-0000-4000-8000-000000000003' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'SKYRG-2026' where id = 'a1000000-0000-4000-8000-000000000004' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'AFORK-2026' where id = 'a1000000-0000-4000-8000-000000000005' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'TIMP-2026' where id = 'a1000000-0000-4000-8000-000000000006' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'BYU-2026' where id = 'a1000000-0000-4000-8000-000000000011' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'UTAH-2026' where id = 'a1000000-0000-4000-8000-000000000012' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'USU-2026' where id = 'a1000000-0000-4000-8000-000000000013' and coalesce(team_code, '') = '';
+update public.schools_and_teams set team_code = 'WEBER-2026' where id = 'a1000000-0000-4000-8000-000000000014' and coalesce(team_code, '') = '';
 
 alter table public.profiles add column if not exists school_id uuid references public.schools_and_teams (id) on delete set null;
 alter table public.profiles add column if not exists athlete_division text;

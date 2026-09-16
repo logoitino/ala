@@ -2,7 +2,35 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-09-16
+
+### Spotlight Watch no longer 400s athlete sheet
+
+- Seeded `spotlight_awards` rows can have a null `player_id`. The parser used to invent `spotlight-{award.id}` and **Watch Full Highlight** on the Spotlight tab pushed `/user/{that string}`. Postgres then returned `invalid input syntax for type uuid`. Watch now opens the clip; `/user/[id]` only queries real `players.id` UUIDs.
+
+### Share & Fund ⚡ QR flyer
+
+- Athlete Profile and Locker Room Wishlist cards open `ShareQrModal`: Obsidian canvas, neon-jade QR for `https://tapuai.app/gift/{handle}` (`react-native-qrcode-svg`).
+- **Save QR Image to Camera Roll** (`expo-media-library` `Asset.create`), **Copy Web Tipping Link** (`expo-clipboard` + Success haptic), **Share via SMS / Social** (`Share.share`).
+- Expo route `/gift/[handle]` is the in-app landing for that URL.
+
+### Team Code Athlete Verification (Varsity)
+
+- Claiming athlete + school stays easy (`RoleSwitcherModal` **Claim athlete profile**). `add_user_role('athlete')` no longer sets `is_verified`.
+- **Claim School Verification ⚡** (`VerifyAthleteModal`): team code (`WSTLK-RUG-2026`) or coach/parent request. `profiles.verification_status` = `unverified` \| `pending` \| `verified`.
+- Viewers see neon jade **⚡ VERIFIED VARSITY** (`VarsityBadge`) on the hero name and 3D trading card; otherwise SCHOOL CLAIMED / Not verified yet or ⏳ VARSITY PENDING. Highlights stay public while waiting.
+- Player of the Week / Spotlight auto-elect requires Varsity (`athlete_is_varsity_verified`). Incremental: `supabase/athlete_verification.sql`.
+
+### Legal Terms & NIL Compliance sheet
+
+- Profile Settings → **Terms of Service & NIL Compliance 📜** (`LegalModal`): ToS/Privacy summary, High School NIL disclaimer (Mālo independent of performance; no school-trademark license), Minor Safety & Parental Authorization.
+- Mandatory `LegalAckToggle` on **Apply for Athlete Verification** and **Connect Bank Account**. Stamps `profiles.legal_terms_accepted_at` (`supabase/legal_terms_ack.sql`). Connect onboarding returns 403 without it.
+
 ## 2026-09-15
+
+### Expo Go iOS Simulator — Record no longer aborts
+
+- Upload **Record** skipped `launchCameraAsync` on iOS Simulator (`UIImagePickerController setMediaTypes:` abort in Expo Go 57). Use **Library** (PHPicker) or a physical device.
 
 ### Clean Profile hierarchy
 

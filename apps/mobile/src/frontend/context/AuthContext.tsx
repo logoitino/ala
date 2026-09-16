@@ -77,7 +77,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 /**
  * @purpose Session, guest browse markers, Soft-Wall auth (Apple / Google / Magic Link), dual Fan/Athlete, Studio unlock.
- * @returns Auth bag including `isGuest`, `roles`, `activeRole`, sign-in helpers, and Studio flags.
+ * @returns Auth bag including `isGuest`, `roles`, `activeRole`, `isVerified` (Varsity, not athlete claim), sign-in helpers, and Studio flags.
  * @sideEffects Supabase Auth + `profiles`; AsyncStorage guest/dev/studio keys; deep-link session recovery.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -293,7 +293,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAthlete = roles.includes('athlete');
   const isAdmin = studioUnlocked || isAdminAccess({ role, roles, profile });
   const isGuest = !session;
-  const isVerified = Boolean(profile?.is_verified) || isAthlete;
+  const isVerified = Boolean(profile?.is_verified);
   const canReceiveTips = isAthlete;
   const activeRole: 'fan' | 'athlete' = useMemo(() => {
     if (!isAthlete) return 'fan';
@@ -317,7 +317,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: newRole === 'admin' ? 'admin' : newRole === 'athlete' ? 'athlete' : current.role,
           is_admin: newRole === 'admin' ? true : current.is_admin,
           active_role: newRole === 'athlete' ? 'athlete' : current.active_role,
-          is_verified: newRole === 'athlete' ? true : current.is_verified,
         };
       });
       const remote = await addUserRoleRemote(newRole);
@@ -330,7 +329,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 role: newRole === 'admin' ? 'admin' : newRole === 'athlete' ? 'athlete' : current.role,
                 is_admin: newRole === 'admin' ? true : current.is_admin,
                 active_role: newRole === 'athlete' ? 'athlete' : current.active_role,
-                is_verified: newRole === 'athlete' ? true : current.is_verified,
               }
             : current,
         );

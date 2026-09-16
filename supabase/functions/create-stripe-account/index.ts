@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
     });
     const { data: profile } = await admin
       .from('profiles')
-      .select('id, stripe_connect_id')
+      .select('id, stripe_connect_id, legal_terms_accepted_at, legal_terms_version')
       .eq('user_id', authData.user.id)
       .maybeSingle();
 
@@ -102,6 +102,10 @@ Deno.serve(async (req) => {
       typeof profile?.stripe_connect_id === 'string' && profile.stripe_connect_id.trim()
         ? profile.stripe_connect_id.trim()
         : null;
+
+    if (mode === 'onboarding' && !storedAccountId && !profile?.legal_terms_accepted_at) {
+      return json({ error: 'Agree to Terms of Service & NIL Compliance before connecting a bank.' }, 403);
+    }
 
     if ((mode === 'dashboard' || mode === 'status') && !storedAccountId) {
       return json({ error: 'No Stripe Express account is linked to this athlete yet.' }, 400);

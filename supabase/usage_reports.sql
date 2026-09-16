@@ -59,7 +59,7 @@ as $$
     'audience', jsonb_build_object(
       'profiles', (select count(*)::int from public.profiles),
       'athletes', (select count(*)::int from public.players),
-      'verified', (select count(*)::int from public.profiles where coalesce(is_verified_athlete, false) = true or role = 'athlete'),
+      'verified', (select count(*)::int from public.profiles where coalesce(is_verified, false) = true or coalesce(verification_status, '') = 'verified'),
       'admins', (select count(*)::int from public.profiles where coalesce(is_admin, false) = true),
       'schools', (select count(*)::int from public.schools_and_teams),
       'pending_verify', (select count(*)::int from public.verification_requests where status = 'pending')

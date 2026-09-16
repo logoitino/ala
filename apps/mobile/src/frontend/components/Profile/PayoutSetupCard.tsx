@@ -1,19 +1,28 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useState } from 'react';
 
+import { LegalAckToggle, LegalModal } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { cardShadow, colors, radii } from '@/constants/theme';
+import { useLegalAck } from '@/hooks/useLegalAck';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 
 /**
  * @purpose Athlete payout callout: Connect Express bank onboarding or Express dashboard.
  * @returns Setup card when onboarding is incomplete; **Payouts Active ✅** plus manage action when complete.
- * @sideEffects `useStripeConnect` → JWT Edge Function `create-stripe-account` (never mint Account Links or `sk_` in `src/frontend/`), `WebBrowser.openAuthSessionAsync`. Medium haptic on press.
+ * @sideEffects `useStripeConnect` → JWT Edge Function `create-stripe-account` (never mint Account Links or `sk_` in `src/frontend/`), `WebBrowser.openAuthSessionAsync`. Medium haptic on press. Legal ack required before first Connect.
  */
 export function PayoutSetupCard() {
   const { createStripeExpressAccount, busy, stripeOnboardingComplete, payoutsEnabled } = useStripeConnect();
+  const { accepted, accept } = useLegalAck();
+  const [legalOpen, setLegalOpen] = useState(false);
 
   const onPress = () => {
+    if (!stripeOnboardingComplete && !accepted) {
+      Alert.alert('Terms required', 'Agree to Terms of Service & NIL Compliance before connecting a bank.');
+      return;
+    }
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch {
@@ -57,12 +66,20 @@ export function PayoutSetupCard() {
     <View style={styles.card} accessibilityRole="summary">
       <Text style={styles.title}>Set Up Payouts ⚡</Text>
       <Text style={styles.lede}>Receive Mālo Tips & Subscription Direct Deposits</Text>
+      <LegalAckToggle
+        checked={accepted}
+        disabled={accepted}
+        onCheckedChange={(next) => {
+          if (next) void accept();
+        }}
+        onOpenTerms={() => setLegalOpen(true)}
+      />
       <AnimatedButton
         accessibilityLabel="Connect bank account"
-        disabled={busy}
+        disabled={busy || !accepted}
         haptic="none"
         onPress={onPress}
-        contentStyle={[styles.connectBtn, busy && styles.busy]}
+        contentStyle={[styles.connectBtn, (busy || !accepted) && styles.busy]}
       >
         {busy ? (
           <ActivityIndicator color={colors.onAccent} />
@@ -70,6 +87,7 @@ export function PayoutSetupCard() {
           <Text style={styles.connectLabel}>Connect Bank Account</Text>
         )}
       </AnimatedButton>
+      <LegalModal visible={legalOpen} requireAck onClose={() => setLegalOpen(false)} />
     </View>
   );
 }

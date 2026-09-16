@@ -63,7 +63,7 @@ function playSpotlight(player: VideoPlayer) {
  * @param onDismiss Launch popup writes AsyncStorage seen; board replay just closes.
  * @param replay When true, the close control is **Close** (Spotlight tab).
  * @param onSupport Opens the Mālo tip sheet for the spotlight athlete.
- * @param onWatch Jumps the Highlights ⚡ feed to the winning clip.
+ * @param onWatch Plays the winning clip (Home jumps the feed; Spotlight tab opens `ReelViewModal`).
  * @returns Modal over Highlights. Stays mounted after hide so `expo-video` can release without `pause()` on a dead native object.
  * @sideEffects `expo-video` looped muted preview; haptics on CTAs.
  */

@@ -61,6 +61,14 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 
 ---
 
+## 4b. Expo Go SIGABRT on iOS Simulator (`UIImagePickerController setMediaTypes:`)
+
+**Cause:** Upload **Record** opens the legacy camera picker with `mediaTypes: videos`. The Simulator has no `public.movie` camera types, so UIKit aborts the whole Expo Go process.
+
+**Fix:** Reloaded Metro with the current `UploadVideoModal` — Record shows an alert on Simulator. Use **Library**, or Expo Go on a phone. Do not tap Record on Simulator with an older JS bundle.
+
+---
+
 ## 5. Upload fails
 
 **Cause:** Missing Storage bucket `game_highlights`, or upload without a tagged player / active game / caption.

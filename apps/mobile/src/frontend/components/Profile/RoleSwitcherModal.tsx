@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { TeamSearchField } from '@/components/Profile/TeamSearchField';
+import { LegalAckToggle, LegalModal } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -33,6 +34,7 @@ import {
 } from '@/data/teams';
 import { activeSportNames } from '@/data/sports';
 import { SPRING_CARD } from '@/theme/motion';
+import { useLegalAck } from '@/hooks/useLegalAck';
 
 const SHEET_OFF = 720;
 
@@ -54,7 +56,7 @@ function fireMediumHaptic() {
  * @param visible Opens the Reanimated bottom sheet.
  * @param onClose Dismiss after backdrop tap or a successful conversion.
  * @returns Modal bottom sheet over an `expo-blur` backdrop.
- * @sideEffects `search_schools_and_teams`; `add_user_role` + `profiles.school_id` / `athlete_division`; Medium `impactAsync`; Aura toast on unlock.
+ * @sideEffects `search_schools_and_teams`; `add_user_role` + `profiles.school_id` / `athlete_division`; Medium `impactAsync`; Aura toast on unlock; legal ack required before claiming a roster (Varsity is a later team-code step).
  */
 export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) {
   const insets = useSafeAreaInsets();
@@ -66,6 +68,8 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
     (item) => ({ id: item, label: item }),
   );
   const { showToast } = useCelebration();
+  const { accepted: legalAccepted, accept: acceptLegal } = useLegalAck();
+  const [legalOpen, setLegalOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [applying, setApplying] = useState(false);
   const [teamQuery, setTeamQuery] = useState('');
@@ -154,6 +158,10 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
 
   const onApply = async () => {
     if (applying) return;
+    if (!legalAccepted) {
+      showToast('Agree to Terms of Service & NIL Compliance first.');
+      return;
+    }
     if (!team || !sport || !classYear || !jersey.trim() || !position.trim()) {
       showToast('Pick a team, sport, number, position, and class year.');
       return;
@@ -168,7 +176,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
         position: position.trim(),
         classYear,
       });
-      showToast(isAthlete ? 'Roster saved 🏆' : 'Athlete Mode unlocked 🏆');
+      showToast(isAthlete ? 'Roster saved 🏆' : 'School claimed 🏆 Get Varsity verified to unlock Player of the Week');
       dismiss();
     } finally {
       setApplying(false);
@@ -195,8 +203,8 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
           <Text style={styles.kicker}>Account Capability</Text>
           <Text style={styles.title}>Roles on this account</Text>
           <Text style={styles.blurb}>
-            Fan is the base. Unlock Athlete with the same roster flow for High School and NCAA — then receive Mālo and
-            host a Subscriber Vault.
+            Fan is the base. Claim a High School or NCAA roster so fans can find you — Varsity verification (team code)
+            is a later glow, not a gate. Highlights stay public while you wait.
           </Text>
           <ScrollView
             keyboardShouldPersistTaps="handled"
@@ -231,8 +239,9 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
             )}
           </View>
           <Text style={styles.cardBody}>
-            Claim a High School or NCAA roster, receive Mālo tips, set up Stripe Express payouts, and host a $
-            {live.catalog.exclusiveDollars.toFixed(2)}/mo Subscriber Vault 🔒.
+            Claim a High School or NCAA roster, receive Mālo tips, and host a $
+            {live.catalog.exclusiveDollars.toFixed(2)}/mo Subscriber Vault 🔒. School claim is not Varsity — fans will
+            see Not verified yet until a team code or coach/parent approval.
           </Text>
           {savedTeam ? (
             <View style={styles.teamChip} accessibilityRole="summary">
@@ -336,21 +345,31 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
         ) : null}
 
         {needsRoster ? (
-          <AnimatedButton
-            accessibilityLabel={isAthlete ? 'Save athlete roster' : 'Apply / Unlock Athlete Mode'}
-            disabled={applying}
-            haptic="none"
-            onPress={() => void onApply()}
-            contentStyle={[styles.applyBtn, applying && styles.busy]}
-          >
-            {applying ? (
-              <ActivityIndicator color={colors.onAccent} />
-            ) : (
-              <Text style={styles.applyLabel}>
-                {isAthlete ? 'Save roster 🏆' : 'Apply for Athlete Verification 🏆'}
-              </Text>
-            )}
-          </AnimatedButton>
+          <>
+            <LegalAckToggle
+              checked={legalAccepted}
+              disabled={legalAccepted}
+              onCheckedChange={(next) => {
+                if (next) void acceptLegal();
+              }}
+              onOpenTerms={() => setLegalOpen(true)}
+            />
+            <AnimatedButton
+              accessibilityLabel={isAthlete ? 'Save athlete roster' : 'Claim athlete profile'}
+              disabled={applying || !legalAccepted}
+              haptic="none"
+              onPress={() => void onApply()}
+              contentStyle={[styles.applyBtn, (applying || !legalAccepted) && styles.busy]}
+            >
+              {applying ? (
+                <ActivityIndicator color={colors.onAccent} />
+              ) : (
+                <Text style={styles.applyLabel}>
+                  {isAthlete ? 'Save roster 🏆' : 'Claim athlete profile 🏆'}
+                </Text>
+              )}
+            </AnimatedButton>
+          </>
         ) : null}
           </ScrollView>
         </KeyboardAvoidingView>
@@ -361,16 +380,19 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
   if (!open && !visible) return null;
 
   return (
-    <Modal
-      animationType="none"
-      presentationStyle="overFullScreen"
-      statusBarTranslucent
-      transparent
-      visible={open}
-      onRequestClose={dismiss}
-    >
-      {body}
-    </Modal>
+    <>
+      <Modal
+        animationType="none"
+        presentationStyle="overFullScreen"
+        statusBarTranslucent
+        transparent
+        visible={open}
+        onRequestClose={dismiss}
+      >
+        {body}
+      </Modal>
+      <LegalModal visible={legalOpen} requireAck onClose={() => setLegalOpen(false)} />
+    </>
   );
 }
 

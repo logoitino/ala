@@ -7,6 +7,7 @@ import {
   type AthleteStatsBundle,
 } from '@/data/athleteStats';
 import type { AthleteCareerStat, AthleteGameLog, Player } from '@/types/database';
+import { isAuraUuid } from '@/lib/aura';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 function asPlayer(row: Player | null | undefined, fallbackId: string): Player {
@@ -50,7 +51,7 @@ export async function fetchAthleteStats(
   const id = playerId?.trim();
   if (!id) return demoAthleteStats(asPlayer(player, 'demo-athlete'));
 
-  if (!isSupabaseConfigured || id.startsWith('demo-') || id.startsWith('dev-')) {
+  if (!isSupabaseConfigured || !isAuraUuid(id) || id.startsWith('demo-') || id.startsWith('dev-')) {
     return demoAthleteStats(asPlayer(player, id));
   }
 

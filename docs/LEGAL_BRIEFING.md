@@ -47,7 +47,8 @@ Still true, maintained by hand when those flows change:
 | Target users include high-school athletes and fans | Product copy, roster, Local schools |
 | Mālo is a JWT-gated PaymentIntent (test mode today) | `useTipCheckout`, Stripe PaymentSheet |
 | Parent screen toggles `parental_consent_approved` on `players` | `app/(parent)/parent/index.tsx` |
-| Athletes can open Stripe Express (JWT Edge Function) | `PayoutSetupCard` / `create-stripe-account` |
+| Athletes can open Stripe Express (JWT Edge Function) | `PayoutSetupCard` / `create-stripe-account` — gated on `legal_terms_accepted_at` |
+| In-app Terms / NIL / minor-safety sheet | `LegalModal` + `LEGAL_TERMS_VERSION`; Profile hamburger |
 | Custodial payouts require JWT; destination is `profiles.stripe_connect_id` | `createPayout.ts` |
 | Exclusive access is a **one-time PaymentIntent**, not a Stripe Subscription | `docs/SCHEMA.md` |
 | Cheer polls are vote counts only — no stake, no payout | `cast_cheer_vote` |

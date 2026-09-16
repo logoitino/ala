@@ -23,6 +23,8 @@ export type Profile = {
   full_name: string;
   username?: string | null;
   is_verified: boolean;
+  /** `unverified` | `pending` | `verified`. Claiming a school does not set verified. */
+  verification_status?: 'unverified' | 'pending' | 'verified' | string | null;
   spirit_points: number;
   aura_points?: number;
   current_tier?: number | null;
@@ -35,6 +37,9 @@ export type Profile = {
   stripe_connect_id?: string | null;
   stripe_onboarding_complete?: boolean;
   payouts_enabled?: boolean;
+  /** ISO time the current Terms / NIL / minor-safety version was acknowledged. */
+  legal_terms_accepted_at?: string | null;
+  legal_terms_version?: string | null;
   school_id?: string | null;
   athlete_division?: string | null;
   athlete_sport?: string | null;
@@ -238,6 +243,10 @@ export type VerificationRequest = {
   full_name: string;
   status: string;
   notes: string | null;
+  requester_user_id?: string | null;
+  school_id?: string | null;
+  team_code?: string | null;
+  created_at?: string;
 };
 
 export type Disbursement = {
@@ -464,6 +473,7 @@ export type SchoolAndTeam = {
   division: string;
   region: string;
   city?: string | null;
+  team_code?: string | null;
   created_at?: string;
 };
 
@@ -665,6 +675,18 @@ export type Database = {
       add_user_role: {
         Args: { new_role: string };
         Returns: string[];
+      };
+      redeem_team_code: {
+        Args: { raw_code: string };
+        Returns: Record<string, unknown>;
+      };
+      request_athlete_verification: {
+        Args: { request_notes?: string | null };
+        Returns: Record<string, unknown>;
+      };
+      athlete_is_varsity_verified: {
+        Args: { target_player_id: string };
+        Returns: boolean;
       };
       get_aura_tier: {
         Args: { points: number };
