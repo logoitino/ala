@@ -50,6 +50,9 @@ alter table public.profiles add column if not exists payouts_enabled boolean not
 alter table public.profiles add column if not exists active_role text not null default 'fan';
 alter table public.profiles add column if not exists legal_terms_accepted_at timestamptz;
 alter table public.profiles add column if not exists legal_terms_version text;
+alter table public.profiles add column if not exists avatar_url text;
+alter table public.profiles add column if not exists is_verified boolean not null default false;
+alter table public.profiles add column if not exists is_verified_athlete boolean not null default false;
 
 create table if not exists public.athlete_career_stats (
   player_id uuid primary key references public.players (id) on delete cascade,

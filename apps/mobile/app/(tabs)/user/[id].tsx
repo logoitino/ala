@@ -1,13 +1,14 @@
-import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
-import { ScreenShell } from '@/components/ScreenShell';
+import { TabScreen } from '@/components/TabScreen';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { useOptionalUploadSheet } from '@/context/UploadSheetContext';
 import { markExclusiveClips } from '@/data/exclusive';
 import { displayValue, type Player } from '@/data/players';
@@ -48,8 +49,8 @@ function mergeUploadedReel(
 }
 
 /**
- * @purpose Public athlete profile from any name tap: 3D trading card, Highlights ⚡ / Stats 📊 / Vault 🔒.
- * @sideEffects Loads player + reels + career stats; Stripe PaymentSheet for Vault; `add_user_aura` +100. Ignores non-UUID ids (Spotlight used to pass `spotlight-{award.id}`).
+ * @purpose Public athlete sheet from any name tap — same `AthleteProfileView` as the Profile tab (back instead of hamburger).
+ * @sideEffects Loads player + reels + career stats + claimed avatar; Stripe PaymentSheet for Mālo / exclusive; `add_user_aura` +100. Ignores non-UUID ids (Spotlight used to pass `spotlight-{award.id}`).
  */
 export default function UserAthleteProfileScreen() {
   const router = useRouter();
@@ -62,12 +63,14 @@ export default function UserAthleteProfileScreen() {
   const [error, setError] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<'unverified' | 'pending' | 'verified'>('unverified');
   const [schoolClaimed, setSchoolClaimed] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { stats, loading: statsLoading } = useAthleteStats(playerId, player);
   const { subscribed, grant } = useAthleteSubscription(playerId);
   const { startCheckout, busy } = useTipCheckout();
   const { live } = useAppRuntime();
   const { isAthlete } = useAuth();
-  const { players: rosterPlayers } = useRoster();
+  const { requireAuth } = useSoftWall();
+  const { players: rosterPlayers, applyBackerCount } = useRoster();
   const uploadSheet = useOptionalUploadSheet();
 
   const load = useCallback(async () => {
@@ -105,6 +108,7 @@ export default function UserAthleteProfileScreen() {
     const verification = await fetchPlayerVerification(playerId, nextPlayer.name);
     setVerificationStatus(verification.status);
     setSchoolClaimed(verification.schoolClaimed);
+    setAvatarUrl(verification.avatarUrl);
     setLoading(false);
   }, [playerId, rawId, uploadSheet?.lastUploaded]);
 
@@ -140,15 +144,43 @@ export default function UserAthleteProfileScreen() {
     [player, reels],
   );
 
+  const dropMalo = () => {
+    if (!player) return;
+    const amount = live.catalog.maloAmounts[0] ?? 5;
+    requireAuth({
+      kind: 'malo',
+      athleteName: player.name,
+      athleteId: player.id,
+      resume: () => {
+        void startCheckout({
+          player,
+          tipAmount: amount,
+          coverFees: false,
+          onBacked: (nextCount) => {
+            applyBackerCount(player.id, nextCount);
+            setPlayer((current) => (current ? { ...current, backer_count: nextCount } : current));
+          },
+        });
+      },
+    });
+  };
+
   const unlockExclusive = () => {
     if (!player) return;
-    void startCheckout({
-      player,
-      tipAmount: live.catalog.exclusiveDollars,
-      coverFees: false,
-      auraPoints: live.catalog.exclusiveAura,
-      skipBacker: true,
-      onPaid: grant,
+    requireAuth({
+      kind: 'signin',
+      athleteName: player.name,
+      athleteId: player.id,
+      resume: () => {
+        void startCheckout({
+          player,
+          tipAmount: live.catalog.exclusiveDollars,
+          coverFees: false,
+          auraPoints: live.catalog.exclusiveAura,
+          skipBacker: true,
+          onPaid: grant,
+        });
+      },
     });
   };
 
@@ -170,18 +202,18 @@ export default function UserAthleteProfileScreen() {
 
   if (loading) {
     return (
-      <ScreenShell style={styles.tabInset}>
+      <TabScreen>
         <View style={styles.missing}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.missingText}>Loading athlete…</Text>
         </View>
-      </ScreenShell>
+      </TabScreen>
     );
   }
 
   if (error || !player) {
     return (
-      <ScreenShell style={styles.tabInset}>
+      <TabScreen>
         <View style={styles.missing}>
           <Text style={styles.missingTitle}>Couldn’t load athlete.</Text>
           <Text style={styles.missingText}>{error ?? 'Athlete not found.'}</Text>
@@ -193,7 +225,7 @@ export default function UserAthleteProfileScreen() {
             <Text style={styles.retryLabel}>Try again</Text>
           </Pressable>
         </View>
-      </ScreenShell>
+      </TabScreen>
     );
   }
 
@@ -203,8 +235,7 @@ export default function UserAthleteProfileScreen() {
     .join(' · ');
 
   return (
-    <ScreenShell style={styles.tabInset}>
-      <Stack.Screen options={{ title: displayName }} />
+    <TabScreen>
       <ScrollView contentContainerStyle={styles.content}>
         <AthleteProfileView
           player={player}
@@ -230,22 +261,27 @@ export default function UserAthleteProfileScreen() {
           showClaimBadges={isAthlete}
           verificationStatus={verificationStatus}
           schoolClaimed={schoolClaimed}
+          avatarUrl={avatarUrl}
+          onBack={() => router.back()}
+          onDropMalo={dropMalo}
+          onSubscribe={unlockExclusive}
           onOpenAthlete={(nextId) => router.push(userProfileHref(nextId))}
           onHypeChange={applyHype}
+          onBacked={(nextCount) => {
+            applyBackerCount(player.id, nextCount);
+            setPlayer((current) => (current ? { ...current, backer_count: nextCount } : current));
+          }}
           onUnlockVault={unlockExclusive}
         />
       </ScrollView>
-    </ScreenShell>
+    </TabScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  tabInset: {
-    paddingBottom: 8,
-  },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 4,
     paddingBottom: 120,
     gap: 12,
   },

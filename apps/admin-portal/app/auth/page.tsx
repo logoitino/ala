@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { Panel, PortalShell, StatCard } from '@/components/PortalShell';
 import { fetchSoftWallOversight } from '@/lib/softWall';
 
@@ -76,6 +78,17 @@ export default async function SoftWallAuthPage() {
             </li>
             <li>Operator stays Features-gated — keep Operator console Off until you want sideline monetization.</li>
           </ol>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link href="/features" className="rounded-full bg-[var(--jade)] px-4 py-2 text-sm font-extrabold text-white">
+              Features · pause Mālo / Crew / Wishlist
+            </Link>
+            <Link
+              href="/people"
+              className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
+            >
+              People
+            </Link>
+          </div>
         </Panel>
       </div>
     </PortalShell>

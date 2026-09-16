@@ -37,6 +37,7 @@
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-canvas": "^0.1.40",
+    "react-native-compressor": "^2.0.3",
     "react-native-confetti-cannon": "^1.5.2",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-qrcode-svg": "^6.3.24",

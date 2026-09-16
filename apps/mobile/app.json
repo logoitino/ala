@@ -37,7 +37,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Tapua'i to pick a Seki play from your camera roll.",
+          "photosPermission": "Allow Tapua'i to pick a Seki play or profile photo from your camera roll.",
           "cameraPermission": "Allow Tapua'i to record a Seki play.",
           "microphonePermission": "Allow Tapua'i to record audio with your clip."
         }
@@ -58,7 +58,8 @@
         }
       ],
       "expo-video",
-      "expo-web-browser"
+      "expo-web-browser",
+      "react-native-compressor"
     ],
     "experiments": {
       "typedRoutes": true

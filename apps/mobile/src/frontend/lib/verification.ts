@@ -168,24 +168,26 @@ export async function requestAthleteVerification(notes?: string): Promise<Redeem
 
 /**
  * @purpose Load the claimed-profile Varsity state for a public athlete sheet (`players.id`).
- * @sideEffects `profiles` SELECT by `player_id` then name match.
+ * @sideEffects `profiles` SELECT by `player_id` then name match (`verification_status`, `school_id`, `avatar_url`).
  */
 export async function fetchPlayerVerification(
   playerId: string,
   playerName?: string | null,
-): Promise<{ status: VerificationStatus; schoolClaimed: boolean; schoolId: string | null }> {
-  const empty = { status: 'unverified' as const, schoolClaimed: false, schoolId: null };
+): Promise<{
+  status: VerificationStatus;
+  schoolClaimed: boolean;
+  schoolId: string | null;
+  avatarUrl: string | null;
+}> {
+  const empty = { status: 'unverified' as const, schoolClaimed: false, schoolId: null, avatarUrl: null };
   if (!playerId || !isSupabaseConfigured) return empty;
-  const { data: byPlayer } = await supabase
-    .from('profiles')
-    .select('is_verified, verification_status, school_id, player_id, full_name')
-    .eq('player_id', playerId)
-    .maybeSingle();
+  const columns = 'is_verified, verification_status, school_id, player_id, full_name, avatar_url';
+  const { data: byPlayer } = await supabase.from('profiles').select(columns).eq('player_id', playerId).maybeSingle();
   let match = byPlayer;
   if (!match && playerName?.trim()) {
     const { data: byName } = await supabase
       .from('profiles')
-      .select('is_verified, verification_status, school_id, player_id, full_name')
+      .select(columns)
       .ilike('full_name', playerName.trim())
       .limit(1)
       .maybeSingle();
@@ -196,6 +198,7 @@ export async function fetchPlayerVerification(
     status: resolveVerificationStatus(match),
     schoolClaimed: Boolean(match.school_id),
     schoolId: typeof match.school_id === 'string' ? match.school_id : null,
+    avatarUrl: typeof match.avatar_url === 'string' && match.avatar_url.trim() ? match.avatar_url.trim() : null,
   };
 }
 

@@ -6,6 +6,7 @@ import { SPONSOR_TIERS } from '@/data/sponsorships';
 import { ATHLETE_CLASS_YEARS } from '@/data/teams';
 import { DAYLIGHT_THEME } from '@/constants/theme';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { APP_RUNTIME_FLAG_GROUPS } from '@tapuai/shared-types';
 
 export type AppRuntimeTabs = {
   home: boolean;
@@ -165,59 +166,19 @@ export type AppFlagGroup = {
 };
 
 /** Heavy chrome that stays draft until Publish to app. */
-export const APP_FLAG_GROUPS: AppFlagGroup[] = [
-  {
-    id: 'tabs',
-    label: 'Fan bar',
-    hint: 'Hide a tab for a campaign. Draft until you hit Publish to app.',
-    flags: [
-      { path: 'tabs.home', label: 'Home', hint: 'Highlights ⚡ feed' },
-      { path: 'tabs.local', label: 'Local', hint: 'Matches, polls, boosters' },
-      { path: 'tabs.spotlight', label: 'Spotlight', hint: 'Player of the Week board' },
-      { path: 'tabs.drip', label: 'Drip', hint: 'Marketplace' },
-      { path: 'tabs.profile', label: 'Profile', hint: 'Avatar hero + hamburger hub' },
-      { path: 'tabs.upload', label: 'Upload +', hint: 'Center plus on the fan bar' },
-    ],
-  },
-  {
-    id: 'buttons',
-    label: 'Hype and support',
-    hint: 'Kill a rail or checkout without shipping a new binary.',
-    flags: [
-      { path: 'buttons.seki', label: 'Seki', hint: '🤙 on Highlights ⚡' },
-      { path: 'buttons.aura', label: 'Aura', hint: '⚡ on Highlights ⚡' },
-      { path: 'buttons.flex', label: 'Flex', hint: '💪 on Highlights ⚡' },
-      { path: 'buttons.malo', label: 'Mālo', hint: 'Tip rail and Profile Drop Mālo' },
-      { path: 'buttons.more', label: 'More sheet', hint: 'Share / Save / Report' },
-      { path: 'buttons.subscribe', label: 'Subscribe', hint: 'Exclusive pass (price on Catalogs)' },
-      { path: 'buttons.crew', label: 'Join Crew', hint: 'The Crew ⚡' },
-      { path: 'buttons.vault', label: 'Vault', hint: 'Lock / Open Vault' },
-      { path: 'buttons.flashUnlock', label: 'Flash Unlock', hint: '2-hour Vault unlock' },
-      { path: 'buttons.suggest', label: 'Suggestions', hint: 'Profile + Highlights ⋯ feedback' },
-    ],
-  },
-  {
-    id: 'layouts',
-    label: 'Boards and portals',
-    hint: 'Park a Local board or a role HQ without deleting data.',
-    flags: [
-      { path: 'layouts.liveMatches', label: 'Live Matches', hint: 'Local match list' },
-      { path: 'layouts.cheerPolls', label: 'School Polls', hint: 'Cheer matchups' },
-      { path: 'layouts.topBoosters', label: 'Top Boosters', hint: 'Local sponsorship rail' },
-      { path: 'layouts.sponsorshipModal', label: 'Sponsorship checkout', hint: 'Booster PaymentSheet' },
-      { path: 'layouts.spotlightModal', label: 'Player of the Week modal', hint: 'Home launch Spotlight' },
-      { path: 'layouts.homeSearch', label: 'Home search', hint: 'Highlights ⚡ clip search' },
-      { path: 'layouts.localSearch', label: 'Local Explore', hint: 'Players, schools, sponsors' },
-      { path: 'layouts.slangGuide', label: 'Slang guide', hint: 'Mālo / Seki explainer on Home' },
-      { path: 'layouts.receipts', label: 'Receipts', hint: 'Profile Tip History & Receipts' },
-      { path: 'layouts.wishlist', label: 'Locker Room Wishlist', hint: 'Gear funding on Stats 📊' },
-      { path: 'layouts.operatorConsole', label: 'Operator console', hint: 'Paused at launch — Features on + Publish to open /operator' },
-      { path: 'layouts.parentHq', label: 'Parent HQ', hint: '/parent' },
-      { path: 'layouts.boosterHq', label: 'Booster HQ', hint: '/booster' },
-      { path: 'layouts.sponsorHq', label: 'Sponsor HQ', hint: '/sponsor' },
-    ],
-  },
-];
+export const APP_FLAG_GROUPS: AppFlagGroup[] = APP_RUNTIME_FLAG_GROUPS.filter(
+  (group): group is (typeof APP_RUNTIME_FLAG_GROUPS)[number] & { id: 'tabs' | 'buttons' | 'layouts' } =>
+    group.id === 'tabs' || group.id === 'buttons' || group.id === 'layouts',
+).map((group) => ({
+  id: group.id,
+  label: group.label,
+  hint: group.hint,
+  flags: group.flags.map((flag) => ({
+    path: flag.path as AppRuntimeFlagPath,
+    label: flag.label,
+    hint: flag.hint,
+  })),
+}));
 
 export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
   tabs: { home: true, local: true, spotlight: true, drip: true, profile: true, upload: true },

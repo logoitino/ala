@@ -1,4 +1,18 @@
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import type { Profile } from '@/types/database';
+
+/**
+ * @purpose True when this sheet is the signed-in person's claimed / named roster row — hide Join Crew, Mālo, Subscribe.
+ */
+export function isOwnAthleteSheet(
+  profile: Pick<Profile, 'player_id' | 'full_name'> | null | undefined,
+  player: { id: string; name: string } | null | undefined,
+): boolean {
+  if (!profile || !player?.id) return false;
+  if (profile.player_id && profile.player_id === player.id) return true;
+  const name = profile.full_name?.trim().toLowerCase();
+  return Boolean(name && name === player.name.trim().toLowerCase());
+}
 
 /**
  * @purpose Which roster rows are claimed (`profiles.player_id` → `players.id`) for athlete Claimed/Unclaimed badges.

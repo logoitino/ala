@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic';
  * @sideEffects profiles SELECT.
  */
 export default async function PeoplePage() {
-  const [oversight, people] = await Promise.all([fetchSoftWallOversight(), fetchPortalPeople()]);
+  const [oversight, roster] = await Promise.all([fetchSoftWallOversight(), fetchPortalPeople()]);
+  const people = roster.people;
   const fans = people.filter((row) => row.role === 'fan' && !row.is_admin);
 
   return (
@@ -24,7 +25,12 @@ export default async function PeoplePage() {
           Guests do not get a profiles row until they sign in. Approve athlete verification and grant admin on Expo{' '}
           <code className="rounded bg-emerald-50 px-1.5">/admin/people</code> — this desk is live oversight.
         </p>
-        {people.length === 0 ? (
+        {roster.error ? (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+            Could not list profiles: {roster.error}. Counts above still work. Grant admin / verify on Expo /admin/people.
+          </p>
+        ) : null}
+        {people.length === 0 && !roster.error ? (
           <p className="rounded-xl border border-dashed border-emerald-200 px-4 py-6 text-sm text-slate-500">
             No profiles yet. Soft-Wall Apple / Google / Magic Link creates the first fan row via{' '}
             <code>handle_new_auth_user</code>.
@@ -36,7 +42,17 @@ export default async function PeoplePage() {
                 <div>
                   <p className="font-extrabold">{person.full_name}</p>
                   <p className="text-sm text-slate-600">
-                    {[person.username, person.role, person.is_verified ? 'Verified' : 'Unverified', person.is_admin ? 'Admin' : '']
+                    {[
+                      person.username,
+                      person.role,
+                      person.player_id ? 'Claimed roster' : null,
+                      person.verification_status === 'verified' || person.is_verified
+                        ? '⚡ Varsity'
+                        : person.verification_status === 'pending'
+                          ? 'Varsity pending'
+                          : 'Unverified',
+                      person.is_admin ? 'Admin' : '',
+                    ]
                       .filter(Boolean)
                       .join(' · ')}
                   </p>

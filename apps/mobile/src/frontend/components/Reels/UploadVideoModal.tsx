@@ -18,6 +18,7 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import { HighlightPickerModal } from '@/components/Reels/HighlightPickerModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Constants from 'expo-constants';
@@ -32,8 +33,14 @@ import {
   SERVE_LIKE_ME_BOOST_LABEL,
   type ReelCategory,
 } from '@/data/highlights';
+import {
+  HIGHLIGHT_MAX_SECONDS,
+  HIGHLIGHT_OPTIMIZING,
+  HIGHLIGHT_TOO_LONG,
+} from '@/data/media';
 import { displayValue } from '@/data/players';
 import { gameMatchupLabel, playerTagLabel, uploadSekiPlay } from '@/lib/reels';
+import { assetDurationMs, isHighlightTooLong } from '@/services/MediaUploadService';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { telemetry } from '@/services/TelemetryManager';
 import type { Game, Player, Reel } from '@/types/database';
@@ -50,12 +57,11 @@ type PickedVideo = {
   mimeType?: string | null;
   fileName?: string | null;
   durationMs?: number | null;
+  compressed?: boolean;
 };
 
 type OpenSelect = 'game' | 'player' | null;
 type PickSource = 'library' | 'camera';
-
-const MAX_CLIP_MS = 45_000;
 
 /**
  * @purpose Detect iOS Simulator so we never open UIImagePickerController for video.
@@ -71,16 +77,11 @@ function isIosSimulator(): boolean {
 
 const IOS_SIMULATOR = isIosSimulator();
 
-/** Library uses PHPicker (no `allowsEditing`). Camera still needs the legacy picker on a phone. */
-const LIBRARY_VIDEO_OPTIONS: ImagePicker.ImagePickerOptions = {
-  mediaTypes: ['videos'],
-  allowsEditing: false,
-  quality: 1,
-};
-
 const CAMERA_VIDEO_OPTIONS: ImagePicker.ImagePickerOptions = {
-  ...LIBRARY_VIDEO_OPTIONS,
-  videoMaxDuration: 45,
+  mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+  videoMaxDuration: HIGHLIGHT_MAX_SECONDS,
+  allowsEditing: true,
+  quality: 1,
 };
 
 const NEON_JADE = '#00E676';
@@ -131,7 +132,7 @@ function ClipPreview({ uri }: { uri: string }) {
  * @param players Roster for the player tag picker.
  * @param onClose Dismiss (blocked while uploading).
  * @param onUploaded Pushes the new reel onto the active feed via `UploadSheetContext`.
- * @sideEffects ImagePicker URI + expo-video thumbnail; Storage upload with progress bar; `reels` insert including `is_vault_only` / `is_exclusive` / `category` (default public Game Play); Success haptic on Publish Highlight ⚡. iOS Simulator never calls `launchCameraAsync` (native abort).
+ * @sideEffects `HighlightPickerModal` camera roll (45s) + compressor overlay; camera URI; expo-video thumbnail; `MediaUploadService` Storage `reels/{user_id}/{timestamp}.mp4` + `reels` insert; Success haptic on Publish Highlight ⚡. iOS Simulator never calls `launchCameraAsync` (native abort).
  */
 export function UploadVideoModal({ visible, players, onClose, onUploaded }: UploadVideoModalProps) {
   const insets = useSafeAreaInsets();
@@ -148,6 +149,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const [asset, setAsset] = useState<PickedVideo | null>(null);
   const [openSelect, setOpenSelect] = useState<OpenSelect>(null);
   const [pickSource, setPickSource] = useState<PickSource | null>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -218,6 +220,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       setLoadError(null);
       setUploadError(null);
       setStatusLabel('Uploading Seki play…');
+      setLibraryOpen(false);
       setIsExclusive(false);
       setCategory(REEL_CATEGORY_GAME);
       return;
@@ -267,15 +270,16 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   }, [visible, players]);
 
   const applyPickedAsset = (source: PickSource, next: ImagePicker.ImagePickerAsset) => {
-    if (next.duration && next.duration > MAX_CLIP_MS) {
-      Alert.alert('Clip too long', 'Pick a highlight 45 seconds or shorter.');
+    if (isHighlightTooLong(next.duration)) {
+      Alert.alert('Clip too long', HIGHLIGHT_TOO_LONG);
       return;
     }
     setAsset({
       uri: next.uri,
       mimeType: next.mimeType,
       fileName: next.fileName,
-      durationMs: next.duration,
+      durationMs: assetDurationMs(next.duration),
+      compressed: false,
     });
     setPickSource(source);
     setUploadError(null);
@@ -286,14 +290,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
 
     try {
       if (source === 'library') {
-        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!permission.granted) {
-          Alert.alert('Permission needed', 'Allow photo library access to pick a Seki play.');
-          return;
-        }
-        const result = await ImagePicker.launchImageLibraryAsync(LIBRARY_VIDEO_OPTIONS);
-        if (result.canceled || !result.assets[0]) return;
-        applyPickedAsset(source, result.assets[0]);
+        setLibraryOpen(true);
         return;
       }
 
@@ -325,7 +322,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     if (!asset || !canSubmit) return;
     setUploading(true);
     setUploadError(null);
-    setStatusLabel('Reading clip…');
+    setStatusLabel(asset.compressed ? 'Uploading to Tapua\'i…' : HIGHLIGHT_OPTIMIZING);
     setProgress(0.04);
     try {
       const reel = await uploadSekiPlay({
@@ -337,6 +334,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         gameId,
         isExclusive,
         category,
+        compressed: asset.compressed,
         onProgress: setProgress,
         onStatus: setStatusLabel,
       });
@@ -652,6 +650,15 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
+      <HighlightPickerModal
+        visible={libraryOpen}
+        onClose={() => setLibraryOpen(false)}
+        onPicked={(clip) => {
+          setAsset(clip);
+          setPickSource('library');
+          setUploadError(null);
+        }}
+      />
     </Modal>
   );
 }

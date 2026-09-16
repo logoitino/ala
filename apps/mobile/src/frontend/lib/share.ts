@@ -1,18 +1,13 @@
 import { Platform, Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
-import { File, Paths } from 'expo-file-system';
-import { Asset, requestPermissionsAsync } from 'expo-media-library';
 
 import { formatGiftUrl, normalizeAthleteHandle, shareQrSubtitle } from '@/data/share';
 import { handleFromName } from '@/lib/aura';
+import type { GiftQrTarget } from '@/lib/share.types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
-export type GiftQrTarget = {
-  handle: string;
-  url: string;
-  athleteName: string;
-};
+export type { GiftQrTarget } from '@/lib/share.types';
 
 type SvgDataUrlRef = {
   toDataURL?: (callback: (data: string) => void) => void;
@@ -86,6 +81,10 @@ export async function saveGiftQrToCameraRoll(svg: SvgDataUrlRef | null, handle: 
     return;
   }
 
+  const [{ File, Paths }, { Asset, requestPermissionsAsync }] = await Promise.all([
+    import('expo-file-system'),
+    import('expo-media-library'),
+  ]);
   const file = new File(Paths.cache, `tapuai-${handle}-qr.png`);
   if (file.exists) file.delete();
   file.create();

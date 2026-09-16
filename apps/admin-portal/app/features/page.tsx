@@ -15,9 +15,11 @@ export default async function FeaturesPage() {
     <PortalShell active="/features">
       <Panel title="Features" kicker="Live chrome">
         <p className="text-sm leading-6 text-slate-600">
-          Draft Soft-Wall gates, Profile chrome (Flip card / Crew strip / tabs), and fan-bar tabs here. Publish to app
-          copies draft onto <code className="rounded bg-emerald-50 px-1.5">published</code> so Expo fans see the change.
-          Look / Catalogs / full desks remain in Expo <code className="rounded bg-emerald-50 px-1.5">/admin</code>.
+          Draft the same flags Expo <code className="rounded bg-emerald-50 px-1.5">/admin/features</code> and Look ·
+          Profile own: fan bar, hype buttons, boards, Soft-Wall-related Mālo / Crew / Wishlist / Operator, and Profile
+          chrome. Publish to app copies draft onto <code className="rounded bg-emerald-50 px-1.5">published</code> so
+          Expo fans pick it up over Realtime. Games, Drip, Sports, and catalogs still live only in Expo{' '}
+          <code className="rounded bg-emerald-50 px-1.5">/admin</code>.
         </p>
         {!runtime.configured ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">

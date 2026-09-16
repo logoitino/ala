@@ -1,6 +1,6 @@
 # Tapua'i onboarding
 
-Get a new engineer from clone to Metro (mobile) and the Next admin stub. Architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · [DOCUMENTATION.md](../DOCUMENTATION.md). Schema: [SCHEMA.md](SCHEMA.md).
+Get a new engineer from clone to Metro (mobile) and the Next admin portal. Architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · [DOCUMENTATION.md](../DOCUMENTATION.md). Schema: [SCHEMA.md](SCHEMA.md). Departments: [TEAMS.md](TEAMS.md).
 
 Expo **SDK 57**: [https://docs.expo.dev/versions/v57.0.0/](https://docs.expo.dev/versions/v57.0.0/).
 
@@ -81,7 +81,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
 
-Then `pnpm admin` → http://localhost:3001 — Overview, Soft-Wall, Profile (claimed athletes + Look chrome), Features (draft Soft-Wall + Profile flags + Publish), People (recent Soft-Wall fans).
+Then `pnpm admin` → http://localhost:3001 — Overview, Soft-Wall, Profile (claimed athletes + Look chrome **toggles**), Features (same flag catalog as Expo Features / Look + Publish to app), People (recent Soft-Wall fans, Claimed / Varsity). Use the same project URL and anon key as `apps/mobile/.env.local`. Games, Drip, Sports, and catalogs remain Expo `/admin`.
 ---
 
 ## 4. Run
@@ -103,7 +103,9 @@ pnpm admin
 
 Confirm `apps/mobile/babel.config.js` has `presets: ['babel-preset-expo']`.
 
-**iOS Simulator + Expo Go:** Highlights **Library** works. **Record** is blocked — the Simulator camera has no video types and Expo Go 57 aborts. Drag a clip into the Simulator Photos app, or use a physical iPhone.
+**iOS Simulator + Expo Go:** Highlights **Library** works. **Record** is blocked — the Simulator camera has no video types and Expo Go 57 aborts. Drag a clip into the Simulator Photos app, or use a physical iPhone. Native `react-native-compressor` needs a dev client (`npx expo prebuild`); Expo Go still uploads the original clip.
+
+After changing media buckets, run `supabase/media_upload.sql` so Storage `reels` + `avatars` and `profiles.avatar_url` exist.
 
 ---
 

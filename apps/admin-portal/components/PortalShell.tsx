@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 
 const NAV = [
   { href: '/', label: 'Overview' },
+  { href: '/reports', label: 'Reports' },
+  { href: '/money', label: 'Money' },
   { href: '/auth', label: 'Soft-Wall' },
   { href: '/profile', label: 'Profile' },
   { href: '/features', label: 'Features' },
@@ -10,7 +12,7 @@ const NAV = [
 ] as const;
 
 /**
- * @purpose Daylight shell for the Next Soft-Wall + Profile oversight portal (jade / gold, not Expo desks).
+ * @purpose Daylight shell for the Next web admin portal (Reports, Money, Soft-Wall, Features).
  */
 export function PortalShell({
   children,
@@ -27,9 +29,11 @@ export function PortalShell({
             <p className="text-[11px] font-extrabold tracking-[0.2em] text-[var(--gold)] uppercase">
               Tapua&apos;i admin portal
             </p>
-            <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Soft-Wall + Profile plane</h1>
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Web admin portal</h1>
             <p className="mt-1 max-w-xl text-sm leading-6 text-slate-600">
-              Live oversight for Soft-Wall auth, Clean Profile chrome, and Features flags. Full desks still ship in Expo{' '}
+              Reports (behavior) and Money (ledger) read the same Supabase RPCs as Expo. Features flags write{' '}
+              <code className="rounded bg-emerald-50 px-1.5 py-0.5 text-[var(--jade)]">app_runtime_config</code>. Games,
+              Drip SKUs, and catalogs still edit in Expo{' '}
               <code className="rounded bg-emerald-50 px-1.5 py-0.5 text-[var(--jade)]">/admin</code>.
             </p>
           </div>

@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,7 +15,6 @@ import { NotificationPrefsBar } from '@/components/NotificationPrefsBar';
 import { PlayerListItem } from '@/components/PlayerListItem';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TabSwitcher } from '@/components/TabSwitcher';
-import { TipSheetModal } from '@/components/TipSheetModal';
 import { colors, radii } from '@/constants/theme';
 import {
   displayValue,
@@ -25,6 +24,7 @@ import {
   type Player,
 } from '@/data/players';
 import { loadFavoritePlayerIds, saveFavoritePlayerIds } from '@/lib/favorites';
+import { userProfileHref } from '@/lib/navigation';
 import type { Game, GameEvent, GameEventWithPlayer } from '@/types/database';
 import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
 
@@ -43,7 +43,12 @@ function mergeEvent(
   return { ...row, players: player };
 }
 
+/**
+ * @purpose Live match feed + rosters. Roster / name taps open `/user/[id]` (same athlete sheet as Profile). Compact Mālo stays on each play card.
+ * @sideEffects `games` / `players` / `game_events` fetch + Realtime; favorites in AsyncStorage.
+ */
 export default function GameOverviewScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const gameId = Array.isArray(id) ? id[0] : id;
   const mountedRef = useRef(true);
@@ -58,7 +63,6 @@ export default function GameOverviewScreen() {
   const [tab, setTab] = useState<'feed' | 'rosters'>('feed');
   const [alertPref, setAlertPref] = useState<NotificationPref>('all');
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  const [tipPlayer, setTipPlayer] = useState<Player | null>(null);
 
   const prependEvent = useCallback((next: GameEventWithPlayer) => {
     setEvents((current) => {
@@ -83,9 +87,6 @@ export default function GameOverviewScreen() {
         if (!joined) return event;
         return { ...event, players: { ...joined, backer_count: nextCount } };
       }),
-    );
-    setTipPlayer((current) =>
-      current?.id === playerId ? { ...current, backer_count: nextCount } : current,
     );
   }, []);
 
@@ -236,7 +237,7 @@ export default function GameOverviewScreen() {
               player={player}
               favorited={favoriteIds.includes(player.id)}
               onToggleFavorite={() => toggleFavorite(player.id)}
-              onPress={() => setTipPlayer(player)}
+              onPress={() => router.push(userProfileHref(player.id))}
             />
           ))}
         </View>
@@ -286,6 +287,7 @@ export default function GameOverviewScreen() {
                     key={event.id}
                     event={event}
                     onBacked={applyBackerCount}
+                    onOpenAthlete={(playerId) => router.push(userProfileHref(playerId))}
                   />
                 ))
               )}
@@ -301,14 +303,6 @@ export default function GameOverviewScreen() {
           )}
         </ScrollView>
       )}
-
-      <TipSheetModal
-        player={tipPlayer}
-        onClose={() => setTipPlayer(null)}
-        onBacked={(nextCount) => {
-          if (tipPlayer) applyBackerCount(tipPlayer.id, nextCount);
-        }}
-      />
     </ScreenShell>
   );
 }

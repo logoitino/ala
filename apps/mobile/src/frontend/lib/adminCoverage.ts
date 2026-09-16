@@ -90,7 +90,8 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'sponsor_tiers', label: 'Sponsor tier prices', hint: 'Silver / Gold / Platinum dollars — Catalogs', surface: 'local', fanHref: '/local', adminHref: '/admin/catalog' },
   { id: 'game_feed_tabs', label: 'Game Feed / Roster tabs', hint: '/local/game/[id]', surface: 'local', fanHref: '/local', adminHref: '/admin/games' },
   { id: 'game_notify', label: 'Game notifications', hint: 'Score / Seki / final alerts on the match sheet', surface: 'local', fanHref: '/local', adminHref: '/admin/games' },
-  { id: 'game_roster_malo', label: 'Roster Mālo', hint: 'Tip a jersey from the match sheet', surface: 'local', fanHref: '/local', adminHref: '/admin/money', flag: 'buttons.malo' },
+  { id: 'game_roster_profile', label: 'Roster athlete', hint: 'Opens /user/[id] from the match roster', surface: 'local', fanHref: '/local', adminHref: '/admin/athletes' },
+  { id: 'game_play_malo', label: 'Play-card Mālo', hint: 'Compact tip on a live play', surface: 'local', fanHref: '/local', adminHref: '/admin/money', flag: 'buttons.malo' },
 
   { id: 'tab.spotlight', label: 'Spotlight tab', hint: 'Fan bar', surface: 'spotlight', fanHref: '/spotlight', adminHref: '/admin/features', flag: 'tabs.spotlight', telemetry: 'tab.spotlight' },
   { id: 'spotlight_card', label: 'Award card', hint: 'Replay Player of the Week', surface: 'spotlight', fanHref: '/spotlight', adminHref: '/admin/spotlight', telemetry: 'spotlight_card' },
@@ -113,6 +114,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'wishlist_gift', label: 'Gift Item Directly', hint: 'Retailer link per gear goal', surface: 'profile', fanHref: '/profile', adminHref: '/admin/wishlist', flag: 'layouts.wishlist', telemetry: 'wishlist_gift' },
   { id: 'wishlist_chip_in', label: 'Chip In', hint: 'Mālo toward gear + 500 Aura equip (first Catalogs preset)', surface: 'profile', fanHref: '/profile', adminHref: '/admin/catalog', flag: 'layouts.wishlist', telemetry: 'wishlist_chip_in' },
   { id: 'share_qr', label: 'Share & Fund QR', hint: 'ShareQrModal gift flyer tapuai.app/gift/{handle}', surface: 'profile', fanHref: '/profile', adminHref: '/admin/people', telemetry: 'share_qr', owner: 'code' },
+  { id: 'profile_avatar', label: 'Profile photo', hint: 'ProfileAvatarPicker 1:1 crop → avatars bucket', surface: 'profile', fanHref: '/profile', adminHref: '/admin/people', telemetry: 'profile_avatar', owner: 'code' },
   { id: 'profile_tabs', label: 'Highlights / Stats / Vault tabs', hint: 'Look hides a pane; Sports fills Stats', surface: 'profile', fanHref: '/profile', adminHref: '/admin/look' },
   { id: 'profile_malo', label: 'Drop Mālo', hint: 'Profile quick support — first Catalogs preset', surface: 'profile', fanHref: '/profile', adminHref: '/admin/catalog', flag: 'buttons.malo' },
   { id: 'profile_role', label: 'Account capability', hint: 'Fan / athlete / parent / operator switch', surface: 'profile', fanHref: '/profile', adminHref: '/admin/people' },
@@ -145,7 +147,8 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'browse_guest', label: 'Guest browse hub', hint: 'Highlights / cards / wishlist view without session', surface: 'auth', fanHref: '/', adminHref: '/admin/coverage', owner: 'code' },
 
   { id: 'tab.upload', label: 'Upload +', hint: 'Center FAB', surface: 'upload', fanHref: '/', adminHref: '/admin/features', flag: 'tabs.upload', telemetry: 'tab.upload' },
-  { id: 'upload', label: 'Publish Reel', hint: 'game_highlights Storage', surface: 'upload', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'upload' },
+  { id: 'upload', label: 'Publish Reel', hint: 'reels Storage (fallback game_highlights)', surface: 'upload', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'upload' },
+  { id: 'upload_library', label: 'Camera Roll picker', hint: 'HighlightPickerModal 45s + compress overlay', surface: 'upload', fanHref: '/', adminHref: '/admin/highlights', flag: 'tabs.upload', telemetry: 'upload' },
   { id: 'upload_source', label: 'Library vs Record', hint: 'Clip source picker', surface: 'upload', fanHref: '/', adminHref: '/admin/features', flag: 'tabs.upload' },
   { id: 'upload_category', label: 'Upload category pills', hint: 'Game Play / Train / Serve labels — Catalogs', surface: 'upload', fanHref: '/', adminHref: '/admin/catalog', flag: 'tabs.upload' },
   { id: 'upload_vault', label: 'Vault-only toggle', hint: 'Publish straight to the Vault', surface: 'upload', fanHref: '/', adminHref: '/admin/highlights', flag: 'buttons.vault' },

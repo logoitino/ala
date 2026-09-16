@@ -2,18 +2,24 @@ import Link from 'next/link';
 
 import { Panel, PortalShell, StatCard } from '@/components/PortalShell';
 import { fetchProfileOversight } from '@/lib/profile';
+import { fetchPortalReports, fetchPortalRevenue, formatUsd } from '@/lib/reports';
 import { fetchSoftWallOversight } from '@/lib/softWall';
 import { isAdminPortalConfigured } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * @purpose Next Soft-Wall + Profile oversight home — fan counts, claim signal, gate + chrome map.
- * @sideEffects Server SELECT via `fetchSoftWallOversight` + `fetchProfileOversight`.
+ * @purpose Next web admin home — money, behavior, Soft-Wall, and Feature shortcuts.
+ * @sideEffects Server SELECT / RPC via Soft-Wall, Profile, Reports, and Money loaders.
  */
 export default async function AdminHomePage() {
   const configured = isAdminPortalConfigured();
-  const [oversight, profile] = await Promise.all([fetchSoftWallOversight(), fetchProfileOversight()]);
+  const [oversight, profile, reports, revenue] = await Promise.all([
+    fetchSoftWallOversight(),
+    fetchProfileOversight(),
+    fetchPortalReports(),
+    fetchPortalRevenue(),
+  ]);
 
   return (
     <PortalShell active="/">
@@ -29,32 +35,28 @@ export default async function AdminHomePage() {
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
+          label="Gross volume"
+          value={formatUsd(revenue.gross_volume_cents)}
+          hint="Money desk · get_company_revenue_summary"
+          tone={revenue.gross_volume_cents ? 'ok' : 'neutral'}
+        />
+        <StatCard
+          label="Mālo · 7d"
+          value={formatUsd(reports.money.malo_cents_7d ?? 0)}
+          hint="Reports · tips window"
+          tone={reports.money.malo_cents_7d ? 'ok' : 'neutral'}
+        />
+        <StatCard
+          label="Sessions · 24h"
+          value={(reports.usage.sessions_24h ?? 0).toLocaleString()}
+          hint="Reports · tab behavior"
+          tone={reports.usage.sessions_24h ? 'ok' : 'neutral'}
+        />
+        <StatCard
           label="Fan profiles"
           value={String(oversight.fanProfiles)}
           hint="Soft-Wall sign-ins with a profiles row"
           tone="ok"
-        />
-        <StatCard
-          label="Fans · 7 days"
-          value={String(oversight.fansLast7d)}
-          hint="New Soft-Wall accounts this week"
-          tone={oversight.fansLast7d > 0 ? 'ok' : 'neutral'}
-        />
-        <StatCard
-          label="Claimed athletes"
-          value={String(profile.claimedAthletes)}
-          hint="profiles.player_id · Active Team Roster Claimed"
-          tone={profile.claimedAthletes > 0 ? 'ok' : 'neutral'}
-        />
-        <StatCard
-          label="Operator console"
-          value={oversight.operatorConsoleLive ? 'Live' : 'Paused'}
-          hint={
-            oversight.operatorConsoleDraft === true && !oversight.operatorConsoleLive
-              ? 'Draft ON — Publish from Features'
-              : 'Features → Operator console + Publish'
-          }
-          tone={oversight.operatorConsoleLive ? 'warn' : 'ok'}
         />
       </div>
 
@@ -118,8 +120,20 @@ export default async function AdminHomePage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/features"
+              href="/reports"
               className="rounded-full bg-[var(--jade)] px-4 py-2 text-sm font-extrabold text-white"
+            >
+              Reports
+            </Link>
+            <Link
+              href="/money"
+              className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
+            >
+              Money
+            </Link>
+            <Link
+              href="/features"
+              className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
             >
               Features
             </Link>
@@ -141,12 +155,13 @@ export default async function AdminHomePage() {
 
       <div className="mt-6">
         <Panel title="Clean Profile chrome" kicker="Look · Profile">
-          <p className="text-sm leading-6 text-slate-600">
-            Hero avatar + hamburger settings; Flip Aura card gated by{' '}
-            <code className="rounded bg-emerald-50 px-1.5">profile.showCard</code>. Slim Crew strip, Highlights collage,
-            then Active Team Roster (Claimed = <code className="rounded bg-emerald-50 px-1.5">profiles.player_id</code>
-            ). Draft on Features · Profile chrome or Expo Look, then Publish.
-          </p>
+        <p className="text-sm leading-6 text-slate-600">
+          Own Profile and a tapped athlete share one sheet. Hamburger overlays the hub; back overlays `/user/[id]`.
+          Flip Aura card gated by <code className="rounded bg-emerald-50 px-1.5">profile.showCard</code>. Slim Crew
+          strip, Highlights collage, then Active Team Roster (Claimed ={' '}
+          <code className="rounded bg-emerald-50 px-1.5">profiles.player_id</code>
+          ). Draft on Features · Profile chrome or Expo Look, then Publish.
+        </p>
           <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { label: 'Flip Aura card', on: profile.showCard },

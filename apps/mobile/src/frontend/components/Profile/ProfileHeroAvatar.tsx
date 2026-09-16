@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { ProfileAvatarPicker } from '@/components/Profile/ProfileAvatarPicker';
 import { SubscriberCrest } from '@/components/Profile/SubscriberCrest';
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -19,6 +20,9 @@ type ProfileHeroAvatarProps = {
   verificationStatus?: VerificationStatus;
   schoolClaimed?: boolean;
   onClaimVerification?: () => void;
+  avatarUrl?: string | null;
+  canEditAvatar?: boolean;
+  onAvatarUploaded?: (url: string) => void;
 };
 
 function initialsFromName(name: string): string {
@@ -34,6 +38,9 @@ function initialsFromName(name: string): string {
  * @param auraPoints Drives tier ring color + slim progress.
  * @param onFlipAura Opens the Aura trading card sheet (menu or control).
  * @param verificationStatus Viewer-facing Varsity chip next to the name.
+ * @param avatarUrl `profiles.avatar_url` when set.
+ * @param canEditAvatar Own hub — opens `ProfileAvatarPicker` 1:1 crop.
+ * @sideEffects `ProfileAvatarPicker` camera roll + Storage `avatars` when editable.
  */
 export function ProfileHeroAvatar({
   name,
@@ -46,6 +53,9 @@ export function ProfileHeroAvatar({
   verificationStatus = 'unverified',
   schoolClaimed = false,
   onClaimVerification,
+  avatarUrl,
+  canEditAvatar = false,
+  onAvatarUploaded,
 }: ProfileHeroAvatarProps) {
   const tier = auraTierForPoints(auraPoints);
   const progress = auraProgressTowardNext(auraPoints);
@@ -55,7 +65,14 @@ export function ProfileHeroAvatar({
     <View style={styles.wrap}>
       <View style={styles.avatarStage}>
         <View style={[styles.avatarRing, { borderColor: tier.color, backgroundColor: tier.face }]}>
-          <Text style={[styles.initials, { color: tier.ink }]}>{initials}</Text>
+          <ProfileAvatarPicker
+            uri={avatarUrl}
+            editable={canEditAvatar}
+            size={124}
+            onUploaded={onAvatarUploaded}
+          >
+            <Text style={[styles.initials, { color: tier.ink }]}>{initials}</Text>
+          </ProfileAvatarPicker>
           {subscriberCrest ? (
             <View style={styles.crest}>
               <SubscriberCrest />

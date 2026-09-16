@@ -251,7 +251,7 @@ export const PROFILE_CHROME_FLAGS: ProfileChromeFlag[] = [
     id: 'actionsOnTop',
     path: 'profile.actionsOnTop',
     label: 'Actions on top',
-    hint: 'Drop Mālo / Subscribe sit above Highlights when On',
+    hint: 'Off (shipping): Drop Mālo / Subscribe under Crew. On: park them under Highlights / Stats / Vault',
     fanSurface: 'Profile · actions row',
     adminDesk: '/admin/look',
   },
@@ -279,3 +279,87 @@ export type ProfileOversight = {
   statsFirst: boolean;
   chromeFlags: ProfileChromeFlag[];
 };
+
+export type AppRuntimeFlagRow = {
+  path: string;
+  label: string;
+  hint: string;
+};
+
+export type AppRuntimeFlagGroup = {
+  id: 'tabs' | 'buttons' | 'layouts' | 'profile';
+  label: string;
+  hint: string;
+  flags: AppRuntimeFlagRow[];
+};
+
+/**
+ * @purpose One flag catalog for Expo Features / Look and the Next Features desk — same paths Expo `parseAppRuntimeConfig` reads.
+ */
+export const APP_RUNTIME_FLAG_GROUPS: AppRuntimeFlagGroup[] = [
+  {
+    id: 'tabs',
+    label: 'Fan bar',
+    hint: 'Hide a tab for a campaign. Draft until you hit Publish to app.',
+    flags: [
+      { path: 'tabs.home', label: 'Home', hint: 'Highlights ⚡ feed' },
+      { path: 'tabs.local', label: 'Local', hint: 'Matches, polls, boosters' },
+      { path: 'tabs.spotlight', label: 'Spotlight', hint: 'Player of the Week board' },
+      { path: 'tabs.drip', label: 'Drip', hint: 'Marketplace' },
+      { path: 'tabs.profile', label: 'Profile', hint: 'Athlete sheet + hamburger hub' },
+      { path: 'tabs.upload', label: 'Upload +', hint: 'Center plus on the fan bar' },
+    ],
+  },
+  {
+    id: 'buttons',
+    label: 'Hype and support',
+    hint: 'Kill a rail or checkout without shipping a new binary.',
+    flags: [
+      { path: 'buttons.seki', label: 'Seki', hint: '🤙 on Highlights ⚡' },
+      { path: 'buttons.aura', label: 'Aura', hint: '⚡ on Highlights ⚡' },
+      { path: 'buttons.flex', label: 'Flex', hint: '💪 on Highlights ⚡' },
+      { path: 'buttons.malo', label: 'Mālo', hint: 'Tip rail and Profile Drop Mālo' },
+      { path: 'buttons.more', label: 'More sheet', hint: 'Share / Save / Report' },
+      { path: 'buttons.subscribe', label: 'Subscribe', hint: 'Exclusive pass (price on Catalogs)' },
+      { path: 'buttons.crew', label: 'Join Crew', hint: 'The Crew ⚡' },
+      { path: 'buttons.vault', label: 'Vault', hint: 'Lock / Open Vault' },
+      { path: 'buttons.flashUnlock', label: 'Flash Unlock', hint: '2-hour Vault unlock' },
+      { path: 'buttons.suggest', label: 'Suggestions', hint: 'Profile + Highlights ⋯ feedback' },
+    ],
+  },
+  {
+    id: 'layouts',
+    label: 'Boards and portals',
+    hint: 'Park a Local board or a role HQ without deleting data.',
+    flags: [
+      { path: 'layouts.liveMatches', label: 'Live Matches', hint: 'Local match list' },
+      { path: 'layouts.cheerPolls', label: 'School Polls', hint: 'Cheer matchups' },
+      { path: 'layouts.topBoosters', label: 'Top Boosters', hint: 'Local sponsorship rail' },
+      { path: 'layouts.sponsorshipModal', label: 'Sponsorship checkout', hint: 'Booster PaymentSheet' },
+      { path: 'layouts.spotlightModal', label: 'Player of the Week modal', hint: 'Home launch Spotlight' },
+      { path: 'layouts.homeSearch', label: 'Home search', hint: 'Highlights ⚡ clip search' },
+      { path: 'layouts.localSearch', label: 'Local Explore', hint: 'Players, schools, sponsors' },
+      { path: 'layouts.slangGuide', label: 'Slang guide', hint: 'Mālo / Seki explainer on Home' },
+      { path: 'layouts.receipts', label: 'Receipts', hint: 'Profile Tip History & Receipts' },
+      { path: 'layouts.wishlist', label: 'Locker Room Wishlist', hint: 'Gear funding on Stats 📊' },
+      {
+        path: 'layouts.operatorConsole',
+        label: 'Operator console',
+        hint: 'Paused at launch — Features on + Publish to open /operator',
+      },
+      { path: 'layouts.parentHq', label: 'Parent HQ', hint: '/parent' },
+      { path: 'layouts.boosterHq', label: 'Booster HQ', hint: '/booster' },
+      { path: 'layouts.sponsorHq', label: 'Sponsor HQ', hint: '/sponsor' },
+    ],
+  },
+  {
+    id: 'profile',
+    label: 'Profile chrome',
+    hint: 'Same switches as Expo Look · Profile. Draft until Publish to app.',
+    flags: PROFILE_CHROME_FLAGS.map((flag) => ({
+      path: flag.path,
+      label: flag.label,
+      hint: flag.hint,
+    })),
+  },
+];

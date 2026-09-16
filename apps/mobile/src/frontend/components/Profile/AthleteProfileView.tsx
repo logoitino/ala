@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Reanimated, {
   useAnimatedStyle,
@@ -47,6 +48,7 @@ import type { VerificationStatus } from '@/data/verification';
 import { useCrew } from '@/hooks/useCrew';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { formatCompactCount } from '@/lib/hype';
+import { isOwnAthleteSheet } from '@/lib/roster';
 import type { Player, UserRole } from '@/types/database';
 import type { ReelHype } from '@/lib/reels';
 import { isVaultSealed } from '@/lib/vault';
@@ -97,6 +99,15 @@ type AthleteProfileViewProps = {
   verificationStatus?: VerificationStatus;
   schoolClaimed?: boolean;
   onClaimVerification?: () => void;
+  avatarUrl?: string | null;
+  canEditAvatar?: boolean;
+  onAvatarUploaded?: (url: string) => void;
+  /** Hide the nested stack title — back chevron on public `/user/[id]`. */
+  onBack?: () => void;
+  /** Own hub account hamburger. Public sheets omit this. */
+  headerRight?: ReactNode;
+  onDropMalo?: () => void;
+  onSubscribe?: () => void;
   leading?: ReactNode;
   actions?: ReactNode;
   trailing?: ReactNode;
@@ -110,12 +121,11 @@ type AthleteProfileViewProps = {
 };
 
 /**
- * @purpose Clean athlete sheet: hero avatar, slim Crew/Squad, Highlights collage, Active Team Roster, then Stats / Vault.
- * @param rosterPlayers Schoolmates for the roster strip; empty skips the section.
- * @param auraCardOpen When controlled, parent (hamburger) opens the Flip Aura card modal.
- * @param verificationStatus Varsity chip on the hero name and 3D card.
- * @returns Hero + slim counters + collage-first chrome. Parent owns the ScrollView.
- * @sideEffects Child grids / vault / Q&A / `useCrew`; wishlist lights Flip-card glow when opened; `ShareQrModal` Camera Roll / clipboard / native share.
+ * @purpose One athlete sheet for the Profile tab and `/user/[id]`: hero, Crew, fan Mālo/Subscribe (when not you), Share & Fund, Highlights / Stats / Vault, roster.
+ * @param onBack Public sheet back control (stack header is hidden so chrome matches the hub).
+ * @param headerRight Own-hub account menu.
+ * @param onDropMalo / onSubscribe Fan support — hidden on your own claimed row.
+ * @sideEffects Child grids / vault / Q&A / `useCrew`; wishlist lights Flip-card glow when opened; `ShareQrModal`; own-hub `ProfileAvatarPicker`.
  */
 export function AthleteProfileView({
   player,
@@ -150,6 +160,13 @@ export function AthleteProfileView({
   verificationStatus = 'unverified',
   schoolClaimed = false,
   onClaimVerification,
+  avatarUrl,
+  canEditAvatar = false,
+  onAvatarUploaded,
+  onBack,
+  headerRight,
+  onDropMalo,
+  onSubscribe,
   leading,
   actions,
   trailing,
@@ -163,7 +180,12 @@ export function AthleteProfileView({
 }: AthleteProfileViewProps) {
   const insets = useSafeAreaInsets();
   const { live } = useAppRuntime();
+  const { profile } = useAuth();
   const { configFor } = useSportConfigs();
+  const ownSheet = isOwnAthleteSheet(profile, player);
+  const editAvatar = Boolean(canEditAvatar && ownSheet);
+  const maloAmount = live.catalog.maloAmounts[0] ?? 5;
+  const showFanSupport = !ownSheet && (Boolean(onDropMalo && live.buttons.malo) || Boolean(onSubscribe && live.buttons.subscribe));
   const [tab, setTab] = useState<AthleteProfileTab>('highlights');
   const [wishlistFulfilled, setWishlistFulfilled] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -260,8 +282,60 @@ export function AthleteProfileView({
     />
   ) : null;
 
+  const fanSupport = showFanSupport ? (
+    <View style={styles.actionRow}>
+      {live.buttons.malo && onDropMalo ? (
+        <AnimatedButton
+          accessibilityLabel={`Drop ${maloAmount} dollar Mālo`}
+          disabled={tipping}
+          haptic="medium"
+          onPress={onDropMalo}
+          style={styles.actionFlex}
+          contentStyle={[styles.primaryAction, tipping && styles.disabled]}
+        >
+          <Text style={styles.primaryActionLabel}>Drop ${maloAmount} Mālo</Text>
+        </AnimatedButton>
+      ) : null}
+      {live.buttons.subscribe && onSubscribe ? (
+        <AnimatedButton
+          accessibilityLabel={
+            subscribed
+              ? 'Subscribed to exclusive feed'
+              : `Subscribe for ${live.catalog.exclusiveDollars.toFixed(2)} a month`
+          }
+          disabled={subscribed || vaultBusy}
+          onPress={onSubscribe}
+          style={styles.actionFlex}
+          contentStyle={[styles.secondaryAction, subscribed && styles.secondaryActionOn]}
+        >
+          <Text style={[styles.secondaryActionLabel, subscribed && styles.secondaryActionLabelOn]}>
+            {subscribed ? 'Subscribed' : `Subscribe ($${live.catalog.exclusiveDollars.toFixed(2)}/mo)`}
+          </Text>
+        </AnimatedButton>
+      ) : null}
+    </View>
+  ) : null;
+
   return (
     <View style={styles.root}>
+      {onBack || headerRight ? (
+        <View style={styles.navRow}>
+          {onBack ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Back"
+              haptic="selection"
+              onPress={onBack}
+              style={styles.navBtn}
+            >
+              <Ionicons name="chevron-back" size={26} color={FOCAL.jadeInk} />
+            </Pressable>
+          ) : (
+            <View style={styles.navHit} />
+          )}
+          {headerRight ?? <View style={styles.navHit} />}
+        </View>
+      ) : null}
       {leading}
       <ProfileHeroAvatar
         name={name}
@@ -274,8 +348,12 @@ export function AthleteProfileView({
         verificationStatus={verificationStatus}
         schoolClaimed={schoolClaimed}
         onClaimVerification={onClaimVerification}
+        avatarUrl={avatarUrl}
+        canEditAvatar={editAvatar}
+        onAvatarUploaded={onAvatarUploaded}
       />
       {live.profile.showCrew ? <CrewStatsBar player={player} /> : null}
+      {!live.profile.actionsOnTop ? fanSupport : null}
       {actions}
       <AnimatedButton
         accessibilityLabel={SHARE_FUND_CTA}
@@ -348,6 +426,8 @@ export function AthleteProfileView({
         </View>
       ) : null}
 
+      {live.profile.actionsOnTop ? fanSupport : null}
+
       <Modal
         transparent
         animationType="fade"
@@ -390,9 +470,7 @@ function CrewStatsBar({ player }: { player: Player }) {
   const { live } = useAppRuntime();
   const { requireAuth } = useSoftWall();
   const crew = useCrew(player.id);
-  const isOwn =
-    Boolean(profile?.full_name?.trim()) &&
-    player.name.trim().toLowerCase() === profile!.full_name.trim().toLowerCase();
+  const isOwn = isOwnAthleteSheet(profile, player);
 
   const onJoin = () => {
     requireAuth({
@@ -496,6 +574,73 @@ const styles = StyleSheet.create({
   },
   statsPane: {
     gap: 16,
+  },
+  navRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 44,
+  },
+  navHit: {
+    width: 44,
+    height: 44,
+  },
+  navBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: FOCAL.mistJade,
+    borderWidth: 1,
+    borderColor: 'rgba(0,115,60,0.18)',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  actionFlex: {
+    flex: 1,
+  },
+  primaryAction: {
+    flex: 1,
+    minHeight: 52,
+    borderRadius: radii.md,
+    backgroundColor: FOCAL.goldInk,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  primaryActionLabel: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  secondaryAction: {
+    flex: 1,
+    minHeight: 52,
+    borderRadius: radii.md,
+    backgroundColor: FOCAL.mistEmber,
+    borderWidth: 1.5,
+    borderColor: FOCAL.ember,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  secondaryActionOn: {
+    backgroundColor: FOCAL.mistGold,
+  },
+  secondaryActionLabel: {
+    color: FOCAL.emberInk,
+    fontSize: 13,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  secondaryActionLabelOn: {
+    color: FOCAL.goldInk,
+  },
+  disabled: {
+    opacity: 0.55,
   },
   shareHit: {
     minHeight: 48,

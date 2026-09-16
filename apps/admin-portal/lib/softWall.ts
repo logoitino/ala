@@ -97,35 +97,57 @@ export type PortalPerson = {
   username: string | null;
   role: string;
   is_verified: boolean;
+  verification_status: string | null;
   is_admin: boolean;
+  player_id: string | null;
   created_at: string | null;
 };
 
 /**
  * @purpose Recent Soft-Wall fan profiles for the web People desk.
- * @sideEffects `profiles` SELECT.
+ * @sideEffects `profiles` SELECT. Live DB uses `is_verified_athlete` (schema.sql also has `is_verified`).
  */
-export async function fetchPortalPeople(limit = 40): Promise<PortalPerson[]> {
+export async function fetchPortalPeople(limit = 40): Promise<{ people: PortalPerson[]; error: string | null }> {
   const supabase = getSupabaseServerClient();
-  if (!supabase) return [];
-  const { data, error } = await supabase
+  if (!supabase) return { people: [], error: 'Supabase env missing' };
+  const full = await supabase
     .from('profiles')
-    .select('id, full_name, username, role, is_verified, is_admin, roles, created_at')
+    .select(
+      'id, full_name, username, role, is_admin, roles, created_at, player_id, verification_status, is_verified_athlete',
+    )
     .order('created_at', { ascending: false })
     .limit(limit);
-  if (error || !Array.isArray(data)) return [];
-  return data.map((row) => {
-    const roles = Array.isArray(row.roles) ? row.roles.map(String) : [];
-    return {
-      id: String(row.id),
-      full_name: String(row.full_name || 'Unnamed'),
-      username: row.username ? String(row.username) : null,
-      role: String(row.role || 'fan'),
-      is_verified: Boolean(row.is_verified),
-      is_admin: Boolean(row.is_admin) || roles.includes('admin') || row.role === 'admin',
-      created_at: typeof row.created_at === 'string' ? row.created_at : null,
-    };
-  });
+  const source =
+    full.error || !Array.isArray(full.data)
+      ? await supabase
+          .from('profiles')
+          .select('id, full_name, username, role, is_admin, roles, created_at')
+          .order('created_at', { ascending: false })
+          .limit(limit)
+      : full;
+  if (source.error || !Array.isArray(source.data)) {
+    return { people: [], error: source.error?.message ?? 'Could not load profiles.' };
+  }
+  return {
+    error: null,
+    people: source.data.map((row) => {
+      const record = row as Record<string, unknown>;
+      const roles = Array.isArray(record.roles) ? record.roles.map(String) : [];
+      const verification =
+        typeof record.verification_status === 'string' ? record.verification_status : null;
+      return {
+        id: String(record.id),
+        full_name: String(record.full_name || 'Unnamed'),
+        username: record.username ? String(record.username) : null,
+        role: String(record.role || 'fan'),
+        is_verified: Boolean(record.is_verified_athlete) || verification === 'verified',
+        verification_status: verification,
+        is_admin: Boolean(record.is_admin) || roles.includes('admin') || record.role === 'admin',
+        player_id: typeof record.player_id === 'string' ? record.player_id : null,
+        created_at: typeof record.created_at === 'string' ? record.created_at : null,
+      };
+    }),
+  };
 }
 
 export type PortalRuntimeSnapshot = {

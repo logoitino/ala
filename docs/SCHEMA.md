@@ -44,7 +44,7 @@ Identity for signed-in users.
 | `active_role` | text default `fan` | Fan View vs Athlete Management View (`fan` \| `athlete`). Incremental: `supabase/add_user_role.sql`. |
 | `full_name` | text not null | |
 | `username` | text | Optional; client slugs `full_name` if null |
-| `is_verified` | boolean default false | Varsity badge. **Not** set by claiming athlete/school. True only after team code (`redeem_team_code`) or staff/coach approval. |
+| `is_verified` | boolean default false | Varsity badge. **Not** set by claiming athlete/school. True only after team code (`redeem_team_code`) or staff/coach approval. Some hosted DBs also have `is_verified_athlete` (legacy alias). Next `/people` + Expo People read either. Incremental: `supabase/profiles_verified_compat.sql`. |
 | `verification_status` | text default `unverified` | `unverified` \| `pending` \| `verified`. Claimed school stays public while pending. Incremental: `supabase/athlete_verification.sql`. |
 | `spirit_points` | integer | |
 | `aura_points` | integer default 0 | Ranking currency |
@@ -63,6 +63,7 @@ Identity for signed-in users.
 | `athlete_class_year` | text | Graduation class (`26` / `27` / `28` → UI `'26`). |
 | `is_admin` | boolean default false | Web Admin Dashboard. Set by `add_user_role('admin')`. Also treated as true when `role` / `roles` include `admin`. Incremental: `supabase/admin_dashboard.sql`. |
 | `player_id` | uuid FK → `players` ON DELETE SET NULL | Claimed roster row so That's me can auto-confirm. Incremental: `supabase/spotlight_auto.sql`. |
+| `avatar_url` | text | Public Storage URL (`avatars/{user_id}/{timestamp}.jpg`). Incremental: `supabase/media_upload.sql`. |
 | `created_at` | timestamptz | |
 
 **RLS:** public SELECT; INSERT when `user_id = auth.uid()` (Soft-Wall / client `ensureFanProfile`); UPDATE own row or `admin`. First signup also inserts via trigger `on_auth_user_created` → `handle_new_auth_user()` on `auth.users` (security definer). Incremental: `supabase/auth_fan_profile.sql`. Client: `AuthContext` + `lib/auth.ts`.
@@ -115,7 +116,7 @@ Strips `%` / `_`, then `ILIKE '%' || needle || '%'`. Grant: `EXECUTE` to `anon`,
 
 ### `reels`
 
-Highlight / Seki clips. Files in Storage **`game_highlights`**.
+Highlight / Seki clips. Files in Storage **`reels`** (fallback **`game_highlights`**).
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -733,7 +734,7 @@ get_admin_reports() returns jsonb
   -- series { clips, malo, stalls, dwell }
 ```
 
-Usage windows (24h / 7d / previous 7d), Mālo, Vault / Flash Unlock / Spotlight mix, Crew follows, telemetry stalls, **tab dwell / scroll / feature taps / control issues**, top Mālo / hottest clips / athletes-by-school, and `series` (7-day clips / Mālo / stalls / dwell). Incremental: `supabase/app_runtime.sql` + `supabase/admin_reports.sql` + `supabase/usage_reports.sql`. Client: `/admin/reports` (Health + **Usage** desk, graphs).
+Usage windows (24h / 7d / previous 7d), Mālo, Vault / Flash Unlock / Spotlight mix, Crew follows, telemetry stalls, **tab dwell / scroll / feature taps / control issues**, top Mālo / hottest clips / athletes-by-school, and `series` (7-day clips / Mālo / stalls / dwell). Incremental: `supabase/app_runtime.sql` + `supabase/admin_reports.sql` + `supabase/usage_reports.sql`. Client: Expo `/admin/reports` and Next `http://localhost:3001/reports`.
 
 ### `company_revenue_bps(stream_source)` / `record_company_revenue` / `sync_company_revenue_logs`
 
@@ -763,7 +764,7 @@ get_company_revenue_summary() returns jsonb
   -- streams[] (Mālo / boosters / merch+vault), recent[]
 ```
 
-`VOLATILE` — runs `sync_company_revenue_logs` then aggregates. Client: `/admin/money`. Grant: `EXECUTE` to `anon`, `authenticated`. Changing the old `TABLE(total_gross, …)` return type required `DROP FUNCTION` first.
+`VOLATILE` — runs `sync_company_revenue_logs` then aggregates. Client: Expo `/admin/money` and Next `http://localhost:3001/money`. Grant: `EXECUTE` to `anon`, `authenticated`. Changing the old `TABLE(total_gross, …)` return type required `DROP FUNCTION` first.
 
 ### `toggle_reel_vault_status(target_reel_id)`
 
@@ -877,7 +878,30 @@ Created in `supabase/reels.sql`:
 | RLS SELECT | `storage.objects` where `bucket_id = 'game_highlights'` |
 | RLS INSERT | same `bucket_id` |
 
-Upload requires a tagged player, an active game, a caption, and a video category (Game Play / Train Like Me / Serve Like Me).
+Upload requires a tagged player, an active game, a caption, and a video category (Game Play / Train Like Me / Serve Like Me). `MediaUploadService` writes `reels/{user_id}/{timestamp}.mp4` into bucket **`reels`** first, then falls back to `game_highlights` if that bucket is missing.
+
+### Storage — `reels`
+
+Created in `supabase/media_upload.sql`. Client: `REELS_BUCKET` in `MediaUploadService.ts`.
+
+| Parameter | Value |
+| --- | --- |
+| Bucket id / name | `reels` |
+| Public | `true` |
+| Object path | `reels/{auth.users.id}/{timestamp}.mp4` |
+| RLS SELECT / INSERT / UPDATE | `storage.objects` where `bucket_id = 'reels'` (demo-open) |
+
+### Storage — `avatars`
+
+Created in `supabase/media_upload.sql`. Client: `ProfileAvatarPicker` → `uploadAvatar`.
+
+| Parameter | Value |
+| --- | --- |
+| Bucket id / name | `avatars` |
+| Public | `true` |
+| Object path | `{auth.users.id}/{timestamp}.jpg` |
+| Writes | `profiles.avatar_url` |
+| RLS SELECT / INSERT / UPDATE | `storage.objects` where `bucket_id = 'avatars'` (demo-open) |
 
 ---
 
@@ -893,4 +917,4 @@ Prefer full `schema.sql` on a blank project (includes `profiles` / `tips` / oper
 
 1. `players.sql` → `game_events.sql` → `games.sql` (+ `games_clock.sql` + `games_operator.sql`)
 2. `increment_backer.sql` → `increment_hype.sql` (`increment_player_hype`)
-3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `legal_terms_ack.sql` → `athlete_verification.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql`
+3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `legal_terms_ack.sql` → `athlete_verification.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql` → `media_upload.sql`

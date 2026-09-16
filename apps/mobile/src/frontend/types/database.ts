@@ -50,6 +50,8 @@ export type Profile = {
   team?: SchoolTeam | null;
   /** Claimed `players.id` for That's me auto-confirm. */
   player_id?: string | null;
+  /** Public Storage URL from the `avatars` bucket. Incremental: `supabase/media_upload.sql`. */
+  avatar_url?: string | null;
   created_at?: string;
 };
 

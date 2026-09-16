@@ -71,9 +71,9 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 
 ## 5. Upload fails
 
-**Cause:** Missing Storage bucket `game_highlights`, or upload without a tagged player / active game / caption.
+**Cause:** Missing Storage bucket `reels` (or fallback `game_highlights`), or upload without a tagged player / active game / caption.
 
-**Fix:** Run `supabase/reels.sql`. Confirm the bucket is public and policies allow SELECT + INSERT on `storage.objects` for that `bucket_id`.
+**Fix:** Run `supabase/reels.sql` then `supabase/media_upload.sql`. Confirm buckets `reels` and `game_highlights` are public and policies allow SELECT + INSERT on `storage.objects`. Profile photos need bucket `avatars` and `profiles.avatar_url`.
 
 ---
 

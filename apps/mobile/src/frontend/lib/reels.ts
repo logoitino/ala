@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { parseReelCategory, type HighlightClip, type ReelCategory } from '@/data/highlights';
 import type { PlayReactionId } from '@/data/players';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { uploadHighlight } from '@/services/MediaUploadService';
 import type { Player, Reel, ReelWithPlayer } from '@/types/database';
 
 export const HIGHLIGHTS_BUCKET = 'game_highlights';
@@ -19,51 +20,11 @@ export type UploadSekiPlayInput = {
   isExclusive?: boolean;
   /** Persist `reels.category`. Default Game Play. */
   category?: ReelCategory;
+  /** True when `HighlightPickerModal` already ran `Video.compress`. */
+  compressed?: boolean;
   onProgress?: (value: number) => void;
   onStatus?: (message: string) => void;
 };
-
-function fileExtFromUri(selectedVideoUri: string, fileName?: string | null): string {
-  const source = fileName || selectedVideoUri;
-  const raw = (source.split('.').pop() || 'mp4').split(/[?#]/)[0].toLowerCase();
-  return /^[a-z0-9]{2,5}$/.test(raw) ? raw : 'mp4';
-}
-
-function errorMessage(caught: unknown, fallback: string): string {
-  return caught instanceof Error && caught.message.trim() ? caught.message : fallback;
-}
-
-async function blobFromVideoUri(selectedVideoUri: string): Promise<Blob> {
-  let response: Response;
-  try {
-    response = await fetch(selectedVideoUri);
-  } catch (caught) {
-    throw new Error(
-      `Could not read this clip from disk. Pick or record it again. (${errorMessage(caught, 'fetch failed')})`,
-    );
-  }
-
-  // Local file:// / content:// / ph:// fetches often return status 0, so skip response.ok.
-  try {
-    const blob = await response.blob();
-    if (blob && blob.size > 0) return blob;
-  } catch {
-    // Fall through to ArrayBuffer → Blob for React Native file URIs.
-  }
-
-  try {
-    const retry = await fetch(selectedVideoUri);
-    const buffer = await retry.arrayBuffer();
-    if (!buffer.byteLength) {
-      throw new Error('The selected clip is empty.');
-    }
-    return new Blob([buffer], { type: 'video/mp4' });
-  } catch (caught) {
-    throw new Error(
-      `Could not convert this clip to binary data. (${errorMessage(caught, 'blob conversion failed')})`,
-    );
-  }
-}
 
 export function playerFromReel(reel: ReelWithPlayer, roster: Player[] = []): Player | null {
   const joined = reel.players;
@@ -348,139 +309,13 @@ export async function addReelTips(reelId: string, addCents: number, current: Ree
 }
 
 /**
- * @purpose Upload a Seki clip to Storage `game_highlights` and insert a `reels` row.
- * @param input Local video URI, caption, tagged player/game, optional `isExclusive` (writes `is_vault_only`), optional `category` (Game Play / Train / Serve).
+ * @purpose Upload a Seki clip: compress, Storage `reels/{user_id}/{timestamp}.mp4` (fallback `game_highlights`), insert `public.reels`.
+ * @param input Local video URI, caption, tagged player/game, optional `isExclusive` / `category` / `compressed`.
  * @returns The inserted reel, including vault flags and category. Default is public Game Play.
- * @sideEffects Storage upload; `reels` insert (`is_vault_only` / `is_exclusive` / `category`).
+ * @sideEffects `MediaUploadService.uploadHighlight`.
  */
-export async function uploadSekiPlay({
-  uri: selectedVideoUri,
-  fileName,
-  title,
-  playerId,
-  gameId,
-  isExclusive = false,
-  category = 'game_play',
-  onProgress,
-  onStatus,
-}: UploadSekiPlayInput): Promise<Reel> {
-  if (!isSupabaseConfigured) {
-    throw new Error('Supabase is not configured. Add EXPO_PUBLIC keys to .env.local.');
-  }
-
-  const caption = title.trim();
-  if (!caption) throw new Error('Add a title / hype caption.');
-  if (!playerId) throw new Error('Tag a player before uploading.');
-  if (!gameId) throw new Error('Pick an active game before uploading.');
-  if (!selectedVideoUri) throw new Error('Pick or record a clip before uploading.');
-
-  onStatus?.('Reading clip…');
-  onProgress?.(0.08);
-
-  const fileExt = fileExtFromUri(selectedVideoUri, fileName);
-  const uploadName = `${Date.now()}.${fileExt}`;
-  const filePath = `reels/${uploadName}`;
-
-  const blob = await blobFromVideoUri(selectedVideoUri);
-  onProgress?.(0.32);
-  onStatus?.('Uploading to Tapua\'i…');
-
-  const { error: uploadError } = await supabase.storage.from(HIGHLIGHTS_BUCKET).upload(filePath, blob, {
-    contentType: 'video/mp4',
-    upsert: true,
-  });
-
-  if (uploadError) {
-    throw new Error(
-      uploadError.message.includes('Bucket not found')
-        ? 'Storage bucket game_highlights is missing. Run supabase/reels.sql in the SQL editor.'
-        : uploadError.message,
-    );
-  }
-
-  onProgress?.(0.82);
-  onStatus?.('Saving reel…');
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from(HIGHLIGHTS_BUCKET).getPublicUrl(filePath);
-  if (!publicUrl) throw new Error('Upload succeeded but no public video URL was returned.');
-
-  const nextCategory = parseReelCategory(category);
-  const baseRow = {
-    video_url: publicUrl,
-    title: caption,
-    player_id: playerId,
-    game_id: gameId,
-    is_exclusive: isExclusive,
-    is_vault_only: isExclusive,
-    category: nextCategory,
-  };
-
-  const withCategory = await supabase
-    .from('reels')
-    .insert(baseRow)
-    .select('id, video_url, title, player_id, game_id, created_at, is_exclusive, is_vault_only, category')
-    .single();
-
-  if (!withCategory.error && withCategory.data) {
-    onProgress?.(1);
-    onStatus?.('Seki play uploaded.');
-    return {
-      ...(withCategory.data as Reel),
-      is_exclusive: isExclusive,
-      is_vault_only: isExclusive,
-      category: nextCategory,
-    };
-  }
-
-  const insertError = withCategory.error;
-  if (insertError?.message.includes('category') || insertError?.message.includes('is_vault_only')) {
-    const { category: _dropped, ...withoutCategory } = baseRow;
-    const retry = await supabase
-      .from('reels')
-      .insert(withoutCategory)
-      .select('id, video_url, title, player_id, game_id, created_at, is_exclusive, is_vault_only')
-      .single();
-    if (!retry.error && retry.data) {
-      onProgress?.(1);
-      onStatus?.('Seki play uploaded.');
-      return { ...(retry.data as Reel), is_exclusive: isExclusive, is_vault_only: isExclusive, category: nextCategory };
-    }
-    if (retry.error?.message.includes('is_vault_only') || insertError.message.includes('is_vault_only')) {
-      const vaultless = await supabase
-        .from('reels')
-        .insert({
-          video_url: publicUrl,
-          title: caption,
-          player_id: playerId,
-          game_id: gameId,
-          is_exclusive: isExclusive,
-        })
-        .select('id, video_url, title, player_id, game_id, created_at, is_exclusive')
-        .single();
-      if (!vaultless.error && vaultless.data) {
-        onProgress?.(1);
-        onStatus?.('Seki play uploaded.');
-        return {
-          ...(vaultless.data as Reel),
-          is_exclusive: isExclusive,
-          is_vault_only: isExclusive,
-          category: nextCategory,
-        };
-      }
-    }
-  }
-
-  throw new Error(
-    insertError?.message.includes('Could not find the table')
-      ? 'The reels table is missing. Run supabase/reels.sql in the SQL editor.'
-      : insertError?.message.includes('is_exclusive')
-        ? 'The reels.is_exclusive column is missing. Run supabase/subscriptions.sql in the SQL editor.'
-        : insertError?.message.includes('category')
-          ? 'The reels.category column is missing. Run supabase/reel_category.sql in the SQL editor.'
-          : insertError?.message ?? 'Could not save that Highlight.',
-  );
+export async function uploadSekiPlay(input: UploadSekiPlayInput): Promise<Reel> {
+  return uploadHighlight(input);
 }
 
 export function gameMatchupLabel(homeTeam: string, awayTeam: string): string {

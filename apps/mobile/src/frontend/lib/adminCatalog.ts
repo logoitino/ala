@@ -102,8 +102,33 @@ function asBool(value: unknown, fallback = false): boolean {
   return typeof value === 'boolean' ? value : fallback;
 }
 
-function throwIf(error: { message: string } | null, fallback: string): void {
+function throwIf(error: { message?: string } | null, fallback: string): void {
   if (error) throw new Error(error.message || fallback);
+}
+
+/**
+ * @purpose Stamp Varsity on a profile whether the project has `is_verified` or live `is_verified_athlete`.
+ * @sideEffects `profiles` UPDATE.
+ */
+async function stampProfileVerification(
+  match: { column: 'player_id' | 'full_name'; value: string },
+  verified: boolean,
+): Promise<{ message?: string } | null> {
+  const status = verified ? 'verified' : 'unverified';
+  const bags: Record<string, unknown>[] = [
+    { is_verified: verified, is_verified_athlete: verified, verification_status: status },
+    { is_verified_athlete: verified, verification_status: status },
+    { is_verified: verified, verification_status: status },
+    { verification_status: status },
+  ];
+  let lastError: { message?: string } | null = null;
+  for (const bag of bags) {
+    const { error } = await supabase.from('profiles').update(bag as never).eq(match.column, match.value);
+    if (!error) return null;
+    lastError = error;
+    if (!String(error.message ?? '').includes('does not exist')) return error;
+  }
+  return lastError;
 }
 
 export function slugify(value: string): string {
@@ -519,30 +544,53 @@ export async function setHighlightRemoved(reelId: string, removed: boolean): Pro
   throwIf(error, 'Could not update this Highlight.');
 }
 
+function profileLooksVerified(row: Record<string, unknown>): boolean {
+  return (
+    asBool(row.is_verified) ||
+    asBool(row.is_verified_athlete) ||
+    asText(row.verification_status) === 'verified'
+  );
+}
+
 /**
  * @purpose Load accounts for verify / admin-grant.
- * @sideEffects `profiles` SELECT.
+ * @sideEffects `profiles` SELECT. Live projects may have `is_verified_athlete` instead of `is_verified`.
  */
 export async function fetchAdminPeople(): Promise<AdminPerson[]> {
   if (!isSupabaseConfigured) return [];
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, full_name, username, role, is_verified, is_admin, roles, created_at')
-    .order('created_at', { ascending: false })
-    .limit(80);
-  throwIf(error, 'Could not load people.');
-  if (!Array.isArray(data)) return [];
-  return data.map((row) => {
-    const roles = Array.isArray(row.roles) ? row.roles.map(String) : [];
-    const isFan = row.role === 'fan' || roles.includes('fan');
+  const selects = [
+    'id, full_name, username, role, is_verified, is_verified_athlete, verification_status, is_admin, roles, created_at',
+    'id, full_name, username, role, is_verified_athlete, verification_status, is_admin, roles, created_at',
+    'id, full_name, username, role, is_verified, is_admin, roles, created_at',
+    'id, full_name, username, role, is_admin, roles, created_at',
+  ];
+  let data: unknown[] | null = null;
+  let lastError: string | null = null;
+  for (const columns of selects) {
+    const result = await supabase
+      .from('profiles')
+      .select(columns)
+      .order('created_at', { ascending: false })
+      .limit(80);
+    if (!result.error && Array.isArray(result.data)) {
+      data = result.data;
+      break;
+    }
+    lastError = result.error?.message ?? lastError;
+  }
+  if (!data) throwIf({ message: lastError ?? 'Could not load people.' }, 'Could not load people.');
+  return (data ?? []).map((row) => {
+    const record = row as Record<string, unknown>;
+    const roles = Array.isArray(record.roles) ? record.roles.map(String) : [];
+    const isFan = record.role === 'fan' || roles.includes('fan');
     return {
-      id: asText(row.id),
-      full_name: asText(row.full_name, 'Unnamed'),
-      username: asText(row.username) || null,
-      role: asText(row.role, 'fan'),
-      is_verified: asBool(row.is_verified),
-      is_admin: asBool(row.is_admin) || roles.includes('admin') || row.role === 'admin',
-      created_at: typeof row.created_at === 'string' ? row.created_at : null,
+      id: asText(record.id),
+      full_name: asText(record.full_name, 'Unnamed'),
+      username: asText(record.username) || null,
+      role: asText(record.role, 'fan'),
+      is_verified: profileLooksVerified(record),
+      is_admin: asBool(record.is_admin) || roles.includes('admin') || record.role === 'admin',
+      created_at: typeof record.created_at === 'string' ? record.created_at : null,
       is_fan: isFan,
     };
   });
@@ -592,8 +640,21 @@ export async function patchAdminPerson(
   }
 
   if (Object.keys(body).length === 0) return;
-  const { error } = await supabase.from('profiles').update(body).eq('id', id);
-  throwIf(error, 'Could not update this person.');
+  const attempts: Record<string, unknown>[] = [body];
+  if (typeof patch.is_verified === 'boolean') {
+    const withoutCanonical = { ...body };
+    delete withoutCanonical.is_verified;
+    attempts.push({ ...withoutCanonical, is_verified_athlete: patch.is_verified });
+    attempts.push(withoutCanonical);
+  }
+  let lastError: { message?: string } | null = null;
+  for (const next of attempts) {
+    const { error } = await supabase.from('profiles').update(next as never).eq('id', id);
+    if (!error) return;
+    lastError = error;
+    if (!String(error.message ?? '').includes('does not exist')) break;
+  }
+  throwIf(lastError, 'Could not update this person.');
 }
 
 /**
@@ -630,17 +691,17 @@ export async function setVerificationStatus(id: string, status: 'approved' | 're
 
   if (status === 'rejected') {
     if (data.player_id) {
-      await supabase
-        .from('profiles')
-        .update({ is_verified: false, verification_status: 'unverified' })
-        .eq('player_id', data.player_id);
+      throwIf(
+        await stampProfileVerification({ column: 'player_id', value: data.player_id }, false),
+        'Could not update the linked profile.',
+      );
     }
     const rejectedName = asText(data.full_name).trim();
     if (rejectedName) {
-      await supabase
-        .from('profiles')
-        .update({ is_verified: false, verification_status: 'unverified' })
-        .eq('full_name', rejectedName);
+      throwIf(
+        await stampProfileVerification({ column: 'full_name', value: rejectedName }, false),
+        'Could not update a matching profile by name.',
+      );
     }
     return;
   }
@@ -653,20 +714,18 @@ export async function setVerificationStatus(id: string, status: 'approved' | 're
       .eq('id', data.player_id);
     throwIf(playerError, 'Verified the request, but could not update the player row.');
 
-    const { error: linkedError } = await supabase
-      .from('profiles')
-      .update({ is_verified: true, verification_status: 'verified' })
-      .eq('player_id', data.player_id);
-    throwIf(linkedError, 'Verified the request, but could not update the linked profile.');
+    throwIf(
+      await stampProfileVerification({ column: 'player_id', value: data.player_id }, true),
+      'Verified the request, but could not update the linked profile.',
+    );
   }
 
   const name = asText(data.full_name).trim();
   if (name) {
-    const { error: nameError } = await supabase
-      .from('profiles')
-      .update({ is_verified: true, verification_status: 'verified' })
-      .eq('full_name', name);
-    throwIf(nameError, 'Verified the request, but could not match a profile by name.');
+    throwIf(
+      await stampProfileVerification({ column: 'full_name', value: name }, true),
+      'Verified the request, but could not match a profile by name.',
+    );
   }
 }
 

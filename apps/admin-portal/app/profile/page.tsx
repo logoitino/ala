@@ -1,16 +1,18 @@
 import Link from 'next/link';
 
+import { FeatureFlagBoard } from '@/components/FeatureFlagBoard';
 import { Panel, PortalShell, StatCard } from '@/components/PortalShell';
 import { fetchProfileOversight } from '@/lib/profile';
+import { fetchPortalRuntime } from '@/lib/softWall';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * @purpose Next Profile hierarchy oversight — Look chrome flags + claimed roster signal.
- * @sideEffects `fetchProfileOversight`.
+ * @sideEffects `fetchProfileOversight` + `fetchPortalRuntime`; Profile chrome toggles via FeatureFlagBoard.
  */
 export default async function ProfileOversightPage() {
-  const oversight = await fetchProfileOversight();
+  const [oversight, runtime] = await Promise.all([fetchProfileOversight(), fetchPortalRuntime()]);
 
   const liveById: Record<string, boolean> = {
     showCard: oversight.showCard,
@@ -52,11 +54,9 @@ export default async function ProfileOversightPage() {
 
       <Panel title="Clean Profile hierarchy" kicker="Fan surface">
         <p className="text-sm leading-6 text-slate-600">
-          Own Profile: hamburger <code className="rounded bg-emerald-50 px-1.5">ProfileMenuSheet</code> owns Sign
-          in/out, Capability, Suggest, Receipts, Admin, Flip Aura card, Payouts. Hero is a large circular avatar; slim
-          Crew · Squad strip; Highlights collage; Active Team Roster (athletes see Claimed / Unclaimed via{' '}
-          <code className="rounded bg-emerald-50 px-1.5">profiles.player_id</code>). Toggle chrome below via Features →
-          Profile group, or Expo Look · Profile, then Publish to app.
+          Own Profile and `/user/[id]` share <code className="rounded bg-emerald-50 px-1.5">AthleteProfileView</code>.
+          Hamburger is hub-only; Join Crew / Mālo / Subscribe hide on your claimed row. Toggle chrome below (same RPCs
+          as Expo Look · Profile), then Publish to app.
         </p>
         <p className="text-sm text-slate-600">
           Last Publish:{' '}
@@ -108,6 +108,28 @@ export default async function ProfileOversightPage() {
             </Panel>
           );
         })}
+      </div>
+
+      <div className="mt-6">
+        <Panel title="Draft Profile chrome" kicker="Look · Profile">
+          <p className="text-sm leading-6 text-slate-600">
+            These switches write <code className="rounded bg-emerald-50 px-1.5">app_runtime_config.draft</code> — the
+            same document Expo Look edits. Publish copies onto <code>published</code> so the fan app updates over
+            Realtime.
+          </p>
+          {runtime.configured ? (
+            <FeatureFlagBoard
+              initialDraft={runtime.draft}
+              initialPublished={runtime.published}
+              dirty={runtime.dirty}
+              groupIds={['profile']}
+            />
+          ) : (
+            <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+              Set NEXT_PUBLIC_SUPABASE_* in apps/admin-portal/.env.local to toggle Profile chrome from here.
+            </p>
+          )}
+        </Panel>
       </div>
     </PortalShell>
   );

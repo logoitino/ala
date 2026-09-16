@@ -121,7 +121,7 @@ export function LookTool() {
           />
           <ToggleRow
             title="Actions on top"
-            meta="Drop Mālo / Subscribe sit above Highlights"
+            meta="Off (shipping): Mālo / Subscribe under Crew. On: park them under Highlights / Stats / Vault."
             on={draft.profile.actionsOnTop}
             live={published.profile.actionsOnTop}
             onPress={() => patchProfile('actionsOnTop', !draft.profile.actionsOnTop)}

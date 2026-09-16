@@ -1,71 +1,41 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+
+import { APP_RUNTIME_FLAG_GROUPS, type AppRuntimeFlagGroup } from '@tapuai/shared-types';
 
 import { getSupabaseBrowserClient } from '@/lib/supabase';
 
-type FlagRow = {
-  path: string;
-  label: string;
-  hint: string;
-  group: string;
-};
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
 
-const FLAG_ROWS: FlagRow[] = [
-  { group: 'Soft-Wall related', path: 'buttons.malo', label: 'Mālo', hint: 'Soft wall when On' },
-  { group: 'Soft-Wall related', path: 'buttons.crew', label: 'Join Crew', hint: 'Soft wall when On' },
-  { group: 'Soft-Wall related', path: 'layouts.wishlist', label: 'Locker Room Wishlist', hint: 'Chip In Soft Wall when On' },
-  {
-    group: 'Soft-Wall related',
-    path: 'layouts.operatorConsole',
-    label: 'Operator console',
-    hint: 'Paused at launch — On + Publish opens /operator',
-  },
-  {
-    group: 'Profile chrome',
-    path: 'profile.showCard',
-    label: 'Flip Aura card',
-    hint: 'Hamburger Flip · not the default hero',
-  },
-  {
-    group: 'Profile chrome',
-    path: 'profile.showCrew',
-    label: 'Crew · Squad strip',
-    hint: 'Slim counters under the avatar',
-  },
-  { group: 'Profile chrome', path: 'profile.showStats', label: 'Stats tab', hint: 'Pill under Highlights + roster' },
-  {
-    group: 'Profile chrome',
-    path: 'profile.showVault',
-    label: 'Vault tab',
-    hint: 'Also needs Features Vault button',
-  },
-  {
-    group: 'Profile chrome',
-    path: 'profile.actionsOnTop',
-    label: 'Actions on top',
-    hint: 'Drop Mālo / Subscribe above Highlights',
-  },
-  {
-    group: 'Profile chrome',
-    path: 'profile.statsFirst',
-    label: 'Open on Stats',
-    hint: 'Off keeps Highlights collage first',
-  },
-  { group: 'Fan bar', path: 'tabs.home', label: 'Home', hint: 'Highlights ⚡' },
-  { group: 'Fan bar', path: 'tabs.local', label: 'Local', hint: 'Scores + polls' },
-  { group: 'Fan bar', path: 'tabs.spotlight', label: 'Spotlight', hint: 'Awards' },
-  { group: 'Fan bar', path: 'tabs.drip', label: 'Drip', hint: 'Gear shop' },
-  { group: 'Fan bar', path: 'tabs.profile', label: 'Profile', hint: 'Avatar hero + hamburger' },
-];
+/**
+ * @purpose Overlay draft keys onto published so a Next toggle cannot wipe Look copy / catalogs.
+ */
+function mergeRuntimeBags(
+  published: Record<string, unknown>,
+  draft: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...published };
+  for (const [key, value] of Object.entries(draft)) {
+    const live = published[key];
+    if (isPlainObject(value) && isPlainObject(live)) {
+      out[key] = { ...live, ...value };
+    } else {
+      out[key] = value;
+    }
+  }
+  return out;
+}
 
 function readFlag(bag: Record<string, unknown>, path: string): boolean {
   const [root, key] = path.split('.');
   if (!root || !key) return true;
   const group = bag[root];
-  if (!group || typeof group !== 'object') return true;
-  const value = (group as Record<string, unknown>)[key];
+  if (!isPlainObject(group)) return true;
+  const value = group[key];
   return typeof value === 'boolean' ? value : true;
 }
 
@@ -73,51 +43,68 @@ function setFlag(bag: Record<string, unknown>, path: string, value: boolean): Re
   const [root, key] = path.split('.');
   if (!root || !key) return bag;
   const group = {
-    ...((bag[root] && typeof bag[root] === 'object' ? bag[root] : {}) as Record<string, unknown>),
+    ...(isPlainObject(bag[root]) ? bag[root] : {}),
     [key]: value,
   };
   return { ...bag, [root]: group };
 }
 
 /**
- * @purpose Interactive Soft-Wall + Profile chrome + fan-bar Features toggles on the Next portal.
- * Drafts via RPC; Publish ships to the fan app.
+ * @purpose Interactive Features toggles on the Next portal — same `app_runtime_config` draft Expo `/admin/features` + Look write.
+ * @param groupIds Limit to Profile chrome on the Profile desk; omit for the full Features board.
  * @sideEffects `patch_app_runtime_draft`, `publish_app_runtime`.
  */
 export function FeatureFlagBoard({
   initialDraft,
   initialPublished,
   dirty: initialDirty,
+  groupIds,
 }: {
   initialDraft: Record<string, unknown>;
   initialPublished: Record<string, unknown>;
   dirty: boolean;
+  groupIds?: AppRuntimeFlagGroup['id'][];
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState(initialDraft);
-  const [published] = useState(initialPublished);
+  const [published, setPublished] = useState(initialPublished);
   const [dirty, setDirty] = useState(initialDirty);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
-  const toggle = async (path: string) => {
+  const groups = useMemo(
+    () =>
+      APP_RUNTIME_FLAG_GROUPS.filter((group) => !groupIds || groupIds.includes(group.id)),
+    [groupIds],
+  );
+
+  const persistDraft = async (nextDraft: Record<string, unknown>, ok: string) => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      setMessage('Add NEXT_PUBLIC_SUPABASE_* to apps/admin-portal/.env.local');
+      setFailed(true);
+      setMessage('Add NEXT_PUBLIC_SUPABASE_* to apps/admin-portal/.env.local (same project as the Expo app).');
       return;
     }
-    const nextValue = !readFlag(draft, path);
-    const nextDraft = setFlag(draft, path, nextValue);
+    const { error } = await supabase.rpc('patch_app_runtime_draft', { next_draft: nextDraft });
+    if (error) throw error;
+    setDraft(nextDraft);
+    setDirty(JSON.stringify(nextDraft) !== JSON.stringify(published));
+    setFailed(false);
+    setMessage(ok);
+    router.refresh();
+  };
+
+  const toggle = async (path: string) => {
+    const merged = mergeRuntimeBags(published, draft);
+    const nextValue = !readFlag(merged, path);
+    const nextDraft = setFlag(merged, path, nextValue);
     setBusy(path);
     setMessage(null);
     try {
-      const { error } = await supabase.rpc('patch_app_runtime_draft', { next_draft: nextDraft });
-      if (error) throw error;
-      setDraft(nextDraft);
-      setDirty(JSON.stringify(nextDraft) !== JSON.stringify(published));
-      setMessage(`Draft updated · ${path} ${nextValue ? 'ON' : 'OFF'}. Publish to ship.`);
-      router.refresh();
+      await persistDraft(nextDraft, `Draft updated · ${path} ${nextValue ? 'ON' : 'OFF'}. Publish to ship to Expo.`);
     } catch (caught) {
+      setFailed(true);
       setMessage(caught instanceof Error ? caught.message : 'Could not save draft.');
     } finally {
       setBusy(null);
@@ -127,25 +114,45 @@ export function FeatureFlagBoard({
   const publish = async () => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
+      setFailed(true);
       setMessage('Add NEXT_PUBLIC_SUPABASE_* to apps/admin-portal/.env.local');
       return;
     }
     setBusy('publish');
     setMessage(null);
     try {
+      const merged = mergeRuntimeBags(published, draft);
+      const { error: patchError } = await supabase.rpc('patch_app_runtime_draft', { next_draft: merged });
+      if (patchError) throw patchError;
       const { error } = await supabase.rpc('publish_app_runtime');
       if (error) throw error;
+      setDraft(merged);
+      setPublished(merged);
       setDirty(false);
-      setMessage('Published to the fan app.');
+      setFailed(false);
+      setMessage('Published to the fan app. Expo reads app_runtime_config.published over Realtime.');
       router.refresh();
     } catch (caught) {
+      setFailed(true);
       setMessage(caught instanceof Error ? caught.message : 'Could not publish.');
     } finally {
       setBusy(null);
     }
   };
 
-  const groups = Array.from(new Set(FLAG_ROWS.map((row) => row.group)));
+  const discard = async () => {
+    setBusy('discard');
+    setMessage(null);
+    try {
+      await persistDraft(published, 'Draft discarded — matches live chrome.');
+      setDirty(false);
+    } catch (caught) {
+      setFailed(true);
+      setMessage(caught instanceof Error ? caught.message : 'Could not discard draft.');
+    } finally {
+      setBusy(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -158,20 +165,38 @@ export function FeatureFlagBoard({
         >
           {busy === 'publish' ? 'Publishing…' : 'Publish to app'}
         </button>
+        <button
+          type="button"
+          disabled={busy === 'discard' || !dirty}
+          onClick={() => void discard()}
+          className="rounded-full border border-emerald-900/15 bg-white px-5 py-2.5 text-sm font-extrabold text-slate-800 disabled:opacity-40"
+        >
+          {busy === 'discard' ? 'Reverting…' : 'Discard draft'}
+        </button>
         <p className="text-sm text-slate-600">
-          {dirty ? 'Draft differs from live chrome.' : 'Draft matches published.'}
+          {dirty ? 'Draft differs from live Expo chrome.' : 'Draft matches published.'}
         </p>
       </div>
       {message ? (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-[var(--jade)]">
+        <p
+          className={
+            failed
+              ? 'rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900'
+              : 'rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-[var(--jade)]'
+          }
+        >
           {message}
         </p>
       ) : null}
       {groups.map((group) => (
-        <div key={group} className="space-y-3">
-          <h3 className="text-sm font-extrabold tracking-wide text-[var(--gold)] uppercase">{group}</h3>
-          {FLAG_ROWS.filter((row) => row.group === group).map((row) => {
-            const on = readFlag(draft, row.path);
+        <div key={group.id} className="space-y-3">
+          <div>
+            <h3 className="text-sm font-extrabold tracking-wide text-[var(--gold)] uppercase">{group.label}</h3>
+            <p className="mt-1 text-sm text-slate-600">{group.hint}</p>
+          </div>
+          {group.flags.map((row) => {
+            const merged = mergeRuntimeBags(published, draft);
+            const on = readFlag(merged, row.path);
             const live = readFlag(published, row.path);
             return (
               <div
@@ -182,8 +207,15 @@ export function FeatureFlagBoard({
                   <p className="font-extrabold text-[var(--ink)]">{row.label}</p>
                   <p className="mt-1 text-sm text-slate-600">
                     {row.hint}
-                    {on !== live ? (on ? ' · draft ON, live OFF' : ' · draft OFF, live ON') : live ? ' · live' : ' · live off'}
+                    {on !== live
+                      ? on
+                        ? ' · draft ON, live OFF'
+                        : ' · draft OFF, live ON'
+                      : live
+                        ? ' · live'
+                        : ' · live off'}
                   </p>
+                  <p className="mt-1 text-xs font-semibold text-slate-400">{row.path}</p>
                 </div>
                 <button
                   type="button"

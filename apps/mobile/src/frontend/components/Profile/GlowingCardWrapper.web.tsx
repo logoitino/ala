@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
 import { View } from 'react-native';
-import { WithSkiaWeb } from '@shopify/react-native-skia/lib/module/web';
 
 import { radii } from '@/constants/theme';
 
@@ -10,13 +9,20 @@ import {
   type GlowingCardWrapperProps,
 } from '@/components/Profile/glowingCardChrome';
 
+type WithSkiaWebComponent = ComponentType<{
+  getComponent: () => Promise<unknown>;
+  componentProps: Record<string, unknown>;
+  opts: { locateFile: (file: string) => string };
+  fallback: null;
+}>;
+
 /**
  * @purpose Web-only loader for the Skia neon sweep. CanvasKit WASM must initialize before `@shopify/react-native-skia` is imported.
  * @param children The flippable `AuraTradingCard` (or a Studio persona card).
  * @param isWishlistFulfilled At least one wishlist item is fully funded / equipped.
  * @param isAuraMaxed Aura tier 7 — Celestial Prism.
  * @returns Same layout as native; `LoadSkiaWeb` runs via `WithSkiaWeb` then mounts `GlowingNeonBorder`.
- * @sideEffects Fetches `/canvaskit.wasm` (copied by `pnpm --filter @tapuai/mobile skia:web` / mobile `postinstall`). Never imported by the iOS/Android bundle.
+ * @sideEffects Client-only import of Skia web (SSR on Expo web crashed when this class loaded in Node). Fetches `/canvaskit.wasm`.
  */
 export function GlowingCardWrapper({
   children,
@@ -24,12 +30,23 @@ export function GlowingCardWrapper({
   isAuraMaxed = false,
 }: GlowingCardWrapperProps) {
   const [box, setBox] = useState({ width: 0, height: 0 });
+  const [WithSkiaWeb, setWithSkiaWeb] = useState<WithSkiaWebComponent | null>(null);
   const glow = isWishlistFulfilled || isAuraMaxed;
-  const ready = glow && box.width > 0 && box.height > 0;
+  const ready = glow && box.width > 0 && box.height > 0 && WithSkiaWeb;
+
+  useEffect(() => {
+    let cancelled = false;
+    void import('@shopify/react-native-skia/lib/module/web').then((mod) => {
+      if (!cancelled) setWithSkiaWeb(() => mod.WithSkiaWeb as WithSkiaWebComponent);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <View style={[styles.container, glow ? styles.glowPad : null]}>
-      {ready ? (
+      {ready && WithSkiaWeb ? (
         <View
           style={[
             styles.glow,

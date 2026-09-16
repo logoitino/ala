@@ -4,6 +4,35 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-16
 
+### Expo web no longer dies on Profile SSR
+
+- `http://localhost:8081` crashed with `Class extends value undefined is not a constructor or null` while SSR-loading Profile (`react-native-qrcode-svg` + `expo-file-system` `File` on Node). Web now uses `ShareQrModal.web.tsx` / `share.web.ts` and loads Skia `WithSkiaWeb` only in the browser.
+
+### Web Reports + Money on the Next portal
+
+- `pnpm admin` → `http://localhost:3001/reports` (behavior: sessions, taps, dwell, Mālo windows, leaders) and `/money` (gross / net / payouts / streams). Same RPCs as Expo `/admin/reports` and `/admin/money`.
+
+### Department call sheet
+
+- New [TEAMS.md](docs/TEAMS.md): command staff (Facilitator / Mobile / Backend / QA) plus product departments (`HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `COMMERCE` · `AURA` · `ADMIN` · `BACKEND` · `OPERATOR` · `ROLE_HQ` · `QA` · `LEGAL`). Each section lists fan route, Expo/Next desk, functions, and do-not-touch. Grok [ALA_TEAM_BRIEF.md](docs/ALA_TEAM_BRIEF.md) points at the call template.
+
+### Admin portal wired to the fan app
+
+- Next Features (`pnpm admin`) now toggles the **same flag catalog** as Expo `/admin/features` + Look · Profile (`APP_RUNTIME_FLAG_GROUPS` in shared-types): fan bar, hype, boards, Profile chrome. Draft merge keeps Look copy / catalogs when you flip one switch. **Publish to app** / **Discard draft** hit `patch_app_runtime_draft` + `publish_app_runtime` — Expo fans pick up `published` over Realtime.
+- Profile desk can draft chrome (Flip card, Crew, tabs, Actions on top, Open on Stats) instead of read-only badges. **Actions on top** actually moves Mālo / Subscribe in `AthleteProfileView`.
+- People list shows Claimed roster + Varsity status from live `is_verified_athlete` / `verification_status` (hosted DBs that never got `profiles.is_verified`). Expo `/admin/people` list + Verify/Approve use the same fallback. Incremental: `supabase/profiles_verified_compat.sql`. Coverage: match roster taps open `/user/[id]`.
+
+### Profile tab matches a tapped athlete
+
+- Own Profile and `/user/[id]` share one `AthleteProfileView`: hero, Crew, Share & Fund, Highlights / Stats / Vault, roster. **YOUR HUB** heading is gone; hamburger overlays the own sheet, back overlays a public sheet (stack title hidden).
+- Join Crew, Drop Mālo, and Subscribe hide when `profiles.player_id` (or name) matches the roster row (`isOwnAthleteSheet`). Public sheets run PaymentSheet + `useAthleteSubscription.grant` instead of a fake AsyncStorage tick. Live-game roster and play-card names open `/user/[id]` instead of a tip sheet.
+
+### Highlight picker + compression + avatars
+
+- Camera Roll Highlights go through `HighlightPickerModal` (`expo-image-picker` videos, 45s cap, trim UI). Longer clips alert **Highlight clips must be 45 seconds or less to showcase your best plays!**
+- `MediaUploadService` compresses with `react-native-compressor` (1080p vertical, ~2.5 Mbps) under **Optimizing highlight quality...**, uploads `reels/{user_id}/{timestamp}.mp4` to Storage `reels` (fallback `game_highlights`), then inserts `public.reels`. Expo Go skips native compress and still publishes.
+- Own Profile hero `ProfileAvatarPicker` 1:1 crop → `avatars` bucket → `profiles.avatar_url`. Incremental: `supabase/media_upload.sql`.
+
 ### Spotlight Watch no longer 400s athlete sheet
 
 - Seeded `spotlight_awards` rows can have a null `player_id`. The parser used to invent `spotlight-{award.id}` and **Watch Full Highlight** on the Spotlight tab pushed `/user/{that string}`. Postgres then returned `invalid input syntax for type uuid`. Watch now opens the clip; `/user/[id]` only queries real `players.id` UUIDs.

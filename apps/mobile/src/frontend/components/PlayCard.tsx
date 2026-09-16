@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { TipCheckout } from '@/components/TipCheckout';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import {
   PLAY_REACTIONS,
@@ -20,6 +21,7 @@ import { FOCAL } from '@/theme/motion';
 type PlayCardProps = {
   event: GameEventWithPlayer;
   onBacked?: (playerId: string, nextCount: number) => void;
+  onOpenAthlete?: (playerId: string) => void;
 };
 
 export function resolveEventPlayer(event: GameEventWithPlayer): Player | null {
@@ -52,10 +54,11 @@ function actionTone(eventType: string): 'td' | 'tackle' | 'sack' | 'play' {
  * @purpose Local play-by-play card: jersey, action tag, and Seki / Aura / Flex taps that bump `increment_player_hype`.
  * @param event `game_events` row with optional joined player.
  * @param onBacked Fires after a compact Mālo on this athlete.
+ * @param onOpenAthlete Opens `/user/[id]` when the athlete name is tapped.
  * @returns Surface card with colored reaction chips.
  * @sideEffects Optimistic local counts plus `bumpPlayerHype` RPC when a player is tagged.
  */
-export function PlayCard({ event, onBacked }: PlayCardProps) {
+export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
   const player = resolveEventPlayer(event);
   const [counts, setCounts] = useState(() => getCounts(event.id));
   const [sekiHint, setSekiHint] = useState(false);
@@ -98,7 +101,16 @@ export function PlayCard({ event, onBacked }: PlayCardProps) {
             {displayValue(player?.jersey_number, '—')}
           </Text>
         </View>
-        <View style={styles.identity}>
+        <Pressable
+          accessibilityRole={player && onOpenAthlete ? 'button' : undefined}
+          accessibilityLabel={player ? `Open ${player.name} profile` : undefined}
+          disabled={!player || !onOpenAthlete}
+          haptic="selection"
+          onPress={() => {
+            if (player && onOpenAthlete) onOpenAthlete(player.id);
+          }}
+          style={styles.identity}
+        >
           <Text style={styles.name} numberOfLines={1}>
             {displayValue(player?.name, 'Unknown player')}
           </Text>
@@ -106,7 +118,7 @@ export function PlayCard({ event, onBacked }: PlayCardProps) {
             {displayValue(player?.position)}
             {event.created_at ? `  ·  ${formatPlayTime(event.created_at)}` : ''}
           </Text>
-        </View>
+        </Pressable>
         <View style={[styles.tag, tagStyles[tone]]}>
           <Text style={styles.tagLabel}>{formatActionTag(event.event_type)}</Text>
         </View>
