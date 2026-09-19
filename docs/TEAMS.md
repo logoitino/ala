@@ -26,6 +26,10 @@ Department codes: `FACILITATOR` · `HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PR
 
 If the bug spans two departments, **Facilitator** names a lead and a pair. Schema / RLS / RPC / Storage / Stripe secrets always pull **Backend**. Publish-to-app and docs honesty always pull **QA**.
 
+### Dispatching in Claude Code
+
+Every department except `FACILITATOR` (that's whoever is driving the session — human or the top-level Claude Code assistant, reading this file to route) is a real subagent at `.claude/agents/<code>.md` (lowercase, `ROLE_HQ` → `role-hq.md`). Ask Claude Code to dispatch one directly — "CALL: BACKEND, fix the anon RLS grants" works, or explicitly say "use the backend subagent." Each subagent's file already embeds its fan surface, admin desk, key files, do-not-touch list, and pairing rules from this page, plus any currently-open backlog items relevant to that department, so a call does not need to re-explain context. Subagents run with `Read, Edit, Write, Bash, Grep, Glob` (LEGAL and QA are more restricted — see their files) and are expected to self-gate with `pnpm typecheck` / `pnpm docs:check` before reporting done. Keep this file and the `.claude/agents/*.md` files in sync when a department's surface changes — the agent files are the executable copy, this file is the readable one.
+
 ---
 
 ## Command staff (Grok ALA channel)

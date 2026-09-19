@@ -66,7 +66,7 @@ Identity for signed-in users.
 | `avatar_url` | text | Public Storage URL (`avatars/{user_id}/{timestamp}.jpg`). Incremental: `supabase/media_upload.sql`. |
 | `created_at` | timestamptz | |
 
-**RLS:** public SELECT; INSERT when `user_id = auth.uid()` (Soft-Wall / client `ensureFanProfile`); UPDATE own row or `admin`. First signup also inserts via trigger `on_auth_user_created` → `handle_new_auth_user()` on `auth.users` (security definer). Incremental: `supabase/auth_fan_profile.sql`. Client: `AuthContext` + `lib/auth.ts`.
+**RLS:** public SELECT; INSERT when `user_id = auth.uid()` (Soft-Wall / client `ensureFanProfile`); UPDATE own row or `admin`. First signup also inserts via trigger `on_auth_user_created` → `handle_new_auth_user()` on `auth.users` (security definer). Incremental: `supabase/auth_fan_profile.sql`. Client: `AuthContext` + `lib/auth.ts`. **2026-09 audit:** public SELECT is kept (guest-browse surfaces like Team Roster Strip, Top Boosters, `/gift/[handle]` all read `profiles` with no session), but this still publicly exposes `stripe_connect_id` and other status columns — considered a column-level `REVOKE` but reverted because it would also break `AuthContext`'s `select('*')` self-profile load without a live DB to test against; flagged as a real follow-up (either a `profiles_public` view + call-site migration, or an audited explicit column allowlist). The server routes that need `stripe_connect_id` (`createPayout.ts`, `create-stripe-account`) already read it with the service-role key, unaffected either way.
 
 ### `schools_and_teams`
 
@@ -209,7 +209,7 @@ Per-athlete exclusive access after `$4.99/mo` PaymentSheet on `/athlete/[id]`. C
 
 Unique `(subscriber_id, athlete_id)`. Incremental file: `supabase/subscriptions.sql` (alias: `supabase/athlete_subscriptions.sql`, which also copies any leftover `athlete_subscriptions` rows). If a stub `subscriptions` table already exists (no `subscriber_id` / `athlete_id`), the script drops it when empty or renames it to `subscriptions_legacy`. An older `user_id` column is renamed to `subscriber_id`.
 
-**RLS (demo):** public SELECT / INSERT / UPDATE.
+**RLS (2026-09 audit):** SELECT/UPDATE own `subscriber_id` or admin; INSERT requires `auth.uid() = subscriber_id`. Previously `with check (true)` let any client grant itself a free permanent unlock for any `subscriber_id` — closed.
 
 ### `subscriber_requests`
 
@@ -297,7 +297,7 @@ update_game_score(
 ) returns jsonb
 ```
 
-Atomic increment of scores plus optional clock fields. Re-run `supabase/games_operator.sql`. Client: `updateGameScore` in `apps/mobile/src/frontend/lib/operator.ts` (falls back to a direct `games` UPDATE if the RPC is missing).
+Atomic increment of scores plus optional clock fields. Re-run `supabase/games_operator.sql`. Client: `updateGameScore` in `apps/mobile/src/frontend/lib/operator.ts` (falls back to a direct `games` UPDATE if the RPC is missing). **2026-09 audit:** this is the operator console's primary score path and is SECURITY DEFINER, so it bypassed the `games` RLS policy's claimed-game narrowing entirely; it now carries the same stopgap check internally — an anon caller can only score a game while it is still unclaimed (`claimed_by is null`).
 
 ### `video_tips` → `public.tips`
 
@@ -317,7 +317,7 @@ Clip totals still use `increment_reel_tips`, not a rollup column on `tips`.
 
 Successful Mālo (`useTipCheckout`, `!skipBacker`) **inserts** a `tips` row. Profile **Tip History & Receipts** (`/receipts`) reads via `get_fan_tip_history`. Profile **Total Tips Dropped** on the trading card is still device-local (`tapuai.maloDroppedCount`). Incremental `supabase/get_fan_tip_history.sql` **creates** `public.tips` when it is missing (this table lived only in full `schema.sql`).
 
-**RLS (demo):** public SELECT; INSERT anyone.
+**RLS (2026-09 audit):** SELECT own `fan_id` or admin; INSERT requires `auth.uid() = fan_id` (was `with check (true)` — any client could fabricate a tip of any amount for any player; closed at the RLS layer, though this still trusts the client that a real Stripe charge happened — see `supabase/functions/stripe-webhook/index.ts` for the real verification path this is meant to migrate to). `amount_cents` / `aura_points` now also have `>= 0` CHECK constraints.
 
 ### Related
 
@@ -447,7 +447,7 @@ Active items for one athlete, unfunded first (`order by is_equipped, sort_order,
 chip_in_wishlist_item(item_id uuid, amount_cents integer) returns jsonb
 ```
 
-Adds a Mālo contribution to `current_amount_cents`. When the row crosses `target_amount_cents` for the first time it sets `is_equipped` / `equipped_at` / `aura_awarded` and calls `add_user_aura(player_id, 500)`. Returns `{ item, newly_equipped, aura_points, athlete_aura_points }` — the client uses `newly_equipped` for confetti and `athlete_aura_points` to restyle the Aura card. **v2:** like `add_user_aura` / `increment_backer_count`, this RPC trusts the client-supplied amount under demo RLS. Move the credit behind the Stripe webhook before real money.
+Adds a Mālo contribution to `current_amount_cents`. When the row crosses `target_amount_cents` for the first time it sets `is_equipped` / `equipped_at` / `aura_awarded` and calls `add_user_aura(player_id, 500)`. Returns `{ item, newly_equipped, aura_points, athlete_aura_points }` — the client uses `newly_equipped` for confetti and `athlete_aura_points` to restyle the Aura card. **v2:** like `add_user_aura` / `increment_backer_count`, this RPC trusts the client-supplied amount. Move the credit behind the Stripe webhook before real money. **2026-09 audit:** `EXECUTE` restricted to `authenticated` (Chip In is behind the Soft Wall, so this doesn't affect guests); `wishlist_items` has no per-contribution ledger row (only the aggregate `current_amount_cents`), so there is no `auth.uid()` owner column to check here — a per-call cap (`amount_cents <= 100000`) stands in as a stopgap instead.
 
 ### `shop_orders`
 
@@ -462,7 +462,7 @@ Paid Drip checkout rows. ProductSheet inserts after PaymentSheet succeeds. A tri
 | `qty` | integer default 1 | |
 | `created_at` | timestamptz | |
 
-**RLS (demo):** public SELECT; INSERT anyone; admin UPDATE / DELETE.
+**RLS (2026-09 audit):** SELECT now admin-only (no client reads this table directly yet); INSERT still open to anyone — Drip is **not** behind the Soft Wall (`SOFT_WALL_GATES` only lists `malo` / `crew` / `wishlist`), so guest checkout genuinely needs anon INSERT; UPDATE / DELETE admin-only (previously anon could also update/delete any row through the same `for all` policy — closed). `amount_cents` / `qty` now have CHECK constraints (`>= 0` / `> 0`).
 
 ### `company_revenue_logs`
 
@@ -491,7 +491,7 @@ Fan `MALO_DISCLAIMER` still says 100% to custodial until counsel updates it. Thi
 | `gross_amount` / `platform_cut_amount` / `payout_amount` | numeric | Dollars (legacy stub; kept in sync) |
 | `created_at` | timestamptz | |
 
-**RLS (demo):** admin or `anon` SELECT / writes (Expo Go Studio). Incremental: `supabase/company_revenue.sql`. Client: `fetchCompanyRevenueSummary` + `fetchCompanyRevenueLogs`.
+**RLS (2026-09 audit):** admin-only SELECT / writes (`anon` bypass dropped — all legitimate writes flow through the SECURITY DEFINER trigger `company_revenue_after_source_insert` / `record_company_revenue`, which is unaffected by table grants). `record_company_revenue` / `sync_company_revenue_logs` EXECUTE also revoked from `anon`/`authenticated` entirely — no client ever called them directly, and `record_company_revenue`'s `on conflict (source, source_id) do update` made it a direct route to overwrite an existing ledger row if it had stayed callable. `gross_cents` / `platform_cents` / `payout_cents` now have `>= 0` CHECK constraints. Incremental: `supabase/company_revenue.sql`. Client: `fetchCompanyRevenueSummary` + `fetchCompanyRevenueLogs` (now require a real authenticated admin session).
 
 ### `app_runtime_config`
 
@@ -507,7 +507,7 @@ Single-row fan chrome map (`id = 'default'`). Admin **Features** writes `draft`.
 
 JSON groups: `tabs` (home / local / spotlight / drip / profile / upload), `buttons` (seki / aura / flex / malo / more / subscribe / crew / vault / flashUnlock / **suggest**), `layouts` (liveMatches / cheerPolls / topBoosters / sponsorshipModal / spotlightModal / homeSearch / localSearch / **operatorConsole** (default **off** until Features + Publish) / parentHq / boosterHq / sponsorHq / **slangGuide** / **receipts** / **wishlist**), `theme` (background / surface / jade / gold / text; default **Daylight** `#F3FAF6` / `#00733C`), `profile` (showCard = Flip Aura card from hamburger — not the default hero / showCrew = slim Crew · Squad strip / showStats / showVault / actionsOnTop / statsFirst; Next portal + Expo Look draft these via `PROFILE_CHROME_FLAGS`), `highlights` (railSide / namePlacement / showSchool / showCaption / railOrder), `copy` (Home / Local / Spotlight / Drip kickers and ledes, `slangLine`, Profile / Receipts kickers and ledes, Operator / Parent / Booster / Sponsor ledes, optional `homeBannerTitle` / `homeBannerBody`), **`catalog`** (`maloAmounts`, `maloFeeDollars`, `exclusiveDollars`, `exclusiveAura`, `classYears`, `localFilters`, `sponsorTiers`, `reelCategories`). Client desks: `/admin/features` (flags + Soft-Wall board), `/admin/look` (colors, copy, Profile chrome, Highlights ⚡ rail), `/admin/catalog` (prices and chips), `/admin/lab` (JSON draft, hidden from the sidebar), `/admin/coverage` (client map of every fan control → desk / flag / telemetry, including Soft-Wall auth surface; no extra table). Next portal (`pnpm admin`) also reads published Soft-Wall flags + fan counts via `SOFT_WALL_GATES`.
 
-**RLS (demo):** public SELECT; admin INSERT / UPDATE (`anon` in Expo Go). Incremental: `supabase/app_runtime.sql`. Client: `apps/mobile/src/frontend/lib/runtime.ts` + `/admin/features`.
+**RLS (2026-09 audit):** public SELECT stays (the fan app reads `published` on boot, before any sign-in); INSERT / UPDATE now authenticated-admin only (`anon` bypass dropped). `patch_app_runtime_draft` / `publish_app_runtime` are SECURITY DEFINER so this table policy never actually gated them either way — both now also check `current_user_role() = 'admin'` internally. Incremental: `supabase/app_runtime.sql`. Client: `apps/mobile/src/frontend/lib/runtime.ts` + `/admin/features`.
 
 ### `app_feedback`
 
@@ -614,7 +614,7 @@ Any authenticated user, including verified athletes, may drop Mālo.
 - Increments `profiles.aura_points` where `user_id` or `id` matches
 - Returns `{ aura_points, player_aura_points, profile_aura_points, points_added }`
 
-Grant: `EXECUTE` to `anon`, `authenticated`. Client: `apps/mobile/src/frontend/hooks/useTipCheckout.ts` via `addUserAura`.
+Grant: `EXECUTE` to `authenticated` only (2026-09 audit — `anon` revoked). Client: `apps/mobile/src/frontend/hooks/useTipCheckout.ts` via `addUserAura`. **Security note:** this RPC still cannot verify from SQL alone that a real Stripe charge happened (it's called for both the tipper and the recipient after client-side `presentPaymentSheet()` resolves), so as a stopgap it rejects `points_to_add > 5000` per call (bypassed only for the `service_role` caller — see `supabase/functions/stripe-webhook/index.ts`, the server-verified path meant to eventually replace this client-facing call entirely).
 
 ### `add_user_role(new_role)`
 
@@ -715,7 +715,7 @@ Admin dashboard Telemetry cards. Engagement is Seki + Aura + Flex on live clips.
 patch_app_runtime_draft(next_draft jsonb) returns jsonb  -- { draft, published, published_at, updated_at }
 ```
 
-Writes Features draft. Fans still see `published` until `publish_app_runtime`. Incremental: `supabase/app_runtime.sql`. Client: `saveAppRuntimeDraft`.
+Writes Features draft. Fans still see `published` until `publish_app_runtime`. Incremental: `supabase/app_runtime.sql`. Client: `saveAppRuntimeDraft`. **2026-09 audit:** `EXECUTE` restricted to `authenticated`; internally raises unless `current_user_role() = 'admin'` (SECURITY DEFINER bypasses the table's RLS, so the real gate has to live in the function body — was previously callable by literally anyone).
 
 ### `publish_app_runtime()`
 
@@ -723,7 +723,7 @@ Writes Features draft. Fans still see `published` until `publish_app_runtime`. I
 publish_app_runtime() returns jsonb  -- copies draft onto published, sets published_at
 ```
 
-Gold **Publish to app** in the admin sidebar. Incremental: `supabase/app_runtime.sql`. Client: `publishAppRuntime`.
+Gold **Publish to app** in the admin sidebar. Incremental: `supabase/app_runtime.sql`. Client: `publishAppRuntime`. **2026-09 audit:** same tightening as `patch_app_runtime_draft` above — `authenticated` + internal admin check.
 
 ### `get_admin_reports()`
 
@@ -734,7 +734,15 @@ get_admin_reports() returns jsonb
   -- series { clips, malo, stalls, dwell }
 ```
 
-Usage windows (24h / 7d / previous 7d), Mālo, Vault / Flash Unlock / Spotlight mix, Crew follows, telemetry stalls, **tab dwell / scroll / feature taps / control issues**, top Mālo / hottest clips / athletes-by-school, and `series` (7-day clips / Mālo / stalls / dwell). Incremental: `supabase/app_runtime.sql` + `supabase/admin_reports.sql` + `supabase/usage_reports.sql`. Client: Expo `/admin/reports` and Next `http://localhost:3001/reports`.
+Usage windows (24h / 7d / previous 7d), Mālo, Vault / Flash Unlock / Spotlight mix, Crew follows, telemetry stalls, **tab dwell / scroll / feature taps / control issues**, top Mālo / hottest clips / athletes-by-school, and `series` (7-day clips / Mālo / stalls / dwell). Incremental: `supabase/app_runtime.sql` + `supabase/admin_reports.sql` + `supabase/usage_reports.sql`. Client: Expo `/admin/reports` and Next `http://localhost:3001/reports`. **2026-09 audit:** `EXECUTE` restricted to `authenticated`; internally calls `require_admin_guard()` (new helper — `language sql` functions can't use `if/raise` directly) and raises unless the caller is admin. Was previously anon-executable with no role check at all — anyone could read platform-wide money/audience aggregates.
+
+### `require_admin_guard()`
+
+```sql
+require_admin_guard() returns void
+```
+
+2026-09 audit addition. Small SECURITY DEFINER helper — raises `Admin access required` unless `current_user_role() = 'admin'`, else no-ops. Exists because `get_admin_reports()` is `language sql` (no `if/raise` control flow available directly); called as `select public.require_admin_guard();` as that function's first statement.
 
 ### `company_revenue_bps(stream_source)` / `record_company_revenue` / `sync_company_revenue_logs`
 
@@ -828,40 +836,47 @@ If `aura_points` is unset on a player, the client falls back to `aura_count + se
 
 ---
 
-## RLS (demo-open)
+## RLS (tightened 2026-09 — some tables still demo-open, tighten those before production)
 
-Policies in `schema.sql` allow Expo Go without login. **Tighten before production.**
+`schema.sql` originally allowed Expo Go without login almost everywhere (`auth.role() = 'anon' or ...` baked into most admin/staff policies). A 2026-09 security audit closed the money-fabrication and admin-data-exposure holes below; a few same-pattern tables were deliberately **not** touched in that pass (called out at the bottom) because closing them needs either a bigger product decision (real authenticated operator/admin accounts — the PIN claim and Studio-unlock preview are both client-only today, not Supabase-authenticated) or a larger refactor (`reels` INSERT/UPDATE, `subscriber_requests` INSERT, `app_feedback` SELECT/UPDATE, `upsert_cheer_poll`, `operator_gigs`/`operator_checkins`, the direct `wishlist_items` table write policy (the fan-facing `chip_in_wishlist_item` RPC path IS tightened — see above — but admin desk direct-table writes to `wishlist_items` still have the `anon` bypass), `sport_configs` admin writes — still `with check (true)` / anon-or-role, same class of issue as `tips` was, just not in this pass's scope). Those remaining tables are still demo-open — tighten before production.
 
 | Table | SELECT | Writes |
 | --- | --- | --- |
-| `profiles` | Public | INSERT own (`user_id = auth.uid`); UPDATE own / admin |
-| `players` | Public | anon or booster/admin/operator/parent |
-| `games` | Public | UPDATE anon or operator/admin; INSERT admin/operator |
-| `reels` | Public | INSERT + UPDATE anyone |
-| `subscriptions` | Public | INSERT + UPDATE anyone |
-| `subscriber_requests` | Public | INSERT anyone |
-| `tips` | Public | INSERT anyone |
-| `sponsorships` | Public | INSERT anyone; admin UPDATE / DELETE |
+| `profiles` | Public (guest-browse; `stripe_connect_id` exposure to anon/authenticated is a known, deliberately-deferred gap — see the `profiles` section above) | INSERT own (`user_id = auth.uid`); UPDATE own / admin |
+| `players` | Public | **authenticated** booster/admin/operator/parent only (`anon` bypass dropped — carries `aura_points`) |
+| `games` | Public | UPDATE operator/admin, or `anon` only while `claimed_by is null`; INSERT **authenticated** admin/operator |
+| `game_events` | Public | INSERT operator/admin, or `anon` only while the referenced game is unclaimed. `player_id` nullable for sideline callouts |
+| `reels` | Public | INSERT + UPDATE anyone — **not tightened this pass**, same class of hole as `tips` was; flagged as a follow-up |
+| `subscriptions` | Own `subscriber_id` or admin | INSERT/UPDATE own `subscriber_id` only (`with check (true)` closed) |
+| `subscriber_requests` | Public | INSERT anyone — not tightened this pass |
+| `tips` | Own `fan_id` or admin | INSERT requires `auth.uid() = fan_id` (`with check (true)` closed); `amount_cents`/`aura_points` CHECK `>= 0` |
+| `sponsorships` | Public | INSERT anyone; admin UPDATE / DELETE (`anon` bypass dropped on admin policy); `amount_cents`/`aura_points` CHECK `>= 0` |
 | `shop_products` | Public | Admin INSERT / UPDATE / DELETE |
-| `shop_orders` | Public | INSERT anyone; admin UPDATE / DELETE |
-| `company_revenue_logs` | Admin or `anon` | Admin or `anon` writes (Expo Go) |
-| `app_runtime_config` | Public | Admin INSERT / UPDATE |
-| `app_feedback` | Admin or `anon` | INSERT anyone; admin or `anon` UPDATE |
+| `shop_orders` | **Admin-only** | INSERT anyone (Drip is not Soft-Wall-gated — see `shop_orders` section above); admin UPDATE / DELETE (`anon` bypass dropped); `amount_cents` CHECK `>= 0`, `qty` CHECK `> 0` |
+| `company_revenue_logs` | **Admin-only** | **Admin-only** (`anon` bypass dropped; real writes flow through a SECURITY DEFINER trigger regardless); amount columns CHECK `>= 0` |
+| `app_runtime_config` | Public (fan chrome boot) | **authenticated** admin only (`anon` bypass dropped; `patch_app_runtime_draft`/`publish_app_runtime` also admin-checked internally since SECURITY DEFINER bypasses this policy) |
+| `app_feedback` | Admin or `anon` | INSERT anyone; admin or `anon` UPDATE — not tightened this pass |
 | `telemetry_logs` | Authenticated | INSERT anyone |
 | `saved_reels` | Own rows | INSERT / DELETE own rows |
-| `reel_hype_votes` | Own rows | INSERT own rows |
+| `reel_hype_votes` | Own rows | INSERT own rows, **authenticated only** (anon execute on `increment_reel_hype` defeated this table's own per-user dedupe — closed) |
 | `schools_and_teams` | Public | Admin INSERT / UPDATE / DELETE |
 | `athlete_career_stats` | Public | Seed-only |
 | `athlete_game_logs` | Public | Seed-only |
-| `spotlight_awards` | Public | Admin INSERT / UPDATE / DELETE |
+| `spotlight_awards` | Public | **authenticated** admin only (`anon` bypass dropped, including inside `publish_spotlight_award` / `unlock_spotlight_period`) |
 | `crew_follows` | Public | INSERT / DELETE own `follower_id` |
 | `crew_push_queue` | Own `recipient_id` | INSERT anyone (RPC writes) |
-| `cheer_polls` | Public | Admin writes; votes via `cast_cheer_vote` |
-| `game_events` | Public | INSERT anon or operator/admin. `player_id` nullable for sideline callouts |
+| `cheer_polls` | Public | Admin writes (`upsert_cheer_poll` still has an anon bypass — not tightened this pass, tied to the same operator-demo product question as `games`); votes via `cast_cheer_vote` |
+| `verification_requests` | Own request (`requester_user_id`) or booster/admin | INSERT requires the caller's own `requester_user_id` (or null); booster/admin UPDATE / DELETE (`anon` bypass dropped) |
+| `disbursements` | admin/parent only (was public despite being named "Admin read") | admin/parent only (`anon` bypass dropped) |
+| `sponsor_ads` | Public | **authenticated** sponsor/admin only (`anon` bypass dropped; no client code writes this table today) |
 
 ```sql
 current_user_role()  -- profiles.role for auth.uid(), else 'guest'
 ```
+
+**Known open product decision (not made in this pass):** operator PIN-claim (`lib/operator.ts` `OPERATOR_TEST_PIN`) and Expo `/admin` Studio-unlock preview are both client-only gates today, never backed by a real Supabase-authenticated session/role. RLS can no longer treat `auth.role() = 'anon'` as "trusted operator/admin" the way it used to, so anon writes on `games`/`game_events` are now narrowed to unclaimed games only (see above) rather than fully blocked, and `players`/`sponsor_ads`/admin-desk writes now require a real authenticated account with the right role — Studio-unlock-only preview (no sign-in) will no longer be able to write to those tables. Whether to build real authenticated operator/admin accounts is a product call for the team, not something decided here.
+
+**Server-side payment verification:** `supabase/functions/stripe-webhook/index.ts` (new) verifies the Stripe signature on `payment_intent.succeeded` and is meant to become the only writer of `tips` / `subscriptions` / Aura once COMMERCE adds enough PaymentIntent metadata for it to attribute a charge to a specific tip/subscription/order — see the file's header comment for the deploy checklist (Stripe dashboard webhook + `STRIPE_WEBHOOK_SECRET`) and what's still manual. The client-side write path in `useTipCheckout.ts` is intentionally still in place; migrating off it is a COMMERCE follow-up.
 
 ---
 

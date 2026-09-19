@@ -6,12 +6,15 @@ import {
   Text,
   View,
 } from 'react-native';
-import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
+import { CardShine } from '@/components/Effects/CardShine';
+import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { useCelebration } from '@/context/CelebrationContext';
 import { cardShadow, colors, radii } from '@/constants/theme';
+import { SPRING_FLIP } from '@/theme/motion';
 
 const CONFETTI_COLORS = [colors.accent, colors.primary, colors.gold, '#FFFFFF', colors.success];
 
@@ -20,12 +23,22 @@ export function BackedCelebration() {
   const { payload, dismiss } = useCelebration();
   const [burstKey, setBurstKey] = useState(0);
   const width = Dimensions.get('window').width;
+  const cardEntrance = useSharedValue(0);
 
   useEffect(() => {
-    if (payload) setBurstKey((current) => current + 1);
-  }, [payload]);
+    if (payload) {
+      setBurstKey((current) => current + 1);
+      cardEntrance.value = 0;
+      cardEntrance.value = withSpring(1, SPRING_FLIP);
+    }
+  }, [cardEntrance, payload]);
 
   const origin = useMemo(() => ({ x: width / 2, y: -12 }), [width]);
+
+  const cardEntranceStyle = useAnimatedStyle(() => ({
+    opacity: cardEntrance.value,
+    transform: [{ scale: 0.85 + cardEntrance.value * 0.15 }],
+  }));
 
   return (
     <Modal
@@ -56,7 +69,8 @@ export function BackedCelebration() {
           </View>
         ) : null}
 
-        <View style={styles.card}>
+        <Animated.View style={[styles.card, cardEntranceStyle]}>
+          <CardShine loopMs={2400} width={70} tint="rgba(0,230,118,0.35)" />
           <Text style={styles.kicker}>SEKI! MĀLO DELIVERED! 🚀</Text>
           <Text style={styles.headline}>
             YOU BACKED {payload?.playerName.toUpperCase()}! 🏈
@@ -65,14 +79,15 @@ export function BackedCelebration() {
           {payload?.auraPointsEarned ? (
             <Text style={styles.auraEarned}>+{payload.auraPointsEarned} Aura Points Earned! ⚡</Text>
           ) : null}
-          <Pressable
-            accessibilityRole="button"
+          <AnimatedButton
+            accessibilityLabel="Keep dropping Mālo"
+            haptic="medium"
+            contentStyle={styles.button}
             onPress={dismiss}
-            style={({ pressed }) => [styles.button, pressed && styles.pressed]}
           >
             <Text style={styles.buttonLabel}>Keep dropping Mālo</Text>
-          </Pressable>
-        </View>
+          </AnimatedButton>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -116,6 +131,7 @@ const styles = StyleSheet.create({
     paddingVertical: 28,
     gap: 12,
     alignItems: 'center',
+    overflow: 'hidden',
     ...cardShadow,
   },
   kicker: {

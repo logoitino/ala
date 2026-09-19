@@ -24,7 +24,7 @@ Prices, PIN, Connect identity, RLS, and the Mālo disclaimer are generated from 
 | Fact | Where it lives |
 | --- | --- |
 | Mālo amounts | $5 / $10 / $25 + custom (`TIP_AMOUNTS`) |
-| In-app claim | 100% of your backing (minus standard payment processing unless covered) goes directly to the athlete's custodial account. |
+| In-app claim | 100% of your backing (minus standard payment processing unless covered) goes directly to the athlete's custodial account — not the person who uploaded the clip. |
 | Admin Mālo rake | 10% platform / 90% athlete (`MALO_PLATFORM_CUT_BPS`) — control plane only |
 | Exclusive | $4.99; +100 Aura (`EXCLUSIVE_MONTHLY_DOLLARS`) |
 | Boosters | Silver $50 / Gold $150 / Platinum $500 (`SPONSOR_TIERS`) |

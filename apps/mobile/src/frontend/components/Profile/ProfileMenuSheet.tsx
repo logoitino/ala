@@ -1,13 +1,14 @@
 import { type ReactNode, useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
 export type ProfileMenuItem = {
   id: string;
@@ -29,34 +30,51 @@ type ProfileMenuSheetProps = {
  * @param items Menu rows; parent closes the sheet before opening nested modals.
  * @returns Blur bottom sheet matching RoleSwitcher / SoftWall chrome.
  */
+const SHEET_TRAVEL = 420;
+
 export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMenuSheetProps) {
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
+  const translateY = useSharedValue(SHEET_TRAVEL);
+  const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
-    if (visible) setOpen(true);
-  }, [visible]);
+    if (visible) {
+      setOpen(true);
+      translateY.value = withSpring(0, SPRING_CARD);
+      backdropOpacity.value = withTiming(1, { duration: 200 });
+    }
+  }, [backdropOpacity, translateY, visible]);
+
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
 
   if (!open && !visible) return null;
 
   const dismiss = () => {
-    setOpen(false);
-    onClose();
+    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
+    backdropOpacity.value = withTiming(0, { duration: 160 });
+    setTimeout(() => {
+      setOpen(false);
+      onClose();
+    }, 180);
   };
 
   return (
     <Modal
       transparent
-      animationType="fade"
+      animationType="none"
       visible={visible}
       onRequestClose={dismiss}
       onDismiss={() => setOpen(false)}
     >
       <View style={styles.root}>
         <Pressable haptic="none" style={styles.backdrop} onPress={dismiss}>
-          <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+          <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
+            <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+          </Animated.View>
         </Pressable>
-        <View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
+        <Animated.View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }, sheetStyle]}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>Account</Text>
           <Text style={styles.title}>Settings</Text>
@@ -85,7 +103,7 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
           <Pressable accessibilityRole="button" onPress={dismiss} style={styles.close}>
             <Text style={styles.closeLabel}>Close</Text>
           </Pressable>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

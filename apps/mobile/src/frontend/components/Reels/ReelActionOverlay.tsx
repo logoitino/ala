@@ -10,6 +10,7 @@ import { colors } from '@/constants/theme';
 import { formatCompactCount } from '@/lib/hype';
 import { formatTipDollars, type ReelHype } from '@/lib/reels';
 import type { PlayReactionId } from '@/data/players';
+import { maloAthleteCta } from '@/data/malo';
 import { HYPE_FX } from '@/theme/hypeFx';
 import { FOCAL } from '@/theme/motion';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -32,6 +33,8 @@ type ReelActionOverlayProps = {
   userTipped?: boolean;
   tipping?: boolean;
   canTip?: boolean;
+  /** When false, Mālo still taps (open profile / toast) but PaymentSheet is not ready. */
+  maloReady?: boolean;
   canOpenAthlete?: boolean;
   reacting?: boolean;
   onOpenAthlete?: () => void;
@@ -41,7 +44,7 @@ type ReelActionOverlayProps = {
 };
 
 /**
- * @purpose TikTok-style Highlights chrome: name + school + caption bottom-left (7-tier color on the name), right rail Seki / Aura / Flex / Mālo / ⋯. One hype kind per fan; Mālo fills after a tip. Share, Save, and Report live in the more sheet.
+ * @purpose TikTok-style Highlights chrome: name + school + caption bottom-left (7-tier color on the name), right rail Seki / Aura / Flex / Mālo / ⋯. Mālo is athlete-named; pending tags stay tappable but do not open PaymentSheet.
  * @param hype Live clip counters (optimistic local state).
  * @param onReact Increments the tapped hype kind immediately; `reels` updates in the background.
  * @returns Overlay copy + action rail. Pointer-events box-none so video taps pass through.
@@ -59,6 +62,7 @@ export function ReelActionOverlay({
   userTipped = false,
   tipping = false,
   canTip = true,
+  maloReady = true,
   canOpenAthlete = false,
   reacting = false,
   onOpenAthlete,
@@ -93,14 +97,15 @@ export function ReelActionOverlay({
       );
     }
     if (id === 'malo' && live.buttons.malo) {
+      const tipLabel = userTipped
+        ? `Mālo sent to ${athleteName}, ${formatTipDollars(hype.total_tips_cents)} total`
+        : maloReady
+          ? `${maloAthleteCta(athleteName)}, ${formatTipDollars(hype.total_tips_cents)} total`
+          : `Confirm ${athleteName} on this clip before Mālo`;
       return (
         <AnimatedPressable
           key="malo"
-          accessibilityLabel={
-            userTipped
-              ? `Mālo sent, ${formatTipDollars(hype.total_tips_cents)} total`
-              : `Drop a Mālo, ${formatTipDollars(hype.total_tips_cents)} total`
-          }
+          accessibilityLabel={tipLabel}
           accessibilityState={{ disabled: !canTip || tipping || !onTip }}
           disabled={!canTip || tipping || !onTip}
           scaleTo={0.88}
@@ -110,14 +115,14 @@ export function ReelActionOverlay({
             styles.malo,
             { backgroundColor: userTipped ? jade : ink, borderColor: jade },
             userTipped ? null : { shadowColor: jade },
-            (!canTip || tipping) && styles.disabled,
+            (!canTip || tipping || !maloReady) && styles.disabled,
           ]}
         >
           <Text style={[styles.maloLabel, { color: userTipped ? ink : jade }]}>
             {userTipped ? "Mālo'd" : 'Mālo'}
           </Text>
-          <Text style={[styles.maloTotal, { color: userTipped ? ink : jade }]}>
-            {formatTipDollars(hype.total_tips_cents)}
+          <Text style={[styles.maloTotal, { color: userTipped ? ink : jade }]} numberOfLines={1}>
+            {maloReady || userTipped ? formatTipDollars(hype.total_tips_cents) : 'Tag'}
           </Text>
         </AnimatedPressable>
       );

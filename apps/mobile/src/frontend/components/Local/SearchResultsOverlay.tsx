@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, {
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -173,28 +179,32 @@ export function SearchResultsOverlay({
             style={styles.results}
             contentContainerStyle={styles.list}
           >
-            {mergedHits.map((hit) => (
-              <AnimatedButton
+            {mergedHits.map((hit, index) => (
+              <Animated.View
                 key={`${hit.entity_type}:${hit.entity_id}`}
-                accessibilityLabel={`${kindLabel(hit.entity_type)} ${hit.title}`}
-                onPress={() => openHit(hit)}
-                contentStyle={styles.row}
+                entering={FadeInUp.delay(Math.min(index, 6) * 22).duration(140)}
               >
-                <View style={styles.rowIcon}>
-                  <Ionicons name={kindIcon(hit.entity_type)} size={18} color={colors.primary} />
-                </View>
-                <View style={styles.rowCopy}>
-                  <Text style={styles.rowKind}>{kindLabel(hit.entity_type)}</Text>
-                  <Text style={styles.rowTitle} numberOfLines={1}>
-                    {hit.title}
-                  </Text>
-                  {hit.subtitle ? (
-                    <Text style={styles.rowSub} numberOfLines={1}>
-                      {hit.subtitle}
+                <AnimatedButton
+                  accessibilityLabel={`${kindLabel(hit.entity_type)} ${hit.title}`}
+                  onPress={() => openHit(hit)}
+                  contentStyle={styles.row}
+                >
+                  <View style={styles.rowIcon}>
+                    <Ionicons name={kindIcon(hit.entity_type)} size={18} color={colors.primary} />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <Text style={styles.rowKind}>{kindLabel(hit.entity_type)}</Text>
+                    <Text style={styles.rowTitle} numberOfLines={1}>
+                      {hit.title}
                     </Text>
-                  ) : null}
-                </View>
-              </AnimatedButton>
+                    {hit.subtitle ? (
+                      <Text style={styles.rowSub} numberOfLines={1}>
+                        {hit.subtitle}
+                      </Text>
+                    ) : null}
+                  </View>
+                </AnimatedButton>
+              </Animated.View>
             ))}
           </ScrollView>
         )}

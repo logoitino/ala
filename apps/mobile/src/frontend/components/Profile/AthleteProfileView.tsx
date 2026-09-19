@@ -286,14 +286,16 @@ export function AthleteProfileView({
     <View style={styles.actionRow}>
       {live.buttons.malo && onDropMalo ? (
         <AnimatedButton
-          accessibilityLabel={`Drop ${maloAmount} dollar Mālo`}
+          accessibilityLabel={`Drop ${maloAmount} dollar Mālo for ${name}`}
           disabled={tipping}
           haptic="medium"
           onPress={onDropMalo}
           style={styles.actionFlex}
           contentStyle={[styles.primaryAction, tipping && styles.disabled]}
         >
-          <Text style={styles.primaryActionLabel}>Drop ${maloAmount} Mālo</Text>
+          <Text style={styles.primaryActionLabel}>
+            Drop ${maloAmount} Mālo · {name}
+          </Text>
         </AnimatedButton>
       ) : null}
       {live.buttons.subscribe && onSubscribe ? (

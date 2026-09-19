@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { type Href, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import { OperatorRosterModal } from '@/components/OperatorRosterModal';
 import { PlaySentBanner } from '@/components/PlaySentBanner';
@@ -435,20 +435,12 @@ export default function OperatorScorekeeperScreen() {
         <Text style={styles.label}>Broadcast to fans</Text>
         <View style={styles.callouts}>
           {sport.callouts.map((callout) => (
-            <AnimatedPressable
+            <CalloutButton
               key={callout.id}
-              haptic="none"
-              scaleTo={0.94}
+              label={`${callout.emoji} ${callout.label}`}
               disabled={sending}
-              accessibilityLabel={`${callout.emoji} ${callout.label}`}
               onPress={() => void broadcast(callout)}
-              style={styles.calloutFlex}
-              contentStyle={[styles.callout, sending && styles.disabled]}
-            >
-              <Text style={styles.calloutLabel}>
-                {callout.emoji} {callout.label}
-              </Text>
-            </AnimatedPressable>
+            />
           ))}
         </View>
 
@@ -559,21 +551,91 @@ function ScoreColumn({
       <Animated.Text style={[styles.score, scoreStyle]}>{value}</Animated.Text>
       <View style={styles.stepCol}>
         {steps.map((step) => (
-          <AnimatedPressable
+          <ScoreStepButton
             key={step.id}
-            haptic="light"
-            scaleTo={0.92}
+            label={label}
+            points={step.points}
+            hint={step.label}
             disabled={disabled}
-            accessibilityLabel={`${label} ${step.label}`}
             onPress={() => onBump(step.points)}
-            contentStyle={[styles.step, disabled && styles.disabled]}
-          >
-            <Text style={styles.stepLabel}>+{step.points}</Text>
-            <Text style={styles.stepHint}>{step.label}</Text>
-          </AnimatedPressable>
+          />
         ))}
       </View>
     </View>
+  );
+}
+
+/**
+ * @purpose One score-step button (+1 / +3 / +6…). Flashes white the instant it's tapped, before the
+ * `update_game_score` RPC resolves, so the operator gets confirmation the tap registered even under time pressure.
+ */
+function ScoreStepButton({
+  label,
+  points,
+  hint,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  points: number;
+  hint: string;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  const flash = useSharedValue(0);
+  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+
+  return (
+    <AnimatedPressable
+      haptic="light"
+      scaleTo={0.92}
+      disabled={disabled}
+      accessibilityLabel={`${label} ${hint}`}
+      onPress={() => {
+        flash.value = withSequence(withTiming(0.55, { duration: 40 }), withTiming(0, { duration: 220 }));
+        onPress();
+      }}
+      contentStyle={[styles.step, disabled && styles.disabled]}
+    >
+      <Animated.View pointerEvents="none" style={[styles.stepFlash, flashStyle]} />
+      <Text style={styles.stepLabel}>+{points}</Text>
+      <Text style={styles.stepHint}>{hint}</Text>
+    </AnimatedPressable>
+  );
+}
+
+/**
+ * @purpose One sideline callout button (⚡ Big Play, 🏆 Touchdown, …). Flashes jade the instant it's tapped,
+ * ahead of the Broadcast round-trip, so the operator sees confirmation before `flashToast` lands.
+ */
+function CalloutButton({
+  label,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  const flash = useSharedValue(0);
+  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
+
+  return (
+    <AnimatedPressable
+      haptic="none"
+      scaleTo={0.94}
+      disabled={disabled}
+      accessibilityLabel={label}
+      onPress={() => {
+        flash.value = withSequence(withTiming(1, { duration: 50 }), withTiming(0, { duration: 260 }));
+        onPress();
+      }}
+      style={styles.calloutFlex}
+      contentStyle={[styles.callout, disabled && styles.disabled]}
+    >
+      <Animated.View pointerEvents="none" style={[styles.calloutFlash, flashStyle]} />
+      <Text style={styles.calloutLabel}>{label}</Text>
+    </AnimatedPressable>
   );
 }
 
@@ -657,6 +719,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 6,
+    overflow: 'hidden',
+  },
+  stepFlash: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: colors.onAccent,
   },
   stepLabel: {
     color: colors.onAccent,
@@ -734,6 +801,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  calloutFlash: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: colors.primary,
   },
   calloutLabel: {
     color: colors.text,

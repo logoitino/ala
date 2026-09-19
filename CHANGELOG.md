@@ -4,6 +4,11 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-16
 
+### Highlights Mālo goes to the athlete in the play
+
+- Rail CTA and tip sheet name the tagged athlete (`Drop Mālo · [Name]`). Copy says the gift is for the performer, not whoever uploaded the clip (`MALO_DISCLAIMER` + sheet subtitle).
+- PaymentSheet opens only when the clip has a roster athlete and a non-pending / non-rejected tag. Pending or untagged clips toast and route to profile (or Alert) instead of checkout. Profile CTA reads `Drop $N Mālo · [Name]`.
+
 ### Expo web no longer dies on Profile SSR
 
 - `http://localhost:8081` crashed with `Class extends value undefined is not a constructor or null` while SSR-loading Profile (`react-native-qrcode-svg` + `expo-file-system` `File` on Node). Web now uses `ShareQrModal.web.tsx` / `share.web.ts` and loads Skia `WithSkiaWeb` only in the browser.

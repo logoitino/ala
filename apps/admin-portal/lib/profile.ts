@@ -4,7 +4,7 @@
 
 import { PROFILE_CHROME_FLAGS, type ProfileOversight } from '@tapuai/shared-types';
 
-import { getSupabaseServerClient } from '@/lib/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase.server';
 
 type RuntimeProfile = {
   showCard?: boolean;
@@ -47,7 +47,7 @@ export async function fetchProfileOversight(): Promise<ProfileOversight> {
     chromeFlags: PROFILE_CHROME_FLAGS,
   };
 
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   if (!supabase) return empty;
 
   const [runtimeRes, claimedRes, athleteRes] = await Promise.all([

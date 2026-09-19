@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
@@ -72,7 +73,16 @@ function AuraBoosterCard({
     >
       <AuraTicks color={tier.color} />
       <View style={styles.topRow}>
-        <View style={[styles.rank, { borderColor: rankColor, backgroundColor: `${rankColor}22` }]}>
+        <View
+          style={[
+            styles.rank,
+            { borderColor: rankColor, backgroundColor: `${rankColor}22` },
+            rank === 1 && styles.rankTop,
+          ]}
+        >
+          {rank === 1 ? (
+            <Ionicons name="star" size={10} color={FOCAL.goldInk} style={styles.rankStar} />
+          ) : null}
           <Text style={[styles.rankLabel, { color: rank === 1 ? FOCAL.goldInk : tier.ink }]}>#{rank}</Text>
         </View>
         <View style={[styles.badge, { borderColor: tier.color, backgroundColor: `${tier.color}22` }]}>
@@ -82,6 +92,7 @@ function AuraBoosterCard({
 
       <View style={styles.identity}>
         <View style={[styles.avatar, { borderColor: tier.color }]}>
+          <View pointerEvents="none" style={styles.avatarGloss} />
           <Text style={[styles.initials, { color: tier.ink }]}>{initialsFor(booster.full_name)}</Text>
         </View>
         <Text style={styles.name} numberOfLines={1}>
@@ -130,6 +141,7 @@ function BoosterPeek({
           <AuraTicks color={tier.color} size={18} weight={2} />
           <Text style={styles.peekKicker}>Booster profile</Text>
           <View style={[styles.peekAvatar, { borderColor: tier.color }]}>
+            <View pointerEvents="none" style={styles.peekAvatarGloss} />
             <Text style={[styles.peekInitials, { color: tier.ink }]}>{initialsFor(booster.full_name)}</Text>
           </View>
           <Text style={styles.peekName}>{booster.full_name}</Text>
@@ -252,10 +264,29 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rank: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,
+  },
+  rankTop: {
+    borderWidth: 1.5,
+    ...Platform.select({
+      ios: {
+        shadowColor: FOCAL.electricGold,
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 0 },
+      },
+      android: { elevation: 4 },
+      default: { boxShadow: `0px 0px 8px ${FOCAL.electricGold}88` },
+    }),
+  },
+  rankStar: {
+    marginTop: -1,
   },
   rankLabel: {
     fontSize: 10,
@@ -285,6 +316,17 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarGloss: {
+    position: 'absolute',
+    top: -12,
+    left: -9,
+    width: 42,
+    height: 27,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    transform: [{ rotate: '-18deg' }],
   },
   initials: {
     fontSize: 16,
@@ -345,6 +387,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
+    overflow: 'hidden',
+  },
+  peekAvatarGloss: {
+    position: 'absolute',
+    top: -20,
+    left: -14,
+    width: 70,
+    height: 44,
+    borderRadius: 35,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    transform: [{ rotate: '-18deg' }],
   },
   peekInitials: {
     fontSize: 28,

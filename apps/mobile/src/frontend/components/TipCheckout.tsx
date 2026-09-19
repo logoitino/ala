@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 
 import { FeeCheckbox } from '@/components/FeeCheckbox';
 import { TipButton } from '@/components/TipButton';
@@ -7,6 +8,7 @@ import { colors, radii } from '@/constants/theme';
 import { AURA_PER_DOLLAR, MALO_DISCLAIMER, auraPointsForTip, displayValue, type Player } from '@/data/players';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
+import { SPRING_BOUNCE } from '@/theme/motion';
 
 type TipCheckoutProps = {
   player: Player;
@@ -25,7 +27,7 @@ function parseCustomTip(value: string): number | null {
 }
 
 /**
- * @purpose Mālo amount picker ($5 / $10 / $25 / Custom) wired to Stripe PaymentSheet.
+ * @purpose Mālo amount picker ($5 / $10 / $25 / Custom) wired to Stripe PaymentSheet. Header names the athlete who receives the gift (not the uploader).
  * @param onBusyChange Lets the tip sheet lock Close/backdrop while PaymentSheet is presenting.
  * @sideEffects `useTipCheckout` → PaymentIntent, optional backer/reel counters, `add_user_aura`.
  */
@@ -47,11 +49,23 @@ export function TipCheckout({
   const playerName = displayValue(player.name, 'this athlete');
   const customAmount = useMemo(() => parseCustomTip(customValue), [customValue]);
   const customAura = customAmount != null ? auraPointsForTip(customAmount) : null;
+  const auraBump = useSharedValue(1);
 
   useEffect(() => {
     onBusyChange?.(busy);
     return () => onBusyChange?.(false);
   }, [busy, onBusyChange]);
+
+  useEffect(() => {
+    if (customAura == null) return;
+    auraBump.value = withSequence(withSpring(1.12, SPRING_BOUNCE), withSpring(1, SPRING_BOUNCE));
+    // Bump reacts to the derived aura total, not the shared value itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customAura]);
+
+  const auraBumpStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: auraBump.value }],
+  }));
 
   const pay = (tipAmount: number) => {
     void startCheckout({ player, tipAmount, coverFees, reelId, onBacked, onTipped });
@@ -61,8 +75,11 @@ export function TipCheckout({
     <View style={[styles.section, compact && styles.compact]}>
       {!compact && !hideHeader ? (
         <View style={styles.header}>
-          <Text style={styles.title}>Drop a Mālo</Text>
-          <Text style={styles.subtitle}>Send direct financial support to {playerName}</Text>
+          <Text style={styles.title}>Drop Mālo · {playerName}</Text>
+          <Text style={styles.subtitle}>
+            This gift goes to {playerName} — the athlete — not whoever uploaded a clip. You each earn{' '}
+            {AURA_PER_DOLLAR} Aura Points per $1.
+          </Text>
         </View>
       ) : null}
 
@@ -104,11 +121,11 @@ export function TipCheckout({
             style={styles.input}
             value={customValue}
           />
-          <Text style={styles.customAura}>
+          <Animated.Text style={[styles.customAura, auraBumpStyle]}>
             {customAura != null
               ? `+${customAura} Aura Points Earned! ⚡`
               : 'Minimum $1.00'}
-          </Text>
+          </Animated.Text>
           <TipButton
             amount={customAmount ?? undefined}
             label={customAmount != null ? `Drop $${customAmount} Mālo` : 'Drop custom Mālo'}

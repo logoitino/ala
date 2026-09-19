@@ -10,8 +10,10 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ReanimatedView, { FadeIn } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { CardShine } from '@/components/Effects/CardShine';
 import { colors, radii } from '@/constants/theme';
 import {
   HIGHLIGHT_LIBRARY_CTA,
@@ -159,14 +161,21 @@ export function HighlightPickerModal({ visible, onClose, onPicked }: HighlightPi
         </AnimatedButton>
 
         {optimizing ? (
-          <View style={[StyleSheet.absoluteFill, styles.overlay]} accessibilityRole="progressbar" accessibilityLabel={HIGHLIGHT_OPTIMIZING}>
+          <ReanimatedView.View
+            entering={FadeIn.duration(140)}
+            style={[StyleSheet.absoluteFill, styles.overlay]}
+            accessibilityRole="progressbar"
+            accessibilityLabel={HIGHLIGHT_OPTIMIZING}
+          >
             <ActivityIndicator color={FOCAL.neonJade} size="large" />
             <Text style={styles.overlayTitle}>{HIGHLIGHT_OPTIMIZING}</Text>
             <View style={styles.track}>
-              <Animated.View style={[styles.fill, { width: barWidth }]} />
+              <Animated.View style={[styles.fill, { width: barWidth }]}>
+                <CardShine loopMs={1700} width={14} />
+              </Animated.View>
             </View>
             <Text style={styles.percent}>{Math.round(progress * 100)}%</Text>
-          </View>
+          </ReanimatedView.View>
         ) : null}
       </View>
     </Modal>
@@ -239,6 +248,7 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 999,
     backgroundColor: FOCAL.neonJade,
+    overflow: 'hidden',
   },
   percent: {
     color: colors.onAccent,

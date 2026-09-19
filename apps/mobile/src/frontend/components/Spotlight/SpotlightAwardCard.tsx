@@ -1,5 +1,6 @@
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
+import { CardShine } from '@/components/Effects/CardShine';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
@@ -40,9 +41,21 @@ export function SpotlightAwardCard({ award, featured = false, onPress }: Spotlig
       contentStyle={[styles.card, featured && styles.featured]}
       onPress={onPress}
     >
-      <View style={[styles.portrait, { borderColor: featured ? FOCAL.electricGold : tier.color }]}>
+      {featured ? <CardShine loopMs={3400} width={60} tint={`${FOCAL.electricGold}80`} /> : null}
+      <View
+        style={[
+          styles.portrait,
+          { borderColor: featured ? FOCAL.electricGold : tier.color, backgroundColor: featured ? FOCAL.mistGold : `${tier.color}1A` },
+        ]}
+      >
+        <View pointerEvents="none" style={styles.portraitGloss} />
         <Text style={[styles.initials, { color: featured ? FOCAL.goldInk : tier.ink }]}>{initialsFor(name)}</Text>
       </View>
+      {featured ? (
+        <View style={styles.crown}>
+          <Text style={styles.crownEmoji}>👑</Text>
+        </View>
+      ) : null}
       <View style={styles.copy}>
         <Text style={[styles.kicker, featured && styles.kickerFeatured]} numberOfLines={1}>
           {label}
@@ -73,6 +86,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
+    overflow: 'hidden',
   },
   featured: {
     borderColor: FOCAL.electricGold,
@@ -96,6 +110,43 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  portraitGloss: {
+    position: 'absolute',
+    top: -16,
+    left: -12,
+    width: 54,
+    height: 36,
+    borderRadius: 27,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    transform: [{ rotate: '-18deg' }],
+  },
+  crown: {
+    position: 'absolute',
+    top: -6,
+    left: 58,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: FOCAL.mistGold,
+    borderWidth: 1.5,
+    borderColor: FOCAL.electricGold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: FOCAL.electricGold,
+        shadowOpacity: 0.5,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 0 },
+      },
+      android: { elevation: 4 },
+      default: { boxShadow: `0px 0px 6px ${FOCAL.electricGold}` },
+    }),
+  },
+  crownEmoji: {
+    fontSize: 13,
   },
   initials: {
     fontSize: 20,

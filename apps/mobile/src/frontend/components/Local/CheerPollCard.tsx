@@ -45,6 +45,7 @@ export function CheerPollCard({
   const homePct = rawTotal === 0 ? 50 : Math.round((poll.home_votes / rawTotal) * 100);
   const awayPct = rawTotal === 0 ? 50 : 100 - homePct;
   const total = rawTotal;
+  const leading: CheerSide | null = homePct === awayPct ? null : homePct > awayPct ? 'home' : 'away';
   const homeWidth = useSharedValue(0);
   const awayWidth = useSharedValue(0);
   const replayFromZero = useRef(false);
@@ -113,9 +114,9 @@ export function CheerPollCard({
       </View>
 
       <View style={styles.pctRow}>
-        <Text style={styles.homePct}>{homePct}%</Text>
+        <Text style={[styles.homePct, leading === 'home' && styles.pctLeading]}>{homePct}%</Text>
         <Text style={styles.voteCount}>{total.toLocaleString()} cheers</Text>
-        <Text style={styles.awayPct}>{awayPct}%</Text>
+        <Text style={[styles.awayPct, leading === 'away' && styles.pctLeading]}>{awayPct}%</Text>
       </View>
 
       <View style={styles.actions}>
@@ -174,6 +175,9 @@ function TeamVoteButton({
           selected && (side === 'home' ? styles.teamBtnOn : styles.awayBtnOn),
         ]}
       >
+        <View style={[styles.teamDot, side === 'home' ? styles.teamDotHome : styles.teamDotAway]}>
+          <View pointerEvents="none" style={styles.teamDotGloss} />
+        </View>
         <Text style={[styles.teamBtnLabel, selected && styles.teamBtnLabelOn]} numberOfLines={2}>
           {label}
         </Text>
@@ -292,6 +296,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
+  pctLeading: {
+    fontSize: 19,
+  },
   voteCount: {
     color: colors.textMuted,
     fontSize: 11,
@@ -308,6 +315,7 @@ const styles = StyleSheet.create({
   },
   teamBtn: {
     minHeight: 48,
+    flexDirection: 'row',
     borderRadius: radii.md,
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -315,6 +323,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
+    gap: 8,
+  },
+  teamDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  teamDotHome: {
+    backgroundColor: FOCAL.jadeInk,
+  },
+  teamDotAway: {
+    backgroundColor: FOCAL.cyanInk,
+  },
+  teamDotGloss: {
+    position: 'absolute',
+    top: -6,
+    left: -5,
+    width: 20,
+    height: 13,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    transform: [{ rotate: '-18deg' }],
   },
   homeBtn: {
     borderColor: FOCAL.jadeInk,

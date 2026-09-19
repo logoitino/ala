@@ -2,7 +2,7 @@ import { useEventListener } from 'expo';
 import { useIsFocused } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Share, StyleSheet, Text, View } from 'react-native';
 import { BlurTargetView, BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -46,6 +46,11 @@ import {
   REEL_CATEGORY_SERVE,
   type HighlightClip,
 } from '@/data/highlights';
+import {
+  canDropMaloOnHighlight,
+  MALO_PENDING_TAG_TOAST,
+  MALO_UNTAGGED_TOAST,
+} from '@/data/malo';
 import { useAthleteSubscription } from '@/hooks/useAthleteSubscription';
 import { useGameEventBroadcast } from '@/hooks/useGameEventBroadcast';
 import { useSavedReel } from '@/hooks/useSavedReel';
@@ -94,9 +99,9 @@ const LIVE_BANNER_RESERVE = 108;
 const OVERLAY_BOTTOM_INSET = 8;
 
 /**
- * @purpose Full-screen Reel feed card: Exclusive mute vs double-tap Aura ⚡, TikTok-style name + caption on the clip just above the fan bar, Train/Serve / Flash Unlock chips, one Seki / Aura / Flex per fan, Mālo fills after a tip, ⋯ for Share / Save / Report. Vault clips lock when `players.vault_locked` (default) unless the fan is subscribed or a Flash Unlock window is live. Serve Like Me doubles double-tap Aura. Seki / Aura / Flex fire a colored `HypeBurst`.
- * @param clip Highlight including `isVaultOnly` from `reels.is_vault_only` (default false), optional `gameId`, `category`, and `flashUnlockUntil`.
- * @param onOpenProfile Opens `/user/[id]` so the fan can subscribe when Stripe is unavailable.
+ * @purpose Full-screen Reel feed card: Exclusive mute vs double-tap Aura ⚡, TikTok-style name + caption on the clip just above the fan bar, Train/Serve / Flash Unlock chips, one Seki / Aura / Flex per fan, Mālo for the confirmed athlete on the clip (not the uploader), ⋯ for Share / Save / Report. Vault clips lock when `players.vault_locked` (default) unless the fan is subscribed or a Flash Unlock window is live. Serve Like Me doubles double-tap Aura. Seki / Aura / Flex fire a colored `HypeBurst`.
+ * @param clip Highlight including `isVaultOnly` from `reels.is_vault_only` (default false), optional `gameId`, `category`, `flashUnlockUntil`, and `tagStatus`.
+ * @param onOpenProfile Opens `/user/[id]` so the fan can subscribe when Stripe is unavailable — also used when Mālo is blocked on a pending tag.
  * @param playbackActive When true, play the focused page even if the Expo route is unfocused (profile modal).
  * @sideEffects expo-video; optimistic `reels` hype + `increment_reel_hype` (OfflineQueue when `NetInfo.isConnected === false`); double-tap `add_user_aura` (2× on Serve Like Me) + Medium haptic + `HypeBurst`; mute toggle; `saved_reels`; Expo `Share.share`; `report_reel`; Broadcast subscribe on `game_events_${gameId}`; `TelemetryManager` TTFF + stall + feature taps / report issues; vault unlock via PaymentSheet.
  */
@@ -165,6 +170,7 @@ export function ReelCard({
   const muteOpacity = useSharedValue(0);
   const playerName = displayValue(player?.name, clip.athleteName);
   const schoolName = (player?.school_name || clip.school || '').trim();
+  const maloReady = canDropMaloOnHighlight(clip, player);
   const auraTier = auraTierForPoints(
     player ? resolveAuraPoints(player) : Math.max(0, (clip.auraCount ?? 0) + (clip.sekiCount ?? 0) + (clip.flexCount ?? 0)),
   );
@@ -618,10 +624,25 @@ export function ReelCard({
           userTipped={userTipped}
           tipping={tipping}
           reacting={locked}
-          canTip={Boolean(player) && !locked}
+          canTip={!locked && Boolean(onTip)}
+          maloReady={maloReady}
           canOpenAthlete={Boolean(onOpenProfile)}
           onOpenAthlete={onOpenProfile}
           onTip={() => {
+            if (!maloReady) {
+              telemetry.trackFeature('malo.blocked', surface);
+              const message =
+                clip.tagStatus === 'pending' || clip.tagStatus === 'rejected'
+                  ? MALO_PENDING_TAG_TOAST
+                  : MALO_UNTAGGED_TOAST;
+              if (onOpenProfile && (clip.playerId || player?.id)) {
+                celebration?.showToast(message);
+                onOpenProfile();
+                return;
+              }
+              Alert.alert('Support the athlete in the play', message);
+              return;
+            }
             telemetry.trackFeature('malo', surface);
             onTip();
           }}

@@ -3,10 +3,14 @@ import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, View } from 'r
 import { BlurView } from 'expo-blur';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
+import { CardShine } from '@/components/Effects/CardShine';
 import { TipCheckout } from '@/components/TipCheckout';
 import { colors, radii } from '@/constants/theme';
+import { maloAthleteCta, maloAthleteSheetSubtitle } from '@/data/malo';
 import { displayValue, type Player } from '@/data/players';
+import { FOCAL, SPRING_BOUNCE } from '@/theme/motion';
 
 type TipSheetModalProps = {
   player: Player | null;
@@ -17,7 +21,7 @@ type TipSheetModalProps = {
 };
 
 /**
- * @purpose Bottom-sheet Mālo checkout over a blurred feed backdrop. Close/backdrop are locked while PaymentSheet is open.
+ * @purpose Bottom-sheet Mālo checkout over a blurred feed backdrop. Copy names the athlete who receives the gift (not the uploader).
  * @sideEffects Unmounts `TipCheckout` on dismiss so custom amount / fee state reset.
  */
 export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: TipSheetModalProps) {
@@ -25,11 +29,24 @@ export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: Ti
   const [delivered, setDelivered] = useState(false);
   const [busy, setBusy] = useState(false);
   const playerName = displayValue(player?.name, 'this athlete');
+  const headerPop = useSharedValue(1);
 
   useEffect(() => {
     setDelivered(false);
     setBusy(false);
-  }, [player?.id]);
+    headerPop.value = 1;
+  }, [player?.id, headerPop]);
+
+  useEffect(() => {
+    if (delivered) {
+      headerPop.value = 0.9;
+      headerPop.value = withSpring(1, SPRING_BOUNCE);
+    }
+  }, [delivered, headerPop]);
+
+  const headerStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: headerPop.value }],
+  }));
 
   const dismiss = () => {
     if (busy) return;
@@ -52,14 +69,15 @@ export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: Ti
           onPress={() => undefined}
         >
           <View style={styles.handle} />
-          <View style={styles.header}>
+          <Animated.View style={[styles.header, delivered && styles.headerDelivered, headerStyle]}>
+            {delivered ? (
+              <CardShine tint="rgba(0,230,118,0.4)" color="rgba(255,255,255,0.95)" loopMs={2600} />
+            ) : null}
             <Text style={[styles.title, delivered && styles.successTitle]}>
-              {delivered ? 'SEKI! MĀLO DELIVERED! 🚀' : 'Drop a Mālo'}
+              {delivered ? `SEKI! Mālo delivered to ${playerName} 🚀` : maloAthleteCta(playerName)}
             </Text>
-            <Text style={styles.subtitle}>
-              Send direct financial support to {playerName}. You and this athlete each earn 10 Aura Points per $1.
-            </Text>
-          </View>
+            <Text style={styles.subtitle}>{maloAthleteSheetSubtitle(playerName)}</Text>
+          </Animated.View>
           {player ? (
             <TipCheckout
               player={player}
@@ -121,6 +139,16 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: 6,
+  },
+  headerDelivered: {
+    gap: 6,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: FOCAL.neonJade,
+    backgroundColor: FOCAL.mistJade,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    overflow: 'hidden',
   },
   title: {
     fontSize: 22,

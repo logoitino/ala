@@ -42,6 +42,7 @@ export function GearCard({ item, onPress }: GearCardProps) {
     >
       <View style={styles.top}>
         <View style={styles.iconWrap}>
+          <View pointerEvents="none" style={styles.iconGloss} />
           <Ionicons name={ICONS[item.icon]} size={22} color={FOCAL.emberInk} />
         </View>
         <View style={styles.badges}>
@@ -83,6 +84,17 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.mistGold,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  iconGloss: {
+    position: 'absolute',
+    top: -10,
+    left: -8,
+    width: 34,
+    height: 22,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    transform: [{ rotate: '-18deg' }],
   },
   badges: {
     flexDirection: 'row',

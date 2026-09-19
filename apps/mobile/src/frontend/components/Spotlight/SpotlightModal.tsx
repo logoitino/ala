@@ -10,6 +10,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CardShine } from '@/components/Effects/CardShine';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
@@ -175,6 +176,8 @@ function SpotlightBody({
               />
               <View style={[styles.portraitRing, { borderColor: tier.color, shadowColor: tier.color }]}>
                 <View style={[styles.portraitInner, { borderColor: tier.tier === 7 ? '#00E5FF' : tier.color }]}>
+                  <CardShine loopMs={3400} width={70} tint={`${tier.color}80`} />
+                  <View pointerEvents="none" style={styles.portraitGloss} />
                   <Text style={[styles.initials, { color: tier.color }]}>{initialsFor(athleteName)}</Text>
                 </View>
               </View>
@@ -361,6 +364,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.videoSurface,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  portraitGloss: {
+    position: 'absolute',
+    top: -26,
+    left: -18,
+    width: 90,
+    height: 60,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    transform: [{ rotate: '-18deg' }],
   },
   initials: {
     fontSize: 36,

@@ -50,8 +50,10 @@ export function AnimatedPressable({
   accessibilityState,
 }: AnimatedPressableProps) {
   const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    opacity: opacity.value,
   }));
 
   return (
@@ -63,11 +65,13 @@ export function AnimatedPressable({
       onPressIn={() => {
         if (disabled) return;
         scale.value = withTiming(scaleTo, PRESS_IN);
+        opacity.value = withTiming(0.86, PRESS_IN);
       }}
       onPressOut={() => {
         scale.value = overshoot
           ? withSequence(withSpring(1.15, SPRING_BOUNCE), withSpring(1, SPRING_CARD))
           : withSpring(1, SPRING_CARD);
+        opacity.value = withSpring(1, SPRING_CARD);
       }}
       onPress={(event) => {
         if (disabled) return;

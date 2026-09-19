@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
@@ -8,8 +8,11 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
 import { isOperatorPin, OPERATOR_TEST_PIN } from '@/lib/operator';
-import { SPRING_BOUNCE } from '@/theme/motion';
+import { SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 import type { Game } from '@/types/database';
+
+/** How long the success pulse/flash plays before `onUnlock` fires, so the operator sees it land. */
+const SUCCESS_HOLD_MS = 260;
 
 const PIN_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'] as const;
 
@@ -31,21 +34,31 @@ type PINClaimModalProps = {
 export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PINClaimModalProps) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const shake = useSharedValue(0);
+  const successPulse = useSharedValue(1);
+  const successFlash = useSharedValue(0);
 
   useEffect(() => {
     if (!game) {
       setPin('');
       setError(null);
+      setSuccess(false);
+      shake.value = 0;
+      successPulse.value = 1;
+      successFlash.value = 0;
     }
-  }, [game]);
+  }, [game, shake, successFlash, successPulse]);
 
   const shakeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shake.value }],
+    transform: [{ translateX: shake.value }, { scale: successPulse.value }],
+  }));
+  const flashStyle = useAnimatedStyle(() => ({
+    opacity: successFlash.value,
   }));
 
   const tapDigit = (key: (typeof PIN_KEYS)[number]) => {
-    if (!key || claiming) return;
+    if (!key || claiming || success) return;
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {
@@ -95,6 +108,10 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
     } catch {
       // no-op
     }
+    setSuccess(true);
+    successPulse.value = withSequence(withSpring(1.16, SPRING_BOUNCE), withSpring(1, SPRING_CARD));
+    successFlash.value = withSequence(withTiming(1, { duration: 110 }), withTiming(0, { duration: 220 }));
+    await new Promise((resolve) => setTimeout(resolve, SUCCESS_HOLD_MS));
     await onUnlock();
   };
 
@@ -110,17 +127,22 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
           </Text>
           <Text style={styles.hint}>4-digit sideline PIN · test {OPERATOR_TEST_PIN}</Text>
 
-          <Animated.View style={[styles.dots, shakeStyle]} accessibilityLabel={`PIN entered, ${pin.length} of 4 digits`}>
-            {[0, 1, 2, 3].map((index) => (
-              <View key={index} style={[styles.dot, pin.length > index && styles.dotOn]} />
-            ))}
-          </Animated.View>
+          <View style={styles.dotsWrap}>
+            <Animated.View pointerEvents="none" style={[styles.dotsFlash, flashStyle]} />
+            <Animated.View style={[styles.dots, shakeStyle]} accessibilityLabel={`PIN entered, ${pin.length} of 4 digits`}>
+              {[0, 1, 2, 3].map((index) => (
+                <PinDot key={index} active={pin.length > index} />
+              ))}
+            </Animated.View>
+          </View>
           {error ? (
             <Text style={styles.error} accessibilityRole="alert">
               {error}
             </Text>
           ) : (
-            <Text style={styles.muted}>{claiming ? 'Claiming scoring rights…' : 'Enter PIN to claim this game'}</Text>
+            <Text style={styles.muted}>
+              {success ? 'PIN accepted!' : claiming ? 'Claiming scoring rights…' : 'Enter PIN to claim this game'}
+            </Text>
           )}
 
           <View style={styles.pad}>
@@ -132,7 +154,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
                   haptic="none"
                   scaleTo={0.92}
                   overshoot={false}
-                  disabled={claiming}
+                  disabled={claiming || success}
                   accessibilityLabel={key === 'del' ? 'Delete' : `Digit ${key}`}
                   onPress={() => tapDigit(key)}
                   style={styles.key}
@@ -147,6 +169,27 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
       </View>
     </Modal>
   );
+}
+
+/**
+ * @purpose One PIN dot. Pops with a spring bounce the instant it lights up so each digit tap reads as registered.
+ */
+function PinDot({ active }: { active: boolean }) {
+  const scale = useSharedValue(1);
+  const wasActive = useRef(active);
+
+  useEffect(() => {
+    if (active && !wasActive.current) {
+      scale.value = withSequence(withSpring(1.45, SPRING_BOUNCE), withSpring(1, SPRING_CARD));
+    }
+    wasActive.current = active;
+  }, [active, scale]);
+
+  const dotStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return <Animated.View style={[styles.dot, active && styles.dotOn, dotStyle]} />;
 }
 
 const styles = StyleSheet.create({
@@ -192,6 +235,14 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     fontWeight: '600',
+  },
+  dotsWrap: {
+    overflow: 'hidden',
+    borderRadius: radii.md,
+  },
+  dotsFlash: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: colors.success,
   },
   dots: {
     flexDirection: 'row',

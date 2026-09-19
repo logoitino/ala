@@ -18,6 +18,7 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import { CardShine } from '@/components/Effects/CardShine';
 import { HighlightPickerModal } from '@/components/Reels/HighlightPickerModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -141,6 +142,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const exclusiveDollars = live.catalog.exclusiveDollars;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(0.45)).current;
+  const successAnim = useRef(new Animated.Value(0)).current;
 
   const [games, setGames] = useState<Game[]>([]);
   const [gameId, setGameId] = useState('');
@@ -157,6 +159,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const [statusLabel, setStatusLabel] = useState('Uploading Seki play…');
   const [isExclusive, setIsExclusive] = useState(false);
   const [category, setCategory] = useState<ReelCategory>(REEL_CATEGORY_GAME);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const selectedGame = games.find((game) => game.id === gameId) ?? null;
   const selectedPlayer = players.find((player) => player.id === playerId) ?? null;
@@ -223,6 +226,8 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       setLibraryOpen(false);
       setIsExclusive(false);
       setCategory(REEL_CATEGORY_GAME);
+      setShowSuccess(false);
+      successAnim.setValue(0);
       return;
     }
 
@@ -343,6 +348,15 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       fireSuccess();
       telemetry.trackFeature('upload', 'home');
       onUploaded(reel);
+      setShowSuccess(true);
+      successAnim.setValue(0);
+      Animated.spring(successAnim, {
+        toValue: 1,
+        friction: 5,
+        tension: 140,
+        useNativeDriver: true,
+      }).start();
+      await new Promise((resolve) => setTimeout(resolve, 650));
       onClose();
     } catch (caught) {
       setProgress(0);
@@ -354,6 +368,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       Alert.alert('Upload failed', message);
     } finally {
       setUploading(false);
+      setShowSuccess(false);
     }
   };
 
@@ -623,11 +638,26 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
             {loadError ? <Text style={styles.error}>{loadError}</Text> : null}
             {uploadError ? <Text style={styles.error}>{uploadError}</Text> : null}
 
-            {uploading ? (
+            {uploading && showSuccess ? (
+              <Animated.View
+                style={[
+                  styles.successWrap,
+                  { opacity: successAnim, transform: [{ scale: successAnim }] },
+                ]}
+              >
+                <View style={styles.successBadge}>
+                  <Ionicons name="checkmark" size={26} color={colors.onAccent} />
+                  <View pointerEvents="none" style={styles.successBadgeGloss} />
+                </View>
+                <Text style={styles.successLabel}>Seki play uploaded ⚡</Text>
+              </Animated.View>
+            ) : uploading ? (
               <View style={styles.progressWrap} accessibilityRole="progressbar">
                 <Animated.View style={[styles.progressGlow, { opacity: pulse }]} />
                 <View style={styles.progressTrack}>
-                  <Animated.View style={[styles.progressFill, { width: barWidth }]} />
+                  <Animated.View style={[styles.progressFill, { width: barWidth }]}>
+                    <CardShine loopMs={1700} width={12} />
+                  </Animated.View>
                 </View>
                 <View style={styles.progressMeta}>
                   <ActivityIndicator color={NEON_JADE} />
@@ -1036,6 +1066,37 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 999,
     backgroundColor: NEON_JADE,
+    overflow: 'hidden',
+  },
+  successWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 10,
+  },
+  successBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: NEON_JADE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  successBadgeGloss: {
+    position: 'absolute',
+    top: -8,
+    left: -6,
+    width: 32,
+    height: 22,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    transform: [{ rotate: '-18deg' }],
+  },
+  successLabel: {
+    color: colors.text,
+    fontWeight: '800',
+    fontSize: 14,
   },
   progressMeta: {
     flexDirection: 'row',

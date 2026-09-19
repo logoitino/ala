@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
@@ -191,26 +197,26 @@ export function HomeSearchOverlay({
             <Text style={styles.empty}>No clips or athletes match that yet.</Text>
           ) : (
             merged.map((hit) => (
-              <AnimatedButton
-                key={hit.id}
-                haptic="light"
-                onPress={() => openHit(hit)}
-                contentStyle={styles.row}
-              >
-                <Ionicons
-                  name={hit.kind === 'highlight' ? 'play-circle-outline' : 'flash-outline'}
-                  size={20}
-                  color={colors.primary}
-                />
-                <View style={styles.rowCopy}>
-                  <Text style={styles.rowTitle} numberOfLines={1}>
-                    {hit.title}
-                  </Text>
-                  <Text style={styles.rowMeta} numberOfLines={1}>
-                    {hit.kind === 'highlight' ? 'Highlight' : 'Athlete'} · {hit.subtitle}
-                  </Text>
-                </View>
-              </AnimatedButton>
+              <Animated.View key={hit.id} entering={FadeIn.duration(130)}>
+                <AnimatedButton haptic="light" onPress={() => openHit(hit)} contentStyle={styles.row}>
+                  <View style={styles.rowIcon}>
+                    <Ionicons
+                      name={hit.kind === 'highlight' ? 'play-circle-outline' : 'flash-outline'}
+                      size={20}
+                      color={colors.primary}
+                    />
+                    <View pointerEvents="none" style={styles.rowIconGloss} />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <Text style={styles.rowTitle} numberOfLines={1}>
+                      {hit.title}
+                    </Text>
+                    <Text style={styles.rowMeta} numberOfLines={1}>
+                      {hit.kind === 'highlight' ? 'Highlight' : 'Athlete'} · {hit.subtitle}
+                    </Text>
+                  </View>
+                </AnimatedButton>
+              </Animated.View>
             ))
           )}
         </ScrollView>
@@ -283,6 +289,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: 8,
+  },
+  rowIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  rowIconGloss: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    width: 20,
+    height: 14,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    transform: [{ rotate: '-18deg' }],
   },
   rowCopy: {
     flex: 1,

@@ -1,10 +1,13 @@
 import { BlurView } from 'expo-blur';
+import { useEffect } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { SPRING_CARD } from '@/theme/motion';
 
 type ReportContentModalProps = {
   visible: boolean;
@@ -31,6 +34,24 @@ export function ReportContentModal({
   const insets = useSafeAreaInsets();
   const who = athleteName?.trim() ? `@${athleteName.trim()}` : 'this highlight';
 
+  const translateY = useSharedValue(24);
+  const sheetOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (visible) {
+      translateY.value = withSpring(0, SPRING_CARD);
+      sheetOpacity.value = withTiming(1, { duration: 180 });
+      return;
+    }
+    translateY.value = withTiming(24, { duration: 140 });
+    sheetOpacity.value = withTiming(0, { duration: 120 });
+  }, [sheetOpacity, translateY, visible]);
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    opacity: sheetOpacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
   return (
     <Modal
       animationType="fade"
@@ -45,7 +66,7 @@ export function ReportContentModal({
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           <View style={styles.dim} />
         </Pressable>
-        <View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
+        <Animated.View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }, sheetStyle]}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>Safety</Text>
           <Text style={styles.title}>Report / Hide Highlight 🚩</Text>
@@ -70,7 +91,7 @@ export function ReportContentModal({
           >
             <Text style={styles.cancelLabel}>Cancel</Text>
           </AnimatedButton>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

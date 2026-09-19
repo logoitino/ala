@@ -13,7 +13,7 @@ export function auraPointsForTip(tipAmount: number): number {
 }
 
 export const MALO_DISCLAIMER =
-  "100% of your backing (minus standard payment processing unless covered) goes directly to the athlete's custodial account.";
+  "100% of your backing (minus standard payment processing unless covered) goes directly to the athlete's custodial account — not the person who uploaded the clip.";
 
 export const QUICK_REACTIONS = [
   { id: 'aura', label: 'Aura ⚡', reaction: 'Aura' },

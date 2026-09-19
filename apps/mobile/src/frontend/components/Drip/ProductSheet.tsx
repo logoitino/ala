@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -19,9 +28,15 @@ import { useAuth } from '@/context/AuthContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { recordDripOrder } from '@/lib/finance';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 
 const SHEET_OFF = 720;
+
+const ICONS: Record<DripItem['icon'], keyof typeof Ionicons.glyphMap> = {
+  shirt: 'shirt-outline',
+  sparkles: 'sparkles-outline',
+  basketball: 'basketball-outline',
+};
 
 type ProductSheetProps = {
   item: DripItem | null;
@@ -47,6 +62,10 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
   const display = item ?? lastItem.current;
   const translateY = useSharedValue(SHEET_OFF);
   const dim = useSharedValue(0);
+  const contentScale = useSharedValue(0.92);
+  const contentOpacity = useSharedValue(0);
+  const totalBump = useSharedValue(1);
+  const qtyBump = useSharedValue(1);
   const sizeLayouts = useRef<Partial<Record<DripSize, { x: number; width: number }>>>({});
   const sizePlaced = useRef(false);
   const indicatorX = useSharedValue(0);
@@ -78,16 +97,24 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
     sizePlaced.current = false;
     translateY.value = SHEET_OFF;
     dim.value = 0;
+    contentScale.value = 0.92;
+    contentOpacity.value = 0;
     const frame = requestAnimationFrame(() => {
       translateY.value = withSpring(0, SPRING_CARD);
       dim.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
+      contentScale.value = withSpring(1, SPRING_CARD);
+      contentOpacity.value = withTiming(1, { duration: 260, easing: Easing.out(Easing.cubic) });
     });
     return () => cancelAnimationFrame(frame);
-  }, [dim, item, translateY]);
+  }, [contentOpacity, contentScale, dim, item, translateY]);
 
   useEffect(() => {
     setQty((current) => Math.min(maxQty, Math.max(1, current)));
   }, [maxQty]);
+
+  useEffect(() => {
+    qtyBump.value = withSequence(withSpring(1.18, SPRING_BOUNCE), withSpring(1, SPRING_BOUNCE));
+  }, [qty, qtyBump]);
 
   useEffect(() => {
     moveSizeIndicator(size, true);
@@ -112,12 +139,31 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
   const aura = display ? dripAuraForOrder(display, qty) : 0;
   const buyLabel = `Buy Now — ${dripPriceLabel(totalCents)}`;
 
+  useEffect(() => {
+    totalBump.value = withSequence(withSpring(1.1, SPRING_BOUNCE), withSpring(1, SPRING_BOUNCE));
+    // Bump reacts to the derived total, not the shared value itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalCents]);
+
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: dim.value,
   }));
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
+  }));
+
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+    transform: [{ scale: contentScale.value }],
+  }));
+
+  const qtyValueStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: qtyBump.value }],
+  }));
+
+  const totalStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: totalBump.value }],
   }));
 
   const indicatorStyle = useAnimatedStyle(() => ({
@@ -165,7 +211,11 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
         <Pressable haptic="none" onPress={() => undefined}>
           <View style={styles.handle} />
           {display ? (
-            <>
+            <Animated.View style={contentStyle}>
+              <View style={styles.iconWrap}>
+                <View pointerEvents="none" style={styles.iconGloss} />
+                <Ionicons name={ICONS[display.icon]} size={26} color={FOCAL.emberInk} />
+              </View>
               <Text style={styles.kicker}>{sizeHint}</Text>
               <Text style={styles.title}>{display.name}</Text>
               <Text style={styles.blurb}>{display.blurb}</Text>
@@ -216,7 +266,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
                   >
                     <Text style={styles.qtyGlyph}>−</Text>
                   </AnimatedButton>
-                  <Text style={styles.qtyValue}>{qty}</Text>
+                  <Animated.Text style={[styles.qtyValue, qtyValueStyle]}>{qty}</Animated.Text>
                   <AnimatedButton
                     accessibilityLabel="Increase quantity"
                     disabled={qty >= maxQty}
@@ -231,7 +281,9 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
 
               <View style={styles.auraBanner}>
                 <Text style={styles.auraCopy}>Earn +{aura} Aura Points with this order ⚡</Text>
-                <Text style={styles.totalCopy}>Total {dripPriceLabel(totalCents)}</Text>
+                <Animated.Text style={[styles.totalCopy, totalStyle]}>
+                  Total {dripPriceLabel(totalCents)}
+                </Animated.Text>
               </View>
 
               <AnimatedButton
@@ -243,7 +295,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
               >
                 <Text style={styles.buyLabel}>{busy ? 'Opening PaymentSheet…' : buyLabel}</Text>
               </AnimatedButton>
-            </>
+            </Animated.View>
           ) : null}
         </Pressable>
       </Animated.View>
@@ -308,6 +360,26 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: colors.border,
     marginBottom: 6,
+  },
+  iconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: FOCAL.mistGold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  iconGloss: {
+    position: 'absolute',
+    top: -12,
+    left: -10,
+    width: 42,
+    height: 28,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    transform: [{ rotate: '-18deg' }],
   },
   kicker: {
     color: colors.primary,

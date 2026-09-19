@@ -15,9 +15,11 @@ import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import { CardShine } from '@/components/Effects/CardShine';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import {
@@ -28,6 +30,7 @@ import {
 } from '@/data/sponsorships';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { uploadSponsorLogo, type RecordSponsorshipInput } from '@/hooks/useSponsorships';
+import { SPRING_CARD } from '@/theme/motion';
 import type { SponsorshipTierId } from '@/types/database';
 
 type SponsorshipModalProps = {
@@ -75,6 +78,8 @@ export function SponsorshipModal({
   const [businessName, setBusinessName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [schoolTeam, setSchoolTeam] = useState('');
+  const sheetY = useSharedValue(36);
+  const sheetOpacity = useSharedValue(0);
 
   useEffect(() => {
     if (!visible) return;
@@ -82,7 +87,16 @@ export function SponsorshipModal({
     setBusinessName('');
     setLogoUrl('');
     setSchoolTeam('');
-  }, [visible]);
+    sheetY.value = 36;
+    sheetOpacity.value = 0;
+    sheetY.value = withSpring(0, SPRING_CARD);
+    sheetOpacity.value = withTiming(1, { duration: 220 });
+  }, [visible, sheetOpacity, sheetY]);
+
+  const sheetEntrance = useAnimatedStyle(() => ({
+    opacity: sheetOpacity.value,
+    transform: [{ translateY: sheetY.value }],
+  }));
 
   const tier = tiers.find((item) => item.id === tierId) ?? tiers[0];
 
@@ -157,6 +171,7 @@ export function SponsorshipModal({
         <Pressable haptic="none" disabled={busy} style={styles.backdrop} onPress={dismiss}>
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={styles.blur} />
           <Pressable haptic="none" style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]} onPress={() => undefined}>
+            <Animated.View style={[styles.sheetInner, sheetEntrance]}>
             <View style={styles.handle} />
             <Text style={styles.kicker}>Local boosters</Text>
             <Text style={styles.title}>Become a Team Sponsor</Text>
@@ -184,6 +199,9 @@ export function SponsorshipModal({
                       selected && { borderColor: option.accent, backgroundColor: `${option.accent}22` },
                     ]}
                   >
+                    {selected ? (
+                      <CardShine tint={`${option.accent}55`} color="rgba(255,255,255,0.85)" width={38} loopMs={2600} />
+                    ) : null}
                     <View style={styles.tierHead}>
                       <Text style={[styles.tierName, selected && { color: option.accent }]}>{option.name}</Text>
                       <View style={[styles.badge, { borderColor: option.accent }]}>
@@ -289,6 +307,7 @@ export function SponsorshipModal({
                 )}
               </AnimatedButton>
             </ScrollView>
+            </Animated.View>
 
             <Pressable
               accessibilityRole="button"
@@ -338,6 +357,9 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     gap: 10,
   },
+  sheetInner: {
+    gap: 10,
+  },
   handle: {
     alignSelf: 'center',
     width: 42,
@@ -376,6 +398,7 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 4,
     alignItems: 'stretch',
+    overflow: 'hidden',
   },
   tierCardOn: {
     borderWidth: 2,

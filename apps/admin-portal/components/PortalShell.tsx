@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { SignOutButton } from '@/components/SignOutButton';
+
 const NAV = [
   { href: '/', label: 'Overview' },
   { href: '/reports', label: 'Reports' },
@@ -37,7 +39,7 @@ export function PortalShell({
               <code className="rounded bg-emerald-50 px-1.5 py-0.5 text-[var(--jade)]">/admin</code>.
             </p>
           </div>
-          <nav className="flex flex-wrap gap-2">
+          <nav className="flex flex-wrap items-center gap-2">
             {NAV.map((item) => {
               const on = item.href === active;
               return (
@@ -54,6 +56,7 @@ export function PortalShell({
                 </Link>
               );
             })}
+            <SignOutButton />
           </nav>
         </div>
       </header>

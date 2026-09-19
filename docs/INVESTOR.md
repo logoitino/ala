@@ -54,7 +54,7 @@ Prices below are generated from source (`pnpm docs:sync`). Do not edit inside th
 <!-- product-facts:start -->
 | Line | Price (as coded) | Notes |
 | --- | --- | --- |
-| Mālo | $5 / $10 / $25 + custom | 100% of your backing (minus standard payment processing unless covered) goes directly to the athlete's custodial account. |
+| Mālo | $5 / $10 / $25 + custom | 100% of your backing (minus standard payment processing unless covered) goes directly to the athlete's custodial account — not the person who uploaded the clip. |
 | Admin splits | Mālo 10%/90% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. Fan Mālo copy unchanged until counsel. |
 | Exclusive | $4.99 one-time PaymentIntent stored as a `subscriptions` row | +100 Aura to the payer. Not Stripe Billing yet. |
 | Boosters | Silver $50 / Gold $150 / Platinum $500 first month | Silver / Gold / Platinum |

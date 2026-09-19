@@ -60,6 +60,7 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
       <View style={styles.scoreboard}>
         <View style={styles.teamCol}>
           <View style={[styles.logo, styles.homeLogo]}>
+            <View pointerEvents="none" style={styles.logoGloss} />
             <Text style={[styles.logoLabel, styles.homeLogoLabel]}>{teamInitials(home)}</Text>
           </View>
           <Text style={styles.teamName} numberOfLines={2}>
@@ -78,6 +79,7 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
 
         <View style={styles.teamCol}>
           <View style={[styles.logo, styles.awayLogo]}>
+            <View pointerEvents="none" style={styles.logoGloss} />
             <Text style={styles.logoLabel}>{teamInitials(away)}</Text>
           </View>
           <Text style={styles.teamName} numberOfLines={2}>
@@ -170,6 +172,17 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  logoGloss: {
+    position: 'absolute',
+    top: -14,
+    left: -10,
+    width: 46,
+    height: 30,
+    borderRadius: 23,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    transform: [{ rotate: '-18deg' }],
   },
   homeLogo: {
     backgroundColor: colors.surface,

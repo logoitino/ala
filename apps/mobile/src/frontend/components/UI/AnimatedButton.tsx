@@ -44,8 +44,10 @@ export function AnimatedButton({
   accessibilityState,
 }: AnimatedButtonProps) {
   const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    opacity: opacity.value,
   }));
 
   return (
@@ -56,9 +58,11 @@ export function AnimatedButton({
       disabled={disabled}
       onPressIn={() => {
         scale.value = withSpring(scaleTo, SPRING_BOUNCE);
+        opacity.value = withSpring(0.82, SPRING_BOUNCE);
       }}
       onPressOut={() => {
         scale.value = withSpring(1, SPRING_BOUNCE);
+        opacity.value = withSpring(1, SPRING_BOUNCE);
       }}
       onPress={(event) => {
         if (disabled) return;

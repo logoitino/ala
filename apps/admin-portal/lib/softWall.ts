@@ -9,7 +9,7 @@ import {
   type SoftWallOversight,
 } from '@tapuai/shared-types';
 
-import { getSupabaseServerClient } from '@/lib/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase.server';
 
 type RuntimeLayouts = {
   operatorConsole?: boolean;
@@ -54,7 +54,7 @@ export async function fetchSoftWallOversight(): Promise<SoftWallOversight> {
     authProviders: SOFT_WALL_AUTH_PROVIDERS,
   };
 
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   if (!supabase) return empty;
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -108,7 +108,7 @@ export type PortalPerson = {
  * @sideEffects `profiles` SELECT. Live DB uses `is_verified_athlete` (schema.sql also has `is_verified`).
  */
 export async function fetchPortalPeople(limit = 40): Promise<{ people: PortalPerson[]; error: string | null }> {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   if (!supabase) return { people: [], error: 'Supabase env missing' };
   const full = await supabase
     .from('profiles')
@@ -170,7 +170,7 @@ export async function fetchPortalRuntime(): Promise<PortalRuntimeSnapshot> {
     publishedAt: null,
     dirty: false,
   };
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   if (!supabase) return empty;
   const { data, error } = await supabase
     .from('app_runtime_config')

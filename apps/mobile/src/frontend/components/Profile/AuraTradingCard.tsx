@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -13,6 +13,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
+import { CardShine } from '@/components/Effects/CardShine';
 import { GlowingCardWrapper } from '@/components/Profile/GlowingCardWrapper';
 import { SubscriberCrest } from '@/components/Profile/SubscriberCrest';
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
@@ -147,6 +148,7 @@ function CardChrome({ tier, children }: { tier: AuraTier; children: ReactNode })
         },
       ]}
     >
+      <CardShine tint={`${tier.color}66`} />
       <View pointerEvents="none" style={[styles.tick, styles.tickTl, { borderColor: tier.color, borderWidth: tick }]} />
       <View pointerEvents="none" style={[styles.tick, styles.tickTr, { borderColor: tier.color, borderWidth: tick }]} />
       <View pointerEvents="none" style={[styles.tick, styles.tickBl, { borderColor: tier.color, borderWidth: tick }]} />
@@ -214,6 +216,27 @@ export function AuraTradingCard({
   const [frontH, setFrontH] = useState(200);
   const [backH, setBackH] = useState(280);
   const spinning = useSharedValue(false);
+  const entrance = useSharedValue(0);
+  const progressFill = useSharedValue(0);
+
+  useEffect(() => {
+    entrance.value = withSpring(1, SPRING_FLIP);
+  }, [entrance]);
+
+  useEffect(() => {
+    progressFill.value = withSpring(progress.ratio, SPRING_FLIP);
+    // progress.ratio is derived fresh every render from auraPoints; only re-run when the value itself moves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress.ratio]);
+
+  const entranceStyle = useAnimatedStyle(() => ({
+    opacity: entrance.value,
+    transform: [{ scale: 0.9 + entrance.value * 0.1 }, { translateY: (1 - entrance.value) * 14 }],
+  }));
+
+  const fillStyle = useAnimatedStyle(() => ({
+    width: `${Math.round(progressFill.value * 100)}%`,
+  }));
   const handle = (username ?? '').replace(/^@/, '').trim() || name.trim().split(/\s+/)[0]?.toLowerCase() || 'athlete';
   const roleBadges = tradingCardRoleBadges(roles, role ?? roleTag);
   const isFan = roleBadges.some((item) => item.label === 'Fan');
@@ -296,7 +319,7 @@ export function AuraTradingCard({
   }));
 
   return (
-    <View style={styles.wrap}>
+    <Animated.View style={[styles.wrap, entranceStyle]}>
       <GlowingCardWrapper isAuraMaxed={auraMaxed} isWishlistFulfilled={wishlistFulfilled}>
         <GestureDetector gesture={tapToFlip}>
         <View
@@ -315,7 +338,8 @@ export function AuraTradingCard({
               <CardChrome tier={tier}>
                 <View style={styles.identity}>
                   <View style={styles.avatarWrap}>
-                    <View style={[styles.avatar, { borderColor: tier.color }]}>
+                    <View style={[styles.avatar, { borderColor: tier.color, backgroundColor: `${tier.color}1A` }]}>
+                      <View pointerEvents="none" style={styles.avatarGloss} />
                       <Text style={[styles.initials, { color: tier.ink }]}>{initialsFor(name)}</Text>
                     </View>
                     {jersey != null && jersey !== '' ? (
@@ -370,12 +394,9 @@ export function AuraTradingCard({
                     </Text>
                   </View>
                   <View style={styles.track}>
-                    <View
-                      style={[
-                        styles.fill,
-                        { width: `${Math.round(progress.ratio * 100)}%`, backgroundColor: tier.color },
-                      ]}
-                    />
+                    <Animated.View style={[styles.fill, { backgroundColor: tier.color }, fillStyle]}>
+                      <CardShine loopMs={1800} width={14} />
+                    </Animated.View>
                   </View>
                 </View>
               </CardChrome>
@@ -468,7 +489,7 @@ export function AuraTradingCard({
           <Text style={styles.verifyLabel}>{CLAIM_VERIFY_CTA}</Text>
         </AnimatedButton>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -592,6 +613,17 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarGloss: {
+    position: 'absolute',
+    top: -18,
+    left: -14,
+    width: 60,
+    height: 40,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    transform: [{ rotate: '-18deg' }],
   },
   jerseyChip: {
     position: 'absolute',
@@ -692,6 +724,7 @@ const styles = StyleSheet.create({
   fill: {
     height: 8,
     borderRadius: 999,
+    overflow: 'hidden',
   },
   backKicker: {
     color: colors.textMuted,

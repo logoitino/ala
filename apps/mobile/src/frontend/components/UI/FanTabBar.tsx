@@ -1,9 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useEffect } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
+import { SPRING_BOUNCE } from '@/theme/motion';
 import { HIGHLIGHT_NAV_LABEL, SPOTLIGHT_NAV_LABEL } from '@/data/highlights';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -22,6 +25,61 @@ const TAB_META: Record<string, { label: string; icon: keyof typeof Ionicons.glyp
 function accentForRoute(name: string) {
   const key = (name === 'shop' ? 'drip' : name) as FanTabAccentId;
   return TAB_ACCENTS[key] ?? TAB_ACCENTS.index;
+}
+
+type TabButtonProps = {
+  focused: boolean;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  activeIcon: keyof typeof Ionicons.glyphMap;
+  accentColor: string;
+  accentMist: string;
+  accentGlow: string;
+  onPress: () => void;
+};
+
+/**
+ * @purpose One fan-bar destination. Owns its own Reanimated values so the icon can pop
+ * and the active mist background can fade in the moment `focused` flips true, instead of
+ * snapping — a real React component (not an inline render function) so hooks stay legal
+ * even though the route list length can change under runtime feature flags.
+ * @sideEffects Reanimated `withSequence`/`withSpring` icon bounce + `withTiming` mist fade on focus change.
+ */
+function TabButton({ focused, label, icon, activeIcon, accentColor, accentMist, accentGlow, onPress }: TabButtonProps) {
+  const iconScale = useSharedValue(1);
+  const mist = useSharedValue(focused ? 1 : 0);
+  const color = focused ? accentColor : colors.textMuted;
+
+  useEffect(() => {
+    mist.value = withTiming(focused ? 1 : 0, { duration: 180 });
+    if (focused) {
+      iconScale.value = withSequence(withSpring(1.22, SPRING_BOUNCE), withSpring(1, SPRING_BOUNCE));
+    }
+  }, [focused, iconScale, mist]);
+
+  const mistStyle = useAnimatedStyle(() => ({ opacity: mist.value }));
+  const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: iconScale.value }] }));
+
+  return (
+    <AnimatedButton
+      haptic="selection"
+      accessibilityRole="tab"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: focused }}
+      style={styles.tabHit}
+      contentStyle={styles.tabInner}
+      onPress={onPress}
+    >
+      <Animated.View pointerEvents="none" style={[styles.tabMist, { backgroundColor: accentMist }, mistStyle]} />
+      <Animated.View style={iconStyle}>
+        <Ionicons name={focused ? activeIcon : icon} size={20} color={color} />
+      </Animated.View>
+      <Text style={[styles.tabLabel, { color }]} numberOfLines={1}>
+        {label}
+      </Text>
+      {focused ? <View style={[styles.tabDot, { backgroundColor: accentGlow }]} /> : <View style={styles.tabDotSpacer} />}
+    </AnimatedButton>
+  );
 }
 
 /**
@@ -53,17 +111,17 @@ export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
     const focused = state.index === index;
     const meta = TAB_META[route.name] ?? { label: route.name, icon: 'ellipse-outline' as const, activeIcon: 'ellipse' as const };
     const accent = accentForRoute(route.name);
-    const color = focused ? accent.color : colors.textMuted;
 
     return (
-      <AnimatedButton
+      <TabButton
         key={route.key}
-        haptic="selection"
-        accessibilityRole="tab"
-        accessibilityLabel={meta.label}
-        accessibilityState={{ selected: focused }}
-        style={styles.tabHit}
-        contentStyle={[styles.tabInner, focused && { backgroundColor: accent.mist }]}
+        focused={focused}
+        label={meta.label}
+        icon={meta.icon}
+        activeIcon={meta.activeIcon}
+        accentColor={accent.color}
+        accentMist={accent.mist}
+        accentGlow={accent.glow}
         onPress={() => {
           const event = navigation.emit({
             type: 'tabPress',
@@ -77,13 +135,7 @@ export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
           }
           navigation.navigate(route.name);
         }}
-      >
-        <Ionicons name={focused ? meta.activeIcon : meta.icon} size={20} color={color} />
-        <Text style={[styles.tabLabel, { color }]} numberOfLines={1}>
-          {meta.label}
-        </Text>
-        {focused ? <View style={[styles.tabDot, { backgroundColor: accent.glow }]} /> : <View style={styles.tabDotSpacer} />}
-      </AnimatedButton>
+      />
     );
   };
 
@@ -139,6 +191,10 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     marginHorizontal: 2,
     marginVertical: 2,
+    overflow: 'hidden',
+  },
+  tabMist: {
+    ...StyleSheet.absoluteFill,
   },
   tabLabel: {
     fontSize: 11,

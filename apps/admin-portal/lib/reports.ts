@@ -3,7 +3,7 @@
  * Same RPCs Expo `/admin/reports` and `/admin/money` call.
  */
 
-import { getSupabaseServerClient } from '@/lib/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase.server';
 
 export type ReportSection = Record<string, number>;
 
@@ -219,7 +219,7 @@ export function labelForReportKey(key: string): string {
  * @sideEffects `get_admin_reports` RPC (same as Expo `/admin/reports`).
  */
 export async function fetchPortalReports(): Promise<PortalReports> {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   if (!supabase) return { ...EMPTY_REPORTS, error: 'Supabase env missing' };
   const { data, error } = await supabase.rpc('get_admin_reports');
   if (error) return { ...EMPTY_REPORTS, configured: true, error: error.message };
@@ -254,7 +254,7 @@ export async function fetchPortalReports(): Promise<PortalReports> {
  * @sideEffects `get_company_revenue_summary` (syncs `company_revenue_logs`).
  */
 export async function fetchPortalRevenue(): Promise<PortalRevenue> {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   if (!supabase) return { ...EMPTY_REVENUE, error: 'Supabase env missing' };
   const { data, error } = await supabase.rpc('get_company_revenue_summary');
   if (error) return { ...EMPTY_REVENUE, configured: true, error: error.message };

@@ -1,12 +1,17 @@
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
+import { SPRING_CARD } from '@/theme/motion';
 import type { FanTipReceipt } from '@/types/database';
 
 type ReceiptCardProps = {
   receipt: FanTipReceipt;
   onViewReel?: (receipt: FanTipReceipt) => void;
+  /** Position in the ledger list — staggers the mount-in so a scan down the list feels alive, not flat. */
+  index?: number;
 };
 
 function initialsFor(name: string): string {
@@ -38,20 +43,37 @@ function formatReceiptDate(iso: string): string {
  * @param onViewReel Opens the athlete's Highlights ⚡ (`/user/[id]`) when the fan taps View Highlight.
  * @returns Polynesian Obsidian transaction card.
  */
-export function ReceiptCard({ receipt, onViewReel }: ReceiptCardProps) {
+export function ReceiptCard({ receipt, onViewReel, index = 0 }: ReceiptCardProps) {
   const name = receipt.athlete_name.trim() || 'Athlete';
   const school = receipt.school_name.trim();
   const stamped = formatReceiptDate(receipt.created_at);
   const auraGained = Math.max(0, receipt.aura_points);
 
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(14);
+
+  useEffect(() => {
+    const delay = Math.min(index, 6) * 50;
+    opacity.value = withDelay(delay, withTiming(1, { duration: 240 }));
+    translateY.value = withDelay(delay, withSpring(0, SPRING_CARD));
+    // Runs once on mount to stagger the reveal; not meant to re-fire per re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const enterStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
   return (
-    <View
+    <Animated.View
       accessibilityRole="summary"
       accessibilityLabel={`${name}, ${formatMaloAmount(receipt.amount_cents)}, plus ${auraGained} Aura`}
-      style={styles.card}
+      style={[styles.card, enterStyle]}
     >
       <View style={styles.topRow}>
         <View style={styles.avatar}>
+          <View pointerEvents="none" style={styles.avatarGloss} />
           <Text style={styles.initials}>{initialsFor(name)}</Text>
         </View>
         <View style={styles.identity}>
@@ -77,7 +99,7 @@ export function ReceiptCard({ receipt, onViewReel }: ReceiptCardProps) {
           <Text style={styles.viewReelLabel}>View Highlight ⚡</Text>
         </AnimatedButton>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -104,6 +126,17 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarGloss: {
+    position: 'absolute',
+    top: -12,
+    left: -9,
+    width: 38,
+    height: 25,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    transform: [{ rotate: '-18deg' }],
   },
   initials: {
     color: colors.primary,

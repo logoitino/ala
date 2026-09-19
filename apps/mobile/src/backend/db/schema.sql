@@ -54,6 +54,26 @@ alter table public.profiles add column if not exists avatar_url text;
 alter table public.profiles add column if not exists is_verified boolean not null default false;
 alter table public.profiles add column if not exists is_verified_athlete boolean not null default false;
 
+-- 2026-09 audit: CHECK constraints on the Aura currency / engagement counter columns, so even a
+-- direct authenticated-staff table write (or a bug) can't drive them negative.
+do $$
+begin
+  alter table public.players add constraint players_counters_check
+    check (
+      aura_points >= 0 and view_count >= 0 and aura_count >= 0
+      and flex_count >= 0 and seki_count >= 0 and backer_count >= 0
+    );
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter table public.profiles add constraint profiles_aura_points_check check (aura_points >= 0);
+exception
+  when duplicate_object then null;
+end $$;
+
 create table if not exists public.athlete_career_stats (
   player_id uuid primary key references public.players (id) on delete cascade,
   sport text not null default 'Football',
@@ -480,6 +500,22 @@ end $$;
 
 create index if not exists tips_fan_id_created_at_idx on public.tips (fan_id, created_at desc);
 
+-- 2026-09 audit: CHECK constraints on money/points columns that had none, so even a bug (or a
+-- future direct-table write by an authenticated staff role) can't post a negative tip or Aura award.
+do $$
+begin
+  alter table public.tips add constraint tips_amount_cents_check check (amount_cents >= 0);
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter table public.tips add constraint tips_aura_points_check check (aura_points >= 0);
+exception
+  when duplicate_object then null;
+end $$;
+
 create table if not exists public.operator_gigs (
   id uuid primary key default gen_random_uuid(),
   game_id uuid references public.games (id) on delete set null,
@@ -519,6 +555,20 @@ create table if not exists public.sponsorships (
   created_at timestamptz not null default now()
 );
 
+do $$
+begin
+  alter table public.sponsorships add constraint sponsorships_amount_cents_check check (amount_cents >= 0);
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter table public.sponsorships add constraint sponsorships_aura_points_check check (aura_points >= 0);
+exception
+  when duplicate_object then null;
+end $$;
+
 create table if not exists public.verification_requests (
   id uuid primary key default gen_random_uuid(),
   player_id uuid references public.players (id) on delete set null,
@@ -543,6 +593,13 @@ create table if not exists public.disbursements (
   status text not null default 'pending',
   created_at timestamptz not null default now()
 );
+
+do $$
+begin
+  alter table public.disbursements add constraint disbursements_amount_cents_check check (amount_cents >= 0);
+exception
+  when duplicate_object then null;
+end $$;
 
 create table if not exists public.telemetry_logs (
   id uuid primary key default gen_random_uuid(),
@@ -886,6 +943,19 @@ declare
   profile_total integer;
 begin
   add_points := greatest(coalesce(points_to_add, 0), 0);
+
+  -- SECURITY TRADEOFF (2026-09 audit item 1/4): this RPC is called for BOTH the tipper
+  -- (self-Aura) and the athlete recipient right after a real tip (see useTipCheckout.ts),
+  -- so a strict `auth.uid() = target_user_id` ownership check would break the "award the
+  -- athlete too" half. Postgres/RLS alone cannot verify a real Stripe charge happened —
+  -- that verification now lives in supabase/functions/stripe-webhook/index.ts, which writes
+  -- Aura directly (as service_role, exempt below) once a charge is confirmed. Until every
+  -- caller is migrated to trust that webhook instead of calling this RPC client-side, cap the
+  -- client-facing path so a compromised/scripted client can fabricate at most a small amount
+  -- of Aura per call rather than an unbounded amount. This is a stopgap, not a fix.
+  if auth.role() <> 'service_role' and add_points > 5000 then
+    raise exception 'points_to_add exceeds the per-call limit (5000)';
+  end if;
 
   update public.players
   set aura_points = coalesce(aura_points, 0) + add_points
@@ -1618,7 +1688,9 @@ declare
   kind text := public.spotlight_normalize_kind(period_kind);
   bounds record;
 begin
-  if public.current_user_role() <> 'admin' and auth.role() <> 'anon' then
+  -- 2026-09 audit: dropped the `auth.role() <> 'anon'` bypass — this is an admin-only Spotlight
+  -- desk action (`/admin/spotlight`), not part of the anon operator-PIN sideline flow.
+  if public.current_user_role() <> 'admin' then
     raise exception 'Access restricted';
   end if;
   select * into bounds from public.spotlight_window(kind);
@@ -2045,7 +2117,9 @@ declare
   clip uuid;
   award_id uuid;
 begin
-  if public.current_user_role() <> 'admin' and auth.role() <> 'anon' then
+  -- 2026-09 audit: dropped the `auth.role() <> 'anon'` bypass — this is an admin-only Spotlight
+  -- desk action (`/admin/spotlight`), not part of the anon operator-PIN sideline flow.
+  if public.current_user_role() <> 'admin' then
     raise exception 'Access restricted';
   end if;
   if kind not in ('week', 'month', 'year') then
@@ -2140,7 +2214,9 @@ declare
   action text := lower(btrim(coalesce(moderation_action, '')));
   result public.reels%rowtype;
 begin
-  if public.current_user_role() <> 'admin' and auth.role() <> 'anon' then
+  -- 2026-09 audit: dropped the `auth.role() <> 'anon'` bypass — content moderation is an
+  -- admin-only action, not part of the anon operator-PIN sideline flow.
+  if public.current_user_role() <> 'admin' then
     raise exception 'Access restricted';
   end if;
   if action not in ('dismiss', 'remove') then
@@ -2440,6 +2516,17 @@ as $$
 declare
   result public.games%rowtype;
 begin
+  -- 2026-09 audit item 12: this is SECURITY DEFINER, so it bypasses the "Operators update games"
+  -- RLS policy's claimed_by-narrowing entirely — and it's the operator console's PRIMARY score
+  -- path (`updateGameScore` in lib/operator.ts calls this RPC before falling back to a direct
+  -- table UPDATE), so leaving this function unconditional would make that RLS narrowing mostly
+  -- cosmetic. Same stopgap here: an anon caller may only update a game that is still unclaimed.
+  if public.current_user_role() not in ('operator', 'admin') and auth.role() <> 'service_role' then
+    if exists (select 1 from public.games where id = target_game_id and claimed_by is not null) then
+      raise exception 'This game has been claimed by another operator.';
+    end if;
+  end if;
+
   update public.games
   set
     home_score = greatest(coalesce(home_score, 0) + coalesce(home_delta, 0), 0),
@@ -2493,6 +2580,14 @@ alter table public.crew_follows enable row level security;
 alter table public.crew_push_queue enable row level security;
 
 -- Read: guests/fans can watch game day.
+-- SECURITY NOTE (2026-09 audit item 6): kept `using (true)` here deliberately — profiles power
+-- guest-facing reads across the app with no Supabase session at all (public /user/[id], Team
+-- Roster Strip `lib/roster.ts`, Top Boosters `useAuraBoosters.ts`, /gift/[handle] `lib/share.ts`),
+-- so gating this to `authenticated` would break the documented browse-first guest flow. The
+-- concretely named harmful column (`stripe_connect_id`) is NOT closed in this pass — see the long
+-- comment on the `grant ... on public.profiles` line below for why a column-level fix was drafted,
+-- found unsafe to land blind (breaks `AuthContext.tsx`'s `select('*')` self-profile load), and
+-- reverted in favor of flagging it as a real, testable-only-on-staging follow-up.
 drop policy if exists "Public read profiles" on public.profiles;
 create policy "Public read profiles" on public.profiles for select using (true);
 
@@ -2516,11 +2611,14 @@ create policy "Public read spotlight awards"
   on public.spotlight_awards for select
   using (true);
 
+-- 2026-09 audit item 12: dropped the `auth.role() = 'anon'` bypass. Spotlight publishing is an
+-- admin desk action (`/admin/spotlight`), not the anon operator-PIN sideline flow, so there is no
+-- guest-facing write to preserve here.
 drop policy if exists "Admin write spotlight awards" on public.spotlight_awards;
 create policy "Admin write spotlight awards"
   on public.spotlight_awards for all
-  using (auth.role() = 'anon' or public.current_user_role() = 'admin')
-  with check (auth.role() = 'anon' or public.current_user_role() = 'admin');
+  using (public.current_user_role() = 'admin')
+  with check (public.current_user_role() = 'admin');
 
 drop policy if exists "Public read crew follows" on public.crew_follows;
 create policy "Public read crew follows" on public.crew_follows for select using (true);
@@ -2553,49 +2651,85 @@ create policy "Users update own profile"
 drop policy if exists "Public read players" on public.players;
 create policy "Public read players" on public.players for select using (true);
 
+-- 2026-09 audit item 1/12: dropped the `auth.role() = 'anon'` bypass. `players` carries the real
+-- Aura currency column (`aura_points`) plus roster/measurables — a raw anon REST PATCH could set
+-- `aura_points` directly, bypassing `add_user_aura` entirely, which is worse than any of the RPC
+-- holes this pass closes. The anon-facing hype-tap fallback in `lib/hype.ts` and backer-count
+-- fallback in `lib/payments.ts` are unaffected: their primary path is the `increment_player_hype`
+-- / `increment_backer_count` RPCs (still anon-executable, see grants below — those two are
+-- vanity/engagement counters, not currency, and `increment_backer_count` only runs after a
+-- soft-wall-gated authenticated Mālo tip anyway) and only fall back to a direct table write if the
+-- RPC itself errors. Roster/measurables editing from the admin Catalog desk now requires a real
+-- authenticated session with one of these roles — Studio-unlock-only preview (no Supabase auth)
+-- will no longer be able to write here; see summary for the "admin desk has no real auth gate yet"
+-- product decision this surfaces.
 drop policy if exists "Staff write players" on public.players;
 create policy "Staff write players"
   on public.players for all
-  using (
-    auth.role() = 'anon'
-    or public.current_user_role() in ('booster', 'admin', 'operator', 'parent')
-  )
-  with check (
-    auth.role() = 'anon'
-    or public.current_user_role() in ('booster', 'admin', 'operator', 'parent')
-  );
+  using (public.current_user_role() in ('booster', 'admin', 'operator', 'parent'))
+  with check (public.current_user_role() in ('booster', 'admin', 'operator', 'parent'));
 
 drop policy if exists "Public read games" on public.games;
 create policy "Public read games" on public.games for select using (true);
 
+-- 2026-09 audit item 12: operator claim is PIN-based in the client only (`lib/operator.ts`
+-- `OPERATOR_TEST_PIN`), never a Supabase-authenticated session, so restricting this to
+-- `authenticated` would break the sideline scoring demo outright. Real fix (authenticated operator
+-- accounts) is a bigger product decision flagged in the summary, not made here. As a narrower
+-- stopgap: an anon caller may only update a game that is still unclaimed (`claimed_by is null`).
+-- Once a real authenticated operator (or admin) claims a game via `claimOperatorGame`, anon
+-- callers can no longer overwrite its score/clock/quarter via raw REST.
 drop policy if exists "Operators update games" on public.games;
 create policy "Operators update games"
   on public.games for update
   using (
-    auth.role() = 'anon'
-    or public.current_user_role() in ('operator', 'admin')
+    public.current_user_role() in ('operator', 'admin')
+    or (auth.role() = 'anon' and claimed_by is null)
   )
   with check (
-    auth.role() = 'anon'
-    or public.current_user_role() in ('operator', 'admin')
+    public.current_user_role() in ('operator', 'admin')
+    or (auth.role() = 'anon' and claimed_by is null)
   );
 
 drop policy if exists "Public read game_events" on public.game_events;
 create policy "Public read game_events" on public.game_events for select using (true);
 
+-- Same stopgap as "Operators update games": anon play-by-play inserts are only allowed while the
+-- referenced game is unclaimed (or `game_id` is null, matching the retry fallback in
+-- `insertOperatorCallout`/`lib/operator.ts` for older rows without the column).
 drop policy if exists "Operators insert game_events" on public.game_events;
 create policy "Operators insert game_events"
   on public.game_events for insert
   with check (
-    auth.role() = 'anon'
-    or public.current_user_role() in ('operator', 'admin')
+    public.current_user_role() in ('operator', 'admin')
+    or (
+      auth.role() = 'anon'
+      and (
+        game_id is null
+        or exists (
+          select 1 from public.games g
+          where g.id = game_events.game_id and g.claimed_by is null
+        )
+      )
+    )
   );
 
+-- 2026-09 audit item 2: tips are financial records, not a guest-browse surface — no client reads
+-- another fan's tips directly (`useFanTipHistory` filters by `fan_id = auth.uid()`; admin reads go
+-- through `get_admin_reports()`, a SECURITY DEFINER RPC that bypasses this policy entirely).
 drop policy if exists "Public read tips" on public.tips;
-create policy "Public read tips" on public.tips for select using (true);
+create policy "Public read tips"
+  on public.tips for select
+  using (auth.uid() = fan_id or public.current_user_role() = 'admin');
 
+-- 2026-09 audit item 2: `with check (true)` let any client insert a fabricated tip of any amount
+-- for any player. This still does not verify a real Stripe charge happened (see
+-- supabase/functions/stripe-webhook/index.ts for that) but at minimum ties the row to the caller's
+-- own auth.uid(), closing "anyone can credit tips to any fan_id".
 drop policy if exists "Insert tips" on public.tips;
-create policy "Insert tips" on public.tips for insert with check (true);
+create policy "Insert tips"
+  on public.tips for insert
+  with check (auth.uid() = fan_id);
 
 drop policy if exists "Public read gigs" on public.operator_gigs;
 create policy "Public read gigs" on public.operator_gigs for select using (true);
@@ -2621,34 +2755,64 @@ create policy "Insert sponsorships" on public.sponsorships for insert with check
 drop policy if exists "Public read ads" on public.sponsor_ads;
 create policy "Public read ads" on public.sponsor_ads for select using (true);
 
+-- 2026-09 audit item 12: dropped the `auth.role() = 'anon'` bypass. No client code writes
+-- `sponsor_ads` directly today (sideline/rivalry banner tools are stubs per `lib/adminCoverage.ts`),
+-- so there is no anon-facing flow this could break.
 drop policy if exists "Sponsors write ads" on public.sponsor_ads;
 create policy "Sponsors write ads"
   on public.sponsor_ads for all
-  using (auth.role() = 'anon' or public.current_user_role() in ('sponsor', 'admin'))
-  with check (auth.role() = 'anon' or public.current_user_role() in ('sponsor', 'admin'));
+  using (public.current_user_role() in ('sponsor', 'admin'))
+  with check (public.current_user_role() in ('sponsor', 'admin'));
 
+-- 2026-09 audit item 12: verification requests are an internal review queue (Varsity claims),
+-- not a guest-browse surface — no fan-facing screen reads other athletes' requests directly.
 drop policy if exists "Staff read verification" on public.verification_requests;
-create policy "Staff read verification" on public.verification_requests for select using (true);
+create policy "Staff read verification"
+  on public.verification_requests for select
+  using (
+    public.current_user_role() in ('booster', 'admin')
+    or exists (
+      select 1 from public.profiles p
+      where p.id = verification_requests.requester_user_id and p.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "Boosters write verification" on public.verification_requests;
 create policy "Boosters write verification"
   on public.verification_requests for all
-  using (auth.role() = 'anon' or public.current_user_role() in ('booster', 'admin'))
-  with check (auth.role() = 'anon' or public.current_user_role() in ('booster', 'admin'));
+  using (public.current_user_role() in ('booster', 'admin'))
+  with check (public.current_user_role() in ('booster', 'admin'));
 
+-- 2026-09 audit item 12: `request_athlete_verification` (the RPC used by the primary path in
+-- `lib/verification.ts`) is already `authenticated`-only. The direct-insert fallback in that same
+-- file only runs once `supabase.auth.getUser()` resolves a user, and always sets
+-- `requester_user_id` from that user's own profile — so tying the check to auth.uid() matches the
+-- only real caller and closes the previous unconditional `with check (true)`.
 drop policy if exists "Athletes insert verification" on public.verification_requests;
 create policy "Athletes insert verification"
   on public.verification_requests for insert
-  with check (true);
+  with check (
+    requester_user_id is null
+    or exists (
+      select 1 from public.profiles p
+      where p.id = verification_requests.requester_user_id and p.user_id = auth.uid()
+    )
+  );
 
+-- 2026-09 audit item 11: this policy was literally named "Admin read" but its actual `using`
+-- clause was `true` (public) — payout records readable by anyone. Now genuinely admin/parent-only.
 drop policy if exists "Admin read disbursements" on public.disbursements;
-create policy "Admin read disbursements" on public.disbursements for select using (true);
+create policy "Admin read disbursements"
+  on public.disbursements for select
+  using (public.current_user_role() in ('admin', 'parent'));
 
+-- 2026-09 audit item 11: dropped the `auth.role() = 'anon'` bypass — disbursements are payout
+-- ledger rows, not part of any guest or anon operator-demo flow.
 drop policy if exists "Admin write disbursements" on public.disbursements;
 create policy "Admin write disbursements"
   on public.disbursements for all
-  using (auth.role() = 'anon' or public.current_user_role() in ('admin', 'parent'))
-  with check (auth.role() = 'anon' or public.current_user_role() in ('admin', 'parent'));
+  using (public.current_user_role() in ('admin', 'parent'))
+  with check (public.current_user_role() in ('admin', 'parent'));
 
 drop policy if exists "Public read reels" on public.reels;
 create policy "Public read reels" on public.reels for select using (true);
@@ -2691,21 +2855,26 @@ create policy "Fans insert own reel hype votes"
 
 alter table public.subscriptions enable row level security;
 
+-- 2026-09 audit item 3: subscriptions gate paid athlete content — `useHasSubscriberPass` only
+-- ever reads the caller's own `subscriber_id`, so there is no guest-browse read to preserve.
 drop policy if exists "Public read subscriptions" on public.subscriptions;
 create policy "Public read subscriptions"
   on public.subscriptions for select
-  using (true);
+  using (auth.uid() = subscriber_id or public.current_user_role() = 'admin');
 
+-- 2026-09 audit item 3: `with check (true)` let any client grant itself a free permanent unlock of
+-- any athlete's paid content for any subscriber_id. `useAthleteSubscription.ts` always inserts with
+-- `subscriber_id: user.id`, so tying the check to auth.uid() matches the only real caller.
 drop policy if exists "Public insert subscriptions" on public.subscriptions;
 create policy "Public insert subscriptions"
   on public.subscriptions for insert
-  with check (true);
+  with check (auth.uid() = subscriber_id);
 
 drop policy if exists "Public update subscriptions" on public.subscriptions;
 create policy "Public update subscriptions"
   on public.subscriptions for update
-  using (true)
-  with check (true);
+  using (auth.uid() = subscriber_id or public.current_user_role() = 'admin')
+  with check (auth.uid() = subscriber_id or public.current_user_role() = 'admin');
 
 drop policy if exists "Public read subscriber requests" on public.subscriber_requests;
 create policy "Public read subscriber requests"
@@ -2726,37 +2895,95 @@ create policy "Insert telemetry logs" on public.telemetry_logs for insert with c
 drop policy if exists "Authenticated read telemetry logs" on public.telemetry_logs;
 create policy "Authenticated read telemetry logs" on public.telemetry_logs for select using (auth.role() = 'authenticated');
 
+-- 2026-09 audit: `profiles` SELECT stays public (see the policy comment above for why); the
+-- concretely sensitive column is closed via the REVOKE further below. INSERT/UPDATE stay open to
+-- anon at the grant level because the RLS policies ("Users insert own profile" / "Users update own
+-- profile") already tie them to `auth.uid()`, matching the existing pattern elsewhere in this file.
 grant select, insert, update, delete on public.profiles to anon, authenticated;
+-- 2026-09 audit item 6, considered and NOT applied: a column-level
+-- `revoke select (stripe_connect_id) on public.profiles from anon, authenticated` was drafted to
+-- close the named PII exposure without touching the table-wide read guest browse depends on.
+-- Reverted: Postgres column privileges only add a *narrower* grant on top of a table-wide one —
+-- they do not subtract from it, so this would have been a no-op unless the table-wide `select`
+-- grant above were also revoked and re-granted on an explicit column allowlist. That in turn would
+-- make any `select('*')` query on `profiles` fail outright (Postgres/PostgREST reject the whole
+-- wildcard query if the caller lacks privilege on any one column), and `select('*')` on `profiles`
+-- is exactly how `AuthContext.tsx` loads every signed-in user's own profile on every app boot
+-- (`.from('profiles').select('*').eq('user_id', userId)`). That is untestable from here against a
+-- live Supabase instance, and the failure mode (every authenticated user unable to load their own
+-- profile) is worse than the exposure it would close. Left open, flagged for a real fix: either
+-- (a) a `profiles_public` view carrying only the non-sensitive columns, with call sites migrated
+-- to it, or (b) enumerating every non-sensitive column for an explicit `grant select (...)` after
+-- auditing every current `select('*')`/`select(...)` call site — either is a bigger, testable-only-
+-- against-staging change, not something to land blind in this pass.
 grant select on public.schools_and_teams to anon, authenticated;
 grant select on public.athlete_career_stats to anon, authenticated;
 grant select on public.athlete_game_logs to anon, authenticated;
-grant select, insert, update, delete on public.spotlight_awards to anon, authenticated;
+-- 2026-09 audit item 12: spotlight board stays publicly readable (guest browse); publishing is
+-- now authenticated-admin only (see the RLS policy above).
+grant select on public.spotlight_awards to anon, authenticated;
+grant insert, update, delete on public.spotlight_awards to authenticated;
 grant select, insert, delete on public.crew_follows to anon, authenticated;
 grant select, insert on public.crew_push_queue to anon, authenticated;
-grant select, insert, update, delete on public.players to anon, authenticated;
-grant select, insert, update on public.games to anon, authenticated;
+-- 2026-09 audit item 1/12: `players` carries `aura_points` directly — see the RLS policy comment
+-- above. Read stays public (roster/cards are guest-browse); writes are now authenticated-role only.
+grant select on public.players to anon, authenticated;
+grant insert, update, delete on public.players to authenticated;
+-- 2026-09 audit item 12: `games`/`game_events` reads stay public (live scoreboard is guest-browse).
+-- Writes stay grantable to anon at the table level because the RLS policies above now narrow anon
+-- writes to unclaimed games only; INSERT (creating a new game) is admin-desk-only, not part of the
+-- anon operator-PIN flow, so that moves to authenticated.
+grant select, update on public.games to anon, authenticated;
+grant insert on public.games to authenticated;
 grant select, insert on public.game_events to anon, authenticated;
-grant select, insert on public.tips to anon, authenticated;
+-- 2026-09 audit item 2: tips are financial records now scoped by the RLS policies above
+-- (auth.uid() = fan_id, or admin) — no legitimate anon caller remains, so anon is revoked here too.
+grant select, insert on public.tips to authenticated;
 grant select, insert, update, delete on public.operator_gigs to anon, authenticated;
 grant select, insert on public.operator_checkins to anon, authenticated;
-grant select, insert, update, delete on public.sponsor_ads to anon, authenticated;
+-- 2026-09 audit item 12: sponsor_ads reads stay public (sideline banners are guest-browse); writes
+-- are now authenticated-role only (see the RLS policy above).
+grant select on public.sponsor_ads to anon, authenticated;
+grant insert, update, delete on public.sponsor_ads to authenticated;
 grant select, insert on public.sponsorships to anon, authenticated;
-grant select, insert, update, delete on public.verification_requests to anon, authenticated;
-grant select, insert, update on public.disbursements to anon, authenticated;
+-- 2026-09 audit item 12: verification_requests is an internal review queue, not guest-browse —
+-- anon is revoked entirely; RLS above scopes authenticated access to the requester or booster/admin.
+grant select, insert, update, delete on public.verification_requests to authenticated;
+-- 2026-09 audit item 11: disbursements are payout ledger rows — anon revoked entirely.
+grant select, insert, update on public.disbursements to authenticated;
 grant select, insert, update on public.reels to anon, authenticated;
 grant select, insert, delete on public.saved_reels to authenticated;
 grant select, insert on public.reel_hype_votes to authenticated;
-grant select, insert, update on public.subscriptions to anon, authenticated;
+-- 2026-09 audit item 3: subscriptions gate paid content — anon revoked; RLS above scopes
+-- authenticated access to the subscriber themself (or admin).
+grant select, insert, update on public.subscriptions to authenticated;
 grant select, insert on public.subscriber_requests to anon, authenticated;
 grant select on public.cheer_polls to anon, authenticated;
 grant insert on public.telemetry_logs to anon, authenticated;
 grant select on public.telemetry_logs to authenticated;
-grant execute on function public.increment_backer_count(uuid) to anon, authenticated;
-grant execute on function public.add_user_aura(uuid, integer) to anon, authenticated;
+-- 2026-09 audit item 1: `increment_backer_count` only ever runs after a soft-wall-gated
+-- authenticated Mālo tip (`useTipCheckout.ts` / `lib/payments.ts`) — anon revoked.
+grant execute on function public.increment_backer_count(uuid) to authenticated;
+-- 2026-09 audit item 1/4: see the SECURITY TRADEOFF comment on the function body above (per-call
+-- cap stopgap) — anon revoked, authenticated + internal cap only.
+grant execute on function public.add_user_aura(uuid, integer) to authenticated;
 grant execute on function public.get_aura_tier(integer) to anon, authenticated;
+-- 2026-09 audit item 1: intentionally LEFT anon-executable. Unlike the others in this list,
+-- `increment_player_hype` writes vanity view/aura/flex/seki tap counters on `players`, never the
+-- `aura_points` currency column, has no per-user dedup either way, and is a documented
+-- guest-facing engagement surface (Highlights ⚡ reactions are not behind the Soft Wall). Tightening
+-- it to authenticated would regress a currently-working guest feature for a purely cosmetic counter
+-- with no money/Aura implication. Flagged here rather than silently left as-is.
 grant execute on function public.increment_player_hype(uuid, text) to anon, authenticated;
-grant execute on function public.increment_reel_hype(uuid, text) to anon, authenticated;
-grant execute on function public.increment_reel_tips(uuid, integer) to anon, authenticated;
+-- 2026-09 audit item 1: `increment_reel_hype` is different from `increment_player_hype` above — it
+-- writes to `reel_hype_votes` with a per-(user_id, reel_id, kind) UNIQUE constraint specifically to
+-- dedupe one hype tap per signed-in fan. For an anon caller `auth.uid()` is null, so that dedupe
+-- insert was always skipped and the counter incremented unconditionally on every call — i.e. anon
+-- execute defeated this table's own anti-spam design. Restricting to authenticated makes the dedupe
+-- actually work as designed, not just closes a theoretical hole.
+grant execute on function public.increment_reel_hype(uuid, text) to authenticated;
+-- 2026-09 audit item 1: same reasoning as increment_backer_count — only reached post-Mālo-tip.
+grant execute on function public.increment_reel_tips(uuid, integer) to authenticated;
 grant execute on function public.cast_cheer_vote(text, text, text, text, text) to anon, authenticated;
 grant execute on function public.update_game_score(uuid, integer, integer, boolean, text) to anon, authenticated;
 grant execute on function public.current_user_role() to anon, authenticated;
@@ -2949,10 +3176,13 @@ create policy "Admin write cheer polls"
   using (auth.role() = 'anon' or public.current_user_role() = 'admin')
   with check (auth.role() = 'anon' or public.current_user_role() = 'admin');
 
+-- 2026-09 audit item 12: dropped the `auth.role() = 'anon'` bypass. Creating a new game row is an
+-- admin-desk action (`adminCatalog.ts`), not part of the anon operator-PIN scoring flow — the grant
+-- for INSERT on `games` is authenticated-only now too (see grants below), so this matches.
 drop policy if exists "Admin insert games" on public.games;
 create policy "Admin insert games"
   on public.games for insert
-  with check (auth.role() = 'anon' or public.current_user_role() in ('admin', 'operator'));
+  with check (public.current_user_role() in ('admin', 'operator'));
 
 drop policy if exists "Admin write sponsorships" on public.sponsorships;
 create policy "Admin write sponsorships"
@@ -3038,11 +3268,17 @@ create policy "Public read app runtime"
   on public.app_runtime_config for select
   using (true);
 
+-- 2026-09 audit item 10: dropped the `auth.role() = 'anon'` bypass. Note this RLS policy alone
+-- was never the real gate for `patch_app_runtime_draft` / `publish_app_runtime` below — both are
+-- SECURITY DEFINER, which bypasses table RLS regardless of what this policy says. The actual fix
+-- for those two is the internal `current_user_role() <> 'admin'` check added to each (item 9). This
+-- policy still matters for the direct-table-UPDATE fallback in `lib/runtime.ts` (`saveAppRuntimeDraft`
+-- / `publishAppRuntime`), which now requires a real authenticated admin session too.
 drop policy if exists "Admin write app runtime" on public.app_runtime_config;
 create policy "Admin write app runtime"
   on public.app_runtime_config for all
-  using (auth.role() = 'anon' or public.current_user_role() = 'admin')
-  with check (auth.role() = 'anon' or public.current_user_role() = 'admin');
+  using (public.current_user_role() = 'admin')
+  with check (public.current_user_role() = 'admin');
 
 drop function if exists public.patch_app_runtime_draft(jsonb);
 
@@ -3055,6 +3291,12 @@ as $$
 declare
   result public.app_runtime_config;
 begin
+  -- 2026-09 audit item 9: this is SECURITY DEFINER, so the table's RLS policy above never actually
+  -- gated it — anyone with `execute` (previously anon+authenticated) could publish a live config
+  -- change regardless of the RLS policy's wording. The real gate has to live here.
+  if public.current_user_role() <> 'admin' then
+    raise exception 'Admin access required';
+  end if;
   if next_draft is null then
     raise exception 'next_draft is required';
   end if;
@@ -3084,6 +3326,11 @@ as $$
 declare
   result public.app_runtime_config;
 begin
+  -- 2026-09 audit item 9: same reasoning as patch_app_runtime_draft above — SECURITY DEFINER
+  -- bypasses table RLS, so the admin check has to happen inside the function body.
+  if public.current_user_role() <> 'admin' then
+    raise exception 'Admin access required';
+  end if;
   update public.app_runtime_config
   set published = draft,
       published_at = timezone('utc', now()),
@@ -3102,8 +3349,28 @@ begin
 end;
 $$;
 
+-- 2026-09 audit item 7: small reusable guard for `language sql` functions, which cannot use
+-- `if ... raise exception` directly. Raises when the caller is not an admin, else no-ops.
+create or replace function public.require_admin_guard()
+returns void
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if public.current_user_role() <> 'admin' then
+    raise exception 'Admin access required';
+  end if;
+end;
+$$;
+
 drop function if exists public.get_admin_reports();
 
+-- 2026-09 audit item 7: was anon-executable with no role check at all — anyone could read
+-- platform-wide money/audience/content aggregates. `select public.require_admin_guard();` as the
+-- first statement raises before the report query runs if the caller is not an admin; the report
+-- query itself is the function's returned (final-statement) result, unchanged otherwise.
 create or replace function public.get_admin_reports()
 returns jsonb
 language sql
@@ -3111,6 +3378,7 @@ stable
 security definer
 set search_path = public
 as $$
+  select public.require_admin_guard();
   select jsonb_build_object(
     'generated_at', timezone('utc', now()),
     'engagement', jsonb_build_object(
@@ -3350,11 +3618,16 @@ as $$
   );
 $$;
 
+-- 2026-09 audit items 7/9/10: app_runtime_config SELECT stays public — it drives the fan app's
+-- feature-flag/chrome bootstrap, read by guests before any sign-in. Writes are now
+-- authenticated-only (admin enforced by the RLS policy above and, for the two RPCs, redundantly
+-- inside the function bodies since SECURITY DEFINER bypasses RLS).
 grant select on public.app_runtime_config to anon, authenticated;
-grant insert, update on public.app_runtime_config to anon, authenticated;
-grant execute on function public.patch_app_runtime_draft(jsonb) to anon, authenticated;
-grant execute on function public.publish_app_runtime() to anon, authenticated;
-grant execute on function public.get_admin_reports() to anon, authenticated;
+grant insert, update on public.app_runtime_config to authenticated;
+grant execute on function public.patch_app_runtime_draft(jsonb) to authenticated;
+grant execute on function public.publish_app_runtime() to authenticated;
+grant execute on function public.get_admin_reports() to authenticated;
+grant execute on function public.require_admin_guard() to authenticated;
 
 do $$
 begin
@@ -3377,6 +3650,20 @@ create table if not exists public.shop_orders (
   qty integer not null default 1,
   created_at timestamptz not null default now()
 );
+
+do $$
+begin
+  alter table public.shop_orders add constraint shop_orders_amount_cents_check check (amount_cents >= 0);
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter table public.shop_orders add constraint shop_orders_qty_check check (qty > 0);
+exception
+  when duplicate_object then null;
+end $$;
 
 create table if not exists public.company_revenue_logs (
   id uuid primary key default gen_random_uuid(),
@@ -3432,6 +3719,15 @@ end $$;
 do $$
 begin
   alter table public.company_revenue_logs
+    add constraint company_revenue_logs_amounts_check
+    check (gross_cents >= 0 and platform_cents >= 0 and payout_cents >= 0);
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter table public.company_revenue_logs
     add constraint company_revenue_logs_player_id_fkey
     foreign key (player_id) references public.players (id) on delete set null;
 exception
@@ -3447,42 +3743,54 @@ create index if not exists shop_orders_created_at_idx
 alter table public.company_revenue_logs enable row level security;
 alter table public.shop_orders enable row level security;
 
+-- 2026-09 audit item 8: dropped the `auth.role() = 'anon'` bypass on both policies. All legitimate
+-- writes to this table go through the SECURITY DEFINER trigger `company_revenue_after_source_insert`
+-- / `record_company_revenue` (fired on tips/sponsorships/subscriptions/shop_orders inserts), which
+-- runs as the function owner and is unaffected by RLS or table grants — so there is no anon write
+-- path this could break. No client code reads this table directly except the admin Money desk
+-- (`lib/finance.ts` `fetchCompanyRevenueLogs`), which now requires a real authenticated admin.
 drop policy if exists "Admin Full Access Revenue Logs" on public.company_revenue_logs;
 drop policy if exists "Admin read company revenue logs" on public.company_revenue_logs;
 create policy "Admin read company revenue logs"
   on public.company_revenue_logs for select
-  using (
-    auth.role() = 'anon'
-    or public.current_user_role() = 'admin'
-  );
+  using (public.current_user_role() = 'admin');
 
 drop policy if exists "Admin write company revenue logs" on public.company_revenue_logs;
 create policy "Admin write company revenue logs"
   on public.company_revenue_logs for all
-  using (
-    auth.role() = 'anon'
-    or public.current_user_role() = 'admin'
-  )
-  with check (
-    auth.role() = 'anon'
-    or public.current_user_role() = 'admin'
-  );
+  using (public.current_user_role() = 'admin')
+  with check (public.current_user_role() = 'admin');
 
+-- 2026-09 audit item 8: no client code reads `shop_orders` directly (Drip purchase history isn't
+-- surfaced yet) — restricted to admin. INSERT stays open below: Drip purchases are NOT behind the
+-- Soft Wall (`packages/shared-types/index.ts` `SOFT_WALL_GATES` lists only malo/crew/wishlist), so
+-- guest checkout genuinely can insert an order with a null `buyer_id` today; closing that
+-- fabrication risk needs the same Stripe-webhook migration flagged for `tips` (item 1/2), not a
+-- narrower RLS check here since there is no reliable owner column for a guest purchase.
 drop policy if exists "Public read shop orders" on public.shop_orders;
 create policy "Public read shop orders"
   on public.shop_orders for select
-  using (true);
+  using (public.current_user_role() = 'admin');
 
 drop policy if exists "Anyone insert shop orders" on public.shop_orders;
 create policy "Anyone insert shop orders"
   on public.shop_orders for insert
   with check (true);
 
+-- 2026-09 audit item 8: this "all" policy's `auth.role() = 'anon'` bypass meant anon could also
+-- UPDATE/DELETE any shop order (not just insert) — the real hole named in the audit ("edited or
+-- deleted via raw REST"). Dropped; update/delete are now admin-only, insert is unaffected (separate
+-- policy above).
 drop policy if exists "Admin write shop orders" on public.shop_orders;
 create policy "Admin write shop orders"
-  on public.shop_orders for all
-  using (auth.role() = 'anon' or public.current_user_role() = 'admin')
-  with check (auth.role() = 'anon' or public.current_user_role() = 'admin');
+  on public.shop_orders for update
+  using (public.current_user_role() = 'admin')
+  with check (public.current_user_role() = 'admin');
+
+drop policy if exists "Admin delete shop orders" on public.shop_orders;
+create policy "Admin delete shop orders"
+  on public.shop_orders for delete
+  using (public.current_user_role() = 'admin');
 
 create or replace function public.company_revenue_bps(stream_source text)
 returns integer
@@ -3795,6 +4103,8 @@ create trigger company_revenue_shop_orders_ai
 
 drop function if exists public.get_company_revenue_summary();
 
+-- 2026-09 audit item 7: was anon-executable with no role check — anyone could read the full
+-- company revenue ledger summary. SECURITY DEFINER bypasses table RLS, so the guard must be here.
 create or replace function public.get_company_revenue_summary()
 returns jsonb
 language plpgsql
@@ -3804,6 +4114,9 @@ as $$
 declare
   payload jsonb;
 begin
+  if public.current_user_role() <> 'admin' then
+    raise exception 'Admin access required';
+  end if;
   perform public.sync_company_revenue_logs();
 
   select jsonb_build_object(
@@ -3884,12 +4197,25 @@ begin
 end;
 $$;
 
-grant select, insert, update, delete on public.company_revenue_logs to anon, authenticated;
-grant select, insert, update, delete on public.shop_orders to anon, authenticated;
-grant execute on function public.company_revenue_bps(text) to anon, authenticated;
-grant execute on function public.record_company_revenue(text, text, integer, text, uuid, text, timestamptz) to anon, authenticated;
-grant execute on function public.sync_company_revenue_logs() to anon, authenticated;
-grant execute on function public.get_company_revenue_summary() to anon, authenticated;
+-- 2026-09 audit item 8: anon revoked entirely — see the RLS policy comments above (all legitimate
+-- writes flow through the SECURITY DEFINER trigger, which doesn't need a table grant to do it).
+grant select, insert, update, delete on public.company_revenue_logs to authenticated;
+-- shop_orders: read/update/delete are admin-only via RLS above; insert stays open to anon (guest
+-- Drip checkout — see the policy comment above for why that is a separate, larger fix).
+grant select, insert, update, delete on public.shop_orders to authenticated;
+grant insert on public.shop_orders to anon;
+grant execute on function public.company_revenue_bps(text) to authenticated;
+-- 2026-09 audit (found alongside item 8, not separately numbered in the backlog): this RPC does a
+-- raw `insert ... on conflict (source, source_id) do update` into the revenue ledger with
+-- caller-supplied amounts and no role check, and is meant to be called ONLY by the
+-- `company_revenue_after_source_insert` trigger (internal calls from another SECURITY DEFINER
+-- function run as the owner and do not need this grant). No client code calls it. Revoking both
+-- anon and authenticated closes a direct-RPC path to fabricate or overwrite revenue rows by
+-- reusing a real (source, source_id) pair — the same class of hole as item 8, just one level
+-- removed from the table itself.
+revoke execute on function public.record_company_revenue(text, text, integer, text, uuid, text, timestamptz) from anon, authenticated;
+revoke execute on function public.sync_company_revenue_logs() from anon, authenticated;
+grant execute on function public.get_company_revenue_summary() to authenticated;
 
 -- Fan suggestions for the admin control plane. Incremental: supabase/app_feedback.sql.
 -- Fan suggestions / bugs for the admin control plane. Safe to re-run.
@@ -4153,6 +4479,15 @@ declare
   awarded integer := 0;
   aura_result jsonb;
 begin
+  -- SECURITY TRADEOFF (2026-09 audit item 5): `wishlist_items` has no per-contribution ledger
+  -- (only an aggregate `current_amount_cents`), so there is no "payer" column to check
+  -- `auth.uid() =` against here. Execute is now `authenticated`-only (see grants below) and a
+  -- per-call cap is enforced as a stopgap until this is verified against a real Stripe charge
+  -- the same way supabase/functions/stripe-webhook/index.ts will eventually verify tips.
+  if auth.role() <> 'service_role' and add_cents > 100000 then
+    raise exception 'amount_cents exceeds the per-call limit (100000)';
+  end if;
+
   update public.wishlist_items
   set
     current_amount_cents = current_amount_cents + add_cents,
@@ -4197,7 +4532,10 @@ $$;
 grant select on public.wishlist_items to anon, authenticated;
 grant insert, update, delete on public.wishlist_items to anon, authenticated;
 grant execute on function public.get_wishlist_items(uuid) to anon, authenticated;
-grant execute on function public.chip_in_wishlist_item(uuid, integer) to anon, authenticated;
+-- 2026-09 audit item 1/5: Chip In is behind the Soft Wall (`SOFT_WALL_GATES` id `wishlist`), so
+-- authenticated-only does not regress guest browse. See the SECURITY TRADEOFF comment on the
+-- function body above for why a per-call cap stands in for a real ownership check.
+grant execute on function public.chip_in_wishlist_item(uuid, integer) to authenticated;
 
 -- Sports builder playbooks. Incremental: supabase/sport_configs.sql.
 -- Sports builder: per-sport scoring, periods, callouts, and Stats 📊 fields. Safe to re-run.

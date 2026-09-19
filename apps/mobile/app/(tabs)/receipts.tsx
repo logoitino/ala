@@ -112,8 +112,8 @@ export default function ReceiptsScreen() {
             adminLabel="Open Money"
           />
         ) : (
-          receipts.map((receipt) => (
-            <ReceiptCard key={receipt.id} receipt={receipt} onViewReel={onViewReel} />
+          receipts.map((receipt, index) => (
+            <ReceiptCard key={receipt.id} receipt={receipt} onViewReel={onViewReel} index={index} />
           ))
         )}
       </ScrollView>
