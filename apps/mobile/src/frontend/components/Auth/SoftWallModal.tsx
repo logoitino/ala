@@ -13,6 +13,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { LegalAckToggle } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
@@ -21,6 +22,8 @@ import { useSoftWall } from '@/context/SoftWallContext';
 import { DEMO_FAN_EMAIL } from '@/lib/auth';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
+
+const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
 
 type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | null;
 
@@ -40,6 +43,7 @@ export function SoftWallModal() {
   } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [busy, setBusy] = useState<AuthBusy>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +52,7 @@ export function SoftWallModal() {
     if (!visible) {
       setEmail('');
       setPassword('');
+      setAgeConfirmed(false);
       setBusy(null);
       setMessage(null);
       setError(null);
@@ -70,8 +75,8 @@ export function SoftWallModal() {
         ? `Support ${athlete}'s Journey!`
         : 'Support their Journey!';
 
-  const canPassword = Boolean(email.trim() && password);
-  const canMagic = Boolean(email.trim());
+  const canPassword = Boolean(email.trim() && password && ageConfirmed);
+  const canMagic = Boolean(email.trim() && ageConfirmed);
 
   const run = async (kind: Exclude<AuthBusy, null>, work: () => Promise<void>) => {
     setBusy(kind);
@@ -149,15 +154,21 @@ export function SoftWallModal() {
                 editable={!busy}
                 onSubmitEditing={() => {
                   if (canPassword) {
-                    void run('password', () => signInWithEmailPassword(email, password));
+                    void run('password', () => signInWithEmailPassword(email, password, ageConfirmed));
                   }
                 }}
+              />
+              <LegalAckToggle
+                checked={ageConfirmed}
+                onCheckedChange={setAgeConfirmed}
+                disabled={Boolean(busy)}
+                label={AGE_GATE_LABEL}
               />
               <AnimatedButton
                 accessibilityLabel="Sign in with email and password"
                 disabled={Boolean(busy) || !canPassword}
                 haptic="medium"
-                onPress={() => void run('password', () => signInWithEmailPassword(email, password))}
+                onPress={() => void run('password', () => signInWithEmailPassword(email, password, ageConfirmed))}
                 contentStyle={[styles.providerBtn, styles.magicBtn, (busy || !canPassword) && styles.disabled]}
               >
                 {busy === 'password' ? (
@@ -174,7 +185,7 @@ export function SoftWallModal() {
                 accessibilityLabel="Send magic link email"
                 disabled={Boolean(busy) || !canMagic}
                 haptic="selection"
-                onPress={() => void run('magic', () => signInWithMagicLink(email))}
+                onPress={() => void run('magic', () => signInWithMagicLink(email, ageConfirmed))}
                 contentStyle={[styles.providerBtn, styles.secondaryBtn, (busy || !canMagic) && styles.disabled]}
               >
                 {busy === 'magic' ? (

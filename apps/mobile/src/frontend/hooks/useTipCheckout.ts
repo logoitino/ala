@@ -100,7 +100,7 @@ export function useTipCheckout() {
       const checkoutStartedAt = Date.now();
       try {
         const intentStartedAt = Date.now();
-        const clientSecret = await createPaymentIntent(amountCents);
+        const clientSecret = await createPaymentIntent(amountCents, player?.id ?? null);
         telemetry.trackCheckoutLatency('payment_intent', Date.now() - intentStartedAt);
 
         const initStartedAt = Date.now();
@@ -126,9 +126,40 @@ export function useTipCheckout() {
 
         await onPaid?.();
 
-        const nextCount =
-          skipBacker || !player ? (player?.backer_count ?? 0) : await incrementBackerCount(player);
-        if (!skipBacker && player) {
+        const pointsToAdd = auraPoints ?? auraPointsForTip(tipAmount);
+        const tipperId = user?.id ?? null;
+        const recipientId = !skipBacker && player?.id ? player.id : null;
+
+        // A compliance freeze (or any other insert-denied response) on the `tips` ledger row means
+        // this athlete should see NONE of the tip's visible effects — not just a missing ledger row.
+        // Insert (or skip, when there's nothing to insert) BEFORE incrementing the public backer
+        // count / reel-tip total, and before awarding the recipient Aura, and gate both on it having
+        // actually succeeded. `add_user_aura` / `increment_backer_count` / `increment_reel_tips` also
+        // check the freeze themselves server-side (defense in depth), but ordering this correctly on
+        // the client avoids firing those RPCs — and their exceptions — needlessly.
+        let tipInsertSucceeded = !skipBacker && !!player;
+        if (!skipBacker && player && isSupabaseConfigured) {
+          // Minimal generic message for an insert-denied response (e.g. a compliance freeze) — the
+          // policy itself does the real gating server-side, this just tells the fan something.
+          const { error: tipError } = await supabase.from('tips').insert({
+            player_id: player.id,
+            amount_cents: Math.round(tipAmount * 100),
+            fan_id: tipperId,
+            reel_id: reelId ?? null,
+            aura_points: pointsToAdd,
+          });
+          if (tipError) {
+            tipInsertSucceeded = false;
+            Alert.alert(
+              'Mālo not recorded',
+              'Your payment went through, but this athlete cannot currently receive Mālo. Contact support if this seems wrong.',
+            );
+          }
+        }
+
+        let nextCount = player?.backer_count ?? 0;
+        if (!skipBacker && player && tipInsertSucceeded) {
+          nextCount = await incrementBackerCount(player);
           onBacked?.(nextCount);
           onTipped?.(amountCents);
           if (reelId) {
@@ -138,26 +169,12 @@ export function useTipCheckout() {
           await bumpMaloDroppedCount();
         }
 
-        const pointsToAdd = auraPoints ?? auraPointsForTip(tipAmount);
-        const tipperId = user?.id ?? null;
-        const recipientId = !skipBacker && player?.id ? player.id : null;
-
-        if (!skipBacker && player && isSupabaseConfigured) {
-          await supabase.from('tips').insert({
-            player_id: player.id,
-            amount_cents: Math.round(tipAmount * 100),
-            fan_id: tipperId,
-            reel_id: reelId ?? null,
-            aura_points: pointsToAdd,
-          });
-        }
-
         if (isSupabaseConfigured && pointsToAdd > 0) {
           if (tipperId) {
             const tipperAward = await addUserAura(tipperId, pointsToAdd);
             applyAuraAward(tipperId, tipperAward);
           }
-          if (recipientId && recipientId !== tipperId) {
+          if (recipientId && recipientId !== tipperId && tipInsertSucceeded) {
             const athleteAward = await addUserAura(recipientId, pointsToAdd);
             applyAuraAward(recipientId, athleteAward);
           }

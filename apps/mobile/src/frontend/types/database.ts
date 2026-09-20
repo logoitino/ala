@@ -52,6 +52,11 @@ export type Profile = {
   player_id?: string | null;
   /** Public Storage URL from the `avatars` bucket. Incremental: `supabase/media_upload.sql`. */
   avatar_url?: string | null;
+  /** COPPA gate: self-attested "13 years of age or older" checkbox. Null = not yet confirmed
+   * (pre-existing accounts included) — never used to retroactively block an existing session. */
+  age_confirmed_13_plus?: boolean | null;
+  /** Compliance freeze switch (LEGAL_BRIEFING.md §8 item 5). Flip only via `set_malo_freeze`. */
+  malo_frozen?: boolean | null;
   created_at?: string;
 };
 
@@ -476,6 +481,8 @@ export type SchoolAndTeam = {
   region: string;
   city?: string | null;
   team_code?: string | null;
+  /** Compliance freeze switch (LEGAL_BRIEFING.md §8 item 5). Flip only via `set_malo_freeze`. */
+  malo_frozen?: boolean | null;
   created_at?: string;
 };
 
@@ -870,6 +877,10 @@ export type Database = {
       };
       set_player_vault_locked: {
         Args: { target_player_id: string; is_locked: boolean };
+        Returns: boolean;
+      };
+      set_malo_freeze: {
+        Args: { target_type: 'athlete' | 'school'; target_id: string; frozen: boolean };
         Returns: boolean;
       };
       get_crew_graph: {

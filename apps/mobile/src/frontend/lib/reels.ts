@@ -15,7 +15,8 @@ export type UploadSekiPlayInput = {
   fileName?: string | null;
   title: string;
   playerId: string;
-  gameId: string;
+  /** Optional — a Highlight does not need to be linked to a specific live matchup. */
+  gameId?: string | null;
   /** Persist `reels.is_vault_only` / `is_exclusive`. Default false = free public feed. */
   isExclusive?: boolean;
   /** Persist `reels.category`. Default Game Play. */

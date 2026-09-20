@@ -31,6 +31,13 @@ create table if not exists public.players (
 
 alter table public.players add column if not exists guardian_id uuid references public.profiles (id) on delete set null;
 alter table public.players add column if not exists parental_consent_approved boolean not null default false;
+-- Phase 1 item 3 groundwork (docs/PARENT_PAYEE_CONNECT_DESIGN.md) — dated consent record alongside
+-- the existing boolean, mirroring `profiles.legal_terms_accepted_at`. Not yet written by any code
+-- path; the consent-flow UI that sets it is a follow-up gated on that design doc's sign-offs.
+alter table public.players add column if not exists guardian_consent_at timestamptz;
+-- Supports "which athletes does this guardian manage" / "who is this athlete's guardian" lookups
+-- (already used by the tag-confirmation RPC below); no index existed on this FK.
+create index if not exists players_guardian_id_idx on public.players (guardian_id);
 alter table public.players add column if not exists team text;
 alter table public.players add column if not exists height text not null default '';
 alter table public.players add column if not exists view_count integer not null default 0;
@@ -53,6 +60,12 @@ alter table public.profiles add column if not exists legal_terms_version text;
 alter table public.profiles add column if not exists avatar_url text;
 alter table public.profiles add column if not exists is_verified boolean not null default false;
 alter table public.profiles add column if not exists is_verified_athlete boolean not null default false;
+-- COPPA age gate (2026-09): self-attested "13 years of age or older" confirmation collected as a
+-- checkbox at sign-up (data minimization — never a birthdate or exact age). Nullable/default null so
+-- pre-existing accounts created before this gate existed are left alone, never retroactively blocked.
+-- Set to true by `ensureFanProfile` (client fallback) or `handle_new_auth_user` (from signup metadata)
+-- the moment a NEW account is created with the box checked; existing rows are never overwritten.
+alter table public.profiles add column if not exists age_confirmed_13_plus boolean default null;
 
 -- 2026-09 audit: CHECK constraints on the Aura currency / engagement counter columns, so even a
 -- direct authenticated-staff table write (or a bug) can't drive them negative.
@@ -117,6 +130,10 @@ alter table public.schools_and_teams add column if not exists city text not null
 alter table public.schools_and_teams add column if not exists created_at timestamptz not null default now();
 alter table public.schools_and_teams add column if not exists team_code text;
 
+-- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): per-school Mālo freeze switch. Nullable,
+-- defaults to false. Flip only via `set_malo_freeze` (admin-only SECURITY DEFINER RPC below).
+alter table public.schools_and_teams add column if not exists malo_frozen boolean default false;
+
 create unique index if not exists schools_and_teams_team_code_key
   on public.schools_and_teams (upper(btrim(team_code)))
   where team_code is not null and btrim(team_code) <> '';
@@ -172,6 +189,12 @@ begin
 exception
   when duplicate_object then null;
 end $$;
+
+-- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): per-athlete Mālo freeze switch so the team can
+-- honor a written direction from a school/association within hours. Nullable, defaults to false so
+-- existing rows are unaffected. Flip only via `set_malo_freeze` (admin-only SECURITY DEFINER RPC
+-- below) — this column is never exposed to a raw client UPDATE.
+alter table public.profiles add column if not exists malo_frozen boolean default false;
 
 update public.profiles
 set is_admin = true
@@ -919,6 +942,12 @@ as $$
 declare
   new_count integer;
 begin
+  -- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): a frozen athlete's public backer count must
+  -- not keep climbing off a Mālo that the `tips` INSERT already rejects — see `malo_target_frozen`.
+  if public.malo_target_frozen(target_player_id) then
+    raise exception 'Mālo is frozen for this athlete; backer count cannot be incremented.';
+  end if;
+
   update public.players
   set backer_count = coalesce(backer_count, 0) + 1
   where id = target_player_id
@@ -955,6 +984,17 @@ begin
   -- of Aura per call rather than an unbounded amount. This is a stopgap, not a fix.
   if auth.role() <> 'service_role' and add_points > 5000 then
     raise exception 'points_to_add exceeds the per-call limit (5000)';
+  end if;
+
+  -- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): this RPC is called both for the tipper's own
+  -- Fan Aura (target_user_id = auth user id) and for the athlete recipient's Athlete Aura
+  -- (target_user_id = players.id) — see useTipCheckout.ts. `malo_target_frozen` only matches a
+  -- `profiles` row keyed by `player_id = target_user_id`, so this is a no-op (false) for a tipper's
+  -- own auth/profile id and only blocks the case that actually matters: awarding Aura to a frozen
+  -- athlete. Applies to every caller (checkout, reel double-tap, wishlist chip-in), not service_role
+  -- exempt, since the freeze must be a hard block regardless of caller.
+  if public.malo_target_frozen(target_user_id) then
+    raise exception 'Mālo is frozen for this athlete; Aura cannot be added.';
   end if;
 
   update public.players
@@ -1113,7 +1153,16 @@ set search_path = public
 as $$
 declare
   new_total integer;
+  reel_player_id uuid;
 begin
+  -- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): this is the visible running total of Mālo
+  -- dollars on a clip — resolve the tagged athlete and block the same way `tips` INSERT does.
+  -- An untagged reel (no player_id) has no freeze target, so it is not blocked.
+  select player_id into reel_player_id from public.reels where id = target_reel_id;
+  if reel_player_id is not null and public.malo_target_frozen(reel_player_id) then
+    raise exception 'Mālo is frozen for this athlete; reel tip total cannot be updated.';
+  end if;
+
   update public.reels
   set total_tips_cents = coalesce(total_tips_cents, 0) + greatest(coalesce(add_cents, 0), 0)
   where id = target_reel_id
@@ -2554,6 +2603,76 @@ begin
 end;
 $$;
 
+-- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): true when the target athlete's own profile
+-- freeze, or their school's freeze, should block NEW Mālo/exclusive money for `players.id`
+-- `target_player_id`. Reused by the `tips` and `subscriptions` INSERT/UPDATE checks below. A
+-- roster row with no linked `profiles` row (unclaimed athlete) has nowhere to store a freeze flag,
+-- so it reads as not-frozen — matches the rest of the freeze switch, which only exists on claimed
+-- profiles/schools.
+create or replace function public.malo_target_frozen(target_player_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles pr
+    left join public.schools_and_teams sc on sc.id = pr.school_id
+    where pr.player_id = target_player_id
+      and (coalesce(pr.malo_frozen, false) or coalesce(sc.malo_frozen, false))
+  );
+$$;
+
+grant execute on function public.malo_target_frozen(uuid) to anon, authenticated;
+
+drop function if exists public.set_malo_freeze(text, uuid, boolean);
+
+-- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): the ONLY way to flip `profiles.malo_frozen` /
+-- `schools_and_teams.malo_frozen` — admin-only, checked internally via `current_user_role()`, so no
+-- extra table-level UPDATE grant is needed on either table for this feature.
+create or replace function public.set_malo_freeze(target_type text, target_id uuid, frozen boolean)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  next_frozen boolean := coalesce(frozen, false);
+  updated_id uuid;
+begin
+  if public.current_user_role() <> 'admin' then
+    raise exception 'Access restricted';
+  end if;
+  if target_id is null then
+    raise exception 'target_id required';
+  end if;
+
+  if target_type = 'athlete' then
+    update public.profiles
+    set malo_frozen = next_frozen
+    where id = target_id
+    returning id into updated_id;
+  elsif target_type = 'school' then
+    update public.schools_and_teams
+    set malo_frozen = next_frozen
+    where id = target_id
+    returning id into updated_id;
+  else
+    raise exception 'Unknown target_type %', target_type;
+  end if;
+
+  if updated_id is null then
+    raise exception '% not found', target_type;
+  end if;
+
+  return next_frozen;
+end;
+$$;
+
+grant execute on function public.set_malo_freeze(text, uuid, boolean) to authenticated;
+
 alter table public.profiles enable row level security;
 alter table public.players enable row level security;
 alter table public.games enable row level security;
@@ -2663,11 +2782,87 @@ create policy "Public read players" on public.players for select using (true);
 -- authenticated session with one of these roles — Studio-unlock-only preview (no Supabase auth)
 -- will no longer be able to write here; see summary for the "admin desk has no real auth gate yet"
 -- product decision this surfaces.
+-- 2026-09 parent-payee security fix (docs/PARENT_PAYEE_CONNECT_DESIGN.md §0): `parent` dropped from
+-- this blanket policy. It previously let ANY `parent`-role account UPDATE `guardian_id` on ANY
+-- roster row with zero verification of an actual parent/guardian relationship — low-stakes while
+-- `guardian_id` was inert, but about to gate real Stripe Connect payout money per the parent-payee
+-- design doc. The design doc's own §1 flags that the *right* linking mechanism (invite code vs.
+-- roster-seed import vs. something else) is still an open sign-off, so this pass does not invent
+-- one. Interim, conservative fix: `guardian_id` can now only be set by an admin, via the narrow
+-- `admin_set_player_guardian` RPC below (see policy + RPC further down). A parent who is *already*
+-- the linked guardian on a row keeps the ability to toggle `parental_consent_approved` for that one
+-- row via the separate "Parents update own linked player" policy below — this preserves the Parent
+-- screen's existing revoke/re-approve toggle for an already-linked athlete, but the *initial*
+-- self-claim (`app/(parent)/parent/index.tsx`'s `toggleConsent` setting `guardian_id = profile.id`
+-- on a row it doesn't already own) is now rejected by RLS, which is the hole being closed — that
+-- UI is not touched in this pass, so that specific call will surface a permission error until the
+-- real linking flow (§1 of the design doc) ships.
 drop policy if exists "Staff write players" on public.players;
 create policy "Staff write players"
   on public.players for all
-  using (public.current_user_role() in ('booster', 'admin', 'operator', 'parent'))
-  with check (public.current_user_role() in ('booster', 'admin', 'operator', 'parent'));
+  using (public.current_user_role() in ('booster', 'admin', 'operator'))
+  with check (public.current_user_role() in ('booster', 'admin', 'operator'));
+
+-- 2026-09 parent-payee security fix (see comment above): a `parent`-role account may only UPDATE a
+-- `players` row where `guardian_id` already equals their own `profiles.id` (i.e. they are already
+-- the recorded guardian, set by an admin via `admin_set_player_guardian`) — and the `with check`
+-- requires the row's `guardian_id` to still equal that same actor afterwards, so this policy can
+-- never be used to claim an unowned row, reassign guardianship to someone else, or null it out.
+-- This is intentionally narrower than "for all": it exists only so an already-linked parent can
+-- keep toggling `parental_consent_approved` (and, later, `guardian_consent_at`) for their own
+-- athlete, matching the Parent screen's revoke/re-approve behavior.
+drop policy if exists "Parents update own linked player" on public.players;
+create policy "Parents update own linked player"
+  on public.players for update
+  using (
+    public.current_user_role() = 'parent'
+    and guardian_id is not null
+    and guardian_id = (select p.id from public.profiles p where p.user_id = auth.uid() limit 1)
+  )
+  with check (
+    public.current_user_role() = 'parent'
+    and guardian_id = (select p.id from public.profiles p where p.user_id = auth.uid() limit 1)
+  );
+
+-- 2026-09 parent-payee security fix: the only way `guardian_id` can now be set (the previous hole
+-- let any `parent`-role account self-assign this on any row via direct UPDATE). Deliberately narrow
+-- and admin-only rather than a self-service "request guardian link" flow — the design doc
+-- (docs/PARENT_PAYEE_CONNECT_DESIGN.md §1) has three live candidate linking mechanisms (invite
+-- code, roster-seed import, scoped self-declare) still pending product/legal sign-off, and building
+-- a request/approval RPC now would risk prescribing the wrong one. This is an interim stopgap, not
+-- the final parent-onboarding flow.
+create or replace function public.admin_set_player_guardian(target_player_id uuid, new_guardian_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if public.current_user_role() <> 'admin' then
+    raise exception 'Admin required';
+  end if;
+  if target_player_id is null then
+    raise exception 'target_player_id required';
+  end if;
+  if new_guardian_id is not null and not exists (select 1 from public.profiles where id = new_guardian_id) then
+    raise exception 'Unknown guardian profile';
+  end if;
+
+  update public.players
+  set
+    guardian_id = new_guardian_id,
+    parental_consent_approved = false,
+    guardian_consent_at = null
+  where id = target_player_id;
+
+  if not found then
+    raise exception 'Unknown player';
+  end if;
+end;
+$$;
+
+revoke all on function public.admin_set_player_guardian(uuid, uuid) from public;
+grant execute on function public.admin_set_player_guardian(uuid, uuid) to authenticated;
 
 drop policy if exists "Public read games" on public.games;
 create policy "Public read games" on public.games for select using (true);
@@ -2726,10 +2921,12 @@ create policy "Public read tips"
 -- for any player. This still does not verify a real Stripe charge happened (see
 -- supabase/functions/stripe-webhook/index.ts for that) but at minimum ties the row to the caller's
 -- own auth.uid(), closing "anyone can credit tips to any fan_id".
+-- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): a frozen athlete (or their frozen school)
+-- rejects new Mālo at the database layer, not just in the client — see `malo_target_frozen`.
 drop policy if exists "Insert tips" on public.tips;
 create policy "Insert tips"
   on public.tips for insert
-  with check (auth.uid() = fan_id);
+  with check (auth.uid() = fan_id and not public.malo_target_frozen(tips.player_id));
 
 drop policy if exists "Public read gigs" on public.operator_gigs;
 create policy "Public read gigs" on public.operator_gigs for select using (true);
@@ -2865,16 +3062,21 @@ create policy "Public read subscriptions"
 -- 2026-09 audit item 3: `with check (true)` let any client grant itself a free permanent unlock of
 -- any athlete's paid content for any subscriber_id. `useAthleteSubscription.ts` always inserts with
 -- `subscriber_id: user.id`, so tying the check to auth.uid() matches the only real caller.
+-- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): a frozen athlete (or their frozen school)
+-- rejects new exclusive subscriptions at the database layer — see `malo_target_frozen`.
 drop policy if exists "Public insert subscriptions" on public.subscriptions;
 create policy "Public insert subscriptions"
   on public.subscriptions for insert
-  with check (auth.uid() = subscriber_id);
+  with check (auth.uid() = subscriber_id and not public.malo_target_frozen(subscriptions.athlete_id));
 
 drop policy if exists "Public update subscriptions" on public.subscriptions;
 create policy "Public update subscriptions"
   on public.subscriptions for update
   using (auth.uid() = subscriber_id or public.current_user_role() = 'admin')
-  with check (auth.uid() = subscriber_id or public.current_user_role() = 'admin');
+  with check (
+    (auth.uid() = subscriber_id or public.current_user_role() = 'admin')
+    and not public.malo_target_frozen(subscriptions.athlete_id)
+  );
 
 drop policy if exists "Public read subscriber requests" on public.subscriber_requests;
 create policy "Public read subscriber requests"
@@ -4478,6 +4680,7 @@ declare
   newly_equipped boolean := false;
   awarded integer := 0;
   aura_result jsonb;
+  target_player uuid;
 begin
   -- SECURITY TRADEOFF (2026-09 audit item 5): `wishlist_items` has no per-contribution ledger
   -- (only an aggregate `current_amount_cents`), so there is no "payer" column to check
@@ -4486,6 +4689,15 @@ begin
   -- the same way supabase/functions/stripe-webhook/index.ts will eventually verify tips.
   if auth.role() <> 'service_role' and add_cents > 100000 then
     raise exception 'amount_cents exceeds the per-call limit (100000)';
+  end if;
+
+  -- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): this is a Mālo contribution too (see the
+  -- doc comment above) — block it the same way `tips` INSERT does, before the aggregate even moves,
+  -- not only at the equip/+500 Aura step below (add_user_aura's own check would catch that step,
+  -- but not a below-target contribution that never reaches it).
+  select player_id into target_player from public.wishlist_items where id = item_id;
+  if target_player is not null and public.malo_target_frozen(target_player) then
+    raise exception 'Mālo is frozen for this athlete; wishlist contributions are disabled.';
   end if;
 
   update public.wishlist_items
@@ -4706,7 +4918,9 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (user_id, full_name, role, roles, is_verified, spirit_points, active_role)
+  insert into public.profiles (
+    user_id, full_name, role, roles, is_verified, spirit_points, active_role, age_confirmed_13_plus
+  )
   values (
     new.id,
     coalesce(
@@ -4719,7 +4933,11 @@ begin
     array['fan']::text[],
     false,
     0,
-    'fan'
+    'fan',
+    -- COPPA gate: only ever set true from the sign-up checkbox's metadata (email+password /
+    -- magic-link). OAuth (Apple/Google) never sends this, so it stays null and the client shows a
+    -- one-time post-sign-in confirmation modal instead (`AgeConfirmModal`).
+    nullif(new.raw_user_meta_data->>'age_confirmed_13_plus', '')::boolean
   )
   on conflict (user_id) do nothing;
   return new;

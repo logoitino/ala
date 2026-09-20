@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 
 import {
@@ -11,7 +12,7 @@ import {
   AdminPills,
   AdminRow,
 } from '@/components/Admin/AdminChrome';
-import { fetchAdminSchools, upsertSchool } from '@/lib/adminCatalog';
+import { fetchAdminSchools, setMaloFreeze, upsertSchool } from '@/lib/adminCatalog';
 import { formatTeamBadge, type SchoolTeam } from '@/data/teams';
 
 const empty = {
@@ -26,7 +27,7 @@ const empty = {
 
 /**
  * @purpose Edit `schools_and_teams` so athlete onboarding and Local search match production.
- * @sideEffects `schools_and_teams` INSERT / UPDATE.
+ * @sideEffects `schools_and_teams` INSERT / UPDATE; `set_malo_freeze` RPC for the compliance freeze switch.
  */
 export function SchoolsTool() {
   const [rows, setRows] = useState<SchoolTeam[]>([]);
@@ -86,6 +87,38 @@ export function SchoolsTool() {
     return `${row.name} ${row.mascot} ${row.city ?? ''}`.toLowerCase().includes(needle);
   });
 
+  /**
+   * @purpose Compliance kill switch (LEGAL_BRIEFING.md §8 item 5): honor a written direction from a
+   * school/association to freeze Mālo across every athlete at this school within hours.
+   */
+  const confirmFreeze = (school: SchoolTeam) => {
+    const next = !school.malo_frozen;
+    Alert.alert(
+      next ? 'Freeze Mālo for this school?' : 'Unfreeze Mālo for this school?',
+      next
+        ? `Every athlete at ${school.name} will no longer be able to receive Mālo or new exclusive subscriptions. Use this only for a written school/association direction.`
+        : `Athletes at ${school.name} will be able to receive Mālo and new exclusive subscriptions again.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: next ? 'Freeze' : 'Unfreeze',
+          style: next ? 'destructive' : 'default',
+          onPress: () => {
+            setBusy(true);
+            setMessage(null);
+            void setMaloFreeze('school', school.id, next)
+              .then(() => {
+                setMessage(next ? `${school.name} is frozen.` : `${school.name} is unfrozen.`);
+                return refresh();
+              })
+              .catch((caught) => setMessage(caught instanceof Error ? caught.message : 'Could not update this school.'))
+              .finally(() => setBusy(false));
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <AdminPage
       title="Schools"
@@ -135,7 +168,11 @@ export function SchoolsTool() {
         <AdminEmpty text="No schools match this filter." />
       ) : (
         visible.map((row) => (
-          <AdminRow key={row.id} title={row.name} meta={`${row.mascot} · ${formatTeamBadge(row)}`}>
+          <AdminRow
+            key={row.id}
+            title={row.name}
+            meta={`${row.mascot} · ${formatTeamBadge(row)}${row.malo_frozen ? ' · Mālo frozen' : ''}`}
+          >
             <AdminBtn
               label="Edit"
               onPress={() =>
@@ -149,6 +186,12 @@ export function SchoolsTool() {
                   city: row.city ?? '',
                 })
               }
+            />
+            <AdminBtn
+              label={row.malo_frozen ? 'Unfreeze Mālo' : 'Freeze Mālo'}
+              kind={row.malo_frozen ? 'ghost' : 'danger'}
+              disabled={busy}
+              onPress={() => confirmFreeze(row)}
             />
           </AdminRow>
         ))

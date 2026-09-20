@@ -47,6 +47,9 @@ export type Profile = {
   athlete_class_year?: string | null;
   team?: SharedSchoolTeam | null;
   player_id?: string | null;
+  /** COPPA gate: self-attested "13 years of age or older" checkbox. Null = not yet confirmed
+   * (pre-existing accounts included) — never used to retroactively block an existing session. */
+  age_confirmed_13_plus?: boolean | null;
   created_at?: string;
 };
 

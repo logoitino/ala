@@ -35,7 +35,7 @@ Guests browse Highlights / cards / wishlist. **Mālo · Join Crew · Chip In** �
 
 ## Docs of record
 
-Pull facts from: `AGENTS.md` · `DOCUMENTATION.md` · `CHANGELOG.md` · `docs/ARCHITECTURE.md` · `docs/ONBOARDING.md` · `docs/SCHEMA.md` · `docs/TEAMS.md` · `docs/AUDIT_REPORT.md`. Product copy: **Mālo** / **Seki** / **Highlights ⚡**. Canvas: Daylight.
+Pull facts from: `AGENTS.md` · `DOCUMENTATION.md` · `CHANGELOG.md` · `docs/ARCHITECTURE.md` · `docs/ONBOARDING.md` · `docs/SCHEMA.md` · `docs/TEAMS.md` · `docs/AUDIT_REPORT.md` · `docs/ROADMAP.md`. Product copy: **Mālo** / **Seki** / **Highlights ⚡**. Canvas: Daylight.
 
 ## Role reminders (command staff)
 

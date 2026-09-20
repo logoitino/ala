@@ -54,10 +54,27 @@ function displayNameFromUser(user: User): string {
 }
 
 /**
+ * @purpose Detect a brand-new Supabase Auth user (this sign-in is also the account's first ever).
+ * @remarks Standard Supabase idiom: `created_at` and `last_sign_in_at` land within the same request
+ * on account creation, then diverge on every later sign-in. Used to decide whether the COPPA
+ * one-time `AgeConfirmModal` (Apple / Google path) needs to show — never to gate a returning user.
+ */
+export function isNewAuthUser(user: User): boolean {
+  if (!user.created_at || !user.last_sign_in_at) return false;
+  const created = new Date(user.created_at).getTime();
+  const lastSignIn = new Date(user.last_sign_in_at).getTime();
+  if (Number.isNaN(created) || Number.isNaN(lastSignIn)) return false;
+  return Math.abs(lastSignIn - created) < 10_000;
+}
+
+/**
  * @purpose Ensure a base fan `profiles` row exists after first successful auth.
+ * @param ageConfirmed13Plus COPPA self-attestation from the sign-up checkbox, when this call is the
+ * one that creates the row (client-side fallback — the `handle_new_auth_user` trigger normally wins
+ * the race and already carries this from signup metadata; either path never overwrites an existing row).
  * @sideEffects `profiles` SELECT + INSERT.
  */
-export async function ensureFanProfile(user: User): Promise<void> {
+export async function ensureFanProfile(user: User, ageConfirmed13Plus?: boolean): Promise<void> {
   if (!isSupabaseConfigured) return;
   const { data } = await supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle();
   if (data?.id) return;
@@ -67,10 +84,26 @@ export async function ensureFanProfile(user: User): Promise<void> {
     role: 'fan',
     roles: ['fan'],
     active_role: 'fan',
+    age_confirmed_13_plus: ageConfirmed13Plus ?? null,
   });
   if (error && !/duplicate|unique/i.test(error.message)) {
     throw new Error(error.message || 'Could not create your fan profile.');
   }
+}
+
+/**
+ * @purpose Record the COPPA self-attestation for the signed-in fan (Apple/Google post-sign-in modal).
+ * @remarks Only ever called for the signed-in user's own row (`user_id = auth.uid()` under RLS) and
+ * only ever writes `true` — never used to clear or re-check an existing confirmation.
+ * @sideEffects `profiles` UPDATE.
+ */
+export async function confirmAge13Plus(userId: string): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  const { error } = await supabase
+    .from('profiles')
+    .update({ age_confirmed_13_plus: true })
+    .eq('user_id', userId);
+  if (error) throw new Error(error.message || 'Could not save your confirmation.');
 }
 
 function parseParams(url: string): Record<string, string> {
@@ -169,9 +202,16 @@ export async function signInWithGoogle(): Promise<Session> {
 
 /**
  * @purpose Email + password Soft-Wall sign-in (normal credentials).
+ * @param ageConfirmed13Plus COPPA checkbox from the sign-up sheet. Only ever used as the fallback
+ * value if this call is the one that bootstraps a brand-new `profiles` row (see `ensureFanProfile`);
+ * a returning user's existing row is never touched by it.
  * @sideEffects `signInWithPassword`; `ensureFanProfile`.
  */
-export async function signInWithEmailPassword(email: string, password: string): Promise<Session> {
+export async function signInWithEmailPassword(
+  email: string,
+  password: string,
+  ageConfirmed13Plus?: boolean,
+): Promise<Session> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
   const trimmed = email.trim().toLowerCase();
   if (!trimmed.includes('@')) throw new Error('Enter a valid email.');
@@ -183,21 +223,27 @@ export async function signInWithEmailPassword(email: string, password: string): 
   });
   if (error) throw new Error(error.message);
   if (!data.session?.user) throw new Error('Sign-in did not create a session.');
-  await ensureFanProfile(data.session.user);
+  await ensureFanProfile(data.session.user, ageConfirmed13Plus);
   return data.session;
 }
 
 /**
  * @purpose Email magic link. User returns via `alasports://auth/callback`.
+ * @param ageConfirmed13Plus COPPA checkbox from the sign-up sheet. Carried as signup `user_metadata`
+ * so `handle_new_auth_user()` can stamp it on the new `profiles` row — only applies the first time this
+ * email creates an account; Supabase does not re-run the trigger or touch metadata for a returning user.
  * @sideEffects `signInWithOtp`.
  */
-export async function signInWithMagicLink(email: string): Promise<void> {
+export async function signInWithMagicLink(email: string, ageConfirmed13Plus?: boolean): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
   const trimmed = email.trim().toLowerCase();
   if (!trimmed.includes('@')) throw new Error('Enter a valid email.');
   const { error } = await supabase.auth.signInWithOtp({
     email: trimmed,
-    options: { emailRedirectTo: authRedirectUri() },
+    options: {
+      emailRedirectTo: authRedirectUri(),
+      data: { age_confirmed_13_plus: ageConfirmed13Plus ?? null },
+    },
   });
   if (error) throw new Error(error.message);
 }

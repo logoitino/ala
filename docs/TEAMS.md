@@ -278,10 +278,15 @@ Checklist:
 
 1. `pnpm typecheck`
 2. `pnpm docs:check`
-3. Soft-Wall: guest can browse; Mālo/Crew/Chip In resume after sign-in
-4. Profile: own hub hamburger; `/user/[id]` back; no self Mālo
-5. Features: draft vs published; did anyone hit **Publish to app** on purpose?
-6. Press screenshots STALE if Reel / Local / Profile chrome moved
+3. `pnpm --filter @tapuai/mobile test` (Jest — add a test alongside any new money/Aura/eligibility pure-logic file)
+4. Soft-Wall: guest can browse; Mālo/Crew/Chip In resume after sign-in
+5. Profile: own hub hamburger; `/user/[id]` back; no self Mālo
+6. Features: draft vs published; did anyone hit **Publish to app** on purpose?
+7. Press screenshots STALE if Reel / Local / Profile chrome moved
+8. Compliance flows (see the fix/testing roadmap): Mālo works from a Profile with no clip open; a frozen athlete/school rejects Mālo and exclusive checkout at the database level; new sign-up requires the 13+ confirmation and existing accounts are never retroactively blocked by it.
+9. Device smoke: run the relevant role slice (fan/athlete/parent/operator/booster) from `docs/AUDIT_REPORT.md`'s "Device smoke" checklist on a real device — the web preview can't test PaymentSheet, camera upload, or haptics.
+
+Full detail and rationale: `.claude/agents/qa.md` (the executable copy of this checklist) and [ROADMAP.md](ROADMAP.md) (the phased roadmap this checklist tracks).
 
 ---
 

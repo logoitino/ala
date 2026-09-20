@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AuraToast } from '@/components/AuraToast';
 import { BackedCelebration } from '@/components/BackedCelebration';
 import { StudioPreviewBar } from '@/components/Admin/StudioPreviewBar';
+import { AgeConfirmModal } from '@/components/Auth/AgeConfirmModal';
 import { SoftWallModal } from '@/components/Auth/SoftWallModal';
 import { WelcomeOverlay } from '@/components/Onboarding/WelcomeOverlay';
 import { AuthProvider } from '@/context/AuthContext';
@@ -53,6 +54,7 @@ function RuntimeApp() {
         <BackedCelebration />
         <AuraToast />
         <SoftWallModal />
+        <AgeConfirmModal />
         <WelcomeOverlay />
       </View>
     </>

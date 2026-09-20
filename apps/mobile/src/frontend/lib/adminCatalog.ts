@@ -87,6 +87,8 @@ export type AdminPerson = {
   is_admin: boolean;
   created_at: string | null;
   is_fan: boolean;
+  /** Compliance freeze switch (LEGAL_BRIEFING.md §8 item 5). Flip via `setMaloFreeze`. */
+  malo_frozen: boolean;
 };
 
 function asText(value: unknown, fallback = ''): string {
@@ -364,21 +366,32 @@ export async function setShopProductActive(id: string, isActive: boolean): Promi
  */
 export async function fetchAdminSchools(): Promise<SchoolTeam[]> {
   if (!isSupabaseConfigured) return [];
-  const { data, error } = await supabase
+  const primary = await supabase
     .from('schools_and_teams')
-    .select('id, name, mascot, level, division, region, city')
+    .select('id, name, mascot, level, division, region, city, malo_frozen')
     .order('name', { ascending: true });
+  // Fallback for a hosted DB that hasn't picked up the `malo_frozen` column yet.
+  const { data, error } = primary.error
+    ? await supabase
+        .from('schools_and_teams')
+        .select('id, name, mascot, level, division, region, city')
+        .order('name', { ascending: true })
+    : primary;
   throwIf(error, 'Could not load schools.');
   if (!Array.isArray(data)) return [];
-  return data.map((row) => ({
-    id: asText(row.id),
-    name: asText(row.name),
-    mascot: asText(row.mascot),
-    level: row.level === 'college' ? 'college' : 'high_school',
-    division: asText(row.division, row.level === 'college' ? 'NCAA D1' : 'High School'),
-    region: asText(row.region, row.level === 'college' ? 'Big 12' : 'UT'),
-    city: asText(row.city) || null,
-  }));
+  return data.map((row) => {
+    const record = row as Record<string, unknown>;
+    return {
+      id: asText(record.id),
+      name: asText(record.name),
+      mascot: asText(record.mascot),
+      level: record.level === 'college' ? 'college' : 'high_school',
+      division: asText(record.division, record.level === 'college' ? 'NCAA D1' : 'High School'),
+      region: asText(record.region, record.level === 'college' ? 'Big 12' : 'UT'),
+      city: asText(record.city) || null,
+      malo_frozen: asBool(record.malo_frozen),
+    } as SchoolTeam;
+  });
 }
 
 /**
@@ -559,9 +572,12 @@ function profileLooksVerified(row: Record<string, unknown>): boolean {
 export async function fetchAdminPeople(): Promise<AdminPerson[]> {
   if (!isSupabaseConfigured) return [];
   const selects = [
+    'id, full_name, username, role, is_verified, is_verified_athlete, verification_status, is_admin, roles, created_at, malo_frozen',
+    'id, full_name, username, role, is_verified_athlete, verification_status, is_admin, roles, created_at, malo_frozen',
+    'id, full_name, username, role, is_verified, is_admin, roles, created_at, malo_frozen',
+    'id, full_name, username, role, is_admin, roles, created_at, malo_frozen',
+    // Fallback for a hosted DB that hasn't picked up the `malo_frozen` column yet.
     'id, full_name, username, role, is_verified, is_verified_athlete, verification_status, is_admin, roles, created_at',
-    'id, full_name, username, role, is_verified_athlete, verification_status, is_admin, roles, created_at',
-    'id, full_name, username, role, is_verified, is_admin, roles, created_at',
     'id, full_name, username, role, is_admin, roles, created_at',
   ];
   let data: unknown[] | null = null;
@@ -592,8 +608,30 @@ export async function fetchAdminPeople(): Promise<AdminPerson[]> {
       is_admin: asBool(record.is_admin) || roles.includes('admin') || record.role === 'admin',
       created_at: typeof record.created_at === 'string' ? record.created_at : null,
       is_fan: isFan,
+      malo_frozen: asBool(record.malo_frozen),
     };
   });
+}
+
+/**
+ * @purpose Freeze or unfreeze Mālo/exclusive checkout for one athlete's profile or one school.
+ * Compliance kill switch (LEGAL_BRIEFING.md §8 item 5) — admin-only, routed through the
+ * `set_malo_freeze` RPC so no raw table UPDATE grant is needed for this feature.
+ * @sideEffects `set_malo_freeze` RPC → `profiles.malo_frozen` or `schools_and_teams.malo_frozen`.
+ */
+export async function setMaloFreeze(
+  targetType: 'athlete' | 'school',
+  targetId: string,
+  frozen: boolean,
+): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  if (!targetId) throw new Error('Missing id.');
+  const { error } = await supabase.rpc('set_malo_freeze', {
+    target_type: targetType,
+    target_id: targetId,
+    frozen,
+  });
+  throwIf(error, 'Could not update the Mālo freeze.');
 }
 
 /**

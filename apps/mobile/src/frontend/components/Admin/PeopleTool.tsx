@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 
 import {
@@ -14,6 +15,7 @@ import {
   fetchAdminPeople,
   fetchVerificationQueue,
   patchAdminPerson,
+  setMaloFreeze,
   setVerificationStatus,
   type AdminPerson,
 } from '@/lib/adminCatalog';
@@ -23,7 +25,7 @@ type PeopleFilter = 'all' | 'admin' | 'unverified' | 'verified' | 'fans';
 
 /**
  * @purpose Verify people, grant admin, and oversee Soft-Wall fan signups. Filter the roster instead of scrolling a raw dump.
- * @sideEffects `profiles` UPDATE; `verification_requests` UPDATE.
+ * @sideEffects `profiles` UPDATE; `verification_requests` UPDATE; `set_malo_freeze` RPC for the compliance freeze switch.
  */
 export function PeopleTool() {
   const [people, setPeople] = useState<AdminPerson[]>([]);
@@ -85,6 +87,34 @@ export function PeopleTool() {
     } finally {
       setBusyId(null);
     }
+  };
+
+  /**
+   * @purpose Compliance kill switch (LEGAL_BRIEFING.md §8 item 5): honor a written direction from a
+   * school/association to freeze Mālo for this athlete's profile within hours. Confirms before
+   * either direction since it blocks (or unblocks) real money.
+   */
+  const confirmFreeze = (person: AdminPerson) => {
+    const next = !person.malo_frozen;
+    Alert.alert(
+      next ? 'Freeze Mālo?' : 'Unfreeze Mālo?',
+      next
+        ? `${person.full_name} will no longer be able to receive Mālo or new exclusive subscriptions. Use this only for a written school/association direction.`
+        : `${person.full_name} will be able to receive Mālo and new exclusive subscriptions again.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: next ? 'Freeze' : 'Unfreeze',
+          style: next ? 'destructive' : 'default',
+          onPress: () =>
+            void act(
+              person.id,
+              () => setMaloFreeze('athlete', person.id, next),
+              next ? `${person.full_name} is frozen.` : `${person.full_name} is unfrozen.`,
+            ),
+        },
+      ],
+    );
   };
 
   return (
@@ -149,6 +179,7 @@ export function PeopleTool() {
               person.is_fan ? 'Soft-Wall fan' : '',
               person.is_verified ? 'Verified' : 'Unverified',
               person.is_admin ? 'Admin' : '',
+              person.malo_frozen ? 'Mālo frozen' : '',
               person.created_at ? new Date(person.created_at).toLocaleDateString() : '',
             ]
               .filter(Boolean)
@@ -176,6 +207,12 @@ export function PeopleTool() {
                   person.is_admin ? 'Admin revoked.' : 'Admin granted.',
                 )
               }
+            />
+            <AdminBtn
+              label={busyId === person.id ? '…' : person.malo_frozen ? 'Unfreeze Mālo' : 'Freeze Mālo'}
+              kind={person.malo_frozen ? 'ghost' : 'danger'}
+              disabled={busyId === person.id}
+              onPress={() => confirmFreeze(person)}
             />
           </AdminRow>
         ))

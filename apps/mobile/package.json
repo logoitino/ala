@@ -51,7 +51,11 @@
     "stripe": "^22.6.2"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "^29.5.14",
     "@types/react": "~19.2.2",
+    "jest": "^29.7.0",
+    "jest-expo": "~57.0.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -60,7 +64,18 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
+    "test": "jest",
     "skia:web": "node ../../node_modules/@shopify/react-native-skia/scripts/setup-canvaskit.js",
     "postinstall": "node ../../node_modules/@shopify/react-native-skia/scripts/setup-canvaskit.js || node node_modules/@shopify/react-native-skia/scripts/setup-canvaskit.js"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/.expo/"
+    ]
   }
 }

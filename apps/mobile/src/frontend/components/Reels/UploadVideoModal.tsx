@@ -166,10 +166,10 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
 
   const gameLabel = selectedGame
     ? gameMatchupLabel(selectedGame.home_team, selectedGame.away_team)
-    : 'Pick a game';
+    : 'No specific game (optional)';
   const playerLabel = selectedPlayer ? playerTagLabel(selectedPlayer) : 'Tag a player';
 
-  const canSubmit = Boolean(asset && gameId && playerId && caption.trim()) && !uploading;
+  const canSubmit = Boolean(asset && playerId && caption.trim()) && !uploading;
 
   const sortedPlayers = useMemo(
     () =>
@@ -250,7 +250,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       }
       if (!active) return;
       setGames(rows);
-      setLoadError(rows.length === 0 ? 'No games found. Seed the games table, then retry.' : null);
+      setLoadError(null);
 
       const westlake = rows.find(
         (game) =>
@@ -485,13 +485,27 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
             </View>
 
             <SelectField
-              label="Active Game"
+              label="Tag a Game (optional)"
               value={gameLabel}
               open={openSelect === 'game'}
-              disabled={uploading || games.length === 0}
+              disabled={uploading}
               filled={Boolean(gameId)}
               onToggle={() => setOpenSelect((current) => (current === 'game' ? null : 'game'))}
             >
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: !gameId }}
+                onPress={() => {
+                  setGameId('');
+                  setOpenSelect(null);
+                }}
+                style={[styles.option, !gameId && styles.optionSelected]}
+              >
+                <Text style={[styles.optionLabel, !gameId && styles.optionLabelSelected]}>
+                  No specific game
+                </Text>
+                <Text style={styles.optionMeta}>Post without linking to a live matchup</Text>
+              </Pressable>
               {games.map((game) => {
                 const label = gameMatchupLabel(game.home_team, game.away_team);
                 const selected = game.id === gameId;

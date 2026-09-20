@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 
 import { useAuth } from '@/context/AuthContext';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -71,15 +72,24 @@ export function useAthleteSubscription(playerId: string | undefined) {
   }, [refresh]);
 
   /**
-   * @purpose Insert an active exclusive pass and unblur exclusive tiles without waiting on Stripe/RPC.
-   * @sideEffects Sets local `subscribed`; AsyncStorage write; `subscriptions` insert (`subscriber_id`, `athlete_id`).
+   * @purpose Insert an active exclusive pass and unblur exclusive tiles — gated on the insert
+   * actually succeeding so a server-side rejection (e.g. `malo_target_frozen` via the
+   * `subscriptions` INSERT/UPDATE RLS policies) leaves the fan's UI locked instead of silently
+   * unlocking. Mirrors the `tips`-insert gating in `useTipCheckout.ts`.
+   * @sideEffects `subscriptions` insert (`subscriber_id`, `athlete_id`); sets local `subscribed` +
+   * AsyncStorage write only once that insert has succeeded (or a guest/unconfigured/non-UUID path
+   * where no server check is possible); user-visible Alert on a genuine rejection.
    */
   const grant = useCallback(async () => {
     if (!playerId) return;
-    setSubscribed(true);
-    await AsyncStorage.setItem(storageKey(playerId, user?.id), '1');
 
-    if (!user?.id || !isSupabaseConfigured || !isPlayerUuid(playerId)) return;
+    // No server-side check is possible here (guest, Supabase not configured, or a non-UUID
+    // placeholder id) — nothing to gate on, so unlock locally as before.
+    if (!user?.id || !isSupabaseConfigured || !isPlayerUuid(playerId)) {
+      setSubscribed(true);
+      await AsyncStorage.setItem(storageKey(playerId, user?.id), '1');
+      return;
+    }
 
     const { error } = await supabase.from('subscriptions').insert({
       subscriber_id: user.id,
@@ -88,8 +98,19 @@ export function useAthleteSubscription(playerId: string | undefined) {
     });
 
     if (error && error.code !== '23505') {
-      // Table may be missing until `supabase/subscriptions.sql` is applied; local grant still stands.
+      // A genuine rejection (frozen athlete via RLS, network failure, etc.) — do NOT unlock
+      // locally. Table may also be missing until `supabase/subscriptions.sql` is applied, in
+      // which case this same generic message applies.
+      Alert.alert(
+        'Subscription not recorded',
+        'This athlete cannot currently accept exclusive subscriptions. Contact support if this seems wrong.',
+      );
+      return;
     }
+
+    // Insert succeeded, or `23505` duplicate-key (fan is already subscribed) — both are success.
+    setSubscribed(true);
+    await AsyncStorage.setItem(storageKey(playerId, user.id), '1');
   }, [playerId, user?.id]);
 
   return { subscribed, grant, loading, refresh };

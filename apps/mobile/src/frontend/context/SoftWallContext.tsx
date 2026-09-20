@@ -38,7 +38,7 @@ const SoftWallContext = createContext<SoftWallContextValue | null>(null);
  * @sideEffects Stashes intent until SoftWallModal completes Apple / Google / Magic Link; telemetry `soft_wall.*`.
  */
 export function SoftWallProvider({ children }: { children: ReactNode }) {
-  const { isGuest, session, loading } = useAuth();
+  const { isGuest, session, loading, needsAgeConfirmation } = useAuth();
   const [intent, setIntent] = useState<SoftWallIntent | null>(null);
   const pendingResume = useRef<(() => void) | null>(null);
   const armedForSession = useRef(false);
@@ -52,7 +52,7 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
   const requireAuth = useCallback(
     (next: SoftWallIntent) => {
       if (loading) return;
-      if (!isGuest && session) {
+      if (!isGuest && session && !needsAgeConfirmation) {
         next.resume();
         return;
       }
@@ -61,19 +61,33 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
       setIntent(next);
       telemetry.trackFeature(`soft_wall.${next.kind}`, 'auth');
     },
-    [isGuest, loading, session],
+    [isGuest, loading, needsAgeConfirmation, session],
   );
 
+  // Close the sign-in sheet the instant a session exists, same as before — a brand-new fan
+  // shouldn't be stuck staring at the Apple/Google/Magic-Link form while COPPA confirmation
+  // runs in its own modal (AgeConfirmModal, mounted separately in app/_layout.tsx).
   useEffect(() => {
     if (isGuest || !session || !armedForSession.current) return;
+    setIntent(null);
+  }, [isGuest, session]);
+
+  // Release the stashed action (Mālo checkout, Join Crew, Chip In — all money-adjacent) only once
+  // BOTH a session exists AND, for brand-new Apple/Google/Magic-Link accounts, `needsAgeConfirmation`
+  // has cleared. `AgeConfirmModal.confirmAge13Plus()` updates `AuthContext`'s `profile` state, which
+  // recomputes `needsAgeConfirmation` to false and re-renders here via the `useAuth()` value — so this
+  // effect re-fires on its own once confirmation lands; no polling needed. Returning users, and new
+  // users who already confirmed via the Soft-Wall sign-up form's own checkbox, never have
+  // `needsAgeConfirmation` true, so this adds no delay for them versus before.
+  useEffect(() => {
+    if (isGuest || !session || needsAgeConfirmation || !armedForSession.current) return;
     const resume = pendingResume.current;
     pendingResume.current = null;
     armedForSession.current = false;
-    setIntent(null);
     if (resume) {
       requestAnimationFrame(() => resume());
     }
-  }, [isGuest, session]);
+  }, [isGuest, session, needsAgeConfirmation]);
 
   const value = useMemo(
     () => ({

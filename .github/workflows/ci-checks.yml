@@ -34,9 +34,12 @@ jobs:
       - name: Check front-of-house docs match product constants
         run: pnpm docs:check
 
+      - name: Run mobile unit tests
+        run: pnpm --filter @tapuai/mobile test -- --ci
+
       - name: Check for Leaked Backend Keys (Security Bot)
         run: |
-          if grep -rn "sk_test_" apps/mobile/src/frontend/; then
-            echo "ERROR: Stripe Secret Key found in frontend code!"
+          if grep -rnE "sk_test_|sk_live_|service_role" apps/mobile/src/frontend/ apps/admin-portal/app apps/admin-portal/components apps/admin-portal/lib; then
+            echo "ERROR: Stripe secret key or service_role key found in client-facing code!"
             exit 1
           fi

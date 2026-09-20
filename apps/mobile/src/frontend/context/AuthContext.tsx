@@ -13,8 +13,10 @@ import {
 
 import {
   completeAuthRedirect,
+  confirmAge13Plus as confirmAge13PlusRemote,
   ensureFanProfile,
   ensureGuestId,
+  isNewAuthUser,
   signInWithApple as appleSignIn,
   signInWithGoogle as googleSignIn,
   signInWithMagicLink as magicLinkSignIn,
@@ -48,6 +50,11 @@ type AuthContextValue = {
   isAdmin: boolean;
   /** True when there is no Supabase session (browse-first guest). Studio `guest` role is separate. */
   isGuest: boolean;
+  /** True only right after a brand-new account's first sign-in (Apple/Google skip the sign-up form)
+   * when the COPPA 13+ self-attestation has not been captured yet. Never true for a returning user. */
+  needsAgeConfirmation: boolean;
+  /** Records the COPPA 13+ self-attestation for the signed-in fan (`AgeConfirmModal`). */
+  confirmAge13Plus: () => Promise<void>;
   /** Local Studio session so `/admin` stays open while previewing Fan / Operator. */
   studioUnlocked: boolean;
   canReceiveTips: boolean;
@@ -67,8 +74,8 @@ type AuthContextValue = {
   refreshProfile: () => Promise<Profile | null>;
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signInWithEmailPassword: (email: string, password: string) => Promise<void>;
-  signInWithMagicLink: (email: string) => Promise<void>;
+  signInWithEmailPassword: (email: string, password: string, ageConfirmed13Plus?: boolean) => Promise<void>;
+  signInWithMagicLink: (email: string, ageConfirmed13Plus?: boolean) => Promise<void>;
   signInWithDemoAccount: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -260,15 +267,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [hydrateSession]);
 
   const signInWithEmailPassword = useCallback(
-    async (email: string, password: string) => {
-      const next = await passwordSignIn(email, password);
+    async (email: string, password: string, ageConfirmed13Plus?: boolean) => {
+      const next = await passwordSignIn(email, password, ageConfirmed13Plus);
       await hydrateSession(next);
     },
     [hydrateSession],
   );
 
-  const signInWithMagicLink = useCallback(async (email: string) => {
-    await magicLinkSignIn(email);
+  const signInWithMagicLink = useCallback(async (email: string, ageConfirmed13Plus?: boolean) => {
+    await magicLinkSignIn(email, ageConfirmed13Plus);
   }, []);
 
   const signInWithDemoAccount = useCallback(async () => {
@@ -294,6 +301,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = studioUnlocked || isAdminAccess({ role, roles, profile });
   const isGuest = !session;
   const isVerified = Boolean(profile?.is_verified);
+  // COPPA gate: only for a brand-new account's very first sign-in (Apple/Google have no sign-up
+  // form to collect the checkbox on). A returning user always has `session.user` last_sign_in_at
+  // far from created_at, so this stays false for every pre-existing account regardless of the
+  // stored `age_confirmed_13_plus` value — see `.claude/agents/backend.md` "do not retroactively block".
+  const needsAgeConfirmation = Boolean(
+    session?.user &&
+      profile &&
+      profile.age_confirmed_13_plus !== true &&
+      isNewAuthUser(session.user),
+  );
+
+  const confirmAge13Plus = useCallback(async () => {
+    if (!session?.user.id) return;
+    await confirmAge13PlusRemote(session.user.id);
+    setProfile((current) => (current ? { ...current, age_confirmed_13_plus: true } : current));
+  }, [session?.user.id]);
   const canReceiveTips = isAthlete;
   const activeRole: 'fan' | 'athlete' = useMemo(() => {
     if (!isAthlete) return 'fan';
@@ -378,6 +401,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAthlete,
       isAdmin,
       isGuest,
+      needsAgeConfirmation,
+      confirmAge13Plus,
       studioUnlocked,
       canReceiveTips,
       isVerified,
@@ -405,12 +430,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       addUserRole,
       canReceiveTips,
       completeAthleteOnboarding,
+      confirmAge13Plus,
       isAthlete,
       isAdmin,
       isGuest,
       isVerified,
       loading,
       lockStudio,
+      needsAgeConfirmation,
       previewAsRole,
       profile,
       refreshProfile,

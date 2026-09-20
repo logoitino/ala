@@ -24,15 +24,18 @@ type LegalAckToggleProps = {
   onCheckedChange: (next: boolean) => void;
   onOpenTerms?: () => void;
   disabled?: boolean;
+  /** Overrides the default Terms/NIL copy — e.g. the COPPA age-gate checkbox reuses this same control. */
+  label?: string;
 };
 
 /**
  * @purpose Mandatory Terms / NIL / minor-safety checkbox for Athlete Verification and Stripe Connect.
+ * Also reused (with a custom `label`) for the Soft-Wall / OAuth COPPA "13 years of age or older" gate.
  * @param checked Local or persisted acknowledgement.
  * @param onCheckedChange Parent persists via `useLegalAck.accept` when turning on.
  * @param onOpenTerms Opens `LegalModal` so the athlete can read the three sections.
  */
-export function LegalAckToggle({ checked, onCheckedChange, onOpenTerms, disabled }: LegalAckToggleProps) {
+export function LegalAckToggle({ checked, onCheckedChange, onOpenTerms, disabled, label }: LegalAckToggleProps) {
   return (
     <View style={styles.ackCard}>
       <Pressable
@@ -49,7 +52,7 @@ export function LegalAckToggle({ checked, onCheckedChange, onOpenTerms, disabled
           color={checked ? colors.primary : undefined}
           style={styles.checkbox}
         />
-        <Text style={styles.ackLabel}>{LEGAL_ACK_LABEL}</Text>
+        <Text style={styles.ackLabel}>{label ?? LEGAL_ACK_LABEL}</Text>
       </Pressable>
       {onOpenTerms ? (
         <Pressable accessibilityRole="button" haptic="selection" onPress={onOpenTerms} style={styles.readLink}>

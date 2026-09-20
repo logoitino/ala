@@ -11,6 +11,9 @@ export type SchoolTeam = {
   /** HS state (`UT`) or college conference (`Big 12`). */
   region: string;
   city?: string | null;
+  /** Compliance freeze switch (LEGAL_BRIEFING.md §8 item 5). Blocks new Mālo/exclusive money for
+   * every athlete at this school. Flip only via the `set_malo_freeze` RPC — see `Admin/SchoolsTool.tsx`. */
+  malo_frozen?: boolean;
 };
 
 export const ATHLETE_SPORTS = ['Football', 'Basketball', 'Rugby', 'Volleyball', 'Soccer', 'Baseball', 'Softball', 'Wrestling', 'Track & Field', 'Lacrosse', 'Ice Hockey', 'Tennis'] as const;

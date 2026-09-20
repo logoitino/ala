@@ -30,7 +30,8 @@ export type PickedHighlight = {
 export type UploadHighlightInput = PickedHighlight & {
   title: string;
   playerId: string;
-  gameId: string;
+  /** Optional — a Highlight does not need to be linked to a specific live matchup. */
+  gameId?: string | null;
   isExclusive?: boolean;
   category?: ReelCategory;
   onProgress?: CompressProgress;
@@ -156,7 +157,7 @@ async function insertReelRow(baseRow: {
   video_url: string;
   title: string;
   player_id: string;
-  game_id: string;
+  game_id: string | null;
   is_exclusive: boolean;
   is_vault_only: boolean;
   category: ReelCategory;
@@ -245,7 +246,6 @@ export async function uploadHighlight({
   const caption = title.trim();
   if (!caption) throw new Error('Add a title / hype caption.');
   if (!playerId) throw new Error('Tag a player before uploading.');
-  if (!gameId) throw new Error('Pick an active game before uploading.');
   if (!uri) throw new Error('Pick or record a clip before uploading.');
 
   let localUri = uri;
@@ -278,7 +278,7 @@ export async function uploadHighlight({
     video_url: publicUrl,
     title: caption,
     player_id: playerId,
-    game_id: gameId,
+    game_id: gameId || null,
     is_exclusive: isExclusive,
     is_vault_only: isExclusive,
     category: nextCategory,
