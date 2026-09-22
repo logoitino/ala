@@ -73,24 +73,26 @@ export function ReportContentModal({
           <Text style={styles.body}>
             Hide {who} from your feed. We flag the clip for review and it will not show on this account again.
           </Text>
-          <AnimatedButton
-            accessibilityLabel="Report and hide this highlight"
-            disabled={submitting}
-            haptic="medium"
-            onPress={onConfirm}
-            contentStyle={[styles.reportBtn, submitting && styles.busy]}
-          >
-            <Text style={styles.reportLabel}>{submitting ? 'Reporting…' : 'Report and hide'}</Text>
-          </AnimatedButton>
-          <AnimatedButton
-            accessibilityLabel="Cancel report"
-            disabled={submitting}
-            haptic="light"
-            onPress={onClose}
-            contentStyle={styles.cancelBtn}
-          >
-            <Text style={styles.cancelLabel}>Cancel</Text>
-          </AnimatedButton>
+          <View style={styles.actions}>
+            <AnimatedButton
+              accessibilityLabel="Report and hide this highlight"
+              disabled={submitting}
+              haptic="medium"
+              onPress={onConfirm}
+              contentStyle={[styles.reportBtn, submitting && styles.busy]}
+            >
+              <Text style={styles.reportLabel}>{submitting ? 'Reporting…' : 'Report and hide'}</Text>
+            </AnimatedButton>
+            <AnimatedButton
+              accessibilityLabel="Cancel report"
+              disabled={submitting}
+              haptic="light"
+              onPress={onClose}
+              contentStyle={styles.cancelBtn}
+            >
+              <Text style={styles.cancelLabel}>Cancel</Text>
+            </AnimatedButton>
+          </View>
         </Animated.View>
       </View>
     </Modal>
@@ -118,7 +120,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingHorizontal: 16,
     paddingTop: 8,
-    gap: 12,
+    gap: 8,
   },
   handle: {
     alignSelf: 'center',
@@ -144,6 +146,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '600',
+  },
+  actions: {
+    gap: 10,
+    marginTop: 8,
   },
   reportBtn: {
     minHeight: 52,

@@ -253,7 +253,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
 
         {needsRoster ? (
           <View style={styles.onboard} accessibilityRole="summary">
-            <Text style={styles.toggleLabel}>Athlete roster</Text>
+            <Text style={[styles.toggleLabel, styles.toggleLabelFlush]}>Athlete roster</Text>
             <Text style={styles.onboardHint}>Same steps for High School and college. Search any team in the catalog.</Text>
             <TeamSearchField
               query={teamQuery}
@@ -310,8 +310,8 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
         ) : null}
 
         {dual && !applying ? (
-          <View>
-            <Text style={styles.toggleLabel}>Active mode</Text>
+          <View style={styles.activeModeWrap}>
+            <Text style={[styles.toggleLabel, styles.toggleLabelFlush]}>Active mode</Text>
             <View style={styles.switcher} accessibilityRole="tablist">
               <Animated.View pointerEvents="none" style={[styles.switchIndicator, indicatorStyle]} />
               {(['fan', 'athlete'] as const).map((id) => {
@@ -567,6 +567,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     marginBottom: 8,
+  },
+  toggleLabelFlush: {
+    marginBottom: 0,
+  },
+  activeModeWrap: {
+    gap: 8,
   },
   switcher: {
     position: 'relative',

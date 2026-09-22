@@ -107,7 +107,8 @@ begin
   if target_player_id is null then
     return false;
   end if;
-  if role_name = 'admin' or auth.role() = 'anon' then
+  -- 2026-09 audit follow-up: dropped the `auth.role() = 'anon'` bypass — see schema.sql.
+  if role_name = 'admin' then
     return true;
   end if;
 
@@ -348,7 +349,6 @@ begin
     and coalesce(r.is_removed, false) = false
     and (
       role_name = 'admin'
-      or auth.role() = 'anon'
       or public.can_confirm_player_tag(r.player_id)
     )
   order by r.created_at desc
@@ -937,9 +937,10 @@ $$;
 
 grant execute on function public.spotlight_normalize_kind(text) to anon, authenticated;
 grant execute on function public.spotlight_window(text, date) to anon, authenticated;
-grant execute on function public.can_confirm_player_tag(uuid) to anon, authenticated;
-grant execute on function public.confirm_reel_player_tag(uuid, text) to anon, authenticated;
-grant execute on function public.get_pending_player_tags() to anon, authenticated;
+-- 2026-09 audit follow-up: anon dropped — see schema.sql.
+grant execute on function public.can_confirm_player_tag(uuid) to authenticated;
+grant execute on function public.confirm_reel_player_tag(uuid, text) to authenticated;
+grant execute on function public.get_pending_player_tags() to authenticated;
 grant execute on function public.get_spotlight_standings(text) to anon, authenticated;
 grant execute on function public.sync_spotlight_period(text) to anon, authenticated;
 grant execute on function public.sync_live_spotlight_awards() to anon, authenticated;

@@ -50,6 +50,9 @@ grant select, insert on public.tips to anon, authenticated;
 
 drop function if exists public.get_fan_tip_history(uuid);
 
+-- fan_user_id is accepted (and ignored) only for client call-signature compatibility;
+-- the function ALWAYS scopes to the authenticated caller and never trusts a
+-- client-supplied identity. An anonymous caller (auth.uid() is null) gets zero rows.
 create or replace function public.get_fan_tip_history(fan_user_id uuid)
 returns table (
   id uuid,
@@ -77,8 +80,9 @@ as $$
     coalesce(nullif(p.school_name, ''), '') as school_name
   from public.tips t
   left join public.players p on p.id = t.player_id
-  where t.fan_id = coalesce(auth.uid(), fan_user_id)
+  where auth.uid() is not null
+    and t.fan_id = auth.uid()
   order by t.created_at desc;
 $$;
 
-grant execute on function public.get_fan_tip_history(uuid) to anon, authenticated;
+grant execute on function public.get_fan_tip_history(uuid) to authenticated;

@@ -89,6 +89,8 @@ export type AdminPerson = {
   is_fan: boolean;
   /** Compliance freeze switch (LEGAL_BRIEFING.md §8 item 5). Flip via `setMaloFreeze`. */
   malo_frozen: boolean;
+  /** Dual capability, e.g. `['fan', 'parent']`. Used to find guardian candidates for `adminSetPlayerGuardian`. */
+  roles: string[];
 };
 
 function asText(value: unknown, fallback = ''): string {
@@ -548,12 +550,18 @@ export async function patchHighlight(
 
 /**
  * @purpose Take a clip off Highlights ⚡ or put it back for fans.
- * @sideEffects `reels` UPDATE (`is_removed` / `is_flagged`).
+ * @sideEffects `moderate_flagged_reel` RPC (admin-only; SECURITY DEFINER) — `remove` / `restore`.
  */
 export async function setHighlightRemoved(reelId: string, removed: boolean): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-  const patch = removed ? { is_removed: true, is_flagged: false } : { is_removed: false };
-  const { error } = await supabase.from('reels').update(patch).eq('id', reelId);
+  // 2026-09 audit (reels RLS tightening): `is_removed` / `is_flagged` are no longer in the
+  // raw-UPDATE column grant on `reels` — this desk now goes through the same admin-gated RPC as
+  // the Moderation queue (`moderate_flagged_reel`), which already supports `remove` and now also
+  // `restore` (see schema.sql).
+  const { error } = await supabase.rpc('moderate_flagged_reel', {
+    target_reel_id: reelId,
+    moderation_action: removed ? 'remove' : 'restore',
+  });
   throwIf(error, 'Could not update this Highlight.');
 }
 
@@ -609,6 +617,7 @@ export async function fetchAdminPeople(): Promise<AdminPerson[]> {
       created_at: typeof record.created_at === 'string' ? record.created_at : null,
       is_fan: isFan,
       malo_frozen: asBool(record.malo_frozen),
+      roles,
     };
   });
 }
@@ -632,6 +641,30 @@ export async function setMaloFreeze(
     frozen,
   });
   throwIf(error, 'Could not update the Mālo freeze.');
+}
+
+/**
+ * @purpose Link (or unlink, passing `guardianId: null`) an athlete's parent/guardian profile. This is
+ * now the *only* way `players.guardian_id` can be set — a 2026-09 security fix closed the hole where
+ * any `parent`-role account could self-assign as guardian of any athlete with zero verification, and
+ * RLS now rejects every other write path. Routed through the narrow `admin_set_player_guardian`
+ * SECURITY DEFINER RPC (admin-only, checked internally) so no raw `guardian_id` UPDATE grant is
+ * needed. This is an interim manual admin tool to unblock the Parent screen, not the eventual
+ * self-service linking mechanism — see docs/PARENT_PAYEE_CONNECT_DESIGN.md §1, still open.
+ * @sideEffects `admin_set_player_guardian` RPC → `players.guardian_id`; also resets
+ * `parental_consent_approved` to false and clears `guardian_consent_at` on that row.
+ */
+export async function adminSetPlayerGuardian(
+  playerId: string,
+  guardianId: string | null,
+): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  if (!playerId) throw new Error('Missing player id.');
+  const { error } = await supabase.rpc('admin_set_player_guardian', {
+    target_player_id: playerId,
+    new_guardian_id: guardianId,
+  });
+  throwIf(error, 'Could not update this athlete’s guardian.');
 }
 
 /**
@@ -746,10 +779,13 @@ export async function setVerificationStatus(id: string, status: 'approved' | 're
   if (status !== 'approved') return;
 
   if (data.player_id) {
-    const { error: playerError } = await supabase
-      .from('players')
-      .update({ parental_consent_approved: true })
-      .eq('id', data.player_id);
+    // 2026-09 audit item 2: `parental_consent_approved` / `guardian_consent_at` are no longer
+    // directly UPDATE-able by any authenticated role (column grant narrowed to close the
+    // booster/operator guardian-write hole) — this now goes through the admin-only
+    // `admin_approve_player_consent` SECURITY DEFINER RPC, which bypasses that grant.
+    const { error: playerError } = await supabase.rpc('admin_approve_player_consent', {
+      target_player_id: data.player_id,
+    });
     throwIf(playerError, 'Verified the request, but could not update the player row.');
 
     throwIf(

@@ -672,6 +672,20 @@ $$;
 
 drop function if exists public.add_user_role(text);
 
+-- 2026-09 audit (self-escalation fix): `add_user_role` always writes `auth.uid()`'s own row and had
+-- NO check on which role was being requested — any authenticated session could call
+-- `supabase.rpc('add_user_role', { new_role: 'admin' })` and set `is_admin = true` on itself, a full
+-- privilege escalation with no verification step. Only `fan` and `athlete` have a real self-service
+-- UI path today (`RoleSwitcherModal` → `AuthContext.completeAthleteOnboarding` → `addUserRole
+-- ('athlete')`; `fan` is the default/downgrade). `parent` / `operator` / `booster` / `sponsor` /
+-- `admin` have no legitimate self-service caller anywhere in the frontend (grepped every
+-- `addUserRole(` / `add_user_role` call site: operator access is purely PIN-based with no role
+-- grant at all — `lib/operator.ts`'s `OPERATOR_TEST_PIN` never touches `profiles`; there is no
+-- "become a booster/parent/sponsor" flow either) — so this RPC now refuses to grant any of those
+-- five unless the caller is *already* admin (checked via `current_user_role()` against the row's
+-- state before this call runs, i.e. it can never be the thing that makes someone admin for the
+-- first time). This closes the RPC path; the matching raw-`UPDATE`-on-`profiles` path is closed
+-- separately below by the `guard_profiles_admin_escalation` trigger.
 create or replace function public.add_user_role(new_role text)
 returns text[]
 language plpgsql
@@ -681,10 +695,18 @@ as $$
 declare
   next_roles text[];
   normalized text;
+  caller_role text;
 begin
   normalized := lower(btrim(coalesce(new_role, '')));
   if normalized = '' then
     raise exception 'role required';
+  end if;
+
+  if normalized not in ('fan', 'athlete') then
+    caller_role := public.current_user_role();
+    if caller_role <> 'admin' then
+      raise exception 'role % is not self-service', normalized;
+    end if;
   end if;
 
   update public.profiles
@@ -1225,7 +1247,12 @@ begin
   if target_player_id is null then
     return false;
   end if;
-  if role_name = 'admin' or auth.role() = 'anon' then
+  -- 2026-09 audit follow-up: dropped the `auth.role() = 'anon'` bypass. It let anyone
+  -- holding only the public anon key (no session at all) confirm/reject any player's
+  -- tag on any Highlight via `confirm_reel_player_tag`, which trusts this helper as its
+  -- sole gate. Only a real admin session (or, below, the tagged athlete/guardian/
+  -- operator match) may confirm a tag now.
+  if role_name = 'admin' then
     return true;
   end if;
 
@@ -1465,8 +1492,9 @@ begin
   where r.tag_status = 'pending'
     and coalesce(r.is_removed, false) = false
     and (
+      -- 2026-09 audit follow-up: dropped the `auth.role() = 'anon'` bypass alongside
+      -- `can_confirm_player_tag`'s matching fix, above.
       role_name = 'admin'
-      or auth.role() = 'anon'
       or public.can_confirm_player_tag(r.player_id)
     )
   order by r.created_at desc
@@ -1762,10 +1790,27 @@ set search_path = public
 as $$
 declare
   actor uuid := auth.uid();
+  owner_profile uuid;
+  clip_uploader uuid;
   next_vault boolean;
 begin
   if actor is null then
     raise exception 'Sign in to change vault status.';
+  end if;
+
+  select uploaded_by into clip_uploader from public.reels where id = target_reel_id;
+  if not found then
+    raise exception 'Highlight not found.';
+  end if;
+
+  select p.id into owner_profile from public.profiles p where p.user_id = actor limit 1;
+
+  -- 2026-09 audit (reels RLS tightening): this RPC previously let *any* signed-in user flip the
+  -- Vault flag on *any* reel — it only checked `actor is not null`, not who uploaded the clip. Now
+  -- scoped to the uploader (matches `AthleteReelManager`'s own-clip long-press menu) or an admin
+  -- (matches the `/admin/highlights` desk's Vault toggle).
+  if clip_uploader is distinct from owner_profile and public.current_user_role() <> 'admin' then
+    raise exception 'Only the uploader or an admin can change this Highlight''s Vault status.';
   end if;
 
   update public.reels
@@ -1797,6 +1842,23 @@ declare
 begin
   if actor is null then
     raise exception 'Sign in to lock or open the Vault.';
+  end if;
+
+  -- 2026-09 audit follow-up: this SECURITY DEFINER RPC bypasses RLS entirely, so it needs its own
+  -- ownership check — previously any signed-in fan could lock/unlock any athlete's Vault. There
+  -- are two legitimate callers: (a) the athlete themselves, managing their own claimed roster row
+  -- from their own Profile tab (`app/(tabs)/profile.tsx`'s `manageVault` — `VaultLockCard`), and
+  -- (b) school staff from the admin Athletes desk (`AthletesTool.tsx`), mirroring the "Staff write
+  -- players" RLS policy's role set.
+  if not (
+    public.current_user_role() in ('booster', 'admin', 'operator')
+    or exists (
+      select 1 from public.profiles p
+      where p.user_id = actor
+        and p.player_id = target_player_id
+    )
+  ) then
+    raise exception 'Only the athlete, school staff, or admin may lock or open a Vault.';
   end if;
 
   update public.players
@@ -1920,6 +1982,7 @@ set search_path = public
 as $$
 declare
   actor uuid := auth.uid();
+  owner_profile uuid;
   until_at timestamptz := timezone('utc', now()) + interval '2 hours';
   clip public.reels%rowtype;
   notified integer := 0;
@@ -1931,6 +1994,15 @@ begin
   select * into clip from public.reels where id = target_reel_id;
   if clip.id is null then
     raise exception 'Highlight not found.';
+  end if;
+
+  select p.id into owner_profile from public.profiles p where p.user_id = actor limit 1;
+
+  -- 2026-09 audit (reels RLS tightening): previously any signed-in user could flash-unlock any
+  -- Vault clip for free (no ownership check at all) — this only exists as an athlete's own-clip
+  -- promo tool (`AthleteReelManager`), so scope it the same way as `toggle_reel_vault_status`.
+  if clip.uploaded_by is distinct from owner_profile and public.current_user_role() <> 'admin' then
+    raise exception 'Only the uploader or an admin can flash-unlock this Highlight.';
   end if;
 
   update public.reels
@@ -2268,13 +2340,21 @@ begin
   if public.current_user_role() <> 'admin' then
     raise exception 'Access restricted';
   end if;
-  if action not in ('dismiss', 'remove') then
+  -- 2026-09 audit (reels RLS tightening): `restore` added so the `/admin/highlights` desk's
+  -- un-remove toggle (`setHighlightRemoved(reelId, false)`) has an admin-gated RPC path now that
+  -- `is_removed` is no longer in the raw-UPDATE column grant (see the RLS policy comment below).
+  if action not in ('dismiss', 'remove', 'restore') then
     raise exception 'Unknown moderation_action %', moderation_action;
   end if;
 
   if action = 'dismiss' then
     update public.reels
     set is_flagged = false
+    where id = target_reel_id
+    returning * into result;
+  elsif action = 'restore' then
+    update public.reels
+    set is_removed = false
     where id = target_reel_id
     returning * into result;
   else
@@ -2333,6 +2413,9 @@ $$;
 
 drop function if exists public.get_fan_tip_history(uuid);
 
+-- fan_user_id is accepted (and ignored) only for client call-signature compatibility;
+-- the function ALWAYS scopes to the authenticated caller and never trusts a
+-- client-supplied identity. An anonymous caller (auth.uid() is null) gets zero rows.
 create or replace function public.get_fan_tip_history(fan_user_id uuid)
 returns table (
   id uuid,
@@ -2360,7 +2443,8 @@ as $$
     coalesce(nullif(p.school_name, ''), '') as school_name
   from public.tips t
   left join public.players p on p.id = t.player_id
-  where t.fan_id = coalesce(auth.uid(), fan_user_id)
+  where auth.uid() is not null
+    and t.fan_id = auth.uid()
   order by t.created_at desc;
 $$;
 
@@ -2756,16 +2840,100 @@ create policy "Users read own crew push"
 drop policy if exists "Insert crew push" on public.crew_push_queue;
 create policy "Insert crew push" on public.crew_push_queue for insert with check (true);
 
+-- 2026-09 audit (self-escalation fix, third pass — INSERT gap): this policy used to read
+-- `with check (user_id = auth.uid() or auth.role() = 'anon')`, the same `auth.role() = 'anon'`
+-- bypass pattern closed everywhere else in this file. Unlike the UPDATE policy below, no legitimate
+-- caller ever needs the anon branch here: the only two INSERT paths into `profiles` are (a)
+-- `handle_new_auth_user` (further down this file), a `SECURITY DEFINER` trigger on `auth.users` that
+-- bypasses RLS entirely and is therefore unaffected by this policy either way, and (b)
+-- `ensureFanProfile` in `lib/auth.ts`, the client fallback, which is only ever called with a `User`
+-- already resolved from a real Supabase session (`data.user` / `data.session.user` after
+-- `signUp` / `signInWithPassword` / OAuth exchange resolves) — it always runs as `authenticated`
+-- with `user_id: user.id === auth.uid()`, so it already satisfies the `user_id = auth.uid()` branch
+-- alone. With the anon branch present, an unauthenticated caller (raw anon key, no session) could
+-- INSERT a brand-new row with `is_admin` / `role` / `roles` set directly — neither `add_user_role`'s
+-- caller-must-already-be-admin check nor the `guard_profiles_admin_escalation` trigger (previously
+-- `before update` only) applied to that path. The live blast radius was narrow (`user_id` carries a
+-- `unique references auth.users (id)` FK, so the row must name a real, existing auth user, and
+-- `handle_new_auth_user` normally already inserts that user's row first — the window was a fresh
+-- `auth.users` id with no `profiles` row yet, e.g. a signup where the trigger insert failed/raced),
+-- but `auth.role() = 'anon'` on an admin-flaggable table's INSERT check is wrong in principle
+-- regardless of how narrow that window is. Fixed by dropping the anon branch; see
+-- `guard_profiles_admin_escalation` below for the matching `before insert` defense-in-depth.
 drop policy if exists "Users insert own profile" on public.profiles;
 create policy "Users insert own profile"
   on public.profiles for insert
-  with check (user_id = auth.uid() or auth.role() = 'anon');
+  with check (user_id = auth.uid());
 
 drop policy if exists "Users update own profile" on public.profiles;
 create policy "Users update own profile"
   on public.profiles for update
   using (user_id = auth.uid() or public.current_user_role() = 'admin')
   with check (user_id = auth.uid() or public.current_user_role() = 'admin');
+
+-- 2026-09 audit (self-escalation fix, second half): the "Users update own profile" policy above
+-- lets any signed-in user UPDATE their own row with no column restriction — `is_admin` / `role` /
+-- `roles` included. `add_user_role()` now refuses to grant `admin` unless the caller is already
+-- admin, but that RPC is not the only writer of these columns: any client can call
+-- `supabase.from('profiles').update({ is_admin: true, role: 'admin', roles: ['admin'] }).eq
+-- ('user_id', auth.uid())` directly and hit the exact same `user_id = auth.uid()` branch, bypassing
+-- the RPC entirely. Postgres column-level GRANTs can't distinguish "this caller is already admin"
+-- from "this caller is escalating themselves right now" (both run as the same `authenticated`
+-- role), so the only reliable server-side gate is a row trigger that compares the caller's
+-- *pre-existing* role (via `current_user_role()`, which reads the row as it stands before this
+-- statement) against whether the write is trying to turn a non-admin row into an admin row. This
+-- is defense-in-depth for the same vulnerability `add_user_role` was fixed for above, closing the
+-- raw-`UPDATE` path (`PeopleTool`'s legitimate admin-grant action in `lib/adminCatalog.ts`'s
+-- `patchAdminPerson` is unaffected: it is only ever called by a session that is already admin
+-- against the RLS `using` branch above's `current_user_role() = 'admin'` grant, so `old_is_admin`
+-- there is irrelevant — the trigger only blocks a *non-admin* caller flipping *their own* row to
+-- admin).
+-- 2026-09 audit (self-escalation fix, third pass — INSERT gap): this used to be `before update`
+-- only, which left a brand-new INSERT free to set `is_admin`/`role`/`roles` to admin with no gate at
+-- all (see "Users insert own profile" above for how that was reachable). Extended to
+-- `before insert or update`. On INSERT there is no prior row to diff against — `old` doesn't exist
+-- for that op — so the rule collapses to "the new row can't claim admin unless the caller performing
+-- the insert is already admin" rather than the UPDATE path's "old row wasn't admin, new row is, and
+-- the caller isn't admin". `TG_OP` distinguishes the two so the function never dereferences `old`
+-- during an INSERT.
+create or replace function public.guard_profiles_admin_escalation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  new_is_admin boolean;
+  old_is_admin boolean;
+begin
+  new_is_admin := coalesce(new.is_admin, false)
+    or new.role = 'admin'
+    or coalesce(new.roles, array[]::text[]) @> array['admin']::text[];
+
+  if tg_op = 'INSERT' then
+    if new_is_admin and public.current_user_role() <> 'admin' then
+      raise exception 'admin role can only be granted by an existing admin';
+    end if;
+    return new;
+  end if;
+
+  old_is_admin := coalesce(old.is_admin, false)
+    or old.role = 'admin'
+    or coalesce(old.roles, array[]::text[]) @> array['admin']::text[];
+
+  if new_is_admin and not old_is_admin and public.current_user_role() <> 'admin' then
+    raise exception 'admin role can only be granted by an existing admin';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists guard_profiles_admin_escalation on public.profiles;
+create trigger guard_profiles_admin_escalation
+  before insert or update on public.profiles
+  for each row
+  execute function public.guard_profiles_admin_escalation();
 
 drop policy if exists "Public read players" on public.players;
 create policy "Public read players" on public.players for select using (true);
@@ -2864,6 +3032,82 @@ $$;
 revoke all on function public.admin_set_player_guardian(uuid, uuid) from public;
 grant execute on function public.admin_set_player_guardian(uuid, uuid) to authenticated;
 
+-- 2026-09 audit item 2 (add_user_role escalation pass): "Staff write players" below is `for all`
+-- for `booster`/`admin`/`operator` with no column scoping, and the table-level `grant update` on
+-- `players` had no column allowlist either — together that let a `booster`- or `operator`-role
+-- account write `guardian_id` / `parental_consent_approved` / `guardian_consent_at` directly via a
+-- raw REST `UPDATE`, completely bypassing the admin-only RPC above. Postgres column GRANTs are
+-- role-level (every signed-in user is just `authenticated`), so they can't tell "booster" apart
+-- from "the one already-linked parent" or "an admin approving a verification request" — those two
+-- legitimate direct-write call sites (`app/(parent)/parent/index.tsx`'s `toggleConsent`, and
+-- `lib/adminCatalog.ts`'s `setVerificationStatus`) are moved to these two narrow SECURITY DEFINER
+-- RPCs so the column-level grant below can safely exclude all three columns for everyone else.
+create or replace function public.parent_set_player_consent(target_player_id uuid, approved boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_profile_id uuid;
+begin
+  if public.current_user_role() <> 'parent' then
+    raise exception 'Parent required';
+  end if;
+  if target_player_id is null then
+    raise exception 'target_player_id required';
+  end if;
+
+  select id into caller_profile_id from public.profiles where user_id = auth.uid() limit 1;
+  if caller_profile_id is null then
+    raise exception 'Profile not found';
+  end if;
+
+  update public.players
+  set
+    parental_consent_approved = coalesce(approved, false),
+    guardian_consent_at = case when coalesce(approved, false) then now() else null end
+  where id = target_player_id
+    and guardian_id = caller_profile_id;
+
+  if not found then
+    raise exception 'Not linked to this athlete';
+  end if;
+end;
+$$;
+
+revoke all on function public.parent_set_player_consent(uuid, boolean) from public;
+grant execute on function public.parent_set_player_consent(uuid, boolean) to authenticated;
+
+create or replace function public.admin_approve_player_consent(target_player_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if public.current_user_role() <> 'admin' then
+    raise exception 'Admin required';
+  end if;
+  if target_player_id is null then
+    raise exception 'target_player_id required';
+  end if;
+
+  update public.players
+  set
+    parental_consent_approved = true,
+    guardian_consent_at = now()
+  where id = target_player_id;
+
+  if not found then
+    raise exception 'Unknown player';
+  end if;
+end;
+$$;
+
+revoke all on function public.admin_approve_player_consent(uuid) from public;
+grant execute on function public.admin_approve_player_consent(uuid) to authenticated;
+
 drop policy if exists "Public read games" on public.games;
 create policy "Public read games" on public.games for select using (true);
 
@@ -2946,8 +3190,20 @@ create policy "Operators write checkins"
 drop policy if exists "Public read sponsorships" on public.sponsorships;
 create policy "Public read sponsorships" on public.sponsorships for select using (true);
 
+-- 2026-09 audit sweep (same pattern as `tips`/`subscriptions` item 2/3): sponsorships are financial
+-- records — the fan/booster checkout flow (`hooks/useSponsorships.ts` `recordSponsorship`) always
+-- inserts with `sponsor_user_id: user?.id`, and that checkout is JWT-gated (`stripeIntent.ts`
+-- `requireAccessToken` throws before `createPaymentIntent`/PaymentSheet ever runs without a real
+-- session), so there is no anonymous booster-checkout path to preserve. The admin Boosters desk
+-- (`lib/adminCatalog.ts` `upsertBooster`, `/admin/boosters`) records offline sponsorship deals without
+-- a `sponsor_user_id` at all, so admin needs its own alternative rather than an ownership check that
+-- row could never satisfy. Like `tips`, this closes fabrication (arbitrary `sponsor_user_id` / amount
+-- via the anon key) but does not itself verify a Stripe charge happened — that is the separate
+-- Stripe-webhook effort scaffolded in `supabase/functions/stripe-webhook/`.
 drop policy if exists "Insert sponsorships" on public.sponsorships;
-create policy "Insert sponsorships" on public.sponsorships for insert with check (true);
+create policy "Insert sponsorships"
+  on public.sponsorships for insert
+  with check (auth.uid() = sponsor_user_id or public.current_user_role() = 'admin');
 
 drop policy if exists "Public read ads" on public.sponsor_ads;
 create policy "Public read ads" on public.sponsor_ads for select using (true);
@@ -3014,16 +3270,47 @@ create policy "Admin write disbursements"
 drop policy if exists "Public read reels" on public.reels;
 create policy "Public read reels" on public.reels for select using (true);
 
+-- 2026-09 audit (reels RLS tightening): `with check (true)` let any anon/authenticated client
+-- insert a Highlight attributed to any `player_id` with any `uploaded_by`. `MediaUploadService.
+-- insertReelRow` never sets `uploaded_by` itself; the `reels_apply_tag_defaults` BEFORE INSERT
+-- trigger (see that trigger above) fills it from the caller's own `profiles.id` before this WITH
+-- CHECK runs — Postgres applies a row's BEFORE-trigger mutations, then evaluates RLS, for INSERT —
+-- so this check passes for every real upload and rejects any row a client tries to attribute to
+-- someone else's profile. Soft-Wall gates the upload FAB, so `anon` was never a real caller either;
+-- narrowed to `authenticated` to match.
 drop policy if exists "Public insert reels" on public.reels;
-create policy "Public insert reels"
+create policy "Authenticated insert own reels"
   on public.reels for insert
-  with check (true);
+  to authenticated
+  with check (
+    uploaded_by = (select p.id from public.profiles p where p.user_id = auth.uid() limit 1)
+  );
 
+-- 2026-09 audit (reels RLS tightening): `using (true) with check (true)` let any anon/authenticated
+-- client vandalize ANY reel row via a raw REST PATCH — caption, video_url, hype counts, tip totals,
+-- vault/exclusive flags, moderation flags, all of it. Two row policies replace it below (uploader
+-- edits their own clip; admin edits any clip); the GRANT further down additionally narrows which
+-- *columns* `authenticated` may touch at all to `title` / `category` / `is_exclusive` /
+-- `is_vault_only` / `flash_unlock_until` (RLS alone can't restrict columns within a matched
+-- policy, so without that grant an owner-scoped policy could still be used to rewrite counters or
+-- moderation flags on their own row). Counters (`seki_count`/`aura_count`/`flex_count`/
+-- `total_tips_cents`), `is_flagged`/`is_removed`/`reported_by`, and the tag fields only move through
+-- the SECURITY DEFINER RPCs (`increment_reel_hype`, `increment_reel_tips`, `moderate_flagged_reel`,
+-- `confirm_reel_player_tag`, `report_reel`), which bypass column grants entirely because they run as
+-- the function owner, not the caller's session role.
 drop policy if exists "Public update reels" on public.reels;
-create policy "Public update reels"
+create policy "Uploader updates own reel"
   on public.reels for update
-  using (true)
-  with check (true);
+  to authenticated
+  using (uploaded_by = (select p.id from public.profiles p where p.user_id = auth.uid() limit 1))
+  with check (uploaded_by = (select p.id from public.profiles p where p.user_id = auth.uid() limit 1));
+
+drop policy if exists "Admin moderates any reel" on public.reels;
+create policy "Admin moderates any reel"
+  on public.reels for update
+  to authenticated
+  using (public.current_user_role() = 'admin')
+  with check (public.current_user_role() = 'admin');
 
 drop policy if exists "Fans read own saved reels" on public.saved_reels;
 create policy "Fans read own saved reels"
@@ -3078,15 +3365,29 @@ create policy "Public update subscriptions"
     and not public.malo_target_frozen(subscriptions.athlete_id)
   );
 
+-- 2026-09 audit item (subscriber_requests): `body` is the actual private message text a fan sends
+-- an athlete (Vault "Direct Request"). SELECT is scoped to the sender (their own Q&A history), the
+-- receiving athlete (via `profiles.player_id = subscriber_requests.athlete_id`, mirroring the
+-- `profiles.player_id` athlete-identity join used elsewhere in this file), or admin — not `using
+-- (true)`. INSERT requires the caller to insert as themself.
 drop policy if exists "Public read subscriber requests" on public.subscriber_requests;
-create policy "Public read subscriber requests"
+drop policy if exists "Read own or received subscriber requests" on public.subscriber_requests;
+create policy "Read own or received subscriber requests"
   on public.subscriber_requests for select
-  using (true);
+  using (
+    auth.uid() = subscriber_id
+    or exists (
+      select 1 from public.profiles pr
+      where pr.user_id = auth.uid() and pr.player_id = subscriber_requests.athlete_id
+    )
+    or public.current_user_role() = 'admin'
+  );
 
 drop policy if exists "Public insert subscriber requests" on public.subscriber_requests;
-create policy "Public insert subscriber requests"
+drop policy if exists "Insert own subscriber requests" on public.subscriber_requests;
+create policy "Insert own subscriber requests"
   on public.subscriber_requests for insert
-  with check (true);
+  with check (auth.uid() = subscriber_id);
 
 drop policy if exists "Public read cheer polls" on public.cheer_polls;
 create policy "Public read cheer polls" on public.cheer_polls for select using (true);
@@ -3099,8 +3400,12 @@ create policy "Authenticated read telemetry logs" on public.telemetry_logs for s
 
 -- 2026-09 audit: `profiles` SELECT stays public (see the policy comment above for why); the
 -- concretely sensitive column is closed via the REVOKE further below. INSERT/UPDATE stay open to
--- anon at the grant level because the RLS policies ("Users insert own profile" / "Users update own
--- profile") already tie them to `auth.uid()`, matching the existing pattern elsewhere in this file.
+-- anon at the *grant* level (Postgres GRANTs are additive with RLS, not a replacement for it) because
+-- the RLS policies ("Users insert own profile" / "Users update own profile") tie the actual writes to
+-- `auth.uid()`, matching the existing pattern elsewhere in this file — as of the third-pass fix above,
+-- "Users insert own profile" no longer has an `auth.role() = 'anon'` escape hatch, so an anon-key
+-- caller with no session (`auth.uid()` null) cannot satisfy either policy's `with check` regardless
+-- of holding the table-level grant.
 grant select, insert, update, delete on public.profiles to anon, authenticated;
 -- 2026-09 audit item 6, considered and NOT applied: a column-level
 -- `revoke select (stripe_connect_id) on public.profiles from anon, authenticated` was drafted to
@@ -3130,7 +3435,18 @@ grant select, insert on public.crew_push_queue to anon, authenticated;
 -- 2026-09 audit item 1/12: `players` carries `aura_points` directly — see the RLS policy comment
 -- above. Read stays public (roster/cards are guest-browse); writes are now authenticated-role only.
 grant select on public.players to anon, authenticated;
-grant insert, update, delete on public.players to authenticated;
+grant insert, delete on public.players to authenticated;
+-- 2026-09 audit item 2 (add_user_role escalation pass): UPDATE narrowed to an explicit column
+-- allowlist that excludes `guardian_id` / `parental_consent_approved` / `guardian_consent_at` —
+-- those three are now writable only through the SECURITY DEFINER RPCs above
+-- (`admin_set_player_guardian`, `parent_set_player_consent`, `admin_approve_player_consent`), which
+-- bypass this grant entirely. This is the fix for the "Staff write players" policy still being
+-- `for all` for `booster`/`operator` with zero column scoping — see the long comment above.
+grant update (
+  name, jersey_number, position, height, school_name, backer_count, team,
+  view_count, aura_count, flex_count, seki_count, aura_points, weight,
+  forty_yard, vertical_jump, vault_locked
+) on public.players to authenticated;
 -- 2026-09 audit item 12: `games`/`game_events` reads stay public (live scoreboard is guest-browse).
 -- Writes stay grantable to anon at the table level because the RLS policies above now narrow anon
 -- writes to unclaimed games only; INSERT (creating a new game) is admin-desk-only, not part of the
@@ -3147,19 +3463,30 @@ grant select, insert on public.operator_checkins to anon, authenticated;
 -- are now authenticated-role only (see the RLS policy above).
 grant select on public.sponsor_ads to anon, authenticated;
 grant insert, update, delete on public.sponsor_ads to authenticated;
-grant select, insert on public.sponsorships to anon, authenticated;
+-- 2026-09 audit sweep: read stays public (Top Boosters rail is guest-browse), but insert is
+-- authenticated-only now — see the RLS policy comment above.
+grant select on public.sponsorships to anon, authenticated;
+grant insert on public.sponsorships to authenticated;
 -- 2026-09 audit item 12: verification_requests is an internal review queue, not guest-browse —
 -- anon is revoked entirely; RLS above scopes authenticated access to the requester or booster/admin.
 grant select, insert, update, delete on public.verification_requests to authenticated;
 -- 2026-09 audit item 11: disbursements are payout ledger rows — anon revoked entirely.
 grant select, insert, update on public.disbursements to authenticated;
-grant select, insert, update on public.reels to anon, authenticated;
+-- 2026-09 audit (reels RLS tightening): guest browse keeps SELECT public. INSERT/UPDATE drop `anon`
+-- (Soft-Wall gates the upload FAB; no real anon caller). UPDATE is further narrowed to an explicit
+-- column allowlist — see the RLS policy comments above for why counters/moderation flags are
+-- deliberately excluded and stay RPC-only.
+grant select on public.reels to anon, authenticated;
+grant insert on public.reels to authenticated;
+grant update (title, category, is_exclusive, is_vault_only, flash_unlock_until) on public.reels to authenticated;
 grant select, insert, delete on public.saved_reels to authenticated;
 grant select, insert on public.reel_hype_votes to authenticated;
 -- 2026-09 audit item 3: subscriptions gate paid content — anon revoked; RLS above scopes
 -- authenticated access to the subscriber themself (or admin).
 grant select, insert, update on public.subscriptions to authenticated;
-grant select, insert on public.subscriber_requests to anon, authenticated;
+-- 2026-09 audit item (subscriber_requests): `body` is private message content — anon revoked;
+-- RLS above scopes SELECT to the sender, the receiving athlete, or admin, and INSERT to the sender.
+grant select, insert on public.subscriber_requests to authenticated;
 grant select on public.cheer_polls to anon, authenticated;
 grant insert on public.telemetry_logs to anon, authenticated;
 grant select on public.telemetry_logs to authenticated;
@@ -3196,28 +3523,41 @@ grant execute on function public.sport_from_team_code_token(text) to anon, authe
 grant execute on function public.athlete_is_varsity_verified(uuid) to anon, authenticated;
 grant execute on function public.redeem_team_code(text) to authenticated;
 grant execute on function public.request_athlete_verification(text) to authenticated;
-grant execute on function public.get_fan_tip_history(uuid) to anon, authenticated;
+grant execute on function public.get_fan_tip_history(uuid) to authenticated;
 grant execute on function public.search_local_entities(text, text) to anon, authenticated;
 grant execute on function public.search_schools_and_teams(text) to anon, authenticated;
 grant execute on function public.report_reel(uuid) to authenticated;
 grant execute on function public.publish_spotlight_award(uuid, text, text, date, date) to anon, authenticated;
 grant execute on function public.spotlight_normalize_kind(text) to anon, authenticated;
 grant execute on function public.spotlight_window(text, date) to anon, authenticated;
-grant execute on function public.can_confirm_player_tag(uuid) to anon, authenticated;
-grant execute on function public.confirm_reel_player_tag(uuid, text) to anon, authenticated;
-grant execute on function public.get_pending_player_tags() to anon, authenticated;
+-- 2026-09 audit follow-up: anon dropped from all three — confirming/rejecting a player
+-- tag (and the pending-tag queue that feeds it) requires a real session now that the
+-- `auth.role() = 'anon'` bypass is gone from the function bodies above.
+grant execute on function public.can_confirm_player_tag(uuid) to authenticated;
+grant execute on function public.confirm_reel_player_tag(uuid, text) to authenticated;
+grant execute on function public.get_pending_player_tags() to authenticated;
 grant execute on function public.get_spotlight_standings(text) to anon, authenticated;
 grant execute on function public.sync_spotlight_period(text) to anon, authenticated;
 grant execute on function public.sync_live_spotlight_awards() to anon, authenticated;
 grant execute on function public.unlock_spotlight_period(text) to anon, authenticated;
-grant execute on function public.moderate_flagged_reel(uuid, text) to anon, authenticated;
+-- 2026-09 audit (reels RLS tightening): the function body already restricts this to
+-- `current_user_role() = 'admin'` (see the comment on the function above) — `anon` execute here was
+-- always a no-op for a real admin action, dropped for consistency with the other admin-only RPCs.
+grant execute on function public.moderate_flagged_reel(uuid, text) to authenticated;
 grant execute on function public.get_admin_platform_metrics() to anon, authenticated;
-grant execute on function public.toggle_reel_vault_status(uuid) to anon, authenticated;
-grant execute on function public.set_player_vault_locked(uuid, boolean) to anon, authenticated;
+-- 2026-09 audit (reels RLS tightening): the function body now requires the uploader or an admin
+-- (see the comment on the function above) — `anon` execute was already a no-op (`actor is null`
+-- always raised), dropped for consistency.
+grant execute on function public.toggle_reel_vault_status(uuid) to authenticated;
+-- 2026-09 audit follow-up: anon dropped — the role check inside the function body now requires
+-- a real authenticated session anyway (current_user_role() resolves to 'guest' for anon).
+grant execute on function public.set_player_vault_locked(uuid, boolean) to authenticated;
 grant execute on function public.get_active_spotlight_award(uuid) to anon, authenticated;
 grant execute on function public.get_crew_graph(uuid) to anon, authenticated;
 grant execute on function public.toggle_crew_follow(uuid, boolean) to anon, authenticated;
-grant execute on function public.set_reel_flash_unlock(uuid) to anon, authenticated;
+-- 2026-09 audit (reels RLS tightening): same reasoning as `toggle_reel_vault_status` above —
+-- ownership check added to the function body, `anon` execute dropped as a no-op.
+grant execute on function public.set_reel_flash_unlock(uuid) to authenticated;
 
 do $$
 begin
@@ -3964,20 +4304,26 @@ create policy "Admin write company revenue logs"
   with check (public.current_user_role() = 'admin');
 
 -- 2026-09 audit item 8: no client code reads `shop_orders` directly (Drip purchase history isn't
--- surfaced yet) — restricted to admin. INSERT stays open below: Drip purchases are NOT behind the
--- Soft Wall (`packages/shared-types/index.ts` `SOFT_WALL_GATES` lists only malo/crew/wishlist), so
--- guest checkout genuinely can insert an order with a null `buyer_id` today; closing that
--- fabrication risk needs the same Stripe-webhook migration flagged for `tips` (item 1/2), not a
--- narrower RLS check here since there is no reliable owner column for a guest purchase.
+-- surfaced yet) — restricted to admin.
 drop policy if exists "Public read shop orders" on public.shop_orders;
 create policy "Public read shop orders"
   on public.shop_orders for select
   using (public.current_user_role() = 'admin');
 
+-- 2026-09 audit sweep: re-traced the "guest checkout" reasoning above — Drip is NOT listed in
+-- `SOFT_WALL_GATES` (that list only gates the proactive sign-in *prompt* UI), but the actual charge
+-- still goes through the same JWT-gated flow as Mālo/boosters: `Drip/ProductSheet.tsx` calls
+-- `useTipCheckout().startCheckout`, which calls `stripeIntent.ts` `createPaymentIntent`, which calls
+-- `requireAccessToken` — that throws before PaymentSheet ever opens if there is no real Supabase
+-- session. So `recordDripOrder`'s `buyerId: user?.id` (`finance.ts`) is never actually null on a
+-- legitimate purchase; there is no anonymous-buyer Drip order to preserve. Tightened to match
+-- `tips`/`sponsorships`. As with those, this only stops a fabricated row from a client that never went
+-- through Stripe — it does not itself verify the charge happened.
 drop policy if exists "Anyone insert shop orders" on public.shop_orders;
-create policy "Anyone insert shop orders"
+drop policy if exists "Insert shop orders" on public.shop_orders;
+create policy "Insert shop orders"
   on public.shop_orders for insert
-  with check (true);
+  with check (auth.uid() = buyer_id);
 
 -- 2026-09 audit item 8: this "all" policy's `auth.role() = 'anon'` bypass meant anon could also
 -- UPDATE/DELETE any shop order (not just insert) — the real hole named in the audit ("edited or
@@ -4402,10 +4748,10 @@ $$;
 -- 2026-09 audit item 8: anon revoked entirely — see the RLS policy comments above (all legitimate
 -- writes flow through the SECURITY DEFINER trigger, which doesn't need a table grant to do it).
 grant select, insert, update, delete on public.company_revenue_logs to authenticated;
--- shop_orders: read/update/delete are admin-only via RLS above; insert stays open to anon (guest
--- Drip checkout — see the policy comment above for why that is a separate, larger fix).
+-- 2026-09 audit sweep: read/update/delete are admin-only via RLS above; insert is now
+-- authenticated-only too (anon revoked) — see the RLS policy comment above for why the earlier
+-- "guest checkout" grant here was based on a stale reading of the Drip purchase flow.
 grant select, insert, update, delete on public.shop_orders to authenticated;
-grant insert on public.shop_orders to anon;
 grant execute on function public.company_revenue_bps(text) to authenticated;
 -- 2026-09 audit (found alongside item 8, not separately numbered in the backlog): this RPC does a
 -- raw `insert ... on conflict (source, source_id) do update` into the revenue ledger with
@@ -4948,3 +5294,69 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_auth_user();
+
+-- Storage: buckets + policies for Highlight upload/playback and profile avatars.
+-- 2026-09 fix: this used to live only in supabase/media_upload.sql and supabase/reels.sql —
+-- fine for an existing hosted project that already ran those, but it meant a FRESH project
+-- seeded from schema.sql alone (exactly what Phase 0's "apply to a fresh Supabase project"
+-- and the Phase 2 staging-project setup call for) had no Storage buckets at all, so every
+-- upload would fail with "bucket is missing". Consolidated here so schema.sql alone is enough.
+insert into storage.buckets (id, name, public)
+values ('reels', 'reels', true)
+on conflict (id) do update set public = excluded.public;
+
+insert into storage.buckets (id, name, public)
+values ('game_highlights', 'game_highlights', true)
+on conflict (id) do update set public = excluded.public;
+
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do update set public = excluded.public;
+
+drop policy if exists "Public read reels bucket" on storage.objects;
+create policy "Public read reels bucket"
+  on storage.objects for select
+  using (bucket_id = 'reels');
+
+-- Signed-in fans only: bucket_id alone (with no auth check) let any anon-key
+-- holder INSERT/UPDATE arbitrary files into these public buckets with no
+-- session at all. MediaUploadService.ts already requires a session for both
+-- uploadHighlight (reels/game_highlights) and uploadAvatar (avatars), so this
+-- matches the existing client contract — it only blocks callers with no
+-- session, which the app never asks Storage to do anyway.
+drop policy if exists "Public upload reels bucket" on storage.objects;
+create policy "Public upload reels bucket"
+  on storage.objects for insert
+  with check (bucket_id = 'reels' and auth.role() = 'authenticated');
+
+drop policy if exists "Public update reels bucket" on storage.objects;
+create policy "Public update reels bucket"
+  on storage.objects for update
+  using (bucket_id = 'reels' and auth.role() = 'authenticated')
+  with check (bucket_id = 'reels' and auth.role() = 'authenticated');
+
+drop policy if exists "Public read game highlights" on storage.objects;
+create policy "Public read game highlights"
+  on storage.objects for select
+  using (bucket_id = 'game_highlights');
+
+drop policy if exists "Public upload game highlights" on storage.objects;
+create policy "Public upload game highlights"
+  on storage.objects for insert
+  with check (bucket_id = 'game_highlights' and auth.role() = 'authenticated');
+
+drop policy if exists "Public read avatars" on storage.objects;
+create policy "Public read avatars"
+  on storage.objects for select
+  using (bucket_id = 'avatars');
+
+drop policy if exists "Public upload avatars" on storage.objects;
+create policy "Public upload avatars"
+  on storage.objects for insert
+  with check (bucket_id = 'avatars' and auth.role() = 'authenticated');
+
+drop policy if exists "Public update avatars" on storage.objects;
+create policy "Public update avatars"
+  on storage.objects for update
+  using (bucket_id = 'avatars' and auth.role() = 'authenticated')
+  with check (bucket_id = 'avatars' and auth.role() = 'authenticated');

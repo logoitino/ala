@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   },
   rowCopy: {
     flex: 1,
-    gap: 1,
+    gap: 2,
   },
   rowKind: {
     color: colors.primary,

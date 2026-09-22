@@ -10,6 +10,7 @@ import Reanimated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -31,7 +32,9 @@ import {
   shareGiftLink,
 } from '@/lib/share';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, SPRING_CARD } from '@/theme/motion';
+
+const SHEET_TRAVEL = 420;
 
 type ShareQrModalProps = {
   visible: boolean;
@@ -59,6 +62,8 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
   const [busy, setBusy] = useState<'save' | 'copy' | 'share' | null>(null);
   const svgRef = useRef<QrSvgRef | null>(null);
   const pulse = useSharedValue(0.45);
+  const translateY = useSharedValue(SHEET_TRAVEL);
+  const backdropOpacity = useSharedValue(0);
   const target = giftQrTarget(athleteName, username);
 
   useEffect(() => {
@@ -66,8 +71,10 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
       setOpen(true);
       setBusy(null);
       telemetry.trackFeature('share_qr', 'profile');
+      translateY.value = withSpring(0, SPRING_CARD);
+      backdropOpacity.value = withTiming(1, { duration: 200 });
     }
-  }, [visible]);
+  }, [backdropOpacity, translateY, visible]);
 
   useEffect(() => {
     if (!visible) {
@@ -86,13 +93,19 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
   const glowStyle = useAnimatedStyle(() => ({
     opacity: 0.28 + pulse.value * 0.45,
   }));
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
 
   if (!open && !visible) return null;
 
   const dismiss = () => {
-    setOpen(false);
+    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
+    backdropOpacity.value = withTiming(0, { duration: 160 });
     setBusy(null);
-    onClose();
+    setTimeout(() => {
+      setOpen(false);
+      onClose();
+    }, 180);
   };
 
   const run = async (kind: 'save' | 'copy' | 'share', work: () => Promise<void>, ok: string) => {
@@ -109,13 +122,23 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
   };
 
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={dismiss}>
+    <Modal
+      transparent
+      animationType="none"
+      visible={visible}
+      onRequestClose={dismiss}
+      onDismiss={() => setOpen(false)}
+    >
       <StatusBar style="light" />
       <View style={styles.root}>
         <Pressable haptic="none" style={styles.backdrop} onPress={dismiss}>
-          <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+          <Reanimated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
+            <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+          </Reanimated.View>
         </Pressable>
-        <View style={[styles.sheet, { paddingBottom: 18 + insets.bottom, paddingTop: 18 + insets.top }]}>
+        <Reanimated.View
+          style={[styles.sheet, { paddingBottom: 18 + insets.bottom, paddingTop: 18 + insets.top }, sheetStyle]}
+        >
           <Text style={styles.kicker}>Family flyer</Text>
           <Text style={styles.title}>{SHARE_QR_TITLE}</Text>
           <Text style={styles.subtitle}>{shareQrSubtitle(target.athleteName)}</Text>
@@ -214,7 +237,7 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
           <Pressable accessibilityRole="button" onPress={dismiss} style={styles.close}>
             <Text style={styles.closeLabel}>Close</Text>
           </Pressable>
-        </View>
+        </Reanimated.View>
       </View>
     </Modal>
   );

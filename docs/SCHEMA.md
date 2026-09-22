@@ -15,7 +15,7 @@ Auth (`auth.users`) must exist before `profiles.user_id` can reference it.
 | --- | --- |
 | `video_tips` | `public.tips` (Mālo ledger) + `reels.total_tips_cents` |
 | `add_user_aura(target_user_id, points_to_add)` | Postgres `add_user_aura(uuid, integer)` |
-| `add_user_role(new_role)` | Postgres `add_user_role(text)` → `profiles.roles` (does not mint Varsity) |
+| `add_user_role(new_role)` | Postgres `add_user_role(text)` → `profiles.roles` (does not mint Varsity; self-service only for `fan`/`athlete` — see `is_admin` row and function doc below) |
 | `redeem_team_code(raw_code)` | Postgres `redeem_team_code(text)` → ⚡ VERIFIED VARSITY |
 | `get_fan_tip_history(fan_user_id)` | Postgres `get_fan_tip_history(uuid)` → Mālo receipts for the tipper |
 | `search_local_entities(search_query, entity_kind)` | Postgres `search_local_entities(text, text)` → athlete / school / booster hits |
@@ -61,14 +61,14 @@ Identity for signed-in users.
 | `athlete_jersey` | text | Roster number. |
 | `athlete_position` | text | Position (same field for HS and college). |
 | `athlete_class_year` | text | Graduation class (`26` / `27` / `28` → UI `'26`). |
-| `is_admin` | boolean default false | Web Admin Dashboard. Set by `add_user_role('admin')`. Also treated as true when `role` / `roles` include `admin`. Incremental: `supabase/admin_dashboard.sql`. |
+| `is_admin` | boolean default false | Web Admin Dashboard. Also treated as true when `role` / `roles` include `admin`. Incremental: `supabase/admin_dashboard.sql`. **2026-09 self-escalation fix:** `add_user_role('admin')` no longer works for a caller who isn't already admin — it raises unless `current_user_role() = 'admin'` before the call (checked inside the function). A `before insert or update` trigger (`guard_profiles_admin_escalation`) closes the matching raw-`UPDATE`- and raw-`INSERT`-on-`profiles` paths too (flipping `is_admin`/`role`/`roles` to admin from a non-admin row on UPDATE, or inserting a brand-new row already claiming admin on INSERT, is rejected regardless of which client makes the call — on INSERT there's no prior row to diff against, so the rule is simply "the new row can't claim admin unless the caller is already admin"). The one remaining legitimate admin-grant path is the admin desk (`PeopleTool.tsx` → `patchAdminPerson` in `lib/adminCatalog.ts`), which only ever runs from an already-admin session (RLS `current_user_role() = 'admin'` branch), so the trigger never blocks it. |
 | `player_id` | uuid FK → `players` ON DELETE SET NULL | Claimed roster row so That's me can auto-confirm. Incremental: `supabase/spotlight_auto.sql`. |
 | `avatar_url` | text | Public Storage URL (`avatars/{user_id}/{timestamp}.jpg`). Incremental: `supabase/media_upload.sql`. |
 | `age_confirmed_13_plus` | boolean default null | COPPA gate: self-attested "I am 13 years of age or older" checkbox, not a birthdate (data minimization). Null = not yet confirmed (includes every pre-existing account from before this column existed — never retroactively blocked). Set `true` only at the moment a **new** account is created with the box checked: `handle_new_auth_user()` reads it from signup metadata (email+password / magic-link), or the client's one-time `AgeConfirmModal` sets it after first Apple/Google sign-in. Incremental: `supabase/auth_fan_profile.sql`. |
 | `malo_frozen` | boolean default false | Compliance kill switch (`LEGAL_BRIEFING.md` §8 item 5): honor a written direction from a school/association to freeze Mālo for this athlete's claimed profile, within hours. Nullable/default false, never retroactive on its own. Flip only via the admin-only `set_malo_freeze(target_type, target_id, frozen)` RPC — never a raw client UPDATE. Enforced (with the athlete's school freeze) by `tips` / `subscriptions` INSERT/UPDATE RLS via `malo_target_frozen(target_player_id)`. Client: Expo `/admin/people` (`PeopleTool.tsx`). |
 | `created_at` | timestamptz | |
 
-**RLS:** public SELECT; INSERT when `user_id = auth.uid()` (Soft-Wall / client `ensureFanProfile`); UPDATE own row or `admin`. First signup also inserts via trigger `on_auth_user_created` → `handle_new_auth_user()` on `auth.users` (security definer), now also carrying `age_confirmed_13_plus` from the signup form's metadata when present. Incremental: `supabase/auth_fan_profile.sql`. Client: `AuthContext` + `lib/auth.ts`. **2026-09 audit:** public SELECT is kept (guest-browse surfaces like Team Roster Strip, Top Boosters, `/gift/[handle]` all read `profiles` with no session), but this still publicly exposes `stripe_connect_id` and other status columns — considered a column-level `REVOKE` but reverted because it would also break `AuthContext`'s `select('*')` self-profile load without a live DB to test against; flagged as a real follow-up (either a `profiles_public` view + call-site migration, or an audited explicit column allowlist). The server routes that need `stripe_connect_id` (`createPayout.ts`, `create-stripe-account`) already read it with the service-role key, unaffected either way.
+**RLS:** public SELECT; INSERT requires `authenticated` with `user_id = auth.uid()` (Soft-Wall / client `ensureFanProfile`) — **2026-09 audit, third pass:** this policy previously also allowed `auth.role() = 'anon'` as an OR branch (the same bypass pattern closed everywhere else), which let an unauthenticated caller INSERT a brand-new row with `is_admin`/`role`/`roles` set directly, unguarded by either the `add_user_role` fix or the escalation trigger below (both applied only to UPDATE at the time). Live blast radius was narrow — `profiles.user_id` is `unique references auth.users (id)`, so the row must name a real, already-existing auth user with no `profiles` row yet — but the anon branch is gone regardless since no legitimate caller needed it: `handle_new_auth_user` (below) bypasses RLS entirely as a trigger, and `ensureFanProfile` only ever runs against an already-resolved real session (`user_id === auth.uid()`). UPDATE own row or `admin`, with a `before insert or update` trigger (`guard_profiles_admin_escalation`) that additionally rejects any write flipping `is_admin`/`role`/`roles` to admin unless the calling session is already admin, on both INSERT and UPDATE — see the `is_admin` row above (2026-09 self-escalation fix). First signup also inserts via trigger `on_auth_user_created` → `handle_new_auth_user()` on `auth.users` (security definer), now also carrying `age_confirmed_13_plus` from the signup form's metadata when present. Incremental: `supabase/auth_fan_profile.sql`. Client: `AuthContext` + `lib/auth.ts`. **2026-09 audit:** public SELECT is kept (guest-browse surfaces like Team Roster Strip, Top Boosters, `/gift/[handle]` all read `profiles` with no session), but this still publicly exposes `stripe_connect_id` and other status columns — considered a column-level `REVOKE` but reverted because it would also break `AuthContext`'s `select('*')` self-profile load without a live DB to test against; flagged as a real follow-up (either a `profiles_public` view + call-site migration, or an audited explicit column allowlist). The server routes that need `stripe_connect_id` (`createPayout.ts`, `create-stripe-account`) already read it with the service-role key, unaffected either way.
 
 ### `schools_and_teams`
 
@@ -95,13 +95,13 @@ Badge copy: `[ High School • UT ]` vs `[ NCAA D1 • Big 12 ]` (`formatTeamBad
 
 | Column | Type | Notes |
 | --- | --- | --- |
-| `guardian_id` | uuid FK → `profiles(id)` ON DELETE SET NULL | The parent/guardian's own `profiles.id`. **2026-09 security fix:** can now only be set by an admin via the `admin_set_player_guardian(target_player_id, new_guardian_id)` SECURITY DEFINER RPC (admin-role-checked internally) — no client/table-level write path sets it anymore. Also used by `confirm_reel_player_tag`'s auto-confirm check (schema.sql ~1212) and the tag-pending logic in the `reels` section below. |
-| `parental_consent_approved` | boolean not null default false | Toggled by the Parent screen (`app/(parent)/parent/index.tsx`'s `toggleConsent`), but only once `guardian_id` already equals that parent's `profiles.id` — see RLS below. `admin_set_player_guardian` resets this to `false` whenever it (re)assigns `guardian_id`. |
-| `guardian_consent_at` | timestamptz | Dated record of when `parental_consent_approved` was last set true, mirroring `profiles.legal_terms_accepted_at`. Added as groundwork for Phase 1 item 3; not yet written by any code path. Index: `players_guardian_id_idx`. |
+| `guardian_id` | uuid FK → `profiles(id)` ON DELETE SET NULL | The parent/guardian's own `profiles.id`. **2026-09 security fix:** can now only be set by an admin via the `admin_set_player_guardian(target_player_id, new_guardian_id)` SECURITY DEFINER RPC (admin-role-checked internally). Client: `adminSetPlayerGuardian` in `apps/mobile/src/frontend/lib/adminCatalog.ts`, called from Expo `/admin/athletes` (`AthletesTool.tsx`)'s per-row "Link guardian" action (pick a `players` row + a `parent`-role `profiles` row, confirm, done) — the manual stopgap that unblocks first-time linking now that the self-assign hole is closed; see the RLS note below. Also used by `confirm_reel_player_tag`'s auto-confirm check (schema.sql ~1212) and the tag-pending logic in the `reels` section below. |
+| `parental_consent_approved` | boolean not null default false | Toggled by the Parent screen (`app/(parent)/parent/index.tsx`'s `toggleConsent`) via the `parent_set_player_consent(target_player_id, approved)` SECURITY DEFINER RPC, which re-checks server-side that `guardian_id` already equals the caller's own linked `profiles.id` — see RLS below. Also settable `true` by an admin approving a verification request, via `admin_approve_player_consent(target_player_id)` (`setVerificationStatus` in `lib/adminCatalog.ts`). `admin_set_player_guardian` resets this to `false` whenever it (re)assigns `guardian_id`. |
+| `guardian_consent_at` | timestamptz | Dated record of when `parental_consent_approved` was last set true, mirroring `profiles.legal_terms_accepted_at`. Written by `parent_set_player_consent` / `admin_approve_player_consent` (both above). Index: `players_guardian_id_idx`. |
 
-**RLS (2026-09 parent-payee security fix — closes the self-claim hole below):** the previous "Staff write players" blanket policy let any `parent`-role account UPDATE `guardian_id` on *any* roster row, self-assigning as guardian of an arbitrary athlete with zero verification — flagged in [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md) §0 as load-bearing the moment guardian identity gates real Connect payout money. Fixed with the most conservative option available (per that doc's own §1, the real linking mechanism — invite code / roster-seed import / scoped self-declare — still needs product/legal sign-off, so this pass does not build that flow): `parent` was dropped from "Staff write players" (now booster/admin/operator only); `guardian_id` can only be set by an admin via `admin_set_player_guardian`; a new narrow "Parents update own linked player" policy lets an already-linked parent (`guardian_id = auth-resolved profiles.id`) keep toggling `parental_consent_approved` for their own athlete, matching the Parent screen's existing revoke/re-approve behavior, but cannot change `guardian_id` at all (not to themselves-on-an-unowned-row, not to anyone else, not to null). Consequence: the Parent screen's *initial* consent-approve tap (which also self-assigned `guardian_id`) now gets rejected by RLS for a row it doesn't already own — that UI is unchanged in this pass, so it will show a permission error until the real parent-athlete linking flow (§1 of the design doc) ships and calls `admin_set_player_guardian` (or its eventual replacement) first.
+**RLS + GRANT (2026-09 parent-payee security fix, closes the self-claim hole below):** the previous "Staff write players" blanket policy let any `parent`-role account UPDATE `guardian_id` on *any* roster row, self-assigning as guardian of an arbitrary athlete with zero verification — flagged in [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md) §0 as load-bearing the moment guardian identity gates real Connect payout money. Fixed with the most conservative option available (per that doc's own §1, the real linking mechanism — invite code / roster-seed import / scoped self-declare — still needs product/legal sign-off, so this pass does not build that flow): `parent` was dropped from "Staff write players" (now booster/admin/operator only); `guardian_id` can only be set by an admin via `admin_set_player_guardian`; a new narrow "Parents update own linked player" policy lets an already-linked parent (`guardian_id = auth-resolved profiles.id`) keep toggling `parental_consent_approved` for their own athlete, matching the Parent screen's existing revoke/re-approve behavior, but cannot change `guardian_id` at all (not to themselves-on-an-unowned-row, not to anyone else, not to null). **2026-09 self-escalation audit follow-up (this was a real gap, not just a documentation nit):** the "Staff write players" policy's row-level `booster`/`admin`/`operator` check had no column scoping, and the table-level `grant update on players to authenticated` had no column allowlist either — so a `booster`- or `operator`-role account could still directly `UPDATE players SET guardian_id = …` via raw REST, completely bypassing `admin_set_player_guardian`, and the "Parents update own linked player" RLS policy's raw-write path was reachable by any `authenticated` caller at the grant level (Postgres column GRANTs are role-level, not row/policy-level, so they can't distinguish "the one linked parent" from anyone else signed in). Closed by narrowing the table-level grant to `grant update (name, jersey_number, position, height, school_name, backer_count, team, view_count, aura_count, flex_count, seki_count, aura_points, weight, forty_yard, vertical_jump, vault_locked) on public.players to authenticated` — i.e. `guardian_id` / `parental_consent_approved` / `guardian_consent_at` are excluded from every raw client write, full stop. The two remaining legitimate direct-write call sites (Parent screen toggle, admin verification-approve) were moved onto the two new SECURITY DEFINER RPCs above (`parent_set_player_consent`, `admin_approve_player_consent`), which bypass the column grant like `admin_set_player_guardian` already did. Consequence: the Parent screen's *initial* consent-approve tap (which also tried to self-assign `guardian_id`) still gets rejected — same intentional gap as before, unrelated to this pass — until an admin completes the first-time link. **2026-09 follow-up:** that admin-side gap is closed by Expo `/admin/athletes`'s "Link guardian" action (see the `guardian_id` row above) — an admin picks the athlete + parent pair and calls `admin_set_player_guardian`, after which the Parent screen's existing revoke/re-approve toggle works normally for that pair. This is still a manual stopgap, not the real self-service flow.
 
-**Design in progress:** see [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md) (Phase 1 item 3 — parent-of-record as the Stripe Connect account holder, athlete as beneficiary in metadata only). The §0 self-claim RLS gap that document flagged is now closed as described above; the full linking-mechanism decision in §1 remains open.
+**Design in progress:** see [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md) (Phase 1 item 3 — parent-of-record as the Stripe Connect account holder, athlete as beneficiary in metadata only). The §0 self-claim RLS gap that document flagged is now closed as described above, and admins have a working manual linking tool (Expo `/admin/athletes`); the full self-service linking-mechanism decision in §1 remains open.
 
 ### `players` measurables + Stats 📊
 
@@ -143,18 +143,18 @@ Highlight / Seki clips. Files in Storage **`reels`** (fallback **`game_highlight
 | `seki_count`, `aura_count`, `flex_count` | integer | Clip hype |
 | `total_tips_cents` | integer | Mālo on this clip |
 | `is_exclusive` | boolean default false | Legacy subscriber-only flag. Kept in lockstep with `is_vault_only`. |
-| `is_vault_only` | boolean default **false** | Clip lives in the Vault collection (not the free Highlights ⚡ tab). Fans only need a subscription when `players.vault_locked` is true. Athlete long-press calls `toggle_reel_vault_status`. |
+| `is_vault_only` | boolean default **false** | Clip lives in the Vault collection (not the free Highlights ⚡ tab). Fans only need a subscription when `players.vault_locked` is true. Athlete long-press calls `toggle_reel_vault_status` (**2026-09:** now checks the caller is the clip's `uploaded_by` or an admin — previously any signed-in user could flip any clip's Vault flag). |
 | `is_flagged` | boolean default false | Set by `report_reel`. Review flag, not a global takedown. |
 | `reported_by` | uuid[] default `{}` | Fan ids who reported this clip. Feed hides the row for those users. |
 | `is_removed` | boolean default false | Admin **Remove Content**. Hidden from Highlights ⚡. Incremental: `supabase/admin_dashboard.sql`. |
 | `category` | text default `game_play` | `game_play` \| `train_like_me` \| `serve_like_me`. Upload pills + feed badge. Serve Like Me doubles double-tap Aura (`SERVE_LIKE_ME_AURA_MULTIPLIER`). Incremental: `supabase/reel_category.sql`. |
-| `flash_unlock_until` | timestamptz | Vault clip is playable until this instant. Athlete long-press **🔓 Flash Unlock (2 Hours)** calls `set_reel_flash_unlock`. Incremental: `supabase/crew_and_flash_unlock.sql`. |
+| `flash_unlock_until` | timestamptz | Vault clip is playable until this instant. Athlete long-press **🔓 Flash Unlock (2 Hours)** calls `set_reel_flash_unlock` (**2026-09:** now checks the caller is the clip's `uploaded_by` or an admin — previously any signed-in user could flash-unlock any Vault clip for free). Incremental: `supabase/crew_and_flash_unlock.sql`. |
 | `uploaded_by` | uuid FK → `profiles` ON DELETE SET NULL | Fan who uploaded. Trigger fills from the session profile. Incremental: `supabase/spotlight_auto.sql`. |
 | `tag_status` | text default `pending` | `pending` \| `confirmed` \| `rejected`. Existing rows were backfilled `confirmed`. New fan tags stay pending until the tagged athlete, parent, school operator, or admin confirms. Only confirmed Game Play hype elects Spotlight. |
 | `tag_confirmed_at` / `tag_confirmed_by` | timestamptz / uuid FK → `profiles` | Who verified the jersey. |
 | `created_at` | timestamptz | |
 
-**RLS (demo):** public SELECT / INSERT / UPDATE.
+**RLS (2026-09 audit — reels RLS tightening):** public SELECT. INSERT requires `authenticated` and `uploaded_by` to equal the caller's own `profiles.id` (the `reels_apply_tag_defaults` BEFORE INSERT trigger fills `uploaded_by` from the session before this check runs, so a real upload always satisfies it; a client cannot attribute a row to someone else's profile). UPDATE is two policies — the uploader may update their own row, or an admin (`current_user_role() = 'admin'`) may update any row — **and** a column-level `GRANT` on top of that narrows a raw client UPDATE to `title` / `category` / `is_exclusive` / `is_vault_only` / `flash_unlock_until` only. Counters (`seki_count` / `aura_count` / `flex_count` / `total_tips_cents`), `is_flagged` / `is_removed` / `reported_by`, and the tag fields are **not** in that grant — they only move through the SECURITY DEFINER RPCs (`increment_reel_hype`, `increment_reel_tips`, `moderate_flagged_reel`, `confirm_reel_player_tag`, `report_reel`), which bypass the column grant because they run as the function owner. Previously `with check (true)` on both INSERT and UPDATE — any anon/authenticated client could insert a Highlight attributed to any player, or vandalize any reel row (caption, video, hype counts, tip totals, vault flags, moderation flags) via a raw REST call.
 
 ### `saved_reels`
 
@@ -195,7 +195,7 @@ Fan → athlete Crew graph. **The Crew ⚡** is follower count; **Your Squad �
 
 ### `crew_push_queue`
 
-Push payloads queued when an athlete Flash Unlocks a Vault clip. `set_reel_flash_unlock` inserts one row per Crew member (`kind = flash_unlock`). Prototype queue — no Expo push token wiring yet.
+Push payloads queued when an athlete Flash Unlocks a Vault clip. `set_reel_flash_unlock` inserts one row per Crew member (`kind = flash_unlock`). Prototype queue — no Expo push token wiring yet. **2026-09:** `set_reel_flash_unlock` now requires the caller to be the clip's `uploaded_by` or an admin (previously any signed-in user could flash-unlock any Vault clip); grant narrowed to `authenticated` (`anon` execute was already a no-op).
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -240,7 +240,7 @@ Direct shoutout / Q&A from exclusive subscribers on `/athlete/[id]` Vault. Compo
 
 Incremental file: `supabase/subscriber_requests.sql`.
 
-**RLS (demo):** public SELECT / INSERT.
+**RLS (2026-09 audit):** `body` is private message content, so `using (true)` / `with check (true)` were closed. SELECT is the sender (`auth.uid() = subscriber_id`, so a fan can read back their own Q&A history), the receiving athlete (`profiles.player_id = subscriber_requests.athlete_id` for the caller's own `profiles` row, mirroring the athlete-identity join used elsewhere in this file), or admin (`current_user_role() = 'admin'`). INSERT requires `auth.uid() = subscriber_id`. `anon` grant dropped — `authenticated` only.
 
 ### `spotlight_awards`
 
@@ -275,6 +275,8 @@ Highlights launch passes the signed-in `auth.users.id` (guests omit). **Volatile
 ### `can_confirm_player_tag` / `confirm_reel_player_tag` / `get_pending_player_tags`
 
 A fan tag is a claim, not proof. `reels.tag_status` stays `pending` until the tagged athlete (`profiles.player_id`, name match, or jersey + school), their parent (`players.guardian_id`), a school operator, or admin confirms. `confirm_reel_player_tag(target_reel_id, tag_action)` accepts `confirm` or `reject`. Helper `reels_apply_tag_defaults` trigger auto-confirms only signed-in athlete / parent / operator / admin uploads. Incremental: `supabase/spotlight_auto.sql`. Client: `usePendingPlayerTags` + `TagConfirmList`.
+
+**2026-09 audit follow-up:** `can_confirm_player_tag` used to `return true` unconditionally for any `auth.role() = 'anon'` caller, and `get_pending_player_tags` had a matching `or auth.role() = 'anon'` in its WHERE — since `confirm_reel_player_tag` trusts `can_confirm_player_tag` as its sole gate, this meant anyone holding just the public anon key (no session at all) could confirm or reject the player tag on any Highlight. Both bypasses are dropped; all three functions are now `EXECUTE`-granted to `authenticated` only (previously also `anon`).
 
 ### `get_spotlight_standings` / `sync_spotlight_period` / `sync_live_spotlight_awards` / `unlock_spotlight_period` / `spotlight_normalize_kind` / `spotlight_window`
 
@@ -356,7 +358,7 @@ Local business booster ledger (Silver / Gold / Platinum). Distinct from `sponsor
 | `status` | text default `active` | |
 | `created_at` | timestamptz | |
 
-**RLS (demo):** public SELECT; INSERT anyone; admin UPDATE / DELETE. Incremental: `supabase/sponsorships.sql` + `admin_portal.sql`. Client: `useSponsorships` + `/admin/boosters`.
+**RLS (2026-09 audit sweep):** public SELECT; INSERT requires `auth.uid() = sponsor_user_id` **or** `current_user_role() = 'admin'` (`with check (true)` closed — the fan/booster checkout path (`useSponsorships.ts`) always inserts its own `auth.uid()`; the admin Boosters desk (`adminCatalog.ts` `upsertBooster`, `/admin/boosters`) records offline deals with no `sponsor_user_id` at all, hence the admin alternative); admin UPDATE / DELETE (`anon` bypass still present on that policy — not closed this pass). This only stops a fabricated row from a client that never went through Stripe; it does not verify a charge happened (separate webhook effort). Incremental: `supabase/sponsorships.sql` + `admin_portal.sql`. Client: `useSponsorships` + `/admin/boosters`.
 
 ### `shop_products`
 
@@ -477,7 +479,7 @@ Paid Drip checkout rows. ProductSheet inserts after PaymentSheet succeeds. A tri
 | `qty` | integer default 1 | |
 | `created_at` | timestamptz | |
 
-**RLS (2026-09 audit):** SELECT now admin-only (no client reads this table directly yet); INSERT still open to anyone — Drip is **not** behind the Soft Wall (`SOFT_WALL_GATES` only lists `malo` / `crew` / `wishlist`), so guest checkout genuinely needs anon INSERT; UPDATE / DELETE admin-only (previously anon could also update/delete any row through the same `for all` policy — closed). `amount_cents` / `qty` now have CHECK constraints (`>= 0` / `> 0`).
+**RLS (2026-09 audit sweep):** SELECT admin-only (no client reads this table directly yet); INSERT requires `auth.uid() = buyer_id` (`with check (true)` closed) — Drip is **not** listed in `SOFT_WALL_GATES` (`malo` / `crew` / `wishlist` only), but that list only gates the proactive sign-in *prompt* UI: the actual charge still goes through the same JWT-gated `useTipCheckout` → `createPaymentIntent` → `requireAccessToken` flow as Mālo/boosters, which throws before PaymentSheet opens without a real session, so `recordDripOrder`'s `buyerId` is never null on a legitimate purchase and there is no anonymous-buyer order to preserve; UPDATE / DELETE admin-only (previously anon could also update/delete any row through the same `for all` policy — closed). `amount_cents` / `qty` have CHECK constraints (`>= 0` / `> 0`). As with `tips`/`sponsorships`, this only stops a fabricated row from a client that never went through Stripe; it does not verify a charge happened.
 
 ### `company_revenue_logs`
 
@@ -639,6 +641,8 @@ add_user_role(new_role text) returns text[]
 
 Unions `new_role` onto the signed-in `profiles.roles` (`auth.uid()`). Adding `athlete` also keeps `fan` and sets `role` + `active_role` to `athlete`. It does **not** set `is_verified` — school claim is not Varsity. Incremental: `supabase/add_user_role.sql`. Client: `addUserRoleRemote` / `AuthContext.addUserRole`.
 
+**2026-09 self-escalation fix:** this RPC always writes the caller's own row (`auth.uid()`) and previously had no check on which role was being requested — any authenticated session could call `supabase.rpc('add_user_role', { new_role: 'admin' })` and set `is_admin = true` on itself, a full privilege escalation with zero verification. `fan` and `athlete` are the only roles with a real self-service UI path (`RoleSwitcherModal` → `AuthContext.completeAthleteOnboarding`), so those two stay unrestricted. Every other role — `admin`, `parent`, `operator`, `booster`, `sponsor` — has no legitimate self-service caller anywhere in the frontend today (operator access is purely PIN-based via `lib/operator.ts` and never touches `profiles`; there is no "become a booster/parent/sponsor" flow), so the function now raises unless the caller's `current_user_role()` is already `'admin'` before the call runs. A `before insert or update` trigger on `profiles` (`guard_profiles_admin_escalation`) closes the equivalent raw-`UPDATE` and raw-`INSERT` bypasses (`supabase.from('profiles').update({ is_admin: true, ... })`, or a fabricated `insert` of a brand-new admin row) for the same reason — see the `profiles` RLS note above.
+
 ### `malo_target_frozen(target_player_id)` / `set_malo_freeze(target_type, target_id, frozen)`
 
 ```sql
@@ -692,9 +696,9 @@ get_fan_tip_history(fan_user_id uuid) returns table (
 )
 ```
 
-Filters `tips.fan_id` to `coalesce(auth.uid(), fan_user_id)` and left-joins `players` for name + `school_name`. Incremental: `supabase/get_fan_tip_history.sql`. Client: `useFanTipHistory`.
+Filters `tips.fan_id` to `auth.uid()` only (2026-09 audit fix — the `fan_user_id` argument is accepted but ignored/never trusted as a fallback identity; an anonymous caller with `auth.uid()` null gets zero rows) and left-joins `players` for name + `school_name`. Incremental: `supabase/get_fan_tip_history.sql`. Client: `useFanTipHistory`.
 
-Grant: `EXECUTE` to `anon`, `authenticated`.
+Grant: `EXECUTE` to `authenticated` only (previously also granted to `anon`, which let anyone read any fan's tip history by passing an arbitrary `fan_user_id` — closed 2026-09).
 
 ### `search_local_entities(search_query, entity_kind)`
 
@@ -729,7 +733,7 @@ Admin-only (prototype also allows `anon`). Upserts `spotlight_awards` for Player
 moderate_flagged_reel(target_reel_id uuid, moderation_action text) returns jsonb  -- { id, is_flagged, is_removed }
 ```
 
-Admin-only. `dismiss` clears `is_flagged`. `remove` sets `is_removed` so Highlights ⚡ hides the clip. Incremental: `supabase/admin_dashboard.sql`.
+Admin-only (`current_user_role() = 'admin'`, checked inside the function). `dismiss` clears `is_flagged`. `remove` sets `is_removed` so Highlights ⚡ hides the clip. `restore` (**2026-09**, added alongside the `reels` RLS tightening) clears `is_removed` — the `/admin/highlights` desk's un-remove toggle now calls this instead of a raw `reels` UPDATE, since `is_removed` is no longer in that table's column grant. Grant: `EXECUTE` to `authenticated` only (`anon` dropped — the role check already made it a no-op). Incremental: `supabase/admin_dashboard.sql`.
 
 ### `get_admin_platform_metrics`
 
@@ -810,7 +814,7 @@ get_company_revenue_summary() returns jsonb
 toggle_reel_vault_status(target_reel_id uuid) returns boolean  -- next is_vault_only
 ```
 
-Requires `auth.uid()`. Flips `reels.is_vault_only` and writes the same value to `is_exclusive`. Default is **false** (free public feed). Grant: `EXECUTE` to `anon`, `authenticated`. Incremental: `supabase/toggle_reel_vault_status.sql`. Client: `toggleReelVaultStatus` + `AthleteReelManager` (optimistic local write; table UPDATE fallback if the RPC is missing).
+Requires `auth.uid()` and (**2026-09**) either the clip's `uploaded_by` or an admin — previously any signed-in user could flip any clip's Vault flag, not just their own. Flips `reels.is_vault_only` and writes the same value to `is_exclusive`. Default is **false** (free public feed). Grant: `EXECUTE` to `authenticated` only (`anon` dropped — `actor is null` already made it a no-op). Incremental: `supabase/toggle_reel_vault_status.sql`. Client: `toggleReelVaultStatus` + `AthleteReelManager` (own clips) / `/admin/highlights` (any clip); optimistic local write; table UPDATE fallback if the RPC is missing (still RLS/column-scoped to uploader-or-admin, same as the RPC).
 
 ### `set_player_vault_locked(target_player_id, is_locked)`
 
@@ -818,7 +822,7 @@ Requires `auth.uid()`. Flips `reels.is_vault_only` and writes the same value to 
 set_player_vault_locked(target_player_id uuid, is_locked boolean) returns boolean
 ```
 
-Requires `auth.uid()`. Writes `players.vault_locked`. Default **true**: Vault clips stay behind Subscribe ($4.99/mo) until the athlete taps Open Vault 🌐. Incremental: `supabase/player_vault_lock.sql`. Client: `setPlayerVaultLocked` + `VaultLockCard`.
+Requires `auth.uid()`. Writes `players.vault_locked`. Default **true**: Vault clips stay behind Subscribe ($4.99/mo) until the athlete taps Open Vault 🌐. **2026-09 audit follow-up:** the function had zero ownership check — any signed-in fan could lock/unlock any athlete's Vault. Now requires either the caller's own `profiles.player_id = target_player_id` (the athlete managing their own row from `app/(tabs)/profile.tsx`'s `manageVault`) or `current_user_role() in ('booster', 'admin', 'operator')` (the admin Athletes desk), mirroring the "Staff write players" RLS policy. Grant narrowed to `authenticated` (was also `anon`). Incremental: `supabase/player_vault_lock.sql`. Client: `setPlayerVaultLocked` + `VaultLockCard`.
 
 ### `get_aura_tier(points)`
 
@@ -828,7 +832,7 @@ get_aura_tier(points integer) returns jsonb  -- { tier, title, min_points, color
 
 Matches `AURA_TIERS` in `aura.ts`. The app also computes locally (`auraTierForPoints`) so the card does not wait on the network. Keep SQL and TypeScript in lockstep.
 
-Other RPCs: `increment_backer_count`, `increment_player_hype`, `increment_reel_hype` (returns `applied`; no-ops a second Seki / Aura / Flex from the same `auth.uid()`; then `sync_live_spotlight_awards`), `increment_reel_tips`, `cast_cheer_vote`, `upsert_cheer_poll`, `update_game_score`, `current_user_role` (returns `admin` when `is_admin` or `roles` includes admin), `get_fan_tip_history`, `search_local_entities`, `search_schools_and_teams`, `report_reel`, `publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`, `patch_app_runtime_draft`, `publish_app_runtime`, `get_admin_reports`, `company_revenue_bps`, `record_company_revenue`, `sync_company_revenue_logs`, `company_revenue_after_source_insert`, `get_company_revenue_summary`, `submit_app_feedback`, `get_app_feedback`, `triage_app_feedback`, `toggle_reel_vault_status`, `set_player_vault_locked`, `get_active_spotlight_award`, `get_crew_graph`, `toggle_crew_follow`, `set_reel_flash_unlock`, `spotlight_normalize_kind`, `spotlight_window`, `can_confirm_player_tag`, `reels_apply_tag_defaults`, `confirm_reel_player_tag`, `get_pending_player_tags`, `get_spotlight_standings`, `sync_spotlight_period`, `sync_live_spotlight_awards`, `unlock_spotlight_period`, `redeem_team_code`, `request_athlete_verification`, `athlete_is_varsity_verified`, `normalize_team_code`, `team_code_school_key`, `sport_from_team_code_token`, `admin_set_player_guardian` (2026-09 parent-payee security fix — admin-only `players.guardian_id` setter, see the `players` guardian section above). Cheer votes go through `cast_cheer_vote`; admin label edits go through `upsert_cheer_poll`. Re-run `supabase/cheer_polls.sql` after this signature change (`DROP FUNCTION` first):
+Other RPCs: `increment_backer_count`, `increment_player_hype`, `increment_reel_hype` (returns `applied`; no-ops a second Seki / Aura / Flex from the same `auth.uid()`; then `sync_live_spotlight_awards`), `increment_reel_tips`, `cast_cheer_vote`, `upsert_cheer_poll`, `update_game_score`, `current_user_role` (returns `admin` when `is_admin` or `roles` includes admin), `get_fan_tip_history`, `search_local_entities`, `search_schools_and_teams`, `report_reel`, `publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`, `patch_app_runtime_draft`, `publish_app_runtime`, `get_admin_reports`, `company_revenue_bps`, `record_company_revenue`, `sync_company_revenue_logs`, `company_revenue_after_source_insert`, `get_company_revenue_summary`, `submit_app_feedback`, `get_app_feedback`, `triage_app_feedback`, `toggle_reel_vault_status`, `set_player_vault_locked`, `get_active_spotlight_award`, `get_crew_graph`, `toggle_crew_follow`, `set_reel_flash_unlock`, `spotlight_normalize_kind`, `spotlight_window`, `can_confirm_player_tag`, `reels_apply_tag_defaults`, `confirm_reel_player_tag`, `get_pending_player_tags`, `get_spotlight_standings`, `sync_spotlight_period`, `sync_live_spotlight_awards`, `unlock_spotlight_period`, `redeem_team_code`, `request_athlete_verification`, `athlete_is_varsity_verified`, `normalize_team_code`, `team_code_school_key`, `sport_from_team_code_token`, `admin_set_player_guardian` (2026-09 parent-payee security fix — admin-only `players.guardian_id` setter; client `adminSetPlayerGuardian` in `lib/adminCatalog.ts`, called from Expo `/admin/athletes`'s "Link guardian" action, see the `players` guardian section above), `parent_set_player_consent` (2026-09 self-escalation audit follow-up — the linked parent's only remaining path to toggle `players.parental_consent_approved` / `guardian_consent_at`; client: `app/(parent)/parent/index.tsx`'s `toggleConsent`), `admin_approve_player_consent` (same pass — admin-only equivalent for the verification-approve flow; client: `setVerificationStatus` in `lib/adminCatalog.ts`), `guard_profiles_admin_escalation` (`before insert or update` trigger on `profiles`, not a callable RPC — rejects any UPDATE that flips `is_admin`/`role`/`roles` to admin, or any INSERT of a new row that already claims admin, unless the calling session is already admin; see the `profiles.is_admin` row above). Cheer votes go through `cast_cheer_vote`; admin label edits go through `upsert_cheer_poll`. Re-run `supabase/cheer_polls.sql` after this signature change (`DROP FUNCTION` first):
 
 ```sql
 cast_cheer_vote(
@@ -868,21 +872,21 @@ If `aura_points` is unset on a player, the client falls back to `aura_count + se
 
 ## RLS (tightened 2026-09 — some tables still demo-open, tighten those before production)
 
-`schema.sql` originally allowed Expo Go without login almost everywhere (`auth.role() = 'anon' or ...` baked into most admin/staff policies). A 2026-09 security audit closed the money-fabrication and admin-data-exposure holes below; a few same-pattern tables were deliberately **not** touched in that pass (called out at the bottom) because closing them needs either a bigger product decision (real authenticated operator/admin accounts — the PIN claim and Studio-unlock preview are both client-only today, not Supabase-authenticated) or a larger refactor (`reels` INSERT/UPDATE, `subscriber_requests` INSERT, `app_feedback` SELECT/UPDATE, `upsert_cheer_poll`, `operator_gigs`/`operator_checkins`, the direct `wishlist_items` table write policy (the fan-facing `chip_in_wishlist_item` RPC path IS tightened — see above — but admin desk direct-table writes to `wishlist_items` still have the `anon` bypass), `sport_configs` admin writes — still `with check (true)` / anon-or-role, same class of issue as `tips` was, just not in this pass's scope). Those remaining tables are still demo-open — tighten before production.
+`schema.sql` originally allowed Expo Go without login almost everywhere (`auth.role() = 'anon' or ...` baked into most admin/staff policies). A 2026-09 security audit closed the money-fabrication and admin-data-exposure holes below; a few same-pattern tables were deliberately **not** touched in that pass (called out at the bottom) because closing them needs either a bigger product decision (real authenticated operator/admin accounts — the PIN claim and Studio-unlock preview are both client-only today, not Supabase-authenticated) or a larger refactor (`app_feedback` SELECT/UPDATE, `upsert_cheer_poll`, `operator_gigs`/`operator_checkins`, the direct `wishlist_items` table write policy (the fan-facing `chip_in_wishlist_item` RPC path IS tightened — see above — but admin desk direct-table writes to `wishlist_items` still have the `anon` bypass), `sport_configs` admin writes — still `with check (true)` / anon-or-role, same class of issue as `tips` was, just not in this pass's scope). `reels` INSERT/UPDATE was in that deferred list until a later 2026-09 pass tightened it specifically (see the `reels` section above and `toggle_reel_vault_status` / `set_reel_flash_unlock` / `moderate_flagged_reel` RPC entries) — the six-plus raw `.from('reels').update(...)` call sites across `lib/reels.ts`, `lib/admin.ts`, `lib/adminCatalog.ts`, and `lib/crew.ts` were individually audited for their real actor before the RLS/column-grant/RPC design landed. Those remaining tables are still demo-open — tighten before production.
 
 | Table | SELECT | Writes |
 | --- | --- | --- |
 | `profiles` | Public (guest-browse; `stripe_connect_id` exposure to anon/authenticated is a known, deliberately-deferred gap — see the `profiles` section above) | INSERT own (`user_id = auth.uid`); UPDATE own / admin |
-| `players` | Public | **authenticated** booster/admin/operator (`anon` bypass dropped — carries `aura_points`); `parent` may UPDATE only a row where `guardian_id` already equals them (toggles `parental_consent_approved`, cannot change `guardian_id`); `guardian_id` itself is admin-only, via `admin_set_player_guardian` |
+| `players` | Public | **authenticated** booster/admin/operator (`anon` bypass dropped — carries `aura_points`); `parent` may UPDATE only a row where `guardian_id` already equals them; column-level `GRANT` (2026-09 self-escalation audit follow-up) excludes `guardian_id` / `parental_consent_approved` / `guardian_consent_at` from every raw `authenticated` write regardless of role — those three are writable only via `admin_set_player_guardian` (admin-only), `parent_set_player_consent` (linked-parent-only), and `admin_approve_player_consent` (admin-only), all `SECURITY DEFINER` |
 | `games` | Public | UPDATE operator/admin, or `anon` only while `claimed_by is null`; INSERT **authenticated** admin/operator |
 | `game_events` | Public | INSERT operator/admin, or `anon` only while the referenced game is unclaimed. `player_id` nullable for sideline callouts |
-| `reels` | Public | INSERT + UPDATE anyone — **not tightened this pass**, same class of hole as `tips` was; flagged as a follow-up |
+| `reels` | Public | INSERT requires `authenticated` + `uploaded_by = auth.uid()`'s own `profiles.id` (trigger-filled, `with check (true)` closed); UPDATE is uploader-own-row or admin-any-row, **and** a column grant narrows raw UPDATE to `title`/`category`/`is_exclusive`/`is_vault_only`/`flash_unlock_until` — counters and moderation flags are RPC-only |
 | `subscriptions` | Own `subscriber_id` or admin | INSERT/UPDATE own `subscriber_id` only (`with check (true)` closed) |
-| `subscriber_requests` | Public | INSERT anyone — not tightened this pass |
+| `subscriber_requests` | Sender, receiving athlete, or admin | INSERT requires `auth.uid() = subscriber_id` (`with check (true)` closed); `anon` bypass dropped |
 | `tips` | Own `fan_id` or admin | INSERT requires `auth.uid() = fan_id` (`with check (true)` closed); `amount_cents`/`aura_points` CHECK `>= 0` |
-| `sponsorships` | Public | INSERT anyone; admin UPDATE / DELETE (`anon` bypass dropped on admin policy); `amount_cents`/`aura_points` CHECK `>= 0` |
+| `sponsorships` | Public | INSERT requires `auth.uid() = sponsor_user_id` or admin (`with check (true)` closed); admin UPDATE / DELETE (`anon` bypass **still present** on that policy, not closed this pass); `amount_cents`/`aura_points` CHECK `>= 0` |
 | `shop_products` | Public | Admin INSERT / UPDATE / DELETE |
-| `shop_orders` | **Admin-only** | INSERT anyone (Drip is not Soft-Wall-gated — see `shop_orders` section above); admin UPDATE / DELETE (`anon` bypass dropped); `amount_cents` CHECK `>= 0`, `qty` CHECK `> 0` |
+| `shop_orders` | **Admin-only** | INSERT requires `auth.uid() = buyer_id` (`with check (true)` closed — see `shop_orders` section above); admin UPDATE / DELETE (`anon` bypass dropped); `amount_cents` CHECK `>= 0`, `qty` CHECK `> 0` |
 | `company_revenue_logs` | **Admin-only** | **Admin-only** (`anon` bypass dropped; real writes flow through a SECURITY DEFINER trigger regardless); amount columns CHECK `>= 0` |
 | `app_runtime_config` | Public (fan chrome boot) | **authenticated** admin only (`anon` bypass dropped; `patch_app_runtime_draft`/`publish_app_runtime` also admin-checked internally since SECURITY DEFINER bypasses this policy) |
 | `app_feedback` | Admin or `anon` | INSERT anyone; admin or `anon` UPDATE — not tightened this pass |
@@ -912,7 +916,7 @@ current_user_role()  -- profiles.role for auth.uid(), else 'guest'
 
 ## Storage — `game_highlights`
 
-Created in `supabase/reels.sql`:
+Created in `supabase/reels.sql`; consolidated into the canonical `schema.sql` (2026-09, bottom of the file) so a **fresh** Supabase project needs no extra incremental step to get a working upload path — running `supabase/reels.sql` / `supabase/media_upload.sql` afterward is still safe (idempotent) for an already-hosted project catching up.
 
 | Parameter | Value |
 | --- | --- |
@@ -920,25 +924,26 @@ Created in `supabase/reels.sql`:
 | Public | `true` |
 | Client constant | `HIGHLIGHTS_BUCKET` in `apps/mobile/src/frontend/lib/reels.ts` |
 | Object path | `reels/{timestamp}.{ext}`; booster logos at `sponsors/{timestamp}.{ext}` |
-| RLS SELECT | `storage.objects` where `bucket_id = 'game_highlights'` |
-| RLS INSERT | same `bucket_id` |
+| RLS SELECT | `storage.objects` where `bucket_id = 'game_highlights'` (public read, unchanged) |
+| RLS INSERT | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass — was bucket-only, so any anon-key holder with no session could write; `MediaUploadService.uploadHighlight` already requires the caller be signed in, so this closes the gap without breaking the app) |
 
-Upload requires a tagged player, an active game, a caption, and a video category (Game Play / Train Like Me / Serve Like Me). `MediaUploadService` writes `reels/{user_id}/{timestamp}.mp4` into bucket **`reels`** first, then falls back to `game_highlights` if that bucket is missing.
+Upload requires a tagged player, a caption, and a video category (Game Play / Train Like Me / Serve Like Me). **Tagging a game is optional** (2026-09 — previously required, now `UploadVideoModal` defaults to "No specific game" and still lets a fan pick one). `MediaUploadService` writes `reels/{user_id}/{timestamp}.mp4` into bucket **`reels`** first, then falls back to `game_highlights` if that bucket is missing.
 
 ### Storage — `reels`
 
-Created in `supabase/media_upload.sql`. Client: `REELS_BUCKET` in `MediaUploadService.ts`.
+Created in `supabase/media_upload.sql`; consolidated into `schema.sql` (2026-09) — see note above. Client: `REELS_BUCKET` in `MediaUploadService.ts`.
 
 | Parameter | Value |
 | --- | --- |
 | Bucket id / name | `reels` |
 | Public | `true` |
 | Object path | `reels/{auth.users.id}/{timestamp}.mp4` |
-| RLS SELECT / INSERT / UPDATE | `storage.objects` where `bucket_id = 'reels'` (demo-open) |
+| RLS SELECT | `storage.objects` where `bucket_id = 'reels'` (public read, unchanged) |
+| RLS INSERT / UPDATE | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass — was bucket-only/anon-writable; tightened to match `MediaUploadService.uploadHighlight`'s existing signed-in requirement) |
 
 ### Storage — `avatars`
 
-Created in `supabase/media_upload.sql`. Client: `ProfileAvatarPicker` → `uploadAvatar`.
+Created in `supabase/media_upload.sql`; consolidated into `schema.sql` (2026-09) — see note above. Client: `ProfileAvatarPicker` → `uploadAvatar`.
 
 | Parameter | Value |
 | --- | --- |
@@ -946,7 +951,8 @@ Created in `supabase/media_upload.sql`. Client: `ProfileAvatarPicker` → `uploa
 | Public | `true` |
 | Object path | `{auth.users.id}/{timestamp}.jpg` |
 | Writes | `profiles.avatar_url` |
-| RLS SELECT / INSERT / UPDATE | `storage.objects` where `bucket_id = 'avatars'` (demo-open) |
+| RLS SELECT | `storage.objects` where `bucket_id = 'avatars'` (public read, unchanged) |
+| RLS INSERT / UPDATE | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass — was bucket-only/anon-writable; `uploadAvatar` already hard-requires `supabase.auth.getUser()` to return a user before it uploads, so this matches the client contract) |
 
 ---
 

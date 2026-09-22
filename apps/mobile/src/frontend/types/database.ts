@@ -883,6 +883,21 @@ export type Database = {
         Args: { target_type: 'athlete' | 'school'; target_id: string; frozen: boolean };
         Returns: boolean;
       };
+      /** 2026-09 parent-payee security fix: admin-only `players.guardian_id` setter. Client: `adminSetPlayerGuardian`. */
+      admin_set_player_guardian: {
+        Args: { target_player_id: string; new_guardian_id: string | null };
+        Returns: void;
+      };
+      /** 2026-09 audit item 2: only path an already-linked parent has left to toggle `players.parental_consent_approved` / `guardian_consent_at` (column grant narrowed). Client: `app/(parent)/parent/index.tsx`'s `toggleConsent`. */
+      parent_set_player_consent: {
+        Args: { target_player_id: string; approved: boolean };
+        Returns: void;
+      };
+      /** 2026-09 audit item 2: admin-only approval path for the same two columns (verification-queue approve). Client: `setVerificationStatus` in `lib/adminCatalog.ts`. */
+      admin_approve_player_consent: {
+        Args: { target_player_id: string };
+        Returns: void;
+      };
       get_crew_graph: {
         Args: { target_athlete_id: string };
         Returns: {

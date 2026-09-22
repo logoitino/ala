@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { LegalAckToggle, LegalModal } from '@/components/Legal/LegalModal';
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
@@ -34,7 +35,9 @@ import {
 } from '@/data/verification';
 import { redeemTeamCode, requestAthleteVerification } from '@/lib/verification';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, SPRING_CARD } from '@/theme/motion';
+
+const SHEET_TRAVEL = 460;
 
 type VerifyAthleteModalProps = {
   visible: boolean;
@@ -57,6 +60,8 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'redeem' | 'request' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const translateY = useSharedValue(SHEET_TRAVEL);
+  const backdropOpacity = useSharedValue(0);
 
   const status = resolveVerificationStatus(profile);
   const schoolClaimed = Boolean(profile?.school_id || profile?.team);
@@ -66,15 +71,24 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
       setOpen(true);
       setError(null);
       telemetry.trackFeature('athlete_verify', 'profile');
+      translateY.value = withSpring(0, SPRING_CARD);
+      backdropOpacity.value = withTiming(1, { duration: 200 });
     }
-  }, [visible]);
+  }, [backdropOpacity, translateY, visible]);
+
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
 
   if (!open && !visible) return null;
 
   const dismiss = () => {
-    setOpen(false);
+    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
+    backdropOpacity.value = withTiming(0, { duration: 160 });
     setBusy(null);
-    onClose();
+    setTimeout(() => {
+      setOpen(false);
+      onClose();
+    }, 180);
   };
 
   const run = async (kind: 'redeem' | 'request', work: () => Promise<void>) => {
@@ -116,13 +130,21 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
 
   return (
     <>
-      <Modal transparent animationType="fade" visible={visible} onRequestClose={dismiss}>
+      <Modal
+        transparent
+        animationType="none"
+        visible={visible}
+        onRequestClose={dismiss}
+        onDismiss={() => setOpen(false)}
+      >
         <View style={styles.root}>
           <Pressable haptic="none" style={styles.backdrop} onPress={dismiss}>
-            <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+            <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
+              <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+            </Animated.View>
           </Pressable>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
+            <Animated.View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }, sheetStyle]}>
               <View style={styles.handle} />
               <Text style={styles.kicker}>{VERIFY_SHEET_KICKER}</Text>
               <Text style={styles.title}>{VERIFY_SHEET_TITLE}</Text>
@@ -184,6 +206,11 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
                       <Text style={styles.submitLabel}>{VERIFY_SUBMIT_LABEL}</Text>
                     )}
                   </AnimatedButton>
+                  <View style={styles.orDivider} accessibilityElementsHidden importantForAccessibility="no">
+                    <View style={styles.orLine} />
+                    <Text style={styles.orLabel}>or</Text>
+                    <View style={styles.orLine} />
+                  </View>
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={VERIFY_REQUEST_LINK}
@@ -209,7 +236,7 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
               <Pressable accessibilityRole="button" onPress={dismiss} style={styles.close}>
                 <Text style={styles.closeLabel}>Close</Text>
               </Pressable>
-            </View>
+            </Animated.View>
           </KeyboardAvoidingView>
         </View>
       </Modal>
@@ -319,9 +346,27 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
+  orDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 2,
+  },
+  orLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+  },
+  orLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
+  },
   requestHit: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   requestLabel: {
     fontSize: 13,

@@ -9,7 +9,6 @@ import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
-import { useAuth } from '@/context/AuthContext';
 import { telemetry } from '@/services/TelemetryManager';
 import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
@@ -19,7 +18,6 @@ import { supabase } from '@/lib/supabase';
 
 export default function ParentHomeScreen() {
   const { live } = useAppRuntime();
-  const { profile } = useAuth();
   const { players, setPlayers } = useRoster();
   const pending = usePendingPlayerTags();
   const [busy, setBusy] = useState(false);
@@ -28,12 +26,15 @@ export default function ParentHomeScreen() {
     if (busy) return;
     setBusy(true);
     try {
-      const patch: { parental_consent_approved: boolean; guardian_id?: string | null } = {
-        parental_consent_approved: approved,
-      };
-      if (approved && profile?.id) patch.guardian_id = profile.id;
       telemetry.trackFeature('parent_consent', 'parent');
-      const { error } = await supabase.from('players').update(patch).eq('id', playerId);
+      // 2026-09 audit item 2: `parental_consent_approved` / `guardian_consent_at` are no longer
+      // directly UPDATE-able (column grant narrowed to close the booster/operator guardian-write
+      // hole) — this now goes through `parent_set_player_consent`, which re-checks server-side
+      // that this row's `guardian_id` already equals the caller's own linked profile.
+      const { error } = await supabase.rpc('parent_set_player_consent', {
+        target_player_id: playerId,
+        approved,
+      });
       if (error) {
         Alert.alert('Couldn’t update consent', error.message);
         return;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LegalAckToggle } from '@/components/Legal/LegalModal';
@@ -21,9 +22,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { DEMO_FAN_EMAIL } from '@/lib/auth';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
 const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
+const SHEET_TRAVEL = 480;
 
 type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | null;
 
@@ -47,6 +49,10 @@ export function SoftWallModal() {
   const [busy, setBusy] = useState<AuthBusy>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const wasVisible = useRef(false);
+  const translateY = useSharedValue(SHEET_TRAVEL);
+  const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
     if (!visible) {
@@ -58,6 +64,35 @@ export function SoftWallModal() {
       setError(null);
     }
   }, [visible]);
+
+  // Mirrors ProfileMenuSheet's slide-up spring, but also has to animate closed when
+  // SoftWallContext clears itself the instant a session lands (see close() callers in
+  // SoftWallContext) — not just when the fan taps "Keep browsing" — so we track the prior
+  // visibility in a ref instead of relying on a manual dismiss() being the only way out.
+  useEffect(() => {
+    if (visible) {
+      wasVisible.current = true;
+      setOpen(true);
+      translateY.value = withSpring(0, SPRING_CARD);
+      backdropOpacity.value = withTiming(1, { duration: 200 });
+    } else if (wasVisible.current) {
+      wasVisible.current = false;
+      translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
+      backdropOpacity.value = withTiming(0, { duration: 160 });
+      const timer = setTimeout(() => setOpen(false), 180);
+      return () => clearTimeout(timer);
+    }
+  }, [visible, backdropOpacity, translateY]);
+
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
+
+  if (!open && !visible) return null;
+
+  const dismiss = () => {
+    if (busy) return;
+    close();
+  };
 
   const athlete = intent?.athleteName?.trim();
   const body =
@@ -106,17 +141,19 @@ export function SoftWallModal() {
   };
 
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={close}>
+    <Modal animationType="none" transparent visible={open} onRequestClose={dismiss} onDismiss={() => setOpen(false)}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.backdropWrap}
+        style={styles.page}
       >
-        <Pressable haptic="none" style={styles.backdrop} onPress={busy ? undefined : close}>
-          <BlurView intensity={48} tint="dark" pointerEvents="none" style={styles.blur} />
-          <Pressable
-            haptic="none"
-            style={[styles.sheet, { paddingBottom: 16 + insets.bottom, maxHeight: '92%' }]}
-            onPress={() => undefined}
+        <View style={styles.root}>
+          <Pressable haptic="none" style={styles.backdrop} onPress={busy ? undefined : dismiss}>
+            <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, backdropStyle]}>
+              <BlurView intensity={48} tint="dark" style={StyleSheet.absoluteFill} />
+            </Animated.View>
+          </Pressable>
+          <Animated.View
+            style={[styles.sheet, { paddingBottom: 16 + insets.bottom, maxHeight: '92%' }, sheetStyle]}
           >
             <View style={styles.handle} />
             <ScrollView
@@ -128,58 +165,57 @@ export function SoftWallModal() {
               <Text style={styles.title}>{title}</Text>
               <Text style={styles.subtitle}>{body}</Text>
 
-              <Text style={styles.sectionLabel}>Email & password</Text>
-              <TextInput
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                keyboardType="email-address"
-                placeholder="you@family.com"
-                placeholderTextColor={colors.textMuted}
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                editable={!busy}
-              />
-              <TextInput
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="password"
-                placeholder="Password"
-                placeholderTextColor={colors.textMuted}
-                secureTextEntry
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                editable={!busy}
-                onSubmitEditing={() => {
-                  if (canPassword) {
-                    void run('password', () => signInWithEmailPassword(email, password, ageConfirmed));
-                  }
-                }}
-              />
-              <LegalAckToggle
-                checked={ageConfirmed}
-                onCheckedChange={setAgeConfirmed}
-                disabled={Boolean(busy)}
-                label={AGE_GATE_LABEL}
-              />
-              <AnimatedButton
-                accessibilityLabel="Sign in with email and password"
-                disabled={Boolean(busy) || !canPassword}
-                haptic="medium"
-                onPress={() => void run('password', () => signInWithEmailPassword(email, password, ageConfirmed))}
-                contentStyle={[styles.providerBtn, styles.magicBtn, (busy || !canPassword) && styles.disabled]}
-              >
-                {busy === 'password' ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.magicLabel}>Sign in</Text>
-                )}
-              </AnimatedButton>
-              <Text style={styles.demoHint}>
-                Demo Fan: {DEMO_FAN_EMAIL} · or tap Continue as Demo Fan below
-              </Text>
+              <View style={styles.group}>
+                <Text style={styles.sectionLabel}>Email & password</Text>
+                <TextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  keyboardType="email-address"
+                  placeholder="you@family.com"
+                  placeholderTextColor={colors.textMuted}
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  editable={!busy}
+                />
+                <TextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="password"
+                  placeholder="Password"
+                  placeholderTextColor={colors.textMuted}
+                  secureTextEntry
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  editable={!busy}
+                  onSubmitEditing={() => {
+                    if (canPassword) {
+                      void run('password', () => signInWithEmailPassword(email, password, ageConfirmed));
+                    }
+                  }}
+                />
+                <LegalAckToggle
+                  checked={ageConfirmed}
+                  onCheckedChange={setAgeConfirmed}
+                  disabled={Boolean(busy)}
+                  label={AGE_GATE_LABEL}
+                />
+                <AnimatedButton
+                  accessibilityLabel="Sign in with email and password"
+                  disabled={Boolean(busy) || !canPassword}
+                  haptic="medium"
+                  onPress={() => void run('password', () => signInWithEmailPassword(email, password, ageConfirmed))}
+                  contentStyle={[styles.providerBtn, styles.magicBtn, (busy || !canPassword) && styles.disabled]}
+                >
+                  {busy === 'password' ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.magicLabel}>Sign in</Text>
+                  )}
+                </AnimatedButton>
+              </View>
 
               <AnimatedButton
                 accessibilityLabel="Send magic link email"
@@ -197,74 +233,83 @@ export function SoftWallModal() {
 
               <View style={styles.orRow}>
                 <View style={styles.orLine} />
-                <Text style={styles.orLabel}>or</Text>
+                <Text style={styles.orLabel}>continue with</Text>
                 <View style={styles.orLine} />
               </View>
 
-              <AnimatedButton
-                accessibilityLabel="Continue as Demo Fan"
-                disabled={Boolean(busy)}
-                haptic="medium"
-                onPress={() => void run('demo', signInWithDemoAccount)}
-                contentStyle={[styles.providerBtn, styles.demoBtn, busy && styles.disabled]}
-              >
-                {busy === 'demo' ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.demoLabel}>Continue as Demo Fan</Text>
-                )}
-              </AnimatedButton>
+              <View style={styles.group}>
+                <AnimatedButton
+                  accessibilityLabel="Continue with Apple"
+                  disabled={Boolean(busy)}
+                  haptic="medium"
+                  onPress={() => void run('apple', signInWithApple)}
+                  contentStyle={[styles.providerBtn, styles.appleBtn, busy && styles.disabled]}
+                >
+                  {busy === 'apple' ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.appleLabel}>Continue with Apple</Text>
+                  )}
+                </AnimatedButton>
 
-              <AnimatedButton
-                accessibilityLabel="Continue with Apple"
-                disabled={Boolean(busy)}
-                haptic="medium"
-                onPress={() => void run('apple', signInWithApple)}
-                contentStyle={[styles.providerBtn, styles.appleBtn, busy && styles.disabled]}
-              >
-                {busy === 'apple' ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.appleLabel}>Continue with Apple</Text>
-                )}
-              </AnimatedButton>
+                <AnimatedButton
+                  accessibilityLabel="Continue with Google"
+                  disabled={Boolean(busy)}
+                  haptic="medium"
+                  onPress={() => void run('google', signInWithGoogle)}
+                  contentStyle={[styles.providerBtn, styles.googleBtn, busy && styles.disabled]}
+                >
+                  {busy === 'google' ? (
+                    <ActivityIndicator color={FOCAL.ink} />
+                  ) : (
+                    <Text style={styles.googleLabel}>Continue with Google</Text>
+                  )}
+                </AnimatedButton>
+              </View>
 
-              <AnimatedButton
-                accessibilityLabel="Continue with Google"
-                disabled={Boolean(busy)}
-                haptic="medium"
-                onPress={() => void run('google', signInWithGoogle)}
-                contentStyle={[styles.providerBtn, styles.googleBtn, busy && styles.disabled]}
-              >
-                {busy === 'google' ? (
-                  <ActivityIndicator color={FOCAL.ink} />
-                ) : (
-                  <Text style={styles.googleLabel}>Continue with Google</Text>
-                )}
-              </AnimatedButton>
+              <View style={styles.demoGroup}>
+                <Text style={styles.demoHint}>
+                  Just exploring? Continue as Demo Fan — {DEMO_FAN_EMAIL}
+                </Text>
+                <AnimatedButton
+                  accessibilityLabel="Continue as Demo Fan"
+                  disabled={Boolean(busy)}
+                  haptic="medium"
+                  onPress={() => void run('demo', signInWithDemoAccount)}
+                  contentStyle={[styles.providerBtn, styles.demoBtn, busy && styles.disabled]}
+                >
+                  {busy === 'demo' ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.demoLabel}>Continue as Demo Fan</Text>
+                  )}
+                </AnimatedButton>
+              </View>
 
               {message ? <Text style={styles.message}>{message}</Text> : null}
               {error ? <Text style={styles.error}>{error}</Text> : null}
 
-              <Pressable accessibilityRole="button" disabled={Boolean(busy)} onPress={close} style={styles.close}>
+              <Pressable accessibilityRole="button" disabled={Boolean(busy)} onPress={dismiss} style={styles.close}>
                 <Text style={styles.closeLabel}>Keep browsing</Text>
               </Pressable>
             </ScrollView>
-          </Pressable>
-        </Pressable>
+          </Animated.View>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdropWrap: { flex: 1 },
-  backdrop: {
+  page: { flex: 1 },
+  root: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(15,20,22,0.35)',
   },
-  blur: { ...StyleSheet.absoluteFill },
   sheet: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: radii.lg,
@@ -275,6 +320,9 @@ const styles = StyleSheet.create({
   sheetInner: {
     gap: 12,
     paddingBottom: 8,
+  },
+  group: {
+    gap: 10,
   },
   handle: {
     alignSelf: 'center',
@@ -322,8 +370,14 @@ const styles = StyleSheet.create({
   appleLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   demoBtn: { backgroundColor: FOCAL.goldInk },
   demoLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  demoGroup: {
+    gap: 8,
+    marginTop: 2,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
   demoHint: {
-    marginTop: -4,
     fontSize: 12,
     fontWeight: '600',
     color: colors.textMuted,

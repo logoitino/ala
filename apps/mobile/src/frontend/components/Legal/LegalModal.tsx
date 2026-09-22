@@ -3,6 +3,7 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Checkbox } from 'expo-checkbox';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -10,7 +11,9 @@ import { colors, radii } from '@/constants/theme';
 import { LEGAL_ACK_LABEL, LEGAL_MENU_LABEL, LEGAL_SECTIONS, LEGAL_TERMS_VERSION } from '@/data/legal';
 import { useLegalAck } from '@/hooks/useLegalAck';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, SPRING_CARD } from '@/theme/motion';
+
+const SHEET_TRAVEL = 460;
 
 type LegalModalProps = {
   visible: boolean;
@@ -75,20 +78,31 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
   const { accepted, accept } = useLegalAck();
   const [open, setOpen] = useState(false);
   const [checked, setChecked] = useState(false);
+  const translateY = useSharedValue(SHEET_TRAVEL);
+  const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
       setOpen(true);
       setChecked(accepted);
       telemetry.trackFeature('legal_terms', 'profile');
+      translateY.value = withSpring(0, SPRING_CARD);
+      backdropOpacity.value = withTiming(1, { duration: 200 });
     }
-  }, [accepted, visible]);
+  }, [accepted, backdropOpacity, translateY, visible]);
+
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
 
   if (!open && !visible) return null;
 
   const dismiss = () => {
-    setOpen(false);
-    onClose();
+    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
+    backdropOpacity.value = withTiming(0, { duration: 160 });
+    setTimeout(() => {
+      setOpen(false);
+      onClose();
+    }, 180);
   };
 
   const onConfirm = async () => {
@@ -100,12 +114,20 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
   };
 
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={dismiss}>
+    <Modal
+      transparent
+      animationType="none"
+      visible={visible}
+      onRequestClose={dismiss}
+      onDismiss={() => setOpen(false)}
+    >
       <View style={styles.root}>
         <Pressable haptic="none" style={styles.backdrop} onPress={dismiss}>
-          <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+          <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
+            <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+          </Animated.View>
         </Pressable>
-        <View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
+        <Animated.View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }, sheetStyle]}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>Legal</Text>
           <Text style={styles.title}>{LEGAL_MENU_LABEL}</Text>
@@ -147,7 +169,7 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
           >
             <Text style={styles.doneLabel}>{requireAck ? 'Agree & close' : 'Close'}</Text>
           </AnimatedButton>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -240,10 +262,10 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   ackCard: {
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
     borderRadius: radii.md,
-    backgroundColor: colors.background,
+    backgroundColor: colors.accentSoft,
     padding: 12,
     gap: 8,
   },

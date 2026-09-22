@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, SPRING_CARD } from '@/theme/motion';
 import { useAuraBoosters } from '@/hooks/useAuraBoosters';
 import { auraBadgeLabel, type AuraBooster } from '@/lib/aura';
 
@@ -117,6 +118,19 @@ function BoosterPeek({
   rank: number;
   onClose: () => void;
 }) {
+  const intro = useSharedValue(0.9);
+
+  useEffect(() => {
+    if (!booster) return;
+    intro.value = 0.9;
+    intro.value = withSpring(1, SPRING_CARD);
+  }, [booster, intro]);
+
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: 0.5 + intro.value * 0.5,
+    transform: [{ scale: intro.value }],
+  }));
+
   if (!booster) return null;
   const tier = booster.current_tier;
   const badge = auraBadgeLabel(tier);
@@ -130,12 +144,13 @@ function BoosterPeek({
           onPress={onClose}
           style={styles.backdrop}
         />
-        <View
+        <Animated.View
           accessibilityRole="summary"
           accessibilityLabel={`${booster.full_name} booster profile`}
           style={[
             styles.peek,
             { borderColor: tier.color, backgroundColor: tier.face, ...auraShadow(tier.color, tier.glow, true) },
+            cardStyle,
           ]}
         >
           <AuraTicks color={tier.color} size={18} weight={2} />
@@ -155,7 +170,7 @@ function BoosterPeek({
           <AnimatedButton accessibilityLabel="Close booster profile" onPress={onClose} contentStyle={styles.peekClose}>
             <Text style={styles.peekCloseLabel}>Close</Text>
           </AnimatedButton>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

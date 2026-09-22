@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Modal, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -14,7 +15,9 @@ import {
   type AppFeedbackSurface,
 } from '@/lib/feedback';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, SPRING_CARD } from '@/theme/motion';
+
+const SHEET_TRAVEL = 420;
 
 type SuggestionSheetProps = {
   visible: boolean;
@@ -32,8 +35,31 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
   const [kind, setKind] = useState<AppFeedbackKind>('suggestion');
   const [place, setPlace] = useState<AppFeedbackSurface>(surface);
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
+  const translateY = useSharedValue(SHEET_TRAVEL);
+  const backdropOpacity = useSharedValue(0);
 
   const canSend = body.trim().length >= 8 && !busy;
+
+  useEffect(() => {
+    if (visible) {
+      setOpen(true);
+      translateY.value = withSpring(0, SPRING_CARD);
+      backdropOpacity.value = withTiming(1, { duration: 200 });
+    }
+  }, [backdropOpacity, translateY, visible]);
+
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
+
+  const dismiss = () => {
+    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
+    backdropOpacity.value = withTiming(0, { duration: 160 });
+    setTimeout(() => {
+      setOpen(false);
+      onClose();
+    }, 180);
+  };
 
   const send = async () => {
     if (!canSend) return;
@@ -43,7 +69,7 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
       if (kind === 'bug') telemetry.trackIssue('suggestion_bug', place);
       else telemetry.trackFeature('suggestion', place);
       setBody('');
-      onClose();
+      dismiss();
       Alert.alert('Got it', 'Admin will see this on Feedback. If it ships, it goes out with Publish to app.');
     } catch (caught) {
       Alert.alert('Could not send', caught instanceof Error ? caught.message : 'Try again in a moment.');
@@ -52,16 +78,24 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
     }
   };
 
-  if (!visible) return null;
+  if (!open && !visible) return null;
 
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+    <Modal
+      animationType="none"
+      transparent
+      visible={visible}
+      onRequestClose={dismiss}
+      onDismiss={() => setOpen(false)}
+    >
       <View style={[styles.root, Platform.OS === 'web' ? styles.webRoot : undefined]}>
-        <Pressable haptic="none" onPress={onClose} style={StyleSheet.absoluteFill}>
-          <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
-          <View style={styles.dim} />
+        <Pressable haptic="none" onPress={dismiss} style={StyleSheet.absoluteFill}>
+          <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
+            <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+            <View style={styles.dim} />
+          </Animated.View>
         </Pressable>
-        <View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
+        <Animated.View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }, sheetStyle]}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>Improve Tapua'i</Text>
           <Text style={styles.title}>Send a suggestion</Text>
@@ -110,10 +144,10 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
           >
             <Text style={styles.sendLabel}>{busy ? 'Sending…' : 'Send suggestion'}</Text>
           </AnimatedButton>
-          <AnimatedButton haptic="light" accessibilityLabel="Cancel" contentStyle={styles.cancel} onPress={onClose}>
+          <AnimatedButton haptic="light" accessibilityLabel="Cancel" contentStyle={styles.cancel} onPress={dismiss}>
             <Text style={styles.cancelLabel}>Cancel</Text>
           </AnimatedButton>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -202,6 +236,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: colors.background,
     color: colors.text,
     paddingHorizontal: 12,
     paddingVertical: 10,

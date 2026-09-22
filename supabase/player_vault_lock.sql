@@ -20,6 +20,19 @@ begin
     raise exception 'Sign in to lock or open the Vault.';
   end if;
 
+  -- 2026-09 audit follow-up: ownership check — see schema.sql for the full comment. Either the
+  -- athlete managing their own claimed row, or school staff/admin.
+  if not (
+    public.current_user_role() in ('booster', 'admin', 'operator')
+    or exists (
+      select 1 from public.profiles p
+      where p.user_id = actor
+        and p.player_id = target_player_id
+    )
+  ) then
+    raise exception 'Only the athlete, school staff, or admin may lock or open a Vault.';
+  end if;
+
   update public.players
   set vault_locked = coalesce(is_locked, true)
   where id = target_player_id
@@ -33,4 +46,4 @@ begin
 end;
 $$;
 
-grant execute on function public.set_player_vault_locked(uuid, boolean) to anon, authenticated;
+grant execute on function public.set_player_vault_locked(uuid, boolean) to authenticated;

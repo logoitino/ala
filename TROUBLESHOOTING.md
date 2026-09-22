@@ -71,9 +71,9 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 
 ## 5. Upload fails
 
-**Cause:** Missing Storage bucket `reels` (or fallback `game_highlights`), or upload without a tagged player / active game / caption.
+**Cause:** Missing Storage bucket `reels` (or fallback `game_highlights`), or upload without a tagged player / caption. Tagging a game is optional (no longer required).
 
-**Fix:** Run `supabase/reels.sql` then `supabase/media_upload.sql`. Confirm buckets `reels` and `game_highlights` are public and policies allow SELECT + INSERT on `storage.objects`. Profile photos need bucket `avatars` and `profiles.avatar_url`.
+**Fix:** Run the canonical `apps/mobile/src/backend/db/schema.sql` (2026-09 — it now creates the `reels` / `game_highlights` / `avatars` buckets and their policies itself; `supabase/reels.sql` / `supabase/media_upload.sql` are still safe to run afterward on an already-hosted project, just no longer required on a fresh one). Confirm buckets `reels` and `game_highlights` are public and policies allow SELECT + INSERT on `storage.objects`. Profile photos need bucket `avatars` and `profiles.avatar_url`.
 
 ---
 

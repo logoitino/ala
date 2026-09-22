@@ -203,14 +203,16 @@ export function SponsorshipModal({
                       <CardShine tint={`${option.accent}55`} color="rgba(255,255,255,0.85)" width={38} loopMs={2600} />
                     ) : null}
                     <View style={styles.tierHead}>
+                      <View style={[styles.radio, { borderColor: selected ? option.accent : colors.border }]}>
+                        {selected ? <View style={[styles.radioDot, { backgroundColor: option.accent }]} /> : null}
+                      </View>
                       <Text style={[styles.tierName, selected && { color: option.accent }]}>{option.name}</Text>
                       <View style={[styles.badge, { borderColor: option.accent }]}>
                         <Text style={[styles.badgeLabel, { color: option.accent }]}>{option.badge}</Text>
                       </View>
                     </View>
-                    <Text style={styles.tierPrice}>{formatSponsorDollars(option.dollars)}</Text>
+                    <Text style={[styles.tierPrice, { color: option.accent }]}>{formatSponsorDollars(option.dollars)}</Text>
                     <Text style={styles.tierPerks}>{option.perks}</Text>
-                    {selected ? <Text style={[styles.tierSelected, { color: option.accent }]}>Selected</Text> : null}
                   </AnimatedButton>
                 );
               })}
@@ -395,8 +397,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: colors.border,
-    padding: 12,
-    gap: 4,
+    padding: 14,
+    gap: 6,
     alignItems: 'stretch',
     overflow: 'hidden',
   },
@@ -406,8 +408,20 @@ const styles = StyleSheet.create({
   tierHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: 8,
+  },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   tierName: {
     flex: 1,
@@ -426,7 +440,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   tierPrice: {
-    color: colors.primary,
     fontSize: 14,
     fontWeight: '800',
   },
@@ -435,13 +448,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '600',
-  },
-  tierSelected: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-    marginTop: 2,
   },
   fieldLabel: {
     color: colors.textMuted,

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 
 import {
@@ -13,7 +14,13 @@ import {
   AdminSuggest,
 } from '@/components/Admin/AdminChrome';
 import { formatTeamBadge, type SchoolTeam } from '@/data/teams';
-import { fetchAdminSchools, upsertAthlete } from '@/lib/adminCatalog';
+import {
+  adminSetPlayerGuardian,
+  fetchAdminPeople,
+  fetchAdminSchools,
+  upsertAthlete,
+  type AdminPerson,
+} from '@/lib/adminCatalog';
 import { useRoster } from '@/hooks/useRoster';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { setPlayerVaultLocked } from '@/lib/vault';
@@ -33,28 +40,52 @@ const empty = {
 
 /**
  * @purpose Production roster desk with school catalog picker, measurables, and Vault lock.
- * @sideEffects `players` INSERT / UPDATE; `set_player_vault_locked`.
+ * @sideEffects `players` INSERT / UPDATE; `set_player_vault_locked`; `admin_set_player_guardian` RPC.
  */
 export function AthletesTool() {
   const { players, loading, error, refresh } = useRoster();
   const { configs, configFor } = useSportConfigs();
   const [schools, setSchools] = useState<SchoolTeam[]>([]);
+  const [people, setPeople] = useState<AdminPerson[]>([]);
   const [sport, setSport] = useState('Football');
   const [form, setForm] = useState(empty);
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [linkingPlayer, setLinkingPlayer] = useState<Player | null>(null);
+  const [guardianQuery, setGuardianQuery] = useState('');
+  const [guardianBusy, setGuardianBusy] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       void refresh();
       void fetchAdminSchools().then(setSchools).catch(() => setSchools([]));
+      void fetchAdminPeople().then(setPeople).catch(() => setPeople([]));
     }, [refresh]),
   );
 
   const schoolOptions = useMemo(
     () => schools.map((row) => ({ id: row.id, title: row.name, meta: `${row.mascot} · ${formatTeamBadge(row)}` })),
     [schools],
+  );
+
+  const guardianCandidates = useMemo(
+    () => people.filter((row) => row.role === 'parent' || row.roles.includes('parent')),
+    [people],
+  );
+  const guardianOptions = useMemo(
+    () =>
+      guardianCandidates.map((row) => ({
+        id: row.id,
+        title: row.full_name,
+        meta: row.username ? `@${row.username}` : 'Parent',
+      })),
+    [guardianCandidates],
+  );
+  const guardianName = useCallback(
+    (guardianId: string | null | undefined) =>
+      guardianId ? people.find((row) => row.id === guardianId)?.full_name ?? null : null,
+    [people],
   );
 
   const visible = useMemo(() => {
@@ -104,6 +135,59 @@ export function AthletesTool() {
     });
   };
 
+  /**
+   * @purpose First-time parent/guardian link. This is now the only way to set `players.guardian_id`
+   * (2026-09 parent-payee security fix closed the old self-assign hole) — an admin picks the pair
+   * here so a new parent isn't stuck on a broken Parent screen. Confirms before either direction
+   * since it resets the athlete's parental consent.
+   */
+  const doLinkGuardian = async (playerId: string, guardianId: string | null, ok: string) => {
+    if (guardianBusy) return;
+    setGuardianBusy(true);
+    setMessage(null);
+    try {
+      await adminSetPlayerGuardian(playerId, guardianId);
+      setMessage(ok);
+      setLinkingPlayer(null);
+      setGuardianQuery('');
+      await refresh();
+    } catch (caught) {
+      setMessage(caught instanceof Error ? caught.message : 'Could not update this athlete’s guardian.');
+    } finally {
+      setGuardianBusy(false);
+    }
+  };
+
+  const confirmLinkGuardian = (player: Player, guardian: { id: string; title: string }) => {
+    Alert.alert(
+      'Link guardian?',
+      `Link ${guardian.title} as the parent/guardian for ${player.name}? Any existing parental consent for this athlete will be reset and must be re-approved.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Link',
+          onPress: () =>
+            void doLinkGuardian(player.id, guardian.id, `${player.name} is now linked to ${guardian.title}.`),
+        },
+      ],
+    );
+  };
+
+  const confirmUnlinkGuardian = (player: Player) => {
+    Alert.alert(
+      'Unlink guardian?',
+      `Remove the linked guardian from ${player.name}? Parental consent for this athlete will be reset.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Unlink',
+          style: 'destructive',
+          onPress: () => void doLinkGuardian(player.id, null, `${player.name} no longer has a linked guardian.`),
+        },
+      ],
+    );
+  };
+
   const playbook = configFor(sport);
 
   return (
@@ -151,6 +235,41 @@ export function AthletesTool() {
         {form.id ? <AdminBtn label="Clear form" onPress={() => setForm(empty)} /> : null}
         <AdminNotice text={message} />
       </AdminPanel>
+      {linkingPlayer ? (
+        <AdminPanel title={`Link guardian · ${linkingPlayer.name}`}>
+          <AdminNotice
+            text={
+              guardianName(linkingPlayer.guardian_id)
+                ? `Currently linked to ${guardianName(linkingPlayer.guardian_id)}.`
+                : 'No guardian linked yet — the Parent screen is blocked for this athlete until one is.'
+            }
+          />
+          <AdminSuggest
+            label="Parent account"
+            value={guardianQuery}
+            onChangeText={setGuardianQuery}
+            options={guardianOptions}
+            placeholder="Search parent-role profiles by name"
+            onPick={(option) => confirmLinkGuardian(linkingPlayer, option)}
+          />
+          {linkingPlayer.guardian_id ? (
+            <AdminBtn
+              label={guardianBusy ? '…' : 'Unlink current guardian'}
+              kind="danger"
+              disabled={guardianBusy}
+              onPress={() => confirmUnlinkGuardian(linkingPlayer)}
+            />
+          ) : null}
+          <AdminBtn
+            label="Cancel"
+            disabled={guardianBusy}
+            onPress={() => {
+              setLinkingPlayer(null);
+              setGuardianQuery('');
+            }}
+          />
+        </AdminPanel>
+      ) : null}
       <AdminField label="Filter" value={query} onChangeText={setQuery} placeholder="Search roster" />
       {visible.length === 0 ? (
         <AdminEmpty text="No athletes match this filter." />
@@ -159,12 +278,19 @@ export function AthletesTool() {
           <AdminRow
             key={player.id}
             title={player.name}
-            meta={`#${player.jersey_number} · ${player.position || 'Athlete'} · ${player.school_name || 'No school'} · Vault ${player.vault_locked === false ? 'open' : 'locked'}`}
+            meta={`#${player.jersey_number} · ${player.position || 'Athlete'} · ${player.school_name || 'No school'} · Vault ${player.vault_locked === false ? 'open' : 'locked'} · Guardian ${guardianName(player.guardian_id) ?? 'none linked'}`}
           >
             <AdminBtn label="Edit" onPress={() => load(player)} />
             <AdminBtn
               label={player.vault_locked === false ? 'Lock Vault' : 'Open Vault'}
               onPress={() => void setPlayerVaultLocked(player.id, player.vault_locked === false).then(() => refresh())}
+            />
+            <AdminBtn
+              label="Link guardian"
+              onPress={() => {
+                setLinkingPlayer(player);
+                setGuardianQuery('');
+              }}
             />
           </AdminRow>
         ))

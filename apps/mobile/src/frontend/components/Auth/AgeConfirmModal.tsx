@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Modal, StyleSheet, Text } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { LegalAckToggle } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
 const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
 
@@ -24,6 +26,27 @@ export function AgeConfirmModal() {
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Centered-card scale-in (not a slide-up sheet) — same intro spring SpotlightModal uses for
+  // its `sheetStyle`, since this is a full-screen takeover card rather than a bottom sheet.
+  const intro = useSharedValue(0.92);
+  const backdropOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (needsAgeConfirmation) {
+      intro.value = 0.92;
+      intro.value = withSpring(1, SPRING_CARD);
+      backdropOpacity.value = withTiming(1, { duration: 200 });
+    } else {
+      intro.value = 0.92;
+      backdropOpacity.value = 0;
+    }
+  }, [backdropOpacity, intro, needsAgeConfirmation]);
+
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: intro.value }],
+    opacity: 0.55 + intro.value * 0.45,
+  }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
 
   const onConfirm = async () => {
     if (!checked || busy) return;
@@ -43,13 +66,16 @@ export function AgeConfirmModal() {
 
   return (
     <Modal
-      animationType="fade"
+      animationType="none"
       transparent
       visible={needsAgeConfirmation}
       onRequestClose={() => undefined}
     >
-      <View style={[styles.backdrop, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
-        <View style={styles.card}>
+      <Animated.View
+        style={[styles.backdrop, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }, backdropStyle]}
+      >
+        <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+        <Animated.View style={[styles.card, cardStyle]}>
           <Text style={styles.kicker}>Tapua&apos;i</Text>
           <Text style={styles.title}>Quick confirmation</Text>
           <Text style={styles.body}>
@@ -66,8 +92,8 @@ export function AgeConfirmModal() {
           >
             <Text style={styles.ctaLabel}>Confirm & Continue</Text>
           </AnimatedButton>
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 }

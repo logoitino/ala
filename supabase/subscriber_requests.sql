@@ -10,14 +10,27 @@ create table if not exists public.subscriber_requests (
 
 alter table public.subscriber_requests enable row level security;
 
+-- 2026-09 audit: `body` is private message text — SELECT is scoped to the sender (their own Q&A
+-- history), the receiving athlete (via `profiles.player_id = subscriber_requests.athlete_id`), or
+-- admin. INSERT requires the caller to insert as themself.
 drop policy if exists "Public read subscriber requests" on public.subscriber_requests;
-create policy "Public read subscriber requests"
+drop policy if exists "Read own or received subscriber requests" on public.subscriber_requests;
+create policy "Read own or received subscriber requests"
   on public.subscriber_requests for select
-  using (true);
+  using (
+    auth.uid() = subscriber_id
+    or exists (
+      select 1 from public.profiles pr
+      where pr.user_id = auth.uid() and pr.player_id = subscriber_requests.athlete_id
+    )
+    or public.current_user_role() = 'admin'
+  );
 
 drop policy if exists "Public insert subscriber requests" on public.subscriber_requests;
-create policy "Public insert subscriber requests"
+drop policy if exists "Insert own subscriber requests" on public.subscriber_requests;
+create policy "Insert own subscriber requests"
   on public.subscriber_requests for insert
-  with check (true);
+  with check (auth.uid() = subscriber_id);
 
-grant select, insert on public.subscriber_requests to anon, authenticated;
+grant select, insert on public.subscriber_requests to authenticated;
+revoke select, insert on public.subscriber_requests from anon;

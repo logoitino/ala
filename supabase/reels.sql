@@ -105,7 +105,8 @@ create policy "Public read game highlights"
   on storage.objects for select
   using (bucket_id = 'game_highlights');
 
+-- Signed-in fans only — see supabase/media_upload.sql for the matching reels/avatars fix.
 drop policy if exists "Public upload game highlights" on storage.objects;
 create policy "Public upload game highlights"
   on storage.objects for insert
-  with check (bucket_id = 'game_highlights');
+  with check (bucket_id = 'game_highlights' and auth.role() = 'authenticated');

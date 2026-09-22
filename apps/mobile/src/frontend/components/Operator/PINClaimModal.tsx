@@ -239,6 +239,7 @@ const styles = StyleSheet.create({
   dotsWrap: {
     overflow: 'hidden',
     borderRadius: radii.md,
+    marginTop: 4,
   },
   dotsFlash: {
     ...StyleSheet.absoluteFill,
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 8,
-    marginTop: 6,
+    marginTop: 18,
   },
   key: {
     width: '31%',

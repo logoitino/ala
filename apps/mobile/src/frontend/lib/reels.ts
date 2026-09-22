@@ -251,8 +251,8 @@ function parseReelHype(data: unknown, fallback: ReelHype): ReelHype {
  * @param reelId Target `reels.id`.
  * @param kind Chip or double-tap hype kind.
  * @param current Local counts used as the optimistic fallback.
- * @returns Server row when the RPC lands; duplicate votes return the unchanged counts.
- * @sideEffects `increment_reel_hype` RPC (inserts `reel_hype_votes` for `auth.uid()`); `reels` UPDATE if the RPC is missing.
+ * @returns Server row when the RPC lands; duplicate votes (or an RPC error) return the unchanged counts.
+ * @sideEffects `increment_reel_hype` RPC (inserts `reel_hype_votes` for `auth.uid()`).
  */
 export async function bumpReelHype(reelId: string, kind: PlayReactionId, current: ReelHype): Promise<ReelHype> {
   const optimistic: ReelHype = {
@@ -269,23 +269,27 @@ export async function bumpReelHype(reelId: string, kind: PlayReactionId, current
     hype_kind: kind,
   });
 
-  if (!error) {
-    const row = data && typeof data === 'object' ? (data as Record<string, unknown>) : null;
-    const applied = row?.applied !== false;
-    return parseReelHype(data, applied ? optimistic : current);
+  if (error) {
+    // 2026-09 audit (reels RLS tightening): `increment_reel_hype` is the source of truth for hype
+    // counters — it also dedupes one tap per signed-in fan via `reel_hype_votes`. A raw client
+    // `reels` UPDATE fallback would let anyone spam these counts with no dedupe at all, so hype
+    // counters no longer have a raw-UPDATE grant and there is nothing safe to fall back to here.
+    return current;
   }
 
-  const patch =
-    kind === 'aura'
-      ? { aura_count: optimistic.aura_count }
-      : kind === 'flex'
-        ? { flex_count: optimistic.flex_count }
-        : { seki_count: optimistic.seki_count };
-
-  await supabase.from('reels').update(patch).eq('id', reelId);
-  return optimistic;
+  const row = data && typeof data === 'object' ? (data as Record<string, unknown>) : null;
+  const applied = row?.applied !== false;
+  return parseReelHype(data, applied ? optimistic : current);
 }
 
+/**
+ * @purpose Bump a Reel's displayed running Mālo total after a tip is recorded (`increment_reel_tips`).
+ * @param reelId Target `reels.id`.
+ * @param addCents Tip amount already recorded in the `tips` ledger.
+ * @param current Local counts used as the optimistic fallback.
+ * @returns Server total when the RPC lands; the pre-tap total if the RPC errors.
+ * @sideEffects `increment_reel_tips` RPC.
+ */
 export async function addReelTips(reelId: string, addCents: number, current: ReelHype): Promise<ReelHype> {
   const add = Math.max(0, addCents);
   const optimistic: ReelHype = {
@@ -303,10 +307,11 @@ export async function addReelTips(reelId: string, addCents: number, current: Ree
     return { ...optimistic, total_tips_cents: data };
   }
 
-  const { data: row } = await supabase.from('reels').select('total_tips_cents').eq('id', reelId).maybeSingle();
-  const nextTotal = asCount(row?.total_tips_cents, current.total_tips_cents) + add;
-  await supabase.from('reels').update({ total_tips_cents: nextTotal }).eq('id', reelId);
-  return { ...optimistic, total_tips_cents: nextTotal };
+  // 2026-09 audit (reels RLS tightening): `total_tips_cents` is a displayed aggregate, not the
+  // ledger of record (that's `tips`, already inserted by the time this runs) — but it no longer has
+  // a raw-UPDATE grant either way, so a failed RPC just leaves the clip's running total unchanged
+  // rather than trusting a client-computed amount.
+  return current;
 }
 
 /**

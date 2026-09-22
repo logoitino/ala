@@ -451,7 +451,7 @@ export async function fetchAdminFlags(withTelemetry = false): Promise<AdminFlagR
  * @purpose Dismiss a Highlight flag or take the clip off Highlights ⚡.
  * @param reelId `reels.id`.
  * @param action `dismiss` clears `is_flagged`; `remove` sets `is_removed`.
- * @sideEffects `moderate_flagged_reel` RPC; `reels` UPDATE fallback.
+ * @sideEffects `moderate_flagged_reel` RPC (admin-only; SECURITY DEFINER).
  */
 export async function moderateFlaggedReel(reelId: string, action: 'dismiss' | 'remove'): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
@@ -459,10 +459,11 @@ export async function moderateFlaggedReel(reelId: string, action: 'dismiss' | 'r
     target_reel_id: reelId,
     moderation_action: action,
   });
-  if (!error) return;
-  const patch = action === 'remove' ? { is_removed: true, is_flagged: false } : { is_flagged: false };
-  const { error: updateError } = await supabase.from('reels').update(patch).eq('id', reelId);
-  if (updateError) throw new Error(error.message || updateError.message);
+  // 2026-09 audit (reels RLS tightening): `is_flagged` / `is_removed` are no longer in the
+  // raw-UPDATE column grant on `reels` (see schema.sql) — this RPC is already admin-gated and is
+  // the only path left, so a failed call is a real failure, not something to paper over with a
+  // client UPDATE that would now just get rejected anyway.
+  if (error) throw new Error(error.message);
 }
 
 /**

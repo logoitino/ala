@@ -1,16 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { CardShine } from '@/components/Effects/CardShine';
 import { TipCheckout } from '@/components/TipCheckout';
 import { colors, radii } from '@/constants/theme';
 import { maloAthleteCta, maloAthleteSheetSubtitle } from '@/data/malo';
 import { displayValue, type Player } from '@/data/players';
-import { FOCAL, SPRING_BOUNCE } from '@/theme/motion';
+import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 
 type TipSheetModalProps = {
   player: Player | null;
@@ -20,22 +27,57 @@ type TipSheetModalProps = {
   onTipped?: (amountCents: number) => void;
 };
 
+const SHEET_OFF = 640;
+
 /**
  * @purpose Bottom-sheet Mālo checkout over a blurred feed backdrop. Copy names the athlete who receives the gift (not the uploader).
  * @sideEffects Unmounts `TipCheckout` on dismiss so custom amount / fee state reset.
  */
 export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: TipSheetModalProps) {
   const insets = useSafeAreaInsets();
+  const [open, setOpen] = useState(false);
   const [delivered, setDelivered] = useState(false);
   const [busy, setBusy] = useState(false);
-  const playerName = displayValue(player?.name, 'this athlete');
+  const lastPlayer = useRef<Player | null>(null);
+  if (player) lastPlayer.current = player;
+  const display = player ?? lastPlayer.current;
+  const closingRef = useRef(false);
+  const playerName = displayValue(display?.name, 'this athlete');
   const headerPop = useSharedValue(1);
+  const translateY = useSharedValue(SHEET_OFF);
+  const dim = useSharedValue(0);
 
   useEffect(() => {
-    setDelivered(false);
-    setBusy(false);
-    headerPop.value = 1;
-  }, [player?.id, headerPop]);
+    if (player) {
+      closingRef.current = false;
+      setOpen(true);
+      setDelivered(false);
+      setBusy(false);
+      headerPop.value = 1;
+      translateY.value = SHEET_OFF;
+      dim.value = 0;
+      const frame = requestAnimationFrame(() => {
+        translateY.value = withSpring(0, SPRING_CARD);
+        dim.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+    // Parent cleared `player` without going through our own dismiss() (e.g. swiping to
+    // another reel) — still slide the sheet away instead of snapping it out of existence.
+    if (open && !closingRef.current) {
+      dim.value = withTiming(0, { duration: 160 });
+      translateY.value = withTiming(
+        SHEET_OFF,
+        { duration: 200, easing: Easing.in(Easing.cubic) },
+        (finished) => {
+          if (finished) runOnJS(setOpen)(false);
+        },
+      );
+    }
+    return undefined;
+    // Only the identity of the target player should retrigger this effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player?.id]);
 
   useEffect(() => {
     if (delivered) {
@@ -48,26 +90,41 @@ export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: Ti
     transform: [{ scale: headerPop.value }],
   }));
 
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: dim.value }));
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+
   const dismiss = () => {
-    if (busy) return;
-    setDelivered(false);
-    setBusy(false);
-    onClose();
+    if (busy || !open) return;
+    closingRef.current = true;
+    dim.value = withTiming(0, { duration: 180 });
+    translateY.value = withTiming(
+      SHEET_OFF,
+      { duration: 220, easing: Easing.in(Easing.cubic) },
+      (finished) => {
+        if (finished) {
+          runOnJS(setOpen)(false);
+          runOnJS(onClose)();
+        }
+      },
+    );
   };
 
+  if (!open && !player) return null;
+
   return (
-    <Modal animationType="fade" transparent visible={Boolean(player)} onRequestClose={dismiss}>
+    <Modal animationType="none" transparent visible={open} onRequestClose={dismiss}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.backdropWrap}
       >
       <Pressable haptic="none" style={styles.backdrop} onPress={dismiss}>
-        <BlurView intensity={48} tint="dark" pointerEvents="none" style={styles.blur} />
-        <Pressable
-          haptic="none"
-          style={[styles.sheet, { paddingBottom: 24 + insets.bottom }]}
-          onPress={() => undefined}
+        <Animated.View style={[styles.blur, backdropStyle]}>
+          <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+        </Animated.View>
+        <Animated.View
+          style={[styles.sheet, { paddingBottom: 24 + insets.bottom }, sheetStyle]}
         >
+        <Pressable haptic="none" onPress={() => undefined}>
           <View style={styles.handle} />
           <Animated.View style={[styles.header, delivered && styles.headerDelivered, headerStyle]}>
             {delivered ? (
@@ -78,9 +135,9 @@ export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: Ti
             </Text>
             <Text style={styles.subtitle}>{maloAthleteSheetSubtitle(playerName)}</Text>
           </Animated.View>
-          {player ? (
+          {display ? (
             <TipCheckout
-              player={player}
+              player={display}
               hideHeader
               reelId={reelId}
               onBusyChange={setBusy}
@@ -101,6 +158,7 @@ export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: Ti
             <Text style={styles.closeLabel}>{busy ? 'Payment in progress…' : delivered ? 'Done' : 'Close'}</Text>
           </Pressable>
         </Pressable>
+        </Animated.View>
       </Pressable>
       </KeyboardAvoidingView>
     </Modal>
@@ -117,10 +175,10 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: colors.border,
   },
   blur: {
     ...StyleSheet.absoluteFill,
+    backgroundColor: colors.border,
   },
   sheet: {
     backgroundColor: colors.surface,

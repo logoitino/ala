@@ -211,7 +211,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
         <Pressable haptic="none" onPress={() => undefined}>
           <View style={styles.handle} />
           {display ? (
-            <Animated.View style={contentStyle}>
+            <Animated.View style={[styles.content, contentStyle]}>
               <View style={styles.iconWrap}>
                 <View pointerEvents="none" style={styles.iconGloss} />
                 <Ionicons name={ICONS[display.icon]} size={26} color={FOCAL.emberInk} />
@@ -279,11 +279,17 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
                 </View>
               </View>
 
-              <View style={styles.auraBanner}>
-                <Text style={styles.auraCopy}>Earn +{aura} Aura Points with this order ⚡</Text>
-                <Animated.Text style={[styles.totalCopy, totalStyle]}>
-                  Total {dripPriceLabel(totalCents)}
-                </Animated.Text>
+              <View style={styles.summaryCard}>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Total</Text>
+                  <Animated.Text style={[styles.summaryValue, totalStyle]}>
+                    {dripPriceLabel(totalCents)}
+                  </Animated.Text>
+                </View>
+                <View style={styles.auraRow}>
+                  <Ionicons name="flash" size={13} color={FOCAL.jadeInk} />
+                  <Text style={styles.auraCopy}>+{aura} Aura Points with this order</Text>
+                </View>
               </View>
 
               <AnimatedButton
@@ -361,6 +367,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginBottom: 6,
   },
+  content: {
+    gap: 12,
+  },
   iconWrap: {
     width: 52,
     height: 52,
@@ -369,7 +378,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    marginBottom: 8,
   },
   iconGloss: {
     position: 'absolute',
@@ -491,26 +499,41 @@ const styles = StyleSheet.create({
     minWidth: 24,
     textAlign: 'center',
   },
-  auraBanner: {
+  summaryCard: {
     backgroundColor: colors.accentSoft,
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: radii.md,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 12,
-    gap: 4,
+    gap: 8,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  summaryLabel: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  summaryValue: {
+    color: colors.text,
+    fontSize: 21,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  auraRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
   auraCopy: {
     color: colors.primary,
-    fontSize: 14,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  totalCopy: {
-    color: colors.text,
     fontSize: 13,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: '800',
   },
   buy: {
     minHeight: 52,
