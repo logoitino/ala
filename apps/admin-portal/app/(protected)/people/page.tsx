@@ -1,4 +1,4 @@
-import { Panel, PortalShell, StatCard } from '@/components/PortalShell';
+import { Badge, Panel, PortalShell, StatCard } from '@/components/PortalShell';
 import { fetchPortalPeople, fetchSoftWallOversight } from '@/lib/softWall';
 
 export const dynamic = 'force-dynamic';
@@ -21,50 +21,49 @@ export default async function PeoplePage() {
       </div>
 
       <Panel title="Recent Soft-Wall fans" kicker="Audience">
-        <p className="text-sm leading-6 text-slate-600">
+        <p className="text-sm leading-6 text-[var(--ink-soft)]">
           Guests do not get a profiles row until they sign in. Approve athlete verification and grant admin on Expo{' '}
-          <code className="rounded bg-emerald-50 px-1.5">/admin/people</code> — this desk is live oversight.
+          <code className="rounded bg-[var(--jade-soft)] px-1.5">/admin/people</code> — this desk is live oversight.
         </p>
         {roster.error ? (
-          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+          <p className="rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)]">
             Could not list profiles: {roster.error}. Counts above still work. Grant admin / verify on Expo /admin/people.
           </p>
         ) : null}
         {people.length === 0 && !roster.error ? (
-          <p className="rounded-xl border border-dashed border-emerald-200 px-4 py-6 text-sm text-slate-500">
+          <p className="rounded-xl border border-dashed border-[var(--border)] px-4 py-6 text-sm text-[var(--text-muted)]">
             No profiles yet. Soft-Wall Apple / Google / Magic Link creates the first fan row via{' '}
             <code>handle_new_auth_user</code>.
           </p>
         ) : (
-          <ul className="divide-y divide-emerald-900/5">
-            {people.map((person) => (
-              <li key={person.id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-extrabold">{person.full_name}</p>
-                  <p className="text-sm text-slate-600">
-                    {[
-                      person.username,
-                      person.role,
-                      person.player_id ? 'Claimed roster' : null,
-                      person.verification_status === 'verified' || person.is_verified
-                        ? '⚡ Varsity'
-                        : person.verification_status === 'pending'
-                          ? 'Varsity pending'
-                          : 'Unverified',
-                      person.is_admin ? 'Admin' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
+          <ul className="divide-y divide-[var(--border)]">
+            {people.map((person) => {
+              const verified =
+                person.verification_status === 'verified' || person.is_verified;
+              const pending = person.verification_status === 'pending';
+              return (
+                <li key={person.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-extrabold">{person.full_name}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      {person.username ? <Badge tone="neutral">@{person.username}</Badge> : null}
+                      <Badge tone="neutral">{person.role}</Badge>
+                      {person.player_id ? <Badge tone="ok">Claimed roster</Badge> : null}
+                      <Badge tone={verified ? 'ok' : pending ? 'warn' : 'neutral'}>
+                        {verified ? '⚡ Varsity' : pending ? 'Varsity pending' : 'Unverified'}
+                      </Badge>
+                      {person.is_admin ? <Badge tone="warn">Admin</Badge> : null}
+                    </div>
+                  </div>
+                  <p className="text-xs font-semibold text-[var(--text-muted)]">
+                    {person.created_at ? new Date(person.created_at).toLocaleString() : '—'}
                   </p>
-                </div>
-                <p className="text-xs font-semibold text-slate-500">
-                  {person.created_at ? new Date(person.created_at).toLocaleString() : '—'}
-                </p>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
-        <p className="text-xs font-semibold text-slate-500">
+        <p className="text-xs font-semibold text-[var(--text-muted)]">
           Showing {people.length} newest · {fans.length} look like Soft-Wall fans in this page.
         </p>
       </Panel>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Panel, PortalShell, StatCard } from '@/components/PortalShell';
+import { Badge, Panel, PortalShell, SectionHeading, StatCard } from '@/components/PortalShell';
 import { fetchProfileOversight } from '@/lib/profile';
 import { fetchPortalReports, fetchPortalRevenue, formatUsd } from '@/lib/reports';
 import { fetchSoftWallOversight } from '@/lib/softWall';
@@ -9,7 +9,8 @@ import { isAdminPortalConfigured } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 /**
- * @purpose Next web admin home — money, behavior, Soft-Wall, and Feature shortcuts.
+ * @purpose Next web admin home — a genuine at-a-glance summary with links out to each desk, not a duplicate
+ *   of every desk's full content. Reports/Money/Soft-Wall/Profile own the detail; this page owns the KPIs.
  * @sideEffects Server SELECT / RPC via Soft-Wall, Profile, Reports, and Money loaders.
  */
 export default async function AdminHomePage() {
@@ -21,176 +22,115 @@ export default async function AdminHomePage() {
     fetchPortalRevenue(),
   ]);
 
+  const softWallOn = [oversight.maloLive, oversight.crewLive, oversight.wishlistLive].filter(Boolean).length;
+  const profileFlagsOn = [
+    profile.showCard,
+    profile.showCrew,
+    profile.showStats,
+    profile.showVault,
+  ].filter(Boolean).length;
+
   return (
     <PortalShell active="/">
       {!configured || !oversight.configured ? (
         <Panel title="Connect Supabase" kicker="Setup">
-          <p className="text-sm leading-6 text-slate-600">
-            Copy <code className="rounded bg-emerald-50 px-1.5">apps/admin-portal/.env.example</code> to{' '}
-            <code className="rounded bg-emerald-50 px-1.5">.env.local</code> with the same project URL and anon key as
-            the mobile app. Then reload — this page reads <code>app_runtime_config</code> and Soft-Wall fan profiles.
+          <p className="text-sm leading-6 text-[var(--ink-soft)]">
+            Copy <code className="rounded bg-[var(--jade-soft)] px-1.5">apps/admin-portal/.env.example</code> to{' '}
+            <code className="rounded bg-[var(--jade-soft)] px-1.5">.env.local</code> with the same project URL and
+            anon key as the mobile app. Then reload — this page reads <code>app_runtime_config</code> and Soft-Wall
+            fan profiles.
           </p>
         </Panel>
       ) : null}
 
+      <SectionHeading title="This week" />
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Gross volume"
           value={formatUsd(revenue.gross_volume_cents)}
-          hint="Money desk · get_company_revenue_summary"
+          hint="All revenue streams"
           tone={revenue.gross_volume_cents ? 'ok' : 'neutral'}
         />
         <StatCard
           label="Mālo · 7d"
           value={formatUsd(reports.money.malo_cents_7d ?? 0)}
-          hint="Reports · tips window"
+          hint="Tips window"
           tone={reports.money.malo_cents_7d ? 'ok' : 'neutral'}
         />
         <StatCard
           label="Sessions · 24h"
           value={(reports.usage.sessions_24h ?? 0).toLocaleString()}
-          hint="Reports · tab behavior"
+          hint="Tab behavior"
           tone={reports.usage.sessions_24h ? 'ok' : 'neutral'}
         />
         <StatCard
           label="Fan profiles"
           value={String(oversight.fanProfiles)}
-          hint="Soft-Wall sign-ins with a profiles row"
+          hint={`+${oversight.fansLast7d} this week`}
           tone="ok"
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Panel title="Browse-first Soft Wall" kicker="Auth">
-          <p className="text-sm leading-6 text-slate-600">
-            Guests open Highlights, trading cards, and Locker Room without an account. These three actions open
-            SoftWallModal, then resume after Apple / Google / Magic Link.
-          </p>
-          <ul className="space-y-3">
-            {oversight.softWallGates.map((gate) => {
-              const live =
-                gate.id === 'malo'
-                  ? oversight.maloLive
-                  : gate.id === 'crew'
-                    ? oversight.crewLive
-                    : oversight.wishlistLive;
-              return (
-                <li
-                  key={gate.id}
-                  className="rounded-xl border border-emerald-900/10 bg-[var(--canvas)] px-4 py-3"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-extrabold">{gate.label}</p>
-                    <span
-                      className={
-                        live
-                          ? 'rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-[var(--jade)]'
-                          : 'rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800'
-                      }
-                    >
-                      {live ? 'Control live' : 'Control paused'}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-slate-600">{gate.hint}</p>
-                  <p className="mt-1 text-xs font-semibold text-slate-500">
-                    {gate.fanSurface} · Expo {gate.adminDesk}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-          <Link href="/auth" className="inline-flex text-sm font-extrabold text-[var(--jade)]">
-            Open Soft-Wall desk →
-          </Link>
-        </Panel>
-
-        <Panel title="Providers + publish" kicker="Ops">
-          <ul className="space-y-2 text-sm text-slate-700">
-            {oversight.authProviders.map((provider) => (
-              <li key={provider.id} className="rounded-xl border border-emerald-900/10 px-4 py-3">
-                <p className="font-bold">{provider.label}</p>
-                <p className="text-xs text-slate-500">Redirect {provider.redirect}</p>
-              </li>
-            ))}
-          </ul>
-          <p className="text-sm leading-6 text-slate-600">
-            Last Publish to app:{' '}
-            {oversight.publishedAt ? new Date(oversight.publishedAt).toLocaleString() : 'Never / unknown'}. Toggle Soft-Wall
-            related flags on the Features desk, then Publish.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/reports"
-              className="rounded-full bg-[var(--jade)] px-4 py-2 text-sm font-extrabold text-white"
-            >
-              Reports
-            </Link>
-            <Link
-              href="/money"
-              className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
-            >
-              Money
-            </Link>
-            <Link
-              href="/features"
-              className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
-            >
-              Features
-            </Link>
-            <Link
-              href="/profile"
-              className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
-            >
-              Profile
-            </Link>
-            <Link
-              href="/people"
-              className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
-            >
-              People
-            </Link>
+      <SectionHeading title="System status" hint="Full detail on each desk" />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Link href="/auth" className="block rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--jade)]" style={{ boxShadow: 'var(--shadow-card)' }}>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-extrabold">Soft-Wall gates</p>
+            <Badge tone={softWallOn === 3 ? 'ok' : 'warn'}>{softWallOn}/3 live</Badge>
           </div>
-        </Panel>
+          <p className="mt-2 text-xs text-[var(--text-muted)]">Mālo · Crew · Chip In auth prompts</p>
+          <p className="mt-3 text-sm font-extrabold text-[var(--jade)]">Open Soft-Wall desk →</p>
+        </Link>
+        <Link href="/profile" className="block rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--jade)]" style={{ boxShadow: 'var(--shadow-card)' }}>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-extrabold">Profile chrome</p>
+            <Badge tone={profileFlagsOn >= 3 ? 'ok' : 'warn'}>{profileFlagsOn}/4 on</Badge>
+          </div>
+          <p className="mt-2 text-xs text-[var(--text-muted)]">
+            {oversight.fanProfiles ? `${profile.claimedAthletes} claimed athletes` : 'No profiles yet'}
+          </p>
+          <p className="mt-3 text-sm font-extrabold text-[var(--jade)]">Open Profile desk →</p>
+        </Link>
+        <Link href="/features" className="block rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--jade)]" style={{ boxShadow: 'var(--shadow-card)' }}>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-extrabold">Last publish</p>
+            <Badge tone="neutral">Runtime</Badge>
+          </div>
+          <p className="mt-2 text-xs text-[var(--text-muted)]">
+            {oversight.publishedAt ? new Date(oversight.publishedAt).toLocaleString() : 'Never / unknown'}
+          </p>
+          <p className="mt-3 text-sm font-extrabold text-[var(--jade)]">Open Features desk →</p>
+        </Link>
       </div>
 
-      <div className="mt-6">
-        <Panel title="Clean Profile chrome" kicker="Look · Profile">
-        <p className="text-sm leading-6 text-slate-600">
-          Own Profile and a tapped athlete share one sheet. Hamburger overlays the hub; back overlays `/user/[id]`.
-          Flip Aura card gated by <code className="rounded bg-emerald-50 px-1.5">profile.showCard</code>. Slim Crew
-          strip, Highlights collage, then Active Team Roster (Claimed ={' '}
-          <code className="rounded bg-emerald-50 px-1.5">profiles.player_id</code>
-          ). Draft on Features · Profile chrome or Expo Look, then Publish.
-        </p>
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-8">
+        <SectionHeading title="Quick links" />
+        <Panel title="Where things live" kicker="Ops">
+          <p className="text-sm leading-6 text-[var(--ink-soft)]">
+            This portal is read-only oversight — Reports, Money, Features, and People all display live Supabase
+            data with no edit affordance. Every change, from Features flags to Games to Catalogs, is made in Expo{' '}
+            <code className="rounded bg-[var(--jade-soft)] px-1.5 py-0.5 text-[var(--jade)]">/admin</code>, which
+            this portal reads from — including the same{' '}
+            <code className="rounded bg-[var(--jade-soft)] px-1.5 py-0.5 text-[var(--jade)]">app_runtime_config</code>{' '}
+            Features writes to.
+          </p>
+          <div className="flex flex-wrap gap-2 pt-1">
             {[
-              { label: 'Flip Aura card', on: profile.showCard },
-              { label: 'Crew strip', on: profile.showCrew },
-              { label: 'Stats tab', on: profile.showStats },
-              { label: 'Vault tab', on: profile.showVault },
-              { label: 'Actions on top', on: profile.actionsOnTop },
-              { label: 'Open on Stats', on: profile.statsFirst },
-            ].map((row) => (
-              <li
-                key={row.label}
-                className="flex items-center justify-between rounded-xl border border-emerald-900/10 bg-[var(--canvas)] px-4 py-3 text-sm"
+              { href: '/reports', label: 'Reports' },
+              { href: '/money', label: 'Money' },
+              { href: '/features', label: 'Features' },
+              { href: '/profile', label: 'Profile' },
+              { href: '/people', label: 'People' },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-extrabold text-[var(--ink)] hover:border-[var(--jade)]"
               >
-                <span className="font-bold">{row.label}</span>
-                <span
-                  className={
-                    row.on
-                      ? 'rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-[var(--jade)]'
-                      : 'rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800'
-                  }
-                >
-                  {row.on ? 'On' : 'Off'}
-                </span>
-              </li>
+                {item.label}
+              </Link>
             ))}
-          </ul>
-          <Link href="/profile" className="mt-3 inline-flex text-sm font-extrabold text-[var(--jade)]">
-            Open Profile desk →
-          </Link>
+          </div>
         </Panel>
       </div>
     </PortalShell>

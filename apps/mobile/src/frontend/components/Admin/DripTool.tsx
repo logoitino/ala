@@ -5,6 +5,7 @@ import {
   AdminBtn,
   AdminEmpty,
   AdminField,
+  AdminFieldRow,
   AdminNotice,
   AdminPage,
   AdminPanel,
@@ -129,8 +130,10 @@ export function DripTool() {
         onChange={setFilter}
       />
       <AdminPanel title={form.id ? 'Edit item' : 'New item'}>
-        <AdminField label="Name" value={form.name} onChangeText={(name) => setForm((c) => ({ ...c, name }))} placeholder="Hawks Booster Hoodie" />
-        <AdminField label="Price" value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder="54.00" />
+        <AdminFieldRow>
+          <AdminField label="Name" value={form.name} onChangeText={(name) => setForm((c) => ({ ...c, name }))} placeholder="Hawks Booster Hoodie" />
+          <AdminField label="Price" value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder="54.00" />
+        </AdminFieldRow>
         <AdminPills
           label="Category"
           items={DRIP_FILTERS.filter((item) => item.id !== 'all').map((item) => ({

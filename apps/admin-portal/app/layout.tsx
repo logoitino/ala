@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: "Tapua'i Admin Portal",
-  description: 'Web admin for Tapua\'i — Reports, Money, Soft-Wall, Features.',
+  description: 'Read-only oversight for Tapua\'i — Reports, Money, Soft-Wall, Features, People. All edits happen in Expo /admin.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

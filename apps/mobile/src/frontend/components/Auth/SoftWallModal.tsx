@@ -267,24 +267,34 @@ export function SoftWallModal() {
                 </AnimatedButton>
               </View>
 
-              <View style={styles.demoGroup}>
-                <Text style={styles.demoHint}>
-                  Just exploring? Continue as Demo Fan — {DEMO_FAN_EMAIL}
-                </Text>
-                <AnimatedButton
-                  accessibilityLabel="Continue as Demo Fan"
-                  disabled={Boolean(busy)}
-                  haptic="medium"
-                  onPress={() => void run('demo', signInWithDemoAccount)}
-                  contentStyle={[styles.providerBtn, styles.demoBtn, busy && styles.disabled]}
-                >
-                  {busy === 'demo' ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.demoLabel}>Continue as Demo Fan</Text>
-                  )}
-                </AnimatedButton>
-              </View>
+              {/* 2026-09 audit (Round 11 sweep): this signs into (or, on first use, auto-creates)
+                  a single shared account with a hardcoded password checked into the repo and
+                  .env.example — fine for internal QA on a throwaway project, but with no gate at
+                  all this button shipped to every real user in a production build too, meaning
+                  anyone who reads this open codebase could sign into a real, shared fan session in
+                  the live app. `__DEV__` is false in an `eas build --profile production` bundle
+                  (still true for development/preview profiles and Expo Go), which matches the
+                  actual intent — QA/dogfooding convenience, never a real end-user sign-in option. */}
+              {__DEV__ ? (
+                <View style={styles.demoGroup}>
+                  <Text style={styles.demoHint}>
+                    Just exploring? Continue as Demo Fan — {DEMO_FAN_EMAIL}
+                  </Text>
+                  <AnimatedButton
+                    accessibilityLabel="Continue as Demo Fan"
+                    disabled={Boolean(busy)}
+                    haptic="medium"
+                    onPress={() => void run('demo', signInWithDemoAccount)}
+                    contentStyle={[styles.providerBtn, styles.demoBtn, busy && styles.disabled]}
+                  >
+                    {busy === 'demo' ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.demoLabel}>Continue as Demo Fan</Text>
+                    )}
+                  </AnimatedButton>
+                </View>
+              ) : null}
 
               {message ? <Text style={styles.message}>{message}</Text> : null}
               {error ? <Text style={styles.error}>{error}</Text> : null}

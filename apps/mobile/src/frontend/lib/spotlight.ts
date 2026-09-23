@@ -238,7 +238,8 @@ async function attachReelVideos(awards: SpotlightAward[]): Promise<SpotlightAwar
   ];
   if (ids.length === 0 || !isSupabaseConfigured) return awards;
 
-  const { data, error } = await supabase.from('reels').select('id, video_url, player_id').in('id', ids);
+  // 2026-09 audit (paywall bypass): read from `reels_feed`, not the base table — see lib/reels.ts.
+  const { data, error } = await supabase.from('reels_feed').select('id, video_url, player_id').in('id', ids);
   if (error || !Array.isArray(data)) return awards;
   const clips = new Map<string, { video_url: string | null; player_id: string | null }>();
   for (const row of data) {

@@ -6,6 +6,7 @@ import {
   AdminBtn,
   AdminEmpty,
   AdminField,
+  AdminFieldRow,
   AdminNotice,
   AdminPage,
   AdminPanel,
@@ -200,8 +201,10 @@ export function AthletesTool() {
       saveMode="instant"
     >
       <AdminPanel title={form.id ? 'Edit athlete' : 'New athlete'}>
-        <AdminField label="Name" value={form.name} onChangeText={(name) => setForm((c) => ({ ...c, name }))} placeholder="Marcus Rivera" />
-        <AdminField label="Jersey" value={form.jersey_number} onChangeText={(jersey_number) => setForm((c) => ({ ...c, jersey_number }))} keyboardType="number-pad" />
+        <AdminFieldRow>
+          <AdminField label="Name" value={form.name} onChangeText={(name) => setForm((c) => ({ ...c, name }))} placeholder="Marcus Rivera" />
+          <AdminField label="Jersey" value={form.jersey_number} onChangeText={(jersey_number) => setForm((c) => ({ ...c, jersey_number }))} keyboardType="number-pad" />
+        </AdminFieldRow>
         <AdminPills
           label="Sport"
           items={configs
@@ -218,19 +221,23 @@ export function AthletesTool() {
             onChange={(position) => setForm((c) => ({ ...c, position }))}
           />
         ) : null}
-        <AdminField label="Position (full)" value={form.position} onChangeText={(position) => setForm((c) => ({ ...c, position }))} placeholder="Quarterback" />
-        <AdminSuggest
-          label="School"
-          value={form.school_name}
-          onChangeText={(school_name) => setForm((c) => ({ ...c, school_name }))}
-          options={schoolOptions}
-          placeholder="ALA Hawks / Westlake High"
-          onPick={(option) => setForm((c) => ({ ...c, school_name: option.title }))}
-        />
-        <AdminField label="Height" value={form.height} onChangeText={(height) => setForm((c) => ({ ...c, height }))} placeholder={`6'2"`} />
-        <AdminField label="Weight" value={form.weight} onChangeText={(weight) => setForm((c) => ({ ...c, weight }))} placeholder="192 lb" />
-        <AdminField label="40-yard" value={form.forty_yard} onChangeText={(forty_yard) => setForm((c) => ({ ...c, forty_yard }))} placeholder="4.58s" />
-        <AdminField label="Vertical" value={form.vertical_jump} onChangeText={(vertical_jump) => setForm((c) => ({ ...c, vertical_jump }))} placeholder="34 in" />
+        <AdminFieldRow>
+          <AdminField label="Position (full)" value={form.position} onChangeText={(position) => setForm((c) => ({ ...c, position }))} placeholder="Quarterback" />
+          <AdminSuggest
+            label="School"
+            value={form.school_name}
+            onChangeText={(school_name) => setForm((c) => ({ ...c, school_name }))}
+            options={schoolOptions}
+            placeholder="ALA Hawks / Westlake High"
+            onPick={(option) => setForm((c) => ({ ...c, school_name: option.title }))}
+          />
+        </AdminFieldRow>
+        <AdminFieldRow>
+          <AdminField label="Height" value={form.height} onChangeText={(height) => setForm((c) => ({ ...c, height }))} placeholder={`6'2"`} />
+          <AdminField label="Weight" value={form.weight} onChangeText={(weight) => setForm((c) => ({ ...c, weight }))} placeholder="192 lb" />
+          <AdminField label="40-yard" value={form.forty_yard} onChangeText={(forty_yard) => setForm((c) => ({ ...c, forty_yard }))} placeholder="4.58s" />
+          <AdminField label="Vertical" value={form.vertical_jump} onChangeText={(vertical_jump) => setForm((c) => ({ ...c, vertical_jump }))} placeholder="34 in" />
+        </AdminFieldRow>
         <AdminBtn label={busy ? 'Saving…' : 'Save athlete'} kind="primary" disabled={busy} onPress={() => void save()} />
         {form.id ? <AdminBtn label="Clear form" onPress={() => setForm(empty)} /> : null}
         <AdminNotice text={message} />

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Panel, PortalShell, StatCard } from '@/components/PortalShell';
+import { Panel, PortalShell, SectionHeading, StatCard } from '@/components/PortalShell';
 import { fetchPortalRevenue, formatUsd } from '@/lib/reports';
 
 export const dynamic = 'force-dynamic';
@@ -33,32 +33,33 @@ export default async function MoneyPage() {
 
       {revenue.error ? (
         <Panel title="Could not load money" kicker="RPC">
-          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+          <p className="rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)]">
             {revenue.error}. Needs <code>get_company_revenue_summary</code> (
             <code>supabase/company_revenue.sql</code>).
           </p>
         </Panel>
       ) : null}
 
-      <p className="mb-6 text-sm text-slate-600">
-        Same ledger Expo <code className="rounded bg-emerald-50 px-1.5">/admin/money</code> reads. Behavior windows live
-        on <Link href="/reports" className="font-extrabold text-[var(--jade)]">Reports →</Link>
+      <p className="mb-6 text-sm text-[var(--text-muted)]">
+        Same ledger Expo <code className="rounded bg-[var(--jade-soft)] px-1.5">/admin/money</code> reads. Behavior
+        windows live on <Link href="/reports" className="font-extrabold text-[var(--jade)]">Reports →</Link>
       </p>
 
+      <SectionHeading title="Revenue split" hint="Per stream, gross → net → payout" />
       <Panel title="Streams" kicker="Split">
         {revenue.streams.length === 0 ? (
-          <p className="text-sm text-slate-500">No stream rows yet. Mālo / booster / merch hit the ledger after checkout.</p>
+          <p className="text-sm text-[var(--text-muted)]">No stream rows yet. Mālo / booster / merch hit the ledger after checkout.</p>
         ) : (
-          <ul className="divide-y divide-emerald-900/5">
+          <ul className="divide-y divide-[var(--border)]">
             {revenue.streams.map((stream) => (
               <li key={stream.source} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-extrabold">{stream.label}</p>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-[var(--ink-soft)]">
                     {stream.split} · payee {stream.payee}
                   </p>
                 </div>
-                <p className="text-sm font-semibold text-slate-700">
+                <p className="text-sm font-semibold text-[var(--ink-soft)]">
                   Gross {formatUsd(stream.gross_cents)} · Net {formatUsd(stream.platform_cents)} · Out{' '}
                   {formatUsd(stream.payout_cents)}
                 </p>
@@ -69,18 +70,19 @@ export default async function MoneyPage() {
       </Panel>
 
       <div className="mt-6">
+        <SectionHeading title="Recent activity" />
         <Panel title="Recent ledger" kicker="company_revenue_logs">
           {revenue.recent.length === 0 ? (
-            <p className="text-sm text-slate-500">No log rows yet.</p>
+            <p className="text-sm text-[var(--text-muted)]">No log rows yet.</p>
           ) : (
-            <ul className="divide-y divide-emerald-900/5">
+            <ul className="divide-y divide-[var(--border)]">
               {revenue.recent.map((row) => (
                 <li key={row.id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-extrabold">{row.label}</p>
-                    <p className="text-sm text-slate-600">{row.source}</p>
+                    <p className="text-sm text-[var(--ink-soft)]">{row.source}</p>
                   </div>
-                  <p className="text-xs font-semibold text-slate-500">
+                  <p className="text-xs font-semibold text-[var(--text-muted)]">
                     {formatUsd(row.gross_cents)}
                     {row.created_at ? ` · ${new Date(row.created_at).toLocaleString()}` : ''}
                   </p>

@@ -18,6 +18,14 @@ function payoutJson(
  * @param request JSON `{ amountCents, description }` plus `Authorization: Bearer <access_token>`.
  * @returns `{ status, message, id? }` — transfers when Stripe + linked payouts are ready; queues only if `STRIPE_SECRET_KEY` is missing.
  * @sideEffects `supabase.auth.getUser`; `profiles` SELECT (service role or user-scoped); Stripe Transfer when configured.
+ * 2026-09 audit, critical, not yet resolved: there is no ledger anywhere (this route, `queueCustodialPayout`,
+ * or a table) that tracks how much a given profile has actually earned vs. already been paid — `amountCents`
+ * was trusted verbatim from the client and handed straight to `stripe.transfers.create`. Any authenticated
+ * user who completes Stripe Express onboarding (a normal athlete/parent flow, not an admin action) could
+ * request an arbitrary payout amount and have it wired out of the platform's own Stripe balance. Tips never
+ * use Stripe destination charges (`createPaymentIntent.ts` has no `transfer_data`), so this endpoint is the
+ * *only* path money ever leaves the platform balance — closing it here is not optional. Blocking real
+ * transfers below until a real available-balance check is designed and this comment is removed.
  */
 export async function createPayoutHandler(request: Request): Promise<Response> {
   try {
@@ -66,6 +74,19 @@ export async function createPayoutHandler(request: Request): Promise<Response> {
           400,
         );
       }
+      // 2026-09 audit, critical: no balance ledger exists yet to check `amountCents` against what
+      // this profile has actually earned. Refusing every real transfer here (not just clamping the
+      // amount) until that ledger is designed — this is the only path money leaves the platform's
+      // Stripe balance, so trusting a client-supplied amount is a direct fund-theft vector, not a
+      // vanity-metric one. Contact an admin for a manual disbursement in the meantime.
+      return payoutJson(
+        {
+          status: 'error',
+          message:
+            'Self-service payouts are temporarily disabled while balance verification is built. Contact an admin for a manual disbursement.',
+        },
+        503,
+      );
     }
 
     const result = await queueCustodialPayout({

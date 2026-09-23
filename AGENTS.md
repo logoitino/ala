@@ -11,7 +11,7 @@ This repo is a **pnpm monorepo**.
 | Package | Path |
 | --- | --- |
 | `@tapuai/mobile` | `apps/mobile/` — Expo Router SDK 57 fan app + Expo `/admin` |
-| `@tapuai/admin-portal` | `apps/admin-portal/` — Next web admin (Overview / Reports / Money / Soft-Wall / Profile / Features / People); Features publish `app_runtime_config`; games/drip/catalogs still Expo `/admin` |
+| `@tapuai/admin-portal` | `apps/admin-portal/` — Next web admin, **read-only oversight** (Overview / Reports / Money / Soft-Wall / Profile / Features / People); every write — Features/Look flags, Games, Drip, Catalogs, everything — happens only in Expo `/admin`, which this portal reads from (including `app_runtime_config`) |
 | `@tapuai/shared-types` | `packages/shared-types/` — Profile / ActionStats / Spotlight / Soft-Wall + Profile chrome / RPC shapes |
 
 Root keeps `supabase/`, `docs/`, `scripts/`, `AGENTS.md`, `DOCUMENTATION.md`. Playground `my-app/` is outside the workspace.

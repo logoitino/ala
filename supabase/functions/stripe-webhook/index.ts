@@ -99,18 +99,25 @@ Deno.serve(async (req) => {
       const metadata = intent.metadata ?? {};
       const tapuaiUserId = typeof metadata.tapuai_user_id === 'string' ? metadata.tapuai_user_id : null;
 
-      // Idempotency: Stripe retries webhooks, and the same PaymentIntent can legitimately fire
-      // `succeeded` more than once. Always key any ledger write off `intent.id`, never just "we
-      // got an event", so a retry cannot double-credit Aura or double-insert a tip.
-      const alreadyProcessed = await admin
-        .from('telemetry_logs')
-        .select('id')
-        .eq('event_type', 'stripe_webhook_payment_succeeded')
-        .contains('payload', { payment_intent_id: intent.id })
+      // Idempotency: Stripe retries webhooks, and can legitimately deliver the same event more
+      // than once, including near-simultaneously. A SELECT-then-INSERT check is NOT atomic — two
+      // concurrent deliveries could both pass a "already processed?" SELECT before either finished
+      // writing, double-crediting Aura / double-inserting a tip. `stripe_webhook_events` has
+      // `payment_intent_id` as its PRIMARY KEY, so this INSERT is the atomic claim: only one
+      // concurrent invocation can win it, and Postgres's own uniqueness enforcement (not a
+      // check we run ourselves) is what makes that true.
+      const claim = await admin
+        .from('stripe_webhook_events')
+        .insert({ payment_intent_id: intent.id })
+        .select('payment_intent_id')
         .maybeSingle();
 
-      if (alreadyProcessed.data?.id) {
-        return json({ received: true, duplicate: true });
+      if (claim.error) {
+        if (claim.error.code === '23505') {
+          // unique_violation: another delivery for this same PaymentIntent already claimed it.
+          return json({ received: true, duplicate: true });
+        }
+        throw new Error(claim.error.message);
       }
 
       const richPlayerId = typeof metadata.tip_player_id === 'string' ? metadata.tip_player_id : null;

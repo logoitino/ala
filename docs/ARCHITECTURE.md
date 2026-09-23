@@ -7,7 +7,7 @@ System overview for the pnpm monorepo. Schema detail: [SCHEMA.md](SCHEMA.md). Pr
 | Package | Path | Role |
 | --- | --- | --- |
 | `@tapuai/mobile` | `apps/mobile/` | Expo Router SDK 57 fan app + production Expo `/admin` control plane |
-| `@tapuai/admin-portal` | `apps/admin-portal/` | Next.js web admin (Overview / Reports / Money / Soft-Wall / Profile / Features / People). Reports + Money use the same RPCs as Expo. Features flags publish `app_runtime_config`. Games, Drip SKUs, catalogs still edit in Expo `/admin` |
+| `@tapuai/admin-portal` | `apps/admin-portal/` | Next.js web admin, **read-only oversight** (Overview / Reports / Money / Soft-Wall / Profile / Features / People). Reports + Money use the same RPCs as Expo; Features/Profile display `app_runtime_config` with no toggle. Every write happens only in Expo `/admin` |
 | `@tapuai/shared-types` | `packages/shared-types/` | Shared TypeScript contracts (Profile / Soft-Wall gates / Profile chrome / Spotlight / RPC shapes) |
 | SQL / Edge | `supabase/` | Migrations, Edge Functions, seed SQL (shared backend) |
 

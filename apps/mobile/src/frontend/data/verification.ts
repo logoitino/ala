@@ -35,19 +35,12 @@ export const TEAM_CODE_SPORTS: Record<string, string> = {
   TEN: 'Tennis',
 };
 
-/** Demo `schools_and_teams.team_code` → catalog id (Expo Go / offline). */
-export const DEMO_TEAM_CODES: Record<string, string> = {
-  'WSTLK-2026': 'a1000000-0000-4000-8000-000000000001',
-  'LPKHS-2026': 'a1000000-0000-4000-8000-000000000002',
-  'ALAHS-2026': 'a1000000-0000-4000-8000-000000000003',
-  'SKYRG-2026': 'a1000000-0000-4000-8000-000000000004',
-  'AFORK-2026': 'a1000000-0000-4000-8000-000000000005',
-  'TIMP-2026': 'a1000000-0000-4000-8000-000000000006',
-  'BYU-2026': 'a1000000-0000-4000-8000-000000000011',
-  'UTAH-2026': 'a1000000-0000-4000-8000-000000000012',
-  'USU-2026': 'a1000000-0000-4000-8000-000000000013',
-  'WEBER-2026': 'a1000000-0000-4000-8000-000000000014',
-};
+// 2026-09 audit (Round 13 sweep, critical): removed `DEMO_TEAM_CODES` — it hardcoded every real
+// school's `redeem_team_code` secret here, in a file bundled into the shipped app itself. Unlike
+// the git-history exposure fixed alongside this, that meant the codes were extractable from ANY
+// installed copy of the app (unpacking the JS bundle), independent of repo access entirely. It was
+// also used as a fallback that could grant real `profiles.is_verified = true` — see
+// `lib/verification.ts`'s `redeemTeamCode` for the full explanation. The RPC is the only path now.
 
 export type ParsedTeamCode = {
   normalized: string;

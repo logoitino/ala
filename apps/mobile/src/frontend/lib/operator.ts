@@ -162,6 +162,10 @@ function unwrapBroadcastBody(raw: unknown, depth = 0): Record<string, unknown> |
  * @param gameId Active `games.id`.
  * @param payload `{ type, timestamp, team }` — e.g. type `Big Play`.
  * @sideEffects Supabase Realtime Broadcast (WebSocket, HTTP fallback if the socket is not yet joined).
+ *   `private: true` routes this send through the `realtime.messages` RLS policies in schema.sql, which
+ *   only allow an operator/admin (or anon on a still-unclaimed game, matching the `game_events` INSERT
+ *   policy) to publish on a `game_events_%` topic — otherwise any anon-key holder could broadcast fake
+ *   live events straight to fans with no server-side check at all.
  */
 export async function sendGameEventBroadcast(
   gameId: string,
@@ -169,7 +173,7 @@ export async function sendGameEventBroadcast(
 ): Promise<void> {
   if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
   const channel = supabase.channel(gameEventsChannelName(gameId), {
-    config: { broadcast: { ack: true } },
+    config: { broadcast: { ack: true }, private: true },
   });
   try {
     await new Promise<void>((resolve) => {

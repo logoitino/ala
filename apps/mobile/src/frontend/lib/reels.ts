@@ -144,7 +144,10 @@ export function formatReelDeepLink(reelId: string, playerId?: string | null): st
 }
 
 async function selectReels(columns: string, playerId?: string) {
-  const ordered = supabase.from('reels').select(columns).order('created_at', { ascending: false });
+  // 2026-09 audit (paywall bypass): reads go through `reels_feed`, not the base `reels` table —
+  // the view nulls `video_url` for Vault/Exclusive/Flash-Unlock clips the caller isn't entitled to
+  // instead of trusting the `is_vault_only`/`is_exclusive` filters below to double as access control.
+  const ordered = supabase.from('reels_feed').select(columns).order('created_at', { ascending: false });
   return playerId ? ordered.eq('player_id', playerId) : ordered;
 }
 

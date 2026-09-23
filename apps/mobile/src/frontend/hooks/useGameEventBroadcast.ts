@@ -37,6 +37,10 @@ function dispatchGameEvent(topic: string, event: GameEventBroadcastPayload) {
 
 /**
  * @purpose Share one Realtime channel per `game_events_{id}` so paging Reels never `.on()` after `subscribe()`.
+ * @sideEffects `private: true` opts this channel into Realtime Authorization — Supabase checks the
+ *   `realtime.messages` RLS policies (schema.sql) before delivering a broadcast on this topic. Without
+ *   it, broadcast sends bypass RLS entirely (they are not table writes), so anyone holding the public
+ *   anon key could inject fake sideline events into every fan's live Reel overlay for any game id.
  */
 function watchGameEventChannel(gameId: string, fan: GameEventFan): () => void {
   const topic = gameEventsChannelName(gameId);
@@ -45,7 +49,7 @@ function watchGameEventChannel(gameId: string, fan: GameEventFan): () => void {
     fans = new Set();
     fansByTopic.set(topic, fans);
     const channel = supabase
-      .channel(topic)
+      .channel(topic, { config: { private: true } })
       .on('broadcast', { event: '*' }, (message) => {
         const parsed = parseGameEventBroadcast(message);
         if (parsed) dispatchGameEvent(topic, parsed);

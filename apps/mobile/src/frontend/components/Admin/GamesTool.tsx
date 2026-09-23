@@ -5,6 +5,7 @@ import {
   AdminBtn,
   AdminEmpty,
   AdminField,
+  AdminFieldRow,
   AdminNotice,
   AdminPage,
   AdminPanel,
@@ -161,24 +162,28 @@ export function GamesTool() {
         onChange={setFilter}
       />
       <AdminPanel title={form.id ? 'Edit match' : 'New match'}>
-        <AdminSuggest
-          label="Home school"
-          value={form.home_school}
-          onChangeText={(home_school) => setForm((c) => ({ ...c, home_school, home_team: c.home_team || home_school }))}
-          options={schoolOptions}
-          placeholder="Westlake High"
-          onPick={(option) => pickSchool('home', option)}
-        />
-        <AdminSuggest
-          label="Away school"
-          value={form.away_school}
-          onChangeText={(away_school) => setForm((c) => ({ ...c, away_school, away_team: c.away_team || away_school }))}
-          options={schoolOptions}
-          placeholder="Lone Peak High"
-          onPick={(option) => pickSchool('away', option)}
-        />
-        <AdminField label="Home name on the board" value={form.home_team} onChangeText={(home_team) => setForm((c) => ({ ...c, home_team }))} placeholder="Thunder" />
-        <AdminField label="Away name on the board" value={form.away_team} onChangeText={(away_team) => setForm((c) => ({ ...c, away_team }))} placeholder="Knights" />
+        <AdminFieldRow>
+          <AdminSuggest
+            label="Home school"
+            value={form.home_school}
+            onChangeText={(home_school) => setForm((c) => ({ ...c, home_school, home_team: c.home_team || home_school }))}
+            options={schoolOptions}
+            placeholder="Westlake High"
+            onPick={(option) => pickSchool('home', option)}
+          />
+          <AdminSuggest
+            label="Away school"
+            value={form.away_school}
+            onChangeText={(away_school) => setForm((c) => ({ ...c, away_school, away_team: c.away_team || away_school }))}
+            options={schoolOptions}
+            placeholder="Lone Peak High"
+            onPick={(option) => pickSchool('away', option)}
+          />
+        </AdminFieldRow>
+        <AdminFieldRow>
+          <AdminField label="Home name on the board" value={form.home_team} onChangeText={(home_team) => setForm((c) => ({ ...c, home_team }))} placeholder="Thunder" />
+          <AdminField label="Away name on the board" value={form.away_team} onChangeText={(away_team) => setForm((c) => ({ ...c, away_team }))} placeholder="Knights" />
+        </AdminFieldRow>
         <AdminField label="Venue" value={form.venue} onChangeText={(venue) => setForm((c) => ({ ...c, venue }))} placeholder="Westlake Stadium" />
         <AdminPills
           label="Sport"

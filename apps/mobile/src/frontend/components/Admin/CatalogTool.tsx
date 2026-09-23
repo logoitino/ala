@@ -5,6 +5,7 @@ import {
   AdminBtn,
   AdminEmpty,
   AdminField,
+  AdminFieldRow,
   AdminNotice,
   AdminPage,
   AdminPanel,
@@ -79,15 +80,17 @@ function MoneyPane({
         placeholder="5, 10, 25"
         keyboardType="numbers-and-punctuation"
       />
-      <AdminField label="Cover-fee dollars" value={fee} onChangeText={setFee} placeholder="0.50" keyboardType="decimal-pad" />
-      <AdminField
-        label="Exclusive pass dollars"
-        value={exclusive}
-        onChangeText={setExclusive}
-        placeholder="4.99"
-        keyboardType="decimal-pad"
-      />
-      <AdminField label="Exclusive Aura grant" value={aura} onChangeText={setAura} placeholder="100" keyboardType="number-pad" />
+      <AdminFieldRow>
+        <AdminField label="Cover-fee dollars" value={fee} onChangeText={setFee} placeholder="0.50" keyboardType="decimal-pad" />
+        <AdminField
+          label="Exclusive pass dollars"
+          value={exclusive}
+          onChangeText={setExclusive}
+          placeholder="4.99"
+          keyboardType="decimal-pad"
+        />
+        <AdminField label="Exclusive Aura grant" value={aura} onChangeText={setAura} placeholder="100" keyboardType="number-pad" />
+      </AdminFieldRow>
       <AdminBtn
         label="Save prices"
         kind="primary"

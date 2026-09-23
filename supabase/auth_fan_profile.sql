@@ -12,7 +12,7 @@ set search_path = public
 as $$
 begin
   insert into public.profiles (
-    user_id, full_name, role, roles, is_verified, spirit_points, active_role, age_confirmed_13_plus
+    user_id, full_name, role, roles, is_verified, aura_points, active_role, age_confirmed_13_plus
   )
   values (
     new.id,

@@ -6,6 +6,7 @@ import {
   AdminBtn,
   AdminEmpty,
   AdminField,
+  AdminFieldRow,
   AdminMetrics,
   AdminNotice,
   AdminPage,
@@ -172,46 +173,52 @@ export function WishlistTool() {
       />
 
       <AdminPanel title={form.id ? 'Edit gear' : 'New gear'}>
-        <AdminSuggest
-          label="Athlete"
-          value={form.playerQuery}
-          onChangeText={(playerQuery) => setForm((current) => ({ ...current, playerQuery, playerId: '' }))}
-          options={athleteOptions}
-          placeholder="Search roster"
-          onPick={(option) => setForm((current) => ({ ...current, playerId: option.id, playerQuery: option.title }))}
-        />
-        <AdminField
-          label="Gear"
-          value={form.title}
-          onChangeText={(title) => setForm((current) => ({ ...current, title }))}
-          placeholder="Size 12 turf cleats"
-          autoCapitalize="sentences"
-        />
-        <AdminField
-          label="Photo URL"
-          value={form.photoUrl}
-          onChangeText={(photoUrl) => setForm((current) => ({ ...current, photoUrl }))}
-          placeholder="https://…"
-        />
-        <AdminField
-          label="Retailer link (Gift Item Directly)"
-          value={form.buyUrl}
-          onChangeText={(buyUrl) => setForm((current) => ({ ...current, buyUrl }))}
-          placeholder="https://…"
-        />
-        <AdminField label="Goal" value={form.goal} onChangeText={(goal) => setForm((current) => ({ ...current, goal }))} keyboardType="decimal-pad" />
-        <AdminField
-          label="Already raised"
-          value={form.raised}
-          onChangeText={(raised) => setForm((current) => ({ ...current, raised }))}
-          keyboardType="decimal-pad"
-        />
-        <AdminField
-          label="Rack order"
-          value={form.sortOrder}
-          onChangeText={(sortOrder) => setForm((current) => ({ ...current, sortOrder }))}
-          keyboardType="number-pad"
-        />
+        <AdminFieldRow>
+          <AdminSuggest
+            label="Athlete"
+            value={form.playerQuery}
+            onChangeText={(playerQuery) => setForm((current) => ({ ...current, playerQuery, playerId: '' }))}
+            options={athleteOptions}
+            placeholder="Search roster"
+            onPick={(option) => setForm((current) => ({ ...current, playerId: option.id, playerQuery: option.title }))}
+          />
+          <AdminField
+            label="Gear"
+            value={form.title}
+            onChangeText={(title) => setForm((current) => ({ ...current, title }))}
+            placeholder="Size 12 turf cleats"
+            autoCapitalize="sentences"
+          />
+        </AdminFieldRow>
+        <AdminFieldRow>
+          <AdminField
+            label="Photo URL"
+            value={form.photoUrl}
+            onChangeText={(photoUrl) => setForm((current) => ({ ...current, photoUrl }))}
+            placeholder="https://…"
+          />
+          <AdminField
+            label="Retailer link (Gift Item Directly)"
+            value={form.buyUrl}
+            onChangeText={(buyUrl) => setForm((current) => ({ ...current, buyUrl }))}
+            placeholder="https://…"
+          />
+        </AdminFieldRow>
+        <AdminFieldRow>
+          <AdminField label="Goal" value={form.goal} onChangeText={(goal) => setForm((current) => ({ ...current, goal }))} keyboardType="decimal-pad" />
+          <AdminField
+            label="Already raised"
+            value={form.raised}
+            onChangeText={(raised) => setForm((current) => ({ ...current, raised }))}
+            keyboardType="decimal-pad"
+          />
+          <AdminField
+            label="Rack order"
+            value={form.sortOrder}
+            onChangeText={(sortOrder) => setForm((current) => ({ ...current, sortOrder }))}
+            keyboardType="number-pad"
+          />
+        </AdminFieldRow>
         <AdminBtn label={busy ? 'Saving…' : 'Save gear'} kind="primary" disabled={busy} onPress={() => void save()} />
         {form.id ? <AdminBtn label="Clear form" onPress={() => setForm(EMPTY)} /> : null}
         <AdminNotice text={message} />

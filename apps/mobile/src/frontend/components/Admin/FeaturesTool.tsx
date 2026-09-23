@@ -28,7 +28,7 @@ export function FeaturesTool() {
   return (
     <AdminPage
       title="Features"
-      lede="Turn off a tab or a Mālo button for a campaign. That stays a draft until you hit Publish to app."
+      lede="Turn off a tab or a Mālo button for a campaign. That stays a draft until you hit Publish to app. The web portal shows this same state read-only — all changes happen here."
       saveMode="publish"
     >
       <AdminPublishBar />

@@ -6,6 +6,7 @@ import {
   AdminBtn,
   AdminEmpty,
   AdminField,
+  AdminFieldRow,
   AdminNotice,
   AdminPage,
   AdminPanel,
@@ -120,22 +121,24 @@ export function PollsTool() {
         onChange={setFilter}
       />
       <AdminPanel title={form.slug ? 'Edit poll' : 'New poll'}>
-        <AdminSuggest
-          label="Home"
-          value={form.home_label}
-          onChangeText={(home_label) => setForm((c) => ({ ...c, home_label }))}
-          options={schoolOptions}
-          placeholder="Westlake Thunder"
-          onPick={(option) => setForm((c) => ({ ...c, home_label: option.title }))}
-        />
-        <AdminSuggest
-          label="Away"
-          value={form.away_label}
-          onChangeText={(away_label) => setForm((c) => ({ ...c, away_label }))}
-          options={schoolOptions}
-          placeholder="Lone Peak Knights"
-          onPick={(option) => setForm((c) => ({ ...c, away_label: option.title }))}
-        />
+        <AdminFieldRow>
+          <AdminSuggest
+            label="Home"
+            value={form.home_label}
+            onChangeText={(home_label) => setForm((c) => ({ ...c, home_label }))}
+            options={schoolOptions}
+            placeholder="Westlake Thunder"
+            onPick={(option) => setForm((c) => ({ ...c, home_label: option.title }))}
+          />
+          <AdminSuggest
+            label="Away"
+            value={form.away_label}
+            onChangeText={(away_label) => setForm((c) => ({ ...c, away_label }))}
+            options={schoolOptions}
+            placeholder="Lone Peak Knights"
+            onPick={(option) => setForm((c) => ({ ...c, away_label: option.title }))}
+          />
+        </AdminFieldRow>
         <AdminField label="Slug" value={form.slug} onChangeText={(slug) => setForm((c) => ({ ...c, slug }))} placeholder="westlake-lone-peak" />
         <AdminBtn label={busy ? 'Saving…' : 'Save poll'} kind="primary" disabled={busy} onPress={() => void save({ ...form, is_active: true })} />
         {form.slug ? <AdminBtn label="Clear form" onPress={() => setForm(empty)} /> : null}

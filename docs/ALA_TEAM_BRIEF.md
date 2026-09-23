@@ -9,7 +9,7 @@ Canonical briefing for the Grok Bot **ALA** channel. **Who owns which tab:** [TE
 | Package | Path | Role |
 | --- | --- | --- |
 | `@tapuai/mobile` | `apps/mobile/` | Expo Router SDK 57 fan app + Expo `/admin` production desks |
-| `@tapuai/admin-portal` | `apps/admin-portal/` | **Web** Next admin: Overview / **Reports** / **Money** / Soft-Wall / Profile / Features / People at `http://localhost:3001`. |
+| `@tapuai/admin-portal` | `apps/admin-portal/` | **Web** Next admin, **read-only oversight**: Overview / **Reports** / **Money** / Soft-Wall / Profile / Features / People at `http://localhost:3001`. All edits happen in Expo `/admin`. |
 | `@tapuai/shared-types` | `packages/shared-types/` | Soft-Wall gates (`SOFT_WALL_GATES`) + Profile chrome (`PROFILE_CHROME_FLAGS`) |
 
 Commands: `pnpm mobile` · `pnpm admin` · `pnpm typecheck` · `pnpm docs:check` · `pnpm docs:sync` (prices / Aura / catalogs only).

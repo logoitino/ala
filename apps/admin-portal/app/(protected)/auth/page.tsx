@@ -1,6 +1,4 @@
-import Link from 'next/link';
-
-import { Panel, PortalShell, StatCard } from '@/components/PortalShell';
+import { Badge, Panel, PortalShell, SectionHeading, StatCard } from '@/components/PortalShell';
 import { fetchSoftWallOversight } from '@/lib/softWall';
 
 export const dynamic = 'force-dynamic';
@@ -26,69 +24,61 @@ export default async function SoftWallAuthPage() {
       </div>
 
       <Panel title="Zero lost context" kicker="Product lock">
-        <p className="text-sm leading-6 text-slate-600">
+        <p className="text-sm leading-6 text-[var(--ink-soft)]">
           After SoftWallModal completes Apple / Google / Magic Link, SoftWallContext replays the stashed resume
           (open tip sheet, Crew toggle, or Chip In). Telemetry ids: soft_wall.malo · soft_wall.crew · soft_wall.wishlist
           (Coverage desk in Expo).
         </p>
       </Panel>
 
-      <div className="mt-6 grid gap-4">
-        {oversight.softWallGates.map((gate) => (
-          <Panel key={gate.id} title={gate.label} kicker={gate.id}>
-            <p className="text-sm text-slate-600">{gate.hint}</p>
-            <dl className="grid gap-2 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="font-bold text-slate-500">Fan surface</dt>
-                <dd>{gate.fanSurface}</dd>
-              </div>
-              <div>
-                <dt className="font-bold text-slate-500">Expo desk</dt>
-                <dd>{gate.adminDesk}</dd>
-              </div>
-              <div>
-                <dt className="font-bold text-slate-500">Flag</dt>
-                <dd>{gate.flagPath ?? 'code'}</dd>
-              </div>
-              <div>
-                <dt className="font-bold text-slate-500">Telemetry</dt>
-                <dd>{gate.telemetry}</dd>
-              </div>
-            </dl>
-          </Panel>
-        ))}
+      <div className="mt-8">
+        <SectionHeading title="Gates" hint={`${oversight.softWallGates.length} configured`} />
+        <div className="grid gap-4">
+          {oversight.softWallGates.map((gate) => (
+            <Panel key={gate.id} title={gate.label} kicker={gate.id}>
+              <p className="text-sm text-[var(--ink-soft)]">{gate.hint}</p>
+              <dl className="grid gap-2 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="font-bold text-[var(--text-muted)]">Fan surface</dt>
+                  <dd>{gate.fanSurface}</dd>
+                </div>
+                <div>
+                  <dt className="font-bold text-[var(--text-muted)]">Expo desk</dt>
+                  <dd>{gate.adminDesk}</dd>
+                </div>
+                <div>
+                  <dt className="font-bold text-[var(--text-muted)]">Flag</dt>
+                  <dd>{gate.flagPath ?? 'code'}</dd>
+                </div>
+                <div>
+                  <dt className="font-bold text-[var(--text-muted)]">Telemetry</dt>
+                  <dd>{gate.telemetry}</dd>
+                </div>
+              </dl>
+            </Panel>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-6">
-        <Panel title="Supabase Auth checklist" kicker="Dashboard">
-          <ol className="list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-700">
-            <li>Enable Email (password + magic link), Apple, and Google under Authentication → Providers.</li>
-            <li>
-              Allow redirect <code className="rounded bg-emerald-50 px-1.5">alasports://auth/callback</code>.
-            </li>
-            <li>
-              Run <code className="rounded bg-emerald-50 px-1.5">supabase/auth_fan_profile.sql</code> so first signup
-              inserts a fan profile.
-            </li>
-            <li>
-              Demo Fan QA: SoftWall → <strong>Continue as Demo Fan</strong> uses{' '}
-              <code className="rounded bg-emerald-50 px-1.5">demo@tapuai.app</code> /{' '}
-              <code className="rounded bg-emerald-50 px-1.5">TapuaiDemoFan1!</code>. Disable Confirm email (or pre-create
-              that user) so the first tap works.
-            </li>
-            <li>Operator stays Features-gated — keep Operator console Off until you want sideline monetization.</li>
-          </ol>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link href="/features" className="rounded-full bg-[var(--jade)] px-4 py-2 text-sm font-extrabold text-white">
-              Features · pause Mālo / Crew / Wishlist
-            </Link>
-            <Link
-              href="/people"
-              className="rounded-full border border-emerald-900/15 bg-white px-4 py-2 text-sm font-extrabold text-slate-800"
-            >
-              People
-            </Link>
-          </div>
+      <div className="mt-8">
+        <SectionHeading title="Providers" />
+        <Panel title="Sign-in providers" kicker="Auth">
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {oversight.authProviders.map((provider) => (
+              <li key={provider.id} className="rounded-xl border border-[var(--border)] px-4 py-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-bold">{provider.label}</p>
+                  <Badge tone="neutral">{provider.id}</Badge>
+                </div>
+                <p className="text-xs text-[var(--text-muted)]">Redirect {provider.redirect}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="text-sm leading-6 text-[var(--ink-soft)]">
+            Last Publish to app:{' '}
+            {oversight.publishedAt ? new Date(oversight.publishedAt).toLocaleString() : 'Never / unknown'}. Toggle
+            Soft-Wall related flags on the Features desk, then Publish.
+          </p>
         </Panel>
       </div>
     </PortalShell>

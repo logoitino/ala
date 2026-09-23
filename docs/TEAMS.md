@@ -212,16 +212,16 @@ These four roles already exist. They do not own a tab by themselves — they sta
 | System | features, look, **catalogs**, studio | Features / Look / catalogs wait on **Publish** |
 | Hidden | lab (JSON), qa | Deep links |
 
-**Next `pnpm admin` (`http://localhost:3001`):** Overview · **Reports** (`get_admin_reports`) · **Money** (`get_company_revenue_summary`) · Soft-Wall · Profile · Features · People. Reports/Money are the browser desks for behavior and ledger. Features/Profile toggles write the same `app_runtime_config` as Expo. People is **oversight** (Verify / grant admin stay Expo `/admin/people`).
+**Next `pnpm admin` (`http://localhost:3001`):** **Read-only oversight, no edit affordance anywhere.** Overview · **Reports** (`get_admin_reports`) · **Money** (`get_company_revenue_summary`) · Soft-Wall · Profile · Features · People. All seven desks display live Supabase state; Features/Profile show `app_runtime_config` via `FlagStatusList` (plain badges, no toggle). Every write — flags, Games, Drip, Catalogs, People verify/grant-admin, everything — happens only in Expo `/admin`.
 
 | Function | Where |
 | --- | --- |
 | Expo shell | `app/(admin)/admin/*` · `AdminShell` · `AdminLensContext` |
 | Features flags | `FeaturesTool.tsx` · `lib/runtime.ts` · `APP_RUNTIME_FLAG_GROUPS` |
 | Coverage map | `lib/adminCoverage.ts` (source of fan-control inventory) |
-| Next portal | `apps/admin-portal/` · `FeatureFlagBoard.tsx` |
+| Next portal (read-only) | `apps/admin-portal/` · `components/PortalShell.tsx`'s `FlagStatusList` |
 
-**Do not:** Publish a dirty draft “to see if it works” on a live project. Port games/drip/sports onto Next without Facilitator.
+**Do not:** Publish a dirty draft "to see if it works" on a live project. Add any write path (toggle, form, RPC call) to the Next portal — it is deliberately read-only; if a desk needs editing, that happens in Expo `/admin`, not by porting it onto Next.
 
 **Pair:** Department that owns the fan surface. `QA` after Publish.
 

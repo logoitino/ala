@@ -1,10 +1,8 @@
 import {
-  DEMO_TEAM_CODES,
   parseTeamCode,
   resolveVerificationStatus,
   type VerificationStatus,
 } from '@/data/verification';
-import { DEMO_TEAMS } from '@/data/teams';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export type RedeemTeamCodeResult = {
@@ -56,66 +54,20 @@ export async function redeemTeamCode(rawCode: string): Promise<RedeemTeamCodeRes
         sport: asText(row.sport) ?? parsed.sport,
       };
     }
-    if (error && !rpcMissing(error.message)) {
-      throw new Error(friendlyVerifyError(error.message));
-    }
-
-    const { data: school } = await supabase
-      .from('schools_and_teams')
-      .select('id, name, division, team_code')
-      .or(`team_code.ilike.${parsed.normalized},team_code.ilike.${parsed.schoolKey}`)
-      .maybeSingle();
-
-    if (school && typeof school.id === 'string') {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          school_id: school.id,
-          athlete_division: typeof school.division === 'string' ? school.division : undefined,
-          athlete_sport: parsed.sport ?? undefined,
-          is_verified: true,
-          verification_status: 'verified',
-          role: 'athlete',
-          active_role: 'athlete',
-        })
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id ?? '');
-      if (updateError) throw new Error(friendlyVerifyError(updateError.message));
-      return {
-        ok: true,
-        verification_status: 'verified',
-        school_id: school.id,
-        school_name: typeof school.name === 'string' ? school.name : null,
-        sport: parsed.sport,
-      };
-    }
+    // 2026-09 audit (Round 13 sweep, critical): this used to fall back — on ANY rpc failure,
+    // including the RPC simply being missing from a stale schema cache — to a direct
+    // `schools_and_teams` query filtering by `team_code` (only possible because that column was
+    // publicly readable; fixed by column-restricting the grant, see schema.sql), and beyond that to
+    // `DEMO_TEAM_CODES` — a map of every real school's code hardcoded in `data/verification.ts`,
+    // which ships inside the app bundle to every device and is trivially extractable by unpacking
+    // it, independent of git access entirely. Both fallbacks could grant real
+    // `is_verified = true` on `profiles` using a secret that was never actually secret. The RPC
+    // (rate-limited as of Round 12) is now the only path — a schema-cache lag or RPC outage should
+    // surface as an error here, not silently degrade to an unprotected bypass.
+    throw new Error(friendlyVerifyError(error?.message ?? 'Could not redeem this team code.'));
   }
 
-  const schoolId = DEMO_TEAM_CODES[parsed.schoolKey] ?? DEMO_TEAM_CODES[parsed.normalized];
-  const team = DEMO_TEAMS.find((item) => item.id === schoolId);
-  if (!team) {
-    throw new Error('Unknown team code. Ask your coach for this season’s code, or request approval below.');
-  }
-  if (isSupabaseConfigured) {
-    const userId = (await supabase.auth.getUser()).data.user?.id;
-    if (userId) {
-      await supabase.from('profiles').update({
-        school_id: team.id,
-        athlete_division: team.division,
-        athlete_sport: parsed.sport ?? undefined,
-        is_verified: true,
-        verification_status: 'verified',
-        role: 'athlete',
-        active_role: 'athlete',
-      }).eq('user_id', userId);
-    }
-  }
-  return {
-    ok: true,
-    verification_status: 'verified',
-    school_id: team.id,
-    school_name: team.name,
-    sport: parsed.sport,
-  };
+  throw new Error('Supabase is not configured.');
 }
 
 /**

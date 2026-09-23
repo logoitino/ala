@@ -6,6 +6,7 @@ import {
   AdminBtn,
   AdminEmpty,
   AdminField,
+  AdminFieldRow,
   AdminNotice,
   AdminPage,
   AdminPanel,
@@ -139,8 +140,10 @@ export function SchoolsTool() {
         onChange={setFilter}
       />
       <AdminPanel title={form.id ? 'Edit school' : 'New school'}>
-        <AdminField label="Name" value={form.name} onChangeText={(name) => setForm((c) => ({ ...c, name }))} placeholder="Westlake High" />
-        <AdminField label="Mascot" value={form.mascot} onChangeText={(mascot) => setForm((c) => ({ ...c, mascot }))} placeholder="Thunder" />
+        <AdminFieldRow>
+          <AdminField label="Name" value={form.name} onChangeText={(name) => setForm((c) => ({ ...c, name }))} placeholder="Westlake High" />
+          <AdminField label="Mascot" value={form.mascot} onChangeText={(mascot) => setForm((c) => ({ ...c, mascot }))} placeholder="Thunder" />
+        </AdminFieldRow>
         <AdminPills
           label="Level"
           items={[
@@ -156,9 +159,11 @@ export function SchoolsTool() {
             )
           }
         />
-        <AdminField label="Division" value={form.division} onChangeText={(division) => setForm((c) => ({ ...c, division }))} />
-        <AdminField label="Region / conference" value={form.region} onChangeText={(region) => setForm((c) => ({ ...c, region }))} />
-        <AdminField label="City" value={form.city} onChangeText={(city) => setForm((c) => ({ ...c, city }))} />
+        <AdminFieldRow>
+          <AdminField label="Division" value={form.division} onChangeText={(division) => setForm((c) => ({ ...c, division }))} />
+          <AdminField label="Region / conference" value={form.region} onChangeText={(region) => setForm((c) => ({ ...c, region }))} />
+          <AdminField label="City" value={form.city} onChangeText={(city) => setForm((c) => ({ ...c, city }))} />
+        </AdminFieldRow>
         <AdminBtn label={busy ? 'Saving…' : 'Save school'} kind="primary" disabled={busy} onPress={() => void save()} />
         {form.id ? <AdminBtn label="Clear form" onPress={() => setForm(empty)} /> : null}
         <AdminNotice text={message} />

@@ -5,6 +5,7 @@ import {
   AdminBtn,
   AdminEmpty,
   AdminField,
+  AdminFieldRow,
   AdminNotice,
   AdminPage,
   AdminPanel,
@@ -143,23 +144,27 @@ export function BoostersTool() {
         onChange={setFilter}
       />
       <AdminPanel title={form.id ? 'Edit booster' : 'New booster'}>
-        <AdminField label="Business" value={form.business_name} onChangeText={(business_name) => setForm((c) => ({ ...c, business_name }))} placeholder="Saratoga Springs Pizza" />
-        <AdminSuggest
-          label="School"
-          value={form.school_team}
-          onChangeText={(school_team) => setForm((c) => ({ ...c, school_team }))}
-          options={schoolOptions}
-          placeholder="Westlake High"
-          onPick={(option) => setForm((c) => ({ ...c, school_team: option.title }))}
-        />
+        <AdminFieldRow>
+          <AdminField label="Business" value={form.business_name} onChangeText={(business_name) => setForm((c) => ({ ...c, business_name }))} placeholder="Saratoga Springs Pizza" />
+          <AdminSuggest
+            label="School"
+            value={form.school_team}
+            onChangeText={(school_team) => setForm((c) => ({ ...c, school_team }))}
+            options={schoolOptions}
+            placeholder="Westlake High"
+            onPick={(option) => setForm((c) => ({ ...c, school_team: option.title }))}
+          />
+        </AdminFieldRow>
         <AdminPills
           label="Tier"
           items={tiers.map((tier) => ({ id: tier.id, label: `${tier.name} · $${tier.dollars}` }))}
           value={form.tier}
           onChange={applyTier}
         />
-        <AdminField label="Amount" value={form.amount} onChangeText={(amount) => setForm((c) => ({ ...c, amount }))} keyboardType="decimal-pad" />
-        <AdminField label="Logo URL" value={form.logo_url} onChangeText={(logo_url) => setForm((c) => ({ ...c, logo_url }))} />
+        <AdminFieldRow>
+          <AdminField label="Amount" value={form.amount} onChangeText={(amount) => setForm((c) => ({ ...c, amount }))} keyboardType="decimal-pad" />
+          <AdminField label="Logo URL" value={form.logo_url} onChangeText={(logo_url) => setForm((c) => ({ ...c, logo_url }))} />
+        </AdminFieldRow>
         <AdminBtn label={busy ? 'Saving…' : 'Save booster'} kind="primary" disabled={busy} onPress={() => void save({ status: 'active' })} />
         {form.id ? <AdminBtn label="Clear form" onPress={() => setForm(empty)} /> : null}
         <AdminNotice text={message} />

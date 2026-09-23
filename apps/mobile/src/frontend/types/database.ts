@@ -666,7 +666,33 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      /**
+       * 2026-09 audit (paywall bypass): read-only mirror of `reels` with `video_url` nulled to `''`
+       * unless the caller is entitled (unlocked clip, Flash-Unlocked right now, uploader, admin, or
+       * an active subscriber to the tagged athlete). `lib/reels.ts` / `lib/spotlight.ts` read this
+       * instead of the base table — see schema.sql / docs/SCHEMA.md for the view definition.
+       */
+      reels_feed: {
+        Row: Reel;
+        Relationships: [
+          {
+            foreignKeyName: 'reels_player_id_fkey';
+            columns: ['player_id'];
+            isOneToOne: false;
+            referencedRelation: 'players';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'reels_game_id_fkey';
+            columns: ['game_id'];
+            isOneToOne: false;
+            referencedRelation: 'games';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+    };
     Functions: {
       increment_backer_count: {
         Args: { target_player_id: string };

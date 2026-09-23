@@ -46,16 +46,11 @@ on conflict (id) do update set
   region = excluded.region,
   city = excluded.city;
 
-update public.schools_and_teams set team_code = 'WSTLK-2026' where id = 'a1000000-0000-4000-8000-000000000001' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'LPKHS-2026' where id = 'a1000000-0000-4000-8000-000000000002' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'ALAHS-2026' where id = 'a1000000-0000-4000-8000-000000000003' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'SKYRG-2026' where id = 'a1000000-0000-4000-8000-000000000004' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'AFORK-2026' where id = 'a1000000-0000-4000-8000-000000000005' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'TIMP-2026' where id = 'a1000000-0000-4000-8000-000000000006' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'BYU-2026' where id = 'a1000000-0000-4000-8000-000000000011' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'UTAH-2026' where id = 'a1000000-0000-4000-8000-000000000012' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'USU-2026' where id = 'a1000000-0000-4000-8000-000000000013' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'WEBER-2026' where id = 'a1000000-0000-4000-8000-000000000014' and coalesce(team_code, '') = '';
+-- 2026-09 audit (Round 13 sweep): removed — this was a third copy of the exact hardcoded-secret
+-- bug fixed in apps/mobile/src/backend/db/schema.sql and supabase/athlete_verification.sql (Round
+-- 12), missed in that pass because it's a separate standalone incremental. Never hardcode a real
+-- school's `redeem_team_code` secret in a committed file; set it via the Supabase SQL Editor
+-- directly and hand it to the coach out-of-band.
 
 alter table public.profiles add column if not exists school_id uuid references public.schools_and_teams (id) on delete set null;
 alter table public.profiles add column if not exists athlete_division text;
@@ -73,8 +68,22 @@ create policy "Public read schools and teams"
 
 drop function if exists public.search_schools_and_teams(text);
 
+-- 2026-09 audit (Round 13 sweep, critical): `team_code` is the Varsity-verification secret
+-- (`redeem_team_code`) — was `returns setof public.schools_and_teams` / `select s.*`, and since this
+-- is SECURITY DEFINER it leaked every school's code to anon regardless of the table grant. Explicit
+-- column list, no `team_code`.
 create or replace function public.search_schools_and_teams(search_query text)
-returns setof public.schools_and_teams
+returns table (
+  id uuid,
+  name text,
+  mascot text,
+  level text,
+  division text,
+  region text,
+  city text,
+  created_at timestamptz,
+  malo_frozen boolean
+)
 language plpgsql
 stable
 security definer
@@ -88,7 +97,7 @@ begin
   end if;
 
   return query
-  select s.*
+  select s.id, s.name, s.mascot, s.level, s.division, s.region, s.city, s.created_at, s.malo_frozen
   from public.schools_and_teams s
   where s.name ilike '%' || needle || '%'
      or s.mascot ilike '%' || needle || '%'
@@ -102,5 +111,10 @@ begin
 end;
 $$;
 
-grant select on public.schools_and_teams to anon, authenticated;
+-- 2026-09 audit (Round 13 sweep): column-level grant, not the whole table — see schema.sql for the
+-- full explanation (this REVOKE matters: GRANT is additive, not a replacement, on a project that
+-- already ran the old blanket grant).
+revoke select on public.schools_and_teams from anon, authenticated;
+grant select (id, name, mascot, level, division, region, city, created_at, malo_frozen)
+  on public.schools_and_teams to anon, authenticated;
 grant execute on function public.search_schools_and_teams(text) to anon, authenticated;

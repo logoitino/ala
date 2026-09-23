@@ -1,7 +1,7 @@
 # Tapua'i — System Architecture Overview
 
 **Product:** Tapua'i (“Back Every Athlete.”)  
-**Repo:** pnpm monorepo — `@tapuai/mobile` (Expo) · `@tapuai/admin-portal` (Next Soft-Wall + Profile plane) · `@tapuai/shared-types`
+**Repo:** pnpm monorepo — `@tapuai/mobile` (Expo, the only place admin data changes) · `@tapuai/admin-portal` (Next, read-only oversight) · `@tapuai/shared-types`
 **Runtime:** Expo SDK 57 · React Native · TypeScript (fan app); Next.js Soft-Wall / Profile / Features / People oversight for web admin
 **Companions:** [Architecture](docs/ARCHITECTURE.md) · [Onboarding](docs/ONBOARDING.md) · [Schema](docs/SCHEMA.md) · [Teams / departments](docs/TEAMS.md) · [ALA brief](docs/ALA_TEAM_BRIEF.md) · [Product facts](docs/PRODUCT_FACTS.md) · [Public one-pager](docs/PUBLIC.md) · [Investor briefing](docs/INVESTOR.md) · [Legal briefing](docs/LEGAL_BRIEFING.md) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](CHANGELOG.md) · [Conventions](AGENTS.md) · [Audit](docs/AUDIT_REPORT.md) · [Roadmap](docs/ROADMAP.md)
 
@@ -26,7 +26,7 @@ Roles: `guest`, `fan`, `athlete`, `parent`, `operator`, `booster`, `sponsor`, `a
 | Layer | Spec |
 | --- | --- |
 | Mobile | **Expo (React Native)** Router in `apps/mobile/`, SDK 57, StyleSheet + `apps/mobile/src/frontend/constants/theme.ts` (Daylight default; springs + focal colors in `apps/mobile/src/frontend/theme/motion.ts`) |
-| Admin portal | **Next web admin** in `apps/admin-portal/` — Overview / **Reports** / **Money** / Soft-Wall / Profile / Features / People at `pnpm admin` (`http://localhost:3001`). Reports = `get_admin_reports` (behavior). Money = `get_company_revenue_summary`. Features/Look flags write `app_runtime_config`. Games, Drip SKUs, catalogs remain Expo `/admin` |
+| Admin portal | **Next web admin** in `apps/admin-portal/` — **read-only oversight**: Overview / **Reports** / **Money** / Soft-Wall / Profile / Features / People at `pnpm admin` (`http://localhost:3001`). Reports = `get_admin_reports` (behavior). Money = `get_company_revenue_summary`. Features/Profile pages display `app_runtime_config` state, no toggle affordance. Every write — Features/Look flags, Games, Drip SKUs, Catalogs, everything — happens only in Expo `/admin` |
 | Shared | `@tapuai/shared-types` — Profile / Soft-Wall gates / Profile chrome / Spotlight / common RPC shapes |
 | Graphics | **`@shopify/react-native-skia`** 2.6.2 — `Effects/GlowingNeonBorder` SweepGradient + BlurMask on the Aura trading card (Expo web loads CanvasKit via `WithSkiaWeb` + `apps/mobile/public/canvaskit.wasm`) |
 | Video | **`expo-video` only** (do not use `expo-av` for the feed; do not set `useCaching: true`) |
@@ -86,7 +86,7 @@ apps/mobile/src/frontend/theme/       motion.ts (`SPRING_*`, Island FOCAL + TAB_
 apps/mobile/src/frontend/services/    TelemetryManager (batched `telemetry_logs`); OfflineQueue (AsyncStorage + NetInfo flush); MediaUploadService (`react-native-compressor` + Storage `reels` / `avatars`)
 apps/mobile/src/backend/db/schema.sql Canonical Postgres + RLS
 
-apps/admin-portal/                Next web admin (Overview / Reports / Money / Soft-Wall / Profile / Features / People) at :3001. Reports + Money RPCs match Expo. Features publish `app_runtime_config`. Games/Drip/catalogs still Expo `/admin`
+apps/admin-portal/                Next web admin, read-only oversight (Overview / Reports / Money / Soft-Wall / Profile / Features / People) at :3001. Reports + Money RPCs match Expo. Every write happens only in Expo `/admin`
 packages/shared-types/            @tapuai/shared-types
 scripts/                          Node generators (`sync-front-docs.mjs` → product facts; reads apps/mobile constants)
 docs/TEAMS.md                     Department call sheet (who owns each tab / admin desk)

@@ -53,9 +53,14 @@ export function TelemetryCards({ metrics }: TelemetryCardsProps) {
 
 const styles = StyleSheet.create({
   wrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   card: {
+    flexGrow: 1,
+    flexBasis: 200,
+    minWidth: 180,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
@@ -72,7 +77,7 @@ const styles = StyleSheet.create({
   },
   value: {
     color: colors.text,
-    fontSize: 36,
+    fontSize: 30,
     fontWeight: '800',
     letterSpacing: -0.8,
   },
@@ -82,11 +87,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   meta: {
+    flexGrow: 1,
+    flexBasis: 200,
+    minWidth: 180,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
+    justifyContent: 'center',
     gap: 6,
   },
   metaLine: {

@@ -20,16 +20,9 @@ create unique index if not exists schools_and_teams_team_code_key
   on public.schools_and_teams (upper(btrim(team_code)))
   where team_code is not null and btrim(team_code) <> '';
 
-update public.schools_and_teams set team_code = 'WSTLK-2026' where id = 'a1000000-0000-4000-8000-000000000001' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'LPKHS-2026' where id = 'a1000000-0000-4000-8000-000000000002' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'ALAHS-2026' where id = 'a1000000-0000-4000-8000-000000000003' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'SKYRG-2026' where id = 'a1000000-0000-4000-8000-000000000004' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'AFORK-2026' where id = 'a1000000-0000-4000-8000-000000000005' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'TIMP-2026' where id = 'a1000000-0000-4000-8000-000000000006' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'BYU-2026' where id = 'a1000000-0000-4000-8000-000000000011' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'UTAH-2026' where id = 'a1000000-0000-4000-8000-000000000012' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'USU-2026' where id = 'a1000000-0000-4000-8000-000000000013' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'WEBER-2026' where id = 'a1000000-0000-4000-8000-000000000014' and coalesce(team_code, '') = '';
+-- 2026-09 audit (Round 12 sweep, critical): removed — see apps/mobile/src/backend/db/schema.sql
+-- for the full explanation. Never hardcode a real school's `redeem_team_code` secret in a committed
+-- file again; set it via the Supabase SQL Editor directly and hand it to the coach out-of-band.
 
 alter table public.verification_requests
   add column if not exists requester_user_id uuid references public.profiles (id) on delete set null;
@@ -200,6 +193,11 @@ as $$
   );
 $$;
 
+-- 2026-09 audit (Round 12 sweep): rate limit — SCHOOL-SPORT-YEAR codes are a small enough
+-- keyspace to brute-force via this RPC directly, independent of the git-leak issue fixed above.
+alter table public.profiles add column if not exists team_code_fail_count integer not null default 0;
+alter table public.profiles add column if not exists team_code_locked_until timestamptz;
+
 create or replace function public.redeem_team_code(raw_code text)
 returns jsonb
 language plpgsql
@@ -214,6 +212,8 @@ declare
   sport_name text;
   me public.profiles%rowtype;
   school public.schools_and_teams%rowtype;
+  max_attempts constant integer := 5;
+  lockout_minutes constant integer := 15;
 begin
   if auth.uid() is null then
     raise exception 'Sign in required';
@@ -230,14 +230,31 @@ begin
     raise exception 'legal acknowledgement required';
   end if;
 
+  if me.team_code_locked_until is not null and me.team_code_locked_until > timezone('utc', now()) then
+    raise exception 'Too many attempts. Try again later.';
+  end if;
+
   select * into school
   from public.schools_and_teams s
   where upper(btrim(coalesce(s.team_code, ''))) in (n, school_key)
   limit 1;
 
   if school.id is null then
+    update public.profiles
+    set
+      team_code_fail_count = coalesce(team_code_fail_count, 0) + 1,
+      team_code_locked_until = case
+        when coalesce(team_code_fail_count, 0) + 1 >= max_attempts
+          then timezone('utc', now()) + (lockout_minutes || ' minutes')::interval
+        else team_code_locked_until
+      end
+    where id = me.id;
     raise exception 'Unknown team code';
   end if;
+
+  update public.profiles
+  set team_code_fail_count = 0, team_code_locked_until = null
+  where id = me.id;
 
   parts := string_to_array(n, '-');
   if coalesce(array_length(parts, 1), 0) >= 3 then

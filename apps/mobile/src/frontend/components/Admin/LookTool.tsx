@@ -58,7 +58,7 @@ export function LookTool() {
   return (
     <AdminPage
       title="Look"
-      lede="Brand colors, Home/Local/Spotlight/Drip copy, what sits on Profile, and where Highlights ⚡ buttons live. Draft until Publish to app."
+      lede="Brand colors, Home/Local/Spotlight/Drip copy, what sits on Profile, and where Highlights ⚡ buttons live. Draft until Publish to app. The web portal's Profile desk shows Profile chrome read-only — all changes happen here."
       saveMode="publish"
       error={localError || saveError}
     >

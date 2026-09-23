@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { Children, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -168,6 +168,21 @@ export function AdminField({
         autoCorrect={autoCorrect}
         style={[styles.field, multiline && styles.fieldMulti]}
       />
+    </View>
+  );
+}
+
+/**
+ * @purpose Lay related fields (Home school / Away school, Home name / Away name, …) side by side on
+ *   wide screens instead of forcing every field into one full-width stacked column. Each child is
+ *   wrapped in its own `flex: 1, minWidth: 200` box rather than touching `AdminField`'s own style, so
+ *   plain (non-row) `AdminField` usage elsewhere is completely unaffected — wraps to a single column
+ *   automatically on narrow viewports once two 200px-minimum boxes no longer fit side by side.
+ */
+export function AdminFieldRow({ children }: { children: ReactNode }) {
+  return (
+    <View style={styles.fieldRow}>
+      {Children.map(children, (child) => (child ? <View style={styles.fieldRowItem}>{child}</View> : child))}
     </View>
   );
 }
@@ -457,6 +472,9 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.backgroundBase,
   },
   content: {
+    width: '100%',
+    maxWidth: 1200,
+    alignSelf: 'center',
     paddingHorizontal: 20,
     gap: 14,
   },
@@ -514,6 +532,15 @@ const styles = StyleSheet.create({
   },
   fieldWrap: {
     gap: 6,
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  fieldRowItem: {
+    flexGrow: 1,
+    minWidth: 200,
   },
   label: {
     color: colors.textMuted,

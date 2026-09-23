@@ -11,7 +11,7 @@ create table if not exists public.profiles (
   ),
   full_name text not null,
   is_verified boolean not null default false,
-  spirit_points integer not null default 0,
+  aura_points integer not null default 0,
   stripe_connect_id text,
   created_at timestamptz not null default now()
 );
@@ -69,6 +69,11 @@ alter table public.profiles add column if not exists age_confirmed_13_plus boole
 
 -- 2026-09 audit: CHECK constraints on the Aura currency / engagement counter columns, so even a
 -- direct authenticated-staff table write (or a bug) can't drive them negative.
+-- 2026-09 fix: every such `do $$ ... exception when duplicate_object then null $$` block in this
+-- file now also catches `duplicate_table` (42P07) — a re-run that hits a UNIQUE constraint whose
+-- backing index survived from an earlier partial run raises `relation "..." already exists`
+-- (duplicate_table), not `duplicate_object` (42710), so the narrower catch alone left re-runs
+-- fragile. Harmless no-op for the CHECK-constraint blocks, which never raise duplicate_table.
 do $$
 begin
   alter table public.players add constraint players_counters_check
@@ -78,6 +83,7 @@ begin
     );
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -85,6 +91,7 @@ begin
   alter table public.profiles add constraint profiles_aura_points_check check (aura_points >= 0);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 create table if not exists public.athlete_career_stats (
@@ -160,16 +167,22 @@ on conflict (id) do update set
   region = excluded.region,
   city = excluded.city;
 
-update public.schools_and_teams set team_code = 'WSTLK-2026' where id = 'a1000000-0000-4000-8000-000000000001' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'LPKHS-2026' where id = 'a1000000-0000-4000-8000-000000000002' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'ALAHS-2026' where id = 'a1000000-0000-4000-8000-000000000003' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'SKYRG-2026' where id = 'a1000000-0000-4000-8000-000000000004' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'AFORK-2026' where id = 'a1000000-0000-4000-8000-000000000005' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'TIMP-2026' where id = 'a1000000-0000-4000-8000-000000000006' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'BYU-2026' where id = 'a1000000-0000-4000-8000-000000000011' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'UTAH-2026' where id = 'a1000000-0000-4000-8000-000000000012' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'USU-2026' where id = 'a1000000-0000-4000-8000-000000000013' and coalesce(team_code, '') = '';
-update public.schools_and_teams set team_code = 'WEBER-2026' where id = 'a1000000-0000-4000-8000-000000000014' and coalesce(team_code, '') = '';
+-- 2026-09 audit (Round 12 sweep, critical): this used to hardcode every real school's
+-- `redeem_team_code` secret in plain text, in a file committed to git — WSTLK-2026, LPKHS-2026,
+-- etc. `redeem_team_code` grants instant "⚡ VERIFIED VARSITY" status (school claim, athlete role,
+-- Spotlight eligibility) to any signed-in account that submits the right code, no coach/staff
+-- approval, no identity check — that is the entire point of the feature (fast onboarding), but it
+-- means the code IS the only thing standing between "real athlete" and "anyone who read this file."
+-- These are real Utah high schools (Westlake, Lone Peak, American Fork, Timpview — the actual
+-- Phase 5 GTM target per docs/INVESTOR.md), and this file's git history now permanently contains
+-- every one of those codes regardless of what runs next. Do not put a real school's code in any
+-- committed file again: generate a high-entropy value out-of-band (a UUID segment or random token,
+-- not a guessable SCHOOL-SPORT-YEAR pattern — that format is small enough to brute-force via
+-- `redeem_team_code` directly even without the leak, since it's `authenticated`-only with no rate
+-- limit), set it directly via the Supabase SQL Editor or dashboard (never a file that gets
+-- committed), and hand it to the coach out-of-band (not in any doc/code file either). The codes
+-- from this file's history should be treated as already compromised and rotated the same way before
+-- any real school/athlete relies on them.
 
 alter table public.profiles add column if not exists school_id uuid references public.schools_and_teams (id) on delete set null;
 alter table public.profiles add column if not exists athlete_division text;
@@ -188,6 +201,7 @@ begin
     check (verification_status in ('unverified', 'pending', 'verified'));
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 -- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): per-athlete Mālo freeze switch so the team can
@@ -262,6 +276,7 @@ begin
     foreign key (claimed_by) references public.profiles (id) on delete set null;
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
   when undefined_table then null;
 end $$;
 
@@ -519,6 +534,7 @@ begin
     foreign key (reel_id) references public.reels (id) on delete set null;
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 create index if not exists tips_fan_id_created_at_idx on public.tips (fan_id, created_at desc);
@@ -530,6 +546,7 @@ begin
   alter table public.tips add constraint tips_amount_cents_check check (amount_cents >= 0);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -537,6 +554,33 @@ begin
   alter table public.tips add constraint tips_aura_points_check check (aura_points >= 0);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
+-- 2026-09 audit (Round 24 follow-up): `tips` is written directly by the client right after
+-- `presentPaymentSheet()` resolves (see `useTipCheckout.ts`), with no server-side verification yet
+-- that a Stripe charge of this amount actually happened (that's the dormant rich-metadata path in
+-- `supabase/functions/stripe-webhook/`). Applying the same per-row cap `chip_in_wishlist_item`
+-- already uses for the identical gap ($1,000 / 10,000 Aura) as a stopgap until that webhook path is
+-- live — bounds the blast radius of a fabricated row without touching any legitimate flow (tip
+-- presets top out at $25). `service_role` (the eventual webhook's own writes) is exempt so a real,
+-- Stripe-verified tip larger than this can still be recorded once that path ships.
+do $$
+begin
+  alter table public.tips add constraint tips_amount_cents_cap_check
+    check (auth.role() = 'service_role' or amount_cents <= 100000);
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
+do $$
+begin
+  alter table public.tips add constraint tips_aura_points_cap_check
+    check (auth.role() = 'service_role' or aura_points <= 10000);
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 create table if not exists public.operator_gigs (
@@ -578,11 +622,29 @@ create table if not exists public.sponsorships (
   created_at timestamptz not null default now()
 );
 
+-- 2026-09 fix: this file's `create table if not exists` is a no-op against a `sponsorships` table
+-- that already existed (pre-audit) with a different column set — unlike every other table in this
+-- file, sponsorships never had the matching `add column if not exists` safety net, so the very next
+-- statement (the amount_cents check constraint) crashed with `column "amount_cents" does not exist`
+-- on any project that already had this table. Backfilled to match the standalone incremental
+-- (`supabase/sponsorships.sql`), which already had this right.
+alter table public.sponsorships add column if not exists sponsor_user_id uuid;
+alter table public.sponsorships add column if not exists business_name text not null default '';
+alter table public.sponsorships add column if not exists logo_url text not null default '';
+alter table public.sponsorships add column if not exists school_team text not null default '';
+alter table public.sponsorships add column if not exists tier text not null default 'silver';
+alter table public.sponsorships add column if not exists amount_cents integer not null default 0;
+alter table public.sponsorships add column if not exists aura_points integer not null default 0;
+alter table public.sponsorships add column if not exists billing_interval text not null default 'month';
+alter table public.sponsorships add column if not exists status text not null default 'active';
+alter table public.sponsorships add column if not exists created_at timestamptz not null default now();
+
 do $$
 begin
   alter table public.sponsorships add constraint sponsorships_amount_cents_check check (amount_cents >= 0);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -590,6 +652,28 @@ begin
   alter table public.sponsorships add constraint sponsorships_aura_points_check check (aura_points >= 0);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
+-- 2026-09 audit (Round 24 follow-up): same gap and same stopgap as `tips` above — a sponsor can
+-- self-insert this row (see "Insert sponsorships" policy) with no server-side charge verification
+-- yet. Cap comfortably covers the real catalog max (Platinum $500) with headroom.
+do $$
+begin
+  alter table public.sponsorships add constraint sponsorships_amount_cents_cap_check
+    check (auth.role() = 'service_role' or amount_cents <= 100000);
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
+do $$
+begin
+  alter table public.sponsorships add constraint sponsorships_aura_points_cap_check
+    check (auth.role() = 'service_role' or aura_points <= 10000);
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 create table if not exists public.verification_requests (
@@ -617,11 +701,20 @@ create table if not exists public.disbursements (
   created_at timestamptz not null default now()
 );
 
+-- 2026-09 fix: same gap as sponsorships above — this table had no column safety net, so
+-- `create table if not exists` no-ops against a pre-existing narrower table and the constraint
+-- below then fails with `column "amount_cents" does not exist`.
+alter table public.disbursements add column if not exists player_id uuid references public.players (id) on delete set null;
+alter table public.disbursements add column if not exists amount_cents integer not null default 0;
+alter table public.disbursements add column if not exists status text not null default 'pending';
+alter table public.disbursements add column if not exists created_at timestamptz not null default now();
+
 do $$
 begin
   alter table public.disbursements add constraint disbursements_amount_cents_check check (amount_cents >= 0);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 create table if not exists public.telemetry_logs (
@@ -822,6 +915,12 @@ as $$
   );
 $$;
 
+-- 2026-09 audit (Round 12 sweep): rate limit for redeem_team_code below — the SCHOOL-SPORT-YEAR
+-- code format is a small enough keyspace to brute-force via the RPC directly (no rate limit
+-- existed at all), independent of the separate git-leak issue fixed above.
+alter table public.profiles add column if not exists team_code_fail_count integer not null default 0;
+alter table public.profiles add column if not exists team_code_locked_until timestamptz;
+
 create or replace function public.redeem_team_code(raw_code text)
 returns jsonb
 language plpgsql
@@ -836,6 +935,8 @@ declare
   sport_name text;
   me public.profiles%rowtype;
   school public.schools_and_teams%rowtype;
+  max_attempts constant integer := 5;
+  lockout_minutes constant integer := 15;
 begin
   if auth.uid() is null then
     raise exception 'Sign in required';
@@ -852,14 +953,34 @@ begin
     raise exception 'legal acknowledgement required';
   end if;
 
+  -- 2026-09 audit (Round 12 sweep): reject before ever touching schools_and_teams once locked out,
+  -- so a locked-out account can't keep using this call to probe codes either.
+  if me.team_code_locked_until is not null and me.team_code_locked_until > timezone('utc', now()) then
+    raise exception 'Too many attempts. Try again later.';
+  end if;
+
   select * into school
   from public.schools_and_teams s
   where upper(btrim(coalesce(s.team_code, ''))) in (n, school_key)
   limit 1;
 
   if school.id is null then
+    update public.profiles
+    set
+      team_code_fail_count = coalesce(team_code_fail_count, 0) + 1,
+      team_code_locked_until = case
+        when coalesce(team_code_fail_count, 0) + 1 >= max_attempts
+          then timezone('utc', now()) + (lockout_minutes || ' minutes')::interval
+        else team_code_locked_until
+      end
+    where id = me.id;
     raise exception 'Unknown team code';
   end if;
+
+  -- A real code resets the counter — only wrong guesses count toward the lockout.
+  update public.profiles
+  set team_code_fail_count = 0, team_code_locked_until = null
+  where id = me.id;
 
   parts := string_to_array(n, '-');
   if coalesce(array_length(parts, 1), 0) >= 3 then
@@ -2378,14 +2499,26 @@ $$;
 
 drop function if exists public.get_admin_platform_metrics();
 
+-- 2026-09 audit (Round 18 sweep, critical): was anon-executable with no role check at all — the
+-- exact same gap already found and fixed for `get_admin_reports`/`get_company_revenue_summary`
+-- (2026-09 audit item 7), just never applied here too. `malo_cents` alone is the platform's total
+-- Mālo revenue across every fan/athlete; anyone with the public anon key could read it, plus
+-- engagement/moderation-queue counts, with no login at all. Fixed inline with `current_user_role()`
+-- (defined earlier in this file, unlike `require_admin_guard()` which is defined much later — used
+-- directly here rather than forward-referencing it) as a leading statement that raises before the
+-- real query runs if the caller isn't admin.
 create or replace function public.get_admin_platform_metrics()
 returns jsonb
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $$
-  select jsonb_build_object(
+begin
+  if public.current_user_role() <> 'admin' then
+    raise exception 'Admin access required';
+  end if;
+  return jsonb_build_object(
     'highlight_count', (
       select count(*)::int from public.reels where coalesce(is_removed, false) = false
     ),
@@ -2409,6 +2542,7 @@ as $$
       where created_at >= timezone('utc', now()) - interval '24 hours'
     )
   );
+end;
 $$;
 
 drop function if exists public.get_fan_tip_history(uuid);
@@ -2450,8 +2584,23 @@ $$;
 
 drop function if exists public.search_schools_and_teams(text);
 
+-- 2026-09 audit (Round 13 sweep, critical): was `returns setof public.schools_and_teams` with
+-- `select s.*` — since this is SECURITY DEFINER (runs as the function owner, bypassing the caller's
+-- column grants entirely), it leaked every school's `team_code` regardless of the table-level
+-- column grant fix above. Explicit column list — no `team_code` — closes it at the source instead
+-- of relying on the return type to coincidentally not include it.
 create or replace function public.search_schools_and_teams(search_query text)
-returns setof public.schools_and_teams
+returns table (
+  id uuid,
+  name text,
+  mascot text,
+  level text,
+  division text,
+  region text,
+  city text,
+  created_at timestamptz,
+  malo_frozen boolean
+)
 language plpgsql
 stable
 security definer
@@ -2465,7 +2614,7 @@ begin
   end if;
 
   return query
-  select s.*
+  select s.id, s.name, s.mascot, s.level, s.division, s.region, s.city, s.created_at, s.malo_frozen
   from public.schools_and_teams s
   where s.name ilike '%' || needle || '%'
      or s.mascot ilike '%' || needle || '%'
@@ -2827,18 +2976,32 @@ drop policy if exists "Public read crew follows" on public.crew_follows;
 create policy "Public read crew follows" on public.crew_follows for select using (true);
 
 drop policy if exists "Users write own crew follows" on public.crew_follows;
+-- 2026-09 audit (Round 11 sweep): dropped the `auth.role() = 'anon'` bypass on both — this is a
+-- fan feature gated by Soft-Wall (sign-in required before Join Crew is ever reachable), not an
+-- admin/operator desk with the Studio-Unlock "no real session" excuse. `toggle_crew_follow`
+-- (SECURITY DEFINER, already requires `auth.uid()` non-null) and `setCrewFollow`'s direct-table
+-- fallback in `lib/crew.ts` (documented `@param userId Signed-in auth.uid()`) both only ever write
+-- the caller's own `follower_id` — there was no legitimate anon caller, only an unconditional bypass
+-- letting anyone with the public anon key insert fake Crew follows or delete any real user's Crew
+-- relationships for any athlete pair.
 create policy "Users write own crew follows"
   on public.crew_follows for all
-  using (follower_id = auth.uid() or auth.role() = 'anon')
-  with check (follower_id = auth.uid() or auth.role() = 'anon');
+  using (follower_id = auth.uid())
+  with check (follower_id = auth.uid());
 
+-- 2026-09 audit (Round 11 sweep): same bypass on SELECT let anyone with the anon key read every
+-- fan's queued Crew push payloads, not just their own. INSERT was worse — `with check (true)`, no
+-- role condition even needed — anyone could queue a fake in-app notification (`title`/`body`/`kind`
+-- fully attacker-controlled) targeting any real `recipient_id`. The only real writer,
+-- `set_reel_flash_unlock`, is SECURITY DEFINER and bypasses this policy already; nothing in the app
+-- ever inserts here directly, so INSERT is now closed to clients entirely (and the grant below drops
+-- to select-only).
 drop policy if exists "Users read own crew push" on public.crew_push_queue;
 create policy "Users read own crew push"
   on public.crew_push_queue for select
-  using (recipient_id = auth.uid() or auth.role() = 'anon');
+  using (recipient_id = auth.uid());
 
 drop policy if exists "Insert crew push" on public.crew_push_queue;
-create policy "Insert crew push" on public.crew_push_queue for insert with check (true);
 
 -- 2026-09 audit (self-escalation fix, third pass — INSERT gap): this policy used to read
 -- `with check (user_id = auth.uid() or auth.role() = 'anon')`, the same `auth.role() = 'anon'`
@@ -2896,6 +3059,33 @@ create policy "Users update own profile"
 -- the insert is already admin" rather than the UPDATE path's "old row wasn't admin, new row is, and
 -- the caller isn't admin". `TG_OP` distinguishes the two so the function never dereferences `old`
 -- during an INSERT.
+-- 2026-09 audit (Round 15 sweep, critical): generalized from admin-only to all five privileged
+-- roles. `add_user_role` already refuses to self-grant `booster`/`operator`/`parent`/`sponsor`/
+-- `admin` unless the caller is already admin (Round 3 fix) — but this trigger, the thing that closes
+-- the matching raw-`UPDATE`-on-`profiles` bypass, only ever checked for `is_admin`/`role = 'admin'`.
+-- `profiles` has a blanket `grant ... update` with no column restriction, so any signed-in fan could
+-- run `update profiles set role = 'booster' where user_id = auth.uid()` directly and instantly pass
+-- `current_user_role() in ('booster', 'admin', 'operator')` — unlocking full `players` table write
+-- access ("Staff write players"), among other booster/operator-gated policies, with zero admin
+-- grant. Same root cause and same fix shape as the original admin-escalation bug, just never
+-- extended to the other four roles that RPC already protected.
+-- Checks each of the 5 roles individually (not just "privileged vs not") — a coarse boolean would
+-- let someone who already legitimately holds one privileged role (say an admin-granted `booster`)
+-- self-upgrade to `operator` or `admin` via the same raw update, since "already privileged" would
+-- read true both before and after. Only a role newly present in NEW that wasn't already in OLD
+-- counts as an escalation.
+-- 2026-09 fix (bootstrap gap, present since this trigger's original Round 3 version, only now
+-- surfaced): `current_user_role()` resolves to `'guest'` for ANY session with no PostgREST JWT at
+-- all — including a direct Supabase SQL Editor / migration / service-role connection, which never
+-- sets `request.jwt.claims` in the first place. That meant this trigger blocked not just a client
+-- self-escalating over the anon/authenticated REST API (the actual threat it exists for), but also
+-- the legitimate one-time "grant the very first admin" SQL (`update profiles set is_admin = true
+-- where ...`) run directly in the SQL Editor — a real superuser DB session already has unrestricted
+-- power regardless of this trigger (it can `alter table ... disable trigger` outright), so blocking
+-- it here bought no real security, only a confusing bootstrap failure. Fixed by exempting sessions
+-- with no PostgREST role context at all (`auth.role() is null`) — distinct from, and does NOT
+-- exempt, a genuine anon REST call, which always has `auth.role() = 'anon'` even with no `sub`
+-- claim, so that path is still blocked exactly as before.
 create or replace function public.guard_profiles_admin_escalation()
 returns trigger
 language plpgsql
@@ -2903,26 +3093,34 @@ security definer
 set search_path = public
 as $$
 declare
-  new_is_admin boolean;
-  old_is_admin boolean;
+  privileged_roles constant text[] := array['admin', 'booster', 'operator', 'parent', 'sponsor'];
+  new_roles_set text[];
+  old_roles_set text[];
+  gained text[];
 begin
-  new_is_admin := coalesce(new.is_admin, false)
-    or new.role = 'admin'
-    or coalesce(new.roles, array[]::text[]) @> array['admin']::text[];
-
-  if tg_op = 'INSERT' then
-    if new_is_admin and public.current_user_role() <> 'admin' then
-      raise exception 'admin role can only be granted by an existing admin';
-    end if;
+  if auth.role() is null then
     return new;
   end if;
 
-  old_is_admin := coalesce(old.is_admin, false)
-    or old.role = 'admin'
-    or coalesce(old.roles, array[]::text[]) @> array['admin']::text[];
+  new_roles_set := coalesce(new.roles, array[]::text[])
+    || array[new.role]
+    || case when coalesce(new.is_admin, false) then array['admin'] else array[]::text[] end;
 
-  if new_is_admin and not old_is_admin and public.current_user_role() <> 'admin' then
-    raise exception 'admin role can only be granted by an existing admin';
+  if tg_op = 'INSERT' then
+    old_roles_set := array[]::text[];
+  else
+    old_roles_set := coalesce(old.roles, array[]::text[])
+      || array[old.role]
+      || case when coalesce(old.is_admin, false) then array['admin'] else array[]::text[] end;
+  end if;
+
+  select coalesce(array_agg(r), array[]::text[])
+  into gained
+  from unnest(privileged_roles) as r
+  where r = any (new_roles_set) and not (r = any (old_roles_set));
+
+  if array_length(gained, 1) > 0 and public.current_user_role() <> 'admin' then
+    raise exception 'these roles can only be granted by an existing admin: %', array_to_string(gained, ', ');
   end if;
 
   return new;
@@ -3153,6 +3351,41 @@ create policy "Operators insert game_events"
     )
   );
 
+-- 2026-09 audit: `useGameEventBroadcast.ts` / `lib/operator.ts` push live sideline callouts on a
+-- Realtime Broadcast channel `game_events_{gameId}` for every fan viewing that game's Reel. Broadcast
+-- sends are NOT table writes, so the "Operators insert game_events" policy above never covered them —
+-- with no Realtime Authorization configured, anyone holding the app's public anon key could open a
+-- socket and broadcast a fabricated event straight onto any fan's screen, live, with zero auth check.
+-- Fix: both channel() calls now pass `{ private: true }`, which makes Realtime consult these
+-- `realtime.messages` RLS policies before delivering (receive) or accepting (send) a message on the
+-- topic. Mirrors the same claimed/unclaimed stopgap as the `game_events` table policy above.
+-- Note: `realtime.messages` already has RLS enabled by the Supabase platform on every project, and
+-- the SQL Editor's role does not own that table — running `alter table realtime.messages enable row
+-- level security` here fails with `must be owner of table messages` (42501). Only CREATE POLICY is
+-- needed (and permitted) on it.
+drop policy if exists "Fans receive game_events broadcast" on realtime.messages;
+create policy "Fans receive game_events broadcast"
+  on realtime.messages for select
+  using (realtime.topic() like 'game_events\_%' escape '\');
+
+drop policy if exists "Operators send game_events broadcast" on realtime.messages;
+create policy "Operators send game_events broadcast"
+  on realtime.messages for insert
+  with check (
+    realtime.topic() like 'game_events\_%' escape '\'
+    and (
+      public.current_user_role() in ('operator', 'admin')
+      or (
+        auth.role() = 'anon'
+        and exists (
+          select 1 from public.games g
+          where g.id::text = split_part(realtime.topic(), 'game_events_', 2)
+            and g.claimed_by is null
+        )
+      )
+    )
+  );
+
 -- 2026-09 audit item 2: tips are financial records, not a guest-browse surface — no client reads
 -- another fan's tips directly (`useFanTipHistory` filters by `fan_id = auth.uid()`; admin reads go
 -- through `get_admin_reports()`, a SECURITY DEFINER RPC that bypasses this policy entirely).
@@ -3267,8 +3500,73 @@ create policy "Admin write disbursements"
   using (public.current_user_role() in ('admin', 'parent'))
   with check (public.current_user_role() in ('admin', 'parent'));
 
+-- 2026-09 audit (paywall bypass): `using (true)` + `grant select ... to anon, authenticated` meant
+-- ANY client holding the public anon key could read `video_url` for every reel via a raw REST call —
+-- including Vault-only / subscriber-Exclusive / Flash-Unlock clips — with no subscription, no Vault
+-- unlock, not even a login. The app's own `.eq('is_vault_only', false)` feed filters were never an
+-- access boundary, just a query convenience. RLS can't conditionally null one column within a row
+-- that must otherwise stay visible (for the blurred paywall tile), so the real fix is the
+-- `public.reels_feed` view below, which every fan-facing read now goes through (`lib/reels.ts`,
+-- `lib/spotlight.ts`) — it nulls `video_url` unless the row is unlocked, Flash-Unlocked right now, or
+-- the caller is the uploader / an admin / an active subscriber to the tagged athlete. This base-table
+-- policy is narrowed to just what the base table itself still needs: an uploader reading back their
+-- own freshly-inserted/updated row (`MediaUploadService.insertReelRow`'s `.select()` after insert),
+-- and the admin moderation desks (`lib/admin.ts`, `lib/adminCatalog.ts`) which need every row's
+-- metadata (not video_url) regardless of lock state. The view is owned by the migration role (not
+-- `authenticated`/`anon`), so it reads the full base table regardless of this narrower policy —
+-- Postgres evaluates a view's underlying table access using the view owner's privileges unless the
+-- view is explicitly marked `security_invoker`, which this one deliberately is not.
 drop policy if exists "Public read reels" on public.reels;
-create policy "Public read reels" on public.reels for select using (true);
+drop policy if exists "Read own or admin reels" on public.reels;
+create policy "Read own or admin reels" on public.reels
+  for select
+  to authenticated
+  using (
+    public.current_user_role() = 'admin'
+    or uploaded_by = (select p.id from public.profiles p where p.user_id = auth.uid() limit 1)
+  );
+
+drop view if exists public.reels_feed;
+create view public.reels_feed as
+select
+  r.id,
+  r.title,
+  r.player_id,
+  r.game_id,
+  r.created_at,
+  r.seki_count,
+  r.aura_count,
+  r.flex_count,
+  r.total_tips_cents,
+  r.is_exclusive,
+  r.is_vault_only,
+  r.is_flagged,
+  r.reported_by,
+  r.is_removed,
+  r.category,
+  r.flash_unlock_until,
+  r.uploaded_by,
+  r.tag_status,
+  r.tag_confirmed_at,
+  r.tag_confirmed_by,
+  case
+    when coalesce(r.is_vault_only, false) = false then r.video_url
+    when r.flash_unlock_until is not null and r.flash_unlock_until > timezone('utc', now()) then r.video_url
+    when public.current_user_role() = 'admin' then r.video_url
+    when auth.uid() is not null and r.uploaded_by = (
+      select p.id from public.profiles p where p.user_id = auth.uid() limit 1
+    ) then r.video_url
+    when auth.uid() is not null and r.player_id is not null and exists (
+      select 1 from public.subscriptions s
+      where s.subscriber_id = auth.uid()
+        and s.athlete_id = r.player_id
+        and s.status = 'active'
+    ) then r.video_url
+    else ''
+  end as video_url
+from public.reels r;
+
+grant select on public.reels_feed to anon, authenticated;
 
 -- 2026-09 audit (reels RLS tightening): `with check (true)` let any anon/authenticated client
 -- insert a Highlight attributed to any `player_id` with any `uploaded_by`. `MediaUploadService.
@@ -3279,6 +3577,7 @@ create policy "Public read reels" on public.reels for select using (true);
 -- someone else's profile. Soft-Wall gates the upload FAB, so `anon` was never a real caller either;
 -- narrowed to `authenticated` to match.
 drop policy if exists "Public insert reels" on public.reels;
+drop policy if exists "Authenticated insert own reels" on public.reels;
 create policy "Authenticated insert own reels"
   on public.reels for insert
   to authenticated
@@ -3299,6 +3598,7 @@ create policy "Authenticated insert own reels"
 -- `confirm_reel_player_tag`, `report_reel`), which bypass column grants entirely because they run as
 -- the function owner, not the caller's session role.
 drop policy if exists "Public update reels" on public.reels;
+drop policy if exists "Uploader updates own reel" on public.reels;
 create policy "Uploader updates own reel"
   on public.reels for update
   to authenticated
@@ -3423,15 +3723,33 @@ grant select, insert, update, delete on public.profiles to anon, authenticated;
 -- to it, or (b) enumerating every non-sensitive column for an explicit `grant select (...)` after
 -- auditing every current `select('*')`/`select(...)` call site — either is a bigger, testable-only-
 -- against-staging change, not something to land blind in this pass.
-grant select on public.schools_and_teams to anon, authenticated;
+-- 2026-09 audit (Round 13 sweep, critical): `team_code` is the Varsity-verification secret
+-- (`redeem_team_code`) — a blanket `grant select` on the whole table meant anyone could read every
+-- school's code directly (`select team_code from schools_and_teams`, or even just filter on it in a
+-- WHERE clause to oracle a guess), completely defeating the Round 12 rotation and rate limit: the
+-- rate limit lives inside the RPC, but a raw REST read never touches the RPC at all. Column-level
+-- grant instead — every current client call site (`lib/teams.ts`, `lib/adminCatalog.ts`) already
+-- enumerates explicit columns and never selects `team_code` or `*`, confirmed by grep before this
+-- change; `redeem_team_code`/`search_schools_and_teams` are unaffected since SECURITY DEFINER
+-- functions run as the function owner, not the caller, so they bypass column grants entirely.
+-- The explicit REVOKE matters: GRANT is additive, not a replacement — a project that already ran
+-- the old blanket `grant select on schools_and_teams to anon, authenticated` (every project that ran
+-- schema.sql before this round) keeps that broader privilege forever unless it is revoked first;
+-- adding a narrower column grant on top of it would have been a silent no-op.
+revoke select on public.schools_and_teams from anon, authenticated;
+grant select (id, name, mascot, level, division, region, city, created_at, malo_frozen)
+  on public.schools_and_teams to anon, authenticated;
 grant select on public.athlete_career_stats to anon, authenticated;
 grant select on public.athlete_game_logs to anon, authenticated;
 -- 2026-09 audit item 12: spotlight board stays publicly readable (guest browse); publishing is
 -- now authenticated-admin only (see the RLS policy above).
 grant select on public.spotlight_awards to anon, authenticated;
 grant insert, update, delete on public.spotlight_awards to authenticated;
-grant select, insert, delete on public.crew_follows to anon, authenticated;
-grant select, insert on public.crew_push_queue to anon, authenticated;
+-- 2026-09 audit (Round 11 sweep): both narrowed to `authenticated` — Soft-Wall gates Join Crew
+-- behind sign-in, so there was never a real anon caller; `crew_push_queue` also drops `insert`
+-- entirely (see RLS policy comment above — only the SECURITY DEFINER RPC writes it).
+grant select, insert, delete on public.crew_follows to authenticated;
+grant select on public.crew_push_queue to authenticated;
 -- 2026-09 audit item 1/12: `players` carries `aura_points` directly — see the RLS policy comment
 -- above. Read stays public (roster/cards are guest-browse); writes are now authenticated-role only.
 grant select on public.players to anon, authenticated;
@@ -3472,11 +3790,13 @@ grant insert on public.sponsorships to authenticated;
 grant select, insert, update, delete on public.verification_requests to authenticated;
 -- 2026-09 audit item 11: disbursements are payout ledger rows — anon revoked entirely.
 grant select, insert, update on public.disbursements to authenticated;
--- 2026-09 audit (reels RLS tightening): guest browse keeps SELECT public. INSERT/UPDATE drop `anon`
--- (Soft-Wall gates the upload FAB; no real anon caller). UPDATE is further narrowed to an explicit
--- column allowlist — see the RLS policy comments above for why counters/moderation flags are
--- deliberately excluded and stay RPC-only.
-grant select on public.reels to anon, authenticated;
+-- 2026-09 audit (paywall bypass): base-table SELECT is no longer public — see the "Read own or
+-- admin reels" policy comment above. Guest/fan browsing now reads `public.reels_feed` (granted
+-- further up, right after that view's definition) instead. INSERT/UPDATE drop `anon` (Soft-Wall
+-- gates the upload FAB; no real anon caller). UPDATE is further narrowed to an explicit column
+-- allowlist — see the RLS policy comments above for why counters/moderation flags are deliberately
+-- excluded and stay RPC-only.
+grant select on public.reels to authenticated;
 grant insert on public.reels to authenticated;
 grant update (title, category, is_exclusive, is_vault_only, flash_unlock_until) on public.reels to authenticated;
 grant select, insert, delete on public.saved_reels to authenticated;
@@ -3564,6 +3884,7 @@ begin
   alter publication supabase_realtime add table public.games;
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -3571,6 +3892,7 @@ begin
   alter publication supabase_realtime add table public.game_events;
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -3578,6 +3900,7 @@ begin
   alter publication supabase_realtime add table public.cheer_polls;
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 insert into public.cheer_polls (slug, home_label, away_label, home_votes, away_votes)
@@ -4176,6 +4499,7 @@ begin
   alter publication supabase_realtime add table public.app_runtime_config;
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
   when undefined_object then null;
 end $$;
 
@@ -4193,11 +4517,21 @@ create table if not exists public.shop_orders (
   created_at timestamptz not null default now()
 );
 
+-- 2026-09 fix: same gap as sponsorships above — this table had no column safety net, so
+-- `create table if not exists` no-ops against a pre-existing narrower table and the constraints
+-- below then fail with `column "amount_cents" does not exist` (or `"qty"`).
+alter table public.shop_orders add column if not exists product_id text;
+alter table public.shop_orders add column if not exists buyer_id uuid;
+alter table public.shop_orders add column if not exists amount_cents integer not null default 0;
+alter table public.shop_orders add column if not exists qty integer not null default 1;
+alter table public.shop_orders add column if not exists created_at timestamptz not null default now();
+
 do $$
 begin
   alter table public.shop_orders add constraint shop_orders_amount_cents_check check (amount_cents >= 0);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -4205,6 +4539,22 @@ begin
   alter table public.shop_orders add constraint shop_orders_qty_check check (qty > 0);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
+-- 2026-09 audit (Round 24/26 follow-up): same gap this table's own comment above already names —
+-- `amount_cents` is client-computed (`priceCents * qty` in `ProductSheet.tsx`) and inserted directly,
+-- with no server-side check against a real Stripe charge yet. Same stopgap cap as `tips` /
+-- `sponsorships` / `chip_in_wishlist_item`. Catalog prices top out at $65/item with inventory capped
+-- at 6-40 units (see the `shop_products` seed above), so even buying out the priciest item's entire
+-- stock stays under $400 — $1,000 has generous headroom over any real order.
+do $$
+begin
+  alter table public.shop_orders add constraint shop_orders_amount_cents_cap_check
+    check (auth.role() = 'service_role' or amount_cents <= 100000);
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 create table if not exists public.company_revenue_logs (
@@ -4239,6 +4589,7 @@ begin
     check (source in ('malo', 'booster', 'vault', 'merch'));
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -4248,6 +4599,7 @@ begin
     check (payee_kind in ('athlete', 'operator', 'none'));
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -4256,6 +4608,7 @@ begin
     add constraint company_revenue_logs_source_id_key unique (source, source_id);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -4265,6 +4618,7 @@ begin
     check (gross_cents >= 0 and platform_cents >= 0 and payout_cents >= 0);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -4274,6 +4628,7 @@ begin
     foreign key (player_id) references public.players (id) on delete set null;
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 create index if not exists company_revenue_logs_created_at_idx
@@ -4281,6 +4636,27 @@ create index if not exists company_revenue_logs_created_at_idx
 
 create index if not exists shop_orders_created_at_idx
   on public.shop_orders (created_at desc);
+
+-- 2026-09 audit (Round 10 sweep): dedup ledger for `supabase/functions/stripe-webhook`. That
+-- function's idempotency guard was a `select ... from telemetry_logs where payload contains
+-- {payment_intent_id}` check followed later by an insert marking it processed — two separate,
+-- non-atomic steps. Stripe explicitly redelivers webhooks (retries, and occasionally
+-- near-simultaneous duplicate deliveries for the same event), so two concurrent invocations for the
+-- same PaymentIntent could both pass the "already processed?" check before either finished writing,
+-- double-crediting Aura and double-inserting a `tips` row. Currently dormant (the webhook's
+-- rich-metadata credit path isn't reachable yet — `createPaymentIntentHandler` doesn't set
+-- `tip_player_id`/`tip_kind`/`tip_aura_points` metadata), but fixing before it goes live is a lot
+-- cheaper than fixing after. This table's primary key makes the dedup check atomic: the webhook now
+-- inserts here FIRST, and a unique-violation on that insert (not a prior SELECT) is what means
+-- "another delivery already claimed this event."
+create table if not exists public.stripe_webhook_events (
+  payment_intent_id text primary key,
+  processed_at timestamptz not null default now()
+);
+
+alter table public.stripe_webhook_events enable row level security;
+-- Deliberately zero policies for anon/authenticated — this table is service-role only (the Edge
+-- Function's admin client bypasses RLS entirely), never read or written by the app.
 
 alter table public.company_revenue_logs enable row level security;
 alter table public.shop_orders enable row level security;
@@ -4798,6 +5174,7 @@ begin
     check (kind in ('suggestion', 'bug', 'look', 'other'));
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -4807,6 +5184,7 @@ begin
     check (surface in ('home', 'local', 'spotlight', 'drip', 'profile', 'other'));
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 do $$
@@ -4816,6 +5194,7 @@ begin
     check (status in ('new', 'reviewing', 'planned', 'shipping', 'shipped', 'declined'));
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 create index if not exists app_feedback_status_created_at_idx
@@ -4973,6 +5352,7 @@ begin
     check (target_amount_cents >= 0 and current_amount_cents >= 0);
 exception
   when duplicate_object then null;
+  when duplicate_table then null;
 end $$;
 
 create index if not exists wishlist_items_player_idx
@@ -5265,7 +5645,7 @@ set search_path = public
 as $$
 begin
   insert into public.profiles (
-    user_id, full_name, role, roles, is_verified, spirit_points, active_role, age_confirmed_13_plus
+    user_id, full_name, role, roles, is_verified, aura_points, active_role, age_confirmed_13_plus
   )
   values (
     new.id,
@@ -5295,23 +5675,34 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_auth_user();
 
+grant execute on function public.handle_new_auth_user() to supabase_auth_admin;
+
 -- Storage: buckets + policies for Highlight upload/playback and profile avatars.
 -- 2026-09 fix: this used to live only in supabase/media_upload.sql and supabase/reels.sql —
 -- fine for an existing hosted project that already ran those, but it meant a FRESH project
 -- seeded from schema.sql alone (exactly what Phase 0's "apply to a fresh Supabase project"
 -- and the Phase 2 staging-project setup call for) had no Storage buckets at all, so every
 -- upload would fail with "bucket is missing". Consolidated here so schema.sql alone is enough.
-insert into storage.buckets (id, name, public)
-values ('reels', 'reels', true)
-on conflict (id) do update set public = excluded.public;
+-- 2026-09 audit (Round 18 sweep): `allowed_mime_types` — uploads declare their own Content-Type
+-- client-side (`MediaUploadService.ts` always passes 'video/mp4' for reels/game_highlights,
+-- 'image/jpeg' for avatars) with nothing server-side checking the file actually matches. A raw
+-- REST call to Storage's upload endpoint bypasses the app entirely and can declare any Content-Type
+-- it wants — e.g. uploading HTML/SVG content declared as an image, which the public bucket would
+-- then serve with that same header. This doesn't inspect file *bytes* (Postgres/Storage RLS has no
+-- way to do that; real validation would need an Edge Function doing magic-byte sniffing), but it
+-- does close the direct version of the attack: the bucket now rejects any upload whose declared
+-- Content-Type isn't in this list, matching exactly what the app itself always sends.
+insert into storage.buckets (id, name, public, allowed_mime_types)
+values ('reels', 'reels', true, array['video/mp4', 'video/quicktime'])
+on conflict (id) do update set public = excluded.public, allowed_mime_types = excluded.allowed_mime_types;
 
-insert into storage.buckets (id, name, public)
-values ('game_highlights', 'game_highlights', true)
-on conflict (id) do update set public = excluded.public;
+insert into storage.buckets (id, name, public, allowed_mime_types)
+values ('game_highlights', 'game_highlights', true, array['video/mp4', 'video/quicktime'])
+on conflict (id) do update set public = excluded.public, allowed_mime_types = excluded.allowed_mime_types;
 
-insert into storage.buckets (id, name, public)
-values ('avatars', 'avatars', true)
-on conflict (id) do update set public = excluded.public;
+insert into storage.buckets (id, name, public, allowed_mime_types)
+values ('avatars', 'avatars', true, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = excluded.public, allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "Public read reels bucket" on storage.objects;
 create policy "Public read reels bucket"
