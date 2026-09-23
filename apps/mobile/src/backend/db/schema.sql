@@ -67,6 +67,25 @@ alter table public.profiles add column if not exists is_verified_athlete boolean
 -- the moment a NEW account is created with the box checked; existing rows are never overwritten.
 alter table public.profiles add column if not exists age_confirmed_13_plus boolean default null;
 
+-- 2026-09 profile customization: free-text about-me, social handles, and a per-field "hide from
+-- other users' view" map. `profile_visibility` defaults every field to visible so existing rows
+-- behave exactly as before this migration. Enforcement for "hidden from others" lives in the
+-- `profiles_public` view / `athlete_stats_visible()` further down this file, not here — the base
+-- `profiles` table keeps its existing blanket `using (true)` read policy (documented above; a
+-- column-level narrowing was already tried for `stripe_connect_id` and found unsafe to land blind).
+alter table public.profiles add column if not exists bio text;
+alter table public.profiles add column if not exists social_links jsonb not null default '{}'::jsonb;
+alter table public.profiles add column if not exists profile_visibility jsonb not null default
+  '{"bio": true, "school": true, "stats": true, "social_links": true}'::jsonb;
+
+do $$
+begin
+  alter table public.profiles add constraint profiles_bio_length_check check (char_length(bio) <= 500);
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
 -- 2026-09 audit: CHECK constraints on the Aura currency / engagement counter columns, so even a
 -- direct authenticated-staff table write (or a bug) can't drive them negative.
 -- 2026-09 fix: every such `do $$ ... exception when duplicate_object then null $$` block in this
@@ -2890,6 +2909,35 @@ $$;
 
 grant execute on function public.malo_target_frozen(uuid) to anon, authenticated;
 
+-- 2026-09 profile customization: gates `athlete_career_stats` / `athlete_game_logs` SELECT so an
+-- athlete can hide their stats from other users via `profiles.profile_visibility->>'stats'`. Mirrors
+-- `malo_target_frozen`'s "look up the claiming profile via player_id" shape. A player row nobody has
+-- claimed yet (no matching `profiles.player_id`) has no owner to make that choice, so it stays
+-- visible — this only ever narrows access for a player an owner has actually claimed and hidden.
+-- Owner and admin always see their own stats regardless of the flag (matches the "hide from other
+-- users' view only" scope agreed with the product owner).
+create or replace function public.athlete_stats_visible(target_player_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (
+      select coalesce((pr.profile_visibility->>'stats')::boolean, true)
+        or pr.user_id = auth.uid()
+        or public.current_user_role() = 'admin'
+      from public.profiles pr
+      where pr.player_id = target_player_id
+      limit 1
+    ),
+    true
+  );
+$$;
+
+grant execute on function public.athlete_stats_visible(uuid) to anon, authenticated;
+
 drop function if exists public.set_malo_freeze(text, uuid, boolean);
 
 -- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): the intended way to flip `profiles.malo_frozen` /
@@ -2983,15 +3031,17 @@ create policy "Public read schools and teams"
   on public.schools_and_teams for select
   using (true);
 
+-- 2026-09 profile customization: was `using (true)`. Now defers to `athlete_stats_visible()` so an
+-- athlete can hide their own career stats from other users (owner/admin still always see them).
 drop policy if exists "Public read athlete career stats" on public.athlete_career_stats;
 create policy "Public read athlete career stats"
   on public.athlete_career_stats for select
-  using (true);
+  using (public.athlete_stats_visible(player_id));
 
 drop policy if exists "Public read athlete game logs" on public.athlete_game_logs;
 create policy "Public read athlete game logs"
   on public.athlete_game_logs for select
-  using (true);
+  using (public.athlete_stats_visible(player_id));
 
 drop policy if exists "Public read spotlight awards" on public.spotlight_awards;
 create policy "Public read spotlight awards"
@@ -3234,6 +3284,41 @@ create trigger guard_profiles_admin_escalation
   before insert or update on public.profiles
   for each row
   execute function public.guard_profiles_admin_escalation();
+
+-- 2026-09 profile customization: `profiles` keeps its blanket `using (true)` read policy (see the
+-- long note above — a column-level narrowing was already tried once and found unsafe to land
+-- blind), so `bio` / `social_links` can't be hidden from other users by revoking table access.
+-- Mirrors the `reels_feed` pattern instead: a view that nulls the hidden columns for anyone who
+-- isn't the owner or an admin, which every OTHER-user-facing read (the public `/user/[id]` screen,
+-- Team Roster Strip, etc.) goes through instead of the base table. The owner's own screens keep
+-- reading `profiles` directly, so they always see their own bio/links regardless of the flag.
+drop view if exists public.profiles_public;
+create view public.profiles_public as
+select
+  pr.id,
+  pr.user_id,
+  pr.player_id,
+  pr.username,
+  pr.full_name,
+  pr.avatar_url,
+  pr.is_verified,
+  pr.is_verified_athlete,
+  coalesce((pr.profile_visibility->>'school')::boolean, true) as school_visible,
+  case
+    when coalesce((pr.profile_visibility->>'bio')::boolean, true) then pr.bio
+    when pr.user_id = auth.uid() then pr.bio
+    when public.current_user_role() = 'admin' then pr.bio
+    else null
+  end as bio,
+  case
+    when coalesce((pr.profile_visibility->>'social_links')::boolean, true) then pr.social_links
+    when pr.user_id = auth.uid() then pr.social_links
+    when public.current_user_role() = 'admin' then pr.social_links
+    else '{}'::jsonb
+  end as social_links
+from public.profiles pr;
+
+grant select on public.profiles_public to anon, authenticated;
 
 drop policy if exists "Public read players" on public.players;
 create policy "Public read players" on public.players for select using (true);
@@ -5812,8 +5897,8 @@ grant execute on function public.handle_new_auth_user() to supabase_auth_admin;
 -- and the Phase 2 staging-project setup call for) had no Storage buckets at all, so every
 -- upload would fail with "bucket is missing". Consolidated here so schema.sql alone is enough.
 -- 2026-09 audit (Round 18 sweep): `allowed_mime_types` — uploads declare their own Content-Type
--- client-side (`MediaUploadService.ts` always passes 'video/mp4' for reels/game_highlights,
--- 'image/jpeg' for avatars) with nothing server-side checking the file actually matches. A raw
+-- client-side (`MediaUploadService.ts` passes 'video/mp4' for reels/game_highlights and
+-- image/jpeg|png|webp for avatars, from the file extension) with nothing server-side checking the file actually matches. A raw
 -- REST call to Storage's upload endpoint bypasses the app entirely and can declare any Content-Type
 -- it wants — e.g. uploading HTML/SVG content declared as an image, which the public bucket would
 -- then serve with that same header. This doesn't inspect file *bytes* (Postgres/Storage RLS has no
@@ -5830,6 +5915,14 @@ on conflict (id) do update set public = excluded.public, allowed_mime_types = ex
 
 insert into storage.buckets (id, name, public, allowed_mime_types)
 values ('avatars', 'avatars', true, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = excluded.public, allowed_mime_types = excluded.allowed_mime_types;
+
+-- Private Vault / Exclusive playback. Public Highlights stay on `reels`. New locked clips
+-- upload here and store `reelvault:{path}` in `reels.video_url`. Playback uses a signed URL.
+-- `can_read_reel_vault` allows the uploader, an admin, an active subscriber, a live Flash
+-- Unlock, or a clip that has been moved back to the public feed.
+insert into storage.buckets (id, name, public, allowed_mime_types)
+values ('reel_vault', 'reel_vault', false, array['video/mp4', 'video/quicktime'])
 on conflict (id) do update set public = excluded.public, allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "Public read reels bucket" on storage.objects;
@@ -5879,3 +5972,61 @@ create policy "Public update avatars"
   on storage.objects for update
   using (bucket_id = 'avatars' and auth.role() = 'authenticated')
   with check (bucket_id = 'avatars' and auth.role() = 'authenticated');
+
+-- Storage SELECT on reel_vault cannot query public.reels directly: that table's RLS hides
+-- the row from subscribers and from anon during Flash Unlock, so the EXISTS check would
+-- always fail for the people reels_feed just handed the token to. This definer reads the
+-- same entitlement CASE and only returns a boolean.
+create or replace function public.can_read_reel_vault(object_name text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.reels r
+    where r.video_url = 'reelvault:' || object_name
+      and (
+        coalesce(r.is_vault_only, false) = false
+        or public.current_user_role() = 'admin'
+        or (
+          auth.uid() is not null
+          and r.uploaded_by = (select p.id from public.profiles p where p.user_id = auth.uid() limit 1)
+        )
+        or (r.flash_unlock_until is not null and r.flash_unlock_until > timezone('utc', now()))
+        or (
+          auth.uid() is not null
+          and r.player_id is not null
+          and exists (
+            select 1 from public.subscriptions s
+            where s.subscriber_id = auth.uid()
+              and s.athlete_id = r.player_id
+              and s.status = 'active'
+          )
+        )
+      )
+  );
+$$;
+
+revoke all on function public.can_read_reel_vault(text) from public;
+grant execute on function public.can_read_reel_vault(text) to anon, authenticated;
+
+drop policy if exists "Upload own vault reel" on storage.objects;
+create policy "Upload own vault reel"
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'reel_vault'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "Read entitled vault reel" on storage.objects;
+create policy "Read entitled vault reel"
+  on storage.objects for select
+  to anon, authenticated
+  using (
+    bucket_id = 'reel_vault'
+    and public.can_read_reel_vault(name)
+  );

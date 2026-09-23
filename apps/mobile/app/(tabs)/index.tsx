@@ -344,6 +344,10 @@ export default function HighlightsTab() {
             })}
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={viewabilityConfig}
+            // 2026-09 fix: RN's default (10) meant the first render mounted up to 10 `ReelCard`s at
+            // once — see ReelCard.tsx's `videoPlayer` comment for what that caused on a real device.
+            // `windowSize`/`maxToRenderPerBatch` below only bound growth after the initial render.
+            initialNumToRender={2}
             windowSize={2}
             maxToRenderPerBatch={1}
             removeClippedSubviews={false}

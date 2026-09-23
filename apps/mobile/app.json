@@ -9,7 +9,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.logoitino.ala-sports"
+      "bundleIdentifier": "com.logoitino.ala-sports",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.logoitino.alasports",
@@ -84,6 +87,12 @@
         "projectId": "7434ebc5-7ef5-4306-864f-c43f7d02a3de"
       }
     },
-    "owner": "logoitino"
+    "owner": "logoitino",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7434ebc5-7ef5-4306-864f-c43f7d02a3de"
+    }
   }
 }

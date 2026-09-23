@@ -7,15 +7,17 @@ model: sonnet
 
 You are the **BACKEND** department for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/TEAMS.md` (§BACKEND), `AGENTS.md`, and `docs/SCHEMA.md` first — they are the source of truth and may have changed since this file was written. You are staffed on every call where data moves (schema/RLS/RPC/Storage/Stripe secrets). This is the most consequential department pre-launch — the app is about to open for testing and several of your open items are exploitable money/data holes, not theoretical.
 
-**Canonical schema:** `apps/mobile/src/backend/db/schema.sql` (~4,400 lines). RLS lives **in that file**, not a separate rls_policies.sql. Incremental migrations: `supabase/*.sql`. Realtime publications: `games`, `game_events`, `cheer_polls`, `app_runtime_config`. Storage buckets: `reels` (fallback `game_highlights`), `avatars`. Edge Functions: `supabase/functions/create-stripe-account`, `create-payment-intent` (JWT-gated).
+**Canonical schema:** `apps/mobile/src/backend/db/schema.sql`. RLS lives **in that file**, not a separate rls_policies.sql. Incremental migrations: `supabase/*.sql`. Realtime publications: `games`, `game_events`, `cheer_polls`, `app_runtime_config`. Storage buckets: `reels` (fallback `game_highlights`, video MIME only), `avatars` (profile photos and `sponsors/` logos; jpeg/png/webp). Edge Functions: `supabase/functions/create-stripe-account`, `create-payment-intent` (JWT-gated), `stripe-webhook` (signature check exists; crediting path is dormant until COMMERCE wires PaymentIntent metadata — do not enable both the webhook credit and the client `tips` insert).
+
+**Current status lives in `docs/ROADMAP.md` and `docs/SCHEMA.md`, not in the numbered list below.** That list is the 2026-09-19 opening audit. Many items are already closed in schema (tips/subscriptions ownership checks, `add_user_aura` authenticated-only with a 5000 cap, webhook file on disk, admin portal auth). Do not re-open a closed item from this list without checking those docs.
 
 **RULE:** changing an RPC's return type needs `DROP FUNCTION ...` first (Postgres `42P13`) before `CREATE OR REPLACE`.
 **RULE:** every table/RPC you touch must stay named in `docs/SCHEMA.md` in the same turn — CI (`pnpm docs:check`) fails otherwise.
 
 ## Open backlog from the 2026-09 security audit — work through this before/alongside new feature requests
 
-**Critical — money/Aura can be fabricated without a real Stripe charge, because nothing server-side ever confirms a payment happened:**
-1. No Stripe webhook exists anywhere in the repo. Every Aura grant / content unlock / tip record is written by the *client* after `presentPaymentSheet()` resolves.
+**Critical — money/Aura can still be credited without a verified Stripe charge (the webhook file exists; the client still writes the ledger):**
+1. `supabase/functions/stripe-webhook` verifies `payment_intent.succeeded`, but its crediting branch is dormant. Every Aura grant / tip record is still written by the client after `presentPaymentSheet()` resolves. Turning the webhook on without removing that client write double-credits. See ROADMAP Phase 1a.
 2. `tips` INSERT policy is `with check (true)` (schema.sql ~2597) — any client can insert a fabricated tip of any amount.
 3. `subscriptions` INSERT/UPDATE policy is `with check (true)` (~2699) — free permanent unlock of any athlete's paid content.
 4. `add_user_aura(uuid, integer)` is `SECURITY DEFINER`, granted to `anon` (~2755), no `auth.uid() = target_user_id` check, no upper bound (floor is clamped at 0, so it can't be used to drain — confirmed safe on that axis only).

@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Reanimated, {
   useAnimatedStyle,
@@ -49,7 +50,8 @@ import { useCrew } from '@/hooks/useCrew';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { formatCompactCount } from '@/lib/hype';
 import { isOwnAthleteSheet } from '@/lib/roster';
-import type { Player, UserRole } from '@/types/database';
+import { nonEmptySocialLinks, resolveSocialLinkUrl, socialLinkLabel } from '@/lib/socialLinks';
+import type { Player, ProfileSocialLinks, UserRole } from '@/types/database';
 import type { ReelHype } from '@/lib/reels';
 import { isVaultSealed } from '@/lib/vault';
 import { fetchWishlistItems } from '@/lib/wishlist';
@@ -72,6 +74,12 @@ type AthleteProfileViewProps = {
   username?: string | null;
   jersey?: string | number;
   bio?: string;
+  /** Real, user-authored about-me text (`profiles.bio`) — separate from `bio` above, which is an
+   * auto-generated position/school summary line shown only on the flip-card back face. Rendered
+   * as an "About" section on the main sheet body when present. */
+  aboutBio?: string | null;
+  /** `profiles.social_links`, already visibility-filtered by the caller for a public sheet. */
+  socialLinks?: ProfileSocialLinks | null;
   role?: UserRole;
   roles?: string[] | null;
   auraPoints: number;
@@ -136,6 +144,8 @@ export function AthleteProfileView({
   username,
   jersey,
   bio,
+  aboutBio,
+  socialLinks,
   role,
   roles,
   auraPoints,
@@ -354,6 +364,27 @@ export function AthleteProfileView({
         canEditAvatar={editAvatar}
         onAvatarUploaded={onAvatarUploaded}
       />
+      {aboutBio?.trim() || nonEmptySocialLinks(socialLinks).length > 0 ? (
+        <View style={styles.about}>
+          {aboutBio?.trim() ? <Text style={styles.aboutBio}>{aboutBio.trim()}</Text> : null}
+          {nonEmptySocialLinks(socialLinks).length > 0 ? (
+            <View style={styles.socialRow}>
+              {nonEmptySocialLinks(socialLinks).map(([platform, value]) => (
+                <Pressable
+                  key={platform}
+                  accessibilityRole="link"
+                  accessibilityLabel={`Open ${socialLinkLabel(platform)}`}
+                  haptic="selection"
+                  onPress={() => void WebBrowser.openBrowserAsync(resolveSocialLinkUrl(platform, value))}
+                  style={styles.socialChip}
+                >
+                  <Text style={styles.socialChipLabel}>{socialLinkLabel(platform)}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      ) : null}
       {live.profile.showCrew ? <CrewStatsBar player={player} /> : null}
       {!live.profile.actionsOnTop ? fanSupport : null}
       {actions}
@@ -576,6 +607,33 @@ const styles = StyleSheet.create({
   },
   statsPane: {
     gap: 16,
+  },
+  about: {
+    gap: 10,
+  },
+  aboutBio: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  socialChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  socialChipLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: FOCAL.jadeInk,
   },
   navRow: {
     flexDirection: 'row',

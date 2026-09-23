@@ -23,6 +23,8 @@ export type SoftWallIntent = {
 
 type SoftWallContextValue = {
   visible: boolean;
+  /** Bumps every time the sheet is asked to open so a dropped iOS presentation can present again. */
+  presentId: number;
   intent: SoftWallIntent | null;
   /**
    * @purpose Run `resume` when signed in; otherwise open SoftWallModal and stash the intent for after auth.
@@ -40,6 +42,7 @@ const SoftWallContext = createContext<SoftWallContextValue | null>(null);
 export function SoftWallProvider({ children }: { children: ReactNode }) {
   const { isGuest, session, loading, needsAgeConfirmation } = useAuth();
   const [intent, setIntent] = useState<SoftWallIntent | null>(null);
+  const [presentId, setPresentId] = useState(0);
   const pendingResume = useRef<(() => void) | null>(null);
   const armedForSession = useRef(false);
 
@@ -58,6 +61,7 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
       }
       pendingResume.current = next.resume;
       armedForSession.current = true;
+      setPresentId((current) => current + 1);
       setIntent(next);
       telemetry.trackFeature(`soft_wall.${next.kind}`, 'auth');
     },
@@ -92,11 +96,12 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       visible: Boolean(intent),
+      presentId,
       intent,
       requireAuth,
       close,
     }),
-    [close, intent, requireAuth],
+    [close, intent, presentId, requireAuth],
   );
 
   return <SoftWallContext.Provider value={value}>{children}</SoftWallContext.Provider>;

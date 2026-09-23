@@ -35,7 +35,7 @@ type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | null;
  */
 export function SoftWallModal() {
   const insets = useSafeAreaInsets();
-  const { visible, intent, close } = useSoftWall();
+  const { visible, intent, close, presentId } = useSoftWall();
   const {
     signInWithApple,
     signInWithGoogle,
@@ -141,7 +141,14 @@ export function SoftWallModal() {
   };
 
   return (
-    <Modal animationType="none" transparent visible={open} onRequestClose={dismiss} onDismiss={() => setOpen(false)}>
+    <Modal
+      key={presentId}
+      animationType="none"
+      transparent
+      visible={visible || open}
+      onRequestClose={dismiss}
+      onDismiss={() => setOpen(false)}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.page}

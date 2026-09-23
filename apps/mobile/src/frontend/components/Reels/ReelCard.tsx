@@ -192,7 +192,18 @@ export function ReelCard({
   const clipIdRef = useRef(clip.id);
   clipIdRef.current = clip.id;
 
-  const videoPlayer = useVideoPlayer(videoSource, (instance) => {
+  // 2026-09 fix: this used to pass `videoSource` here directly, which makes `expo-video` start
+  // loading/probing that URL the instant the component mounts — regardless of `active`. The Home
+  // feed's FlatList mounts up to 10 cards on first render (RN's `initialNumToRender` default, not
+  // overridden below), so every one of those 10 clips' videos — several pointing at now-dead
+  // `commondatastorage.googleapis.com` sample URLs mixed into the seeded demo feed — started loading
+  // concurrently on a single Home mount. On a real device this pegged the main thread hard enough to
+  // make the whole app unresponsive with no error surfaced (confirmed via a wall of AVFoundation
+  // "Failed to load available audio/subtitle tracks" warnings for every one of those 10 clips, right
+  // where a real freeze reproduced). Starting from `null` and only loading the real source once this
+  // card is `active` (below) means an off-screen mounted card never touches the network or the native
+  // video decoder at all.
+  const videoPlayer = useVideoPlayer(null, (instance) => {
     instance.loop = true;
     instance.muted = true;
   });
@@ -243,13 +254,13 @@ export function ReelCard({
   }, [clip.id, clip.videoUrl]);
 
   useEffect(() => {
-    if (!clip.videoUrl || loadedUriRef.current === clip.videoUrl) return;
+    if (!active || !clip.videoUrl || loadedUriRef.current === clip.videoUrl) return;
     loadedUriRef.current = clip.videoUrl;
     loadStartedAtRef.current = Date.now();
     firstFrameLoggedRef.current = false;
     stallStartedAtRef.current = null;
     void videoPlayer.replaceAsync(clip.videoUrl);
-  }, [clip.videoUrl, videoPlayer]);
+  }, [active, clip.videoUrl, videoPlayer]);
 
   useEffect(() => {
     videoPlayer.loop = true;

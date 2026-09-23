@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { HIGHLIGHT_CLIPS } from '@/data/highlights';
 import { isAuraUuid } from '@/lib/aura';
+import { resolvePlaybackUrl } from '@/lib/reels';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Player, SpotlightAward, SpotlightPeriodKind } from '@/types/database';
 
@@ -249,13 +250,16 @@ async function attachReelVideos(awards: SpotlightAward[]): Promise<SpotlightAwar
       player_id: row.player_id ?? null,
     });
   }
-  return awards.map((award) => {
-    const clip = award.reel_id ? clips.get(award.reel_id) : undefined;
-    const player_id = asPlayerId(award.player_id, clip?.player_id);
-    const video_url = award.video_url || clip?.video_url || null;
-    if (player_id === award.player_id && video_url === award.video_url) return award;
-    return { ...award, player_id, video_url };
-  });
+  return Promise.all(
+    awards.map(async (award) => {
+      const clip = award.reel_id ? clips.get(award.reel_id) : undefined;
+      const player_id = asPlayerId(award.player_id, clip?.player_id);
+      const stored = award.video_url || clip?.video_url || null;
+      const video_url = stored ? await resolvePlaybackUrl(stored) : null;
+      if (player_id === award.player_id && video_url === award.video_url) return award;
+      return { ...award, player_id, video_url: video_url || null };
+    }),
+  );
 }
 
 function withDemoVideo(award: SpotlightAward): SpotlightAward {

@@ -4,8 +4,13 @@ import { gameMatchesQuery } from '@/data/players';
 import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
 import type { Game } from '@/types/database';
 
+// 2026-09 fix: this used to be shown directly in the Local tab's empty state (`lede={error}`),
+// leaking a developer-facing setup instruction to end users whenever Supabase wasn't configured or
+// a fetch failed. The raw detail is still logged for debugging; only this friendly copy ever reaches
+// the UI now.
 const CONFIG_ERROR =
   'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart Expo.';
+const FRIENDLY_ERROR = 'We can’t reach the scoreboard right now. Check your connection and try again.';
 
 /**
  * @purpose Subscribe to live `games` rows for Local discovery (Realtime + ZIP / school search).
@@ -25,8 +30,9 @@ export function useLiveScores() {
     setError(null);
 
     if (!isSupabaseConfigured) {
+      console.warn('[useLiveScores]', CONFIG_ERROR);
       setGames([]);
-      setError(CONFIG_ERROR);
+      setError(FRIENDLY_ERROR);
       setLoading(false);
       return;
     }
@@ -45,8 +51,9 @@ export function useLiveScores() {
     if (!mountedRef.current) return;
 
     if (source.error) {
+      console.warn('[useLiveScores]', source.error.message);
       setGames([]);
-      setError(source.error.message);
+      setError(FRIENDLY_ERROR);
       setLoading(false);
       return;
     }

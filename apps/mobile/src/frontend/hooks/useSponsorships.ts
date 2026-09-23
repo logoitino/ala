@@ -3,7 +3,7 @@ import { useFocusEffect } from 'expo-router';
 
 import { useAuth } from '@/context/AuthContext';
 import { DEMO_SPONSORSHIPS, sponsorTierById } from '@/data/sponsorships';
-import { HIGHLIGHTS_BUCKET } from '@/lib/reels';
+import { AVATARS_BUCKET, bytesFromUri, imageContentType } from '@/services/MediaUploadService';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Sponsorship, SponsorshipTierId } from '@/types/database';
 
@@ -49,14 +49,9 @@ function parseRows(rows: unknown): Sponsorship[] {
     .filter((row): row is Sponsorship => Boolean(row));
 }
 
-async function blobFromUri(uri: string): Promise<Blob> {
-  const response = await fetch(uri);
-  if (!response.ok) throw new Error('Could not read this logo.');
-  return response.blob();
-}
-
 /**
- * @purpose Upload a booster logo to Storage `game_highlights` under `sponsors/`.
+ * @purpose Upload a booster logo to Storage `avatars` under `sponsors/`.
+ * `game_highlights` only allows video MIME types, and a React Native Blob is `text/plain`.
  * @param localUri Image picker URI.
  * @returns Public URL, or the original URI when Storage is missing.
  * @sideEffects Supabase Storage upload.
@@ -65,16 +60,16 @@ export async function uploadSponsorLogo(localUri: string): Promise<string> {
   if (!isSupabaseConfigured) return localUri;
   if (/^https?:\/\//i.test(localUri)) return localUri;
   try {
-    const blob = await blobFromUri(localUri);
-    const ext = localUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
-    const safeExt = /^[a-z0-9]{2,5}$/.test(ext) ? ext : 'jpg';
-    const path = `sponsors/${Date.now()}.${safeExt}`;
-    const { error } = await supabase.storage.from(HIGHLIGHTS_BUCKET).upload(path, blob, {
-      contentType: blob.type || 'image/jpeg',
+    const contentType = imageContentType(localUri);
+    const ext = contentType === 'image/png' ? 'png' : contentType === 'image/webp' ? 'webp' : 'jpg';
+    const body = await bytesFromUri(localUri);
+    const path = `sponsors/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from(AVATARS_BUCKET).upload(path, body, {
+      contentType,
       upsert: true,
     });
     if (error) return localUri;
-    return supabase.storage.from(HIGHLIGHTS_BUCKET).getPublicUrl(path).data.publicUrl || localUri;
+    return supabase.storage.from(AVATARS_BUCKET).getPublicUrl(path).data.publicUrl || localUri;
   } catch {
     return localUri;
   }

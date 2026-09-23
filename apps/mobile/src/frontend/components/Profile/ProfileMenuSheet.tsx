@@ -1,5 +1,5 @@
-import { type ReactNode, useEffect, useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,37 +27,54 @@ type ProfileMenuSheetProps = {
 
 /**
  * @purpose Hamburger Account Settings sheet — keeps Profile scroll clean (Sign in/out, Capability, Receipts…).
- * @param items Menu rows; parent closes the sheet before opening nested modals.
+ * @param items Menu rows. Nested modals (Sign in, Role, Legal) open only after this sheet's native Modal has dismissed.
  * @returns Blur bottom sheet matching RoleSwitcher / SoftWall chrome.
  */
 const SHEET_TRAVEL = 420;
+/** iOS `onDismiss` is the real signal; this covers Android and a missed callback. */
+const DISMISS_FALLBACK_MS = Platform.OS === 'ios' ? 650 : 280;
 
 export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMenuSheetProps) {
   const insets = useSafeAreaInsets();
-  const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const translateY = useSharedValue(SHEET_TRAVEL);
   const backdropOpacity = useSharedValue(0);
+  const afterRef = useRef<(() => void) | undefined>(undefined);
+  const closingToken = useRef<number | null>(null);
+  const gen = useRef(0);
 
   useEffect(() => {
-    if (visible) {
-      setOpen(true);
-      translateY.value = withSpring(0, SPRING_CARD);
-      backdropOpacity.value = withTiming(1, { duration: 200 });
-    }
+    if (!visible) return;
+    gen.current += 1;
+    closingToken.current = null;
+    afterRef.current = undefined;
+    setMounted(true);
+    translateY.value = withSpring(0, SPRING_CARD);
+    backdropOpacity.value = withTiming(1, { duration: 200 });
   }, [backdropOpacity, translateY, visible]);
 
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
   const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
 
-  if (!open && !visible) return null;
+  const finishDismiss = (token: number) => {
+    if (closingToken.current !== token) return;
+    closingToken.current = null;
+    const after = afterRef.current;
+    afterRef.current = undefined;
+    setMounted(false);
+    after?.();
+  };
 
-  const dismiss = () => {
+  if (!mounted && !visible) return null;
+
+  const dismiss = (after?: () => void) => {
+    const token = ++gen.current;
+    closingToken.current = token;
+    afterRef.current = after;
     translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
     backdropOpacity.value = withTiming(0, { duration: 160 });
-    setTimeout(() => {
-      setOpen(false);
-      onClose();
-    }, 180);
+    onClose();
+    setTimeout(() => finishDismiss(token), DISMISS_FALLBACK_MS);
   };
 
   return (
@@ -65,11 +82,13 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
       transparent
       animationType="none"
       visible={visible}
-      onRequestClose={dismiss}
-      onDismiss={() => setOpen(false)}
+      onRequestClose={() => dismiss()}
+      onDismiss={() => {
+        if (closingToken.current != null) finishDismiss(closingToken.current);
+      }}
     >
       <View style={styles.root}>
-        <Pressable haptic="none" style={styles.backdrop} onPress={dismiss}>
+        <Pressable haptic="none" style={styles.backdrop} onPress={() => dismiss()}>
           <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
             <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           </Animated.View>
@@ -85,9 +104,11 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
                 accessibilityLabel={item.label}
                 haptic="selection"
                 onPress={() => {
-                  dismiss();
-                  // Let the sheet close before nested modals open.
-                  requestAnimationFrame(() => item.onPress());
+                  // iOS only presents one Modal. Opening SoftWall (or Role / Legal) in the same
+                  // turn this sheet unmounts drops the second presentation: React still has
+                  // `visible` true, but the native sheet never stays on screen. `after` runs from
+                  // `onDismiss` (or the platform fallback) once this Modal is actually gone.
+                  dismiss(() => item.onPress());
                 }}
                 contentStyle={styles.row}
               >
@@ -100,7 +121,7 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
             ))}
           </View>
           {footer}
-          <Pressable accessibilityRole="button" onPress={dismiss} style={styles.close}>
+          <Pressable accessibilityRole="button" onPress={() => dismiss()} style={styles.close}>
             <Text style={styles.closeLabel}>Close</Text>
           </Pressable>
         </Animated.View>

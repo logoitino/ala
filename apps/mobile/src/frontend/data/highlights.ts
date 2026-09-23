@@ -151,18 +151,13 @@ export function rankHomeFeed<T extends { clip: HighlightClip; player?: { id?: st
   return scored.map((row) => row.item);
 }
 
-const SAMPLE = {
-  blazes: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-  escapes: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-  fun: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-  joyrides: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-  meltdowns: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-  bunny: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-  elephants: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-  subaru: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
-  bullrun: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
-};
-
+// 2026-09 fix: these used to point at Google's public `commondatastorage.googleapis.com` sample
+// video bucket, which now rejects every request with a permission error. Combined with a Home feed
+// bug (see ReelCard.tsx) that loaded every mounted card's video eagerly, several dead URLs failing
+// at once contributed to real-device freezes. `videoUrl: ''` is a real "no video" value `ReelCard`
+// already handles (`clip.videoUrl || null` — see its `videoSource`), so these entries keep serving
+// their non-video purpose (Home feed filler metadata, `demoSpotlightAward`'s Westlake fallback in
+// lib/spotlight.ts) without ever touching the video decoder.
 export const HIGHLIGHT_CLIPS: HighlightClip[] = [
   {
     id: 'hl-1',
@@ -170,7 +165,7 @@ export const HIGHLIGHT_CLIPS: HighlightClip[] = [
     school: 'ALA Hawks',
     tag: 'Touchdown',
     sekiPlay: true,
-    videoUrl: SAMPLE.blazes,
+    videoUrl: '',
   },
   {
     id: 'hl-2',
@@ -179,7 +174,7 @@ export const HIGHLIGHT_CLIPS: HighlightClip[] = [
     tag: 'Breakaway',
     isVaultOnly: true,
     flashUnlockUntil: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-    videoUrl: SAMPLE.escapes,
+    videoUrl: '',
   },
   {
     id: 'hl-3',
@@ -188,14 +183,14 @@ export const HIGHLIGHT_CLIPS: HighlightClip[] = [
     tag: 'One-handed grab',
     sekiPlay: true,
     category: 'train_like_me',
-    videoUrl: SAMPLE.fun,
+    videoUrl: '',
   },
   {
     id: 'hl-4',
     athleteName: 'Derek Sullivan',
     school: 'Lone Peak',
     tag: 'Sack',
-    videoUrl: SAMPLE.joyrides,
+    videoUrl: '',
   },
   {
     id: 'hl-5',
@@ -203,74 +198,13 @@ export const HIGHLIGHT_CLIPS: HighlightClip[] = [
     school: 'Skyridge',
     tag: 'Chase-down',
     category: 'serve_like_me',
-    videoUrl: SAMPLE.meltdowns,
-  },
-];
-
-const PROFILE_TAGGED_CLIPS: HighlightClip[] = [
-  {
-    id: 'hl-1b',
-    athleteName: 'Marcus Rivera',
-    school: 'ALA Hawks',
-    tag: 'Scramble',
-    videoUrl: SAMPLE.escapes,
-  },
-  {
-    id: 'hl-1c',
-    athleteName: 'Marcus Rivera',
-    school: 'ALA Hawks',
-    tag: 'Deep ball',
-    sekiPlay: true,
-    videoUrl: SAMPLE.fun,
-  },
-  {
-    id: 'hl-1d',
-    athleteName: 'Marcus Rivera',
-    school: 'ALA Hawks',
-    tag: 'Red-zone',
-    videoUrl: SAMPLE.joyrides,
-  },
-  {
-    id: 'hl-1e',
-    athleteName: 'Marcus Rivera',
-    school: 'ALA Hawks',
-    tag: 'Two-point',
-    videoUrl: SAMPLE.meltdowns,
-  },
-  {
-    id: 'hl-1f',
-    athleteName: 'Marcus Rivera',
-    school: 'ALA Hawks',
-    tag: 'Sideline',
-    videoUrl: SAMPLE.bunny,
-  },
-  {
-    id: 'hl-1g',
-    athleteName: 'Marcus Rivera',
-    school: 'ALA Hawks',
-    tag: 'Q4 drive',
-    sekiPlay: true,
-    videoUrl: SAMPLE.elephants,
-  },
-  {
-    id: 'hl-1h',
-    athleteName: 'Marcus Rivera',
-    school: 'ALA Hawks',
-    tag: 'Walk-off',
-    videoUrl: SAMPLE.subaru,
-  },
-  {
-    id: 'hl-1i',
-    athleteName: 'Marcus Rivera',
-    school: 'ALA Hawks',
-    tag: 'Rollout',
-    videoUrl: SAMPLE.bullrun,
+    videoUrl: '',
   },
 ];
 
 export function taggedReelsForAthlete(athleteName: string, school?: string): HighlightClip[] {
   const name = athleteName.trim().toLowerCase();
-  const catalog = [...HIGHLIGHT_CLIPS, ...PROFILE_TAGGED_CLIPS];
+  const catalog = HIGHLIGHT_CLIPS;
   const tagged = catalog.filter((clip) => clip.athleteName.toLowerCase() === name);
   if (tagged.length >= 6) return tagged;
 

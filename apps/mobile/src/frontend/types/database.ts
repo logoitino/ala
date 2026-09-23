@@ -25,7 +25,6 @@ export type Profile = {
   is_verified: boolean;
   /** `unverified` | `pending` | `verified`. Claiming a school does not set verified. */
   verification_status?: 'unverified' | 'pending' | 'verified' | string | null;
-  spirit_points: number;
   aura_points?: number;
   current_tier?: number | null;
   /** Dual capability, e.g. `['fan', 'athlete']`. Falls back to `[role]` when omitted. */
@@ -57,7 +56,38 @@ export type Profile = {
   age_confirmed_13_plus?: boolean | null;
   /** Compliance freeze switch (LEGAL_BRIEFING.md §8 item 5). Flip only via `set_malo_freeze`. */
   malo_frozen?: boolean | null;
+  /** Free-text about-me, ≤500 chars (`profiles_bio_length_check`). */
+  bio?: string | null;
+  /** `{ instagram?, twitter?, tiktok?, youtube? }`-shaped handles/URLs; keys are caller-defined. */
+  social_links?: ProfileSocialLinks | null;
+  /** Per-field "hide from other users' view" map. Missing key defaults to visible (true). */
+  profile_visibility?: ProfileVisibility | null;
   created_at?: string;
+};
+
+export type ProfileSocialLinks = Record<string, string>;
+
+export type ProfileVisibility = {
+  bio?: boolean;
+  school?: boolean;
+  stats?: boolean;
+  social_links?: boolean;
+};
+
+/** Shape of `public.profiles_public` — the "someone else is viewing this account" read surface;
+ * hidden `bio`/`social_links` come back null/empty rather than throwing. See `schema.sql`. */
+export type ProfilePublic = {
+  id: string;
+  user_id: string | null;
+  player_id: string | null;
+  username: string | null;
+  full_name: string;
+  avatar_url: string | null;
+  is_verified: boolean;
+  is_verified_athlete: boolean;
+  school_visible: boolean;
+  bio: string | null;
+  social_links: ProfileSocialLinks;
 };
 
 export type Player = {
@@ -688,6 +718,24 @@ export type Database = {
             columns: ['game_id'];
             isOneToOne: false;
             referencedRelation: 'games';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      /**
+       * 2026-09 profile customization: read-only mirror of `profiles` with `bio` / `social_links`
+       * nulled/emptied for anyone other than the owner or admin whose `profile_visibility` hides
+       * them. The public `/user/[id]` screen and other "viewing someone else" surfaces read this
+       * instead of the base table — see schema.sql for the view definition.
+       */
+      profiles_public: {
+        Row: ProfilePublic;
+        Relationships: [
+          {
+            foreignKeyName: 'profiles_player_id_fkey';
+            columns: ['player_id'];
+            isOneToOne: false;
+            referencedRelation: 'players';
             referencedColumns: ['id'];
           },
         ];

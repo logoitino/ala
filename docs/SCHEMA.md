@@ -66,9 +66,16 @@ Identity for signed-in users.
 | `avatar_url` | text | Public Storage URL (`avatars/{user_id}/{timestamp}.jpg`). Incremental: `supabase/media_upload.sql`. |
 | `age_confirmed_13_plus` | boolean default null | COPPA gate: self-attested "I am 13 years of age or older" checkbox, not a birthdate (data minimization). Null = not yet confirmed (includes every pre-existing account from before this column existed — never retroactively blocked). Set `true` only at the moment a **new** account is created with the box checked: `handle_new_auth_user()` reads it from signup metadata (email+password / magic-link), or the client's one-time `AgeConfirmModal` sets it after first Apple/Google sign-in. Incremental: `supabase/auth_fan_profile.sql`. |
 | `malo_frozen` | boolean default false | Compliance kill switch (`LEGAL_BRIEFING.md` §8 item 5): honor a written direction from a school/association to freeze Mālo for this athlete's claimed profile, within hours. Nullable/default false, never retroactive on its own. Flip only via the admin-only `set_malo_freeze(target_type, target_id, frozen)` RPC — never a raw client UPDATE. Enforced (with the athlete's school freeze) by `tips` / `subscriptions` INSERT/UPDATE RLS via `malo_target_frozen(target_player_id)`. Client: Expo `/admin/people` (`PeopleTool.tsx`). |
+| `bio` | text | Free-text about-me, ≤500 chars (`profiles_bio_length_check`). Editable by the owner from the profile "Edit Profile" sheet. Hideable via `profile_visibility.bio` — see `profiles_public` below. |
+| `social_links` | jsonb default `{}` | Caller-defined `{ platform: handle-or-url }` map (e.g. `instagram`, `twitter`, `tiktok`, `youtube`). Hideable via `profile_visibility.social_links`. |
+| `profile_visibility` | jsonb default `{"bio": true, "school": true, "stats": true, "social_links": true}` | Per-field "hide from other users' view" map the owner controls from Edit Profile. Missing/unset key defaults to visible. Owner and admin always see everything regardless of this flag — it only ever narrows what *other* users see. `bio` / `social_links` enforcement lives in `profiles_public`; `stats` enforcement lives in `athlete_stats_visible(target_player_id)` gating the `athlete_career_stats` / `athlete_game_logs` SELECT policies; `school` is presentation-only (no RLS — `players.school_name` stays a public roster field everywhere else in the app) and is just read by the client to decide whether to render the school/team line on the public profile. |
 | `created_at` | timestamptz | |
 
-**RLS:** public SELECT; INSERT requires `authenticated` with `user_id = auth.uid()` (Soft-Wall / client `ensureFanProfile`) — **2026-09 audit, third pass:** this policy previously also allowed `auth.role() = 'anon'` as an OR branch (the same bypass pattern closed everywhere else), which let an unauthenticated caller INSERT a brand-new row with `is_admin`/`role`/`roles` set directly, unguarded by either the `add_user_role` fix or the escalation trigger below (both applied only to UPDATE at the time). Live blast radius was narrow — `profiles.user_id` is `unique references auth.users (id)`, so the row must name a real, already-existing auth user with no `profiles` row yet — but the anon branch is gone regardless since no legitimate caller needed it: `handle_new_auth_user` (below) bypasses RLS entirely as a trigger, and `ensureFanProfile` only ever runs against an already-resolved real session (`user_id === auth.uid()`). UPDATE own row or `admin`, with a `before insert or update` trigger (`guard_profiles_admin_escalation`) that additionally rejects any write flipping `is_admin`/`role`/`roles` to admin unless the calling session is already admin, on both INSERT and UPDATE — see the `is_admin` row above (2026-09 self-escalation fix). First signup also inserts via trigger `on_auth_user_created` → `handle_new_auth_user()` on `auth.users` (security definer), now also carrying `age_confirmed_13_plus` from the signup form's metadata when present. Incremental: `supabase/auth_fan_profile.sql`. Client: `AuthContext` + `lib/auth.ts`. **2026-09 audit:** public SELECT is kept (guest-browse surfaces like Team Roster Strip, Top Boosters, `/gift/[handle]` all read `profiles` with no session), but this still publicly exposes `stripe_connect_id` and other status columns — considered a column-level `REVOKE` but reverted because it would also break `AuthContext`'s `select('*')` self-profile load without a live DB to test against; flagged as a real follow-up (either a `profiles_public` view + call-site migration, or an audited explicit column allowlist). The server routes that need `stripe_connect_id` (`createPayout.ts`, `create-stripe-account`) already read it with the service-role key, unaffected either way.
+**RLS:** public SELECT; INSERT requires `authenticated` with `user_id = auth.uid()` (Soft-Wall / client `ensureFanProfile`) — **2026-09 audit, third pass:** this policy previously also allowed `auth.role() = 'anon'` as an OR branch (the same bypass pattern closed everywhere else), which let an unauthenticated caller INSERT a brand-new row with `is_admin`/`role`/`roles` set directly, unguarded by either the `add_user_role` fix or the escalation trigger below (both applied only to UPDATE at the time). Live blast radius was narrow — `profiles.user_id` is `unique references auth.users (id)`, so the row must name a real, already-existing auth user with no `profiles` row yet — but the anon branch is gone regardless since no legitimate caller needed it: `handle_new_auth_user` (below) bypasses RLS entirely as a trigger, and `ensureFanProfile` only ever runs against an already-resolved real session (`user_id === auth.uid()`). UPDATE own row or `admin`, with a `before insert or update` trigger (`guard_profiles_admin_escalation`) that additionally rejects any write flipping `is_admin`/`role`/`roles` to admin unless the calling session is already admin, on both INSERT and UPDATE — see the `is_admin` row above (2026-09 self-escalation fix). First signup also inserts via trigger `on_auth_user_created` → `handle_new_auth_user()` on `auth.users` (security definer), now also carrying `age_confirmed_13_plus` from the signup form's metadata when present. Incremental: `supabase/auth_fan_profile.sql`. Client: `AuthContext` + `lib/auth.ts`. **2026-09 audit:** public SELECT is kept (guest-browse surfaces like Team Roster Strip, Top Boosters, `/gift/[handle]` all read `profiles` with no session), but this still publicly exposes `stripe_connect_id` and other status columns — considered a column-level `REVOKE` but reverted because it would also break `AuthContext`'s `select('*')` self-profile load without a live DB to test against; flagged as a real follow-up (either a `profiles_public` view + call-site migration, or an audited explicit column allowlist). The server routes that need `stripe_connect_id` (`createPayout.ts`, `create-stripe-account`) already read it with the service-role key, unaffected either way. **2026-09 profile customization:** the `profiles_public` view below is that follow-up, scoped to `bio` / `social_links` only (not a general fix for `stripe_connect_id`, which remains the same accepted, pre-existing risk described above).
+
+### `profiles_public` (view)
+
+Read-only mirror of `profiles` used by every "viewing someone else's account" surface (public `/user/[id]`, Team Roster Strip, etc.) instead of the base table. Same shape concern as `reels_feed` (base table is publicly `using (true)` and can't be narrowed to a per-row/per-column REVOKE without breaking the owner's own `select('*')`), same fix shape: a view that nulls the hidden columns for anyone who isn't the owner or admin. Columns: `id`, `user_id`, `player_id`, `username`, `full_name`, `avatar_url`, `is_verified`, `is_verified_athlete`, `school_visible` (mirrors `profile_visibility->>'school'`, client-enforced), `bio` (null unless `profile_visibility.bio` is true, or caller is the owner/admin), `social_links` (`{}` under the same condition). Not marked `security_invoker`, so it reads the full base table as its owner regardless of the base table's own policy — same as `reels_feed`. Granted `select` to `anon, authenticated`.
 
 ### `schools_and_teams`
 
@@ -119,6 +126,8 @@ Roster identity lives on `players`. Combine fields and career engine:
 
 Sport-specific career headers (client `careerColumnsForSport`): Football Points/Yards, Basketball Points/Rebounds, Rugby Tries/Tackles, Volleyball Kills/Digs. Trading-card back face shows Games / scoring / volume. Incremental: `supabase/athlete_stats.sql`. Client: `useAthleteStats` / `AthleteStatsTab`.
 
+**RLS (2026-09 profile customization):** `athlete_career_stats` / `athlete_game_logs` SELECT was `using (true)`; now `using (athlete_stats_visible(player_id))` so a claiming athlete can hide their stats from other users via `profiles.profile_visibility.stats` (owner/admin still always see them; an unclaimed player row has no owner to make that choice, so it stays visible). See `athlete_stats_visible(target_player_id)` below.
+
 **RLS (demo):** public SELECT on both stats tables. Writes are seed-only.
 
 ### `search_schools_and_teams(search_query)`
@@ -136,7 +145,7 @@ Highlight / Seki clips. Files in Storage **`reels`** (fallback **`game_highlight
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | uuid PK | |
-| `video_url` | text | Public URL |
+| `video_url` | text | Public https URL for a free Highlight, or `reelvault:{path}` for a Vault / Exclusive clip in the private `reel_vault` bucket |
 | `title` | text | Caption |
 | `player_id` | uuid FK → `players` ON DELETE SET NULL | Tagged athlete |
 | `game_id` | uuid FK → `games` ON DELETE SET NULL | |
@@ -351,7 +360,7 @@ Local business booster ledger (Silver / Gold / Platinum). Distinct from `sponsor
 | `id` | uuid PK | |
 | `sponsor_user_id` | uuid | Payer (`auth.users.id`) |
 | `business_name` | text | |
-| `logo_url` | text | HTTPS or Storage public URL (`game_highlights/sponsors/`) |
+| `logo_url` | text | HTTPS or Storage public URL (`avatars/sponsors/`) |
 | `school_team` | text | Targeted high school |
 | `tier` | text | `silver` \| `gold` \| `platinum` |
 | `amount_cents` | integer | Monthly dollars × 100 ($50 / $150 / $500) |
@@ -671,6 +680,14 @@ Compliance kill switch (`LEGAL_BRIEFING.md` §8 item 5) so the team can honor a 
 
 `set_malo_freeze(target_type, target_id, frozen)` is the **only** way to flip `profiles.malo_frozen` (`target_type = 'athlete'`, `target_id` = `profiles.id`) or `schools_and_teams.malo_frozen` (`target_type = 'school'`, `target_id` = `schools_and_teams.id`). `SECURITY DEFINER`, checks `current_user_role() = 'admin'` internally and raises `Access restricted` otherwise — no raw table UPDATE is granted for this column beyond what already exists. Grant: `EXECUTE` to `authenticated` only. Client: `setMaloFreeze` in `apps/mobile/src/frontend/lib/adminCatalog.ts`, called from Expo `/admin/people` (`PeopleTool.tsx`, per-athlete) and `/admin/schools` (`SchoolsTool.tsx`, per-school), each behind a confirm dialog.
 
+### `athlete_stats_visible(target_player_id)`
+
+```sql
+athlete_stats_visible(target_player_id uuid) returns boolean
+```
+
+Mirrors `malo_target_frozen`'s shape: a `stable` helper that looks up the `profiles` row with `player_id = target_player_id`. Returns true (visible) when that profile's `profile_visibility->>'stats'` isn't explicitly `false`, or the caller is that profile's owner (`auth.uid()`), or the caller is admin. An unclaimed roster row (no linked `profiles` row) has no owner to hide anything, so it reads as visible. Used inside the `athlete_career_stats` / `athlete_game_logs` SELECT policies (see `players` measurables above) — a database-layer gate for the 2026-09 profile customization "hide stats from other users" toggle, not a client-side filter. Grant: `EXECUTE` to `anon`, `authenticated` (called from inside RLS policy evaluation).
+
 ### `redeem_team_code` / `request_athlete_verification` / `athlete_is_varsity_verified`
 
 ```sql
@@ -938,9 +955,10 @@ Created in `supabase/reels.sql`; consolidated into the canonical `schema.sql` (2
 | Bucket id / name | `game_highlights` |
 | Public | `true` |
 | Client constant | `HIGHLIGHTS_BUCKET` in `apps/mobile/src/frontend/lib/reels.ts` |
-| Object path | `reels/{timestamp}.{ext}`; booster logos at `sponsors/{timestamp}.{ext}` |
+| Object path | Highlight fallback only: `reels/{user_id}/{timestamp}.mp4`. Booster logos are images and live on `avatars` at `sponsors/{timestamp}.{ext}` — this bucket’s `allowed_mime_types` is video-only. |
 | RLS SELECT | `storage.objects` where `bucket_id = 'game_highlights'` (public read, unchanged) |
 | RLS INSERT | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass — was bucket-only, so any anon-key holder with no session could write; `MediaUploadService.uploadHighlight` already requires the caller be signed in, so this closes the gap without breaking the app) |
+| `allowed_mime_types` | `video/mp4`, `video/quicktime` (same Round 18 rule as `reels`) |
 
 Upload requires a tagged player, a caption, and a video category (Game Play / Train Like Me / Serve Like Me). **Tagging a game is optional** (2026-09 — previously required, now `UploadVideoModal` defaults to "No specific game" and still lets a fan pick one). `MediaUploadService` writes `reels/{user_id}/{timestamp}.mp4` into bucket **`reels`** first, then falls back to `game_highlights` if that bucket is missing.
 
@@ -955,7 +973,13 @@ Created in `supabase/media_upload.sql`; consolidated into `schema.sql` (2026-09)
 | Object path | `reels/{auth.users.id}/{timestamp}.mp4` |
 | RLS SELECT | `storage.objects` where `bucket_id = 'reels'` (public read, unchanged) |
 | RLS INSERT / UPDATE | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass — was bucket-only/anon-writable; tightened to match `MediaUploadService.uploadHighlight`'s existing signed-in requirement) |
-| `allowed_mime_types` | `video/mp4`, `video/quicktime` (2026-09 Round 18 sweep — the client always declares `video/mp4`; nothing server-side previously stopped a raw REST call from declaring an arbitrary Content-Type instead) |
+| `allowed_mime_types` | `video/mp4`, `video/quicktime` (2026-09 Round 18 sweep — the client declares `video/mp4`; nothing server-side previously stopped a raw REST call from declaring an arbitrary Content-Type instead) |
+
+### Storage — `reel_vault`
+
+Interim private bucket for **new** Vault / Exclusive uploads (`REEL_VAULT_BUCKET`), until the video host is chosen: **Cloudflare Stream or Mux**, whichever stays cheaper and still plays reliably. This bucket is not the long-term host. `public = false`. `allowed_mime_types`: `video/mp4`, `video/quicktime`. `reels.video_url` stores `reelvault:{auth.users.id}/{timestamp}.mp4`, not an https URL. `reels_feed` still returns that token only when the caller is entitled; `resolvePlaybackUrl` then asks Storage for a one-hour signed URL.
+
+`can_read_reel_vault(object_name)` is `SECURITY DEFINER` and returns true when that reel is no longer `is_vault_only` (so "Move to public feed" can still play a file that already lives in this bucket), or for the uploader, an admin, an active `subscriptions` row on `reels.player_id`, or a live `flash_unlock_until`. Storage SELECT calls it because a direct read of `public.reels` is hidden by RLS from everyone except the uploader and an admin. INSERT is the signed-in user, and only into their own `auth.uid()` folder. Grant: `EXECUTE` to `anon`, `authenticated` (anon only succeeds during Flash Unlock). Public Highlights stay on `reels`. Clips uploaded before this bucket still have public URLs — that leftover is the Round 9 hard blocker until those files move.
 
 ### Storage — `avatars`
 
@@ -965,11 +989,11 @@ Created in `supabase/media_upload.sql`; consolidated into `schema.sql` (2026-09)
 | --- | --- |
 | Bucket id / name | `avatars` |
 | Public | `true` |
-| Object path | `{auth.users.id}/{timestamp}.jpg` |
+| Object path | Profile photos `{auth.users.id}/{timestamp}.jpg`; booster logos `sponsors/{timestamp}.{ext}` |
 | Writes | `profiles.avatar_url` |
 | RLS SELECT | `storage.objects` where `bucket_id = 'avatars'` (public read, unchanged) |
 | RLS INSERT / UPDATE | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass — was bucket-only/anon-writable; `uploadAvatar` already hard-requires `supabase.auth.getUser()` to return a user before it uploads, so this matches the client contract) |
-| `allowed_mime_types` | `image/jpeg`, `image/png`, `image/webp` (2026-09 Round 18 sweep — same reasoning as the `reels` bucket above; the client always declares `image/jpeg`) |
+| `allowed_mime_types` | `image/jpeg`, `image/png`, `image/webp`. The client sends an `ArrayBuffer` plus this type (`imageContentType` in `MediaUploadService.ts`). A React Native `Blob` is not used — `fetch().blob()` labels local photos `text/plain`, which this allow-list rejects. |
 
 ---
 

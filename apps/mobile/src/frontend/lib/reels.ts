@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { parseReelCategory, type HighlightClip, type ReelCategory } from '@/data/highlights';
 import type { PlayReactionId } from '@/data/players';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import { uploadHighlight } from '@/services/MediaUploadService';
+import { REEL_VAULT_BUCKET, REEL_VAULT_PREFIX, uploadHighlight } from '@/services/MediaUploadService';
 import type { Player, Reel, ReelWithPlayer } from '@/types/database';
 
 export const HIGHLIGHTS_BUCKET = 'game_highlights';
@@ -143,6 +143,31 @@ export function formatReelDeepLink(reelId: string, playerId?: string | null): st
   return Linking.createURL('/', { queryParams: { reel: reelId } });
 }
 
+/**
+ * @purpose Turn a Vault storage token into a one-hour signed URL. Public https URLs pass through.
+ * @param videoUrl `reels.video_url` from `reels_feed` (`reelvault:{path}` or a public URL).
+ * @returns Playable URL, or '' when the caller is not allowed to read the private object.
+ * @sideEffects Storage `createSignedUrl` on `reel_vault` when the value is a vault token.
+ */
+export async function resolvePlaybackUrl(videoUrl: string | null | undefined): Promise<string> {
+  const raw = videoUrl?.trim() ?? '';
+  if (!raw.startsWith(REEL_VAULT_PREFIX)) return raw;
+  if (!isSupabaseConfigured) return '';
+  const path = raw.slice(REEL_VAULT_PREFIX.length);
+  const { data, error } = await supabase.storage.from(REEL_VAULT_BUCKET).createSignedUrl(path, 60 * 60);
+  if (error || !data?.signedUrl) return '';
+  return data.signedUrl;
+}
+
+async function withPlaybackUrls(rows: ReelWithPlayer[]): Promise<ReelWithPlayer[]> {
+  return Promise.all(
+    rows.map(async (row) => ({
+      ...row,
+      video_url: await resolvePlaybackUrl(row.video_url),
+    })),
+  );
+}
+
 async function selectReels(columns: string, playerId?: string) {
   // 2026-09 audit (paywall bypass): reads go through `reels_feed`, not the base `reels` table —
   // the view nulls `video_url` for Vault/Exclusive/Flash-Unlock clips the caller isn't entitled to
@@ -156,71 +181,87 @@ function rowsFromQuery<T>(data: unknown): T[] {
   return data as unknown as T[];
 }
 
+async function playable(rows: ReelWithPlayer[]): Promise<ReelWithPlayer[]> {
+  return (await withPlaybackUrls(rows)).filter((row) => Boolean(row.video_url));
+}
+
 async function queryReels(playerId?: string): Promise<ReelWithPlayer[]> {
   const tagged = await selectReels(`${REEL_COLUMNS_TAG}, players (${PLAYER_SELECT})`, playerId);
   if (!tagged.error) {
-    return rowsFromQuery<ReelWithPlayer>(tagged.data).filter(
-      (row) => Boolean(row.video_url) && row.is_removed !== true,
+    return playable(
+      rowsFromQuery<ReelWithPlayer>(tagged.data).filter(
+        (row) => Boolean(row.video_url) && row.is_removed !== true,
+      ),
     );
   }
 
   const live = await selectReels(`${REEL_COLUMNS_REMOVED}, players (${PLAYER_SELECT})`, playerId);
   if (!live.error) {
-    return rowsFromQuery<ReelWithPlayer>(live.data).filter(
-      (row) => Boolean(row.video_url) && row.is_removed !== true,
+    return playable(
+      rowsFromQuery<ReelWithPlayer>(live.data).filter(
+        (row) => Boolean(row.video_url) && row.is_removed !== true,
+      ),
     );
   }
 
   const flashed = await selectReels(`${REEL_COLUMNS_FLASH}, players (${PLAYER_SELECT})`, playerId);
   if (!flashed.error) {
-    return rowsFromQuery<ReelWithPlayer>(flashed.data).filter((row) => Boolean(row.video_url));
+    return playable(rowsFromQuery<ReelWithPlayer>(flashed.data).filter((row) => Boolean(row.video_url)));
   }
 
   const categorized = await selectReels(`${REEL_COLUMNS_CATEGORY}, players (${PLAYER_SELECT})`, playerId);
   if (!categorized.error) {
-    return rowsFromQuery<ReelWithPlayer>(categorized.data).filter((row) => Boolean(row.video_url));
+    return playable(rowsFromQuery<ReelWithPlayer>(categorized.data).filter((row) => Boolean(row.video_url)));
   }
 
   const vaulted = await selectReels(`${REEL_COLUMNS_VAULT}, players (${PLAYER_SELECT})`, playerId);
   if (!vaulted.error) {
-    return rowsFromQuery<ReelWithPlayer>(vaulted.data).filter((row) => Boolean(row.video_url));
+    return playable(rowsFromQuery<ReelWithPlayer>(vaulted.data).filter((row) => Boolean(row.video_url)));
   }
 
   const moderated = await selectReels(`${REEL_COLUMNS_MODERATION}, players (${PLAYER_SELECT})`, playerId);
   if (!moderated.error) {
-    return rowsFromQuery<ReelWithPlayer>(moderated.data).filter((row) => Boolean(row.video_url));
+    return playable(rowsFromQuery<ReelWithPlayer>(moderated.data).filter((row) => Boolean(row.video_url)));
   }
 
   const exclusiveWithPlayers = await selectReels(`${REEL_COLUMNS_EXCLUSIVE}, players (${PLAYER_SELECT})`, playerId);
   if (!exclusiveWithPlayers.error) {
-    return rowsFromQuery<ReelWithPlayer>(exclusiveWithPlayers.data).filter((row) => Boolean(row.video_url));
+    return playable(
+      rowsFromQuery<ReelWithPlayer>(exclusiveWithPlayers.data).filter((row) => Boolean(row.video_url)),
+    );
   }
 
   const selectWithPlayers = `${REEL_COLUMNS}, players (${PLAYER_SELECT})`;
   const withPlayers = await selectReels(selectWithPlayers, playerId);
   if (!withPlayers.error) {
-    return rowsFromQuery<ReelWithPlayer>(withPlayers.data).filter((row) => Boolean(row.video_url));
+    return playable(rowsFromQuery<ReelWithPlayer>(withPlayers.data).filter((row) => Boolean(row.video_url)));
   }
 
   const exclusiveOnly = await selectReels(REEL_COLUMNS_EXCLUSIVE, playerId);
   if (!exclusiveOnly.error) {
-    return rowsFromQuery<Reel>(exclusiveOnly.data)
-      .filter((row) => Boolean(row.video_url))
-      .map((row) => ({ ...row, players: null }));
+    return playable(
+      rowsFromQuery<Reel>(exclusiveOnly.data)
+        .filter((row) => Boolean(row.video_url))
+        .map((row) => ({ ...row, players: null })),
+    );
   }
 
   const fallback = await selectReels(REEL_COLUMNS, playerId);
   if (!fallback.error) {
-    return rowsFromQuery<Reel>(fallback.data)
-      .filter((row) => Boolean(row.video_url))
-      .map((row) => ({ ...row, players: null }));
+    return playable(
+      rowsFromQuery<Reel>(fallback.data)
+        .filter((row) => Boolean(row.video_url))
+        .map((row) => ({ ...row, players: null })),
+    );
   }
 
   const basicResult = await selectReels(REEL_COLUMNS_BASIC, playerId);
   if (basicResult.error) throw new Error(basicResult.error.message);
-  return rowsFromQuery<Reel>(basicResult.data)
-    .filter((row) => Boolean(row.video_url))
-    .map((row) => ({ ...row, players: null }));
+  return playable(
+    rowsFromQuery<Reel>(basicResult.data)
+      .filter((row) => Boolean(row.video_url))
+      .map((row) => ({ ...row, players: null })),
+  );
 }
 
 export async function fetchReels(): Promise<ReelWithPlayer[]> {

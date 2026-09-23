@@ -2,6 +2,18 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-09-23
+
+### Vault video playback
+
+- Highlight upload in Expo Go skips `react-native-compressor`. That package needs NitroModules, which Expo Go does not ship, and importing it was the redbox on pick. The original clip still uploads.
+- New Vault / Exclusive uploads go to a private `reel_vault` bucket. The row stores `reelvault:{path}` instead of a public URL. Entitled playback uses a one-hour signed URL, gated by `can_read_reel_vault`. Free Highlights stay on the public `reels` bucket. Older Vault files that were uploaded as public URLs are unchanged.
+
+### Profile photo and sign-in sheet
+
+- Account Settings → Sign in waits until the hamburger sheet’s native modal has dismissed before opening Soft-Wall, so iOS no longer drops the sign-in sheet while the app still treats it as open.
+- Profile photos and booster logos upload as raw bytes with `image/jpeg`, `image/png`, or `image/webp`. A React Native blob’s `text/plain` type was rejected by the `avatars` bucket. Booster logos go to `avatars/sponsors/`, not the video-only `game_highlights` bucket.
+
 ## 2026-09-16
 
 ### Highlights Mālo goes to the athlete in the play

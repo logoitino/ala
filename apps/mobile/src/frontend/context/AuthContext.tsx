@@ -34,7 +34,15 @@ import {
   saveAthleteOnboardingRemote,
   type AthleteOnboarding,
 } from '@/lib/teams';
-import type { Profile, UserRole } from '@/types/database';
+import type { Profile, ProfileSocialLinks, ProfileVisibility, UserRole } from '@/types/database';
+
+export type ProfileEditPatch = {
+  full_name?: string;
+  username?: string | null;
+  bio?: string | null;
+  social_links?: ProfileSocialLinks;
+  profile_visibility?: ProfileVisibility;
+};
 
 const DEV_ROLE_KEY = 'tapuai.devRole';
 const STUDIO_KEY = 'tapuai.studioUnlocked';
@@ -71,6 +79,9 @@ type AuthContextValue = {
   setActiveRole: (role: 'fan' | 'athlete') => Promise<void>;
   addUserRole: (role: UserRole) => Promise<void>;
   completeAthleteOnboarding: (onboard: AthleteOnboarding) => Promise<void>;
+  /** Patches the signed-in fan's own `profiles` row (Edit Profile sheet: name, username, bio,
+   * social links, visibility toggles). Optimistic local update, then a remote write. */
+  updateProfile: (patch: ProfileEditPatch) => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -393,6 +404,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [session?.user.id],
   );
 
+  const updateProfile = useCallback(
+    async (patch: ProfileEditPatch) => {
+      setProfile((current) => (current ? { ...current, ...patch } : current));
+      if (!session?.user.id || !isSupabaseConfigured) return;
+      await supabase.from('profiles').update(patch).eq('user_id', session.user.id);
+    },
+    [session?.user.id],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       role,
@@ -417,6 +437,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setActiveRole,
       addUserRole,
       completeAthleteOnboarding,
+      updateProfile,
       refreshProfile,
       signInWithApple,
       signInWithGoogle,
@@ -454,6 +475,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       studioUnlocked,
       switchRole,
       unlockStudio,
+      updateProfile,
     ],
   );
 

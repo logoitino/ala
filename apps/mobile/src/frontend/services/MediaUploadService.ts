@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, TurboModuleRegistry } from 'react-native';
 
 import {
   HIGHLIGHT_MAX_MS,
@@ -12,6 +12,9 @@ import type { Reel } from '@/types/database';
 export const REELS_BUCKET = 'reels';
 export const HIGHLIGHTS_FALLBACK_BUCKET = 'game_highlights';
 export const AVATARS_BUCKET = 'avatars';
+/** Private bucket for Vault / Exclusive clips. `video_url` stores `reelvault:{path}`, never a public URL. */
+export const REEL_VAULT_BUCKET = 'reel_vault';
+export const REEL_VAULT_PREFIX = 'reelvault:';
 
 /** 1080p vertical, ~2.5 Mbps — fits a 45s Seki clip without crushing jade edges. */
 const VERTICAL_1080_BITRATE = 2_500_000;
@@ -65,7 +68,12 @@ async function sessionUserId(): Promise<string> {
   return data.user?.id ?? 'guest';
 }
 
-async function blobFromUri(uri: string): Promise<Blob> {
+/**
+ * @purpose Read a local picker URI as raw bytes. React Native's `fetch().blob()` stamps
+ * `text/plain`, and Storage then rejects the avatar/reel upload (`allowed_mime_types`).
+ * An ArrayBuffer has no MIME of its own, so `upload()` uses the `contentType` we pass.
+ */
+export async function bytesFromUri(uri: string): Promise<ArrayBuffer> {
   let response: Response;
   try {
     response = await fetch(uri);
@@ -76,31 +84,41 @@ async function blobFromUri(uri: string): Promise<Blob> {
   }
 
   try {
-    const blob = await response.blob();
-    if (blob && blob.size > 0) return blob;
-  } catch {
-    // Native file:// often needs ArrayBuffer.
+    const buffer = await response.arrayBuffer();
+    if (buffer.byteLength) return buffer;
+  } catch (caught) {
+    throw new Error(`Could not convert this file. (${errorMessage(caught, 'read failed')})`);
   }
 
-  try {
-    const retry = await fetch(uri);
-    const buffer = await retry.arrayBuffer();
-    if (!buffer.byteLength) throw new Error('The selected file is empty.');
-    return new Blob([buffer], { type: 'application/octet-stream' });
-  } catch (caught) {
-    throw new Error(`Could not convert this file. (${errorMessage(caught, 'blob conversion failed')})`);
-  }
+  throw new Error('The selected file is empty.');
+}
+
+/** Bucket allow-list is jpeg / png / webp. Edited Camera Roll crops are jpeg when the URI has no extension. */
+export function imageContentType(uri: string): 'image/jpeg' | 'image/png' | 'image/webp' {
+  const path = uri.split('?')[0]?.toLowerCase() ?? '';
+  if (path.endsWith('.png')) return 'image/png';
+  if (path.endsWith('.webp')) return 'image/webp';
+  return 'image/jpeg';
 }
 
 /**
- * @purpose Client-side 1080p vertical compress via `react-native-compressor`. Expo Go / web skip native compress.
+ * @purpose True when this binary actually linked Nitro. Expo Go does not, and importing
+ * `react-native-compressor` there throws an uncaught NitroModules redbox.
+ */
+function compressorNativeReady(): boolean {
+  if (Platform.OS === 'web') return false;
+  return TurboModuleRegistry.get('NitroModules') != null;
+}
+
+/**
+ * @purpose Client-side 1080p vertical compress via `react-native-compressor`. Expo Go / web skip native compress and upload the original file.
  * @param uri Local `file://` or `ph://` video URI.
  * @param onProgress 0–1 while the native encoder runs.
- * @returns Compressed `file://` URI, or the original URI when the native module is missing.
- * @sideEffects Native ffmpeg-style encode on a development build; no-op in Expo Go.
+ * @returns Compressed `file://` URI, or the original URI when NitroModules is not in this binary.
+ * @sideEffects Native encode on a development build that includes `react-native-compressor`. No-op in Expo Go.
  */
 export async function compressHighlight(uri: string, onProgress?: CompressProgress): Promise<string> {
-  if (!uri || Platform.OS === 'web') {
+  if (!uri || !compressorNativeReady()) {
     onProgress?.(1);
     return uri;
   }
@@ -129,12 +147,12 @@ export async function compressHighlight(uri: string, onProgress?: CompressProgre
 async function uploadToBucket(
   buckets: string[],
   path: string,
-  blob: Blob,
+  body: ArrayBuffer,
   contentType: string,
 ): Promise<{ bucket: string; publicUrl: string }> {
   let lastError = 'Upload failed.';
   for (const bucket of buckets) {
-    const { error } = await supabase.storage.from(bucket).upload(path, blob, {
+    const { error } = await supabase.storage.from(bucket).upload(path, body, {
       contentType,
       upsert: true,
     });
@@ -223,10 +241,10 @@ async function insertReelRow(baseRow: {
 }
 
 /**
- * @purpose Compress a Seki clip, upload to Storage `reels/{user_id}/{timestamp}.mp4`, insert `public.reels`.
- * @param input Local URI + caption + tagged player/game. `compressed` skips a second encode after the picker overlay.
- * @returns Inserted reel row (vault flags + category).
- * @sideEffects `react-native-compressor`; Storage `reels` (fallback `game_highlights`); `reels` INSERT.
+ * @purpose Compress a Seki clip and insert `public.reels`. Free clips go to public Storage `reels`. Vault / Exclusive clips go to private `reel_vault` and store `reelvault:{path}`.
+ * @param input Local URI + caption + tagged player/game. `compressed` skips a second encode after the picker overlay. `isExclusive` locks the file.
+ * @returns Inserted reel row. A locked clip's `video_url` on this object is a one-hour signed URL for immediate playback; the database keeps the `reelvault:` token.
+ * @sideEffects `react-native-compressor`; Storage `reels` or `reel_vault`; `reels` INSERT; signed URL for exclusive playback.
  */
 export async function uploadHighlight({
   uri,
@@ -259,23 +277,35 @@ export async function uploadHighlight({
   onProgress?.(0.36);
 
   const owner = await sessionUserId();
-  const filePath = `reels/${owner}/${Date.now()}.mp4`;
-  const blob = await blobFromUri(localUri);
+  if (isExclusive && owner === 'guest') {
+    throw new Error('Sign in before uploading a Vault clip.');
+  }
+  const body = await bytesFromUri(localUri);
   onProgress?.(0.48);
 
-  const { publicUrl } = await uploadToBucket(
-    [REELS_BUCKET, HIGHLIGHTS_FALLBACK_BUCKET],
-    filePath,
-    blob,
-    'video/mp4',
-  );
+  let videoUrl: string;
+  let vaultPath = '';
+  if (isExclusive) {
+    vaultPath = `${owner}/${Date.now()}.mp4`;
+    await uploadToBucket([REEL_VAULT_BUCKET], vaultPath, body, 'video/mp4');
+    videoUrl = `${REEL_VAULT_PREFIX}${vaultPath}`;
+  } else {
+    const filePath = `reels/${owner}/${Date.now()}.mp4`;
+    const uploaded = await uploadToBucket(
+      [REELS_BUCKET, HIGHLIGHTS_FALLBACK_BUCKET],
+      filePath,
+      body,
+      'video/mp4',
+    );
+    videoUrl = uploaded.publicUrl;
+  }
 
   onProgress?.(0.82);
   onStatus?.('Saving reel…');
 
   const nextCategory = parseReelCategory(category);
   const reel = await insertReelRow({
-    video_url: publicUrl,
+    video_url: videoUrl,
     title: caption,
     player_id: playerId,
     game_id: gameId || null,
@@ -286,7 +316,10 @@ export async function uploadHighlight({
 
   onProgress?.(1);
   onStatus?.('Seki play uploaded.');
-  return reel;
+  if (!vaultPath) return reel;
+  const signed = await supabase.storage.from(REEL_VAULT_BUCKET).createSignedUrl(vaultPath, 60 * 60);
+  if (signed.error || !signed.data?.signedUrl) return reel;
+  return { ...reel, video_url: signed.data.signedUrl };
 }
 
 /**
@@ -306,11 +339,11 @@ export async function uploadAvatar(uri: string, onProgress?: CompressProgress): 
   if (!userId) throw new Error('Sign in to set a profile photo.');
 
   onProgress?.(0.15);
-  const blob = await blobFromUri(uri);
+  const body = await bytesFromUri(uri);
   onProgress?.(0.4);
 
   const path = `${userId}/${Date.now()}.jpg`;
-  const { publicUrl } = await uploadToBucket([AVATARS_BUCKET], path, blob, 'image/jpeg');
+  const { publicUrl } = await uploadToBucket([AVATARS_BUCKET], path, body, imageContentType(uri));
   onProgress?.(0.8);
 
   const { error } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('user_id', userId);

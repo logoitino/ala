@@ -8,6 +8,7 @@ import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
 import { LegalModal } from '@/components/Legal/LegalModal';
 import { TabScreen } from '@/components/TabScreen';
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
+import { EditProfileModal } from '@/components/Profile/EditProfileModal';
 import { PayoutSetupCard } from '@/components/Profile/PayoutSetupCard';
 import { ProfileMenuSheet } from '@/components/Profile/ProfileMenuSheet';
 import { RoleSwitcherModal } from '@/components/Profile/RoleSwitcherModal';
@@ -38,17 +39,7 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { FOCAL } from '@/theme/motion';
 import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
 
-const FALLBACK_ATHLETE: Player = {
-  id: 'demo-marcus-rivera',
-  name: 'Marcus Rivera',
-  jersey_number: 7,
-  position: 'Quarterback',
-  height: "6'2\"",
-  school_name: 'ALA Hawks',
-  backer_count: 14,
-  view_count: 1280,
-  vault_locked: true,
-};
+const FAN_SELF_PREFIX = 'fan-self';
 
 /**
  * @purpose Own Profile tab uses the same `AthleteProfileView` as `/user/[id]` — hamburger overlays the sheet instead of a YOUR HUB heading; Mālo / Subscribe only when this is not your claimed row.
@@ -72,6 +63,7 @@ export default function MyHubTab() {
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [legalOpen, setLegalOpen] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [flipOpen, setFlipOpen] = useState(false);
   const [vaultLockBusy, setVaultLockBusy] = useState(false);
@@ -108,8 +100,24 @@ export default function MyHubTab() {
     if (named) return named;
     const favorite = players.find((player) => favoriteIds.includes(player.id));
     if (favorite) return favorite;
-    return players[0] ?? FALLBACK_ATHLETE;
-  }, [favoriteIds, players, profile?.full_name, profile?.player_id]);
+    // 2026-09 fix: this used to fall back to `players[0]` (a real, unrelated athlete's roster row —
+    // whichever one happens to sort first) or a hardcoded "Marcus Rivera" demo object. Either way, a
+    // plain fan with no claimed or name-matched athlete saw someone else's jersey, stats, backer
+    // count, and Vault lock state presented as their own Hub. Synthesizing a lightweight placeholder
+    // from the fan's own profile instead — represents "you, with no athlete claimed yet," not a
+    // stand-in for a real (or fake celebrity) athlete. The `FAN_SELF_PREFIX` id keeps the
+    // demo-id / dev-id skip below from trying to fetch reels for this synthetic row.
+    return {
+      id: `${FAN_SELF_PREFIX}-${profile?.user_id ?? 'guest'}`,
+      name: profile?.full_name?.trim() || 'Fan',
+      jersey_number: 0,
+      position: '',
+      height: '',
+      school_name: '',
+      backer_count: 0,
+      vault_locked: false,
+    } satisfies Player;
+  }, [favoriteIds, players, profile?.full_name, profile?.player_id, profile?.user_id]);
 
   const athlete = useMemo(() => {
     const base = rosterAthlete;
@@ -130,7 +138,12 @@ export default function MyHubTab() {
       void readMaloDroppedCount().then(setTipsDropped);
       void countStoredCheerVotes().then(setPollVotes);
       void readAthleteOnboarding().then((onboard) => setLocalOnboardTeam(onboard?.team ?? null));
-      if (!athlete.id || athlete.id.startsWith('demo-') || athlete.id.startsWith('dev-')) {
+      if (
+        !athlete.id ||
+        athlete.id.startsWith('demo-') ||
+        athlete.id.startsWith('dev-') ||
+        athlete.id.startsWith(FAN_SELF_PREFIX)
+      ) {
         setTaggedRows([]);
         return;
       }
@@ -260,6 +273,14 @@ export default function MyHubTab() {
         onPress: () => router.push('/admin' as Href),
       });
     }
+    if (!isGuest) {
+      items.push({
+        id: 'edit-profile',
+        label: 'Edit Profile',
+        hint: 'Bio, social links, and what other users can see',
+        onPress: () => setEditProfileOpen(true),
+      });
+    }
     items.push({
       id: 'capability',
       label: 'Account Capability',
@@ -344,6 +365,8 @@ export default function MyHubTab() {
           username={hubUsername}
           jersey={cardJersey}
           bio={hubBio || undefined}
+          aboutBio={profile?.bio}
+          socialLinks={profile?.social_links}
           role={role}
           roles={roles}
           auraPoints={hubAuraPoints}
@@ -447,6 +470,7 @@ export default function MyHubTab() {
       <RoleSwitcherModal visible={roleSheetOpen} onClose={() => setRoleSheetOpen(false)} />
       <LegalModal visible={legalOpen} onClose={() => setLegalOpen(false)} />
       <VerifyAthleteModal visible={verifyOpen} onClose={() => setVerifyOpen(false)} />
+      <EditProfileModal visible={editProfileOpen} onClose={() => setEditProfileOpen(false)} />
       <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />
     </TabScreen>
   );

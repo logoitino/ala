@@ -12,8 +12,8 @@ You are the **COMMERCE** department for Tapua'i (ala-sports, pnpm monorepo at re
 
 **Key files:** `hooks/useTipCheckout.ts`, `MaloTipModal`/`TipSheetModal`, `hooks/useStripeConnect.ts`, Edge `create-stripe-account`, `app/api/create-payout+api.ts`, `PayoutSetupCard`, `app/(tabs)/drip.tsx`, `GearCard`, `ProductSheet`, `useDripCatalog`, `app/(tabs)/receipts.tsx`, `useFanTipHistory`.
 
-**Known open security debt (2026-09 audit — this is likely your first real ticket, pair BACKEND):**
-1. No Stripe webhook exists anywhere in the repo. `tips` INSERT and `subscriptions` INSERT/UPDATE RLS policies are `with check (true)` — a client can write a fake paid tip/subscription via direct REST call without ever charging Stripe. `add_user_aura`, `increment_reel_tips`, `increment_backer_count`, `chip_in_wishlist_item` are all `anon`-executable with no server-side proof a charge occurred.
+**Known open security debt (check `docs/ROADMAP.md` Phase 1a before acting — the lines below were the 2026-09-19 opening audit):**
+1. `supabase/functions/stripe-webhook` exists and checks the Stripe signature, but it does not credit `tips` yet. `tips` INSERT is no longer `with check (true)` — it requires `auth.uid() = fan_id` and `malo_target_frozen` — but it still does not prove a charge. `useTipCheckout.ts` inserts the ledger after PaymentSheet. Do not enable webhook crediting until that client insert is retired, or every Mālo double-credits. `add_user_aura` is `authenticated`-only with a 5000-point cap, not anon.
 2. `useTipCheckout.ts` inserts the `tips` row but does not check the insert result for an error — a fan can be charged with no ledger row created.
 3. No double-submit protection on `chip_in_wishlist_item` — a double-tap/retry can double-credit at the DB level (client `busy` state is the only guard today).
 4. `create-payout` resolves the destination account server-side correctly, but never validates the requested amount against actual revenue owed to that athlete.

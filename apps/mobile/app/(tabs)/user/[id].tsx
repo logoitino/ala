@@ -22,10 +22,15 @@ import { handleFromName, isAuraUuid, resolveAuraPoints, subscribePlayerAura } fr
 import { userProfileHref } from '@/lib/navigation';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { fetchPlayerVerification } from '@/lib/verification';
-import type { Reel, ReelWithPlayer } from '@/types/database';
+import type { Reel, ReelWithPlayer, ProfilePublic } from '@/types/database';
 
+// 2026-09 fix: this used to be shown directly (`{error}`) in the "Couldn't load athlete" screen,
+// leaking a developer-facing setup instruction to end users whenever Supabase wasn't configured.
+// The raw detail is still logged for debugging; only this friendly copy ever reaches the UI now
+// (see the matching fix in `useLiveScores.ts` for the Local tab's equivalent leak).
 const CONFIG_ERROR =
   'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart Expo.';
+const FRIENDLY_CONFIG_ERROR = 'This app isn’t connected right now. Please try again later.';
 
 function mergeUploadedReel(
   rows: ReelWithPlayer[],
@@ -64,6 +69,7 @@ export default function UserAthleteProfileScreen() {
   const [verificationStatus, setVerificationStatus] = useState<'unverified' | 'pending' | 'verified'>('unverified');
   const [schoolClaimed, setSchoolClaimed] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [publicProfile, setPublicProfile] = useState<ProfilePublic | null>(null);
   const { stats, loading: statsLoading } = useAthleteStats(playerId, player);
   const { subscribed, grant } = useAthleteSubscription(playerId);
   const { startCheckout, busy } = useTipCheckout();
@@ -87,7 +93,8 @@ export default function UserAthleteProfileScreen() {
     setError(null);
 
     if (!isSupabaseConfigured) {
-      setError(CONFIG_ERROR);
+      console.warn('[UserAthleteProfileScreen]', CONFIG_ERROR);
+      setError(FRIENDLY_CONFIG_ERROR);
       setLoading(false);
       return;
     }
@@ -109,6 +116,12 @@ export default function UserAthleteProfileScreen() {
     setVerificationStatus(verification.status);
     setSchoolClaimed(verification.schoolClaimed);
     setAvatarUrl(verification.avatarUrl);
+    const { data: publicRow } = await supabase
+      .from('profiles_public')
+      .select('*')
+      .eq('player_id', playerId)
+      .maybeSingle();
+    setPublicProfile((publicRow as ProfilePublic | null) ?? null);
     setLoading(false);
   }, [playerId, rawId, uploadSheet?.lastUploaded]);
 
@@ -230,7 +243,8 @@ export default function UserAthleteProfileScreen() {
   }
 
   const displayName = displayValue(player.name);
-  const bio = [displayValue(player.position), displayValue(player.school_name)]
+  const schoolVisible = publicProfile?.school_visible ?? true;
+  const bio = [displayValue(player.position), schoolVisible ? displayValue(player.school_name) : null]
     .filter((part) => part && part !== '—')
     .join(' · ');
 
@@ -246,10 +260,12 @@ export default function UserAthleteProfileScreen() {
           username={handleFromName(displayName)}
           jersey={player.jersey_number}
           bio={bio || undefined}
+          aboutBio={publicProfile?.bio}
+          socialLinks={publicProfile?.social_links}
           role="athlete"
           roles={['athlete']}
           auraPoints={resolveAuraPoints(player)}
-          teamName={player.school_name}
+          teamName={schoolVisible ? player.school_name : undefined}
           subscriberCrest={subscribed}
           totalTipsReceived={player.backer_count ?? 0}
           sekiCount={player.seki_count ?? 0}
