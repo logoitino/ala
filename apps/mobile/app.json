@@ -12,6 +12,7 @@
       "bundleIdentifier": "com.logoitino.ala-sports"
     },
     "android": {
+      "package": "com.logoitino.alasports",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -71,10 +72,18 @@
       ],
       "expo-video",
       "expo-web-browser",
-      "react-native-compressor"
+      "react-native-compressor",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7434ebc5-7ef5-4306-864f-c43f7d02a3de"
+      }
+    },
+    "owner": "logoitino"
   }
 }

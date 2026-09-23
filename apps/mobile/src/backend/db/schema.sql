@@ -959,12 +959,30 @@ begin
     raise exception 'Too many attempts. Try again later.';
   end if;
 
+  -- 2026-09 audit (Round 31/33 follow-up): `team_code_fail_count`/`team_code_locked_until` are
+  -- protected from a raw client write by `guard_profiles_admin_escalation` below, which requires
+  -- either an admin session or this transaction-local flag — set here, right before the only two
+  -- places in this function that touch those columns, so a raw REST call attempting the same reset
+  -- (with no flag set) is rejected while this function's own legitimate resets still work. `true` as
+  -- the third argument to `set_config` scopes it to the current transaction only; PostgREST runs
+  -- each RPC call in its own transaction, so this never leaks into an unrelated request.
+  perform set_config('app.tapuai_team_code_write', 'true', true);
+
   select * into school
   from public.schools_and_teams s
   where upper(btrim(coalesce(s.team_code, ''))) in (n, school_key)
   limit 1;
 
   if school.id is null then
+    -- 2026-09 audit (Round 31 sweep): this used to `raise exception` right after the update above —
+    -- but an unhandled exception rolls back everything this function call did, including that same
+    -- update, since there is no exception handler anywhere in this function to create a savepoint
+    -- boundary. That meant the fail-count increment (and the lockout it is supposed to trigger) never
+    -- actually persisted to the database on a single wrong guess — the Round 12 lockout has never
+    -- been functionally live, silently defeating its own purpose since it was written. Returning a
+    -- graceful `{ok: false, ...}` JSON result instead lets the update above actually commit;
+    -- `lib/verification.ts`'s `redeemTeamCode()` already re-throws on `ok: false`, so the client-
+    -- facing contract (this call throws on a bad code) is unchanged.
     update public.profiles
     set
       team_code_fail_count = coalesce(team_code_fail_count, 0) + 1,
@@ -974,7 +992,7 @@ begin
         else team_code_locked_until
       end
     where id = me.id;
-    raise exception 'Unknown team code';
+    return jsonb_build_object('ok', false, 'error', 'Unknown team code');
   end if;
 
   -- A real code resets the counter — only wrong guesses count toward the lockout.
@@ -1971,15 +1989,27 @@ begin
   -- from their own Profile tab (`app/(tabs)/profile.tsx`'s `manageVault` — `VaultLockCard`), and
   -- (b) school staff from the admin Athletes desk (`AthletesTool.tsx`), mirroring the "Staff write
   -- players" RLS policy's role set.
+  -- 2026-09 audit (Round 27/33 sweep): `profiles.player_id` is a self-service, unverified claim by
+  -- design (`saveAthleteOnboardingRemote`'s fuzzy name match, no team-code requirement — see
+  -- `docs/ALA_TEAM_BRIEF.md`'s "claim freely, not a wall" onboarding philosophy) — anyone could
+  -- previously set their own `player_id` to any real athlete's id and lock/unlock that athlete's
+  -- Vault paywall at will. Vault control is a real monetization gate, not a browse feature, so it's
+  -- the right place to draw the line: require the caller's own profile to be `is_verified` (i.e.
+  -- actually redeemed a coach-issued team code for their claimed school), narrowing this from "any
+  -- account, any player_id" down to "an account that passed real school verification, claiming a
+  -- player_id." Still not a perfect athlete-to-row match (a verified teammate could still claim a
+  -- different teammate's row), but closes the "any stranger, zero verification" version of the gap
+  -- without touching the free/unverified onboarding path itself.
   if not (
     public.current_user_role() in ('booster', 'admin', 'operator')
     or exists (
       select 1 from public.profiles p
       where p.user_id = actor
         and p.player_id = target_player_id
+        and coalesce(p.is_verified, false)
     )
   ) then
-    raise exception 'Only the athlete, school staff, or admin may lock or open a Vault.';
+    raise exception 'Only the verified athlete, school staff, or admin may lock or open a Vault.';
   end if;
 
   update public.players
@@ -2862,9 +2892,14 @@ grant execute on function public.malo_target_frozen(uuid) to anon, authenticated
 
 drop function if exists public.set_malo_freeze(text, uuid, boolean);
 
--- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): the ONLY way to flip `profiles.malo_frozen` /
--- `schools_and_teams.malo_frozen` — admin-only, checked internally via `current_user_role()`, so no
--- extra table-level UPDATE grant is needed on either table for this feature.
+-- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): the intended way to flip `profiles.malo_frozen` /
+-- `schools_and_teams.malo_frozen` — admin-only, checked internally via `current_user_role()`.
+-- 2026-09 audit (Round 29 sweep): the original version of this comment claimed this RPC was "the
+-- ONLY way" to change `malo_frozen` since no extra grant was added for it — that reasoning was wrong
+-- the same way the original `is_admin` self-escalation bug was: `profiles` already has a blanket
+-- `grant ... update` with no column restriction, so a raw client UPDATE to the caller's own row hit
+-- the exact same gap regardless of this RPC's own admin check. Real defense is now in
+-- `guard_profiles_admin_escalation`, which also guards this column.
 create or replace function public.set_malo_freeze(target_type text, target_id uuid, frozen boolean)
 returns boolean
 language plpgsql
@@ -3121,6 +3156,73 @@ begin
 
   if array_length(gained, 1) > 0 and public.current_user_role() <> 'admin' then
     raise exception 'these roles can only be granted by an existing admin: %', array_to_string(gained, ', ');
+  end if;
+
+  -- 2026-09 audit (Round 29 sweep): same root cause as the role-escalation gap above, different
+  -- column. `set_malo_freeze`'s own comment claimed it was "the ONLY way" to flip `malo_frozen`
+  -- because no *extra* table grant was added for it — but `profiles` already has a blanket
+  -- `grant ... update` with no column restriction, so that reasoning never actually held. A frozen
+  -- account (a real compliance/legal action per LEGAL_BRIEFING.md §8 item 5) could self-unfreeze
+  -- with a raw `update profiles set malo_frozen = false where user_id = auth.uid()`, bypassing the
+  -- admin-only RPC entirely and defeating the freeze's whole purpose. Guarding it the same way as
+  -- the role columns: only an admin session may change it.
+  if (
+    (tg_op = 'INSERT' and coalesce(new.malo_frozen, false))
+    or (tg_op = 'UPDATE' and new.malo_frozen is distinct from old.malo_frozen)
+  ) and public.current_user_role() <> 'admin' then
+    raise exception 'malo_frozen can only be changed by an admin';
+  end if;
+
+  -- 2026-09 audit (Round 30 sweep): same root cause again, a third time. `createPayout.ts` and
+  -- `create-stripe-account`'s own doc comments both say the payout destination is "resolved
+  -- server-side from `profiles.stripe_connect_id`, never a client-supplied account id" — but that
+  -- claim only held for the app's own client code, which never happened to write these columns
+  -- directly. Nothing stopped a raw REST call: `profiles`' blanket update grant covers
+  -- `stripe_connect_id` / `payouts_enabled` / `stripe_onboarding_complete` same as everything else,
+  -- so any signed-in user could self-set `payouts_enabled = true` and `stripe_connect_id` to an
+  -- arbitrary string (their own real Connect id, someone else's if ever discoverable, or garbage)
+  -- with zero real Stripe onboarding. Harmless today only because Round 23 already hard-blocks every
+  -- real transfer regardless of these flags — but the entire "destination resolved server-side, never
+  -- trust the client" security property this system is documented to rely on would be false the
+  -- moment that block is lifted, undermining the point of building a balance ledger at all. `auth.role()
+  -- = 'service_role'` is exempted so the `create-stripe-account` Edge Function (which legitimately
+  -- writes these with the service key, and has no admin session to satisfy `current_user_role()`)
+  -- keeps working.
+  if (
+    (tg_op = 'INSERT' and (
+      new.stripe_connect_id is not null
+      or coalesce(new.payouts_enabled, false)
+      or coalesce(new.stripe_onboarding_complete, false)
+    ))
+    or (tg_op = 'UPDATE' and (
+      new.stripe_connect_id is distinct from old.stripe_connect_id
+      or new.payouts_enabled is distinct from old.payouts_enabled
+      or new.stripe_onboarding_complete is distinct from old.stripe_onboarding_complete
+    ))
+  ) and auth.role() <> 'service_role' and public.current_user_role() <> 'admin' then
+    raise exception 'Stripe Connect fields can only be set by the server';
+  end if;
+
+  -- 2026-09 audit (Round 31/33 follow-up): `team_code_fail_count`/`team_code_locked_until` are
+  -- `redeem_team_code`'s anti-brute-force lockout state (Round 12). Unlike the columns above, the
+  -- one legitimate writer runs as the *calling user's own session*, not admin/service_role, so this
+  -- can't just check `current_user_role()`. `redeem_team_code` sets a transaction-local flag
+  -- (`app.tapuai_team_code_write`) immediately before its own writes to these columns; a raw client
+  -- update attempting the same reset has no way to set that flag first, so it's rejected here.
+  if (
+    (tg_op = 'INSERT' and (
+      coalesce(new.team_code_fail_count, 0) <> 0
+      or new.team_code_locked_until is not null
+    ))
+    or (tg_op = 'UPDATE' and (
+      new.team_code_fail_count is distinct from old.team_code_fail_count
+      or new.team_code_locked_until is distinct from old.team_code_locked_until
+    ))
+  )
+    and public.current_user_role() <> 'admin'
+    and coalesce(current_setting('app.tapuai_team_code_write', true), '') <> 'true'
+  then
+    raise exception 'team_code_fail_count / team_code_locked_until can only be changed by the server';
   end if;
 
   return new;
@@ -3670,6 +3772,11 @@ create policy "Public update subscriptions"
 -- receiving athlete (via `profiles.player_id = subscriber_requests.athlete_id`, mirroring the
 -- `profiles.player_id` athlete-identity join used elsewhere in this file), or admin — not `using
 -- (true)`. INSERT requires the caller to insert as themself.
+-- 2026-09 audit (Round 27/33 sweep): same reasoning as `set_player_vault_locked` above —
+-- `player_id` is a self-service, unverified claim, so the receiving-athlete branch here previously
+-- let anyone read another athlete's private messages just by copying their id into their own
+-- `player_id`. Requiring `is_verified` narrows this to "an account that actually redeemed a real
+-- team code," not any signed-in stranger.
 drop policy if exists "Public read subscriber requests" on public.subscriber_requests;
 drop policy if exists "Read own or received subscriber requests" on public.subscriber_requests;
 create policy "Read own or received subscriber requests"
@@ -3678,7 +3785,9 @@ create policy "Read own or received subscriber requests"
     auth.uid() = subscriber_id
     or exists (
       select 1 from public.profiles pr
-      where pr.user_id = auth.uid() and pr.player_id = subscriber_requests.athlete_id
+      where pr.user_id = auth.uid()
+        and pr.player_id = subscriber_requests.athlete_id
+        and coalesce(pr.is_verified, false)
     )
     or public.current_user_role() = 'admin'
   );
@@ -4229,6 +4338,25 @@ begin
   end if;
 end;
 $$;
+
+-- 2026-09 audit (Round 33/34 sweep, found by seeding a genuinely fresh staging project — the exact
+-- clean-install test Phase 2 exists for): `get_admin_reports()` below references `app_feedback` in
+-- its query, but that table's real `create table if not exists` isn't defined until much later in
+-- this file (the "Fan suggestions" section). `get_admin_reports` is `language sql`, and Postgres
+-- validates a SQL-language function's referenced relations exist at CREATE FUNCTION time (unlike
+-- `plpgsql`, which only checks syntax until first execution) — so this has always failed on a truly
+-- fresh project with no pre-existing `app_feedback` table. Never surfaced against the live project
+-- because that table already existed there from an earlier partial run before this ordering issue
+-- existed. Minimal stub here, matching the same "safety net so a later create table if not exists
+-- doesn't crash" idiom already used throughout this file (see the sponsorships/disbursements/
+-- shop_orders comments) — the real `app_feedback` section further down still owns the full column
+-- set, RLS, and grants; this just makes the table exist early enough for this function to compile.
+create table if not exists public.app_feedback (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null default 'suggestion',
+  status text not null default 'new',
+  surface text not null default 'other'
+);
 
 drop function if exists public.get_admin_reports();
 

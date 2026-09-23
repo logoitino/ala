@@ -234,12 +234,24 @@ begin
     raise exception 'Too many attempts. Try again later.';
   end if;
 
+  -- 2026-09 audit (Round 31/33, mirrored from schema.sql): sets a transaction-local flag so
+  -- `guard_profiles_admin_escalation` can tell this function's own legitimate writes to
+  -- `team_code_fail_count`/`team_code_locked_until` apart from a raw client update attempting the
+  -- same reset.
+  perform set_config('app.tapuai_team_code_write', 'true', true);
+
   select * into school
   from public.schools_and_teams s
   where upper(btrim(coalesce(s.team_code, ''))) in (n, school_key)
   limit 1;
 
   if school.id is null then
+    -- 2026-09 audit (Round 31, mirrored from schema.sql): this used to `raise exception` right
+    -- after the update below — an unhandled exception rolls back everything this function did in
+    -- the same call, including that same update, since there is no exception handler here. That
+    -- meant the fail-count increment (and the lockout it triggers) never actually persisted on a
+    -- wrong guess. Returning a graceful `{ok: false, ...}` result instead lets it commit;
+    -- `lib/verification.ts`'s `redeemTeamCode()` already re-throws on `ok: false`.
     update public.profiles
     set
       team_code_fail_count = coalesce(team_code_fail_count, 0) + 1,
@@ -249,7 +261,7 @@ begin
         else team_code_locked_until
       end
     where id = me.id;
-    raise exception 'Unknown team code';
+    return jsonb_build_object('ok', false, 'error', 'Unknown team code');
   end if;
 
   update public.profiles

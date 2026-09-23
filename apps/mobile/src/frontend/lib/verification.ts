@@ -46,8 +46,16 @@ export async function redeemTeamCode(rawCode: string): Promise<RedeemTeamCodeRes
     const { data, error } = await supabase.rpc('redeem_team_code', { raw_code: parsed.normalized });
     if (!error && data && typeof data === 'object') {
       const row = data as Record<string, unknown>;
+      // 2026-09 audit (Round 31 sweep): a wrong/locked-out code now comes back as a graceful
+      // `{ok: false, error}` JSON result (see schema.sql) instead of a thrown Postgres exception —
+      // needed so the RPC's own fail-count increment actually persists. Re-throwing here keeps this
+      // function's own contract (throws on failure) unchanged for `VerifyAthleteModal.tsx`, which
+      // never itself checks `result.ok`.
+      if (row.ok === false) {
+        throw new Error(friendlyVerifyError(asText(row.error) ?? 'Could not redeem this team code.'));
+      }
       return {
-        ok: row.ok !== false,
+        ok: true,
         verification_status: asStatus(row.verification_status ?? 'verified'),
         school_id: asText(row.school_id),
         school_name: asText(row.school_name),
