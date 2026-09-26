@@ -21,6 +21,38 @@ export const DEMO_FAN_EMAIL =
 export const DEMO_FAN_PASSWORD =
   process.env.EXPO_PUBLIC_DEMO_FAN_PASSWORD?.trim() || 'TapuaiDemoFan1!';
 export const DEMO_FAN_NAME = 'Demo Fan';
+export const MIN_PASSWORD_LENGTH = 8;
+
+/**
+ * @purpose True when a password is long enough to create an account. Sign-in does not use this.
+ */
+export function passwordMeetsPolicy(password: string): boolean {
+  return password.length >= MIN_PASSWORD_LENGTH;
+}
+
+/**
+ * @purpose Turn a Supabase Auth failure into a sentence the sheet can show.
+ * @param message Raw `error.message` from Auth.
+ * @param action Which button failed, so a generic `validation_failed` still names the provider.
+ */
+export function authFailureMessage(message: string, action: 'google' | 'apple' | 'signup' | 'signin'): string {
+  const raw = message.trim();
+  if (/provider is not enabled/i.test(raw)) {
+    if (action === 'google') {
+      return 'Google sign-in is turned off on the server. Create an account with email, or enable the Google provider in Supabase Auth.';
+    }
+    if (action === 'apple') {
+      return 'Apple sign-in is turned off on the server. Create an account with email, or enable the Apple provider in Supabase Auth.';
+    }
+  }
+  if (/already registered|already been registered|user already exists/i.test(raw)) {
+    return 'That email already has an account. Sign in instead.';
+  }
+  if (action === 'signup' && /password/i.test(raw)) {
+    return `Use a password of at least ${MIN_PASSWORD_LENGTH} characters.`;
+  }
+  return raw || 'Could not finish that sign-in.';
+}
 
 /**
  * @purpose Redirect URI for Magic Link / OAuth (`alasports://auth/callback`).
@@ -171,7 +203,7 @@ export async function signInWithApple(): Promise<Session> {
     token: credential.identityToken,
     nonce: rawNonce,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(authFailureMessage(error.message, 'apple'));
   if (!data.session?.user) throw new Error('Apple sign-in did not create a session.');
   await ensureFanProfile(data.session.user);
   return data.session;
@@ -188,7 +220,7 @@ export async function signInWithGoogle(): Promise<Session> {
     provider: 'google',
     options: { redirectTo, skipBrowserRedirect: true },
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(authFailureMessage(error.message, 'google'));
   if (!data.url) throw new Error('Google sign-in did not return a URL.');
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
@@ -221,10 +253,55 @@ export async function signInWithEmailPassword(
     email: trimmed,
     password,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(authFailureMessage(error.message, 'signin'));
   if (!data.session?.user) throw new Error('Sign-in did not create a session.');
   await ensureFanProfile(data.session.user, ageConfirmed13Plus);
   return data.session;
+}
+
+/**
+ * @purpose Create a fan account with email and password. Role is always fan; the client never sends one.
+ * @param ageConfirmed13Plus Must be true. Stored in signup metadata for `handle_new_auth_user`.
+ * @returns Session when Supabase signs the new user in immediately.
+ * @sideEffects `signUp`; `ensureFanProfile` when a session comes back. No profile write if email confirmation is still required.
+ */
+export async function signUpWithEmailPassword(
+  email: string,
+  password: string,
+  ageConfirmed13Plus: boolean,
+): Promise<Session | null> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  if (ageConfirmed13Plus !== true) {
+    throw new Error('Confirm you are 13 or older before creating an account.');
+  }
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed.includes('@') || trimmed.startsWith('@') || trimmed.endsWith('@')) {
+    throw new Error('Enter a valid email.');
+  }
+  if (!passwordMeetsPolicy(password)) {
+    throw new Error(`Use a password of at least ${MIN_PASSWORD_LENGTH} characters.`);
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    email: trimmed,
+    password,
+    options: {
+      data: {
+        age_confirmed_13_plus: true,
+        full_name: trimmed.split('@')[0] || 'Fan',
+      },
+      emailRedirectTo: authRedirectUri(),
+    },
+  });
+  if (error) throw new Error(authFailureMessage(error.message, 'signup'));
+  if (data.user && (data.user.identities?.length ?? 0) === 0) {
+    throw new Error('That email already has an account. Sign in instead.');
+  }
+  if (data.session?.user) {
+    await ensureFanProfile(data.session.user, true);
+    return data.session;
+  }
+  return null;
 }
 
 /**
@@ -237,7 +314,12 @@ export async function signInWithEmailPassword(
 export async function signInWithMagicLink(email: string, ageConfirmed13Plus?: boolean): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
   const trimmed = email.trim().toLowerCase();
-  if (!trimmed.includes('@')) throw new Error('Enter a valid email.');
+  if (!trimmed.includes('@') || trimmed.startsWith('@') || trimmed.endsWith('@')) {
+    throw new Error('Enter a valid email.');
+  }
+  if (ageConfirmed13Plus !== true) {
+    throw new Error('Confirm you are 13 or older before creating an account.');
+  }
   const { error } = await supabase.auth.signInWithOtp({
     email: trimmed,
     options: {

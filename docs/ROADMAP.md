@@ -1,6 +1,6 @@
 # Tapua'i — Fix → Test-Prep → Advance → Team-Test Roadmap
 
-Companion to [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md), [AUDIT_REPORT.md](AUDIT_REPORT.md), and [TEAMS.md](TEAMS.md#qa--ship-gate). This is the live tracker for closing the pre-launch security/compliance gaps, standing up real testing infrastructure, and running an internal test wave before any public beta. Update the status line under each phase as work lands — do not let this drift into a one-time snapshot.
+Companion to [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md), [COMPANY_PHASES.md](COMPANY_PHASES.md) (security, billing, and legal phases, including LLC / trademark / patent triage), [AUDIT_REPORT.md](AUDIT_REPORT.md), and [TEAMS.md](TEAMS.md#qa--ship-gate). This is the live tracker for closing the pre-launch security/compliance gaps, standing up real testing infrastructure, and running an internal test wave before any public beta. Update the status line under each phase as work lands — do not let this drift into a one-time snapshot.
 
 ## Context
 
@@ -8,7 +8,7 @@ Two audits found: (1) money/Aura/admin-data could be fabricated because RLS trus
 
 Internal dogfooding runs now, in Stripe test mode, in parallel with Phase 1 — it is **not** gated on legal/compliance work. Only a public beta with real money is gated on Phase 1 + a written association position.
 
-**Where things stand for testing, as of Round 33 (2026-09-22):** Phase 0's security work is done to the point that internal testing (Phase 3) is not blocked on it. Every table/RPC-fabrication bug found across 33 rounds is fixed, the admin login chain (four independent bugs, see Round 21) is fixed and verified live, and the two remaining "Hard Blocker" items below are explicitly scoped as *internal-testing-acceptable, public-beta-blocking* — meaning they do not need to close before Phase 3 testers get in, only before Phase 5. The two genuinely open items from this session (Round 23's payout balance ledger, Round 24's Stripe webhook wiring) are real product/feature decisions, not security holes blocking testing — payouts are simply disabled today (a stub, same as Phase 1 item 3 already notes), which is fine for testers who aren't expected to withdraw real money yet. **The actual bottleneck to getting testers in a real build is Phase 2**, which needs two things only the team can do (an Expo/EAS account, a throwaway staging Supabase project) — see Phase 2 below.
+**Where things stand for testing, as of Round 33 (2026-09-22):** Phase 0's security work is done to the point that internal testing (Phase 3) is not blocked on it. Every table/RPC-fabrication bug found across 33 rounds is fixed, the admin login chain (four independent bugs, see Round 21) is fixed and verified live, and the two remaining "Hard Blocker" items below are explicitly scoped as *internal-testing-acceptable, public-beta-blocking* — meaning they do not need to close before Phase 3 testers get in, only before Phase 5. The two genuinely open items from this session (Round 23's payout balance ledger, Round 24's Stripe webhook wiring) are real product/feature decisions, not security holes blocking testing — payouts are simply disabled today (a stub, same as Phase 1 item 3 already notes), which is fine for testers who aren't expected to withdraw real money yet. **The actual bottleneck to opening Phase 3 is a staging Supabase project.** The EAS preview install already exists (iPad ad hoc + Android APK). See Phase 2 below.
 
 ---
 
@@ -119,23 +119,28 @@ Internal dogfooding runs now, in Stripe test mode, in parallel with Phase 1 — 
 
 ## Phase 2 — Testing infrastructure
 
-**This is the actual bottleneck to getting anyone testing right now.** Everything upstream (Phase 0 security, the admin login chain) is done; the two items below are the only remaining gap between "the code works" and "a real tester has it installed on a real device." Both need the team's own account access — nothing about them is a code fix.
+**Staging is the remaining blocker before Phase 3.** Phase 0 and admin sign-in are done. A preview install link now exists. Testers still need a database that is not the one development writes to.
 
-*Status: Jest + `@testing-library/react-native` added this session (`pnpm --filter @tapuai/mobile test`, first suites on `lib/aura.ts` and `data/malo.ts`); CI extended to run it; `apps/mobile/eas.json` added with development/preview/production build profiles. Still needed: an actual EAS project (`eas login` + `eas init`, needs the team's Expo account), a second throwaway Supabase project for staging, and folding the AUDIT_REPORT.md smoke checklist fully into `.claude/agents/qa.md` (done) and keeping it current.*
+*Status (2026-09-24): Jest + `@testing-library/react-native` (`pnpm --filter @tapuai/mobile test`; Aura tier math, Mālo tag-gating, age-gate). CI runs typecheck, docs:check, tests, and a secret-leak grep. EAS project `@logoitino/ala-sports` is linked. Preview builds finished 2026-09-23: [iOS](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/bb7d3333-643d-44bd-a7d9-7610020fdb00) (ad hoc, the one registered iPad) and [Android](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/3e84abd9-2302-409c-be28-59dda14c4caf) (APK, any Android device). Still needed: a staging Supabase project or branch, with `schema.sql` applied, and the test build pointed at it. QA checklist already includes the Phase 1 flows.*
 
 1. Automated tests, narrow and money-adjacent first — tier math, eligibility gating, fee/split calculations — not full Detox/Maestro e2e yet.
 2. CI (`.github/workflows/ci-checks.yml`) runs typecheck, docs:check, the test suite, and a secret-leak grep (now covering `service_role` too, not just `sk_test_`).
-3. **Blocking:** `eas.json` build profiles exist; someone with an Expo account needs to run `eas login` then `eas init` from `apps/mobile/` to link a real EAS project, then `eas build --profile preview` to produce the first installable link.
-4. **Blocking:** a second, throwaway Supabase project for staging — create one in the Supabase dashboard, run `schema.sql` against it fresh (this doubles as a clean-install test of the migration file itself, which Round 8/11.5 found real bugs in), and point `apps/mobile/.env.local` / `apps/admin-portal/.env.local` at it instead of the current project. Keep the current project as-is for now rather than testing against it directly.
+3. ~~Link EAS and produce a preview install.~~ **Done 2026-09-23.** `eas.json` profiles are development (dev client), preview (internal), and production. Preview iOS is ad hoc for the registered iPad only. A new iPhone needs its UDID on that profile and a new iOS build. Android preview is an APK.
+4. **Blocking:** a second, throwaway Supabase project for staging — create one in the Supabase dashboard (or a branch; none exist yet), run `schema.sql` against it fresh, and point the tester env at it. Keep the current project as the development database.
 5. QA's standing checklist (`.claude/agents/qa.md`, mirrored in `TEAMS.md#qa--ship-gate`) now includes the automated test run and the Phase 1 compliance flows.
 
-**Exit criterion:** `pnpm test` passes in CI (done), a tester can install a real build from a link with no dev-machine dependency (pending items 3/4 above).
+**Exit criterion:** `pnpm test` passes in CI (done), a tester can install a real build from a link with no dev-machine dependency (done for the registered iPad and for Android), and that build talks to staging (item 4, still open).
 
 ---
 
 ## Phase 3 — Team testing, before real (external) people
 
-Two layers, both starting once Phase 2's build pipeline exists:
+**Dry run can start now** on the current Supabase project with the preview installs from Phase 2. That is a trusted-group pass, not the exit below. A staging branch was not opened: Supabase treats it as a separate billed database, and this project has no branch yet. Stripe stays in test mode. There is no Demo Fan button on these installs (`__DEV__` is off in a preview release), so each person uses their own email sign-in. Test card `4242 4242 4242 4242`.
+
+- iPad: [iOS preview](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/bb7d3333-643d-44bd-a7d9-7610020fdb00)
+- Any Android phone: [Android preview](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/3e84abd9-2302-409c-be28-59dda14c4caf)
+
+Two layers, both recorded against that build:
 
 **Layer A — AI department QA rotation.** Each department in `.claude/agents/` self-tests its owned surface against the QA checklist, using the staging Supabase project. Dispatch pattern: `CALL: <DEPARTMENT>` → fix/verify + `pnpm typecheck` → `CALL: QA` for the full gate. Lesson from this session's UI-polish pass (one Metro crash, one hooks-order bug from concurrent edits): **batch 3-4 departments at a time, not all 13 at once**, and always close a wave with one QA pass across everything touched.
 

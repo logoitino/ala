@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { LegalAckToggle, LegalModal } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { cardShadow, colors, radii } from '@/constants/theme';
+import { COMPLIANCE_PAYOUT } from '@/data/legal';
 import { useLegalAck } from '@/hooks/useLegalAck';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 
@@ -23,6 +24,13 @@ export function PayoutSetupCard() {
       Alert.alert('Terms required', 'Agree to Terms of Service & NIL Compliance before connecting a bank.');
       return;
     }
+    if (!stripeOnboardingComplete) {
+      Alert.alert('Not a live payout', COMPLIANCE_PAYOUT, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Continue in test mode', onPress: () => void createStripeExpressAccount() },
+      ]);
+      return;
+    }
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch {
@@ -35,10 +43,11 @@ export function PayoutSetupCard() {
     return (
       <View style={styles.card} accessibilityRole="summary">
         <View style={styles.badge}>
-          <Text style={styles.badgeLabel}>Payouts Active ✅</Text>
+          <Text style={styles.badgeLabel}>Express connected</Text>
         </View>
+        <Text style={styles.warn}>{COMPLIANCE_PAYOUT}</Text>
         {payoutsEnabled ? (
-          <Text style={styles.lede}>Mālo and subscription deposits can land in your connected bank.</Text>
+          <Text style={styles.lede}>Stripe reports transfers as enabled on this test account. This is still not a live custodial payout.</Text>
         ) : (
           <Text style={styles.lede}>
             Express onboarding is in. Stripe still has to finish enabling transfers — open the dashboard if a
@@ -66,6 +75,7 @@ export function PayoutSetupCard() {
     <View style={styles.card} accessibilityRole="summary">
       <Text style={styles.title}>Set Up Payouts ⚡</Text>
       <Text style={styles.lede}>Receive Mālo Tips & Subscription Direct Deposits</Text>
+      <Text style={styles.warn}>{COMPLIANCE_PAYOUT}</Text>
       <LegalAckToggle
         checked={accepted}
         disabled={accepted}
@@ -111,6 +121,12 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     fontWeight: '600',
+    lineHeight: 18,
+  },
+  warn: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '700',
     lineHeight: 18,
   },
   badge: {

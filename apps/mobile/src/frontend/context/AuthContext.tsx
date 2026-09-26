@@ -21,6 +21,7 @@ import {
   signInWithGoogle as googleSignIn,
   signInWithMagicLink as magicLinkSignIn,
   signInWithEmailPassword as passwordSignIn,
+  signUpWithEmailPassword as passwordSignUp,
   signInWithDemoAccount as demoSignIn,
   signOutRemote,
   subscribeAuthDeepLinks,
@@ -86,6 +87,8 @@ type AuthContextValue = {
   signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithEmailPassword: (email: string, password: string, ageConfirmed13Plus?: boolean) => Promise<void>;
+  /** Creates a fan account. Resolves without a session when email confirmation is still required. */
+  signUpWithEmailPassword: (email: string, password: string, ageConfirmed13Plus: boolean) => Promise<boolean>;
   signInWithMagicLink: (email: string, ageConfirmed13Plus?: boolean) => Promise<void>;
   signInWithDemoAccount: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -285,6 +288,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [hydrateSession],
   );
 
+  const signUpWithEmailPassword = useCallback(
+    async (email: string, password: string, ageConfirmed13Plus: boolean) => {
+      const next = await passwordSignUp(email, password, ageConfirmed13Plus);
+      if (!next) return false;
+      await hydrateSession(next);
+      return true;
+    },
+    [hydrateSession],
+  );
+
   const signInWithMagicLink = useCallback(async (email: string, ageConfirmed13Plus?: boolean) => {
     await magicLinkSignIn(email, ageConfirmed13Plus);
   }, []);
@@ -442,6 +455,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithApple,
       signInWithGoogle,
       signInWithEmailPassword,
+      signUpWithEmailPassword,
       signInWithMagicLink,
       signInWithDemoAccount,
       signOut,
@@ -469,6 +483,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithApple,
       signInWithGoogle,
       signInWithEmailPassword,
+      signUpWithEmailPassword,
       signInWithMagicLink,
       signInWithDemoAccount,
       signOut,

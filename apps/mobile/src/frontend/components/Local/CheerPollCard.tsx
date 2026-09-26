@@ -5,6 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
+import { COMPLIANCE_POLL } from '@/data/legal';
 import { useCheerPoll, type CheerSide } from '@/hooks/useCheerPoll';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
@@ -101,6 +102,7 @@ export function CheerPollCard({
         </View>
       </View>
       <Text style={styles.title}>Who are you riding with?</Text>
+      <Text style={styles.matchup}>{COMPLIANCE_POLL}</Text>
       <Text style={styles.matchup}>
         {homeLabel} vs {awayLabel}
       </Text>

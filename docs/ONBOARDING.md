@@ -56,7 +56,7 @@ STRIPE_SECRET_KEY=sk_test_your_secret_key
 
 Browse-first guests can open Highlights, cards, and Locker Room without an account. **Mālo**, **Join Crew**, and **Chip In** open `SoftWallModal` (Apple / Google / Magic Link), then resume the intercepted action.
 
-1. Authentication → Providers: enable **Email** (magic link), **Apple**, and **Google**.
+1. Authentication → Providers: enable **Email** (magic link and email sign-up), **Apple**, and **Google**. A Google tap that shows `400` / `validation_failed` means the Google provider toggle is still off — the app never receives an account. Paste the Google Cloud OAuth client id and secret, and allow redirect `alasports://auth/callback`.
 2. Authentication → URL Configuration: add redirect `alasports://auth/callback` (and the Expo Go / web redirect AuthSession prints if you test those hosts).
 3. Run fan profile bootstrap SQL once: `supabase/auth_fan_profile.sql` (also inlined at the end of `apps/mobile/src/backend/db/schema.sql`).
 4. Native Apple Sign In needs a build with the `expo-apple-authentication` plugin (`apps/mobile/app.json`). **Share & Fund ⚡** QR save uses `expo-media-library` (Camera Roll / save-photos permission in `app.json`).

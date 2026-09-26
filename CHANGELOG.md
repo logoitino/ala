@@ -2,6 +2,23 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-09-25
+
+### Compliance warnings on user actions
+
+- Mālo, bank connect, parent consent, cheer polls, highlight upload, and account creation now say where the product is still a prototype: test payments, no live custodial payout, cheers are not a prize, and uploads need rights to the clip. These notices do not claim the app is legally approved.
+
+### Sign-in and account creation
+
+- Google’s `400 validation_failed` is the Auth server saying the Google provider is not enabled. The sheet now says that in words when Auth returns it.
+- Email **Create account** requires the 13+ confirmation and an 8-character password. The new row is always a fan. The client does not send a role.
+
+## 2026-09-24
+
+### Company phases
+
+- `docs/COMPANY_PHASES.md` is the operating order for security, billing, and legal work (LLC, trademark, patent triage, counsel paper). It points at the roadmap and the legal briefing. It does not clear live Stripe.
+
 ## 2026-09-23
 
 ### Vault video playback

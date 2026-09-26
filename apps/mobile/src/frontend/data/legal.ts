@@ -7,6 +7,19 @@ export const LEGAL_TERMS_VERSION = '2026-09-16';
 
 export const LEGAL_MENU_LABEL = 'Terms of Service & NIL Compliance 📜';
 
+/** Shown wherever the product is still short of the legal briefing. Not a claim of compliance. */
+export const COMPLIANCE_ACCOUNT =
+  'Payments are in test mode. These terms are a prototype summary, not a finished Terms of Service or Privacy Policy.';
+export const COMPLIANCE_PAYMENT =
+  'Test payment only. This does not send live money. Mālo is a gift, not a wager or pay for a play. A school or association may restrict it.';
+export const COMPLIANCE_PAYOUT =
+  'This starts a US individual Express account in test mode. It is not a parent or guardian custodial payout, and it is not a live transfer.';
+export const COMPLIANCE_PARENT =
+  'This consent switch is a prototype. It is not a finished parental authorization, identity check, or custodial payout.';
+export const COMPLIANCE_POLL = 'Cheers only. No entry fee and no prize.';
+export const COMPLIANCE_UPLOAD =
+  'Only upload a clip you have rights to share. School logos and official game film are not a license. Do not upload a child under 13.';
+
 export const LEGAL_ACK_LABEL =
   'I have read and agree to the Terms of Service & Privacy summary, the High School NIL Disclaimer, and the Minor Safety & Parental Authorization policy.';
 

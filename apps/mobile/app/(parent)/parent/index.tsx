@@ -10,6 +10,7 @@ import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { telemetry } from '@/services/TelemetryManager';
+import { COMPLIANCE_PARENT, COMPLIANCE_PAYOUT } from '@/data/legal';
 import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useRoster } from '@/hooks/useRoster';
@@ -23,6 +24,17 @@ export default function ParentHomeScreen() {
   const [busy, setBusy] = useState(false);
 
   const toggleConsent = async (playerId: string, approved: boolean) => {
+    if (approved) {
+      Alert.alert('Prototype consent', COMPLIANCE_PARENT, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Save toggle', onPress: () => void writeConsent(playerId, true) },
+      ]);
+      return;
+    }
+    await writeConsent(playerId, false);
+  };
+
+  const writeConsent = async (playerId: string, approved: boolean) => {
     if (busy) return;
     setBusy(true);
     try {
@@ -50,6 +62,13 @@ export default function ParentHomeScreen() {
   };
 
   const setupPayout = async () => {
+    Alert.alert('Not a live payout', COMPLIANCE_PAYOUT, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Continue', onPress: () => void sendPayout() },
+    ]);
+  };
+
+  const sendPayout = async () => {
     if (busy) return;
     setBusy(true);
     try {
@@ -85,7 +104,7 @@ export default function ParentHomeScreen() {
         />
         <DashboardPanel
           title="Linked student-athletes"
-          body="Approve minor consent before public Mālo is enabled for each athlete."
+          body={COMPLIANCE_PARENT}
         >
           <View style={styles.list}>
             {players.map((player) => {

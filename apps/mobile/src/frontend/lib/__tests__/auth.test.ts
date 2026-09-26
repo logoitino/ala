@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 
-import { isNewAuthUser } from '@/lib/auth';
+import { authFailureMessage, isNewAuthUser, passwordMeetsPolicy } from '@/lib/auth';
 
 function fakeUser(overrides: Partial<Pick<User, 'created_at' | 'last_sign_in_at'>>): User {
   return {
@@ -47,6 +47,16 @@ describe('isNewAuthUser', () => {
     expect(isNewAuthUser(fakeUser({ created_at: '2026-01-01T00:00:00.000Z', last_sign_in_at: undefined }))).toBe(
       false,
     );
+  });
+
+  it('rejects a short password and accepts eight characters', () => {
+    expect(passwordMeetsPolicy('short')).toBe(false);
+    expect(passwordMeetsPolicy('12345678')).toBe(true);
+  });
+
+  it('names a disabled Google provider instead of the raw validation code', () => {
+    expect(authFailureMessage('provider is not enabled', 'google')).toMatch(/Google sign-in is turned off/);
+    expect(authFailureMessage('User already registered', 'signup')).toMatch(/Sign in instead/);
   });
 
   it('is false on malformed date strings rather than throwing', () => {

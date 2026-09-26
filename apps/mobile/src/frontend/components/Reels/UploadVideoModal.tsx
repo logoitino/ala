@@ -39,6 +39,7 @@ import {
   HIGHLIGHT_OPTIMIZING,
   HIGHLIGHT_TOO_LONG,
 } from '@/data/media';
+import { COMPLIANCE_UPLOAD } from '@/data/legal';
 import { displayValue } from '@/data/players';
 import { gameMatchupLabel, playerTagLabel, uploadSekiPlay } from '@/lib/reels';
 import { assetDurationMs, isHighlightTooLong } from '@/services/MediaUploadService';
@@ -395,6 +396,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
             <View style={styles.headerCopy}>
               <Text style={styles.title}>Upload Highlight ⚡</Text>
               <Text style={styles.subtitle}>Clip, tag, caption — then publish.</Text>
+              <Text style={styles.subtitle}>{COMPLIANCE_UPLOAD}</Text>
             </View>
             <AnimatedButton
               accessibilityLabel="Close upload"

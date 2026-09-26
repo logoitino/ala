@@ -20,14 +20,15 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
-import { DEMO_FAN_EMAIL } from '@/lib/auth';
+import { COMPLIANCE_ACCOUNT } from '@/data/legal';
+import { DEMO_FAN_EMAIL, MIN_PASSWORD_LENGTH } from '@/lib/auth';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
 const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
 const SHEET_TRAVEL = 480;
 
-type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | null;
+type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | 'signup' | null;
 
 /**
  * @purpose High-impact auth sheet when a guest hits Mālo / Crew / Chip In. Resumes the stashed action after sign-in.
@@ -41,6 +42,7 @@ export function SoftWallModal() {
     signInWithGoogle,
     signInWithMagicLink,
     signInWithEmailPassword,
+    signUpWithEmailPassword,
     signInWithDemoAccount,
   } = useAuth();
   const [email, setEmail] = useState('');
@@ -126,7 +128,9 @@ export function SoftWallModal() {
             ? 'auth.google'
             : kind === 'password'
               ? 'auth.password'
-              : 'auth.demo';
+              : kind === 'signup'
+                ? 'auth.signup'
+                : 'auth.demo';
     telemetry.trackFeature(telemetryId, 'auth');
     try {
       await work();
@@ -209,6 +213,7 @@ export function SoftWallModal() {
                   disabled={Boolean(busy)}
                   label={AGE_GATE_LABEL}
                 />
+                <Text style={styles.demoHint}>{COMPLIANCE_ACCOUNT}</Text>
                 <AnimatedButton
                   accessibilityLabel="Sign in with email and password"
                   disabled={Boolean(busy) || !canPassword}
@@ -220,6 +225,30 @@ export function SoftWallModal() {
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <Text style={styles.magicLabel}>Sign in</Text>
+                  )}
+                </AnimatedButton>
+                <AnimatedButton
+                  accessibilityLabel="Create an account with email and password"
+                  disabled={Boolean(busy) || !canPassword || password.length < MIN_PASSWORD_LENGTH}
+                  haptic="medium"
+                  onPress={() =>
+                    void run('signup', async () => {
+                      const signedIn = await signUpWithEmailPassword(email, password, ageConfirmed);
+                      if (!signedIn) {
+                        setMessage('Account created. Confirm the email, then sign in.');
+                      }
+                    })
+                  }
+                  contentStyle={[
+                    styles.providerBtn,
+                    styles.secondaryBtn,
+                    (busy || !canPassword || password.length < MIN_PASSWORD_LENGTH) && styles.disabled,
+                  ]}
+                >
+                  {busy === 'signup' ? (
+                    <ActivityIndicator color={FOCAL.jadeInk} />
+                  ) : (
+                    <Text style={styles.secondaryLabel}>Create account</Text>
                   )}
                 </AnimatedButton>
               </View>
@@ -279,9 +308,9 @@ export function SoftWallModal() {
                   .env.example — fine for internal QA on a throwaway project, but with no gate at
                   all this button shipped to every real user in a production build too, meaning
                   anyone who reads this open codebase could sign into a real, shared fan session in
-                  the live app. `__DEV__` is false in an `eas build --profile production` bundle
-                  (still true for development/preview profiles and Expo Go), which matches the
-                  actual intent — QA/dogfooding convenience, never a real end-user sign-in option. */}
+                  the live app. `__DEV__` is true in Expo Go and a development-client build, and false
+                  in preview and production release builds, so the EAS preview install has no Demo Fan
+                  button. That matches the intent — QA convenience, never a real end-user sign-in. */}
               {__DEV__ ? (
                 <View style={styles.demoGroup}>
                   <Text style={styles.demoHint}>

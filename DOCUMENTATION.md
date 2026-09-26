@@ -3,7 +3,7 @@
 **Product:** Tapua'i (“Back Every Athlete.”)  
 **Repo:** pnpm monorepo — `@tapuai/mobile` (Expo, the only place admin data changes) · `@tapuai/admin-portal` (Next, read-only oversight) · `@tapuai/shared-types`
 **Runtime:** Expo SDK 57 · React Native · TypeScript (fan app); Next.js Soft-Wall / Profile / Features / People oversight for web admin
-**Companions:** [Architecture](docs/ARCHITECTURE.md) · [Onboarding](docs/ONBOARDING.md) · [Schema](docs/SCHEMA.md) · [Teams / departments](docs/TEAMS.md) · [ALA brief](docs/ALA_TEAM_BRIEF.md) · [Product facts](docs/PRODUCT_FACTS.md) · [Public one-pager](docs/PUBLIC.md) · [Investor briefing](docs/INVESTOR.md) · [Legal briefing](docs/LEGAL_BRIEFING.md) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](CHANGELOG.md) · [Conventions](AGENTS.md) · [Audit](docs/AUDIT_REPORT.md) · [Roadmap](docs/ROADMAP.md)
+**Companions:** [Architecture](docs/ARCHITECTURE.md) · [Onboarding](docs/ONBOARDING.md) · [Schema](docs/SCHEMA.md) · [Teams / departments](docs/TEAMS.md) · [ALA brief](docs/ALA_TEAM_BRIEF.md) · [Product facts](docs/PRODUCT_FACTS.md) · [Public one-pager](docs/PUBLIC.md) · [Investor briefing](docs/INVESTOR.md) · [Legal briefing](docs/LEGAL_BRIEFING.md) · [Company phases](docs/COMPANY_PHASES.md) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](CHANGELOG.md) · [Conventions](AGENTS.md) · [Audit](docs/AUDIT_REPORT.md) · [Roadmap](docs/ROADMAP.md)
 
 ---
 

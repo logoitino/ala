@@ -5,6 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } 
 import { FeeCheckbox } from '@/components/FeeCheckbox';
 import { TipButton } from '@/components/TipButton';
 import { colors, radii } from '@/constants/theme';
+import { COMPLIANCE_PAYMENT } from '@/data/legal';
 import { AURA_PER_DOLLAR, MALO_DISCLAIMER, auraPointsForTip, displayValue, type Player } from '@/data/players';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
@@ -143,6 +144,7 @@ export function TipCheckout({
       <FeeCheckbox playerName={playerName} checked={coverFees} onChange={setCoverFees} />
 
       <Text style={styles.disclaimer}>{MALO_DISCLAIMER}</Text>
+      <Text style={styles.disclaimer}>{COMPLIANCE_PAYMENT}</Text>
 
       {busy ? (
         <View style={styles.busyRow}>
