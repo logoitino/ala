@@ -58,8 +58,8 @@ import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { addUserAura, auraBadgeLabel, auraTierForPoints, emitPlayerAura, emitProfileAura, resolveAuraPoints } from '@/lib/aura';
 import { hypeFromPlayer } from '@/lib/hype';
 import { formatGameEventHeadline } from '@/lib/operator';
-import { bumpReelHype, formatReelDeepLink, hideReelLocally, hypeFromReel, isReelUuid, reportReelRemote, type ReelHype } from '@/lib/reels';
-import { loadReelVotes, markReelVote, type ReelVoteMap } from '@/lib/reelVotes';
+import { bumpReelHype, clearReelHype, formatReelDeepLink, hideReelLocally, hypeFromReel, isReelUuid, reportReelRemote, type ReelHype } from '@/lib/reels';
+import { clearReelVote, loadReelVotes, markReelVote, type ReelVoteMap } from '@/lib/reelVotes';
 import { isVaultSealed } from '@/lib/vault';
 import { telemetry } from '@/services/TelemetryManager';
 import { offlineQueue } from '@/services/OfflineQueue';
@@ -103,7 +103,7 @@ const OVERLAY_BOTTOM_INSET = 8;
  * @param clip Highlight including `isVaultOnly` from `reels.is_vault_only` (default false), optional `gameId`, `category`, `flashUnlockUntil`, and `tagStatus`.
  * @param onOpenProfile Opens `/user/[id]` so the fan can subscribe when Stripe is unavailable — also used when Mālo is blocked on a pending tag.
  * @param playbackActive When true, play the focused page even if the Expo route is unfocused (profile modal).
- * @sideEffects expo-video; optimistic `reels` hype + `increment_reel_hype` (OfflineQueue when `NetInfo.isConnected === false`); double-tap `add_user_aura` (2× on Serve Like Me) + Medium haptic + `HypeBurst`; mute toggle; `saved_reels`; Expo `Share.share`; `report_reel`; Broadcast subscribe on `game_events_${gameId}`; `TelemetryManager` TTFF + stall + feature taps / report issues; vault unlock via PaymentSheet.
+ * @sideEffects expo-video; optimistic `reels` hype + `increment_reel_hype` / `clear_reel_hype` (OfflineQueue when `NetInfo.isConnected === false`); double-tap `add_user_aura` (2× on Serve Like Me) + Medium haptic + `HypeBurst`; mute toggle; `saved_reels`; Expo `Share.share`; `report_reel`; Broadcast subscribe on `game_events_${gameId}`; `TelemetryManager` TTFF + stall + feature taps / report issues; vault unlock via PaymentSheet.
  */
 export function ReelCard({
   clip,
@@ -290,10 +290,52 @@ export function ReelCard({
     flashMuteBadge();
   }, [flashMuteBadge]);
 
+  const releaseHype = useCallback(
+    (kind: PlayReactionId) => {
+      if (!votesRef.current[kind]) return;
+      const nextVotes = { ...votesRef.current, [kind]: false };
+      votesRef.current = nextVotes;
+      setVotes(nextVotes);
+      void clearReelVote(clip.id, kind, user?.id);
+      const previous = reelHypeRef.current;
+      const optimistic: ReelHype = {
+        ...previous,
+        seki_count: kind === 'seki' ? Math.max(0, previous.seki_count - 1) : previous.seki_count,
+        aura_count: kind === 'aura' ? Math.max(0, previous.aura_count - 1) : previous.aura_count,
+        flex_count: kind === 'flex' ? Math.max(0, previous.flex_count - 1) : previous.flex_count,
+      };
+      reelHypeRef.current = optimistic;
+      setReelHype(optimistic);
+      onReelHypeChange?.(clip.id, optimistic);
+
+      void (async () => {
+        if (await offlineQueue.dropPendingHype(clip.id, kind)) return;
+        if (!user?.id) return;
+        if (!(await offlineQueue.isOnline())) {
+          await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind });
+          return;
+        }
+        try {
+          const server = await clearReelHype(clip.id, kind, previous);
+          if (votesRef.current[kind]) return;
+          reelHypeRef.current = server;
+          setReelHype(server);
+          onReelHypeChange?.(clip.id, server);
+        } catch {
+          await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind });
+        }
+      })();
+    },
+    [clip.id, onReelHypeChange, user?.id],
+  );
+
   const commitHype = useCallback(
     (kind: PlayReactionId, fromDoubleTap = false) => {
       if (lockedRef.current) return;
-      if (votesRef.current[kind]) return;
+      if (votesRef.current[kind]) {
+        if (!fromDoubleTap) releaseHype(kind);
+        return;
+      }
       telemetry.trackFeature(`hype.${kind}`, surface);
       const nextVotes = { ...votesRef.current, [kind]: true };
       votesRef.current = nextVotes;
@@ -349,7 +391,7 @@ export function ReelCard({
         }
       })();
     },
-    [clip.category, clip.id, onReelHypeChange, surface, user?.id],
+    [clip.category, clip.id, onReelHypeChange, releaseHype, surface, user?.id],
   );
 
   const onDoubleAura = useCallback(

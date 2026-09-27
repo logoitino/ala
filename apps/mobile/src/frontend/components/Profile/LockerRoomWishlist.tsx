@@ -26,6 +26,7 @@ import { MaloTipModal } from '@/components/TipSheetModal';
 import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { cardShadow, colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
 import { useSoftWall } from '@/context/SoftWallContext';
@@ -60,6 +61,8 @@ type LockerRoomWishlistProps = {
   username?: string | null;
   /** Fires once per item the moment it crosses 100%. */
   onEquipped?: (item: WishlistItem) => void;
+  /** Gift-link arrival. The item itself is still `origin=wishlist`. */
+  tipEntry?: 'in_app' | 'qr_link';
 };
 
 /**
@@ -68,10 +71,11 @@ type LockerRoomWishlistProps = {
  * @param athleteName Name shown on the Gear Unlocked overlay and QR sheet.
  * @param username Gift-link handle for `ShareQrModal`.
  * @param onEquipped Host hook for a newly funded item (refresh stats, log, etc).
+ * @param tipEntry `qr_link` when the fan opened this profile from a gift QR.
  * @returns Horizontal card row plus the Mālo sheet, Share QR sheet, and the full-screen unlock celebration.
  * @sideEffects `get_wishlist_items` on focus; `MaloTipModal` PaymentSheet; `chip_in_wishlist_item` (which calls `add_user_aura`); `expo-web-browser` for retailer links; Success haptic; `feature_tap` / `ui_issue` telemetry; paused by `layouts.wishlist`.
  */
-export function LockerRoomWishlist({ player, athleteName, username, onEquipped }: LockerRoomWishlistProps) {
+export function LockerRoomWishlist({ player, athleteName, username, onEquipped, tipEntry }: LockerRoomWishlistProps) {
   const { live } = useAppRuntime();
   const celebration = useOptionalCelebration();
   const { requireAuth } = useSoftWall();
@@ -197,6 +201,10 @@ export function LockerRoomWishlist({ player, athleteName, username, onEquipped }
 
       <MaloTipModal
         player={tipItem ? player : null}
+        origin="wishlist"
+        entry={tipEntry}
+        wishlistItemId={tipItem?.id}
+        sourceLabel={tipItem?.title}
         onClose={() => setTipItem(null)}
         onTipped={(amountCents) => void creditChipIn(amountCents)}
       />
@@ -344,6 +352,7 @@ function GearUnlockedOverlay({
   athleteName: string;
   onClose: () => void;
 }) {
+  const frame = useSheetFrame();
   const [burstKey, setBurstKey] = useState(0);
   const width = Dimensions.get('window').width;
 
@@ -353,7 +362,7 @@ function GearUnlockedOverlay({
 
   return (
     <Modal animationType="fade" transparent visible={Boolean(item)} onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingHorizontal: frame.dock.paddingHorizontal }]}>
         {item ? (
           <View pointerEvents="none" style={StyleSheet.absoluteFill}>
             <ConfettiCannon
@@ -367,7 +376,7 @@ function GearUnlockedOverlay({
             />
           </View>
         ) : null}
-        <View style={styles.unlockCard}>
+        <View style={[styles.unlockCard, frame.card]}>
           <Text style={styles.unlockKicker}>{WISHLIST_UNLOCKED_TOAST}</Text>
           <Text style={styles.unlockTitle}>{item?.title.toUpperCase()}</Text>
           <Text style={styles.unlockBody}>
@@ -572,17 +581,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.videoScrim,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
   },
   unlockCard: {
-    width: '100%',
-    maxWidth: 380,
     backgroundColor: colors.surface,
-    borderRadius: 22,
     borderWidth: 1,
     borderColor: FOCAL.jadeInk,
-    paddingHorizontal: 22,
-    paddingVertical: 26,
     gap: 10,
     alignItems: 'center',
     ...cardShadow,

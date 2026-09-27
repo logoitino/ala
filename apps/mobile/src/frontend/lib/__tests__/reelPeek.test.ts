@@ -1,4 +1,4 @@
-import { clampPeekOffset, PEEK_FLING_VELOCITY, resolvePeekSnap } from '@/lib/reels';
+import { clampPeekOffset, PEEK_FLING_VELOCITY, peekPanelWidth, resolvePeekSnap } from '@/lib/reels';
 
 const WIDTH = 400;
 
@@ -34,6 +34,20 @@ describe('resolvePeekSnap', () => {
 
   it('keeps an open panel open on a small drag back', () => {
     expect(resolvePeekSnap(WIDTH * 0.1, 0, WIDTH, -1)).toBe(-1);
+  });
+});
+
+describe('peekPanelWidth', () => {
+  it('stays inside a phone and caps on a wide browser', () => {
+    expect(peekPanelWidth(0)).toBe(0);
+    expect(peekPanelWidth(320)).toBe(269);
+    expect(peekPanelWidth(390)).toBe(328);
+    expect(peekPanelWidth(1200)).toBe(420);
+  });
+
+  it('always leaves a strip to close the panel', () => {
+    expect(320 - peekPanelWidth(320)).toBeGreaterThanOrEqual(40);
+    expect(1200 - peekPanelWidth(1200)).toBeGreaterThanOrEqual(40);
   });
 });
 

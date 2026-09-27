@@ -12,12 +12,12 @@ import {
   View,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { useCelebration } from '@/context/CelebrationContext';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
@@ -59,7 +59,7 @@ type EditProfileModalProps = {
  * @sideEffects `AuthContext.updateProfile` → `profiles` UPDATE (bio / social_links / profile_visibility / full_name / username).
  */
 export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const { profile, updateProfile } = useAuth();
   const { showToast } = useCelebration();
   const [open, setOpen] = useState(false);
@@ -131,7 +131,8 @@ export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
           </Animated.View>
         </Pressable>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <Animated.View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }, sheetStyle]}>
+          <View pointerEvents="box-none" style={frame.dock}>
+          <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
             <View style={styles.handle} />
             <Text style={styles.kicker}>Account</Text>
             <Text style={styles.title}>Edit Profile</Text>
@@ -248,6 +249,7 @@ export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
               <Text style={styles.closeLabel}>Close</Text>
             </Pressable>
           </Animated.View>
+          </View>
         </KeyboardAvoidingView>
       </View>
     </Modal>
@@ -264,16 +266,12 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
-    paddingHorizontal: 18,
-    paddingTop: 10,
     gap: 10,
     maxHeight: '92%',
   },
   handle: {
     alignSelf: 'center',
-    width: 44,
+    width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.border,

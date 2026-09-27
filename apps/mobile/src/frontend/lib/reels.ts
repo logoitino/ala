@@ -129,6 +129,19 @@ export function resolvePeekSnap(translationX: number, velocityX: number, width: 
  * @param panelWidth Panel width in px.
  * @returns Offset in px for the panel / video shift.
  */
+/**
+ * @purpose Width of the Reel owner panel. Leaves an equal close-strip on a phone and caps the card on a wide browser.
+ * @param pageWidth Pager page width in px.
+ * @returns Panel width in px. `0` when the page has not been measured.
+ */
+export function peekPanelWidth(pageWidth: number): number {
+  'worklet';
+  if (pageWidth <= 0) return 0;
+  const capped = Math.min(pageWidth * 0.84, 420);
+  const reveal = Math.max(40, Math.round(pageWidth * 0.12));
+  return Math.max(0, Math.round(Math.min(capped, pageWidth - reveal)));
+}
+
 export function clampPeekOffset(base: number, translationX: number, panelWidth: number): number {
   'worklet';
   const raw = base + translationX;
@@ -396,6 +409,36 @@ export async function bumpReelHype(reelId: string, kind: PlayReactionId, current
     // counters no longer have a raw-UPDATE grant and there is nothing safe to fall back to here.
     return current;
   }
+
+  const row = data && typeof data === 'object' ? (data as Record<string, unknown>) : null;
+  const applied = row?.applied !== false;
+  return parseReelHype(data, applied ? optimistic : current);
+}
+
+/**
+ * @purpose Take back this fan's Seki / Aura / Flex on a Highlight (`clear_reel_hype`).
+ * @param reelId Target `reels.id`.
+ * @param kind Chip the fan tapped again.
+ * @param current Counts before the undo, used when the server has no vote to remove.
+ * @returns Server row when a vote was deleted; `current` when nothing changed.
+ * @sideEffects `clear_reel_hype` RPC (deletes `reel_hype_votes` for `auth.uid()` and steps the counter down).
+ */
+export async function clearReelHype(reelId: string, kind: PlayReactionId, current: ReelHype): Promise<ReelHype> {
+  const optimistic: ReelHype = {
+    ...current,
+    seki_count: kind === 'seki' ? Math.max(0, current.seki_count - 1) : current.seki_count,
+    aura_count: kind === 'aura' ? Math.max(0, current.aura_count - 1) : current.aura_count,
+    flex_count: kind === 'flex' ? Math.max(0, current.flex_count - 1) : current.flex_count,
+  };
+
+  if (!isSupabaseConfigured || !isReelUuid(reelId)) return optimistic;
+
+  const { data, error } = await supabase.rpc('clear_reel_hype', {
+    target_reel_id: reelId,
+    hype_kind: kind,
+  });
+
+  if (error) return current;
 
   const row = data && typeof data === 'object' ? (data as Record<string, unknown>) : null;
   const applied = row?.applied !== false;

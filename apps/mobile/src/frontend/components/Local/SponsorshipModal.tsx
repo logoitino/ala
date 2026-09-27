@@ -14,13 +14,13 @@ import {
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { CardShine } from '@/components/Effects/CardShine';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import {
   catalogSponsorTiers,
@@ -70,7 +70,7 @@ export function SponsorshipModal({
   onClose,
   onSponsored,
 }: SponsorshipModalProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const { live } = useAppRuntime();
   const { startCheckout, busy } = useTipCheckout();
   const tiers = catalogSponsorTiers(live.catalog.sponsorTiers);
@@ -170,7 +170,8 @@ export function SponsorshipModal({
       >
         <Pressable haptic="none" disabled={busy} style={styles.backdrop} onPress={dismiss}>
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={styles.blur} />
-          <Pressable haptic="none" style={[styles.sheet, { paddingBottom: 20 + insets.bottom }]} onPress={() => undefined}>
+          <View pointerEvents="box-none" style={frame.dock}>
+          <Pressable haptic="none" style={[styles.sheet, frame.card]} onPress={() => undefined}>
             <Animated.View style={[styles.sheetInner, sheetEntrance]}>
             <View style={styles.handle} />
             <Text style={styles.kicker}>Local boosters</Text>
@@ -321,6 +322,7 @@ export function SponsorshipModal({
               <Text style={styles.closeLabel}>{busy ? 'Finish payment to close' : 'Cancel'}</Text>
             </Pressable>
           </Pressable>
+          </View>
         </Pressable>
       </KeyboardAvoidingView>
     </Modal>
@@ -351,12 +353,8 @@ const styles = StyleSheet.create({
   sheet: {
     maxHeight: '92%',
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 16,
-    paddingTop: 8,
     gap: 10,
   },
   sheetInner: {

@@ -46,7 +46,7 @@ type ReelActionOverlayProps = {
 /**
  * @purpose TikTok-style Highlights chrome: name + school + caption bottom-left (7-tier color on the name), right rail Seki / Aura / Flex / Mālo / ⋯. Mālo is athlete-named; pending tags stay tappable but do not open PaymentSheet.
  * @param hype Live clip counters (optimistic local state).
- * @param onReact Increments the tapped hype kind immediately; `reels` updates in the background.
+ * @param onReact Toggles the tapped hype kind immediately; `reels` updates in the background. A second tap clears it.
  * @returns Overlay copy + action rail. Pointer-events box-none so video taps pass through.
  * @sideEffects Chip springs (0.88 → 1.15 → 1.0) plus `HypeBurst` particles; ⋯ opens `ReelMoreSheet`.
  */
@@ -90,7 +90,7 @@ export function ReelActionOverlay({
           label={reaction.label}
           count={value}
           selected={Boolean(voted?.[reaction.id])}
-          disabled={reacting || !onReact || Boolean(voted?.[reaction.id])}
+          disabled={reacting || !onReact}
           ink={ink}
           onPress={() => onReact?.(reaction.id)}
         />
@@ -232,11 +232,13 @@ function ReactionChip({
 
   const fire = () => {
     if (disabled) return;
-    rise.value = 0;
-    fade.value = 1;
-    rise.value = withTiming(-36, { duration: 520 });
-    fade.value = withTiming(0, { duration: 520 });
-    setBurstKey((current) => current + 1);
+    if (!selected) {
+      rise.value = 0;
+      fade.value = 1;
+      rise.value = withTiming(-36, { duration: 520 });
+      fade.value = withTiming(0, { duration: 520 });
+      setBurstKey((current) => current + 1);
+    }
     onPress();
   };
 
@@ -251,7 +253,7 @@ function ReactionChip({
         {fx.shout}
       </Animated.Text>
       <AnimatedPressable
-        accessibilityLabel={`${label} ${count}`}
+        accessibilityLabel={selected ? `Remove ${label}` : `${label} ${count}`}
         accessibilityState={{ disabled, selected }}
         disabled={disabled}
         haptic="medium"

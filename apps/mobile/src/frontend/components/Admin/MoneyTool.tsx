@@ -29,6 +29,7 @@ import {
   revenueSourceTitle,
   type CompanyRevenueSummary,
 } from '@/lib/finance';
+import { tipChannelLabel } from '@/lib/finance';
 import { formatTipDollars } from '@/lib/reels';
 import { FOCAL } from '@/theme/motion';
 import type { Disbursement, TipLedgerEntry } from '@/types/database';
@@ -237,7 +238,7 @@ export function MoneyTool() {
             <AdminRow
               key={row.id}
               title={nameFor(row.player_id)}
-              meta={`${formatTipDollars(row.amount_cents)} · ${row.created_at.slice(0, 16).replace('T', ' ')}`}
+              meta={`${formatTipDollars(row.amount_cents)} · ${tipChannelLabel(row.origin, row.entry, row.source_label)} · ${row.created_at.slice(0, 16).replace('T', ' ')}`}
             />
           ))
         )}

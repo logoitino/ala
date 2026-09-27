@@ -11,15 +11,16 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
 import { CardShine } from '@/components/Effects/CardShine';
 import { useCelebration } from '@/context/CelebrationContext';
 import { radii } from '@/constants/theme';
 import { FOCAL, SPRING_BOUNCE } from '@/theme/motion';
 
 /**
- * @purpose Top-of-screen toast for Aura grants and exclusive subscribe unlocks.
- * @returns Floating jade banner; custom `message` when set (subscribe, Q&A), else `+N Aura Points Earned!`.
- * @sideEffects Auto-dismisses after ~2.4s via CelebrationContext.
+ * @purpose Top-of-screen toast for Aura grants, exclusive unlocks, and short notices.
+ * @returns Floating jade banner; custom `message` when set, else `+N Aura Points Earned!`.
+ * @sideEffects Auto-dismisses after ~2.4s. A swipe left, right, or up dismisses it immediately.
  */
 export function AuraToast() {
   const insets = useSafeAreaInsets();
@@ -43,14 +44,16 @@ export function AuraToast() {
   if (!auraToast) return null;
 
   return (
-    <View pointerEvents="none" style={[styles.wrap, { top: insets.top + 10 }]}>
-      <Animated.View entering={FadeInUp.duration(180)} exiting={FadeOutUp.duration(160)} style={styles.toast}>
-        <CardShine loopMs={1600} width={30} tint={`${FOCAL.electricGold}80`} />
-        <Animated.Text style={[styles.spark, sparkStyle]}>⚡</Animated.Text>
-        <Text style={styles.label}>
-          {auraToast.message ?? `+${auraToast.points} Aura Points Earned!`}
-        </Text>
-      </Animated.View>
+    <View pointerEvents="box-none" style={[styles.wrap, { top: insets.top + 10 }]}>
+      <SwipeableBannerWrapper accessibilityLabel="Dismiss notification" onDismiss={dismissAura}>
+        <Animated.View entering={FadeInUp.duration(180)} exiting={FadeOutUp.duration(160)} style={styles.toast}>
+          <CardShine loopMs={1600} width={30} tint={`${FOCAL.electricGold}80`} />
+          <Animated.Text style={[styles.spark, sparkStyle]}>⚡</Animated.Text>
+          <Text style={styles.label}>
+            {auraToast.message ?? `+${auraToast.points} Aura Points Earned!`}
+          </Text>
+        </Animated.View>
+      </SwipeableBannerWrapper>
     </View>
   );
 }

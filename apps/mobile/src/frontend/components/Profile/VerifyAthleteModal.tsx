@@ -10,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { LegalAckToggle, LegalModal } from '@/components/Legal/LegalModal';
@@ -18,6 +17,7 @@ import { VarsityBadge } from '@/components/Profile/VarsityBadge';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { useCelebration } from '@/context/CelebrationContext';
 import { useLegalAck } from '@/hooks/useLegalAck';
@@ -51,7 +51,7 @@ type VerifyAthleteModalProps = {
  * @sideEffects `redeem_team_code` / `request_athlete_verification`; legal ack; telemetry `athlete_verify`; Aura toast.
  */
 export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const { profile, isAthlete, refreshProfile } = useAuth();
   const { showToast } = useCelebration();
   const { accepted: legalAccepted, accept: acceptLegal } = useLegalAck();
@@ -144,7 +144,8 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
             </Animated.View>
           </Pressable>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <Animated.View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }, sheetStyle]}>
+            <View pointerEvents="box-none" style={frame.dock}>
+            <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
               <View style={styles.handle} />
               <Text style={styles.kicker}>{VERIFY_SHEET_KICKER}</Text>
               <Text style={styles.title}>{VERIFY_SHEET_TITLE}</Text>
@@ -237,6 +238,7 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
                 <Text style={styles.closeLabel}>Close</Text>
               </Pressable>
             </Animated.View>
+            </View>
           </KeyboardAvoidingView>
         </View>
       </Modal>
@@ -258,16 +260,12 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
-    paddingHorizontal: 18,
-    paddingTop: 10,
     gap: 10,
     maxHeight: '92%',
   },
   handle: {
     alignSelf: 'center',
-    width: 44,
+    width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.border,

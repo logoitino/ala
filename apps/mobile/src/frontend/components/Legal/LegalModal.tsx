@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Checkbox } from 'expo-checkbox';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { LEGAL_ACK_LABEL, LEGAL_MENU_LABEL, LEGAL_SECTIONS, LEGAL_TERMS_VERSION } from '@/data/legal';
 import { useLegalAck } from '@/hooks/useLegalAck';
 import { telemetry } from '@/services/TelemetryManager';
@@ -74,7 +74,7 @@ export function LegalAckToggle({ checked, onCheckedChange, onOpenTerms, disabled
  * @sideEffects Telemetry `legal_terms`; optional `useLegalAck.accept`.
  */
 export function LegalModal({ visible, onClose, requireAck = false }: LegalModalProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const { accepted, accept } = useLegalAck();
   const [open, setOpen] = useState(false);
   const [checked, setChecked] = useState(false);
@@ -127,7 +127,8 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
             <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           </Animated.View>
         </Pressable>
-        <Animated.View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }, sheetStyle]}>
+        <View pointerEvents="box-none" style={frame.dock}>
+        <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>Legal</Text>
           <Text style={styles.title}>{LEGAL_MENU_LABEL}</Text>
@@ -170,6 +171,7 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
             <Text style={styles.doneLabel}>{requireAck ? 'Agree & close' : 'Close'}</Text>
           </AnimatedButton>
         </Animated.View>
+        </View>
       </View>
     </Modal>
   );
@@ -185,16 +187,12 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
-    paddingHorizontal: 18,
-    paddingTop: 10,
     gap: 10,
     maxHeight: '90%',
   },
   handle: {
     alignSelf: 'center',
-    width: 44,
+    width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.border,

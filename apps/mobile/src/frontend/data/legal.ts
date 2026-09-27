@@ -3,7 +3,7 @@
  * Bump `LEGAL_TERMS_VERSION` when the acknowledgement text materially changes.
  */
 
-export const LEGAL_TERMS_VERSION = '2026-09-16';
+export const LEGAL_TERMS_VERSION = '2026-09-27';
 
 export const LEGAL_MENU_LABEL = 'Terms of Service & NIL Compliance 📜';
 
@@ -12,6 +12,9 @@ export const COMPLIANCE_ACCOUNT =
   'Payments are in test mode. These terms are a prototype summary, not a finished Terms of Service or Privacy Policy.';
 export const COMPLIANCE_PAYMENT =
   'Test payment only. This does not send live money. Mālo is a gift, not a wager or pay for a play. A school or association may restrict it.';
+/** Shown on the Mālo sheet. The full statement lives in `LEGAL_SECTIONS` (Terms of Service & Privacy). */
+export const GIFT_RECORD_NOTICE =
+  'We record where this Mālo started — a Highlight, a QR gift link, a wishlist item, a profile, or a live play — and we use that record for your receipt, to account for the athlete, and to see which parts of Tapua\'i bring in support. Read Terms of Service & NIL Compliance for the full summary.';
 export const COMPLIANCE_PAYOUT =
   'This starts a US individual Express account in test mode. It is not a parent or guardian custodial payout, and it is not a live transfer.';
 export const COMPLIANCE_PARENT =
@@ -35,7 +38,7 @@ export const LEGAL_SECTIONS: LegalSection[] = [
     title: 'Terms of Service & Privacy',
     body: `Tapua'i is a game-day highlights and community app. By using it you agree that Mālo, Crew, Chip In, Drip, and Exclusive are optional; that video, names, and school identity you upload may be shown to other fans; and that we may hide or flag clips you report.
 
-We store the account you create (email or sign-in provider), a fan profile, and product activity needed to run tips, Crew, and receipts. Demo RLS is still open — do not put production student data in this prototype.
+We store the account you create (email or sign-in provider), a fan profile, and product activity needed to run tips, Crew, and receipts. Each Mālo is stored with the amount, the athlete, your account, the time, and where you gave it: a Highlight, a QR gift link, a specific wishlist item, a profile visit, or a live play, plus whether you arrived from a QR link. We use that gift record for your receipts, to account for what is owed to the athlete, and for our own business — to see which parts of Tapua'i bring in support so we can operate, bill, and improve the product. The record is tied to your account. It is not anonymous. Demo RLS is still open — do not put production student data in this prototype.
 
 This summary is not a full Terms of Service or Privacy Policy. It is not legal advice. Counsel must replace it before live money or a public app-store listing.`,
   },

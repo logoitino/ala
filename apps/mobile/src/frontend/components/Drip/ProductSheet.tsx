@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { BlurView } from 'expo-blur';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
   runOnJS,
@@ -16,6 +15,7 @@ import Animated, {
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import {
   DRIP_SIZES,
   dripAuraForOrder,
@@ -51,7 +51,7 @@ type ProductSheetProps = {
  * @sideEffects `useTipCheckout` PaymentSheet, `shop_orders` INSERT, `add_user_aura` (order dollars × 10, payer only), success haptic, Aura toast, Light haptic on size / qty.
  */
 export function ProductSheet({ item, onClose }: ProductSheetProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const { user } = useAuth();
   const { startCheckout, busy } = useTipCheckout();
   const [open, setOpen] = useState(false);
@@ -207,7 +207,8 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
         </Animated.View>
       </Pressable>
-      <Animated.View style={[styles.sheet, { paddingBottom: 20 + insets.bottom }, sheetStyle]}>
+      <View pointerEvents="box-none" style={frame.dock}>
+      <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
         <Pressable haptic="none" onPress={() => undefined}>
           <View style={styles.handle} />
           {display ? (
@@ -305,6 +306,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
           ) : null}
         </Pressable>
       </Animated.View>
+      </View>
     </View>
   );
 
@@ -341,12 +343,8 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 16,
-    paddingTop: 8,
     gap: 12,
     ...Platform.select({
       ios: {

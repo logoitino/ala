@@ -18,6 +18,8 @@ import { SPRING_CARD } from '@/theme/motion';
 
 const DISMISS_Y = -30;
 const OFFSCREEN_Y = -120;
+const DISMISS_X = 72;
+const OFFSCREEN_X = 420;
 const DISMISS_MS = 160;
 
 type SwipeableBannerWrapperProps = {
@@ -36,12 +38,12 @@ function fireLightHaptic() {
 }
 
 /**
- * @purpose Swipe-up / tap-✕ dismiss for top-floating live scoreboards and play-by-play toasts.
- * @param children Banner body (score chip or callout card).
- * @param onDismiss Fired after the banner animates off-screen (`translateY: -120`).
+ * @purpose Swipe up, left, or right — or tap ✕ — to dismiss a top banner or toast.
+ * @param children Banner body (score chip, callout, or Aura toast).
+ * @param onDismiss Fired after the banner animates off-screen.
  * @param onPress Optional tap on the banner body (live scoreboard → Local game). ✕ still dismisses.
  * @returns Reanimated `Gesture.Pan` container with a semi-transparent ✕.
- * @sideEffects `Haptics.impactAsync(Light)` on swipe or tap dismiss. Pan activates only on upward travel so vertical Reel paging is not captured.
+ * @sideEffects `Haptics.impactAsync(Light)` on swipe or tap dismiss.
  */
 export function SwipeableBannerWrapper({
   children,
@@ -49,6 +51,7 @@ export function SwipeableBannerWrapper({
   onPress,
   accessibilityLabel = 'Dismiss banner',
 }: SwipeableBannerWrapperProps) {
+  const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const settled = useRef(false);
 
@@ -69,24 +72,34 @@ export function SwipeableBannerWrapper({
   }, [scheduleFinish, translateY]);
 
   const pan = Gesture.Pan()
-    .activeOffsetY([-16, 1_000_000])
-    .failOffsetY([-1_000_000, 18])
-    .failOffsetX([-24, 24])
+    .minDistance(14)
     .onUpdate((event) => {
+      translateX.value = event.translationX;
       translateY.value = Math.min(0, event.translationY);
     })
     .onEnd((event) => {
-      if (event.translationY < DISMISS_Y) {
+      const sideways = Math.abs(event.translationX) > DISMISS_X || Math.abs(event.velocityX) > 700;
+      if (sideways) {
+        const dir = event.translationX >= 0 ? 1 : -1;
+        translateX.value = withTiming(dir * OFFSCREEN_X, { duration: DISMISS_MS });
+        runOnJS(scheduleFinish)();
+        return;
+      }
+      if (event.translationY < DISMISS_Y || event.velocityY < -700) {
         translateY.value = withTiming(OFFSCREEN_Y, { duration: DISMISS_MS });
         runOnJS(scheduleFinish)();
         return;
       }
+      translateX.value = withSpring(0, SPRING_CARD);
       translateY.value = withSpring(0, SPRING_CARD);
     });
 
   const style = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity: interpolate(translateY.value, [OFFSCREEN_Y, 0], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateX: translateX.value }, { translateY: translateY.value }],
+    opacity: Math.min(
+      interpolate(Math.abs(translateX.value), [0, 180], [1, 0], Extrapolation.CLAMP),
+      interpolate(translateY.value, [OFFSCREEN_Y, 0], [0, 1], Extrapolation.CLAMP),
+    ),
   }));
 
   return (

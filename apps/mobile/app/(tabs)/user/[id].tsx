@@ -60,7 +60,8 @@ function mergeUploadedReel(
  */
 export default function UserAthleteProfileScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, entry } = useLocalSearchParams<{ id: string; entry?: string | string[] }>();
+  const fromQr = (Array.isArray(entry) ? entry[0] : entry) === 'qr';
   const rawId = Array.isArray(id) ? id[0] : id;
   const playerId = rawId && isAuraUuid(rawId) ? rawId : undefined;
   const [player, setPlayer] = useState<Player | null>(null);
@@ -170,6 +171,8 @@ export default function UserAthleteProfileScreen() {
           player,
           tipAmount: amount,
           coverFees: false,
+          origin: fromQr ? 'qr' : 'profile',
+          entry: fromQr ? 'qr_link' : 'in_app',
           onBacked: (nextCount) => {
             applyBackerCount(player.id, nextCount);
             setPlayer((current) => (current ? { ...current, backer_count: nextCount } : current));
@@ -277,6 +280,7 @@ export default function UserAthleteProfileScreen() {
           vaultBusy={busy}
           rosterPlayers={rosterPlayers}
           showClaimBadges={isAthlete}
+          tipEntry={fromQr ? 'qr_link' : 'in_app'}
           verificationStatus={verificationStatus}
           schoolClaimed={schoolClaimed}
           avatarUrl={avatarUrl}

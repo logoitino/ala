@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, with
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
+import { tipChannelLabel } from '@/lib/finance';
 import { SPRING_CARD } from '@/theme/motion';
 import type { FanTipReceipt } from '@/types/database';
 
@@ -68,7 +69,7 @@ export function ReceiptCard({ receipt, onViewReel, index = 0 }: ReceiptCardProps
   return (
     <Animated.View
       accessibilityRole="summary"
-      accessibilityLabel={`${name}, ${formatMaloAmount(receipt.amount_cents)}, plus ${auraGained} Aura`}
+      accessibilityLabel={`${name}, ${formatMaloAmount(receipt.amount_cents)}, ${tipChannelLabel(receipt.origin, receipt.entry, receipt.source_label)}, plus ${auraGained} Aura`}
       style={[styles.card, enterStyle]}
     >
       <View style={styles.topRow}>
@@ -79,6 +80,7 @@ export function ReceiptCard({ receipt, onViewReel, index = 0 }: ReceiptCardProps
         <View style={styles.identity}>
           <Text style={styles.name}>{name}</Text>
           {school ? <Text style={styles.school}>{school}</Text> : null}
+          <Text style={styles.school}>{tipChannelLabel(receipt.origin, receipt.entry, receipt.source_label)}</Text>
           {stamped ? <Text style={styles.stamp}>{stamped}</Text> : null}
         </View>
       </View>

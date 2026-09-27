@@ -21,6 +21,12 @@ export type OfflineAuraAction = {
   userId?: string | null;
 };
 
+export type OfflineHypeClearAction = {
+  type: 'hype_clear';
+  reelId: string;
+  kind: PlayReactionId;
+};
+
 export type OfflineCheerAction = {
   type: 'cheer_vote';
   slug: string;
@@ -44,6 +50,7 @@ export type OfflineReportAction = {
 
 export type OfflineActionPayload =
   | OfflineAuraAction
+  | OfflineHypeClearAction
   | OfflineCheerAction
   | OfflineBookmarkAction
   | OfflineReportAction;
@@ -110,6 +117,15 @@ async function persistCheerVote(action: OfflineCheerAction): Promise<void> {
   if (error) throw error;
 }
 
+async function persistHypeClear(action: OfflineHypeClearAction): Promise<void> {
+  if (!isReelUuid(action.reelId) || !isSupabaseConfigured) return;
+  const { error } = await supabase.rpc('clear_reel_hype', {
+    target_reel_id: action.reelId,
+    hype_kind: action.kind,
+  });
+  if (error) throw error;
+}
+
 async function persistAura(action: OfflineAuraAction): Promise<void> {
   if (!isReelUuid(action.reelId) || !isSupabaseConfigured) return;
   const { error } = await supabase.rpc('increment_reel_hype', {
@@ -127,6 +143,10 @@ async function dispatch(action: OfflineQueuedAction): Promise<void> {
     await persistAura(action);
     return;
   }
+  if (action.type === 'hype_clear') {
+    await persistHypeClear(action);
+    return;
+  }
   if (action.type === 'cheer_vote') {
     await persistCheerVote(action);
     return;
@@ -141,7 +161,7 @@ async function dispatch(action: OfflineQueuedAction): Promise<void> {
 /**
  * @purpose Persist optimistic Aura taps, cheer votes, bookmarks, and reports while `NetInfo.isConnected === false`, then flush to Supabase RPCs on reconnect.
  * @returns Process-wide singleton. `enqueue` writes AsyncStorage; `flush` replays in order.
- * @sideEffects AsyncStorage `tapuai.offlineQueue`; NetInfo + AppState listeners; `increment_reel_hype` / `add_user_aura` / `cast_cheer_vote` / `saved_reels` / `report_reel`.
+ * @sideEffects AsyncStorage `tapuai.offlineQueue`; NetInfo + AppState listeners; `increment_reel_hype` / `clear_reel_hype` / `add_user_aura` / `cast_cheer_vote` / `saved_reels` / `report_reel`.
  */
 export class OfflineQueue {
   private items: OfflineQueuedAction[] = [];
@@ -215,12 +235,41 @@ export class OfflineQueue {
   }
 
   /**
+   * @purpose Drop a Seki / Aura / Flex that has not reached the server yet, so an undo does not replay the tap.
+   * @returns True when a queued hype tap was removed.
+   * @sideEffects AsyncStorage `tapuai.offlineQueue`.
+   */
+  async dropPendingHype(reelId: string, kind: PlayReactionId): Promise<boolean> {
+    if (!this.loaded) await this.hydrate();
+    const before = this.items.length;
+    this.items = this.items.filter(
+      (row) => !(row.type === 'aura_hype' && row.reelId === reelId && row.kind === kind),
+    );
+    if (this.items.length === before) return false;
+    await this.persist();
+    return true;
+  }
+
+  /**
    * @purpose Append an optimistic mutation for later RPC replay. Replaces an existing cheer/bookmark/report for the same target.
    */
   async enqueue(payload: OfflineActionPayload): Promise<void> {
     if (!this.loaded) await this.hydrate();
     const next: OfflineQueuedAction = { ...payload, id: newId(), created_at: nowIso() };
-    if (payload.type === 'cheer_vote') {
+    if (payload.type === 'aura_hype') {
+      this.items = this.items.filter(
+        (row) => !(row.type === 'hype_clear' && row.reelId === payload.reelId && row.kind === payload.kind),
+      );
+    } else if (payload.type === 'hype_clear') {
+      this.items = this.items.filter(
+        (row) =>
+          !(
+            (row.type === 'aura_hype' || row.type === 'hype_clear') &&
+            row.reelId === payload.reelId &&
+            row.kind === payload.kind
+          ),
+      );
+    } else if (payload.type === 'cheer_vote') {
       this.items = this.items.filter((row) => !(row.type === 'cheer_vote' && row.slug === payload.slug));
     } else if (payload.type === 'bookmark') {
       this.items = this.items.filter(

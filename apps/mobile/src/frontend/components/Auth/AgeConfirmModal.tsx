@@ -6,7 +6,8 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 
 import { LegalAckToggle } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors, radii } from '@/constants/theme';
+import { colors } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
@@ -22,6 +23,7 @@ const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
  */
 export function AgeConfirmModal() {
   const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const { needsAgeConfirmation, confirmAge13Plus } = useAuth();
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -72,10 +74,18 @@ export function AgeConfirmModal() {
       onRequestClose={() => undefined}
     >
       <Animated.View
-        style={[styles.backdrop, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }, backdropStyle]}
+        style={[
+          styles.backdrop,
+          {
+            paddingTop: insets.top + 16,
+            paddingBottom: insets.bottom + 16,
+            paddingHorizontal: frame.dock.paddingHorizontal,
+          },
+          backdropStyle,
+        ]}
       >
         <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
-        <Animated.View style={[styles.card, cardStyle]}>
+        <Animated.View style={[styles.card, frame.card, cardStyle]}>
           <Text style={styles.kicker}>Tapua&apos;i</Text>
           <Text style={styles.title}>Quick confirmation</Text>
           <Text style={styles.body}>
@@ -103,12 +113,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(15,20,22,0.72)',
     justifyContent: 'center',
-    paddingHorizontal: 22,
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: 22,
     gap: 14,
     borderWidth: 1,
     borderColor: colors.border,

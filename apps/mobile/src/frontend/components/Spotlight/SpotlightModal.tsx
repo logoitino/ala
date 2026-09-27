@@ -286,6 +286,9 @@ const styles = StyleSheet.create({
   },
   sheet: {
     flex: 1,
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
   },

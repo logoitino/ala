@@ -3,6 +3,8 @@ import { Modal, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import Reanimated, {
   useAnimatedStyle,
   useSharedValue,
@@ -115,6 +117,8 @@ type AthleteProfileViewProps = {
   /** Own hub account hamburger. Public sheets omit this. */
   headerRight?: ReactNode;
   onDropMalo?: () => void;
+  /** `qr_link` when this sheet was opened from a gift QR, so locker chip-ins keep that arrival. */
+  tipEntry?: 'in_app' | 'qr_link';
   onSubscribe?: () => void;
   leading?: ReactNode;
   actions?: ReactNode;
@@ -176,6 +180,7 @@ export function AthleteProfileView({
   onBack,
   headerRight,
   onDropMalo,
+  tipEntry,
   onSubscribe,
   leading,
   actions,
@@ -189,6 +194,7 @@ export function AthleteProfileView({
   onVaultLockChange,
 }: AthleteProfileViewProps) {
   const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const { live } = useAppRuntime();
   const { profile } = useAuth();
   const { configFor } = useSportConfigs();
@@ -434,6 +440,7 @@ export function AthleteProfileView({
             player={player}
             athleteName={name}
             username={username}
+            tipEntry={tipEntry}
             onEquipped={() => setWishlistFulfilled(true)}
           />
         </View>
@@ -467,9 +474,18 @@ export function AthleteProfileView({
         visible={flipOpen && Boolean(tradingCard)}
         onRequestClose={() => setFlipOpen(false)}
       >
-        <View style={[styles.flipRoot, { paddingBottom: 20 + insets.bottom, paddingTop: 20 + insets.top }]}>
+        <View
+          style={[
+            styles.flipRoot,
+            {
+              paddingHorizontal: frame.dock.paddingHorizontal,
+              paddingTop: insets.top + 16,
+              paddingBottom: insets.bottom + 16,
+            },
+          ]}
+        >
           <Pressable haptic="none" style={styles.flipDim} onPress={() => setFlipOpen(false)} />
-          <View style={styles.flipSheet}>
+          <View style={[styles.flipSheet, frame.card]}>
             <Text style={styles.flipKicker}>Aura card</Text>
             {tradingCard}
             <AnimatedButton
@@ -825,7 +841,6 @@ const styles = StyleSheet.create({
   flipRoot: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 16,
     backgroundColor: 'rgba(15,20,22,0.45)',
   },
   flipDim: {
@@ -833,8 +848,6 @@ const styles = StyleSheet.create({
   },
   flipSheet: {
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: 14,
     gap: 12,
   },
   flipKicker: {

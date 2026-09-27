@@ -24,12 +24,10 @@ import type { HighlightClip } from '@/data/highlights';
 import type { Player } from '@/data/players';
 import { canDropMaloOnHighlight } from '@/data/malo';
 import type { UsageSurface } from '@/hooks/useSurfaceUsage';
-import { clampPeekOffset, markPeekHintSeen, readPeekHintSeen, resolvePeekSnap, type PeekSide } from '@/lib/reels';
+import { clampPeekOffset, markPeekHintSeen, peekPanelWidth, readPeekHintSeen, resolvePeekSnap, type PeekSide } from '@/lib/reels';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, REEL_DEPTH, SPRING_PEEK } from '@/theme/motion';
 
-/** Panel covers this share of the page width. */
-const PANEL_RATIO = 0.8;
 /** Video slides this fraction of the panel travel (parallax). */
 const VIDEO_SHIFT = 0.32;
 const HINT_PAGES = 3;
@@ -193,7 +191,7 @@ export function ReelPage({
       crossed.value = false;
     })
     .onUpdate((event) => {
-      const panel = pageWidth.value * PANEL_RATIO;
+      const panel = peekPanelWidth(pageWidth.value);
       const base = side.value * panel;
       const next = clampPeekOffset(base, event.translationX, panel);
       peekX.value = next;
@@ -205,7 +203,7 @@ export function ReelPage({
       }
     })
     .onEnd((event) => {
-      const panel = pageWidth.value * PANEL_RATIO;
+      const panel = peekPanelWidth(pageWidth.value);
       const target = resolvePeekSnap(event.translationX, event.velocityX, pageWidth.value, side.value);
       const changed = target !== side.value;
       side.value = target;
@@ -234,7 +232,7 @@ export function ReelPage({
   });
 
   const videoStyle = useAnimatedStyle(() => {
-    const panel = Math.max(1, pageWidth.value * PANEL_RATIO);
+    const panel = Math.max(1, peekPanelWidth(pageWidth.value));
     const ratio = Math.min(1, Math.abs(peekX.value) / panel);
     return {
       transform: [{ translateX: peekX.value * VIDEO_SHIFT }, { scale: 1 - ratio * 0.04 }],
@@ -242,12 +240,12 @@ export function ReelPage({
   });
 
   const dimStyle = useAnimatedStyle(() => {
-    const panel = Math.max(1, pageWidth.value * PANEL_RATIO);
+    const panel = Math.max(1, peekPanelWidth(pageWidth.value));
     return { opacity: Math.min(1, Math.abs(peekX.value) / panel) * 0.58 };
   });
 
   const panelStyle = useAnimatedStyle(() => {
-    const panel = pageWidth.value * PANEL_RATIO;
+    const panel = peekPanelWidth(pageWidth.value);
     const x = peekX.value;
     // Panel is laid out at left: -panel. Negative x brings it in from the right edge, positive from the left.
     const translateX = x < 0 ? pageWidth.value + panel + x : x;
@@ -262,7 +260,7 @@ export function ReelPage({
     transform: [{ translateX: hintX.value }],
   }));
 
-  const panelWidth = width * PANEL_RATIO;
+  const panelWidth = peekPanelWidth(width);
 
   return (
     <Animated.View style={[styles.page, { height }, depthStyle]} onLayout={onLayout}>
@@ -362,11 +360,13 @@ const styles = StyleSheet.create({
   },
   hint: {
     position: 'absolute',
+    left: 16,
     right: 84,
     top: '46%',
     zIndex: 19,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,

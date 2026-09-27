@@ -22,8 +22,10 @@ export function localGameHref(gameId: string): Href {
 /**
  * @purpose Public athlete sheet inside the fan tabs (`FanTabBar` stays visible).
  * @param playerId `players.id` UUID.
- * @returns `/user/{id}`.
+ * @param entry `qr` when the fan opened a gift link, so the profile Mālo is tagged `entry=qr_link`.
+ * @returns `/user/{id}` or `/user/{id}?entry=qr`.
  */
-export function userProfileHref(playerId: string): Href {
+export function userProfileHref(playerId: string, entry?: 'qr'): Href {
+  if (entry === 'qr') return `/user/${playerId}?entry=qr` as Href;
   return `/user/${playerId}` as Href;
 }

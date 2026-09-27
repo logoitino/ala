@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import Animated, { FadeInDown, FadeOutUp, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { TipCheckout } from '@/components/TipCheckout';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
@@ -16,7 +18,7 @@ import {
 import { bumpPlayerHype } from '@/lib/hype';
 import type { GameEventWithPlayer } from '@/types/database';
 import { HYPE_FX } from '@/theme/hypeFx';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
 type PlayCardProps = {
   event: GameEventWithPlayer;
@@ -50,21 +52,46 @@ function actionTone(eventType: string): 'td' | 'tackle' | 'sack' | 'play' {
   return 'play';
 }
 
+function compactStat(player: Player | null, time: string): string {
+  const bits: string[] = [];
+  if (player?.position) bits.push(player.position);
+  if (time) bits.push(time);
+  if (player) bits.push(`${player.backer_count} backers`);
+  return bits.join('  ·  ');
+}
+
 /**
- * @purpose Local play-by-play card: jersey, action tag, and Seki / Aura / Flex taps that bump `increment_player_hype`.
+ * @purpose Local play-by-play card. The athlete and the play stay in front; a chevron enlarges the same card to Seki / Aura / Flex and Mālo.
  * @param event `game_events` row with optional joined player.
  * @param onBacked Fires after a compact Mālo on this athlete.
  * @param onOpenAthlete Opens `/user/[id]` when the athlete name is tapped.
- * @returns Surface card with colored reaction chips.
- * @sideEffects Optimistic local counts plus `bumpPlayerHype` RPC when a player is tagged.
+ * @returns Collapsed play row, or the same card opened downward.
+ * @sideEffects Optimistic local counts plus `bumpPlayerHype` RPC when a player is tagged. Mālo uses `TipCheckout`.
  */
 export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
   const player = resolveEventPlayer(event);
   const [counts, setCounts] = useState(() => getCounts(event.id));
   const [sekiHint, setSekiHint] = useState(false);
   const [reacting, setReacting] = useState(false);
+  const [open, setOpen] = useState(false);
+  const chevron = useSharedValue(0);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tone = actionTone(event.event_type);
+  const playTitle = event.event_type.trim() || 'Play';
+  const time = formatPlayTime(event.created_at);
+  const stat = compactStat(player, time);
+  const detail = event.description?.trim() ?? '';
+  const showDetail = detail.length > 0 && detail.toLowerCase() !== playTitle.toLowerCase();
+
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${chevron.value * 180}deg` }],
+  }));
+
+  const toggle = () => {
+    const next = !open;
+    setOpen(next);
+    chevron.value = withSpring(next ? 1 : 0, SPRING_CARD);
+  };
 
   useEffect(() => {
     return () => {
@@ -101,38 +128,50 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
             {displayValue(player?.jersey_number, '—')}
           </Text>
         </View>
-        <Pressable
-          accessibilityRole={player && onOpenAthlete ? 'button' : undefined}
-          accessibilityLabel={player ? `Open ${player.name} profile` : undefined}
-          disabled={!player || !onOpenAthlete}
-          haptic="selection"
-          onPress={() => {
-            if (player && onOpenAthlete) onOpenAthlete(player.id);
-          }}
-          style={styles.identity}
-        >
-          <Text style={styles.name} numberOfLines={1}>
-            {displayValue(player?.name, 'Unknown player')}
+        <View style={styles.identity}>
+          <Pressable
+            accessibilityRole={player && onOpenAthlete ? 'button' : undefined}
+            accessibilityLabel={player ? `Open ${player.name} profile` : undefined}
+            disabled={!player || !onOpenAthlete}
+            haptic="selection"
+            onPress={() => {
+              if (player && onOpenAthlete) onOpenAthlete(player.id);
+            }}
+            style={styles.nameHit}
+          >
+            <Text style={styles.name} numberOfLines={1}>
+              {displayValue(player?.name, 'Unknown player')}
+            </Text>
+          </Pressable>
+          <Text style={[styles.play, tagText[tone]]} numberOfLines={1}>
+            {playTitle}
           </Text>
-          <Text style={styles.meta}>
-            {displayValue(player?.position)}
-            {event.created_at ? `  ·  ${formatPlayTime(event.created_at)}` : ''}
-          </Text>
-        </Pressable>
-        <View style={[styles.tag, tagStyles[tone]]}>
-          <Text style={styles.tagLabel}>{formatActionTag(event.event_type)}</Text>
+          {stat ? (
+            <Text style={styles.stat} numberOfLines={1}>
+              {stat}
+            </Text>
+          ) : null}
         </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: open }}
+          accessibilityLabel={open ? 'Hide Mālo and reactions' : 'Show Mālo and reactions'}
+          haptic="selection"
+          onPress={toggle}
+          style={styles.chevronHit}
+        >
+          <Animated.View style={chevronStyle}>
+            <Ionicons name="chevron-down" size={28} color={FOCAL.goldInk} />
+          </Animated.View>
+        </Pressable>
       </View>
 
-      <Text style={styles.headline}>
-        {displayValue(
-          event.description,
-          player
-            ? `#${displayValue(player.jersey_number)} ${displayValue(player.name)}`
-            : 'Play',
-        )}
-      </Text>
-
+      {open ? (
+        <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOutUp.duration(160)} style={styles.drawer}>
+          {showDetail ? <Text style={styles.headline}>{detail}</Text> : null}
+          <View style={[styles.tag, tagStyles[tone], styles.tagInline]}>
+            <Text style={styles.tagLabel}>{formatActionTag(event.event_type)}</Text>
+          </View>
       <View style={styles.reactions}>
         {PLAY_REACTIONS.map((reaction) => {
           const fx = HYPE_FX[reaction.id];
@@ -179,8 +218,11 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
         <TipCheckout
           player={player}
           compact
+          origin="live"
           onBacked={(nextCount) => onBacked?.(player.id, nextCount)}
         />
+      ) : null}
+        </Animated.View>
       ) : null}
     </View>
   );
@@ -191,6 +233,13 @@ const tagStyles = StyleSheet.create({
   tackle: { backgroundColor: colors.primary },
   sack: { backgroundColor: FOCAL.ember },
   play: { backgroundColor: colors.primaryMuted },
+});
+
+const tagText = StyleSheet.create({
+  td: { color: colors.accent },
+  tackle: { color: colors.primary },
+  sack: { color: FOCAL.ember },
+  play: { color: colors.deepGreen },
 });
 
 const styles = StyleSheet.create({
@@ -233,16 +282,41 @@ const styles = StyleSheet.create({
     gap: 2,
     minWidth: 0,
   },
+  nameHit: {
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+  },
   name: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.3,
   },
-  meta: {
+  play: {
+    fontSize: 17,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  stat: {
     fontSize: 13,
     fontWeight: '600',
     color: colors.textMuted,
+  },
+  chevronHit: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.background,
+    borderWidth: 1.5,
+    borderColor: FOCAL.electricGold,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  drawer: {
+    gap: 12,
+  },
+  tagInline: {
+    alignSelf: 'flex-start',
   },
   tag: {
     borderRadius: 8,

@@ -48,12 +48,13 @@ Still true, maintained by hand when those flows change:
 | Mālo is a JWT-gated PaymentIntent (test mode today) | `useTipCheckout`, Stripe PaymentSheet |
 | Parent screen toggles `parental_consent_approved` on `players` | `app/(parent)/parent/index.tsx` |
 | Athletes can open Stripe Express (JWT Edge Function) | `PayoutSetupCard` / `create-stripe-account` — gated on `legal_terms_accepted_at` |
-| In-app Terms / NIL / minor-safety sheet | `LegalModal` + `LEGAL_TERMS_VERSION`; Profile hamburger |
+| In-app Terms / NIL / minor-safety sheet | `LegalModal` + `LEGAL_TERMS_VERSION` (`2026-09-27`); Profile hamburger |
 | Custodial payouts require JWT; destination is `profiles.stripe_connect_id` | `createPayout.ts` |
 | Exclusive access is a **one-time PaymentIntent**, not a Stripe Subscription | `docs/SCHEMA.md` |
 | Cheer polls are vote counts only — no stake, no payout | `cast_cheer_vote` |
 | Aura is a points / card cosmetic system | `aura.ts` |
 | Reels are user- or demo-uploaded video; Report hides for that user and sets `is_flagged` | `report_reel` — not a full moderation desk |
+| Each Mālo row stores amount, athlete, fan account, time, where it started (`highlight` / `qr` / `wishlist` item / `profile` / `live`), and whether arrival was a QR link | `tips.origin`, `tips.entry`, `tips.wishlist_item_id`, `tips.source_label`. Prototype terms and the Mālo sheet say we use that record for receipts, athlete accounting, and to see which parts of the app bring in support. Counsel still replaces this summary before live money. |
 
 Counsel should assume **live money is off** until RLS and operator auth in the generated table change.
 

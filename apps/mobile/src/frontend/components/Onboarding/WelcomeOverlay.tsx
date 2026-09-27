@@ -4,7 +4,8 @@ import { Modal, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors, radii } from '@/constants/theme';
+import { colors } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { ONBOARDING_SEEN_KEY } from '@/lib/auth';
 import { FOCAL } from '@/theme/motion';
 
@@ -14,6 +15,7 @@ import { FOCAL } from '@/theme/motion';
  */
 export function WelcomeOverlay() {
   const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -37,8 +39,17 @@ export function WelcomeOverlay() {
 
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={() => void dismiss()}>
-      <View style={[styles.backdrop, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
-        <View style={styles.card}>
+      <View
+        style={[
+          styles.backdrop,
+          {
+            paddingTop: insets.top + 16,
+            paddingBottom: insets.bottom + 16,
+            paddingHorizontal: frame.dock.paddingHorizontal,
+          },
+        ]}
+      >
+        <View style={[styles.card, frame.card]}>
           <Text style={styles.brand}>Tapua&apos;i</Text>
           <Text style={styles.title}>Back every athlete.</Text>
           <Text style={styles.body}>
@@ -65,12 +76,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(15,20,22,0.72)',
     justifyContent: 'center',
-    paddingHorizontal: 22,
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: 22,
     gap: 12,
     borderWidth: 1,
     borderColor: colors.border,

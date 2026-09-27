@@ -23,6 +23,10 @@ end $$;
 alter table public.tips add column if not exists fan_id uuid;
 alter table public.tips add column if not exists reel_id uuid;
 alter table public.tips add column if not exists aura_points integer not null default 0;
+alter table public.tips add column if not exists origin text not null default 'profile';
+alter table public.tips add column if not exists entry text not null default 'in_app';
+alter table public.tips add column if not exists source_label text not null default '';
+alter table public.tips add column if not exists wishlist_item_id uuid;
 
 do $$
 begin
@@ -40,13 +44,9 @@ create index if not exists tips_fan_id_created_at_idx on public.tips (fan_id, cr
 
 alter table public.tips enable row level security;
 
-drop policy if exists "Public read tips" on public.tips;
-create policy "Public read tips" on public.tips for select using (true);
-
-drop policy if exists "Insert tips" on public.tips;
-create policy "Insert tips" on public.tips for insert with check (true);
-
-grant select, insert on public.tips to anon, authenticated;
+-- Policies stay in schema.sql: SELECT own fan_id or admin, INSERT auth.uid() = fan_id
+-- and not frozen. This file used to reset INSERT to `with check (true)` and grant anon.
+grant select, insert on public.tips to authenticated;
 
 drop function if exists public.get_fan_tip_history(uuid);
 
@@ -62,13 +62,19 @@ returns table (
   aura_points integer,
   created_at timestamptz,
   athlete_name text,
-  school_name text
+  school_name text,
+  origin text,
+  entry text,
+  wishlist_item_id uuid,
+  source_label text
 )
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $$
+begin
+  return query
   select
     t.id,
     t.player_id,
@@ -77,12 +83,17 @@ as $$
     coalesce(t.aura_points, 0) as aura_points,
     t.created_at,
     coalesce(p.name, 'Athlete') as athlete_name,
-    coalesce(nullif(p.school_name, ''), '') as school_name
+    coalesce(nullif(p.school_name, ''), '') as school_name,
+    coalesce(t.origin, 'profile') as origin,
+    coalesce(t.entry, 'in_app') as entry,
+    t.wishlist_item_id,
+    coalesce(t.source_label, '') as source_label
   from public.tips t
   left join public.players p on p.id = t.player_id
   where auth.uid() is not null
     and t.fan_id = auth.uid()
   order by t.created_at desc;
+end;
 $$;
 
 grant execute on function public.get_fan_tip_history(uuid) to authenticated;

@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
 import {
   SHARE_COPY_LABEL,
@@ -30,6 +31,7 @@ type ShareQrModalProps = {
  * @sideEffects `expo-clipboard`; `Share.share`; telemetry `share_qr`.
  */
 export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQrModalProps) {
+  const frame = useSheetFrame();
   const celebration = useOptionalCelebration();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<'copy' | 'share' | null>(null);
@@ -71,7 +73,8 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
         <Pressable haptic="none" style={styles.backdrop} onPress={dismiss}>
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
         </Pressable>
-        <View style={styles.sheet}>
+        <View pointerEvents="box-none" style={frame.dock}>
+        <View style={[styles.sheet, frame.card]}>
           <Text style={styles.kicker}>Family flyer</Text>
           <Text style={styles.title}>{SHARE_QR_TITLE}</Text>
           <Text style={styles.subtitle}>{shareQrSubtitle(target.athleteName)}</Text>
@@ -128,6 +131,7 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
             <Text style={styles.closeLabel}>Close</Text>
           </Pressable>
         </View>
+        </View>
       </View>
     </Modal>
   );
@@ -144,13 +148,8 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: FOCAL.videoBase,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 24,
     gap: 12,
-    borderTopWidth: 1,
+    borderWidth: 1,
     borderColor: 'rgba(0,230,118,0.35)',
   },
   kicker: {

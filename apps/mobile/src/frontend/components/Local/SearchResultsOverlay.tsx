@@ -221,6 +221,9 @@ const styles = StyleSheet.create({
   },
   sheet: {
     flex: 1,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
     overflow: 'hidden',
     backgroundColor: colors.background,
     borderTopLeftRadius: radii.lg,
@@ -233,7 +236,7 @@ const styles = StyleSheet.create({
   },
   handle: {
     alignSelf: 'center',
-    width: 42,
+    width: 36,
     height: 4,
     borderRadius: 999,
     backgroundColor: colors.border,

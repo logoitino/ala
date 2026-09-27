@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 
 import { TaggedReelGrid } from '@/components/TaggedReelGrid';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -57,7 +57,7 @@ export function AthleteReelManager({
   onVaultChange,
   onFlashUnlock,
 }: AthleteReelManagerProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const celebration = useOptionalCelebration();
   const { live } = useAppRuntime();
   const [menuClip, setMenuClip] = useState<HighlightClip | null>(null);
@@ -145,12 +145,13 @@ export function AthleteReelManager({
         visible={Boolean(menuClip)}
         onRequestClose={closeMenu}
       >
-        <View style={[styles.root, Platform.OS === 'web' ? styles.webRoot : undefined]}>
+        <View style={styles.root}>
           <Pressable haptic="none" disabled={sheetBusy} onPress={closeMenu} style={StyleSheet.absoluteFill}>
             <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
             <View style={styles.dim} />
           </Pressable>
-          <View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }]}>
+          <View pointerEvents="box-none" style={frame.dock}>
+          <View style={[styles.sheet, frame.card]}>
             <View style={styles.handle} />
             <Text style={styles.kicker}>Content placement</Text>
             <Text style={styles.title} numberOfLines={2}>
@@ -205,6 +206,7 @@ export function AthleteReelManager({
               <Text style={styles.cancelLabel}>Cancel</Text>
             </AnimatedButton>
           </View>
+          </View>
         </View>
       </Modal>
     </View>
@@ -223,23 +225,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  webRoot: {
-    maxWidth: 430,
-    width: '100%',
-    alignSelf: 'center',
-  },
   dim: {
     ...StyleSheet.absoluteFill,
     backgroundColor: colors.videoScrimSoft,
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 18,
-    paddingTop: 10,
     gap: 10,
   },
   handle: {

@@ -218,6 +218,10 @@ export type TipLedgerEntry = {
   fan_id?: string | null;
   reel_id?: string | null;
   aura_points?: number;
+  origin?: string | null;
+  entry?: string | null;
+  wishlist_item_id?: string | null;
+  source_label?: string | null;
 };
 
 /** Row from `get_fan_tip_history` (Mālo receipts for the signed-in fan). */
@@ -230,6 +234,10 @@ export type FanTipReceipt = {
   created_at: string;
   athlete_name: string;
   school_name: string;
+  origin: string;
+  entry: string;
+  wishlist_item_id: string | null;
+  source_label: string;
 };
 
 export type OperatorCheckin = {
@@ -790,6 +798,16 @@ export type Database = {
         };
       };
       increment_reel_hype: {
+        Args: { target_reel_id: string; hype_kind: string };
+        Returns: {
+          seki_count: number;
+          aura_count: number;
+          flex_count: number;
+          total_tips_cents: number;
+          applied?: boolean;
+        };
+      };
+      clear_reel_hype: {
         Args: { target_reel_id: string; hype_kind: string };
         Returns: {
           seki_count: number;

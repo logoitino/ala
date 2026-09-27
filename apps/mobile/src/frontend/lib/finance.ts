@@ -5,6 +5,54 @@ import {
 } from '@/data/finance';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
+export type TipOrigin = 'highlight' | 'qr' | 'wishlist' | 'profile' | 'live';
+export type TipEntry = 'in_app' | 'qr_link';
+
+/**
+ * @purpose Pick the Mālo channel stored on `tips.origin`.
+ * @param origin Caller override (QR profile, live feed).
+ * @param reelId Highlight clip, when the sheet was opened from one.
+ * @param wishlistItemId Locker item being funded. Wins over a clip id.
+ * @returns `wishlist`, the caller origin, `highlight`, or `profile`.
+ */
+export function resolveTipOrigin(args: {
+  origin?: TipOrigin;
+  reelId?: string | null;
+  wishlistItemId?: string | null;
+}): TipOrigin {
+  if (args.wishlistItemId) return 'wishlist';
+  if (args.origin) return args.origin;
+  if (args.reelId) return 'highlight';
+  return 'profile';
+}
+
+/**
+ * @purpose Short channel line for receipts and the Money desk.
+ * @param origin `tips.origin`.
+ * @param entry `tips.entry`. A Highlight opened from a QR scan reads "Highlight via QR".
+ * @param sourceLabel Item title or other detail stored on the row.
+ * @returns "Wishlist · Cleats", "QR link", "Live feed", and the same shapes.
+ */
+export function tipChannelLabel(
+  origin?: string | null,
+  entry?: string | null,
+  sourceLabel?: string | null,
+): string {
+  const place =
+    origin === 'highlight'
+      ? 'Highlight'
+      : origin === 'qr'
+        ? 'QR link'
+        : origin === 'wishlist'
+          ? 'Wishlist'
+          : origin === 'live'
+            ? 'Live feed'
+            : 'Profile';
+  const via = entry === 'qr_link' && origin !== 'qr' ? ' via QR' : '';
+  const detail = sourceLabel?.trim() ? ` · ${sourceLabel.trim()}` : '';
+  return `${place}${via}${detail}`;
+}
+
 export type CompanyRevenueStream = {
   source: string;
   label: string;

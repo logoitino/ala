@@ -63,7 +63,7 @@ export default function GiftHandleScreen() {
               <AnimatedButton
                 accessibilityLabel={`Open ${name} on Tapua'i`}
                 haptic="medium"
-                onPress={() => router.push(userProfileHref(playerId))}
+                onPress={() => router.push(userProfileHref(playerId, 'qr'))}
                 contentStyle={styles.primary}
               >
                 <Text style={styles.primaryLabel}>Open athlete profile</Text>

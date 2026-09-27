@@ -85,6 +85,9 @@ export function OperatorRosterModal({
 const styles = StyleSheet.create({
   sheet: {
     flex: 1,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
     backgroundColor: colors.background,
     paddingHorizontal: 16,
     gap: 12,

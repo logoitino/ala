@@ -753,7 +753,7 @@ const styles = StyleSheet.create({
   sheet: {
     flex: 1,
     width: '100%',
-    maxWidth: 430,
+    maxWidth: 560,
     alignSelf: 'center',
     backgroundColor: colors.background,
     paddingHorizontal: 16,

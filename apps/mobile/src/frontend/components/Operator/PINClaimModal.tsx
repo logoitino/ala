@@ -6,6 +6,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, w
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { displayValue } from '@/data/players';
 import { isOperatorPin, OPERATOR_TEST_PIN } from '@/lib/operator';
 import { SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
@@ -35,6 +36,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const frame = useSheetFrame();
   const shake = useSharedValue(0);
   const successPulse = useSharedValue(1);
   const successFlash = useSharedValue(0);
@@ -119,7 +121,8 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
     <Modal transparent animationType="fade" visible={Boolean(game)} onRequestClose={onClose}>
       <View style={styles.root}>
         <Pressable haptic="none" accessibilityLabel="Dismiss PIN sheet" onPress={onClose} style={styles.backdrop} />
-        <View style={styles.sheet} accessibilityRole="summary" accessibilityLabel="Operator PIN keypad">
+        <View pointerEvents="box-none" style={frame.dock}>
+        <View style={[styles.sheet, frame.card]} accessibilityRole="summary" accessibilityLabel="Operator PIN keypad">
           <Text style={styles.kicker}>Operator PIN</Text>
           <Text style={styles.title}>Unlock control center</Text>
           <Text style={styles.matchup}>
@@ -166,6 +169,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
             })}
           </View>
         </View>
+        </View>
       </View>
     </Modal>
   );
@@ -205,13 +209,8 @@ const styles = StyleSheet.create({
   sheet: {
     zIndex: 4,
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
     borderWidth: 1,
     borderColor: colors.primary,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 28,
     gap: 8,
   },
   kicker: {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import QRCode from 'react-native-qrcode-svg';
 import Reanimated, {
   Easing,
@@ -56,7 +56,7 @@ type QrSvgRef = {
  * @sideEffects `react-native-qrcode-svg`; `expo-media-library` Camera Roll save; `expo-clipboard`; `Share.share`; haptics; telemetry `share_qr`.
  */
 export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQrModalProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const celebration = useOptionalCelebration();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<'save' | 'copy' | 'share' | null>(null);
@@ -136,9 +136,8 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
             <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           </Reanimated.View>
         </Pressable>
-        <Reanimated.View
-          style={[styles.sheet, { paddingBottom: 18 + insets.bottom, paddingTop: 18 + insets.top }, sheetStyle]}
-        >
+        <View pointerEvents="box-none" style={frame.dock}>
+        <Reanimated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <Text style={styles.kicker}>Family flyer</Text>
           <Text style={styles.title}>{SHARE_QR_TITLE}</Text>
           <Text style={styles.subtitle}>{shareQrSubtitle(target.athleteName)}</Text>
@@ -238,6 +237,7 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
             <Text style={styles.closeLabel}>Close</Text>
           </Pressable>
         </Reanimated.View>
+        </View>
       </View>
     </Modal>
   );
@@ -254,11 +254,8 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: FOCAL.videoBase,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
-    paddingHorizontal: 20,
     gap: 12,
-    borderTopWidth: 1,
+    borderWidth: 1,
     borderColor: 'rgba(0,230,118,0.35)',
   },
   kicker: {

@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { TeamSearchField } from '@/components/Profile/TeamSearchField';
@@ -21,6 +20,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { useCelebration } from '@/context/CelebrationContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -59,7 +59,7 @@ function fireMediumHaptic() {
  * @sideEffects `search_schools_and_teams`; `add_user_role` + `profiles.school_id` / `athlete_division`; Medium `impactAsync`; Aura toast on unlock; legal ack required before claiming a roster (Varsity is a later team-code step).
  */
 export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const { live } = useAppRuntime();
   const classYears = live.catalog.classYears.length > 0 ? live.catalog.classYears : ['26', '27', '28'];
   const { activeRole, isAthlete, profile, completeAthleteOnboarding, setActiveRole } = useAuth();
@@ -197,7 +197,8 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
         </Animated.View>
       </Pressable>
-      <Animated.View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }, sheetStyle]}>
+      <View pointerEvents="box-none" style={frame.dock}>
+      <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>Account Capability</Text>
@@ -374,6 +375,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
           </ScrollView>
         </KeyboardAvoidingView>
       </Animated.View>
+      </View>
     </View>
   );
 
@@ -414,12 +416,8 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 16,
-    paddingTop: 8,
     gap: 8,
     maxHeight: '88%',
     ...Platform.select({
@@ -442,7 +440,7 @@ const styles = StyleSheet.create({
   },
   handle: {
     alignSelf: 'center',
-    width: 42,
+    width: 36,
     height: 4,
     borderRadius: 999,
     backgroundColor: colors.border,

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 
 import { LegalAckToggle } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -35,7 +35,7 @@ type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | 'signup' | 
  * @sideEffects Email/password, Apple / Google / Magic Link / Demo Fan via AuthContext; telemetry `auth.*`.
  */
 export function SoftWallModal() {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const { visible, intent, close, presentId } = useSoftWall();
   const {
     signInWithApple,
@@ -163,9 +163,8 @@ export function SoftWallModal() {
               <BlurView intensity={48} tint="dark" style={StyleSheet.absoluteFill} />
             </Animated.View>
           </Pressable>
-          <Animated.View
-            style={[styles.sheet, { paddingBottom: 16 + insets.bottom, maxHeight: '92%' }, sheetStyle]}
-          >
+          <View pointerEvents="box-none" style={frame.dock}>
+          <Animated.View style={[styles.sheet, frame.card, { maxHeight: '92%' }, sheetStyle]}>
             <View style={styles.handle} />
             <ScrollView
               keyboardShouldPersistTaps="handled"
@@ -340,6 +339,7 @@ export function SoftWallModal() {
               </Pressable>
             </ScrollView>
           </Animated.View>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -358,10 +358,6 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
-    paddingHorizontal: 20,
-    paddingTop: 10,
   },
   sheetInner: {
     gap: 12,
@@ -372,7 +368,7 @@ const styles = StyleSheet.create({
   },
   handle: {
     alignSelf: 'center',
-    width: 44,
+    width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.border,

@@ -545,6 +545,13 @@ create table if not exists public.tips (
 alter table public.tips add column if not exists fan_id uuid;
 alter table public.tips add column if not exists reel_id uuid;
 alter table public.tips add column if not exists aura_points integer not null default 0;
+-- Where the gift was started, and how the fan arrived. Billing groups on these, not on the athlete alone.
+-- origin: highlight | qr | wishlist | profile | live
+-- entry: in_app | qr_link (a Highlight opened after a QR scan stays origin=highlight, entry=qr_link)
+alter table public.tips add column if not exists origin text not null default 'profile';
+alter table public.tips add column if not exists entry text not null default 'in_app';
+alter table public.tips add column if not exists source_label text not null default '';
+alter table public.tips add column if not exists wishlist_item_id uuid;
 
 do $$
 begin
@@ -557,6 +564,50 @@ exception
 end $$;
 
 create index if not exists tips_fan_id_created_at_idx on public.tips (fan_id, created_at desc);
+create index if not exists tips_origin_created_at_idx on public.tips (origin, created_at desc);
+create index if not exists tips_wishlist_item_id_idx on public.tips (wishlist_item_id) where wishlist_item_id is not null;
+
+do $$
+begin
+  alter table public.tips add constraint tips_origin_check
+    check (origin in ('highlight', 'qr', 'wishlist', 'profile', 'live'));
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
+do $$
+begin
+  alter table public.tips add constraint tips_entry_check
+    check (entry in ('in_app', 'qr_link'));
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
+create or replace function public.tip_origin_label(origin text, entry text, source_label text)
+returns text
+language sql
+immutable
+as $$
+  select
+    case coalesce(origin, 'profile')
+      when 'highlight' then 'Highlight'
+      when 'qr' then 'QR link'
+      when 'wishlist' then 'Wishlist'
+      when 'live' then 'Live feed'
+      else 'Profile'
+    end
+    || case
+      when coalesce(entry, 'in_app') = 'qr_link' and coalesce(origin, 'profile') is distinct from 'qr'
+        then ' via QR'
+      else ''
+    end
+    || case
+      when coalesce(btrim(source_label), '') <> '' then ' · ' || btrim(source_label)
+      else ''
+    end;
+$$;
 
 -- 2026-09 audit: CHECK constraints on money/points columns that had none, so even a bug (or a
 -- future direct-table write by an authenticated staff role) can't post a negative tip or Aura award.
@@ -1321,6 +1372,65 @@ begin
     'flex_count', coalesce(result.flex_count, 0),
     'total_tips_cents', coalesce(result.total_tips_cents, 0),
     'applied', applied
+  );
+end;
+$$;
+
+-- Second tap on the same Seki / Aura / Flex chip. Deletes this fan's vote and steps the counter
+-- down by one. No vote row means the counter stays put (`applied: false`).
+create or replace function public.clear_reel_hype(target_reel_id uuid, hype_kind text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  result public.reels%rowtype;
+  viewer uuid := auth.uid();
+  removed integer := 0;
+begin
+  if viewer is null then
+    raise exception 'Sign in to change hype';
+  end if;
+
+  if hype_kind not in ('aura', 'flex', 'seki') then
+    raise exception 'Unknown hype_kind %', hype_kind;
+  end if;
+
+  delete from public.reel_hype_votes
+  where user_id = viewer
+    and reel_id = target_reel_id
+    and kind = hype_kind;
+  get diagnostics removed = row_count;
+
+  if removed > 0 then
+    if hype_kind = 'aura' then
+      update public.reels
+      set aura_count = greatest(coalesce(aura_count, 0) - 1, 0)
+      where id = target_reel_id
+      returning * into result;
+    elsif hype_kind = 'flex' then
+      update public.reels
+      set flex_count = greatest(coalesce(flex_count, 0) - 1, 0)
+      where id = target_reel_id
+      returning * into result;
+    else
+      update public.reels
+      set seki_count = greatest(coalesce(seki_count, 0) - 1, 0)
+      where id = target_reel_id
+      returning * into result;
+    end if;
+    perform public.sync_live_spotlight_awards();
+  else
+    select * into result from public.reels where id = target_reel_id;
+  end if;
+
+  return jsonb_build_object(
+    'seki_count', coalesce(result.seki_count, 0),
+    'aura_count', coalesce(result.aura_count, 0),
+    'flex_count', coalesce(result.flex_count, 0),
+    'total_tips_cents', coalesce(result.total_tips_cents, 0),
+    'applied', removed > 0
   );
 end;
 $$;
@@ -2594,11 +2704,11 @@ begin
 end;
 $$;
 
-drop function if exists public.get_fan_tip_history(uuid);
-
 -- fan_user_id is accepted (and ignored) only for client call-signature compatibility;
 -- the function ALWAYS scopes to the authenticated caller and never trusts a
 -- client-supplied identity. An anonymous caller (auth.uid() is null) gets zero rows.
+drop function if exists public.get_fan_tip_history(uuid);
+
 create or replace function public.get_fan_tip_history(fan_user_id uuid)
 returns table (
   id uuid,
@@ -2608,13 +2718,19 @@ returns table (
   aura_points integer,
   created_at timestamptz,
   athlete_name text,
-  school_name text
+  school_name text,
+  origin text,
+  entry text,
+  wishlist_item_id uuid,
+  source_label text
 )
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $$
+begin
+  return query
   select
     t.id,
     t.player_id,
@@ -2623,12 +2739,17 @@ as $$
     coalesce(t.aura_points, 0) as aura_points,
     t.created_at,
     coalesce(p.name, 'Athlete') as athlete_name,
-    coalesce(nullif(p.school_name, ''), '') as school_name
+    coalesce(nullif(p.school_name, ''), '') as school_name,
+    coalesce(t.origin, 'profile') as origin,
+    coalesce(t.entry, 'in_app') as entry,
+    t.wishlist_item_id,
+    coalesce(t.source_label, '') as source_label
   from public.tips t
   left join public.players p on p.id = t.player_id
   where auth.uid() is not null
     and t.fan_id = auth.uid()
   order by t.created_at desc;
+end;
 $$;
 
 drop function if exists public.search_schools_and_teams(text);
@@ -4025,6 +4146,8 @@ grant execute on function public.increment_player_hype(uuid, text) to anon, auth
 -- execute defeated this table's own anti-spam design. Restricting to authenticated makes the dedupe
 -- actually work as designed, not just closes a theoretical hole.
 grant execute on function public.increment_reel_hype(uuid, text) to authenticated;
+revoke execute on function public.clear_reel_hype(uuid, text) from public, anon;
+grant execute on function public.clear_reel_hype(uuid, text) to authenticated;
 -- 2026-09 audit item 1: same reasoning as increment_backer_count — only reached post-Mālo-tip.
 grant execute on function public.increment_reel_tips(uuid, integer) to authenticated;
 grant execute on function public.cast_cheer_vote(text, text, text, text, text) to anon, authenticated;
@@ -4038,6 +4161,7 @@ grant execute on function public.athlete_is_varsity_verified(uuid) to anon, auth
 grant execute on function public.redeem_team_code(text) to authenticated;
 grant execute on function public.request_athlete_verification(text) to authenticated;
 grant execute on function public.get_fan_tip_history(uuid) to authenticated;
+revoke execute on function public.tip_origin_label(text, text, text) from public, anon;
 grant execute on function public.search_local_entities(text, text) to anon, authenticated;
 grant execute on function public.search_schools_and_teams(text) to anon, authenticated;
 grant execute on function public.report_reel(uuid) to authenticated;
@@ -5053,7 +5177,8 @@ begin
     'malo',
     'malo',
     t.id::text,
-    'Mālo · ' || coalesce(nullif(p.name, ''), 'Athlete'),
+    'Mālo · ' || public.tip_origin_label(t.origin, t.entry, t.source_label)
+      || ' · ' || coalesce(nullif(p.name, ''), 'Athlete'),
     'athlete',
     t.player_id,
     t.amount_cents,
@@ -5190,7 +5315,7 @@ begin
       new.amount_cents,
       'athlete',
       new.player_id,
-      'Mālo',
+      'Mālo · ' || public.tip_origin_label(new.origin, new.entry, new.source_label),
       new.created_at
     );
   elsif tg_table_name = 'sponsorships' then
@@ -5581,6 +5706,16 @@ end $$;
 create index if not exists wishlist_items_player_idx
   on public.wishlist_items (player_id, is_equipped, sort_order);
 
+do $$
+begin
+  alter table public.tips
+    add constraint tips_wishlist_item_id_fkey
+    foreign key (wishlist_item_id) references public.wishlist_items (id) on delete set null;
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
 alter table public.wishlist_items enable row level security;
 
 drop policy if exists "Public read wishlist items" on public.wishlist_items;
@@ -5631,11 +5766,12 @@ declare
   aura_result jsonb;
   target_player uuid;
 begin
-  -- SECURITY TRADEOFF (2026-09 audit item 5): `wishlist_items` has no per-contribution ledger
-  -- (only an aggregate `current_amount_cents`), so there is no "payer" column to check
-  -- `auth.uid() =` against here. Execute is now `authenticated`-only (see grants below) and a
-  -- per-call cap is enforced as a stopgap until this is verified against a real Stripe charge
-  -- the same way supabase/functions/stripe-webhook/index.ts will eventually verify tips.
+  -- The per-gift ledger is the `tips` row `useTipCheckout` inserts before this call
+  -- (`origin = wishlist`, `wishlist_item_id`, `source_label` = the item title). This RPC only
+  -- moves the item aggregate, so it must not insert a second `tips` row.
+  -- SECURITY TRADEOFF (2026-09 audit item 5): there is still no payer column on `wishlist_items`
+  -- itself. Execute is `authenticated`-only and a per-call cap stands in until a Stripe charge
+  -- is verified the same way supabase/functions/stripe-webhook/index.ts will eventually verify tips.
   if auth.role() <> 'service_role' and add_cents > 100000 then
     raise exception 'amount_cents exceeds the per-call limit (100000)';
   end if;

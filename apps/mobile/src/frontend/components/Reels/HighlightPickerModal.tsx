@@ -185,6 +185,9 @@ export function HighlightPickerModal({ visible, onClose, onPicked }: HighlightPi
 const styles = StyleSheet.create({
   sheet: {
     flex: 1,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
     backgroundColor: FOCAL.videoBase,
     paddingHorizontal: 20,
     gap: 12,

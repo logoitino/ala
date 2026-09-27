@@ -1,12 +1,12 @@
 import { BlurView } from 'expo-blur';
 import { useEffect } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { SPRING_CARD } from '@/theme/motion';
 
 type ReportContentModalProps = {
@@ -31,7 +31,7 @@ export function ReportContentModal({
   onClose,
   onConfirm,
 }: ReportContentModalProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const who = athleteName?.trim() ? `@${athleteName.trim()}` : 'this highlight';
 
   const translateY = useSharedValue(24);
@@ -66,7 +66,8 @@ export function ReportContentModal({
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           <View style={styles.dim} />
         </Pressable>
-        <Animated.View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }, sheetStyle]}>
+        <View pointerEvents="box-none" style={frame.dock}>
+        <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>Safety</Text>
           <Text style={styles.title}>Report / Hide Highlight 🚩</Text>
@@ -94,6 +95,7 @@ export function ReportContentModal({
             </AnimatedButton>
           </View>
         </Animated.View>
+        </View>
       </View>
     </Modal>
   );
@@ -114,17 +116,13 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 16,
-    paddingTop: 8,
     gap: 8,
   },
   handle: {
     alignSelf: 'center',
-    width: 42,
+    width: 36,
     height: 4,
     borderRadius: 999,
     backgroundColor: colors.border,

@@ -4,6 +4,27 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-27
 
+### Terms name the Mālo record
+
+- The prototype Terms of Service & Privacy summary (`LEGAL_TERMS_VERSION` `2026-09-27`) tells fans we store where each Mālo started, including the wishlist item, and that we use that record for receipts, athlete accounting, and to see which parts of the app bring in support. The same notice sits on the Mālo sheet. This is still a prototype summary, not a finished privacy policy.
+
+### Mālo rows name where the gift started
+
+- Each `tips` row records `origin` (Highlight, QR link, Wishlist, Profile, Live feed), `entry` (`in_app` or `qr_link`), and, for a locker Chip In, `wishlist_item_id` plus the item title. One row is the ledger. `chip_in_wishlist_item` still only moves the item total. Company-revenue labels keep `source=malo` and add the channel. Apply `supabase/tip_origin.sql` on the live database.
+
+### Local plays open downward
+
+- A Local live-feed card leads with the athlete, the play, and a one-line stat. The gold chevron enlarges that same card to Seki, Aura, Flex, and Mālo.
+
+### Toasts swipe away, and hype chips toggle
+
+- Aura notices, live-score banners, and play callouts dismiss on a swipe left, right, or up.
+- A second tap on Seki, Aura, or Flex takes that reaction back. `clear_reel_hype` deletes the fan's vote and steps the Highlight counter down. Apply `supabase/clear_reel_hype.sql` on the live database for the count to stick.
+
+### Popup cards share one frame
+
+- Fan sheets, centered dialogs, and the Highlights owner peek use one width rule: equal side gutters, a 440-wide card on a browser, and the same padding on an iPhone SE through a Pro Max. `useSheetFrame` owns the sheet chrome. The owner peek caps at 420 and keeps a close strip.
+
 ### School Poll writes are admin-only
 
 - `upsert_cheer_poll` rejected signed-in non-admins and allowed anon, because the guard was `current_user_role() <> 'admin' AND auth.role() <> 'anon'`. It now requires `current_user_role() = 'admin'`. Execute is `authenticated` only. The `cheer_polls` write policy and table grant drop the same anon bypass, so the Polls desk fallback cannot write a poll without an admin session.

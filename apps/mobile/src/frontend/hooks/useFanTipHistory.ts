@@ -34,6 +34,10 @@ function parseReceipt(row: Record<string, unknown>): FanTipReceipt | null {
     created_at: asText(row.created_at, new Date().toISOString()),
     athlete_name: asText(row.athlete_name, 'Athlete'),
     school_name: asText(row.school_name),
+    origin: asText(row.origin, 'profile'),
+    entry: asText(row.entry, 'in_app'),
+    wishlist_item_id: asText(row.wishlist_item_id) || null,
+    source_label: asText(row.source_label),
   };
 }
 
@@ -89,11 +93,21 @@ export function useFanTipHistory() {
       return;
     }
 
-    const fallback = await supabase
+    const rich = await supabase
       .from('tips')
-      .select('id, player_id, reel_id, amount_cents, aura_points, created_at, players(name, school_name)')
+      .select(
+        'id, player_id, reel_id, amount_cents, aura_points, created_at, origin, entry, wishlist_item_id, source_label, players(name, school_name)',
+      )
       .eq('fan_id', userId)
       .order('created_at', { ascending: false });
+    const plain = rich.error
+      ? await supabase
+          .from('tips')
+          .select('id, player_id, reel_id, amount_cents, aura_points, created_at, players(name, school_name)')
+          .eq('fan_id', userId)
+          .order('created_at', { ascending: false })
+      : null;
+    const fallback = plain ?? rich;
 
     if (fallback.error || !fallback.data) {
       setReceipts([]);

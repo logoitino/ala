@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
@@ -66,6 +66,8 @@ export function ReelOwnerPeek({
   onTip,
   onClose,
 }: ReelOwnerPeekProps) {
+  const { width: windowWidth } = useWindowDimensions();
+  const compact = windowWidth < 360;
   const { requireAuth } = useSoftWall();
   const crew = useCrew(open ? player?.id : undefined);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -148,7 +150,10 @@ export function ReelOwnerPeek({
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={styles.panel}
+      contentContainerStyle={[
+        styles.panel,
+        compact ? styles.panelCompact : null,
+      ]}
       showsVerticalScrollIndicator={false}
       bounces={false}
       accessibilityViewIsModal={open}
@@ -246,7 +251,7 @@ export function ReelOwnerPeek({
             haptic="medium"
             scaleTo={0.94}
             onPress={joinCrew}
-            contentStyle={[styles.crewBtn, crew.following && styles.crewBtnOn]}
+            contentStyle={[styles.crewBtn, styles.actionHalf, crew.following && styles.crewBtnOn]}
           >
             <Ionicons name={crew.following ? 'flash' : 'flash-outline'} size={16} color={crew.following ? FOCAL.ink : FOCAL.neonJade} />
             <Text style={[styles.crewLabel, crew.following && styles.crewLabelOn]}>
@@ -260,7 +265,7 @@ export function ReelOwnerPeek({
             haptic="medium"
             scaleTo={0.94}
             onPress={onTip}
-            contentStyle={[styles.maloBtn, !maloReady && styles.maloBtnPending]}
+            contentStyle={[styles.maloBtn, styles.actionHalf, !maloReady && styles.maloBtnPending]}
           >
             <Text style={styles.maloLabel}>{maloReady ? 'Mālo' : 'Tag'}</Text>
           </AnimatedPressable>
@@ -290,10 +295,15 @@ const styles = StyleSheet.create({
   },
   panel: {
     flexGrow: 1,
-    gap: 14,
-    paddingHorizontal: 18,
+    gap: 16,
+    paddingHorizontal: 20,
     paddingVertical: 20,
     justifyContent: 'center',
+  },
+  panelCompact: {
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
   topRow: {
     flexDirection: 'row',
@@ -386,12 +396,15 @@ const styles = StyleSheet.create({
   },
   stats: {
     flexDirection: 'row',
-    gap: 6,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   stat: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '22%',
+    minWidth: 72,
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: radii.md,
     backgroundColor: 'rgba(243,251,247,0.08)',
     borderWidth: 1,
@@ -448,7 +461,12 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
+    alignItems: 'stretch',
     gap: 8,
+  },
+  actionHalf: {
+    flex: 1,
+    flexBasis: 0,
   },
   crewBtn: {
     flex: 1,
@@ -456,7 +474,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    minHeight: 44,
+    minHeight: 48,
     borderRadius: radii.md,
     borderWidth: 1.5,
     borderColor: FOCAL.neonJade,
@@ -474,8 +492,8 @@ const styles = StyleSheet.create({
     color: FOCAL.ink,
   },
   maloBtn: {
-    minWidth: 92,
-    minHeight: 44,
+    flex: 1,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radii.md,

@@ -5,10 +5,11 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring } 
 import { FeeCheckbox } from '@/components/FeeCheckbox';
 import { TipButton } from '@/components/TipButton';
 import { colors, radii } from '@/constants/theme';
-import { COMPLIANCE_PAYMENT } from '@/data/legal';
+import { COMPLIANCE_PAYMENT, GIFT_RECORD_NOTICE } from '@/data/legal';
 import { AURA_PER_DOLLAR, MALO_DISCLAIMER, auraPointsForTip, displayValue, type Player } from '@/data/players';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
+import type { TipEntry, TipOrigin } from '@/lib/finance';
 import { SPRING_BOUNCE } from '@/theme/motion';
 
 type TipCheckoutProps = {
@@ -16,6 +17,10 @@ type TipCheckoutProps = {
   compact?: boolean;
   hideHeader?: boolean;
   reelId?: string;
+  origin?: TipOrigin;
+  entry?: TipEntry;
+  wishlistItemId?: string;
+  sourceLabel?: string;
   onBacked?: (nextCount: number) => void;
   onTipped?: (amountCents: number) => void;
   onBusyChange?: (busy: boolean) => void;
@@ -37,6 +42,10 @@ export function TipCheckout({
   compact = false,
   hideHeader = false,
   reelId,
+  origin,
+  entry,
+  wishlistItemId,
+  sourceLabel,
   onBacked,
   onTipped,
   onBusyChange,
@@ -69,7 +78,18 @@ export function TipCheckout({
   }));
 
   const pay = (tipAmount: number) => {
-    void startCheckout({ player, tipAmount, coverFees, reelId, onBacked, onTipped });
+    void startCheckout({
+      player,
+      tipAmount,
+      coverFees,
+      reelId,
+      origin,
+      entry,
+      wishlistItemId,
+      sourceLabel,
+      onBacked,
+      onTipped,
+    });
   };
 
   return (
@@ -145,6 +165,7 @@ export function TipCheckout({
 
       <Text style={styles.disclaimer}>{MALO_DISCLAIMER}</Text>
       <Text style={styles.disclaimer}>{COMPLIANCE_PAYMENT}</Text>
+      <Text style={styles.disclaimer}>{GIFT_RECORD_NOTICE}</Text>
 
       {busy ? (
         <View style={styles.busyRow}>

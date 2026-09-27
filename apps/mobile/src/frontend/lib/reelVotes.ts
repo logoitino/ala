@@ -69,3 +69,18 @@ export async function markReelVote(
   await AsyncStorage.setItem(storageKey(reelId, userId), JSON.stringify(next));
   return next;
 }
+
+/**
+ * @purpose Forget this fan's Seki / Aura / Flex on a clip so a second tap can light it again.
+ * @sideEffects AsyncStorage `tapuai.reelVotes.*`.
+ */
+export async function clearReelVote(
+  reelId: string,
+  kind: PlayReactionId,
+  userId?: string | null,
+): Promise<ReelVoteMap> {
+  const current = parseVotes(await AsyncStorage.getItem(storageKey(reelId, userId)));
+  const next = { ...current, [kind]: false };
+  await AsyncStorage.setItem(storageKey(reelId, userId), JSON.stringify(next));
+  return next;
+}

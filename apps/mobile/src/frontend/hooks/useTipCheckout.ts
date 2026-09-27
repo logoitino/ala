@@ -9,6 +9,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { exclusiveUnlockToast } from '@/data/exclusive';
 import { displayValue, getTipCharge, auraPointsForTip } from '@/data/players';
 import { addUserAura, emitPlayerAura, emitProfileAura } from '@/lib/aura';
+import { resolveTipOrigin, type TipEntry, type TipOrigin } from '@/lib/finance';
 import { createPaymentIntent, incrementBackerCount } from '@/lib/payments';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { NATIVE_STRIPE_UNAVAILABLE_MESSAGE, useStripe } from '@/lib/stripe';
@@ -22,6 +23,14 @@ type StartCheckoutArgs = {
   tipAmount: number;
   coverFees?: boolean;
   reelId?: string;
+  /** Where the gift started. A clip id becomes `highlight` when this is omitted. */
+  origin?: TipOrigin;
+  /** How the fan arrived. QR gift links use `qr_link`. */
+  entry?: TipEntry;
+  /** `wishlist_items.id` when this Mālo funds one locker item. */
+  wishlistItemId?: string;
+  /** Item title or other detail analysts should see without another join. */
+  sourceLabel?: string;
   /** Override Aura grant. Exclusive checkout uses 100 instead of `tipAmount * 10`. */
   auraPoints?: number;
   /** Skip `increment_backer_count` and reel-tip counters (subscribe / Drip). */
@@ -62,7 +71,7 @@ function applyAuraAward(
 /**
  * @purpose Native Stripe PaymentSheet for Mālo, exclusive subscribe, Drip, or booster sponsorships. Mālo grants Aura to the tipper and the athlete.
  * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may tip a reel.
- * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on Mālo, `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
+ * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on Mālo (`origin`, `entry`, `wishlist_item_id`, `source_label`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
  */
 export function useTipCheckout() {
   const { user, refreshProfile } = useAuth();
@@ -79,6 +88,10 @@ export function useTipCheckout() {
       tipAmount,
       coverFees = false,
       reelId,
+      origin,
+      entry,
+      wishlistItemId,
+      sourceLabel,
       auraPoints,
       skipBacker = false,
       successToast,
@@ -141,13 +154,31 @@ export function useTipCheckout() {
         if (!skipBacker && player && isSupabaseConfigured) {
           // Minimal generic message for an insert-denied response (e.g. a compliance freeze) — the
           // policy itself does the real gating server-side, this just tells the fan something.
-          const { error: tipError } = await supabase.from('tips').insert({
+          const ledger = {
             player_id: player.id,
             amount_cents: Math.round(tipAmount * 100),
             fan_id: tipperId,
             reel_id: reelId ?? null,
             aura_points: pointsToAdd,
-          });
+            origin: resolveTipOrigin({ origin, reelId, wishlistItemId }),
+            entry: entry ?? 'in_app',
+            wishlist_item_id: wishlistItemId ?? null,
+            source_label: sourceLabel?.trim() ?? '',
+          };
+          let { error: tipError } = await supabase.from('tips').insert(ledger);
+          const missingChannel =
+            tipError?.code === '42703' ||
+            /origin|entry|wishlist_item_id|source_label/i.test(tipError?.message ?? '');
+          if (tipError && missingChannel) {
+            const retry = await supabase.from('tips').insert({
+              player_id: ledger.player_id,
+              amount_cents: ledger.amount_cents,
+              fan_id: ledger.fan_id,
+              reel_id: ledger.reel_id,
+              aura_points: ledger.aura_points,
+            });
+            tipError = retry.error;
+          }
           if (tipError) {
             tipInsertSucceeded = false;
             Alert.alert(

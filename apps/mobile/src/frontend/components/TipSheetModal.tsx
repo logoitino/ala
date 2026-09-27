@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
   runOnJS,
@@ -15,13 +14,19 @@ import Animated, {
 import { CardShine } from '@/components/Effects/CardShine';
 import { TipCheckout } from '@/components/TipCheckout';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { maloAthleteCta, maloAthleteSheetSubtitle } from '@/data/malo';
 import { displayValue, type Player } from '@/data/players';
+import type { TipEntry, TipOrigin } from '@/lib/finance';
 import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 
 type TipSheetModalProps = {
   player: Player | null;
   reelId?: string;
+  origin?: TipOrigin;
+  entry?: TipEntry;
+  wishlistItemId?: string;
+  sourceLabel?: string;
   onClose: () => void;
   onBacked?: (nextCount: number) => void;
   onTipped?: (amountCents: number) => void;
@@ -33,8 +38,18 @@ const SHEET_OFF = 640;
  * @purpose Bottom-sheet Mālo checkout over a blurred feed backdrop. Copy names the athlete who receives the gift (not the uploader).
  * @sideEffects Unmounts `TipCheckout` on dismiss so custom amount / fee state reset.
  */
-export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: TipSheetModalProps) {
-  const insets = useSafeAreaInsets();
+export function MaloTipModal({
+  player,
+  reelId,
+  origin,
+  entry,
+  wishlistItemId,
+  sourceLabel,
+  onClose,
+  onBacked,
+  onTipped,
+}: TipSheetModalProps) {
+  const frame = useSheetFrame();
   const [open, setOpen] = useState(false);
   const [delivered, setDelivered] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -121,9 +136,8 @@ export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: Ti
         <Animated.View style={[styles.blur, backdropStyle]}>
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
         </Animated.View>
-        <Animated.View
-          style={[styles.sheet, { paddingBottom: 24 + insets.bottom }, sheetStyle]}
-        >
+        <View pointerEvents="box-none" style={frame.dock}>
+        <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
         <Pressable haptic="none" onPress={() => undefined}>
           <View style={styles.handle} />
           <Animated.View style={[styles.header, delivered && styles.headerDelivered, headerStyle]}>
@@ -140,6 +154,10 @@ export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: Ti
               player={display}
               hideHeader
               reelId={reelId}
+              origin={origin}
+              entry={entry}
+              wishlistItemId={wishlistItemId}
+              sourceLabel={sourceLabel}
               onBusyChange={setBusy}
               onBacked={(nextCount) => {
                 setDelivered(true);
@@ -159,6 +177,7 @@ export function MaloTipModal({ player, reelId, onClose, onBacked, onTipped }: Ti
           </Pressable>
         </Pressable>
         </Animated.View>
+        </View>
       </Pressable>
       </KeyboardAvoidingView>
     </Modal>
@@ -182,15 +201,11 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
-    paddingHorizontal: 20,
-    paddingTop: 10,
     gap: 16,
   },
   handle: {
     alignSelf: 'center',
-    width: 44,
+    width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.border,

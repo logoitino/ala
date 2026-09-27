@@ -233,6 +233,9 @@ const styles = StyleSheet.create({
   },
   sheet: {
     flex: 1,
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,

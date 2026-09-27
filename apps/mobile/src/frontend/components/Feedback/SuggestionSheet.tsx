@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Alert, Modal, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import {
   FEEDBACK_KINDS,
   FEEDBACK_SURFACES,
@@ -30,7 +30,7 @@ type SuggestionSheetProps = {
  * @sideEffects `submit_app_feedback`.
  */
 export function SuggestionSheet({ visible, surface = 'other', onClose }: SuggestionSheetProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const [body, setBody] = useState('');
   const [kind, setKind] = useState<AppFeedbackKind>('suggestion');
   const [place, setPlace] = useState<AppFeedbackSurface>(surface);
@@ -88,14 +88,15 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
       onRequestClose={dismiss}
       onDismiss={() => setOpen(false)}
     >
-      <View style={[styles.root, Platform.OS === 'web' ? styles.webRoot : undefined]}>
+      <View style={styles.root}>
         <Pressable haptic="none" onPress={dismiss} style={StyleSheet.absoluteFill}>
           <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
             <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
             <View style={styles.dim} />
           </Animated.View>
         </Pressable>
-        <Animated.View style={[styles.sheet, { paddingBottom: 16 + insets.bottom }, sheetStyle]}>
+        <View pointerEvents="box-none" style={frame.dock}>
+        <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>Improve Tapua'i</Text>
           <Text style={styles.title}>Send a suggestion</Text>
@@ -148,6 +149,7 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
             <Text style={styles.cancelLabel}>Cancel</Text>
           </AnimatedButton>
         </Animated.View>
+        </View>
       </View>
     </Modal>
   );
@@ -158,24 +160,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  webRoot: {
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
-  },
   dim: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(7,10,12,0.45)',
   },
   sheet: {
-    marginHorizontal: 12,
-    marginBottom: 8,
-    borderRadius: radii.lg,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 14,
-    paddingTop: 10,
     gap: 8,
   },
   handle: {

@@ -1,11 +1,11 @@
 import { BlurView } from 'expo-blur';
-import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { FOCAL } from '@/theme/motion';
 
 type ReelMoreSheetProps = {
@@ -38,7 +38,7 @@ export function ReelMoreSheet({
   onReport,
   onSuggest,
 }: ReelMoreSheetProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const who = athleteName.trim() || 'this highlight';
 
   return (
@@ -50,12 +50,13 @@ export function ReelMoreSheet({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={[styles.root, Platform.OS === 'web' ? styles.webRoot : undefined]}>
+      <View style={styles.root}>
         <Pressable haptic="none" onPress={onClose} style={StyleSheet.absoluteFill}>
           <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           <View style={styles.dim} />
         </Pressable>
-        <View style={[styles.sheet, { paddingBottom: 12 + insets.bottom }]}>
+        <View pointerEvents="box-none" style={frame.dock}>
+        <View style={[styles.sheet, frame.card]}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>More</Text>
           <Text style={styles.title} numberOfLines={1}>
@@ -119,6 +120,7 @@ export function ReelMoreSheet({
             <Text style={styles.cancelLabel}>Cancel</Text>
           </AnimatedButton>
         </View>
+        </View>
       </View>
     </Modal>
   );
@@ -129,24 +131,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  webRoot: {
-    width: '100%',
-    maxWidth: 430,
-    alignSelf: 'center',
-  },
   dim: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(7,10,12,0.45)',
   },
   sheet: {
-    marginHorizontal: 12,
-    marginBottom: 8,
-    borderRadius: radii.lg,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 14,
-    paddingTop: 10,
     gap: 8,
   },
   handle: {

@@ -14,12 +14,14 @@ import { CardShine } from '@/components/Effects/CardShine';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { useCelebration } from '@/context/CelebrationContext';
 import { cardShadow, colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { SPRING_FLIP } from '@/theme/motion';
 
 const CONFETTI_COLORS = [colors.accent, colors.primary, colors.gold, '#FFFFFF', colors.success];
 
 export function BackedCelebration() {
   const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
   const { payload, dismiss } = useCelebration();
   const [burstKey, setBurstKey] = useState(0);
   const width = Dimensions.get('window').width;
@@ -47,7 +49,16 @@ export function BackedCelebration() {
       visible={Boolean(payload)}
       onRequestClose={dismiss}
     >
-      <View style={styles.overlay}>
+      <View
+        style={[
+          styles.overlay,
+          {
+            paddingHorizontal: frame.dock.paddingHorizontal,
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+          },
+        ]}
+      >
         {payload?.auraPointsEarned ? (
           <View pointerEvents="none" style={[styles.toastWrap, { top: insets.top + 10 }]}>
             <View style={styles.toast}>
@@ -69,7 +80,7 @@ export function BackedCelebration() {
           </View>
         ) : null}
 
-        <Animated.View style={[styles.card, cardEntranceStyle]}>
+        <Animated.View style={[styles.card, frame.card, cardEntranceStyle]}>
           <CardShine loopMs={2400} width={70} tint="rgba(0,230,118,0.35)" />
           <Text style={styles.kicker}>SEKI! MĀLO DELIVERED! 🚀</Text>
           <Text style={styles.headline}>
@@ -99,7 +110,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(11, 61, 46, 0.72)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
   },
   toastWrap: {
     position: 'absolute',
@@ -123,12 +133,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   card: {
-    width: '100%',
-    maxWidth: 400,
     backgroundColor: colors.surface,
-    borderRadius: 24,
-    paddingHorizontal: 24,
-    paddingVertical: 28,
     gap: 12,
     alignItems: 'center',
     overflow: 'hidden',

@@ -7,6 +7,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 import { useAuraBoosters } from '@/hooks/useAuraBoosters';
 import { auraBadgeLabel, type AuraBooster } from '@/lib/aura';
@@ -118,6 +119,7 @@ function BoosterPeek({
   rank: number;
   onClose: () => void;
 }) {
+  const frame = useSheetFrame();
   const intro = useSharedValue(0.9);
 
   useEffect(() => {
@@ -137,7 +139,7 @@ function BoosterPeek({
 
   return (
     <Modal transparent animationType="fade" visible onRequestClose={onClose}>
-      <View style={styles.modalRoot}>
+      <View style={[styles.modalRoot, { padding: frame.dock.paddingHorizontal }]}>
         <Pressable
           haptic="none"
           accessibilityLabel="Dismiss booster profile"
@@ -149,6 +151,7 @@ function BoosterPeek({
           accessibilityLabel={`${booster.full_name} booster profile`}
           style={[
             styles.peek,
+            frame.card,
             { borderColor: tier.color, backgroundColor: tier.face, ...auraShadow(tier.color, tier.glow, true) },
             cardStyle,
           ]}
@@ -369,18 +372,13 @@ const styles = StyleSheet.create({
     minHeight: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(8, 12, 14, 0.78)',
   },
   peek: {
-    width: '100%',
-    maxWidth: 340,
-    borderRadius: radii.lg,
     borderWidth: 2,
-    padding: 22,
     gap: 10,
     alignItems: 'center',
     overflow: 'hidden',

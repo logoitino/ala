@@ -850,11 +850,18 @@ export async function upsertBooster(
  */
 export async function fetchAdminTips(): Promise<TipLedgerEntry[]> {
   if (!isSupabaseConfigured) return [];
-  const { data, error } = await supabase
+  const rich = await supabase
     .from('tips')
-    .select('id, player_id, amount_cents, created_at, fan_id, reel_id, aura_points')
+    .select('id, player_id, amount_cents, created_at, fan_id, reel_id, aura_points, origin, entry, wishlist_item_id, source_label')
     .order('created_at', { ascending: false })
     .limit(40);
+  const { data, error } = rich.error
+    ? await supabase
+        .from('tips')
+        .select('id, player_id, amount_cents, created_at, fan_id, reel_id, aura_points')
+        .order('created_at', { ascending: false })
+        .limit(40)
+    : rich;
   if (error || !Array.isArray(data)) return [];
   return data as TipLedgerEntry[];
 }

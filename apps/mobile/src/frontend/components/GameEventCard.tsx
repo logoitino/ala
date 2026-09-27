@@ -58,6 +58,7 @@ function EventCardBody({
         <TipCheckout
           player={player}
           compact
+          origin="live"
           onBacked={(nextCount) => onBacked?.(player.id, nextCount)}
         />
       ) : player && onPressPlayer ? (
