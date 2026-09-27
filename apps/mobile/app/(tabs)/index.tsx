@@ -3,11 +3,13 @@ import { clearVideoCacheAsync } from 'expo-video';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HomeSearchOverlay } from '@/components/Reels/HomeSearchOverlay';
 import { LiveMatchBanner } from '@/components/Reels/LiveMatchBanner';
 import { ReelCard } from '@/components/Reels/ReelCard';
+import { ReelPage } from '@/components/Reels/ReelPage';
 import { SpotlightModal } from '@/components/Spotlight/SpotlightModal';
 import { SlangGuideBanner } from '@/components/Onboarding/SlangGuideBanner';
 import { MaloTipModal } from '@/components/TipSheetModal';
@@ -52,8 +54,8 @@ const FEED_PILLS: { id: HighlightFeedFilter; label: string }[] = [
 ];
 
 /**
- * @purpose Full-screen Home feed: For You mix, All / Seki switch, clip + athlete search, Exclusive mute/Aura gestures, live score banner, Mālo ⚡ sheet, Player of the Week spotlight.
- * @sideEffects `useReels` fetch; `crew_follows` for Home ranking; `clearVideoCacheAsync` on mount; `get_active_spotlight_award` launch popup; `MaloTipModal` PaymentSheet; hide list after Report.
+ * @purpose Full-screen Home feed: For You mix, All / Seki switch, clip + athlete search, Exclusive mute/Aura gestures, live score banner, Mālo ⚡ sheet, Player of the Week spotlight. Pages ride `ReelPage` for card-deck depth on vertical paging and swipe left / right to peek the athlete who owns the clip.
+ * @sideEffects `useReels` fetch; `crew_follows` for Home ranking; `clearVideoCacheAsync` on mount; `get_active_spotlight_award` launch popup; `MaloTipModal` PaymentSheet; hide list after Report; Reanimated scroll handler feeds the pager depth math.
  */
 export default function HighlightsTab() {
   const router = useRouter();
@@ -83,6 +85,13 @@ export default function HighlightsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [crewIds, setCrewIds] = useState<Set<string>>(() => new Set());
   const [localTipped, setLocalTipped] = useState<string[]>([]);
+  const [peekOpen, setPeekOpen] = useState(false);
+  const pagerY = useSharedValue(0);
+  const onPagerScroll = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      pagerY.value = event.contentOffset.y;
+    },
+  });
 
   useEffect(() => {
     let active = true;
@@ -321,10 +330,13 @@ export default function HighlightsTab() {
             <Text style={styles.empty}>{emptyCopy}</Text>
           </View>
         ) : (
-          <FlatList
+          <Animated.FlatList
             ref={listRef}
             data={feed}
-            extraData={`${feedFilter}:${activeIndex}:${hiddenIds.join(',')}:${[...tippedIds].join(',')}:${reels
+            onScroll={onPagerScroll}
+            scrollEventThrottle={16}
+            scrollEnabled={!peekOpen}
+            extraData={`${feedFilter}:${activeIndex}:${searchOpen ? 1 : 0}${tipTarget ? 1 : 0}${spotlight.visible ? 1 : 0}:${hiddenIds.join(',')}:${[...tippedIds].join(',')}:${reels
               .map(
                 (reel) =>
                   `${reel.id}:${reel.seki_count}:${reel.aura_count}:${reel.flex_count}:${reel.total_tips_cents}`,
@@ -360,29 +372,47 @@ export default function HighlightsTab() {
                 progressBackgroundColor={colors.surface}
               />
             }
-            renderItem={({ item, index }) => (
-              <ReelCard
-                clip={{
-                  ...item.clip,
-                  gameId: item.clip.gameId ?? liveGameId,
-                }}
-                player={item.player}
-                active={index === activeIndex}
-                height={pageHeight}
-                tipping={Boolean(tipTarget) || spotlight.visible}
-                playbackActive={!spotlight.visible && !tipTarget}
-                sekiPlay={item.clip.sekiPlay}
-                userTipped={tippedIds.has(item.clip.id)}
-                onTip={() => void tipPlayer(item.player, item.clip.id)}
-                onOpenProfile={
-                  item.player
-                    ? () => router.push(userProfileHref(item.player!.id))
-                    : undefined
-                }
-                onReelHypeChange={applyReelHype}
-                onHide={hideClip}
-              />
-            )}
+            renderItem={({ item, index }) => {
+              const openProfile = item.player
+                ? () => router.push(userProfileHref(item.player!.id))
+                : undefined;
+              const liveReel = reels.find((reel) => reel.id === item.clip.id);
+              return (
+                <ReelPage
+                  index={index}
+                  height={pageHeight}
+                  scrollY={pagerY}
+                  active={index === activeIndex}
+                  clip={item.clip}
+                  player={item.player}
+                  totalTipsCents={liveReel?.total_tips_cents ?? item.clip.totalTipsCents ?? 0}
+                  peekEnabled={!tipTarget && !spotlight.visible && !searchOpen}
+                  peekInsetTop={chromeHeight + 12}
+                  peekInsetBottom={insets.bottom + 24}
+                  onOpenProfile={openProfile}
+                  onTip={item.player ? () => void tipPlayer(item.player, item.clip.id) : undefined}
+                  onPeekChange={setPeekOpen}
+                >
+                  <ReelCard
+                    clip={{
+                      ...item.clip,
+                      gameId: item.clip.gameId ?? liveGameId,
+                    }}
+                    player={item.player}
+                    active={index === activeIndex}
+                    height={pageHeight}
+                    tipping={Boolean(tipTarget) || spotlight.visible}
+                    playbackActive={!spotlight.visible && !tipTarget}
+                    sekiPlay={item.clip.sekiPlay}
+                    userTipped={tippedIds.has(item.clip.id)}
+                    onTip={() => void tipPlayer(item.player, item.clip.id)}
+                    onOpenProfile={openProfile}
+                    onReelHypeChange={applyReelHype}
+                    onHide={hideClip}
+                  />
+                </ReelPage>
+              );
+            }}
           />
         )}
         <View

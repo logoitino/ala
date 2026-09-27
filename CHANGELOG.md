@@ -4,6 +4,13 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-25
 
+### Motion pass: Highlights owner peek, card-deck paging, scroll reveals
+
+- Swipe a Highlight left or right to slide in `Reels/ReelOwnerPeek`: tagged athlete with Aura-tier ring, Varsity badge, position · jersey · school, Crew / Mālo / Seki / Aura counts, Join Crew (Soft-Wall for guests), Mālo, and Open full profile. When someone other than the athlete posted the clip, a “Posted by @handle” line names them (`reels.uploaded_by`). The video parallaxes and dims behind the panel; the pager locks vertical paging while a peek is open. First three pages show a one-time “Swipe for the athlete” hint (AsyncStorage `tapuai.reelPeekHint`). Snap rules live in `lib/reels.ts` (`resolvePeekSnap`, `clampPeekOffset`) with unit tests.
+- `Reels/ReelPage` wraps each pager item (Home and `ReelViewModal`): the outgoing clip shrinks, sinks, rounds and dims while the incoming clip scales up with a slight tilt (`REEL_DEPTH` in `theme/motion.ts`). Reduced Motion turns the depth and reveal effects off.
+- `Effects/ScrollFx` (`ScrollFxScrollView`, `ScrollFxItem`, `ScrollFxParallax`) drives Local (game cards tilt in, polls slide alternately), Spotlight (featured card zooms, board tilts), Drip (gear slides in from alternating sides), and Profile / athlete sheet (pull-to-stretch hero). Headings parallax and fade on scroll (`SCROLL_FX`).
+- Fan bar: the per-tab glow dot is replaced by a sliding accent indicator that springs to the focused tab and overshoots in width (`SPRING_BOUNCE` → `SPRING_CARD`).
+
 ### Compliance warnings on user actions
 
 - Mālo, bank connect, parent consent, cheer polls, highlight upload, and account creation now say where the product is still a prototype: test payments, no live custodial payout, cheers are not a prize, and uploads need rights to the clip. These notices do not claim the app is legally approved.

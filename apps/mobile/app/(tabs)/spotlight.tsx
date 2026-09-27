@@ -3,12 +3,12 @@ import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
+import { ScrollFxItem, ScrollFxParallax, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { SpotlightAwardCard } from '@/components/Spotlight/SpotlightAwardCard';
 import { SpotlightModal } from '@/components/Spotlight/SpotlightModal';
@@ -31,7 +31,7 @@ import { TAB_ACCENTS, FOCAL } from '@/theme/motion';
 import type { Player, SpotlightAward } from '@/types/database';
 
 /**
- * @purpose Fan-bar Spotlight tab: reopen Player of the Week/Month after the Highlights launch popup is dismissed.
+ * @purpose Fan-bar Spotlight tab: reopen Player of the Week/Month after the Highlights launch popup is dismissed. The featured card zooms in, past awards tilt up as the board scrolls, heading drifts with parallax.
  * @sideEffects `useSpotlightBoard` on focus; `SpotlightModal` replay; `ReelViewModal` for Watch Full Highlight; `MaloTipModal` PaymentSheet; `useSurfaceUsage` dwell / taps.
  */
 export default function SpotlightTab() {
@@ -70,10 +70,9 @@ export default function SpotlightTab() {
 
   return (
     <TabScreen>
-      <ScrollView
+      <ScrollFxScrollView
         contentContainerStyle={styles.content}
         onScroll={onScroll}
-        scrollEventThrottle={400}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -84,22 +83,26 @@ export default function SpotlightTab() {
           />
         }
       >
-        <ScreenHeading
-          kicker={live.copy.spotlightKicker}
-          title="Spotlight"
-          lede={live.copy.spotlightLede}
-          accent={TAB_ACCENTS.spotlight.color}
-        />
+        <ScrollFxParallax>
+          <ScreenHeading
+            kicker={live.copy.spotlightKicker}
+            title="Spotlight"
+            lede={live.copy.spotlightLede}
+            accent={TAB_ACCENTS.spotlight.color}
+          />
+        </ScrollFxParallax>
         {loading && awards.length === 0 ? (
           <View style={styles.boot}>
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : null}
         {featured ? (
-          <SpotlightAwardCard featured award={featured} onPress={() => {
-            trackFeature('spotlight_card');
-            setSelected(featured);
-          }} />
+          <ScrollFxItem variant="zoom" exitFade={false}>
+            <SpotlightAwardCard featured award={featured} onPress={() => {
+              trackFeature('spotlight_card');
+              setSelected(featured);
+            }} />
+          </ScrollFxItem>
         ) : (
           <EmptyState
             kicker="Spotlight"
@@ -113,15 +116,17 @@ export default function SpotlightTab() {
         {rest.length > 0 ? (
           <View style={styles.list}>
             <Text style={styles.section}>Recent Spotlights</Text>
-            {rest.map((award) => (
-              <SpotlightAwardCard key={award.id} award={award} onPress={() => {
-                trackFeature('spotlight_card');
-                setSelected(award);
-              }} />
+            {rest.map((award, index) => (
+              <ScrollFxItem key={award.id} index={index + 1} variant="tilt">
+                <SpotlightAwardCard award={award} onPress={() => {
+                  trackFeature('spotlight_card');
+                  setSelected(award);
+                }} />
+              </ScrollFxItem>
             ))}
           </View>
         ) : null}
-      </ScrollView>
+      </ScrollFxScrollView>
       <SpotlightModal
         award={selected}
         visible={Boolean(selected)}

@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 
+import { ScrollFxItem, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
 import { CheerPollCard } from '@/components/Local/CheerPollCard';
 import { SearchResultsOverlay } from '@/components/Local/SearchResultsOverlay';
 import { SponsorshipModal } from '@/components/Local/SponsorshipModal';
@@ -201,7 +202,7 @@ function MatchupSkeleton() {
 }
 
 /**
- * @purpose Local Discovery hub: persistent Explore search, Live Matches, rivalry School Polls, and Top Aura Boosters.
+ * @purpose Local Discovery hub: persistent Explore search, Live Matches, rivalry School Polls, and Top Aura Boosters. Game cards tilt up and polls zig-zag in as the hub scrolls (`ScrollFxItem`).
  * @sideEffects `useLiveScores` Realtime; `search_local_entities` via overlay; `CheerPollCard` votes; `SponsorshipModal` PaymentSheet; Light `impactAsync` on search focus/type. Game taps push `/local/game/[id]` so `FanTabBar` stays visible.
  */
 export default function LocalTab() {
@@ -393,7 +394,7 @@ export default function LocalTab() {
         </View>
 
         <View style={styles.hubFrame}>
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} onScroll={onScroll} scrollEventThrottle={400}>
+          <ScrollFxScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} onScroll={onScroll}>
             <FilterPills
               items={hubs}
               value={hub}
@@ -467,13 +468,14 @@ export default function LocalTab() {
                 />
               ) : (
                 <View style={styles.list}>
-                  {filteredGames.map((game) => (
-                    <GameCard
-                      key={game.id}
-                      game={game}
-                      sponsors={sponsorsForGame(game, sponsors)}
-                      onPress={() => openGame(game.id)}
-                    />
+                  {filteredGames.map((game, index) => (
+                    <ScrollFxItem key={game.id} index={index} variant="tilt">
+                      <GameCard
+                        game={game}
+                        sponsors={sponsorsForGame(game, sponsors)}
+                        onPress={() => openGame(game.id)}
+                      />
+                    </ScrollFxItem>
                   ))}
                 </View>
               )}
@@ -544,13 +546,14 @@ export default function LocalTab() {
                   accent={TAB_ACCENTS.local.color}
                 />
               ) : (
-                visiblePolls.map((poll) => (
-                  <CheerPollCard
-                    key={poll.slug}
-                    slug={poll.slug}
-                    homeLabel={poll.homeLabel}
-                    awayLabel={poll.awayLabel}
-                  />
+                visiblePolls.map((poll, index) => (
+                  <ScrollFxItem key={poll.slug} index={index} variant={index % 2 === 0 ? 'slide-left' : 'slide-right'}>
+                    <CheerPollCard
+                      slug={poll.slug}
+                      homeLabel={poll.homeLabel}
+                      awayLabel={poll.awayLabel}
+                    />
+                  </ScrollFxItem>
                 ))
               )}
             </View>
@@ -564,7 +567,7 @@ export default function LocalTab() {
               </Text>
               <TopAuraBoosters hideTitle />
             </View>
-          </ScrollView>
+          </ScrollFxScrollView>
 
           <SearchResultsOverlay
             searchQuery={live.layouts.localSearch ? searchQuery : ''}

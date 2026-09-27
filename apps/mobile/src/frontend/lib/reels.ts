@@ -85,7 +85,83 @@ export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
     category: parseReelCategory(reel.category),
     flashUnlockUntil: reel.flash_unlock_until ?? null,
     tagStatus: reel.tag_status === 'pending' || reel.tag_status === 'rejected' ? reel.tag_status : 'confirmed',
+    uploadedBy: reel.uploaded_by ?? null,
   };
+}
+
+/** -1 = panel slid in from the right (fan swiped left), 1 = from the left, 0 = closed. */
+export type PeekSide = -1 | 0 | 1;
+
+/** Fraction of the page width a drag must cover to open the owner peek. */
+export const PEEK_OPEN_RATIO = 0.24;
+/** Fraction of the page width a drag must cover to close an open peek. */
+export const PEEK_CLOSE_RATIO = 0.16;
+/** px/s fling that opens or closes regardless of distance. */
+export const PEEK_FLING_VELOCITY = 650;
+
+/**
+ * @purpose Decide where the Reel owner peek settles after a horizontal drag (pure, worklet-safe).
+ * @param translationX Finger travel since the drag began (negative = left).
+ * @param velocityX Release velocity in px/s.
+ * @param width Page width.
+ * @param open Side that was open when the drag began.
+ * @returns The side to snap to. A closed reel opens toward the drag; an open panel closes on the opposite drag and never flips straight to the other side.
+ */
+export function resolvePeekSnap(translationX: number, velocityX: number, width: number, open: PeekSide): PeekSide {
+  'worklet';
+  const span = Math.max(1, width);
+  if (open === 0) {
+    if (translationX <= -span * PEEK_OPEN_RATIO || velocityX <= -PEEK_FLING_VELOCITY) return -1;
+    if (translationX >= span * PEEK_OPEN_RATIO || velocityX >= PEEK_FLING_VELOCITY) return 1;
+    return 0;
+  }
+  // Open from the right (video pushed left): dragging right closes.
+  if (open === -1) {
+    return translationX >= span * PEEK_CLOSE_RATIO || velocityX >= PEEK_FLING_VELOCITY ? 0 : -1;
+  }
+  return translationX <= -span * PEEK_CLOSE_RATIO || velocityX <= -PEEK_FLING_VELOCITY ? 0 : 1;
+}
+
+/**
+ * @purpose Clamp the live peek offset while dragging: full travel up to the panel width, then rubber-band.
+ * @param base Offset when the drag started (`side * panelWidth`).
+ * @param translationX Finger travel.
+ * @param panelWidth Panel width in px.
+ * @returns Offset in px for the panel / video shift.
+ */
+export function clampPeekOffset(base: number, translationX: number, panelWidth: number): number {
+  'worklet';
+  const raw = base + translationX;
+  const limit = Math.max(1, panelWidth);
+  if (raw > limit) return limit + (raw - limit) * 0.18;
+  if (raw < -limit) return -limit + (raw + limit) * 0.18;
+  return raw;
+}
+
+const PEEK_HINT_KEY = 'tapuai.reelPeekHint';
+
+/**
+ * @purpose True once the fan has opened the owner peek at least once (hides the swipe hint).
+ * @sideEffects AsyncStorage `tapuai.reelPeekHint`.
+ */
+export async function readPeekHintSeen(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(PEEK_HINT_KEY)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @purpose Remember that the swipe hint has done its job.
+ * @sideEffects AsyncStorage `tapuai.reelPeekHint`.
+ */
+export async function markPeekHintSeen(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(PEEK_HINT_KEY, '1');
+  } catch {
+    // Storage unavailable (web private mode) — the hint just shows again next launch.
+  }
 }
 
 function stampMs(value?: string | null): number {

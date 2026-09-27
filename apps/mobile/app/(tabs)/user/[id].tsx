@@ -1,8 +1,9 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
+import { ScrollFxParallax, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
 import { TabScreen } from '@/components/TabScreen';
 import { colors, radii } from '@/constants/theme';
@@ -250,7 +251,8 @@ export default function UserAthleteProfileScreen() {
 
   return (
     <TabScreen>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollFxScrollView contentContainerStyle={styles.content}>
+        <ScrollFxParallax factor={0} fadeOver={0}>
         <AthleteProfileView
           player={player}
           clips={clips}
@@ -289,7 +291,8 @@ export default function UserAthleteProfileScreen() {
           }}
           onUnlockVault={unlockExclusive}
         />
-      </ScrollView>
+        </ScrollFxParallax>
+      </ScrollFxScrollView>
     </TabScreen>
   );
 }

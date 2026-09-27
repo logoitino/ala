@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { GearCard } from '@/components/Drip/GearCard';
 import { ProductSheet } from '@/components/Drip/ProductSheet';
+import { ScrollFxItem, ScrollFxParallax, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
 import { RuntimePaused } from '@/components/RuntimePaused';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
@@ -15,7 +16,8 @@ import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 
 /**
- * @purpose Drip marketplace: category pills, GearCard 0.96 press, ProductSheet checkout.
+ * @purpose Drip marketplace: category pills, GearCard 0.96 press, ProductSheet checkout. Cards zig-zag in from
+ * alternating sides as the rack scrolls (`ScrollFxItem`), heading drifts with parallax.
  * @sideEffects `shop_products` via `useDripCatalog`; ProductSheet `useTipCheckout` PaymentSheet + `add_user_aura`.
  */
 export default function DripTab() {
@@ -52,14 +54,16 @@ export default function DripTab() {
 
   return (
     <TabScreen>
-      <ScrollView contentContainerStyle={styles.content} onScroll={onScroll} scrollEventThrottle={400}>
-        <ScreenHeading
-          compact
-          kicker={live.copy.dripKicker}
-          title="Drip"
-          lede={live.copy.dripLede}
-          accent={TAB_ACCENTS.drip.color}
-        />
+      <ScrollFxScrollView contentContainerStyle={styles.content} onScroll={onScroll}>
+        <ScrollFxParallax fadeOver={120}>
+          <ScreenHeading
+            compact
+            kicker={live.copy.dripKicker}
+            title="Drip"
+            lede={live.copy.dripLede}
+            accent={TAB_ACCENTS.drip.color}
+          />
+        </ScrollFxParallax>
         <FilterPills
           items={categoryPills}
           value={filter}
@@ -82,18 +86,19 @@ export default function DripTab() {
             accent={TAB_ACCENTS.drip.color}
           />
         ) : (
-          items.map((item) => (
-            <GearCard
-              key={item.id}
-              item={item}
-              onPress={(next) => {
-                trackFeature('drip_item');
-                setSelected(next);
-              }}
-            />
+          items.map((item, index) => (
+            <ScrollFxItem key={item.id} index={index} variant={index % 2 === 0 ? 'slide-left' : 'slide-right'}>
+              <GearCard
+                item={item}
+                onPress={(next) => {
+                  trackFeature('drip_item');
+                  setSelected(next);
+                }}
+              />
+            </ScrollFxItem>
           ))
         )}
-      </ScrollView>
+      </ScrollFxScrollView>
       <ProductSheet item={selected} onClose={() => setSelected(null)} />
     </TabScreen>
   );

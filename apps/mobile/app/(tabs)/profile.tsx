@@ -2,8 +2,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { ScrollFxParallax, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
 import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
 import { LegalModal } from '@/components/Legal/LegalModal';
 import { TabScreen } from '@/components/TabScreen';
@@ -42,7 +43,7 @@ import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
 const FAN_SELF_PREFIX = 'fan-self';
 
 /**
- * @purpose Own Profile tab uses the same `AthleteProfileView` as `/user/[id]` — hamburger overlays the sheet instead of a YOUR HUB heading; Mālo / Subscribe only when this is not your claimed row.
+ * @purpose Own Profile tab uses the same `AthleteProfileView` as `/user/[id]` — hamburger overlays the sheet instead of a YOUR HUB heading; Mālo / Subscribe only when this is not your claimed row. Pull past the top stretches the hero (`ScrollFxParallax`).
  * @sideEffects Soft-Wall sign-in; Stripe PaymentSheet; `RoleSwitcherModal`; `LegalModal`; `VerifyAthleteModal`; `PayoutSetupCard`; receipts; vault lock; roster claim map.
  */
 export default function MyHubTab() {
@@ -355,7 +356,8 @@ export default function MyHubTab() {
 
   return (
     <TabScreen>
-      <ScrollView contentContainerStyle={styles.content} onScroll={onScroll} scrollEventThrottle={400}>
+      <ScrollFxScrollView contentContainerStyle={styles.content} onScroll={onScroll}>
+        <ScrollFxParallax factor={0} fadeOver={0}>
         <AthleteProfileView
           player={athlete}
           clips={taggedReels}
@@ -454,7 +456,8 @@ export default function MyHubTab() {
             );
           }}
         />
-      </ScrollView>
+        </ScrollFxParallax>
+      </ScrollFxScrollView>
       <ProfileMenuSheet
         visible={menuOpen}
         onClose={() => setMenuOpen(false)}

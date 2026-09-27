@@ -1,12 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useEffect } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Platform, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
-import { SPRING_BOUNCE } from '@/theme/motion';
+import { SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 import { HIGHLIGHT_NAV_LABEL, SPOTLIGHT_NAV_LABEL } from '@/data/highlights';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -34,7 +34,6 @@ type TabButtonProps = {
   activeIcon: keyof typeof Ionicons.glyphMap;
   accentColor: string;
   accentMist: string;
-  accentGlow: string;
   onPress: () => void;
 };
 
@@ -45,7 +44,7 @@ type TabButtonProps = {
  * even though the route list length can change under runtime feature flags.
  * @sideEffects Reanimated `withSequence`/`withSpring` icon bounce + `withTiming` mist fade on focus change.
  */
-function TabButton({ focused, label, icon, activeIcon, accentColor, accentMist, accentGlow, onPress }: TabButtonProps) {
+function TabButton({ focused, label, icon, activeIcon, accentColor, accentMist, onPress }: TabButtonProps) {
   const iconScale = useSharedValue(1);
   const mist = useSharedValue(focused ? 1 : 0);
   const color = focused ? accentColor : colors.textMuted;
@@ -77,22 +76,30 @@ function TabButton({ focused, label, icon, activeIcon, accentColor, accentMist, 
       <Text style={[styles.tabLabel, { color }]} numberOfLines={1}>
         {label}
       </Text>
-      {focused ? <View style={[styles.tabDot, { backgroundColor: accentGlow }]} /> : <View style={styles.tabDotSpacer} />}
+      <View style={styles.tabDotSpacer} />
     </AnimatedButton>
   );
 }
 
 /**
- * @purpose Fan bar: Home / Local / Upload / Spotlight / Drip / Profile. Upload lives in its own slot between Local and Spotlight so the plus never covers a tab.
+ * @purpose Fan bar: Home / Local / Upload / Spotlight / Drip / Profile. Upload lives in its own slot between Local and Spotlight so the plus never covers a tab. A glowing accent bar springs along the top edge to whichever tab is focused, taking that tab’s color (jade / cyan / gold / ember / violet).
  * @param state React Navigation tab state.
  * @param navigation Tab navigator; a second tap on the focused tab pops to that tab’s `index`.
  * @param insets Bottom safe-area for the bar padding.
  * @returns Custom tab bar with an in-slot Upload plus.
- * @sideEffects Opens `UploadSheetContext` on plus press.
+ * @sideEffects Opens `UploadSheetContext` on plus press; Reanimated spring on the indicator when focus changes.
  */
 export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
   const { openUpload } = useUploadSheet();
   const { live } = useAppRuntime();
+  const slots = useRef<Record<string, { x: number; width: number }>>({});
+  const placed = useRef(false);
+  const indicatorX = useSharedValue(0);
+  const indicatorW = useSharedValue(0);
+  const indicatorOp = useSharedValue(0);
+  const focusedKey = state.routes[state.index]?.key ?? '';
+  const focusedAccent = accentForRoute(state.routes[state.index]?.name ?? 'index');
+
   const routes = state.routes.filter((route) => {
     if (!TAB_META[route.name] || route.name === 'shop') return false;
     if (route.name === 'index') return live.tabs.home;
@@ -102,6 +109,45 @@ export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
     if (route.name === 'profile') return live.tabs.profile;
     return true;
   });
+  const visibleKeys = new Set(routes.map((route) => route.key));
+
+  const placeIndicator = (key: string, animate: boolean) => {
+    const box = slots.current[key];
+    if (!box || box.width <= 0 || !visibleKeys.has(key)) {
+      indicatorOp.value = withTiming(0, { duration: 120 });
+      return;
+    }
+    const width = Math.max(24, box.width * 0.5);
+    const x = box.x + (box.width - width) / 2;
+    if (!animate || !placed.current) {
+      indicatorX.value = x;
+      indicatorW.value = width;
+      indicatorOp.value = 1;
+      placed.current = true;
+      return;
+    }
+    indicatorX.value = withSpring(x, SPRING_CARD);
+    indicatorW.value = withSequence(withSpring(width * 1.5, SPRING_BOUNCE), withSpring(width, SPRING_CARD));
+    indicatorOp.value = withTiming(1, { duration: 120 });
+  };
+
+  useEffect(() => {
+    placeIndicator(focusedKey, true);
+    // `slots` is a ref filled by onLayout; focus and the visible route set are the reactive inputs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusedKey, routes.length]);
+
+  const indicatorStyle = useAnimatedStyle(() => ({
+    opacity: indicatorOp.value,
+    width: indicatorW.value,
+    transform: [{ translateX: indicatorX.value }],
+  }));
+
+  const onSlotLayout = (key: string) => (event: LayoutChangeEvent) => {
+    const { x, width } = event.nativeEvent.layout;
+    slots.current[key] = { x, width };
+    if (key === focusedKey) placeIndicator(key, placed.current);
+  };
   const leftCount = Math.min(2, routes.length);
   const left = routes.slice(0, leftCount);
   const right = routes.slice(leftCount);
@@ -113,35 +159,43 @@ export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
     const accent = accentForRoute(route.name);
 
     return (
-      <TabButton
-        key={route.key}
-        focused={focused}
-        label={meta.label}
-        icon={meta.icon}
-        activeIcon={meta.activeIcon}
-        accentColor={accent.color}
-        accentMist={accent.mist}
-        accentGlow={accent.glow}
-        onPress={() => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-          if (event.defaultPrevented) return;
-          if (focused) {
-            navigation.navigate(route.name, { screen: 'index' });
-            return;
-          }
-          navigation.navigate(route.name);
-        }}
-      />
+      <View key={route.key} style={styles.tabSlot} onLayout={onSlotLayout(route.key)}>
+        <TabButton
+          focused={focused}
+          label={meta.label}
+          icon={meta.icon}
+          activeIcon={meta.activeIcon}
+          accentColor={accent.color}
+          accentMist={accent.mist}
+          onPress={() => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (event.defaultPrevented) return;
+            if (focused) {
+              navigation.navigate(route.name, { screen: 'index' });
+              return;
+            }
+            navigation.navigate(route.name);
+          }}
+        />
+      </View>
     );
   };
 
   return (
     <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 6), backgroundColor: live.theme.background }]}>
       <View style={styles.bar}>
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.indicator,
+            { backgroundColor: focusedAccent.glow, shadowColor: focusedAccent.glow },
+            indicatorStyle,
+          ]}
+        />
         {left.map((route) => renderTab(route))}
         {live.tabs.upload ? (
         <View style={styles.fabSlot}>
@@ -177,9 +231,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingTop: 4,
   },
+  tabSlot: {
+    flex: 1,
+    minWidth: 0,
+  },
   tabHit: {
     flex: 1,
     minWidth: 0,
+  },
+  indicator: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: 3,
+    borderRadius: 2,
+    zIndex: 2,
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.9,
+        shadowRadius: 6,
+      },
+      android: { elevation: 3 },
+      default: {},
+    }),
   },
   tabInner: {
     minHeight: 52,
@@ -201,12 +276,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.1,
     textAlign: 'center',
-  },
-  tabDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    marginTop: 1,
   },
   tabDotSpacer: {
     width: 5,

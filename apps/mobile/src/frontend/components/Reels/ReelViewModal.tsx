@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Modal, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ReelCard } from '@/components/Reels/ReelCard';
+import { ReelPage } from '@/components/Reels/ReelPage';
 import { MaloTipModal } from '@/components/TipSheetModal';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
@@ -100,6 +102,13 @@ function ReelViewPager({
   );
   const [activeIndex, setActiveIndex] = useState(startIndex);
   const [tipTarget, setTipTarget] = useState<{ player: Player; reelId: string } | null>(null);
+  const [peekOpen, setPeekOpen] = useState(false);
+  const pagerY = useSharedValue(0);
+  const onPagerScroll = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      pagerY.value = event.contentOffset.y;
+    },
+  });
 
   useEffect(() => {
     let active = true;
@@ -164,9 +173,12 @@ function ReelViewPager({
         onLayout={(event) => setPageHeight(event.nativeEvent.layout.height)}
       >
         {pageHeight > 0 ? (
-          <FlatList
+          <Animated.FlatList
             ref={listRef}
             data={visibleClips}
+            onScroll={onPagerScroll}
+            scrollEventThrottle={16}
+            scrollEnabled={!peekOpen}
             extraData={`${activeIndex}:${hiddenIds.join(',')}`}
             keyExtractor={(item) => item.id}
             pagingEnabled
@@ -192,24 +204,41 @@ function ReelViewPager({
             }}
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={viewabilityConfig}
-            renderItem={({ item, index }) => (
-              <ReelCard
-                clip={item}
-                player={player}
-                active={index === activeIndex}
-                playbackActive
-                height={pageHeight}
-                tipping={Boolean(tipTarget) || tipping}
-                sekiPlay={item.sekiPlay}
-                onTip={() => openTip(item.id)}
-                onOpenProfile={
-                  item.playerId && onOpenAthlete ? () => onOpenAthlete(item.playerId!) : undefined
-                }
-                onReelHypeChange={onHypeChange}
-                onHide={hideClip}
-                surface="profile"
-              />
-            )}
+            renderItem={({ item, index }) => {
+              const openAthlete =
+                item.playerId && onOpenAthlete ? () => onOpenAthlete(item.playerId!) : undefined;
+              return (
+                <ReelPage
+                  index={index}
+                  height={pageHeight}
+                  scrollY={pagerY}
+                  active={index === activeIndex}
+                  clip={item}
+                  player={player}
+                  totalTipsCents={item.totalTipsCents ?? 0}
+                  surface="profile"
+                  peekEnabled={!tipTarget}
+                  onOpenProfile={openAthlete}
+                  onTip={player ? () => openTip(item.id) : undefined}
+                  onPeekChange={setPeekOpen}
+                >
+                  <ReelCard
+                    clip={item}
+                    player={player}
+                    active={index === activeIndex}
+                    playbackActive
+                    height={pageHeight}
+                    tipping={Boolean(tipTarget) || tipping}
+                    sekiPlay={item.sekiPlay}
+                    onTip={() => openTip(item.id)}
+                    onOpenProfile={openAthlete}
+                    onReelHypeChange={onHypeChange}
+                    onHide={hideClip}
+                    surface="profile"
+                  />
+                </ReelPage>
+              );
+            }}
           />
         ) : null}
       </View>

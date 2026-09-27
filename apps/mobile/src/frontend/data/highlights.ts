@@ -112,6 +112,8 @@ export type HighlightClip = {
   flashUnlockUntil?: string | null;
   /** `reels.tag_status` — pending tags do not elect Player of the Week. */
   tagStatus?: 'pending' | 'confirmed' | 'rejected';
+  /** `reels.uploaded_by` — fan who posted the clip (may differ from the tagged athlete). */
+  uploadedBy?: string | null;
 };
 
 export type HomeFeedContext = {

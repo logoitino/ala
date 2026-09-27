@@ -26,6 +26,38 @@ export const SPRING_FLIP: WithSpringConfig = {
   mass: 1,
 };
 
+/** Reel owner peek panel slide (swipe left / right on a Highlight). */
+export const SPRING_PEEK: WithSpringConfig = {
+  stiffness: 220,
+  damping: 24,
+  mass: 0.9,
+};
+
+/**
+ * Highlights pager depth: the outgoing page shrinks / sinks / rounds while the incoming page
+ * scales up from `scaleIn`. `sink` is a fraction of page height.
+ */
+export const REEL_DEPTH = {
+  scaleOut: 0.9,
+  scaleIn: 0.94,
+  sink: 0.16,
+  radius: 32,
+  fade: 0.5,
+  tiltDeg: 7,
+} as const;
+
+/** Scroll-reveal distance (px) for `ScrollFxItem` before an item is fully in. */
+export const SCROLL_FX = {
+  revealDistance: 140,
+  riseY: 28,
+  slideX: 40,
+  tiltDeg: 14,
+  staggerMs: 55,
+  maxStagger: 8,
+  exitFade: 0.45,
+  exitScale: 0.04,
+} as const;
+
 /**
  * Focal color hierarchy — Island Daylight (standard fan-app scheme).
  *
