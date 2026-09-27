@@ -57,11 +57,12 @@ create policy "Admin write schools and teams"
   using (auth.role() = 'anon' or public.current_user_role() = 'admin')
   with check (auth.role() = 'anon' or public.current_user_role() = 'admin');
 
+-- School Poll labels are an admin desk action (`/admin/polls`). Match schema.sql: no anon bypass.
 drop policy if exists "Admin write cheer polls" on public.cheer_polls;
 create policy "Admin write cheer polls"
   on public.cheer_polls for all
-  using (auth.role() = 'anon' or public.current_user_role() = 'admin')
-  with check (auth.role() = 'anon' or public.current_user_role() = 'admin');
+  using (public.current_user_role() = 'admin')
+  with check (public.current_user_role() = 'admin');
 
 drop policy if exists "Admin insert games" on public.games;
 create policy "Admin insert games"
@@ -90,7 +91,8 @@ as $$
 declare
   result public.cheer_polls%rowtype;
 begin
-  if public.current_user_role() <> 'admin' and auth.role() <> 'anon' then
+  -- Admin only. The previous check rejected signed-in non-admins and let anon through.
+  if public.current_user_role() <> 'admin' then
     raise exception 'Access restricted';
   end if;
   insert into public.cheer_polls (slug, home_label, away_label, is_active)
@@ -121,7 +123,9 @@ $$;
 grant select on public.shop_products to anon, authenticated;
 grant insert, update, delete on public.shop_products to anon, authenticated;
 grant insert, update, delete on public.schools_and_teams to anon, authenticated;
-grant insert, update, delete on public.cheer_polls to anon, authenticated;
+revoke insert, update, delete on public.cheer_polls from anon;
+grant insert, update, delete on public.cheer_polls to authenticated;
 grant insert, update on public.games to anon, authenticated;
 grant update, delete on public.sponsorships to anon, authenticated;
-grant execute on function public.upsert_cheer_poll(text, text, text, boolean) to anon, authenticated;
+revoke execute on function public.upsert_cheer_poll(text, text, text, boolean) from anon;
+grant execute on function public.upsert_cheer_poll(text, text, text, boolean) to authenticated;

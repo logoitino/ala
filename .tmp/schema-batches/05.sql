@@ -225,9 +225,9 @@ create policy "Public read players" on public.players for select using (true);
 -- `aura_points` directly, bypassing `add_user_aura` entirely, which is worse than any of the RPC
 -- holes this pass closes. The anon-facing hype-tap fallback in `lib/hype.ts` and backer-count
 -- fallback in `lib/payments.ts` are unaffected: their primary path is the `increment_player_hype`
--- / `increment_backer_count` RPCs (still anon-executable, see grants below — those two are
--- vanity/engagement counters, not currency, and `increment_backer_count` only runs after a
--- soft-wall-gated authenticated Mālo tip anyway) and only fall back to a direct table write if the
+-- / `increment_backer_count` RPCs (`increment_player_hype` stays anon-executable — guest hype taps;
+-- `increment_backer_count` is authenticated only, see the grant below — it only runs after a
+-- soft-wall-gated Mālo tip) and only fall back to a direct table write if the
 -- RPC itself errors. Roster/measurables editing from the admin Catalog desk now requires a real
 -- authenticated session with one of these roles — Studio-unlock-only preview (no Supabase auth)
 -- will no longer be able to write here; see summary for the "admin desk has no real auth gate yet"

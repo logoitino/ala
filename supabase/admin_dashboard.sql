@@ -254,6 +254,9 @@ create policy "Admin write spotlight awards"
 grant select, insert, update, delete on public.spotlight_awards to anon, authenticated;
 grant execute on function public.current_user_role() to anon, authenticated;
 grant execute on function public.add_user_role(text) to authenticated;
-grant execute on function public.publish_spotlight_award(uuid, text, text, date, date) to anon, authenticated;
+-- Admin-only Spotlight desk action. The function body requires `current_user_role() = 'admin'`.
+-- Match `moderate_flagged_reel`: authenticated only. REVOKE so a re-run drops an earlier anon grant.
+revoke execute on function public.publish_spotlight_award(uuid, text, text, date, date) from anon;
+grant execute on function public.publish_spotlight_award(uuid, text, text, date, date) to authenticated;
 grant execute on function public.moderate_flagged_reel(uuid, text) to anon, authenticated;
 grant execute on function public.get_admin_platform_metrics() to anon, authenticated;

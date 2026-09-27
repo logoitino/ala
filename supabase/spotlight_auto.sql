@@ -946,5 +946,7 @@ grant execute on function public.sync_spotlight_period(text) to anon, authentica
 grant execute on function public.sync_live_spotlight_awards() to anon, authenticated;
 grant execute on function public.unlock_spotlight_period(text) to anon, authenticated;
 grant execute on function public.get_active_spotlight_award(uuid) to anon, authenticated;
-grant execute on function public.publish_spotlight_award(uuid, text, text, date, date) to anon, authenticated;
+-- Admin-only Spotlight desk action. Match schema.sql: authenticated only.
+revoke execute on function public.publish_spotlight_award(uuid, text, text, date, date) from anon;
+grant execute on function public.publish_spotlight_award(uuid, text, text, date, date) to authenticated;
 grant execute on function public.increment_reel_hype(uuid, text) to anon, authenticated;

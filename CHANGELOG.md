@@ -2,6 +2,22 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-09-27
+
+### School Poll writes are admin-only
+
+- `upsert_cheer_poll` rejected signed-in non-admins and allowed anon, because the guard was `current_user_role() <> 'admin' AND auth.role() <> 'anon'`. It now requires `current_user_role() = 'admin'`. Execute is `authenticated` only. The `cheer_polls` write policy and table grant drop the same anon bypass, so the Polls desk fallback cannot write a poll without an admin session.
+
+## 2026-09-26
+
+### Backer-count grant
+
+- `supabase/increment_backer.sql` granted `increment_backer_count` to `anon` and `authenticated`, which undoes the canonical grant in `schema.sql` (`authenticated` only). The incremental now revokes `anon` and keeps the Mālo-freeze check from the canonical function.
+
+### Spotlight publish grant
+
+- `publish_spotlight_award` is admin-only inside the function (`current_user_role() = 'admin'`). Execute is now granted to `authenticated` only, matching `moderate_flagged_reel`. A re-run revokes the earlier `anon` grant.
+
 ## 2026-09-25
 
 ### Motion pass: Highlights owner peek, card-deck paging, scroll reveals

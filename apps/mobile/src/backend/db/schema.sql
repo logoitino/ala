@@ -3328,9 +3328,9 @@ create policy "Public read players" on public.players for select using (true);
 -- `aura_points` directly, bypassing `add_user_aura` entirely, which is worse than any of the RPC
 -- holes this pass closes. The anon-facing hype-tap fallback in `lib/hype.ts` and backer-count
 -- fallback in `lib/payments.ts` are unaffected: their primary path is the `increment_player_hype`
--- / `increment_backer_count` RPCs (still anon-executable, see grants below — those two are
--- vanity/engagement counters, not currency, and `increment_backer_count` only runs after a
--- soft-wall-gated authenticated Mālo tip anyway) and only fall back to a direct table write if the
+-- / `increment_backer_count` RPCs (`increment_player_hype` stays anon-executable — guest hype taps;
+-- `increment_backer_count` is authenticated only, see the grant below — it only runs after a
+-- soft-wall-gated Mālo tip) and only fall back to a direct table write if the
 -- RPC itself errors. Roster/measurables editing from the admin Catalog desk now requires a real
 -- authenticated session with one of these roles — Studio-unlock-only preview (no Supabase auth)
 -- will no longer be able to write here; see summary for the "admin desk has no real auth gate yet"
@@ -4041,7 +4041,11 @@ grant execute on function public.get_fan_tip_history(uuid) to authenticated;
 grant execute on function public.search_local_entities(text, text) to anon, authenticated;
 grant execute on function public.search_schools_and_teams(text) to anon, authenticated;
 grant execute on function public.report_reel(uuid) to authenticated;
-grant execute on function public.publish_spotlight_award(uuid, text, text, date, date) to anon, authenticated;
+-- 2026-09 audit follow-up: same reasoning as `moderate_flagged_reel` below — the body
+-- already requires `current_user_role() = 'admin'`, so `anon` execute was a no-op.
+-- REVOKE so a re-run of this file drops a grant left by an earlier apply.
+revoke execute on function public.publish_spotlight_award(uuid, text, text, date, date) from anon;
+grant execute on function public.publish_spotlight_award(uuid, text, text, date, date) to authenticated;
 grant execute on function public.spotlight_normalize_kind(text) to anon, authenticated;
 grant execute on function public.spotlight_window(text, date) to anon, authenticated;
 -- 2026-09 audit follow-up: anon dropped from all three — confirming/rejecting a player
@@ -4229,11 +4233,13 @@ create policy "Admin write schools and teams"
   using (auth.role() = 'anon' or public.current_user_role() = 'admin')
   with check (auth.role() = 'anon' or public.current_user_role() = 'admin');
 
+-- School Poll labels are an admin desk action (`/admin/polls`). The anon bypass let a
+-- logged-out client write the same rows the RPC was supposed to gate.
 drop policy if exists "Admin write cheer polls" on public.cheer_polls;
 create policy "Admin write cheer polls"
   on public.cheer_polls for all
-  using (auth.role() = 'anon' or public.current_user_role() = 'admin')
-  with check (auth.role() = 'anon' or public.current_user_role() = 'admin');
+  using (public.current_user_role() = 'admin')
+  with check (public.current_user_role() = 'admin');
 
 -- 2026-09 audit item 12: dropped the `auth.role() = 'anon'` bypass. Creating a new game row is an
 -- admin-desk action (`adminCatalog.ts`), not part of the anon operator-PIN scoring flow — the grant
@@ -4265,7 +4271,9 @@ as $$
 declare
   result public.cheer_polls%rowtype;
 begin
-  if public.current_user_role() <> 'admin' and auth.role() <> 'anon' then
+  -- Admin only. The previous check (`role <> 'admin' AND auth.role() <> 'anon'`) rejected
+  -- signed-in non-admins and let anon through.
+  if public.current_user_role() <> 'admin' then
     raise exception 'Access restricted';
   end if;
   insert into public.cheer_polls (slug, home_label, away_label, is_active)
@@ -4296,10 +4304,12 @@ $$;
 grant select on public.shop_products to anon, authenticated;
 grant insert, update, delete on public.shop_products to anon, authenticated;
 grant insert, update, delete on public.schools_and_teams to anon, authenticated;
-grant insert, update, delete on public.cheer_polls to anon, authenticated;
+revoke insert, update, delete on public.cheer_polls from anon;
+grant insert, update, delete on public.cheer_polls to authenticated;
 grant insert, update on public.games to anon, authenticated;
 grant update, delete on public.sponsorships to anon, authenticated;
-grant execute on function public.upsert_cheer_poll(text, text, text, boolean) to anon, authenticated;
+revoke execute on function public.upsert_cheer_poll(text, text, text, boolean) from anon;
+grant execute on function public.upsert_cheer_poll(text, text, text, boolean) to authenticated;
 
 -- App chrome flags (draft vs published) + admin reports. Safe to re-run.
 

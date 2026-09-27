@@ -183,7 +183,11 @@ grant execute on function public.get_fan_tip_history(uuid) to authenticated;
 grant execute on function public.search_local_entities(text, text) to anon, authenticated;
 grant execute on function public.search_schools_and_teams(text) to anon, authenticated;
 grant execute on function public.report_reel(uuid) to authenticated;
-grant execute on function public.publish_spotlight_award(uuid, text, text, date, date) to anon, authenticated;
+-- 2026-09 audit follow-up: same reasoning as `moderate_flagged_reel` below — the body
+-- already requires `current_user_role() = 'admin'`, so `anon` execute was a no-op.
+-- REVOKE so a re-run of this file drops a grant left by an earlier apply.
+revoke execute on function public.publish_spotlight_award(uuid, text, text, date, date) from anon;
+grant execute on function public.publish_spotlight_award(uuid, text, text, date, date) to authenticated;
 grant execute on function public.spotlight_normalize_kind(text) to anon, authenticated;
 grant execute on function public.spotlight_window(text, date) to anon, authenticated;
 -- 2026-09 audit follow-up: anon dropped from all three — confirming/rejecting a player
