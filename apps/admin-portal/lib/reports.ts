@@ -323,3 +323,158 @@ export async function fetchPortalRevenue(): Promise<PortalRevenue> {
     };
   }
 }
+
+export type MaloSlice = { key: string; label: string; cents: number; count: number };
+export type MaloDay = { day: string; cents: number };
+export type MaloTxn = {
+  id: string;
+  amount_cents: number;
+  created_at: string;
+  origin: string;
+  entry: string;
+  source_label: string;
+  athlete_name: string;
+  fan_name: string;
+  reel_id: string | null;
+  wishlist_item_id: string | null;
+};
+
+export type PortalMaloBreakdown = {
+  configured: boolean;
+  error: string | null;
+  byOrigin: MaloSlice[];
+  byEntry: MaloSlice[];
+  byDay: MaloDay[];
+  recent: MaloTxn[];
+};
+
+const EMPTY_BREAKDOWN: PortalMaloBreakdown = {
+  configured: false,
+  error: null,
+  byOrigin: [],
+  byEntry: [],
+  byDay: [],
+  recent: [],
+};
+
+export function maloOriginTitle(origin: string): string {
+  if (origin === 'highlight') return 'Highlight';
+  if (origin === 'qr') return 'QR link';
+  if (origin === 'wishlist') return 'Wishlist';
+  if (origin === 'live') return 'Live feed';
+  return 'Profile';
+}
+
+export function maloEntryTitle(entry: string): string {
+  return entry === 'qr_link' ? 'QR gift link' : 'In the app';
+}
+
+export function maloChannel(origin: string, entry: string, sourceLabel: string): string {
+  const via = entry === 'qr_link' && origin !== 'qr' ? ' via QR' : '';
+  const detail = sourceLabel.trim() ? ` · ${sourceLabel.trim()}` : '';
+  return `${maloOriginTitle(origin)}${via}${detail}`;
+}
+
+function asRows(value: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object');
+}
+
+function parseBreakdown(payload: Record<string, unknown>): PortalMaloBreakdown {
+  const byOrigin = asRows(payload.by_origin).map((row) => {
+    const key = asText(row.origin, 'profile');
+    return { key, label: maloOriginTitle(key), cents: asInt(row.cents), count: asInt(row.count) };
+  });
+  const byEntry = asRows(payload.by_entry).map((row) => {
+    const key = asText(row.entry, 'in_app');
+    return { key, label: maloEntryTitle(key), cents: asInt(row.cents), count: asInt(row.count) };
+  });
+  const dayMap = new Map<string, number>();
+  for (const row of asRows(payload.by_day)) {
+    const day = asText(row.day);
+    if (!day) continue;
+    dayMap.set(day, (dayMap.get(day) ?? 0) + asInt(row.cents));
+  }
+  const byDay = [...dayMap.entries()].map(([day, cents]) => ({ day, cents }));
+  const recent = asRows(payload.recent).map((row) => ({
+    id: asText(row.id),
+    amount_cents: asInt(row.amount_cents),
+    created_at: asText(row.created_at),
+    origin: asText(row.origin, 'profile'),
+    entry: asText(row.entry, 'in_app'),
+    source_label: asText(row.source_label),
+    athlete_name: asText(row.athlete_name, 'Athlete'),
+    fan_name: asText(row.fan_name, 'Fan'),
+    reel_id: asText(row.reel_id) || null,
+    wishlist_item_id: asText(row.wishlist_item_id) || null,
+  })).filter((row) => row.id);
+  return { configured: true, error: null, byOrigin, byEntry, byDay, recent };
+}
+
+/**
+ * @purpose Where each Mālo started, plus the latest gift rows, for the web Money desk.
+ * @sideEffects `get_admin_malo_breakdown`. Admin-only. Falls back to a `tips` SELECT when the RPC is not applied yet.
+ */
+export async function fetchPortalMaloBreakdown(): Promise<PortalMaloBreakdown> {
+  const supabase = await getSupabaseServerClient();
+  if (!supabase) return { ...EMPTY_BREAKDOWN, error: 'Supabase env missing' };
+  const rpc = await supabase.rpc('get_admin_malo_breakdown');
+  if (!rpc.error && rpc.data && typeof rpc.data === 'object') {
+    return parseBreakdown(rpc.data as Record<string, unknown>);
+  }
+  const listed = await supabase
+    .from('tips')
+    .select('id, amount_cents, created_at, origin, entry, source_label, reel_id, wishlist_item_id, player_id')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (listed.error || !Array.isArray(listed.data)) {
+    return { ...EMPTY_BREAKDOWN, configured: true, error: rpc.error?.message ?? listed.error?.message ?? 'Could not load Mālo.' };
+  }
+  const rows = listed.data as Record<string, unknown>[];
+  const originMap = new Map<string, { cents: number; count: number }>();
+  const entryMap = new Map<string, { cents: number; count: number }>();
+  const dayMap = new Map<string, number>();
+  const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  for (const row of rows) {
+    const origin = asText(row.origin, 'profile');
+    const entry = asText(row.entry, 'in_app');
+    const cents = asInt(row.amount_cents);
+    const originBucket = originMap.get(origin) ?? { cents: 0, count: 0 };
+    originBucket.cents += cents;
+    originBucket.count += 1;
+    originMap.set(origin, originBucket);
+    const entryBucket = entryMap.get(entry) ?? { cents: 0, count: 0 };
+    entryBucket.cents += cents;
+    entryBucket.count += 1;
+    entryMap.set(entry, entryBucket);
+    const created = asText(row.created_at);
+    const at = created ? new Date(created).getTime() : 0;
+    if (at >= cutoff) {
+      const day = created.slice(0, 10);
+      dayMap.set(day, (dayMap.get(day) ?? 0) + cents);
+    }
+  }
+  return {
+    configured: true,
+    error: null,
+    byOrigin: [...originMap.entries()]
+      .map(([key, bucket]) => ({ key, label: maloOriginTitle(key), ...bucket }))
+      .sort((a, b) => b.cents - a.cents),
+    byEntry: [...entryMap.entries()]
+      .map(([key, bucket]) => ({ key, label: maloEntryTitle(key), ...bucket }))
+      .sort((a, b) => b.cents - a.cents),
+    byDay: [...dayMap.entries()].map(([day, cents]) => ({ day, cents })),
+    recent: rows.slice(0, 40).map((row) => ({
+      id: asText(row.id),
+      amount_cents: asInt(row.amount_cents),
+      created_at: asText(row.created_at),
+      origin: asText(row.origin, 'profile'),
+      entry: asText(row.entry, 'in_app'),
+      source_label: asText(row.source_label),
+      athlete_name: 'Athlete',
+      fan_name: 'Fan',
+      reel_id: asText(row.reel_id) || null,
+      wishlist_item_id: asText(row.wishlist_item_id) || null,
+    })).filter((row) => row.id),
+  };
+}

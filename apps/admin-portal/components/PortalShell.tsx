@@ -14,7 +14,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     title: 'Insights',
     items: [
       { href: '/reports', label: 'Reports', hint: 'Behavior & usage' },
-      { href: '/money', label: 'Money', hint: 'Revenue ledger' },
+      { href: '/money', label: 'Money', hint: 'Gifts and revenue' },
     ],
   },
   {

@@ -56,11 +56,11 @@ export async function fetchWishlistItems(playerId?: string | null): Promise<Wish
 }
 
 /**
- * @purpose Credit a Mālo contribution to one item; the RPC equips it and pays the athlete +500 Aura on the crossing.
- * @param item Card the fan chipped in on.
+ * @purpose Move a wishlist item's funded total after the Mālo sheet has already written the `tips` row.
+ * @param item Card the fan chipped in on. That row's id and title are stored on the `tips` insert (`origin=wishlist`).
  * @param amountCents Amount PaymentSheet actually charged.
  * @returns Updated item plus whether this contribution finished the goal.
- * @sideEffects `chip_in_wishlist_item` RPC (which calls `add_user_aura`). Demo rows resolve locally.
+ * @sideEffects `chip_in_wishlist_item` RPC (item total and, on first full funding, `add_user_aura`). Does not insert a second `tips` row. Demo rows resolve locally.
  */
 export async function chipInWishlistItem(
   item: WishlistItem,

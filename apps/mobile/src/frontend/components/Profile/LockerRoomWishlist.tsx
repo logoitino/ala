@@ -73,7 +73,7 @@ type LockerRoomWishlistProps = {
  * @param onEquipped Host hook for a newly funded item (refresh stats, log, etc).
  * @param tipEntry `qr_link` when the fan opened this profile from a gift QR.
  * @returns Horizontal card row plus the Mālo sheet, Share QR sheet, and the full-screen unlock celebration.
- * @sideEffects `get_wishlist_items` on focus; `MaloTipModal` PaymentSheet; `chip_in_wishlist_item` (which calls `add_user_aura`); `expo-web-browser` for retailer links; Success haptic; `feature_tap` / `ui_issue` telemetry; paused by `layouts.wishlist`.
+ * @sideEffects `get_wishlist_items` on focus; `MaloTipModal` PaymentSheet writes one `tips` row (`origin=wishlist`, item id and title); `chip_in_wishlist_item` then moves the item total and may call `add_user_aura`; `expo-web-browser` for retailer links; Success haptic; `feature_tap` / `ui_issue` telemetry; paused by `layouts.wishlist`.
  */
 export function LockerRoomWishlist({ player, athleteName, username, onEquipped, tipEntry }: LockerRoomWishlistProps) {
   const { live } = useAppRuntime();

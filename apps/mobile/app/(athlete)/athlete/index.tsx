@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import { Stack, type Href, useRouter } from 'expo-router';
 
@@ -12,47 +12,26 @@ import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
-import { useRoster } from '@/hooks/useRoster';
+import { useReceivedMalo } from '@/hooks/useReceivedMalo';
+import { tipChannelLabel } from '@/lib/finance';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import type { TipLedgerEntry } from '@/types/database';
 
 /**
  * @purpose Athlete HQ: confirm pending tags, private Mālo ledger, and display name that writes `profiles.full_name`.
- * @sideEffects `tips` SELECT; `profiles` UPDATE on Save name; tag confirm RPCs via `usePendingPlayerTags`.
+ * @sideEffects `get_received_malo`; `profiles` UPDATE on Save name; tag confirm RPCs via `usePendingPlayerTags`.
  */
 export default function AthleteHomeScreen() {
   const router = useRouter();
   const { profile, refreshProfile, user, isAdmin } = useAuth();
-  const { players } = useRoster();
   const pending = usePendingPlayerTags();
-  const [tips, setTips] = useState<TipLedgerEntry[]>([]);
+  const received = useReceivedMalo(profile?.player_id ?? null);
   const [headline, setHeadline] = useState(profile?.full_name ?? '');
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
-  const athlete = players[0] ?? null;
-
   useEffect(() => {
     if (profile?.full_name) setHeadline(profile.full_name);
   }, [profile?.full_name]);
-
-  const loadTips = useCallback(async () => {
-    if (!athlete) {
-      setTips([]);
-      return;
-    }
-    const { data } = await supabase
-      .from('tips')
-      .select('*')
-      .eq('player_id', athlete.id)
-      .order('created_at', { ascending: false })
-      .limit(20);
-    setTips((data as TipLedgerEntry[] | null) ?? []);
-  }, [athlete]);
-
-  useEffect(() => {
-    void loadTips();
-  }, [loadTips]);
 
   const saveHeadline = async () => {
     const next = headline.trim();
@@ -76,7 +55,8 @@ export default function AthleteHomeScreen() {
     setSaving(false);
   };
 
-  const total = tips.reduce((sum, tip) => sum + tip.amount_cents, 0);
+  const total = received.totalCents;
+  const athleteName = displayValue(profile?.full_name, 'You');
 
   return (
     <ScreenShell>
@@ -98,25 +78,25 @@ export default function AthleteHomeScreen() {
         <DashboardPanel
           title="Private Mālo ledger"
           body={
-            athlete
-              ? `${displayValue(athlete.name)} has received $${(total / 100).toFixed(2)} from fans.`
+            profile?.player_id
+              ? `${athleteName} has received $${(total / 100).toFixed(2)} from fans.`
               : 'No linked athlete profile yet. Unlock Athlete from Profile → Account Capability.'
           }
         >
-          {tips.length === 0 ? (
+          {received.rows.length === 0 ? (
             <EmptyState
               kicker="Mālo"
               title="No Mālo yet"
-              lede="Tips land here after PaymentSheet checkouts on your tagged clips."
+              lede="Gifts from a Highlight, a QR link, a wishlist item, your profile, or a live play show up here."
               actionLabel="Open Profile"
               onAction={() => router.push('/profile' as Href)}
               adminHref="/admin/money"
               adminLabel="Open Money"
             />
           ) : (
-            tips.map((tip) => (
+            received.rows.map((tip) => (
               <Text key={tip.id} style={styles.row}>
-                ${(tip.amount_cents / 100).toFixed(2)} · {new Date(tip.created_at).toLocaleDateString()}
+                {tip.fan_name} · ${((tip.amount_cents) / 100).toFixed(2)} · {tipChannelLabel(tip.origin, tip.entry, tip.source_label)} · {new Date(tip.created_at).toLocaleDateString()}
               </Text>
             ))
           )}

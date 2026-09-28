@@ -72,8 +72,10 @@ as $$
 $$;
 
 /**
- * Add a Mālo contribution to one wishlist item. Crossing the target equips the item once and
+ * Move one wishlist item's funded total. Crossing the target equips the item once and
  * awards the athlete a flat +500 Aura through add_user_aura.
+ * Does not insert a tips row. The gift ledger is the tips insert from useTipCheckout
+ * (origin = wishlist, wishlist_item_id, source_label = the item title) before this call.
  */
 create or replace function public.chip_in_wishlist_item(item_id uuid, amount_cents integer)
 returns jsonb
@@ -133,4 +135,5 @@ $$;
 grant select on public.wishlist_items to anon, authenticated;
 grant insert, update, delete on public.wishlist_items to anon, authenticated;
 grant execute on function public.get_wishlist_items(uuid) to anon, authenticated;
-grant execute on function public.chip_in_wishlist_item(uuid, integer) to anon, authenticated;
+revoke execute on function public.chip_in_wishlist_item(uuid, integer) from public, anon;
+grant execute on function public.chip_in_wishlist_item(uuid, integer) to authenticated;

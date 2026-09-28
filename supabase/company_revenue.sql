@@ -1,6 +1,9 @@
 -- Company revenue control plane for /admin/money.
 -- Safe to re-run. Keep BPS in lockstep with src/frontend/data/finance.ts.
 -- Existing remote stub used numeric dollars; we keep those columns and add cents.
+-- Mālo labels call tip_origin_label (Highlight / QR / Wishlist / Profile / Live).
+-- Apply supabase/tip_origin.sql as well so that helper and the tips columns exist.
+-- source stays 'malo'. The channel lives in the label.
 
 create table if not exists public.shop_orders (
   id uuid primary key default gen_random_uuid(),
@@ -231,7 +234,8 @@ begin
     'malo',
     'malo',
     t.id::text,
-    'Mālo · ' || coalesce(nullif(p.name, ''), 'Athlete'),
+    'Mālo · ' || public.tip_origin_label(t.origin, t.entry, t.source_label)
+      || ' · ' || coalesce(nullif(p.name, ''), 'Athlete'),
     'athlete',
     t.player_id,
     t.amount_cents,
@@ -368,7 +372,7 @@ begin
       new.amount_cents,
       'athlete',
       new.player_id,
-      'Mālo',
+      'Mālo · ' || public.tip_origin_label(new.origin, new.entry, new.source_label),
       new.created_at
     );
   elsif tg_table_name = 'sponsorships' then

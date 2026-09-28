@@ -4,13 +4,21 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-27
 
+### Preview installs
+
+- Internal preview builds for this Mālo ledger pass: [iOS](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/b4b8c235-cbc6-4ae7-ada8-4dadb4a25835) (registered iPad) and [Android](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/1c8b92f0-36b6-48ca-b7d8-c35a1ca02a19) (APK).
+
+### Money desks and athlete profiles read the gift channel
+
+- Next `/money` charts Mālo by surface (Highlight, QR link, Wishlist, Profile, Live feed), by arrival (in the app or a QR gift link), and by the last 14 days, then lists each gift with athlete, fan, item or clip, and amount. Overview names the top surface. Expo `/admin/money` shows the same surface bars. An athlete's own profile and Athlete HQ list gifts they received. Apply `supabase/tip_origin.sql`, then `supabase/malo_ledger.sql` (`get_admin_malo_breakdown`, `get_received_malo`).
+
 ### Terms name the Mālo record
 
 - The prototype Terms of Service & Privacy summary (`LEGAL_TERMS_VERSION` `2026-09-27`) tells fans we store where each Mālo started, including the wishlist item, and that we use that record for receipts, athlete accounting, and to see which parts of the app bring in support. The same notice sits on the Mālo sheet. This is still a prototype summary, not a finished privacy policy.
 
 ### Mālo rows name where the gift started
 
-- Each `tips` row records `origin` (Highlight, QR link, Wishlist, Profile, Live feed), `entry` (`in_app` or `qr_link`), and, for a locker Chip In, `wishlist_item_id` plus the item title. One row is the ledger. `chip_in_wishlist_item` still only moves the item total. Company-revenue labels keep `source=malo` and add the channel. Apply `supabase/tip_origin.sql` on the live database.
+- Each `tips` row records `origin` (Highlight, QR link, Wishlist, Profile, Live feed), `entry` (`in_app` or `qr_link`), and, for a locker Chip In, `wishlist_item_id` plus the item title. One row is the ledger. `chip_in_wishlist_item` still only moves the item total. Company-revenue labels keep `source=malo` and add the channel, including a re-run of `supabase/company_revenue.sql`. Apply `supabase/tip_origin.sql` on the live database.
 
 ### Local plays open downward
 
@@ -74,6 +82,13 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 - Account Settings → Sign in waits until the hamburger sheet’s native modal has dismissed before opening Soft-Wall, so iOS no longer drops the sign-in sheet while the app still treats it as open.
 - Profile photos and booster logos upload as raw bytes with `image/jpeg`, `image/png`, or `image/webp`. A React Native blob’s `text/plain` type was rejected by the `avatars` bucket. Booster logos go to `avatars/sponsors/`, not the video-only `game_highlights` bucket.
+
+### Account customization: bio, social links, and per-field visibility
+
+- Profile hamburger gains **Edit Profile** (`Profile/EditProfileModal`): display name, username, a free-text bio (≤500 chars), up to four social handles (Instagram / X / TikTok / YouTube), and a Visible/Hidden toggle for Bio, School/team, Stats, and Social links. New `profiles.bio` / `profiles.social_links` / `profiles.profile_visibility` columns; `AuthContext.updateProfile` writes them (optimistic local update, then a remote `profiles` UPDATE).
+- The real bio and social chips render as a new "About" section on `AthleteProfileView`'s hero, separate from the existing auto-generated position/school summary line that only ever showed on the flip-card back face. Social chips resolve through `lib/socialLinks.ts` and open in `expo-web-browser`.
+- **Hiding is enforced server-side, not just client-side.** `profiles` keeps its existing public `using (true)` SELECT (narrowing it was already tried once for `stripe_connect_id` and found unsafe to land blind — see `docs/SCHEMA.md`), so a new `profiles_public` view mirrors the `reels_feed` pattern: it nulls `bio`/`social_links` for anyone but the owner or admin when hidden. The public `/user/[id]` screen and `Reels/ReelOwnerPeek`'s "Posted by @handle" line read this view instead of the base table. A new `athlete_stats_visible(target_player_id)` function gates `athlete_career_stats` / `athlete_game_logs` SELECT the same way for the Stats toggle. "School" hidden is presentation-only (no RLS — `players.school_name` stays public everywhere else in the app); it just tells the public screen not to render the school line.
+- **This does not close the existing Phase 0 item 4 concern** (`docs/ROADMAP.md`) about a `profiles_public` view/column-allowlist for full PII (`stripe_connect_id` and other status columns) — this view is scoped narrowly to the new `bio`/`social_links` fields for this feature, not a general fix for the broader public-`profiles`-grant exposure already flagged there.
 
 ## 2026-09-16
 

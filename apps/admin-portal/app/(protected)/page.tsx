@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { Badge, Panel, PortalShell, SectionHeading, StatCard } from '@/components/PortalShell';
 import { fetchProfileOversight } from '@/lib/profile';
-import { fetchPortalReports, fetchPortalRevenue, formatUsd } from '@/lib/reports';
+import { fetchPortalMaloBreakdown, fetchPortalReports, fetchPortalRevenue, formatUsd } from '@/lib/reports';
 import { fetchSoftWallOversight } from '@/lib/softWall';
 import { isAdminPortalConfigured } from '@/lib/supabase';
 
@@ -15,12 +15,14 @@ export const dynamic = 'force-dynamic';
  */
 export default async function AdminHomePage() {
   const configured = isAdminPortalConfigured();
-  const [oversight, profile, reports, revenue] = await Promise.all([
+  const [oversight, profile, reports, revenue, malo] = await Promise.all([
     fetchSoftWallOversight(),
     fetchProfileOversight(),
     fetchPortalReports(),
     fetchPortalRevenue(),
+    fetchPortalMaloBreakdown(),
   ]);
+  const topChannel = malo.byOrigin[0];
 
   const softWallOn = [oversight.maloLive, oversight.crewLive, oversight.wishlistLive].filter(Boolean).length;
   const profileFlagsOn = [
@@ -54,7 +56,7 @@ export default async function AdminHomePage() {
         <StatCard
           label="Mālo · 7d"
           value={formatUsd(reports.money.malo_cents_7d ?? 0)}
-          hint="Tips window"
+          hint={topChannel ? `Most from ${topChannel.label}` : 'Tips window'}
           tone={reports.money.malo_cents_7d ? 'ok' : 'neutral'}
         />
         <StatCard

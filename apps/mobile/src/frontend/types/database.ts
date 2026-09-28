@@ -224,6 +224,20 @@ export type TipLedgerEntry = {
   source_label?: string | null;
 };
 
+/** Row from `get_received_malo` (gifts sent to this athlete). */
+export type ReceivedMalo = {
+  id: string;
+  amount_cents: number;
+  aura_points: number;
+  created_at: string;
+  origin: string;
+  entry: string;
+  source_label: string;
+  reel_id: string | null;
+  wishlist_item_id: string | null;
+  fan_name: string;
+};
+
 /** Row from `get_fan_tip_history` (Mālo receipts for the signed-in fan). */
 export type FanTipReceipt = {
   id: string;
@@ -824,6 +838,31 @@ export type Database = {
       get_fan_tip_history: {
         Args: { fan_user_id: string };
         Returns: FanTipReceipt[];
+      };
+      get_received_malo: {
+        Args: { target_player_id: string };
+        Returns: ReceivedMalo[];
+      };
+      get_admin_malo_breakdown: {
+        Args: Record<string, never>;
+        Returns: {
+          by_origin: { origin: string; cents: number; count: number }[];
+          by_entry: { entry: string; cents: number; count: number }[];
+          by_day: { day: string; origin: string; cents: number; count: number }[];
+          recent: {
+            id: string;
+            amount_cents: number;
+            aura_points: number;
+            created_at: string;
+            origin: string;
+            entry: string;
+            source_label: string;
+            reel_id: string | null;
+            wishlist_item_id: string | null;
+            athlete_name: string;
+            fan_name: string;
+          }[];
+        };
       };
       search_local_entities: {
         Args: { search_query: string; entity_kind?: string };

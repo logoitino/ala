@@ -866,6 +866,43 @@ export async function fetchAdminTips(): Promise<TipLedgerEntry[]> {
   return data as TipLedgerEntry[];
 }
 
+export type MaloOriginBar = { label: string; cents: number; count: number };
+
+/**
+ * @purpose All-time Mālo totals by where the gift started, for the Expo Money desk.
+ * @sideEffects `get_admin_malo_breakdown` (admin-only).
+ */
+export async function fetchAdminMaloOriginBars(): Promise<MaloOriginBar[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.rpc('get_admin_malo_breakdown');
+  if (error || !data || typeof data !== 'object') return [];
+  const rows = (data as { by_origin?: unknown }).by_origin;
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .map((row) => {
+      if (!row || typeof row !== 'object') return null;
+      const bag = row as Record<string, unknown>;
+      const origin = typeof bag.origin === 'string' ? bag.origin : 'profile';
+      const cents = Number(bag.cents);
+      const count = Number(bag.count);
+      return {
+        label:
+          origin === 'highlight'
+            ? 'Highlight'
+            : origin === 'qr'
+              ? 'QR link'
+              : origin === 'wishlist'
+                ? 'Wishlist'
+                : origin === 'live'
+                  ? 'Live feed'
+                  : 'Profile',
+        cents: Number.isFinite(cents) ? Math.round(cents) : 0,
+        count: Number.isFinite(count) ? Math.round(count) : 0,
+      };
+    })
+    .filter((row): row is MaloOriginBar => Boolean(row));
+}
+
 /**
  * @purpose Disbursement queue for athlete payouts.
  * @sideEffects `disbursements` SELECT.

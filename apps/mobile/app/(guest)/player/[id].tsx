@@ -140,6 +140,8 @@ export default function PlayerProfileScreen() {
 
         <TipCheckout
           player={player}
+          origin="profile"
+          entry="in_app"
           onBacked={(nextCount) =>
             setPlayer((current) => (current ? { ...current, backer_count: nextCount } : current))
           }

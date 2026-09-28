@@ -4395,7 +4395,8 @@ begin
     'malo',
     'malo',
     t.id::text,
-    'Mālo · ' || coalesce(nullif(p.name, ''), 'Athlete'),
+    'Mālo · ' || public.tip_origin_label(t.origin, t.entry, t.source_label)
+      || ' · ' || coalesce(nullif(p.name, ''), 'Athlete'),
     'athlete',
     t.player_id,
     t.amount_cents,
@@ -4531,7 +4532,7 @@ begin
       new.amount_cents,
       'athlete',
       new.player_id,
-      'Mālo',
+      'Mālo · ' || public.tip_origin_label(new.origin, new.entry, new.source_label),
       new.created_at
     );
   elsif tg_table_name = 'sponsorships' then
@@ -4941,7 +4942,7 @@ declare
   aura_result jsonb;
   target_player uuid;
 begin
-  -- SECURITY TRADEOFF (2026-09 audit item 5): `wishlist_items` has no per-contribution ledger
+  -- The per-gift ledger is the tips row (origin = wishlist). wishlist_items only stores the aggregate.
   -- (only an aggregate `current_amount_cents`), so there is no "payer" column to check
   -- `auth.uid() =` against here. Execute is now `authenticated`-only (see grants below) and a
   -- per-call cap is enforced as a stopgap until this is verified against a real Stripe charge

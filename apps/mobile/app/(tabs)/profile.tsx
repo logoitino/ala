@@ -217,6 +217,8 @@ export default function MyHubTab() {
           player: athlete,
           tipAmount: amount,
           coverFees: false,
+          origin: 'profile',
+          entry: 'in_app',
           onBacked: (nextCount) => {
             applyBackerCount(athlete.id, nextCount);
             void readMaloDroppedCount().then(setTipsDropped);

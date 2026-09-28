@@ -17,6 +17,7 @@ import { AthleteReelManager } from '@/components/Profile/AthleteReelManager';
 import { AthleteStatsTab } from '@/components/Profile/AthleteStatsTab';
 import { AuraTradingCard } from '@/components/Profile/AuraTradingCard';
 import { LockerRoomWishlist } from '@/components/Profile/LockerRoomWishlist';
+import { ReceivedMaloPanel } from '@/components/Profile/ReceivedMaloPanel';
 import { ProfileHeroAvatar } from '@/components/Profile/ProfileHeroAvatar';
 import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { SubscriberQnA } from '@/components/Profile/SubscriberQnA';
@@ -407,6 +408,7 @@ export function AthleteProfileView({
         <VaultLockCard locked={sealed} busy={vaultLockBusy} onToggle={(next) => onVaultLockChange?.(next)} />
       ) : null}
 
+      {ownSheet ? <ReceivedMaloPanel playerId={player.id} /> : null}
       <FilterPills
         items={tabs}
         value={tab}

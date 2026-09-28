@@ -262,7 +262,7 @@ declare
   aura_result jsonb;
   target_player uuid;
 begin
-  -- SECURITY TRADEOFF (2026-09 audit item 5): `wishlist_items` has no per-contribution ledger
+  -- The per-gift ledger is the tips row (origin = wishlist). wishlist_items only stores the aggregate.
   -- (only an aggregate `current_amount_cents`), so there is no "payer" column to check
   -- `auth.uid() =` against here. Execute is now `authenticated`-only (see grants below) and a
   -- per-call cap is enforced as a stopgap until this is verified against a real Stripe charge

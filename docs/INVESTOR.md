@@ -25,7 +25,7 @@ College NIL marketplaces do not fit. High-school athletes are usually minors, am
 | Loop | Fan action | Persistence |
 | --- | --- | --- |
 | Watch & react | TikTok-style Reels. Seki / Aura / Flex. Live score overlay. | `reels`, `games`, Realtime |
-| Support | **Mālo** via Stripe PaymentSheet | `tips`, Stripe PaymentIntent (test) |
+| Support | **Mālo** via Stripe PaymentSheet | `tips` (amount, athlete, fan, and where the gift started), Stripe PaymentIntent (test) |
 | Rank | Aura card + points per tip dollar | `add_user_aura`, profile / player points |
 
 **Surfaces today**

@@ -347,7 +347,7 @@ Mālo ledger (no separate `video_tips` table).
 
 Clip totals still use `increment_reel_tips`, not a rollup column on `tips`.
 
-Successful Mālo (`useTipCheckout`, `!skipBacker`) **inserts** one `tips` row. Highlight sheets set `origin=highlight` and `reel_id`. A gift-link profile (`/gift/{handle}` → `/user/{id}?entry=qr`) sets `origin=qr` and `entry=qr_link`. A locker Chip In sets `origin=wishlist`, `wishlist_item_id`, and `source_label` to the item title, then `chip_in_wishlist_item` only moves the item total — it does not insert a second row. Live-feed play cards set `origin=live`. Profile **Tip History & Receipts** (`/receipts`) reads via `get_fan_tip_history`. Profile **Total Tips Dropped** on the trading card is still device-local (`tapuai.maloDroppedCount`). `tip_origin_label(origin, entry, source_label)` builds the channel phrase stored on `company_revenue_logs.label` (`source` stays `malo`). Incremental `supabase/tip_origin.sql`. `supabase/get_fan_tip_history.sql` **creates** `public.tips` when it is missing (this table lived only in full `schema.sql`).
+Successful Mālo (`useTipCheckout`, `!skipBacker`) **inserts** one `tips` row. Highlight sheets set `origin=highlight` and `reel_id`. A gift-link profile (`/gift/{handle}` → `/user/{id}?entry=qr`) sets `origin=qr` and `entry=qr_link`. A locker Chip In sets `origin=wishlist`, `wishlist_item_id`, and `source_label` to the item title, then `chip_in_wishlist_item` only moves the item total — it does not insert a second row. Live-feed play cards set `origin=live`. Profile **Tip History & Receipts** (`/receipts`) reads the fan's own gifts via `get_fan_tip_history`. The athlete's own profile and Athlete HQ read gifts they received via `get_received_malo`. Next `/money` and Expo `/admin/money` chart the same rows via `get_admin_malo_breakdown`. Profile **Total Tips Dropped** on the trading card is still device-local (`tapuai.maloDroppedCount`). `tip_origin_label(origin, entry, source_label)` builds the channel phrase stored on `company_revenue_logs.label` (`source` stays `malo`). Incremental `supabase/tip_origin.sql`. `supabase/get_fan_tip_history.sql` **creates** `public.tips` when it is missing (this table lived only in full `schema.sql`).
 
 **RLS (2026-09 audit):** SELECT own `fan_id` or admin; INSERT requires `auth.uid() = fan_id` (was `with check (true)` — any client could fabricate a tip of any amount for any player; closed at the RLS layer, though this still trusts the client that a real Stripe charge happened — see `supabase/functions/stripe-webhook/index.ts` for the real verification path this is meant to migrate to). `amount_cents` / `aura_points` now also have `>= 0` CHECK constraints. **2026-09 compliance:** INSERT also requires `not malo_target_frozen(player_id)` — a frozen athlete (or their frozen school, `LEGAL_BRIEFING.md` §8 item 5) rejects new Mālo at the database layer, surfaced to the fan as a generic "Mālo not recorded" alert in `useTipCheckout.ts` (payment already succeeded; no server-side Stripe verification exists yet either way — see the note above).
 
@@ -479,7 +479,7 @@ Active items for one athlete, unfunded first (`order by is_equipped, sort_order,
 chip_in_wishlist_item(item_id uuid, amount_cents integer) returns jsonb
 ```
 
-Adds a Mālo contribution to `current_amount_cents`. When the row crosses `target_amount_cents` for the first time it sets `is_equipped` / `equipped_at` / `aura_awarded` and calls `add_user_aura(player_id, 500)`. Returns `{ item, newly_equipped, aura_points, athlete_aura_points }` — the client uses `newly_equipped` for confetti and `athlete_aura_points` to restyle the Aura card. **v2:** like `add_user_aura` / `increment_backer_count`, this RPC trusts the client-supplied amount. Move the credit behind the Stripe webhook before real money. **2026-09 audit:** `EXECUTE` restricted to `authenticated` (Chip In is behind the Soft Wall, so this doesn't affect guests); the per-gift row is the `tips` insert (`origin=wishlist`, `wishlist_item_id`) written before this RPC; `wishlist_items` itself still only stores the aggregate `current_amount_cents`, so there is no `auth.uid()` owner column on the item — a per-call cap (`amount_cents <= 100000`) stands in as a stopgap instead. **2026-09 freeze-switch fix:** also raises via `malo_target_frozen(wishlist_items.player_id)` before `current_amount_cents` moves at all — not just at the +500 Aura/equip step below the target, which `add_user_aura`'s own check would already catch.
+Adds a Mālo contribution to `current_amount_cents`. When the row crosses `target_amount_cents` for the first time it sets `is_equipped` / `equipped_at` / `aura_awarded` and calls `add_user_aura(player_id, 500)`. Returns `{ item, newly_equipped, aura_points, athlete_aura_points }` — the client uses `newly_equipped` for confetti and `athlete_aura_points` to restyle the Aura card. **v2:** like `add_user_aura` / `increment_backer_count`, this RPC trusts the client-supplied amount. Move the credit behind the Stripe webhook before real money. **2026-09 audit:** `EXECUTE` restricted to `authenticated` (`schema.sql` and `supabase/locker_room_wishlist.sql` revoke `anon` so a re-run cannot widen it; Chip In is behind the Soft Wall, so this doesn't affect guests); the per-gift row is the `tips` insert (`origin=wishlist`, `wishlist_item_id`) written before this RPC; `wishlist_items` itself still only stores the aggregate `current_amount_cents`, so there is no `auth.uid()` owner column on the item — a per-call cap (`amount_cents <= 100000`) stands in as a stopgap instead. **2026-09 freeze-switch fix:** also raises via `malo_target_frozen(wishlist_items.player_id)` before `current_amount_cents` moves at all — not just at the +500 Aura/equip step below the target, which `add_user_aura`'s own check would already catch.
 
 ### `shop_orders`
 
@@ -740,6 +740,38 @@ Filters `tips.fan_id` to `auth.uid()` only (2026-09 audit fix — the `fan_user_
 
 Grant: `EXECUTE` to `authenticated` only (previously also granted to `anon`, which let anyone read any fan's tip history by passing an arbitrary `fan_user_id` — closed 2026-09).
 
+### `get_received_malo(target_player_id)`
+
+```sql
+get_received_malo(target_player_id uuid) returns table (
+  id uuid,
+  amount_cents integer,
+  aura_points integer,
+  created_at timestamptz,
+  origin text,
+  entry text,
+  source_label text,
+  reel_id uuid,
+  wishlist_item_id uuid,
+  fan_name text
+)
+```
+
+Gifts sent **to** an athlete. `tips` SELECT is the fan who paid or an admin, so the athlete cannot read their own incoming rows with a table select. This function returns rows only when the caller is an admin, the profile whose `player_id` matches `target_player_id`, or the linked guardian (`players.guardian_id`). Fan display name only. Incremental: `supabase/malo_ledger.sql` (after `supabase/tip_origin.sql`). Client: `useReceivedMalo` + `Profile/ReceivedMaloPanel` (own profile) and Athlete HQ.
+
+Grant: `EXECUTE` to `authenticated` only.
+
+### `get_admin_malo_breakdown()`
+
+```sql
+get_admin_malo_breakdown() returns jsonb
+-- { by_origin, by_entry, by_day, recent }
+```
+
+Admin-only (`current_user_role() = 'admin'`). `by_origin` and `by_entry` are all-time cents and counts. `by_day` is the last 14 UTC days split by origin. `recent` is the latest 40 gifts with athlete name, fan name, channel, item id, and clip id. Incremental: `supabase/malo_ledger.sql`. Clients: Next Money desk (`fetchPortalMaloBreakdown`) and Expo `/admin/money` (`fetchAdminMaloOriginBars`).
+
+Grant: `EXECUTE` to `authenticated` only.
+
 ### `search_local_entities(search_query, entity_kind)`
 
 ```sql
@@ -835,7 +867,7 @@ sync_company_revenue_logs() returns integer
 company_revenue_after_source_insert() returns trigger
 ```
 
-BPS stay in lockstep with `apps/mobile/src/frontend/data/finance.ts`. Triggers on `tips`, `sponsorships`, `subscriptions`, `shop_orders` call `record_company_revenue`. `sync_company_revenue_logs` backfills unique `(source, source_id)` rows. Booster gross reads `amount_cents` or, on older remotes, `monthly_amount`. Incremental: `supabase/company_revenue.sql`.
+BPS stay in lockstep with `apps/mobile/src/frontend/data/finance.ts`. Triggers on `tips`, `sponsorships`, `subscriptions`, `shop_orders` call `record_company_revenue`. A Mālo log stays `source = malo`; the label is `Mālo ·` plus `tip_origin_label` and the athlete name. `sync_company_revenue_logs` backfills unique `(source, source_id)` rows. Booster gross reads `amount_cents` or, on older remotes, `monthly_amount`. Incremental: `supabase/company_revenue.sql` (same Mālo label as `schema.sql`) and `supabase/tip_origin.sql` (the helper and columns).
 
 ### `get_company_revenue_summary()`
 
@@ -1017,4 +1049,4 @@ Prefer full `schema.sql` on a blank project (includes `profiles` / `tips` / oper
 
 1. `players.sql` → `game_events.sql` → `games.sql` (+ `games_clock.sql` + `games_operator.sql`)
 2. `increment_backer.sql` → `increment_hype.sql` (`increment_player_hype`)
-3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `legal_terms_ack.sql` → `athlete_verification.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql` → `media_upload.sql` → `tip_origin.sql`
+3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `legal_terms_ack.sql` → `athlete_verification.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql` → `media_upload.sql` → `tip_origin.sql` → `malo_ledger.sql`

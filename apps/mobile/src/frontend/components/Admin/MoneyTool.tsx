@@ -13,23 +13,26 @@ import {
   AdminRow,
   AdminSuggest,
 } from '@/components/Admin/AdminChrome';
+import { AdminBarChart } from '@/components/Admin/AdminCharts';
 import { colors, radii } from '@/constants/theme';
 import { useRoster } from '@/hooks/useRoster';
 import {
   centsFromDollarsInput,
   fetchAdminDisbursements,
+  fetchAdminMaloOriginBars,
   fetchAdminTips,
   queueDisbursement,
   setDisbursementStatus,
+  type MaloOriginBar,
 } from '@/lib/adminCatalog';
 import {
   EMPTY_COMPANY_REVENUE,
   fetchCompanyRevenueLogs,
   fetchCompanyRevenueSummary,
   revenueSourceTitle,
+  tipChannelLabel,
   type CompanyRevenueSummary,
 } from '@/lib/finance';
-import { tipChannelLabel } from '@/lib/finance';
 import { formatTipDollars } from '@/lib/reels';
 import { FOCAL } from '@/theme/motion';
 import type { Disbursement, TipLedgerEntry } from '@/types/database';
@@ -42,7 +45,7 @@ const QUICK = [
 ];
 
 /**
- * @purpose Financial control plane: gross volume, company net, athlete/operator payouts, stream splits, Mālo ledger, and disbursements.
+ * @purpose Financial control plane: gross volume, company net, athlete/operator payouts, stream splits, Mālo by surface, and disbursements.
  * @sideEffects `get_company_revenue_summary`; `company_revenue_logs` SELECT; `tips` SELECT; `disbursements` INSERT / UPDATE.
  */
 export function MoneyTool() {
@@ -50,6 +53,7 @@ export function MoneyTool() {
   const { players } = useRoster();
   const [summary, setSummary] = useState<CompanyRevenueSummary>(EMPTY_COMPANY_REVENUE);
   const [tips, setTips] = useState<TipLedgerEntry[]>([]);
+  const [originBars, setOriginBars] = useState<MaloOriginBar[]>([]);
   const [payouts, setPayouts] = useState<Disbursement[]>([]);
   const [playerId, setPlayerId] = useState('');
   const [playerQuery, setPlayerQuery] = useState('');
@@ -62,11 +66,12 @@ export function MoneyTool() {
     setLoading(true);
     setError(null);
     try {
-      const [nextSummary, nextLogs, nextTips, nextPayouts] = await Promise.all([
+      const [nextSummary, nextLogs, nextTips, nextPayouts, nextOrigins] = await Promise.all([
         fetchCompanyRevenueSummary(),
         fetchCompanyRevenueLogs(),
         fetchAdminTips(),
         fetchAdminDisbursements(),
+        fetchAdminMaloOriginBars(),
       ]);
       setSummary({
         ...nextSummary,
@@ -74,6 +79,7 @@ export function MoneyTool() {
       });
       setTips(nextTips);
       setPayouts(nextPayouts);
+      setOriginBars(nextOrigins);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not load money.');
     } finally {
@@ -229,6 +235,14 @@ export function MoneyTool() {
             </AdminRow>
           ))
         )}
+      </AdminPanel>
+      <AdminPanel title="Where Mālo starts">
+        <AdminBarChart
+          title="All gifts by surface"
+          points={originBars.map((row) => ({ day: `${row.label} · ${row.count}`, value: row.cents }))}
+          formatValue={formatTipDollars}
+          accent={FOCAL.electricGold}
+        />
       </AdminPanel>
       <AdminPanel title={`Recent Mālo · ${formatTipDollars(maloTotal)}`}>
         {tips.length === 0 ? (

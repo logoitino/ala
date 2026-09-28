@@ -114,22 +114,25 @@ These four roles already exist. They do not own a tab by themselves — they sta
 **Call:** `PROFILE`  
 **Fan:** `/profile` (own hub, hamburger) · `/user/[id]` (public, back) · `/athlete/[id]` redirect  
 **Admin:** Expo Look · Profile · `/admin/athletes` · `/admin/people` · `/admin/sports` (Stats) · `/admin/wishlist` · Next `/profile`  
-**What it does:** One `AthleteProfileView` for own and tapped athletes. Hero avatar + picker. Slim Crew. Share & Fund QR (`tapuai.app/gift/{handle}`). Highlights / Stats / Vault pills. Active Team Roster (Claimed = `profiles.player_id`). Join Crew / Drop Mālo / Subscribe hide on your own claimed row. Flip Aura card from hamburger (`profile.showCard`). Varsity ⚡ badge (team code or staff). Legal modal + ack. Role switcher (claim athlete ≠ Varsity).
+**What it does:** One `AthleteProfileView` for own and tapped athletes. Hero avatar + picker. Slim Crew. Share & Fund QR (`tapuai.app/gift/{handle}`). Highlights / Stats / Vault pills. Active Team Roster (Claimed = `profiles.player_id`). Join Crew / Drop Mālo / Subscribe hide on your own claimed row. Flip Aura card from hamburger (`profile.showCard`). Varsity ⚡ badge (team code or staff). Legal modal + ack. Role switcher (claim athlete ≠ Varsity). **Edit Profile** (hamburger): bio, social links, display name/username, and per-field Bio / School / Stats / Social-links visibility toggles — hiding is enforced server-side for other users via `profiles_public` (`reels_feed`-style conditional-null view) and `athlete_stats_visible()`, not just a client-side flag.
 
 | Function | Where |
 | --- | --- |
 | Shared sheet | `components/Profile/AthleteProfileView.tsx` |
 | Own vs public | `app/(tabs)/profile.tsx` · `user/[id].tsx` · `lib/roster.ts` `isOwnAthleteSheet` |
 | Hamburger | `ProfileMenuSheet.tsx` |
+| Edit Profile | `Profile/EditProfileModal.tsx` · `AuthContext.updateProfile` · `lib/socialLinks.ts` |
 | Avatar | `ProfileAvatarPicker.tsx` · Storage `avatars` |
 | Crew | `useCrew` · `lib/crew.ts` |
-| Stats | `AthleteStatsTab.tsx` · `useAthleteStats` |
+| Stats | `AthleteStatsTab.tsx` · `useAthleteStats` (visibility: `athlete_stats_visible()` RLS gate) |
 | Vault | `VaultLockCard.tsx` · `lib/vault.ts` |
 | Wishlist | `LockerRoomWishlist.tsx` (Chip In = `COMMERCE` + `AUTH`) |
 | Varsity | `VerifyAthleteModal.tsx` · `lib/verification.ts` · `VarsityBadge.tsx` |
 | QR | `ShareQrModal.tsx` · `/gift/[handle]` |
 | Legal | `Legal/LegalModal.tsx` · `lib/legal.ts` |
 | Chrome flags | `PROFILE_CHROME_FLAGS` · Look / Next Profile |
+
+**Note:** `profiles_public` is scoped to `bio`/`social_links`/`school_visible` only — it does not close the still-open `docs/ROADMAP.md` Phase 0 item 4 concern about the base `profiles` table's public grant exposing `stripe_connect_id` and other status columns.
 
 **Do not:** Change tip amounts or Connect onboarding (`COMMERCE`). Do not auto-set Varsity on school claim. Do not split own Profile into a second layout.
 
@@ -163,7 +166,7 @@ These four roles already exist. They do not own a tab by themselves — they sta
 **Call:** `COMMERCE`  
 **Fan:** Mālo sheets · `/drip` · Wishlist Chip In · `/receipts` · `/gift/[handle]` · `PayoutSetupCard`  
 **Admin:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers)  
-**What it does:** Stripe **test** PaymentSheet. Mālo $5 / $10 / $25 / Custom → `tips` + 10 Aura per tip dollar. Exclusive subscribe +100 Aura. Drip Buy Now. Wishlist Chip In. Connect Express (JWT Edge `create-stripe-account` only). Custodial payout from `profiles.stripe_connect_id`. Legal ack required before Connect and Varsity apply.
+**What it does:** Stripe **test** PaymentSheet. Mālo $5 / $10 / $25 / Custom → one `tips` row (where it started: Highlight, QR link, wishlist item, profile, or live play) + 10 Aura per tip dollar. Exclusive subscribe +100 Aura. Drip Buy Now. Wishlist Chip In writes that same `tips` row, then `chip_in_wishlist_item` only moves the item total. Connect Express (JWT Edge `create-stripe-account` only). Custodial payout from `profiles.stripe_connect_id`. Legal ack required before Connect and Varsity apply. The prototype terms (`LEGAL_TERMS_VERSION`) and the Mālo sheet say we keep that gift record and use it for receipts, athlete accounting, and to see which parts of the app bring in support.
 
 | Function | Where |
 | --- | --- |

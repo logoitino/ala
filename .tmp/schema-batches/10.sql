@@ -203,7 +203,8 @@ begin
     'malo',
     'malo',
     t.id::text,
-    'Mālo · ' || coalesce(nullif(p.name, ''), 'Athlete'),
+    'Mālo · ' || public.tip_origin_label(t.origin, t.entry, t.source_label)
+      || ' · ' || coalesce(nullif(p.name, ''), 'Athlete'),
     'athlete',
     t.player_id,
     t.amount_cents,
@@ -339,7 +340,7 @@ begin
       new.amount_cents,
       'athlete',
       new.player_id,
-      'Mālo',
+      'Mālo · ' || public.tip_origin_label(new.origin, new.entry, new.source_label),
       new.created_at
     );
   elsif tg_table_name = 'sponsorships' then
