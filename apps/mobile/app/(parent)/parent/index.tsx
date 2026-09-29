@@ -1,25 +1,33 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { Stack } from 'expo-router';
 
+import { GuardianCustodialCard } from '@/components/Custodial/GuardianCustodialCard';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useAuth } from '@/context/AuthContext';
 import { telemetry } from '@/services/TelemetryManager';
-import { COMPLIANCE_PARENT, COMPLIANCE_PAYOUT } from '@/data/legal';
+import { COMPLIANCE_PARENT } from '@/data/legal';
 import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useRoster } from '@/hooks/useRoster';
-import { requestPayout } from '@/lib/payouts';
 import { supabase } from '@/lib/supabase';
 
 export default function ParentHomeScreen() {
   const { live } = useAppRuntime();
-  const { players, setPlayers } = useRoster();
+  const { profile } = useAuth();
+  const { players: roster, setPlayers } = useRoster();
+  // Owner rule 2026-09-29: a guardian sees only the athletes linked to them (`players.guardian_id`,
+  // set by an admin after verification), never the whole roster.
+  const players = useMemo(
+    () => (profile?.id ? roster.filter((player) => player.guardian_id === profile.id) : []),
+    [profile?.id, roster],
+  );
   const pending = usePendingPlayerTags();
   const [busy, setBusy] = useState(false);
 
@@ -61,30 +69,6 @@ export default function ParentHomeScreen() {
     }
   };
 
-  const setupPayout = async () => {
-    Alert.alert('Not a live payout', COMPLIANCE_PAYOUT, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Continue', onPress: () => void sendPayout() },
-    ]);
-  };
-
-  const sendPayout = async () => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      telemetry.trackFeature('parent_payout', 'parent');
-      const result = await requestPayout({
-        amountCents: 2500,
-        description: "Parent custodial payout setup",
-      });
-      Alert.alert('Custodial payout', result.message);
-    } catch (error) {
-      Alert.alert('Payout setup failed', error instanceof Error ? error.message : 'Unknown error');
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <ScreenShell>
       <Stack.Screen options={{ title: 'Parent' }} />
@@ -107,6 +91,11 @@ export default function ParentHomeScreen() {
           body={COMPLIANCE_PARENT}
         >
           <View style={styles.list}>
+            {players.length === 0 ? (
+              <Text style={styles.muted}>
+                No athletes are linked to you yet. Tapua'i links a guardian after checking who they are.
+              </Text>
+            ) : null}
             {players.map((player) => {
               const approved = Boolean(player.parental_consent_approved);
               return (
@@ -134,14 +123,9 @@ export default function ParentHomeScreen() {
             })}
           </View>
         </DashboardPanel>
-        <Pressable
-          accessibilityRole="button"
-          disabled={busy}
-          onPress={() => void setupPayout()}
-          style={styles.primary}
-        >
-          <Text style={styles.primaryLabel}>Set up Stripe custodial payout</Text>
-        </Pressable>
+        {players.map((player) => (
+          <GuardianCustodialCard key={player.id} playerId={player.id} />
+        ))}
       </ScrollView>
     </ScreenShell>
   );
@@ -191,16 +175,5 @@ const styles = StyleSheet.create({
   },
   chipLabelOn: {
     color: colors.onAccent,
-  },
-  primary: {
-    backgroundColor: colors.deepGreen,
-    borderRadius: radii.md,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  primaryLabel: {
-    color: colors.onAccent,
-    fontWeight: '800',
-    fontSize: 16,
   },
 });
