@@ -1,6 +1,6 @@
 # Tapua'i architecture
 
-System overview for the pnpm monorepo. Schema detail: [SCHEMA.md](SCHEMA.md). Product numbers: [PRODUCT_FACTS.md](PRODUCT_FACTS.md). Engineer map: [../DOCUMENTATION.md](../DOCUMENTATION.md). Who owns each tab: [TEAMS.md](TEAMS.md).
+Current state and hand-off: [STATE.md](STATE.md) (read first). System overview for the pnpm monorepo. Schema detail: [SCHEMA.md](SCHEMA.md). Product numbers: [PRODUCT_FACTS.md](PRODUCT_FACTS.md). Engineer map: [../DOCUMENTATION.md](../DOCUMENTATION.md). Who owns each tab: [TEAMS.md](TEAMS.md).
 
 ## Monorepo map
 
@@ -24,18 +24,18 @@ apps/admin-portal ─┘
 
 ## Runtime responsibilities
 
-- **Mobile (Expo):** Highlights ⚡, Local, Spotlight, Drip, Profile (same `AthleteProfileView` as `/user/[id]`; hamburger on own hub), Mālo PaymentSheet, Soft-Wall auth (browse-first guests), operator console (Features-gated), and the live **Admin** desks under `app/(admin)/admin` (Coverage Soft-Wall + Profile surfaces, Features Soft-Wall board, Look Profile chrome, People Fans filter).
-- **Admin portal (Next):** Web app at `pnpm admin` → `http://localhost:3001`. **Reports** (`/reports`, `get_admin_reports`) and **Money** (`/money`, `get_company_revenue_summary` and `get_admin_malo_breakdown`) are the browser desks for behavior, the company ledger, and each Mālo by surface. Soft-Wall / Profile / Features / People stay on this plane; Features Publish copies onto `published`. Edit games, Drip SKUs, sports, and catalogs in Expo `/admin`.
+- **Mobile (Expo):** Highlights ⚡, Activity, Spotlight, Drip, Profile (same `AthleteProfileView` as `/user/[id]`; hamburger on own hub; Local is a pill on Highlights), Donate PaymentSheet (code name Mālo; discloses 90 / 10, optional tip for Tapua'i), Rally goals and preset Say thanks (`components/Rally/`, `components/Thanks/`), custodial money cards (`components/Custodial/`), athlete verification (`components/Verification/`), Soft-Wall auth (browse-first guests), operator console (Features-gated), and the live **Admin** desks under `app/(admin)/admin` (Coverage Soft-Wall + Profile surfaces, Features Soft-Wall board, Look Profile chrome, People Fans filter).
+- **Admin portal (Next):** Web app at `pnpm admin` → `http://localhost:3001`. **Reports** (`/reports`, `get_admin_reports`) and **Money** (`/money`, `get_company_revenue_summary` and `get_admin_malo_breakdown`) are the browser desks for behavior, the company ledger, and each donation by surface. Soft-Wall / Profile / Features / People stay on this plane; Features Publish copies onto `published`. Edit games, Drip SKUs, sports, and catalogs in Expo `/admin`.
 - **Departments:** Call a named owner from [TEAMS.md](TEAMS.md) (`HIGHLIGHTS`, `PROFILE`, `COMMERCE`, …) instead of handing a tab to “Mobile” in the abstract.
 - **Shared types:** Import `@tapuai/shared-types` (or `@shared/*`) for cross-app domain types, including `SOFT_WALL_GATES` / `SoftWallOversight`. Mobile keeps the full generated `Database` helpers in `apps/mobile/src/frontend/types/database.ts`.
-- **Auth:** Supabase session + `alasports://auth/callback`. Soft wall on Mālo / Crew / Chip In only; fan profile via `handle_new_auth_user` + `ensureFanProfile`.
+- **Auth:** Supabase session + `alasports://auth/callback`. Soft wall on Donate / Crew / gear-goal donate only; fan profile via `handle_new_auth_user` + `ensureFanProfile`.
 
 ## Data model (ERD pointer)
 
 Canonical tables and RPCs live in `apps/mobile/src/backend/db/schema.sql` and are documented in [SCHEMA.md](SCHEMA.md). Core loops:
 
 1. `reels` + Storage `reels` (fallback `game_highlights`) → Highlights feed.
-2. `tips` + JWT-gated Stripe PaymentIntent → Mālo → `add_user_aura`. Each `tips` row names where the gift started (`origin`: highlight, qr, wishlist item, profile, or live; `entry`: in_app or qr_link).
+2. `tips` + JWT-gated Stripe PaymentIntent → donation → `add_user_aura`. Each `tips` row names where the donation started (`origin`: highlight, qr, wishlist item, profile, live or rally; `entry`: in_app or qr_link), and carries `platform_tip_cents` (optional tip for Tapua'i) and `rally_id`. `rallies` totals move from those rows; `donation_thanks` holds preset thank-yous (migration `20260929180000`, not applied).
 3. `profiles.aura_points` → 7-tier Aura card + Top Boosters.
 4. `games` / `game_events` Realtime → Local live scores.
 5. `spotlight_awards` → Spotlight tab / launch modal.

@@ -16,14 +16,14 @@ Commands: `pnpm mobile` · `pnpm admin` · `pnpm typecheck` · `pnpm docs:check`
 
 ## Soft-Wall (browse-first)
 
-Guests browse Highlights / cards / wishlist. **Mālo · Join Crew · Chip In** → `SoftWallModal` (email+password Sign in, Demo Fan, Apple, Google, Magic Link) → resume. Operator stays Features-gated (`layouts.operatorConsole` default off). Oversight: Expo Coverage Soft-Wall surface + Next `/auth` + Features Soft-Wall group. Department: `AUTH`.
+Guests browse Highlights / cards / wishlist. **Donate · Join Crew · gear-goal donate** → `SoftWallModal` (email+password Sign in, Demo Fan, Apple, Google, Magic Link) → resume. Operator stays Features-gated (`layouts.operatorConsole` default off). Oversight: Expo Coverage Soft-Wall surface + Next `/auth` + Features Soft-Wall group. Department: `AUTH`.
 
 ## Clean Profile hierarchy (2026-09-15)
 
 1. **Hamburger** `ProfileMenuSheet` — Sign in/out, Account Capability, Suggest, Receipts, Admin, Flip Aura card, Payouts (own Profile only).
 2. **Hero** — large circular avatar (tier ring + jersey); Flip Aura card is secondary (menu / Flip control), gated by `profile.showCard`.
 3. **Slim Crew · Squad** strip (`profile.showCrew`).
-4. Drop Mālo / Subscribe row.
+4. Drop Donate / Subscribe row.
 5. **Highlights collage** first (default tab); Stats / Vault pills under collage + roster.
 6. **Active Team Roster** — schoolmates; athletes see Claimed / Unclaimed via `profiles.player_id`.
 

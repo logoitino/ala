@@ -1,6 +1,6 @@
 # Tapua'i onboarding
 
-Get a new engineer from clone to Metro (mobile) and the Next admin portal. Architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · [DOCUMENTATION.md](../DOCUMENTATION.md). Schema: [SCHEMA.md](SCHEMA.md). Departments: [TEAMS.md](TEAMS.md).
+**Read [STATE.md](STATE.md) first** — §0 is the hand-off (branch, unapplied SQL, next steps) and §3 lists this Mac's environment traps (npm registry blocked, `--watchman=false`, no Simulator taps). Get a new engineer from clone to Metro (mobile) and the Next admin portal. Architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · [DOCUMENTATION.md](../DOCUMENTATION.md). Schema: [SCHEMA.md](SCHEMA.md). Departments: [TEAMS.md](TEAMS.md).
 
 Expo **SDK 57**: [https://docs.expo.dev/versions/v57.0.0/](https://docs.expo.dev/versions/v57.0.0/).
 
@@ -54,7 +54,7 @@ STRIPE_SECRET_KEY=sk_test_your_secret_key
 
 ### Soft-Wall auth (Supabase Dashboard)
 
-Browse-first guests can open Highlights, cards, and Locker Room without an account. **Mālo**, **Join Crew**, and **Chip In** open `SoftWallModal` (Apple / Google / Magic Link), then resume the intercepted action.
+Browse-first guests can open Highlights, cards, and Locker Room without an account. **Donate**, **Join Crew**, and gear-goal donate open `SoftWallModal` (Apple / Google / Magic Link), then resume the intercepted action.
 
 1. Authentication → Providers: enable **Email** (magic link and email sign-up), **Apple**, and **Google**. A Google tap that shows `400` / `validation_failed` means the Google provider toggle is still off — the app never receives an account. Paste the Google Cloud OAuth client id and secret, and allow redirect `alasports://auth/callback`.
 2. Authentication → URL Configuration: add redirect `alasports://auth/callback` (and the Expo Go / web redirect AuthSession prints if you test those hosts).
@@ -111,7 +111,7 @@ After changing media buckets, run `supabase/media_upload.sql` so Storage `reels`
 
 ## 5. Docs sync
 
-After changing Mālo prices, Aura tiers, PIN, Connect identity, or Highlight labels:
+After changing donation amounts, the 90 / 10 split, Aura tiers, PIN, Connect identity, or Highlight labels:
 
 ```bash
 pnpm docs:sync

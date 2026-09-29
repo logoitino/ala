@@ -11,6 +11,68 @@ folder law. Do not skip to the code.
 
 ---
 
+## 0. Pick up here (hand-off, 2026-09-29)
+
+**Where the code is.** Branch `wave0-custodial-verification` (`git log --oneline origin/main..HEAD`
+lists what is unpushed — every 2026-09-29 commit). **Nothing is pushed** — the owner has not
+approved a push. The working tree should be clean apart from the ~500 mode-flip files (§3).
+
+**The mission — judge every change against it.** Make donations and highlights easy for families,
+so they can promote their kid and hopefully get them recruited; kids encourage good workouts with
+fans and serve like their favorite player; Tapua'i is the avenue that makes the donating possible.
+It replaces GoFundMe for families. Full text: `docs/ROADMAP.md` North Star, `docs/STORY.md`
+"The mission, in one breath". Money words: `docs/VOICE.md`.
+
+**Nothing from 2026-09-29 is applied to Supabase.** All of it is written, typechecked and
+unit-tested, never parsed by Postgres. The owner must approve before anything touches the live
+project. Apply on staging first, in this order (each file's header lists its rollback):
+
+| # | File | Needs |
+| --- | --- | --- |
+| 1 | `supabase/clear_reel_hype.sql` | — (un-vote persists) |
+| 2 | `supabase/custodial_money.sql` | — |
+| 3 | `supabase/leaderboards.sql` | — |
+| 4 | `supabase/migrations/20260929120000_athlete_verification_ladder.sql` | — (closes the self-verify holes in §5) |
+| 5 | `supabase/migrations/20260929130000_payout_gate_without_school.sql` | 2, 4 |
+| 6 | `supabase/migrations/20260929140000_school_badge.sql` | 4 |
+| 7 | `supabase/migrations/20260929160000_reel_views_and_filmer_credit.sql` | 3 |
+| 8 | `supabase/migrations/20260929170000_filmer_rewards.sql` | 7 |
+| 9 | `supabase/migrations/20260929180000_rally_goals_thanks_platform_tip.sql` | 2, `company_revenue.sql`, `tip_origin.sql` |
+
+`company_revenue.sql` and `tip_origin.sql` are older and believed applied, but nobody on this Mac
+can check. Before step 9, confirm in the SQL Editor:
+`select to_regprocedure('public.tip_origin_label(text,text,text)'), to_regprocedure('public.athlete_controls_money(uuid)');`
+— both must be non-null. After applying, run `docs/TESTER_SCRIPT.md` and move each row out of §5.
+
+**Next up, in order.**
+1. Owner: approve applying the SQL above to a staging project (ROADMAP Phase 2 item 4 — there is no
+   staging project yet; `docs/STAGING_RUNBOOK.md`).
+2. Owner + counsel: the open items in §6 — especially 8 (how money reaches families) and the App
+   Store question in 9. They gate Wave 1 live money.
+3. Engineering, no owner call needed: Rally meter on the Highlights feed and the full-screen fill
+   celebration (ROADMAP M2); "Watch what it paid for" should open that clip, not just the tab;
+   the telemetry anon-insert hole in §5.
+4. Do **not** build without an owner decision: a filmer cash tip jar (LEGAL row P), free-text
+   thank-yous or any athlete ↔ fan messaging (LEGAL row S), a Rally tied to a play or stat.
+
+**Prove the tree is green before you change anything** (all passed at the last commit):
+`cd apps/mobile && ../../node_modules/.bin/tsc --noEmit` · same in `apps/admin-portal` ·
+`cd apps/mobile && ../../node_modules/.bin/jest --watchman=false` (33 suites / 172 tests) ·
+from the root: `node scripts/check-copy.mjs` and `node scripts/sync-front-docs.mjs --check`
+(Node is `~/.local/node/bin`; `pnpm` scripts wrap these but pnpm can't reach the registry here).
+
+**When you finish — the doc checklist.** Code under `apps/` / `packages/` / `supabase/` → a §4
+line here + bump **Last updated**. User-visible → `CHANGELOG.md`. New table / RPC / column →
+migration file + copy onto `schema.sql` + a row in `supabase/migrations/README.md` + `docs/SCHEMA.md`
+(`docs:check` fails otherwise). New folder / hook / lib file → `AGENTS.md` lists. Any on-screen
+money words → `docs/VOICE.md` rules, `copy:check`, and flag it in `docs/LEGAL_BRIEFING.md` (LEGAL
+owns money copy). Price / split / Aura / Connect changes → `node scripts/sync-front-docs.mjs`
+(regenerates `PRODUCT_FACTS.md` and blocks in PUBLIC / INVESTOR / LEGAL). Roadmap status →
+`docs/ROADMAP.md`. Owner decisions → §6 here, plus ROADMAP / STORY if they change the plan or the story. New tester
+steps → `docs/TESTER_SCRIPT.md`. Commit by path (never `git add -A`); do not push.
+
+---
+
 ## 1. Working agreement — every agent must follow this
 
 **Before you start:** read this file. Check §5 (Known broken) so you do not "fix" something
@@ -42,7 +104,7 @@ Polynesian-inspired fan and athlete hub. pnpm monorepo:
 - `apps/mobile` — Expo Router SDK 57 app (Highlights ⚡ / Activity / Spotlight / Drip / Profile)
   plus the production Expo `/admin` control plane. **All admin writes happen here.**
 - `apps/admin-portal` — Next.js 15 oversight desk on `:3001`. **Deliberately read-only** —
-  8 real pages (Overview / Reports / Money / Soft-Wall / Profile / Features / People). This is
+  7 real pages (Overview / Reports / Money / Soft-Wall / Profile / Features / People). This is
   a standing decision, not an unfinished state. Reconfirmed 2026-09-28.
 - `packages/shared-types` — `@tapuai/shared-types`.
 - `supabase/` — SQL applied by hand to the live project. `apps/mobile/src/backend/db/schema.sql`
@@ -88,6 +150,15 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-09-29** — Hand-off docs (owner: make sure the next AI can pick up and keep the docs
+  current). New §0 here: branch, SQL apply order with dependencies and a pre-flight query, next
+  steps, what not to build without the owner, green-tree commands, and a doc checklist. §2 page
+  count fixed (7), §5 push row, §7 lists VOICE / LEGAL / PUBLIC / INVESTOR / COMPANY_PHASES /
+  CONVENTIONS. Stale money words fixed in DOCUMENTATION (executive summary said "Mālo micro-tipping"),
+  README, ARCHITECTURE, ONBOARDING, ALA_TEAM_BRIEF, COMPANY_PHASES (still said no fee in fan UI), and
+  the COMMERCE / AUTH / PROFILE / QA agents (QA now checks the split disclosure, No-tip default and
+  presets-only thanks). `sync-front-docs.mjs` "Admin donation rake … control plane only" → "Donation
+  split … disclosed". `supabase/migrations/README.md` points at §0 for apply order. Docs only.
 - **2026-09-29** — M2 Rally goals, Say thanks, fee model (owner: keep the 10% and disclose it on the
   sheet, GoFundMe-style optional tip for Tapua'i at checkout; athletes are encouraged to thank donors).
   Migration `20260929180000_rally_goals_thanks_platform_tip.sql` (not applied; needs
@@ -263,10 +334,6 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   `AGENTS.md` corrected — it listed 13 components at paths they had already moved away from, named
   a `MaloTipModal` that does not exist, and omitted the six role-group route trees,
   `src/backend/services/`, and `api/session.ts`.
-- **2026-09-28** — `docs/STATE.md` created as the read-first entry point. `CLAUDE.md` imports it,
-  `AGENTS.md`/`README.md`/`.cursor/rules` point at it, CI fails a PR that changes
-  `apps/`/`packages/`/`supabase/` without updating it, and `scripts/state-doc-guard.sh` is a
-  Claude Code Stop hook covering local agents that never open a PR.
 
 ---
 
@@ -283,7 +350,7 @@ Do not re-diagnose these. Fix them or leave them.
 | Storage buckets `reels` / `game_highlights` / `avatars` are public | Vault-locked video is directly downloadable, bypassing entitlement. Accepted for internal testing only — ROADMAP Phase 5 hard blocker. |
 | `auth.role() = 'anon'` bypass on 8+ tables | Studio Unlock and Operator PIN have no real session. Accepted for internal testing, **not** for public beta. |
 | No staging Supabase project | ROADMAP Phase 2 item 4 — the remaining blocker before tester rollout. |
-| `main` is ahead of `origin/main` | Pushing needs interactive GitHub auth. |
+| Nothing pushed | `wave0-custodial-verification` is well ahead of `origin/main` (local `main` is also ahead). Pushing needs owner approval and interactive GitHub auth. |
 | Self-verify holes — **fixed in SQL, not applied** | On the live DB today: `profiles.player_id`, `is_verified` and `verification_status` are client-writable (no column guard on "Users update own profile"), so any signed-in user can mark themselves verified and self-link to any athlete; a shared team code verifies instantly; admin approval stamps every profile with the same name. The client no longer does any of this, but the database still allows it until `supabase/migrations/20260929120000_athlete_verification_ladder.sql` is applied. ROADMAP Wave 1 blocker. |
 | Held gifts have no cap or refund yet | Gifts to an unverified athlete are "held" only because payouts are 503. The design's ~$250 cap and 30-day refunds need the Phase 1a ledger. Future payout code must call `athlete_payout_allowed`. |
 | School confirm link needs the app | `alasports://school-confirm` opens only where Tapua'i is installed (Edge Functions can't serve HTML on the default domain). A web page for staff without the app is not built. Confirmers are added from the SQL Editor — no admin UI yet. |
@@ -355,3 +422,9 @@ Do not re-diagnose these. Fix them or leave them.
 | `docs/TEAMS.md` · `.claude/agents/*.md` | Department ownership and dispatch. |
 | `.cursor/rules/documentation.mdc` | The full doc-sync obligation table. |
 | `TROUBLESHOOTING.md` | Metro / Expo / env failures. |
+| `docs/VOICE.md` · `.claude/agents/voice.md` | Donation language rules (Donate / donation; "tip" only for the tip for Tapua'i). `copy:check` enforces the retired words. |
+| `docs/LEGAL_BRIEFING.md` | Every legal / money-copy risk as a lettered row (L = the 90 / 10 disclosure, P = filmer cash, R = optional tip, S = preset thank-yous, T = Rally). LEGAL owns money copy. |
+| `docs/PUBLIC.md` · `docs/INVESTOR.md` · `docs/PRODUCT_FACTS.md` | Public / investor story. `PRODUCT_FACTS.md` and the `product-facts` blocks are **generated** by `scripts/sync-front-docs.mjs` — do not hand-edit them. |
+| `docs/COMPANY_PHASES.md` | Company phases, billing plan B0–B7 (when money becomes real). |
+| `docs/PARENT_PAYEE_CONNECT_DESIGN.md` | Guardian-as-payee and custodial money rules (§7). |
+| `docs/CONVENTIONS.md` | Naming and where files go. |

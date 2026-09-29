@@ -43,6 +43,9 @@ The baseline's timestamp must sort **before** `20260929120000`.
 
 ## Files
 
+Apply order, including the standalone `supabase/*.sql` files these depend on, and a pre-flight
+check: `docs/STATE.md` §0.
+
 | File | What | Applied? |
 | --- | --- | --- |
 | `20260929120000_athlete_verification_ladder.sql` | School-confirmed athlete verification: claims go to "pending", the athletic director or coach confirms in person with a 6-digit code; closes the self-verify and name-match holes. [Design](../../docs/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Staging first. No dependency on the other unapplied files |

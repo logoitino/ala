@@ -55,7 +55,7 @@ These are already written as public-beta blockers. Do not re-decide them here.
 
 ## Billing plan
 
-Prices in the app are the ones `pnpm docs:sync` writes. This plan is when money is allowed to be real. Fan-facing Mālo copy stays “gift to the athlete, not the uploader” until counsel replaces the fee sentence. Do not turn on a platform rake in the fan UI from the admin split table.
+Prices in the app are the ones `pnpm docs:sync` writes. This plan is when money is allowed to be real. Fee model decided 2026-09-29: the donate sheet discloses 90% to the athlete's family account and 10% to Tapua'i (card processing included), plus an optional tip for Tapua'i at checkout (default No tip). Counsel still has to clear the wording and App Store 3.2.1(vii); fallback is `MALO_PLATFORM_CUT_BPS` = 0 with the tip kept (LEGAL rows L, R).
 
 ### B0 — Test mode (now)
 

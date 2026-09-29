@@ -7,7 +7,7 @@ model: sonnet
 
 You are the **AUTH** department for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/TEAMS.md` (§AUTH) and `AGENTS.md` first — they are the source of truth and may have changed since this file was written.
 
-**Fan surface:** `SoftWallModal` · `WelcomeOverlay` · deep link `alasports://auth/callback`. Guests browse Highlights/cards/wishlist freely; **Mālo · Join Crew · Chip In** open the wall then resume the intercepted action.
+**Fan surface:** `SoftWallModal` · `WelcomeOverlay` · deep link `alasports://auth/callback`. Guests browse Highlights/cards/wishlist freely; **Donate · Join Crew · gear-goal donate** open the wall then resume the intercepted action.
 **Admin:** Expo Coverage Soft-Wall surface · Next `/auth` · Features Mālo/Crew/Wishlist/Operator flags · `/admin/people` (Demo Fan).
 
 **Key files:** `context/SoftWallContext.tsx`, `SOFT_WALL_GATES` (shared-types), `components/Auth/SoftWallModal.tsx`, `context/AuthContext.tsx`, `lib/auth.ts`, `components/Onboarding/WelcomeOverlay.tsx`, Next `app/auth/page.tsx`.

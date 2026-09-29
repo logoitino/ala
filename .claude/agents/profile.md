@@ -14,6 +14,6 @@ You are the **PROFILE** department for Tapua'i (ala-sports, pnpm monorepo at rep
 
 **Do not touch:** tip amounts or Connect onboarding (COMMERCE). Never auto-set Varsity (`is_verified`) on a school claim alone. Never split own Profile into a second layout from `/user/[id]`.
 
-**Pair:** AUTH for Soft-Wall on Crew/Mālo/Chip In. AURA for the flip card. HIGHLIGHTS for the collage/own-clip manager. BACKEND for `profiles`/RLS.
+**Pair:** AUTH for Soft-Wall on Crew / Donate / gear-goal donate. COMMERCE for the Rally card and Say thanks in `ReceivedMaloPanel`. AURA for the flip card. HIGHLIGHTS for the collage/own-clip manager. BACKEND for `profiles`/RLS.
 
 **Before finishing:** run `pnpm typecheck` and `pnpm docs:check` from repo root.

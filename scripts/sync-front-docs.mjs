@@ -195,7 +195,7 @@ const legalBlock = `${START}
 | --- | --- |
 | Donation amounts | ${tipLabel} + custom (\`TIP_AMOUNTS\`) |
 | In-app claim | ${maloDisclaimer} |
-| Admin donation rake | ${bpsLabel(maloCutBps)} platform / ${bpsLabel(10000 - maloCutBps)} athlete (\`MALO_PLATFORM_CUT_BPS\`) — control plane only |
+| Donation split | ${bpsLabel(maloCutBps)} platform / ${bpsLabel(10000 - maloCutBps)} athlete's family account (\`MALO_PLATFORM_CUT_BPS\`), disclosed on the donate sheet; the optional tip for Tapua'i is separate and 100% platform (rows L, R) |
 | Exclusive | ${dollars(exclusiveDollars)}; +${exclusiveAura} Aura (\`EXCLUSIVE_MONTHLY_DOLLARS\`) |
 | Boosters | ${boosterLabel} (\`SPONSOR_TIERS\`) |
 | Stripe Express | ${connectIndividual && connectCountryUs ? 'US individual' : 'see handler'} (\`createStripeAccount.ts\`) |
