@@ -12,7 +12,7 @@ import Reanimated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { VaultLockedCard } from '@/components/ExclusivePaywall';
+import { VaultLockedCard } from '@/components/Profile/ExclusivePaywall';
 import { AthleteReelManager } from '@/components/Profile/AthleteReelManager';
 import { AthleteStatsTab } from '@/components/Profile/AthleteStatsTab';
 import { AuraTradingCard } from '@/components/Profile/AuraTradingCard';
@@ -23,7 +23,7 @@ import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { SubscriberQnA } from '@/components/Profile/SubscriberQnA';
 import { TeamRosterStrip } from '@/components/Profile/TeamRosterStrip';
 import { VaultLockCard } from '@/components/Profile/VaultLockCard';
-import { TaggedReelGrid } from '@/components/TaggedReelGrid';
+import { TaggedReelGrid } from '@/components/Profile/TaggedReelGrid';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';

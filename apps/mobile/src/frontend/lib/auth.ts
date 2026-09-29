@@ -24,6 +24,28 @@ export const DEMO_FAN_NAME = 'Demo Fan';
 export const MIN_PASSWORD_LENGTH = 8;
 
 /**
+ * @purpose Which buttons the Soft-Wall email form may enable, for a given field state.
+ * @remarks The 13+ checkbox is a COPPA attestation for accounts being *created*, so it gates
+ * Create account and magic link (`signInWithOtp` mints a user when none exists) but never
+ * Sign in — gating sign-in would retroactively lock out email accounts that already exist,
+ * which `signInWithEmailPassword` is explicitly built not to do (it takes the flag as an
+ * optional bootstrap fallback only). Kept here, not inline in `SoftWallModal`, so the rule
+ * is covered by tests.
+ */
+export function softWallEmailGates(
+  email: string,
+  password: string,
+  ageConfirmed13Plus: boolean,
+): { canSignIn: boolean; canCreate: boolean; canMagic: boolean } {
+  const hasEmail = Boolean(email.trim());
+  return {
+    canSignIn: hasEmail && Boolean(password),
+    canCreate: hasEmail && ageConfirmed13Plus && passwordMeetsPolicy(password),
+    canMagic: hasEmail && ageConfirmed13Plus,
+  };
+}
+
+/**
  * @purpose True when a password is long enough to create an account. Sign-in does not use this.
  */
 export function passwordMeetsPolicy(password: string): boolean {

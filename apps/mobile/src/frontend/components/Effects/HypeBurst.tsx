@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withDelay,
   withSequence,
@@ -13,42 +14,68 @@ import type { PlayReactionId } from '@/data/players';
 import { HYPE_FX } from '@/theme/hypeFx';
 import { SPRING_BOUNCE } from '@/theme/motion';
 
+// Ten sparks on a rough ring so the pop reads as a burst rather than a few stray emoji.
 const SPARKS = [
-  { dx: -34, dy: -42, delay: 0 },
-  { dx: 30, dy: -46, delay: 40 },
-  { dx: -40, dy: 8, delay: 70 },
-  { dx: 38, dy: 12, delay: 90 },
-  { dx: 4, dy: -56, delay: 20 },
-  { dx: -8, dy: 36, delay: 110 },
+  { dx: -46, dy: -54, delay: 0 },
+  { dx: 42, dy: -58, delay: 30 },
+  { dx: -56, dy: 6, delay: 60 },
+  { dx: 52, dy: 12, delay: 80 },
+  { dx: 6, dy: -72, delay: 15 },
+  { dx: -12, dy: 48, delay: 100 },
+  { dx: -70, dy: -24, delay: 45 },
+  { dx: 66, dy: -20, delay: 55 },
+  { dx: 30, dy: 46, delay: 120 },
+  { dx: -34, dy: 40, delay: 130 },
 ] as const;
 
 type HypeBurstProps = {
   kind: PlayReactionId;
   /** Serve Like Me double-tap — bigger ring and ⚡2×. */
   boosted?: boolean;
+  /** Multiplies the whole burst. The chip rail passes >1 so the pop clears the 48pt button. */
+  scale?: number;
   onDone: () => void;
 };
 
 /**
- * @purpose Fun particle pop for Seki 🤙 / Aura ⚡ / Flex 💪 — flying emoji, shout label, and a colored ring.
+ * @purpose Fun particle pop for Seki 🤙 / Aura ⚡ / Flex 💪 — flying emoji, a shout label, and a
+ * double shockwave ring. Sized to read clearly over full-screen video.
  * @param kind Which Highlights hype kind was tapped or double-tapped.
  * @param boosted Serve Like Me 2× Aura burst.
+ * @param scale Overall multiplier; the chip rail uses 1.35 so the burst escapes the button.
  * @returns Overlay centered in its parent; parent must be `pointerEvents="none"`.
- * @sideEffects Reanimated springs/timings only. Parent removes the node via `onDone` (~720ms).
+ * @sideEffects Reanimated springs/timings only. Parent removes the node via `onDone` (~860ms).
+ * Reduced Motion collapses this to a single quick fade so the tap still confirms itself.
  */
-export function HypeBurst({ kind, boosted = false, onDone }: HypeBurstProps) {
+export function HypeBurst({ kind, boosted = false, scale = 1, onDone }: HypeBurstProps) {
   const fx = HYPE_FX[kind];
-  const ring = useSharedValue(0.45);
-  const ringOp = useSharedValue(0.9);
-  const shout = useSharedValue(0.4);
+  const reduceMotion = useReducedMotion();
+  const ring = useSharedValue(0.4);
+  const ringOp = useSharedValue(0.95);
+  const wave = useSharedValue(0.3);
+  const waveOp = useSharedValue(0.7);
+  const shout = useSharedValue(0.35);
   const shoutOp = useSharedValue(1);
 
   useEffect(() => {
-    ring.value = withSpring(boosted ? 1.7 : 1.35, SPRING_BOUNCE);
-    ringOp.value = withTiming(0, { duration: 640 });
-    shout.value = withSequence(withSpring(1.18, SPRING_BOUNCE), withTiming(1, { duration: 180 }));
-    shoutOp.value = withDelay(280, withTiming(0, { duration: 360 }));
-    const timer = setTimeout(onDone, boosted ? 820 : 720);
+    const life = reduceMotion ? 420 : boosted ? 960 : 860;
+
+    if (reduceMotion) {
+      ringOp.value = withTiming(0, { duration: 360 });
+      waveOp.value = 0;
+      shout.value = 1;
+      shoutOp.value = withDelay(140, withTiming(0, { duration: 260 }));
+    } else {
+      ring.value = withSpring(boosted ? 2.1 : 1.7, SPRING_BOUNCE);
+      ringOp.value = withTiming(0, { duration: 700 });
+      // Second, slower ripple chasing the first — this is what makes the hit land.
+      wave.value = withDelay(90, withSpring(boosted ? 2.9 : 2.35, SPRING_BOUNCE));
+      waveOp.value = withDelay(90, withTiming(0, { duration: 720 }));
+      shout.value = withSequence(withSpring(1.3, SPRING_BOUNCE), withTiming(1.08, { duration: 200 }));
+      shoutOp.value = withDelay(360, withTiming(0, { duration: 400 }));
+    }
+
+    const timer = setTimeout(onDone, life);
     return () => clearTimeout(timer);
     // Mount-only; `onDone` unmounts this instance.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,24 +88,35 @@ export function HypeBurst({ kind, boosted = false, onDone }: HypeBurstProps) {
     shadowColor: fx.color,
   }));
 
-  const shoutStyle = useAnimatedStyle(() => ({
-    opacity: shoutOp.value,
-    transform: [{ scale: shout.value }, { translateY: (1 - shout.value) * -12 }],
+  const waveStyle = useAnimatedStyle(() => ({
+    opacity: waveOp.value,
+    transform: [{ scale: wave.value }],
+    borderColor: fx.glow,
   }));
 
+  const shoutStyle = useAnimatedStyle(() => ({
+    opacity: shoutOp.value,
+    transform: [{ scale: shout.value }, { translateY: (1 - shout.value) * -16 }],
+  }));
+
+  const sizeScale = scale * (boosted ? 1.15 : 1);
+
   return (
-    <View pointerEvents="none" style={styles.box}>
+    <View pointerEvents="none" style={[styles.box, { transform: [{ scale: sizeScale }] }]}>
+      <Animated.View style={[styles.wave, waveStyle]} />
       <Animated.View style={[styles.ring, boosted && styles.ringBoost, ringStyle]} />
-      {SPARKS.map((spark, index) => (
-        <HypeSpark
-          key={index}
-          dx={spark.dx * (boosted ? 1.25 : 1)}
-          dy={spark.dy * (boosted ? 1.2 : 1)}
-          delay={spark.delay}
-          emoji={fx.emojis[index % fx.emojis.length]}
-          color={fx.color}
-        />
-      ))}
+      {!reduceMotion
+        ? SPARKS.map((spark, index) => (
+            <HypeSpark
+              key={index}
+              dx={spark.dx * (boosted ? 1.2 : 1)}
+              dy={spark.dy * (boosted ? 1.15 : 1)}
+              delay={spark.delay}
+              emoji={fx.emojis[index % fx.emojis.length]}
+              color={fx.color}
+            />
+          ))
+        : null}
       <Animated.Text style={[styles.shout, { color: fx.color }, shoutStyle]}>
         {boosted && kind === 'aura' ? '⚡2×' : fx.shout}
       </Animated.Text>
@@ -102,23 +140,30 @@ function HypeSpark({
   const x = useSharedValue(0);
   const y = useSharedValue(0);
   const op = useSharedValue(0);
-  const scale = useSharedValue(0.35);
+  const scale = useSharedValue(0.3);
+  const spin = useSharedValue(0);
 
   useEffect(() => {
     op.value = withDelay(delay, withTiming(1, { duration: 70 }));
     x.value = withDelay(delay, withSpring(dx, SPRING_BOUNCE));
-    y.value = withDelay(delay, withTiming(dy, { duration: 540 }));
+    y.value = withDelay(delay, withTiming(dy, { duration: 620 }));
+    spin.value = withDelay(delay, withTiming(dx > 0 ? 26 : -26, { duration: 620 }));
     scale.value = withDelay(
       delay,
-      withSequence(withSpring(1.28, SPRING_BOUNCE), withTiming(0.55, { duration: 260 })),
+      withSequence(withSpring(1.5, SPRING_BOUNCE), withTiming(0.6, { duration: 300 })),
     );
-    op.value = withDelay(delay + 400, withTiming(0, { duration: 200 }));
+    op.value = withDelay(delay + 470, withTiming(0, { duration: 240 }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const style = useAnimatedStyle(() => ({
     opacity: op.value,
-    transform: [{ translateX: x.value }, { translateY: y.value }, { scale: scale.value }],
+    transform: [
+      { translateX: x.value },
+      { translateY: y.value },
+      { scale: scale.value },
+      { rotate: `${spin.value}deg` },
+    ],
   }));
 
   return (
@@ -138,32 +183,39 @@ const styles = StyleSheet.create({
   },
   ring: {
     position: 'absolute',
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 3,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 4,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.95,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowRadius: 22,
+    elevation: 10,
   },
   ringBoost: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+  },
+  wave: {
+    position: 'absolute',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
   },
   shout: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '900',
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 8,
-    textShadowColor: 'rgba(0,0,0,0.55)',
+    textShadowRadius: 10,
+    textShadowColor: 'rgba(0,0,0,0.6)',
   },
   spark: {
     position: 'absolute',
-    fontSize: 18,
+    fontSize: 24,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowRadius: 10,
   },
 });

@@ -4,7 +4,15 @@ import { useFocusEffect } from 'expo-router';
 
 import { telemetry } from '@/services/TelemetryManager';
 
-export type UsageSurface = 'home' | 'local' | 'spotlight' | 'drip' | 'profile' | 'upload' | 'other';
+export type UsageSurface =
+  | 'home'
+  | 'local'
+  | 'activity'
+  | 'spotlight'
+  | 'drip'
+  | 'profile'
+  | 'upload'
+  | 'other';
 
 /**
  * @purpose Measure tab dwell, max scroll depth, feature taps, and control failures for `/admin/reports` Usage.

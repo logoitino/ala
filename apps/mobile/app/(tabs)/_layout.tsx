@@ -38,7 +38,12 @@ function FanTabs() {
         }}
       >
         <Tabs.Screen name="index" options={{ title: 'Home', tabBarLabel: 'Home', href: live.tabs.home ? undefined : null }} />
-        <Tabs.Screen name="local" options={{ title: 'Local', tabBarLabel: 'Local', href: live.tabs.local ? undefined : null }} />
+        {/* Local is reachable from the Highlights pill row now, so it is routable but not a bar item. */}
+        <Tabs.Screen name="local" options={{ title: 'Local', href: null }} />
+        <Tabs.Screen
+          name="activity"
+          options={{ title: 'Activity', tabBarLabel: 'Activity', href: live.tabs.activity ? undefined : null }}
+        />
         <Tabs.Screen name="spotlight" options={{ title: 'Spotlight', tabBarLabel: 'Spotlight', href: live.tabs.spotlight ? undefined : null }} />
         <Tabs.Screen name="drip" options={{ title: 'Drip', tabBarLabel: 'Drip', href: live.tabs.drip ? undefined : null }} />
         <Tabs.Screen name="shop" options={{ href: null, title: 'Drip' }} />

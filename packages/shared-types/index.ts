@@ -306,7 +306,8 @@ export const APP_RUNTIME_FLAG_GROUPS: AppRuntimeFlagGroup[] = [
     hint: 'Hide a tab for a campaign. Draft until you hit Publish to app.',
     flags: [
       { path: 'tabs.home', label: 'Home', hint: 'Highlights ⚡ feed' },
-      { path: 'tabs.local', label: 'Local', hint: 'Matches, polls, boosters' },
+      { path: 'tabs.local', label: 'Local', hint: 'Home pill: matches, polls, boosters' },
+      { path: 'tabs.activity', label: 'Activity', hint: 'Mālo received / sent, pending tags' },
       { path: 'tabs.spotlight', label: 'Spotlight', hint: 'Player of the Week board' },
       { path: 'tabs.drip', label: 'Drip', hint: 'Marketplace' },
       { path: 'tabs.profile', label: 'Profile', hint: 'Athlete sheet + hamburger hub' },
@@ -345,6 +346,7 @@ export const APP_RUNTIME_FLAG_GROUPS: AppRuntimeFlagGroup[] = [
       { path: 'layouts.slangGuide', label: 'Slang guide', hint: 'Mālo / Seki explainer on Home' },
       { path: 'layouts.receipts', label: 'Receipts', hint: 'Profile Tip History & Receipts' },
       { path: 'layouts.wishlist', label: 'Locker Room Wishlist', hint: 'Gear funding on Stats 📊' },
+      { path: 'layouts.leaderboards', label: 'Leaderboards', hint: 'Spotlight Boards — hype and views, never Mālo' },
       {
         path: 'layouts.operatorConsole',
         label: 'Operator console',

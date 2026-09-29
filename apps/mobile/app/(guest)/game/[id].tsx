@@ -11,10 +11,10 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { PlayCard, resolveEventPlayer } from '@/components/PlayCard';
 import { LiveMatchBanner } from '@/components/Reels/LiveMatchBanner';
-import { NotificationPrefsBar } from '@/components/NotificationPrefsBar';
-import { PlayerListItem } from '@/components/PlayerListItem';
+import { NotificationPrefsBar } from '@/components/Local/NotificationPrefsBar';
+import { PlayerListItem } from '@/components/Local/PlayerListItem';
 import { ScreenShell } from '@/components/ScreenShell';
-import { TabSwitcher } from '@/components/TabSwitcher';
+import { TabSwitcher } from '@/components/Local/TabSwitcher';
 import { colors, radii } from '@/constants/theme';
 import {
   displayValue,

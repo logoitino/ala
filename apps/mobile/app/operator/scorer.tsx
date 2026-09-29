@@ -3,9 +3,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
-import { GameScoreControls } from '@/components/GameScoreControls';
-import { PlaySentBanner } from '@/components/PlaySentBanner';
-import { ScorerControls } from '@/components/ScorerControls';
+import { GameScoreControls } from '@/components/Operator/GameScoreControls';
+import { PlaySentBanner } from '@/components/Operator/PlaySentBanner';
+import { ScorerControls } from '@/components/Operator/ScorerControls';
 import { ScreenShell } from '@/components/ScreenShell';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import {

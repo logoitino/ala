@@ -30,7 +30,7 @@ import {
 } from '@/data/sponsorships';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { uploadSponsorLogo, type RecordSponsorshipInput } from '@/hooks/useSponsorships';
-import { SPRING_CARD } from '@/theme/motion';
+import { SPRING_CARD, TAB_ACCENTS } from '@/theme/motion';
 import type { SponsorshipTierId } from '@/types/database';
 
 type SponsorshipModalProps = {
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   kicker: {
-    color: colors.primary,
+    color: TAB_ACCENTS.local.color,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,

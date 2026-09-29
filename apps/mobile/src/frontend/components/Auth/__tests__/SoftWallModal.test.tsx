@@ -1,0 +1,119 @@
+import { fireEvent, render, screen } from '@testing-library/react-native';
+
+import { SoftWallModal } from '@/components/Auth/SoftWallModal';
+
+// `mock`-prefixed so Jest's hoisted mock factories below may close over them.
+const mockSignInWithEmailPassword = jest.fn(async () => undefined);
+const mockSignUpWithEmailPassword = jest.fn(async () => undefined);
+const mockSignInWithMagicLink = jest.fn(async () => undefined);
+
+// The sheet only needs to be open and to hand back the auth calls it fires. Everything
+// else stubbed here is a native module or a layout hook with no Node implementation.
+jest.mock('@/context/SoftWallContext', () => ({
+  useSoftWall: () => ({
+    visible: true,
+    intent: { kind: 'signin' as const },
+    presentId: 1,
+    close: jest.fn(),
+  }),
+}));
+
+jest.mock('@/context/AuthContext', () => ({
+  useAuth: () => ({
+    signInWithApple: jest.fn(),
+    signInWithGoogle: jest.fn(),
+    signInWithMagicLink: mockSignInWithMagicLink,
+    signInWithEmailPassword: mockSignInWithEmailPassword,
+    signUpWithEmailPassword: mockSignUpWithEmailPassword,
+    signInWithDemoAccount: jest.fn(),
+  }),
+}));
+
+jest.mock('@/hooks/useSheetFrame', () => ({ useSheetFrame: () => ({ dock: {}, card: {} }) }));
+jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn() } }));
+jest.mock('expo-blur', () => ({ BlurView: 'BlurView' }));
+
+const EMAIL = 'returning@family.com';
+const PASSWORD = 'hunter2password';
+
+// RNTL 14 is async: both `render` and `fireEvent` return promises.
+async function openSheet() {
+  await render(<SoftWallModal />);
+}
+
+async function typeEmail(email = EMAIL) {
+  await fireEvent.changeText(screen.getByPlaceholderText('you@family.com'), email);
+}
+
+async function typePassword(password = PASSWORD) {
+  await fireEvent.changeText(screen.getByPlaceholderText('Password'), password);
+}
+
+const signInButton = () => screen.getByLabelText('Sign in with email and password');
+const createButton = () => screen.getByLabelText('Create an account with email and password');
+const magicButton = () => screen.getByLabelText('Send magic link email');
+// expo-checkbox renders its own checkbox node inside the toggle's Pressable, so match
+// on the accessible name to get the row that actually carries the press handler.
+const ageCheckbox = () =>
+  screen.getByRole('checkbox', { name: 'I confirm I am 13 years of age or older.' });
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
+describe('SoftWallModal email form', () => {
+  it('enables Sign in with the 13+ box unchecked, and actually signs in', async () => {
+    await openSheet();
+    await typeEmail();
+    await typePassword();
+
+    expect(ageCheckbox()).not.toBeChecked();
+    expect(signInButton()).toBeEnabled();
+
+    await fireEvent.press(signInButton());
+    expect(mockSignInWithEmailPassword).toHaveBeenCalledWith(EMAIL, PASSWORD, false);
+  });
+
+  it('keeps Create account disabled until the 13+ box is checked', async () => {
+    await openSheet();
+    await typeEmail();
+    await typePassword();
+
+    expect(createButton()).toBeDisabled();
+
+    await fireEvent.press(ageCheckbox());
+    expect(createButton()).toBeEnabled();
+
+    await fireEvent.press(createButton());
+    expect(mockSignUpWithEmailPassword).toHaveBeenCalledWith(EMAIL, PASSWORD, true);
+  });
+
+  it('keeps the magic link gated too, since signInWithOtp can create the account', async () => {
+    await openSheet();
+    await typeEmail();
+
+    expect(magicButton()).toBeDisabled();
+
+    await fireEvent.press(ageCheckbox());
+    expect(magicButton()).toBeEnabled();
+  });
+
+  it('still requires a password for Sign in', async () => {
+    await openSheet();
+    await typeEmail();
+
+    expect(signInButton()).toBeDisabled();
+    await fireEvent.press(signInButton());
+    expect(mockSignInWithEmailPassword).not.toHaveBeenCalled();
+  });
+
+  it('holds Create account to the 8-character policy while Sign in stays open', async () => {
+    await openSheet();
+    await typeEmail();
+    await typePassword('short');
+    await fireEvent.press(ageCheckbox());
+
+    expect(createButton()).toBeDisabled();
+    expect(signInButton()).toBeEnabled();
+  });
+});

@@ -2,10 +2,11 @@ import { BlurView } from 'expo-blur';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
-import { useSheetFrame } from '@/hooks/useSheetFrame';
+import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { FOCAL } from '@/theme/motion';
 
 type ReelMoreSheetProps = {
@@ -52,12 +53,12 @@ export function ReelMoreSheet({
     >
       <View style={styles.root}>
         <Pressable haptic="none" onPress={onClose} style={StyleSheet.absoluteFill}>
-          <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+          <BlurView intensity={SHEET_BLUR_INTENSITY} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           <View style={styles.dim} />
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
         <View style={[styles.sheet, frame.card]}>
-          <View style={styles.handle} />
+          <SheetHandle />
           <Text style={styles.kicker}>More</Text>
           <Text style={styles.title} numberOfLines={1}>
             {who}
@@ -140,14 +141,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     gap: 8,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    marginBottom: 4,
   },
   kicker: {
     color: colors.textMuted,

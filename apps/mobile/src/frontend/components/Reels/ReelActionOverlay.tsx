@@ -232,6 +232,7 @@ function ReactionChip({
 
   const fire = () => {
     if (disabled) return;
+    // Tapping a selected chip removes the vote, so only an adding tap earns the burst and shout.
     if (!selected) {
       rise.value = 0;
       fade.value = 1;
@@ -246,7 +247,7 @@ function ReactionChip({
     <View style={styles.chipWrap}>
       {burstKey > 0 ? (
         <View pointerEvents="none" style={styles.burstLayer}>
-          <HypeBurst key={burstKey} kind={kind} onDone={() => setBurstKey(0)} />
+          <HypeBurst key={burstKey} kind={kind} scale={1.35} onDone={() => setBurstKey(0)} />
         </View>
       ) : null}
       <Animated.Text pointerEvents="none" style={[styles.plusOne, { color: fx.color }, badgeStyle]}>
@@ -353,20 +354,22 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   burstLayer: {
+    // Deliberately much wider than the 56pt chip so the burst can clear the button.
+    // `chipWrap`/`wrap` both set overflow:'visible' so this is allowed to spill.
     position: 'absolute',
-    width: 120,
-    height: 120,
-    left: -32,
-    top: -36,
+    width: 220,
+    height: 220,
+    left: -82,
+    top: -86,
     zIndex: 4,
   },
   plusOne: {
     position: 'absolute',
     top: -10,
     zIndex: 5,
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: '900',
-    letterSpacing: 0.4,
+    letterSpacing: 0.5,
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,

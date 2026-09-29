@@ -1,7 +1,7 @@
 import { useEventListener } from 'expo';
 import { useIsFocused } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Platform, Share, StyleSheet, Text, View } from 'react-native';
 import { BlurTargetView, BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
@@ -94,6 +94,16 @@ type HypePop = {
   boosted?: boolean;
 };
 
+/** Burst container size in points. Offsets are derived as half of this so it centres on the tap. */
+function popSize(burst: HypePop): number {
+  return burst.boosted ? 224 : 176;
+}
+
+/** Reads the counter for one hype kind so the optimistic/server comparisons stay readable. */
+function countFor(hype: ReelHype, kind: PlayReactionId): number {
+  return kind === 'seki' ? hype.seki_count : kind === 'aura' ? hype.aura_count : hype.flex_count;
+}
+
 const LIVE_BANNER_RESERVE = 108;
 /** Scene already ends at the fan bar; keep chrome on the clip, just above the nav. */
 const OVERLAY_BOTTOM_INSET = 8;
@@ -105,7 +115,7 @@ const OVERLAY_BOTTOM_INSET = 8;
  * @param playbackActive When true, play the focused page even if the Expo route is unfocused (profile modal).
  * @sideEffects expo-video; optimistic `reels` hype + `increment_reel_hype` / `clear_reel_hype` (OfflineQueue when `NetInfo.isConnected === false`); double-tap `add_user_aura` (2× on Serve Like Me) + Medium haptic + `HypeBurst`; mute toggle; `saved_reels`; Expo `Share.share`; `report_reel`; Broadcast subscribe on `game_events_${gameId}`; `TelemetryManager` TTFF + stall + feature taps / report issues; vault unlock via PaymentSheet.
  */
-export function ReelCard({
+function ReelCardImpl({
   clip,
   player,
   active,
@@ -156,6 +166,23 @@ export function ReelCard({
   const [reporting, setReporting] = useState(false);
   const [votes, setVotes] = useState<ReelVoteMap>({ seki: false, aura: false, flex: false });
   const burstId = useRef(0);
+  // One counter per hype kind. Every tap bumps it; a server response is only applied if
+  // its token is still current. Without this, spamming a chip interleaves
+  // `increment_reel_hype` and `clear_reel_hype` and whichever lands last wins, so the
+  // count visibly jumps around and can settle on the wrong value.
+  const hypeGenRef = useRef<Record<PlayReactionId, number>>({ seki: 0, aura: 0, flex: 0 });
+  // Number of hype mutations still settling. While this is > 0 the `clip` prop is just an
+  // echo of our own optimistic write (we push it up via `onReelHypeChange`, the feed rebuilds
+  // the clip, and it arrives back here), so the prop-sync effect must not overwrite local
+  // state with it — that round trip is what made the counter flicker on tap.
+  const hypeInFlightRef = useRef(0);
+  // Bumped when the last in-flight mutation settles so the prop-sync effect re-runs and adopts
+  // any count that arrived (refresh, another fan) while it was being skipped.
+  const [hypeSettled, setHypeSettled] = useState(0);
+  const settleHype = useCallback(() => {
+    hypeInFlightRef.current = Math.max(0, hypeInFlightRef.current - 1);
+    if (hypeInFlightRef.current === 0) setHypeSettled((current) => current + 1);
+  }, []);
   const loadedUriRef = useRef(clip.videoUrl);
   const isFocusedRef = useRef(isFocused);
   const lockedRef = useRef(locked);
@@ -237,15 +264,18 @@ export function ReelCard({
   }, [player?.id, player?.view_count, player?.aura_count, player?.flex_count, player?.seki_count]);
 
   useEffect(() => {
-    setReelHype(
-      hypeFromReel({
-        seki_count: clip.sekiCount,
-        aura_count: clip.auraCount,
-        flex_count: clip.flexCount,
-        total_tips_cents: clip.totalTipsCents,
-      }),
-    );
-  }, [clip.id, clip.sekiCount, clip.auraCount, clip.flexCount, clip.totalTipsCents]);
+    // Our own optimistic write is still round-tripping through the feed; adopting the prop
+    // now would briefly show the pre-tap count.
+    if (hypeInFlightRef.current > 0) return;
+    const next = hypeFromReel({
+      seki_count: clip.sekiCount,
+      aura_count: clip.auraCount,
+      flex_count: clip.flexCount,
+      total_tips_cents: clip.totalTipsCents,
+    });
+    reelHypeRef.current = next;
+    setReelHype(next);
+  }, [clip.id, clip.sekiCount, clip.auraCount, clip.flexCount, clip.totalTipsCents, hypeSettled]);
 
   useEffect(() => {
     loadStartedAtRef.current = Date.now();
@@ -293,6 +323,8 @@ export function ReelCard({
   const releaseHype = useCallback(
     (kind: PlayReactionId) => {
       if (!votesRef.current[kind]) return;
+      const token = hypeGenRef.current[kind] + 1;
+      hypeGenRef.current[kind] = token;
       const nextVotes = { ...votesRef.current, [kind]: false };
       votesRef.current = nextVotes;
       setVotes(nextVotes);
@@ -308,25 +340,37 @@ export function ReelCard({
       setReelHype(optimistic);
       onReelHypeChange?.(clip.id, optimistic);
 
+      hypeInFlightRef.current += 1;
       void (async () => {
-        if (await offlineQueue.dropPendingHype(clip.id, kind)) return;
-        if (!user?.id) return;
-        if (!(await offlineQueue.isOnline())) {
-          await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind });
-          return;
-        }
         try {
-          const server = await clearReelHype(clip.id, kind, previous);
-          if (votesRef.current[kind]) return;
-          reelHypeRef.current = server;
-          setReelHype(server);
-          onReelHypeChange?.(clip.id, server);
-        } catch {
-          await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind });
+          if (await offlineQueue.dropPendingHype(clip.id, kind)) return;
+          if (!user?.id) return;
+          if (!(await offlineQueue.isOnline())) {
+            await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind });
+            return;
+          }
+          try {
+            const server = await clearReelHype(clip.id, kind, previous);
+            // A newer tap superseded this one — keep the optimistic value it wrote.
+            if (hypeGenRef.current[kind] !== token) return;
+            if (votesRef.current[kind]) return;
+            // The decrement did not take (e.g. `clear_reel_hype` not applied on this
+            // database). Adopting the server row here would snap the count back up — the
+            // flicker. Keep the optimistic value; a refresh will reconcile it.
+            const cleared = countFor(server, kind) < countFor(previous, kind);
+            if (!cleared) return;
+            reelHypeRef.current = server;
+            setReelHype(server);
+            onReelHypeChange?.(clip.id, server);
+          } catch {
+            await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind });
+          }
+        } finally {
+          settleHype();
         }
       })();
     },
-    [clip.id, onReelHypeChange, user?.id],
+    [clip.id, onReelHypeChange, settleHype, user?.id],
   );
 
   const commitHype = useCallback(
@@ -337,6 +381,8 @@ export function ReelCard({
         return;
       }
       telemetry.trackFeature(`hype.${kind}`, surface);
+      const token = hypeGenRef.current[kind] + 1;
+      hypeGenRef.current[kind] = token;
       const nextVotes = { ...votesRef.current, [kind]: true };
       votesRef.current = nextVotes;
       setVotes(nextVotes);
@@ -353,6 +399,7 @@ export function ReelCard({
       onReelHypeChange?.(clip.id, optimistic);
       const auraPoints = fromDoubleTap ? doubleTapAuraForCategory(clip.category) : 0;
 
+      hypeInFlightRef.current += 1;
       void (async () => {
         const payload = {
           type: 'aura_hype' as const,
@@ -362,36 +409,41 @@ export function ReelCard({
           auraPoints,
           userId: user?.id,
         };
-        if (!(await offlineQueue.isOnline())) {
-          await offlineQueue.enqueue(payload);
-          return;
-        }
         try {
-          const server = await bumpReelHype(clip.id, kind, previous);
-          const applied =
-            kind === 'seki'
-              ? server.seki_count > previous.seki_count
-              : kind === 'aura'
-                ? server.aura_count > previous.aura_count
-                : server.flex_count > previous.flex_count;
-          reelHypeRef.current = server;
-          setReelHype(server);
-          onReelHypeChange?.(clip.id, server);
-          if (!applied) return;
-          if (fromDoubleTap && user?.id && auraPoints > 0) {
-            const award = await addUserAura(user.id, auraPoints);
-            if (award.profile_aura_points != null) emitProfileAura(user.id, award.profile_aura_points);
-            if (award.player_aura_points != null) emitPlayerAura(user.id, award.player_aura_points);
-            if (award.profile_aura_points == null && award.player_aura_points == null && award.aura_points) {
-              emitProfileAura(user.id, award.aura_points);
-            }
+          if (!(await offlineQueue.isOnline())) {
+            await offlineQueue.enqueue(payload);
+            return;
           }
-        } catch {
-          await offlineQueue.enqueue(payload);
+          try {
+            const server = await bumpReelHype(clip.id, kind, previous);
+            // A newer tap (including an un-vote) superseded this one. Applying the stale
+            // server row here is what made the count jump back up after clearing.
+            if (hypeGenRef.current[kind] !== token) return;
+            if (!votesRef.current[kind]) return;
+            const applied = countFor(server, kind) > countFor(previous, kind);
+            // Same reasoning as the clear path: if the increment did not take, keep the
+            // optimistic value rather than snapping the counter back down.
+            if (!applied) return;
+            reelHypeRef.current = server;
+            setReelHype(server);
+            onReelHypeChange?.(clip.id, server);
+            if (fromDoubleTap && user?.id && auraPoints > 0) {
+              const award = await addUserAura(user.id, auraPoints);
+              if (award.profile_aura_points != null) emitProfileAura(user.id, award.profile_aura_points);
+              if (award.player_aura_points != null) emitPlayerAura(user.id, award.player_aura_points);
+              if (award.profile_aura_points == null && award.player_aura_points == null && award.aura_points) {
+                emitProfileAura(user.id, award.aura_points);
+              }
+            }
+          } catch {
+            await offlineQueue.enqueue(payload);
+          }
+        } finally {
+          settleHype();
         }
       })();
     },
-    [clip.category, clip.id, onReelHypeChange, releaseHype, surface, user?.id],
+    [clip.category, clip.id, onReelHypeChange, releaseHype, settleHype, surface, user?.id],
   );
 
   const onDoubleAura = useCallback(
@@ -607,23 +659,22 @@ export function ReelCard({
         </BlurView>
       ) : null}
 
-      {bursts.map((burst) => (
-        <View
-          key={burst.id}
-          pointerEvents="none"
-          style={[
-            styles.hypePop,
-            burst.boosted && styles.hypePopBoost,
-            { left: burst.x - (burst.boosted ? 64 : 48), top: burst.y - (burst.boosted ? 64 : 48) },
-          ]}
-        >
-          <HypeBurst
-            kind={burst.kind}
-            boosted={burst.boosted}
-            onDone={() => setBursts((current) => current.filter((item) => item.id !== burst.id))}
-          />
-        </View>
-      ))}
+      {bursts.map((burst) => {
+        const size = popSize(burst);
+        return (
+          <View
+            key={burst.id}
+            pointerEvents="none"
+            style={[styles.hypePop, { width: size, height: size, left: burst.x - size / 2, top: burst.y - size / 2 }]}
+          >
+            <HypeBurst
+              kind={burst.kind}
+              boosted={burst.boosted}
+              onDone={() => setBursts((current) => current.filter((item) => item.id !== burst.id))}
+            />
+          </View>
+        );
+      })}
 
       <Reanimated.View pointerEvents="none" style={[styles.muteBadge, muteBadgeStyle]}>
         <View style={styles.muteChip}>
@@ -705,6 +756,9 @@ export function ReelCard({
           }}
           onReact={(kind) => {
             if (locked) return;
+            // The burst is fired by the chip itself (ReelActionOverlay) so it lands on the
+            // control the fan actually touched. Do not also spawn a centred one here —
+            // that read as one tap producing two effects.
             commitHype(kind);
           }}
         />
@@ -877,14 +931,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(7,22,15,0.28)',
   },
   hypePop: {
+    // Width/height/offset are set inline from `popSize` so the pop centres on the tap point.
     position: 'absolute',
-    width: 96,
-    height: 96,
     zIndex: 6,
-  },
-  hypePopBoost: {
-    width: 128,
-    height: 128,
   },
   muteBadge: {
     ...StyleSheet.absoluteFill,
@@ -1000,3 +1049,112 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+/**
+ * Tapping a hype chip bubbles the new count to the feed, which rebuilds every `clip` object
+ * and re-renders every mounted card — video chrome, blur layers, Skia glow and the action
+ * rail included. That cascade, not the counter itself, is what made the chips feel janky.
+ *
+ * Function props are compared by identity. The exported `ReelCard` wrapper hands the memoized
+ * card stable stand-ins that call the latest parent callback, so fresh parent closures do not
+ * defeat the memo — and a skipped render can never leave a stale closure behind (the parents'
+ * `onTip` goes through `requireAuth`, which captures auth `loading` / `session`).
+ */
+function sameReelCardProps(prev: ReelCardProps, next: ReelCardProps): boolean {
+  if (
+    prev.active !== next.active ||
+    prev.height !== next.height ||
+    prev.tipping !== next.tipping ||
+    prev.playbackActive !== next.playbackActive ||
+    prev.userTipped !== next.userTipped ||
+    prev.surface !== next.surface ||
+    prev.sekiPlay !== next.sekiPlay ||
+    prev.onTip !== next.onTip ||
+    prev.onOpenProfile !== next.onOpenProfile ||
+    prev.onReelHypeChange !== next.onReelHypeChange ||
+    prev.onHide !== next.onHide
+  ) {
+    return false;
+  }
+
+  const a = prev.clip;
+  const b = next.clip;
+  if (
+    a.id !== b.id ||
+    a.videoUrl !== b.videoUrl ||
+    a.athleteName !== b.athleteName ||
+    a.school !== b.school ||
+    a.tag !== b.tag ||
+    a.sekiCount !== b.sekiCount ||
+    a.auraCount !== b.auraCount ||
+    a.flexCount !== b.flexCount ||
+    a.totalTipsCents !== b.totalTipsCents ||
+    a.isVaultOnly !== b.isVaultOnly ||
+    a.flashUnlockUntil !== b.flashUnlockUntil ||
+    a.category !== b.category ||
+    a.tagStatus !== b.tagStatus ||
+    a.playerId !== b.playerId ||
+    a.gameId !== b.gameId ||
+    a.sekiPlay !== b.sekiPlay
+  ) {
+    return false;
+  }
+
+  const p = prev.player;
+  const q = next.player;
+  if (p === q) return true;
+  if (!p || !q) return false;
+  return (
+    p.id === q.id &&
+    p.name === q.name &&
+    p.vault_locked === q.vault_locked &&
+    p.aura_count === q.aura_count &&
+    p.seki_count === q.seki_count &&
+    p.flex_count === q.flex_count &&
+    p.view_count === q.view_count &&
+    p.backer_count === q.backer_count
+  );
+}
+
+const MemoReelCard = memo(ReelCardImpl, sameReelCardProps);
+
+/**
+ * @purpose Public `ReelCard`. Keeps the parent's latest callbacks in a ref and passes the
+ * memoized card identity-stable wrappers, so hype-driven feed rebuilds skip the heavy card
+ * while taps still run the current closure. Optional callbacks stay `undefined` when absent
+ * because the card reads their presence (`canTip`, `canOpenAthlete`).
+ */
+export function ReelCard(props: ReelCardProps) {
+  const latest = useRef(props);
+  latest.current = props;
+  const hasOpenProfile = Boolean(props.onOpenProfile);
+  const hasHypeChange = Boolean(props.onReelHypeChange);
+  const hasHide = Boolean(props.onHide);
+
+  const onTip = useCallback(() => latest.current.onTip(), []);
+  const onOpenProfile = useMemo(
+    () => (hasOpenProfile ? () => latest.current.onOpenProfile?.() : undefined),
+    [hasOpenProfile],
+  );
+  const onReelHypeChange = useMemo(
+    () =>
+      hasHypeChange
+        ? (reelId: string, hype: ReelHype) => latest.current.onReelHypeChange?.(reelId, hype)
+        : undefined,
+    [hasHypeChange],
+  );
+  const onHide = useMemo(
+    () => (hasHide ? (reelId: string) => latest.current.onHide?.(reelId) : undefined),
+    [hasHide],
+  );
+
+  return (
+    <MemoReelCard
+      {...props}
+      onTip={onTip}
+      onOpenProfile={onOpenProfile}
+      onReelHypeChange={onReelHypeChange}
+      onHide={onHide}
+    />
+  );
+}

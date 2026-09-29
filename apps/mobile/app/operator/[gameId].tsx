@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
-import { OperatorRosterModal } from '@/components/OperatorRosterModal';
-import { PlaySentBanner } from '@/components/PlaySentBanner';
+import { OperatorRosterModal } from '@/components/Operator/OperatorRosterModal';
+import { PlaySentBanner } from '@/components/Operator/PlaySentBanner';
 import { ScreenShell } from '@/components/ScreenShell';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';

@@ -15,7 +15,7 @@ import { FOCAL, TAB_ACCENTS, type FanTabAccentId } from '@/theme/motion';
 const TAB_META: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap }> =
   {
     index: { label: HIGHLIGHT_NAV_LABEL, icon: 'home-outline', activeIcon: 'home' },
-    local: { label: 'Local', icon: 'location-outline', activeIcon: 'location' },
+    activity: { label: 'Activity', icon: 'notifications-outline', activeIcon: 'notifications' },
     spotlight: { label: SPOTLIGHT_NAV_LABEL, icon: 'trophy-outline', activeIcon: 'trophy' },
     shop: { label: 'Drip', icon: 'shirt-outline', activeIcon: 'shirt' },
     drip: { label: 'Drip', icon: 'shirt-outline', activeIcon: 'shirt' },
@@ -103,7 +103,7 @@ export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
   const routes = state.routes.filter((route) => {
     if (!TAB_META[route.name] || route.name === 'shop') return false;
     if (route.name === 'index') return live.tabs.home;
-    if (route.name === 'local') return live.tabs.local;
+    if (route.name === 'activity') return live.tabs.activity;
     if (route.name === 'spotlight') return live.tabs.spotlight;
     if (route.name === 'drip') return live.tabs.drip;
     if (route.name === 'profile') return live.tabs.profile;

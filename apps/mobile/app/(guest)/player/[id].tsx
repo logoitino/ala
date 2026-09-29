@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
-import { FanBackerBadge } from '@/components/FanBackerBadge';
-import { HypeBoard } from '@/components/HypeBoard';
+import { FanBackerBadge } from '@/components/Profile/FanBackerBadge';
+import { HypeBoard } from '@/components/Profile/HypeBoard';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TipCheckout } from '@/components/TipCheckout';
 import { cardShadow, colors, radii } from '@/constants/theme';

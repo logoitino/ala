@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
 import { clearVideoCacheAsync } from 'expo-video';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -20,7 +20,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 import {
   HIGHLIGHT_CLIPS,
   HIGHLIGHT_FEED_ALL,
@@ -35,8 +35,10 @@ import { useActiveSpotlight } from '@/hooks/useActiveSpotlight';
 import { useFanTipHistory } from '@/hooks/useFanTipHistory';
 import { useLiveGame } from '@/hooks/useLiveGame';
 import { useReels } from '@/hooks/useReels';
+import { useReelViewTracker } from '@/hooks/useReelViewTracker';
 import { useRoster } from '@/hooks/useRoster';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
+import { isAuraUuid } from '@/lib/aura';
 import { fetchSquadAthleteIds } from '@/lib/crew';
 import { playerFromReel, readHiddenReelIds, reelHiddenForUser, reelToClip } from '@/lib/reels';
 import { userProfileHref } from '@/lib/navigation';
@@ -61,7 +63,6 @@ export default function HighlightsTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<FeedItem>>(null);
-  const pendingClipId = useRef<string | null>(null);
   const { user, profile, loading: authLoading } = useAuth();
   const { live: runtime } = useAppRuntime();
   const { requireAuth } = useSoftWall();
@@ -81,6 +82,7 @@ export default function HighlightsTab() {
   const [tipTarget, setTipTarget] = useState<{ player: Player; reelId?: string } | null>(null);
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const [feedFilter, setFeedFilter] = useState<HighlightFeedFilter>('home');
+  const [pendingClipId, setPendingClipId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [crewIds, setCrewIds] = useState<Set<string>>(() => new Set());
@@ -145,6 +147,16 @@ export default function HighlightsTab() {
     return clips;
   }, [clips, feedFilter, homeContext]);
 
+  /** Pill badges: "All 24" / "Seki 8" reads as a promise about what is behind the tab. */
+  const feedCounts = useMemo<Record<HighlightFeedFilter, number>>(
+    () => ({
+      home: rankHomeFeed(clips, homeContext).length,
+      all: clips.length,
+      seki: clips.filter((item) => isSekiHighlight(item.clip)).length,
+    }),
+    [clips, homeContext],
+  );
+
   const tippedIds = useMemo(() => {
     const ids = new Set(localTipped);
     for (const receipt of receipts) {
@@ -167,11 +179,10 @@ export default function HighlightsTab() {
   }, [activeIndex, feed.length]);
 
   useEffect(() => {
-    const clipId = pendingClipId.current;
-    if (!clipId) return;
-    const index = feed.findIndex((item) => item.clip.id === clipId);
+    if (!pendingClipId) return;
+    const index = feed.findIndex((item) => item.clip.id === pendingClipId);
     if (index < 0) return;
-    pendingClipId.current = null;
+    setPendingClipId(null);
     setActiveIndex(index);
     const offset = pageHeight * index;
     requestAnimationFrame(() => {
@@ -181,7 +192,7 @@ export default function HighlightsTab() {
         listRef.current?.scrollToOffset({ offset, animated: true });
       }
     });
-  }, [feed, pageHeight]);
+  }, [feed, pageHeight, pendingClipId]);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
@@ -191,6 +202,13 @@ export default function HighlightsTab() {
   ).current;
 
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 80 }).current;
+
+  const tabFocused = useIsFocused();
+  useReelViewTracker(
+    feed[activeIndex]?.clip.id ?? null,
+    Boolean(user?.id),
+    tabFocused && !spotlight.visible && !tipTarget && !searchOpen,
+  );
 
   useEffect(() => {
     if (feed.length <= 1) {
@@ -250,6 +268,7 @@ export default function HighlightsTab() {
   const switchFeed = useCallback((id: HighlightFeedFilter) => {
     closeSearch();
     trackFeature(`feed.${id}`);
+    setPendingClipId(null);
     setFeedFilter(id);
     setActiveIndex(0);
     requestAnimationFrame(() => {
@@ -258,7 +277,7 @@ export default function HighlightsTab() {
   }, [closeSearch, trackFeature]);
 
   const jumpToClip = useCallback((clipId: string) => {
-    pendingClipId.current = clipId;
+    setPendingClipId(clipId);
     closeSearch();
     trackFeature('home_search_clip');
     setFeedFilter('all');
@@ -267,24 +286,49 @@ export default function HighlightsTab() {
   const jumpToSpotlightClip = useCallback(
     (reelId?: string | null, playerId?: string) => {
       const athleteName = spotlight.award?.player?.name?.trim().toLowerCase();
-      const index = feed.findIndex((item) => {
+      const matches = (item: FeedItem) => {
         if (reelId && item.clip.id === reelId) return true;
         if (playerId && item.player?.id === playerId) return true;
         if (athleteName && item.clip.athleteName.toLowerCase() === athleteName) return true;
         return false;
-      });
-      if (index < 0) return;
-      setActiveIndex(index);
-      const offset = pageHeight * index;
-      requestAnimationFrame(() => {
-        try {
-          listRef.current?.scrollToIndex({ index, animated: true });
-        } catch {
-          listRef.current?.scrollToOffset({ offset, animated: true });
-        }
-      });
+      };
+      const index = feed.findIndex(matches);
+      if (index >= 0) {
+        setActiveIndex(index);
+        const offset = pageHeight * index;
+        requestAnimationFrame(() => {
+          try {
+            listRef.current?.scrollToIndex({ index, animated: true });
+          } catch {
+            listRef.current?.scrollToOffset({ offset, animated: true });
+          }
+        });
+        return;
+      }
+      // The award's clip exists but the active pill filters it out — widen to All and let
+      // the pending-jump effect land it once the feed rebuilds.
+      const unfiltered = clips.find(matches);
+      if (unfiltered) {
+        setPendingClipId(unfiltered.clip.id);
+        setFeedFilter('all');
+        return;
+      }
+      // No clip in the feed at all: fall back to the athlete's profile, same as the
+      // Spotlight tab's own onWatch chain.
+      const profileId = [playerId, spotlight.award?.player?.id, spotlight.award?.player_id].find(
+        (value): value is string => typeof value === 'string' && isAuraUuid(value),
+      );
+      if (profileId) router.push(userProfileHref(profileId));
     },
-    [feed, pageHeight, spotlight.award?.player?.name],
+    [
+      clips,
+      feed,
+      pageHeight,
+      router,
+      spotlight.award?.player?.id,
+      spotlight.award?.player?.name,
+      spotlight.award?.player_id,
+    ],
   );
 
   const dismissSpotlight = spotlight.dismiss;
@@ -475,20 +519,44 @@ export default function HighlightsTab() {
               <View style={styles.feedSwitch} accessibilityRole="tablist" accessibilityLabel="Home feed">
                 {FEED_PILLS.map((item) => {
                   const on = feedFilter === item.id;
+                  const count = feedCounts[item.id];
                   return (
                     <AnimatedButton
                       key={item.id}
                       haptic="selection"
                       accessibilityRole="tab"
-                      accessibilityLabel={item.label}
+                      accessibilityLabel={`${item.label}, ${count} ${count === 1 ? 'clip' : 'clips'}`}
                       accessibilityState={{ selected: on }}
                       contentStyle={[styles.feedPill, on && styles.feedPillOn]}
                       onPress={() => switchFeed(item.id)}
                     >
                       <Text style={[styles.feedPillLabel, on && styles.feedPillLabelOn]}>{item.label}</Text>
+                      {count > 0 ? (
+                        <Text style={[styles.feedPillCount, on && styles.feedPillCountOn]}>{count}</Text>
+                      ) : null}
                     </AnimatedButton>
                   );
                 })}
+                {/* Local is a destination, not a feed filter — the divider and chevron say so. */}
+                {runtime.tabs.local ? (
+                  <>
+                    <View style={styles.feedDivider} />
+                    <AnimatedButton
+                      haptic="selection"
+                      accessibilityRole="button"
+                      accessibilityLabel="Open Local: live matches, school polls and boosters"
+                      contentStyle={[styles.feedPill, styles.localPill]}
+                      onPress={() => {
+                        trackFeature('feed.local_jump');
+                        router.push('/local');
+                      }}
+                    >
+                      <Ionicons name="location" size={13} color={TAB_ACCENTS.local.glow} />
+                      <Text style={[styles.feedPillLabel, styles.localPillLabel]}>Local</Text>
+                      <Ionicons name="chevron-forward" size={12} color={TAB_ACCENTS.local.glow} />
+                    </AnimatedButton>
+                  </>
+                ) : null}
               </View>
             )}
           </View>
@@ -647,8 +715,37 @@ const styles = StyleSheet.create({
     minHeight: 32,
     paddingHorizontal: 10,
     borderRadius: 999,
+    flexDirection: 'row',
+    gap: 4,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  feedPillCount: {
+    color: colors.onVideoMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    opacity: 0.75,
+  },
+  feedPillCountOn: {
+    color: colors.videoScrim,
+    opacity: 0.9,
+  },
+  feedDivider: {
+    width: StyleSheet.hairlineWidth,
+    alignSelf: 'stretch',
+    marginVertical: 6,
+    marginHorizontal: 2,
+    backgroundColor: colors.onVideoMuted,
+    opacity: 0.35,
+  },
+  localPill: {
+    flex: 0,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: `${TAB_ACCENTS.local.glow}55`,
+  },
+  localPillLabel: {
+    color: TAB_ACCENTS.local.mist,
   },
   feedPillOn: {
     backgroundColor: FOCAL.goldInk,

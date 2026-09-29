@@ -16,15 +16,16 @@ import { ScrollFxItem, ScrollFxScrollView } from '@/components/Effects/ScrollFx'
 import { CheerPollCard } from '@/components/Local/CheerPollCard';
 import { SearchResultsOverlay } from '@/components/Local/SearchResultsOverlay';
 import { SponsorshipModal } from '@/components/Local/SponsorshipModal';
-import { GameCard } from '@/components/GameCard';
+import { GameCard } from '@/components/Local/GameCard';
+import { RuntimePaused } from '@/components/RuntimePaused';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
-import { TopAuraBoosters } from '@/components/TopAuraBoosters';
+import { TopAuraBoosters } from '@/components/Local/TopAuraBoosters';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { cardShadow, colors, radii } from '@/constants/theme';
 import {
   UTAH_REGIONS,
   gameInRegion,
@@ -166,7 +167,7 @@ function SponsorRailCard({
       >
         <View style={styles.sponsorLogo}>
           {sponsor.logo_url ? (
-            <Image source={{ uri: sponsor.logo_url }} style={styles.sponsorLogoImage} />
+            <Image source={{ uri: sponsor.logo_url }} resizeMode="cover" style={styles.sponsorLogoImage} />
           ) : (
             <Text style={styles.sponsorInitials}>{initialsForBusiness(sponsor.business_name)}</Text>
           )}
@@ -356,6 +357,11 @@ export default function LocalTab() {
     }, 120);
   };
 
+  // Local left the fan bar for a Home pill, so this guard is now what `tabs.local` enforces.
+  if (!live.tabs.local) {
+    return <RuntimePaused title="Local is paused" lede="Turn Local back on in Admin → Features, then Publish to app." />;
+  }
+
   return (
     <TabScreen>
       <View style={styles.page}>
@@ -405,8 +411,8 @@ export default function LocalTab() {
                 }
               }}
               accessibilityLabel="Local hub"
-              accent={FOCAL.goldInk}
-              mist={FOCAL.mistGold}
+              accent={TAB_ACCENTS.local.color}
+              mist={TAB_ACCENTS.local.mist}
             />
             {hubs.length === 0 ? (
               <EmptyState
@@ -437,7 +443,7 @@ export default function LocalTab() {
 
               {loading ? (
                 <View style={styles.loadingBlock}>
-                  <ActivityIndicator color={colors.deepGreen} size="large" />
+                  <ActivityIndicator color={TAB_ACCENTS.local.color} size="large" />
                   <Text style={styles.muted}>Loading live scores…</Text>
                   <MatchupSkeleton />
                   <MatchupSkeleton />
@@ -505,16 +511,17 @@ export default function LocalTab() {
                   <Text style={styles.ctaLede}>Silver · Gold · Platinum</Text>
                 </AnimatedButton>
                 ) : null}
-                {sponsors.map((sponsor) => (
-                  <SponsorRailCard
-                    key={sponsor.id}
-                    sponsor={sponsor}
-                    highlighted={highlightedSponsorId === sponsor.id}
-                    onLayoutX={(x) => {
-                      sponsorX.current[sponsor.id] = x;
-                    }}
-                    onPress={() => selectBooster(sponsor.id)}
-                  />
+                {sponsors.map((sponsor, index) => (
+                  <ScrollFxItem key={sponsor.id} index={index} variant="zoom">
+                    <SponsorRailCard
+                      sponsor={sponsor}
+                      highlighted={highlightedSponsorId === sponsor.id}
+                      onLayoutX={(x) => {
+                        sponsorX.current[sponsor.id] = x;
+                      }}
+                      onPress={() => selectBooster(sponsor.id)}
+                    />
+                  </ScrollFxItem>
                 ))}
               </ScrollView>
 
@@ -565,7 +572,9 @@ export default function LocalTab() {
               <Text style={styles.hubCopy}>
                 Top Aura Boosters — Slate Silver through Celestial Prism. Tap a card to peek the profile.
               </Text>
-              <TopAuraBoosters hideTitle />
+              <ScrollFxItem variant="rise">
+                <TopAuraBoosters hideTitle />
+              </ScrollFxItem>
             </View>
           </ScrollFxScrollView>
 
@@ -614,9 +623,9 @@ const styles = StyleSheet.create({
     gap: 10,
     minHeight: 52,
     paddingHorizontal: 14,
-    backgroundColor: FOCAL.mistGold,
+    backgroundColor: TAB_ACCENTS.local.mist,
     borderWidth: 1.5,
-    borderColor: FOCAL.electricGold,
+    borderColor: TAB_ACCENTS.local.color,
     borderRadius: radii.md,
   },
   searchGlyph: {
@@ -640,7 +649,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginTop: 4,
     borderLeftWidth: 3,
-    borderLeftColor: FOCAL.electricGold,
+    borderLeftColor: TAB_ACCENTS.local.color,
     paddingLeft: 10,
   },
   hubCopy: {
@@ -653,6 +662,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   pollHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
     gap: 8,
   },
   schoolChip: {
@@ -692,6 +705,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: 12,
     gap: 8,
+    ...cardShadow,
   },
   sponsorCardGold: {
     backgroundColor: FOCAL.mistGold,
@@ -751,17 +765,18 @@ const styles = StyleSheet.create({
   ctaCard: {
     width: 168,
     minHeight: 168,
-    backgroundColor: FOCAL.mistGold,
+    backgroundColor: TAB_ACCENTS.local.mist,
     borderRadius: radii.lg,
     borderWidth: 1.5,
-    borderColor: FOCAL.electricGold,
+    borderColor: TAB_ACCENTS.local.color,
     padding: 12,
     gap: 6,
     alignItems: 'flex-start',
     justifyContent: 'center',
+    ...cardShadow,
   },
   ctaPlus: {
-    color: FOCAL.goldInk,
+    color: TAB_ACCENTS.local.color,
     fontSize: 28,
     fontWeight: '800',
     lineHeight: 32,

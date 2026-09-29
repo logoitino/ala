@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
-import { useSheetFrame } from '@/hooks/useSheetFrame';
+import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { LegalAckToggle } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -21,7 +22,7 @@ import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { COMPLIANCE_ACCOUNT } from '@/data/legal';
-import { DEMO_FAN_EMAIL, MIN_PASSWORD_LENGTH } from '@/lib/auth';
+import { DEMO_FAN_EMAIL, softWallEmailGates } from '@/lib/auth';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
@@ -112,8 +113,9 @@ export function SoftWallModal() {
         ? `Support ${athlete}'s Journey!`
         : 'Support their Journey!';
 
-  const canPassword = Boolean(email.trim() && password && ageConfirmed);
-  const canMagic = Boolean(email.trim() && ageConfirmed);
+  // Sign in is deliberately not age-gated; Create account and magic link are. See
+  // `softWallEmailGates` for why.
+  const { canSignIn, canCreate, canMagic } = softWallEmailGates(email, password, ageConfirmed);
 
   const run = async (kind: Exclude<AuthBusy, null>, work: () => Promise<void>) => {
     setBusy(kind);
@@ -160,12 +162,12 @@ export function SoftWallModal() {
         <View style={styles.root}>
           <Pressable haptic="none" style={styles.backdrop} onPress={busy ? undefined : dismiss}>
             <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, backdropStyle]}>
-              <BlurView intensity={48} tint="dark" style={StyleSheet.absoluteFill} />
+              <BlurView intensity={SHEET_BLUR_INTENSITY} tint="dark" style={StyleSheet.absoluteFill} />
             </Animated.View>
           </Pressable>
           <View pointerEvents="box-none" style={frame.dock}>
           <Animated.View style={[styles.sheet, frame.card, { maxHeight: '92%' }, sheetStyle]}>
-            <View style={styles.handle} />
+            <SheetHandle />
             <ScrollView
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
@@ -201,7 +203,7 @@ export function SoftWallModal() {
                   onChangeText={setPassword}
                   editable={!busy}
                   onSubmitEditing={() => {
-                    if (canPassword) {
+                    if (canSignIn) {
                       void run('password', () => signInWithEmailPassword(email, password, ageConfirmed));
                     }
                   }}
@@ -215,10 +217,10 @@ export function SoftWallModal() {
                 <Text style={styles.demoHint}>{COMPLIANCE_ACCOUNT}</Text>
                 <AnimatedButton
                   accessibilityLabel="Sign in with email and password"
-                  disabled={Boolean(busy) || !canPassword}
+                  disabled={Boolean(busy) || !canSignIn}
                   haptic="medium"
                   onPress={() => void run('password', () => signInWithEmailPassword(email, password, ageConfirmed))}
-                  contentStyle={[styles.providerBtn, styles.magicBtn, (busy || !canPassword) && styles.disabled]}
+                  contentStyle={[styles.providerBtn, styles.magicBtn, (busy || !canSignIn) && styles.disabled]}
                 >
                   {busy === 'password' ? (
                     <ActivityIndicator color="#FFFFFF" />
@@ -228,7 +230,7 @@ export function SoftWallModal() {
                 </AnimatedButton>
                 <AnimatedButton
                   accessibilityLabel="Create an account with email and password"
-                  disabled={Boolean(busy) || !canPassword || password.length < MIN_PASSWORD_LENGTH}
+                  disabled={Boolean(busy) || !canCreate}
                   haptic="medium"
                   onPress={() =>
                     void run('signup', async () => {
@@ -241,7 +243,7 @@ export function SoftWallModal() {
                   contentStyle={[
                     styles.providerBtn,
                     styles.secondaryBtn,
-                    (busy || !canPassword || password.length < MIN_PASSWORD_LENGTH) && styles.disabled,
+                    (busy || !canCreate) && styles.disabled,
                   ]}
                 >
                   {busy === 'signup' ? (
@@ -365,14 +367,6 @@ const styles = StyleSheet.create({
   },
   group: {
     gap: 10,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    marginBottom: 4,
   },
   kicker: {
     fontSize: 11,

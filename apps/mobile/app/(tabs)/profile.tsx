@@ -313,14 +313,8 @@ export default function MyHubTab() {
         },
       });
     }
-    if (live.profile.showCard) {
-      items.push({
-        id: 'flip',
-        label: 'Flip Aura card',
-        hint: '3D trading card',
-        onPress: () => setFlipOpen(true),
-      });
-    }
+    // No 'Flip Aura card' item: `ProfileHeroAvatar` already carries a dedicated flip
+    // control next to the card, so a menu entry for it read as a duplicate.
     if (live.buttons.suggest) {
       items.push({
         id: 'suggest',

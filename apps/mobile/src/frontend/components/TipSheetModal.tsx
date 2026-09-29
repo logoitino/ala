@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import Animated, {
   Easing,
@@ -14,7 +15,7 @@ import Animated, {
 import { CardShine } from '@/components/Effects/CardShine';
 import { TipCheckout } from '@/components/TipCheckout';
 import { colors, radii } from '@/constants/theme';
-import { useSheetFrame } from '@/hooks/useSheetFrame';
+import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { maloAthleteCta, maloAthleteSheetSubtitle } from '@/data/malo';
 import { displayValue, type Player } from '@/data/players';
 import type { TipEntry, TipOrigin } from '@/lib/finance';
@@ -134,12 +135,12 @@ export function MaloTipModal({
       >
       <Pressable haptic="none" style={styles.backdrop} onPress={dismiss}>
         <Animated.View style={[styles.blur, backdropStyle]}>
-          <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+          <BlurView intensity={SHEET_BLUR_INTENSITY} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
         </Animated.View>
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
         <Pressable haptic="none" onPress={() => undefined}>
-          <View style={styles.handle} />
+          <SheetHandle />
           <Animated.View style={[styles.header, delivered && styles.headerDelivered, headerStyle]}>
             {delivered ? (
               <CardShine tint="rgba(0,230,118,0.4)" color="rgba(255,255,255,0.95)" loopMs={2600} />
@@ -202,13 +203,6 @@ const styles = StyleSheet.create({
   sheet: {
     backgroundColor: colors.surface,
     gap: 16,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
   },
   header: {
     gap: 6,

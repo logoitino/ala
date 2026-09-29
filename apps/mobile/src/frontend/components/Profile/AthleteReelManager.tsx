@@ -4,7 +4,7 @@ import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 
-import { TaggedReelGrid } from '@/components/TaggedReelGrid';
+import { TaggedReelGrid } from '@/components/Profile/TaggedReelGrid';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';

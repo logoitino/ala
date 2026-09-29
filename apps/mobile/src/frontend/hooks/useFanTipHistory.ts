@@ -69,7 +69,7 @@ function summarize(rows: FanTipReceipt[]): FanTipHistorySummary {
 
 /**
  * @purpose Load this fan's Mālo receipts via `get_fan_tip_history` for the Tip History screen.
- * @returns `{ receipts, summary, loading, signedIn, refresh }` — summary is Total Tipped, Athletes Supported, Aura Earned.
+ * @returns `{ receipts, summary, loading, error, signedIn, refresh }` — summary is Total Tipped, Athletes Supported, Aura Earned.
  * @sideEffects Supabase RPC `get_fan_tip_history`; falls back to a `tips` SELECT joined to `players` if the RPC is missing.
  */
 export function useFanTipHistory() {
@@ -77,10 +77,12 @@ export function useFanTipHistory() {
   const userId = user?.id ?? null;
   const [receipts, setReceipts] = useState<FanTipReceipt[]>([]);
   const [loading, setLoading] = useState(Boolean(userId));
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!userId || !isSupabaseConfigured) {
       setReceipts([]);
+      setError(null);
       setLoading(false);
       return;
     }
@@ -89,6 +91,7 @@ export function useFanTipHistory() {
     const rpc = await supabase.rpc('get_fan_tip_history', { fan_user_id: userId });
     if (!rpc.error) {
       setReceipts(parseReceipts(rpc.data));
+      setError(null);
       setLoading(false);
       return;
     }
@@ -111,9 +114,12 @@ export function useFanTipHistory() {
 
     if (fallback.error || !fallback.data) {
       setReceipts([]);
+      setError(fallback.error?.message ?? 'Could not load your Mālo receipts.');
       setLoading(false);
       return;
     }
+
+    setError(null);
 
     setReceipts(
       parseReceipts(
@@ -139,6 +145,7 @@ export function useFanTipHistory() {
     receipts,
     summary,
     loading,
+    error,
     signedIn: Boolean(userId),
     refresh,
   };

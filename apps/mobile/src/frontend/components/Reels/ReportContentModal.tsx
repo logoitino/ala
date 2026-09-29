@@ -3,10 +3,11 @@ import { useEffect } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
-import { useSheetFrame } from '@/hooks/useSheetFrame';
+import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { SPRING_CARD } from '@/theme/motion';
 
 type ReportContentModalProps = {
@@ -63,12 +64,12 @@ export function ReportContentModal({
     >
       <View style={[styles.root, Platform.OS === 'web' ? styles.webRoot : undefined]}>
         <Pressable haptic="none" disabled={submitting} onPress={onClose} style={StyleSheet.absoluteFill}>
-          <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+          <BlurView intensity={SHEET_BLUR_INTENSITY} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           <View style={styles.dim} />
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
-          <View style={styles.handle} />
+          <SheetHandle />
           <Text style={styles.kicker}>Safety</Text>
           <Text style={styles.title}>Report / Hide Highlight 🚩</Text>
           <Text style={styles.body}>
@@ -119,13 +120,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     gap: 8,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: colors.border,
   },
   kicker: {
     color: colors.primary,

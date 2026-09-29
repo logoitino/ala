@@ -102,6 +102,7 @@ export const FOCAL = {
 export const TAB_ACCENTS = {
   index: { color: FOCAL.jadeInk, mist: FOCAL.mistJade, glow: FOCAL.neonJade },
   local: { color: FOCAL.cyanInk, mist: FOCAL.mistCyan, glow: FOCAL.islandCyan },
+  activity: { color: FOCAL.violetInk, mist: FOCAL.mistViolet, glow: FOCAL.electricViolet },
   spotlight: { color: FOCAL.goldInk, mist: FOCAL.mistGold, glow: FOCAL.electricGold },
   drip: { color: FOCAL.emberInk, mist: FOCAL.mistEmber, glow: FOCAL.ember },
   profile: { color: FOCAL.violetInk, mist: FOCAL.mistViolet, glow: FOCAL.electricViolet },

@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 
-import { authFailureMessage, isNewAuthUser, passwordMeetsPolicy } from '@/lib/auth';
+import { authFailureMessage, isNewAuthUser, passwordMeetsPolicy, softWallEmailGates } from '@/lib/auth';
 
 function fakeUser(overrides: Partial<Pick<User, 'created_at' | 'last_sign_in_at'>>): User {
   return {
@@ -63,5 +63,40 @@ describe('isNewAuthUser', () => {
     expect(isNewAuthUser(fakeUser({ created_at: 'not-a-date', last_sign_in_at: 'also-not-a-date' }))).toBe(
       false,
     );
+  });
+});
+
+describe('softWallEmailGates', () => {
+  it('never blocks retroactively: Sign in is enabled without the 13+ confirmation', () => {
+    const gates = softWallEmailGates('returning@family.com', 'hunter2password', false);
+    expect(gates.canSignIn).toBe(true);
+  });
+
+  it('still gates Create account and magic link on the 13+ confirmation', () => {
+    const unconfirmed = softWallEmailGates('new@family.com', 'hunter2password', false);
+    expect(unconfirmed.canCreate).toBe(false);
+    expect(unconfirmed.canMagic).toBe(false);
+
+    const confirmed = softWallEmailGates('new@family.com', 'hunter2password', true);
+    expect(confirmed.canCreate).toBe(true);
+    expect(confirmed.canMagic).toBe(true);
+  });
+
+  it('holds Create account to the password policy but lets a short existing password sign in', () => {
+    const gates = softWallEmailGates('returning@family.com', 'short', true);
+    expect(gates.canCreate).toBe(false);
+    expect(gates.canSignIn).toBe(true);
+  });
+
+  it('needs an email for every path, and a password for the two password paths', () => {
+    expect(softWallEmailGates('   ', 'hunter2password', true)).toEqual({
+      canSignIn: false,
+      canCreate: false,
+      canMagic: false,
+    });
+    const noPassword = softWallEmailGates('fan@family.com', '', true);
+    expect(noPassword.canSignIn).toBe(false);
+    expect(noPassword.canCreate).toBe(false);
+    expect(noPassword.canMagic).toBe(true);
   });
 });

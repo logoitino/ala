@@ -12,10 +12,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
-import { useSheetFrame } from '@/hooks/useSheetFrame';
+import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import {
   DRIP_SIZES,
   dripAuraForOrder,
@@ -204,13 +205,13 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
     <View style={[styles.root, Platform.OS === 'web' ? styles.webRoot : styles.nativeRoot]}>
       <Pressable haptic="none" disabled={busy} onPress={() => dismiss()} style={StyleSheet.absoluteFill}>
         <Animated.View style={[styles.dim, backdropStyle]}>
-          <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+          <BlurView intensity={SHEET_BLUR_INTENSITY} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
         </Animated.View>
       </Pressable>
       <View pointerEvents="box-none" style={frame.dock}>
       <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
         <Pressable haptic="none" onPress={() => undefined}>
-          <View style={styles.handle} />
+          <SheetHandle />
           {display ? (
             <Animated.View style={[styles.content, contentStyle]}>
               <View style={styles.iconWrap}>
@@ -356,14 +357,6 @@ const styles = StyleSheet.create({
       android: { elevation: 12 },
       default: { boxShadow: '0px -8px 24px rgba(0, 115, 60, 0.14)' },
     }),
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 42,
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: colors.border,
-    marginBottom: 6,
   },
   content: {
     gap: 12,

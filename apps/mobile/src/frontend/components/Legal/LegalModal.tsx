@@ -4,10 +4,11 @@ import { BlurView } from 'expo-blur';
 import { Checkbox } from 'expo-checkbox';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
-import { useSheetFrame } from '@/hooks/useSheetFrame';
+import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { LEGAL_ACK_LABEL, LEGAL_MENU_LABEL, LEGAL_SECTIONS, LEGAL_TERMS_VERSION } from '@/data/legal';
 import { useLegalAck } from '@/hooks/useLegalAck';
 import { telemetry } from '@/services/TelemetryManager';
@@ -124,12 +125,12 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
       <View style={styles.root}>
         <Pressable haptic="none" style={styles.backdrop} onPress={dismiss}>
           <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
-            <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={SHEET_BLUR_INTENSITY} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           </Animated.View>
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
-          <View style={styles.handle} />
+          <SheetHandle />
           <Text style={styles.kicker}>Legal</Text>
           <Text style={styles.title}>{LEGAL_MENU_LABEL}</Text>
           <Text style={styles.lede}>
@@ -189,14 +190,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     gap: 10,
     maxHeight: '90%',
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    marginBottom: 4,
   },
   kicker: {
     fontSize: 11,

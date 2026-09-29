@@ -172,7 +172,8 @@ function CardChrome({ tier, children }: { tier: AuraTier; children: ReactNode })
  * @param careerPreview Top 3 career stats (Games / Points or Tries / Yards or Tackles) on the back face.
  * @param isAuraMaxed / wishlistFulfilled Lights the Skia neon sweep (`GlowingNeonBorder`) and pulses stroke thickness.
  * @param verificationStatus Neon jade ⚡ VERIFIED VARSITY on the identity face when Varsity is earned.
- * @returns Flippable card plus **Flip Card 🔄**. Tap the body or the button to flip.
+ * @returns Flippable card. Tapping anywhere on the card flips it; a small 🔄 chip in the
+ * corner is the affordance (there is no separate flip button).
  * @sideEffects Reanimated `withSpring` `rotateY` 0↔180 (`SPRING_FLIP`, `perspective: 1000`); `Haptics.impactAsync(Medium)` exactly when the rotation crosses 90°; back-face Season Points / Total Tipped fade in with `withDelay`; Skia canvas when the glow is on.
  */
 export function AuraTradingCard({
@@ -467,18 +468,16 @@ export function AuraTradingCard({
               </CardChrome>
             </View>
           </Animated.View>
+          {/* Affordance only — the whole card is the target, so this must not eat the tap. */}
+          <View pointerEvents="none" style={styles.flipHint}>
+            <Text style={[styles.flipHintLabel, { color: tier.ink }]}>
+              {flipped ? '🔄 Identity' : '🔄 Season'}
+            </Text>
+          </View>
         </View>
         </GestureDetector>
       </GlowingCardWrapper>
 
-      <AnimatedButton
-        accessibilityLabel={flipped ? 'Show identity face' : 'Flip card'}
-        haptic="none"
-        onPress={flip}
-        contentStyle={styles.flipBtn}
-      >
-        <Text style={styles.flipLabel}>Flip Card 🔄</Text>
-      </AnimatedButton>
       {onClaimVerification && verificationStatus !== 'verified' ? (
         <AnimatedButton
           accessibilityLabel={CLAIM_VERIFY_CTA}
@@ -809,19 +808,21 @@ const styles = StyleSheet.create({
   earnedLabelOff: {
     color: colors.textMuted,
   },
-  flipBtn: {
-    minHeight: 44,
-    borderRadius: radii.md,
-    borderWidth: 1.5,
-    borderColor: FOCAL.electricGold,
-    backgroundColor: FOCAL.mistGold,
-    alignItems: 'center',
-    justifyContent: 'center',
+  flipHint: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    zIndex: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.55)',
   },
-  flipLabel: {
-    color: FOCAL.goldInk,
-    fontSize: 14,
+  flipHintLabel: {
+    fontSize: 11,
     fontWeight: '800',
+    letterSpacing: 0.3,
+    opacity: 0.85,
   },
   verifyBtn: {
     minHeight: 40,

@@ -35,26 +35,30 @@ function parseRow(row: Record<string, unknown>): ReceivedMalo | null {
 /**
  * @purpose Gifts fans sent to this athlete: amount, who gave it, and where it started.
  * @param playerId `players.id` for the athlete (or the child a guardian is linked to).
- * @returns `{ rows, totalCents, loading }` — empty when the viewer is not that athlete, their guardian, or an admin.
+ * @returns `{ rows, totalCents, loading, error }` — empty when the viewer is not that athlete, their guardian, or an admin.
  * @sideEffects Supabase RPC `get_received_malo`.
  */
 export function useReceivedMalo(playerId: string | null | undefined) {
   const [rows, setRows] = useState<ReceivedMalo[]>([]);
   const [loading, setLoading] = useState(Boolean(playerId));
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!playerId || !isSupabaseConfigured) {
       setRows([]);
+      setError(null);
       setLoading(false);
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase.rpc('get_received_malo', { target_player_id: playerId });
-    if (error || !Array.isArray(data)) {
+    const { data, error: rpcError } = await supabase.rpc('get_received_malo', { target_player_id: playerId });
+    if (rpcError || !Array.isArray(data)) {
       setRows([]);
+      setError(rpcError?.message ?? 'Could not load Mālo received.');
       setLoading(false);
       return;
     }
+    setError(null);
     setRows(
       data
         .map((row) => (row && typeof row === 'object' ? parseRow(row as Record<string, unknown>) : null))
@@ -70,5 +74,5 @@ export function useReceivedMalo(playerId: string | null | undefined) {
   );
 
   const totalCents = rows.reduce((sum, row) => sum + row.amount_cents, 0);
-  return { rows, totalCents, loading, refresh };
+  return { rows, totalCents, loading, error, refresh };
 }

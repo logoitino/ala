@@ -9,6 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -169,7 +170,7 @@ export function HomeSearchOverlay({
       style={[styles.wrap, { paddingTop: offsetTop }, sheetStyle]}
     >
       <View pointerEvents="auto" style={styles.sheet}>
-        <View style={styles.handle} />
+        <SheetHandle />
         <Text style={styles.kicker}>Search Home</Text>
         <FilterPills
           items={KIND_PILLS}
@@ -243,13 +244,6 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 10,
     marginBottom: 12,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
   },
   kicker: {
     color: colors.textMuted,

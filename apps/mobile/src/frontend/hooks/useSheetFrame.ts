@@ -6,6 +6,12 @@ import { radii, space } from '@/constants/theme';
 /** Widest a fan popup grows. Wider browsers center this card instead of stretching it. */
 const SHEET_MAX = 440;
 
+/**
+ * One blur strength for every fan sheet backdrop. These had drifted to 40 and 48 across the
+ * five sheets, so a menu and a checkout dimmed the feed by visibly different amounts.
+ */
+export const SHEET_BLUR_INTENSITY = 44;
+
 export type SheetFrame = {
   /** Equal side gutters and clearance above the home indicator. Backdrop stays full-screen. */
   dock: ViewStyle;

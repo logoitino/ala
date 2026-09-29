@@ -4,10 +4,11 @@ import { BlurView } from 'expo-blur';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
-import { useSheetFrame } from '@/hooks/useSheetFrame';
+import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
 export type ProfileMenuItem = {
@@ -90,12 +91,12 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
       <View style={styles.root}>
         <Pressable haptic="none" style={styles.backdrop} onPress={() => dismiss()}>
           <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
-            <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={SHEET_BLUR_INTENSITY} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           </Animated.View>
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
-          <View style={styles.handle} />
+          <SheetHandle />
           <Text style={styles.kicker}>Account</Text>
           <Text style={styles.title}>Settings</Text>
           <View style={styles.list}>
@@ -143,14 +144,6 @@ const styles = StyleSheet.create({
   sheet: {
     backgroundColor: colors.surface,
     gap: 10,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    marginBottom: 4,
   },
   kicker: {
     fontSize: 11,
