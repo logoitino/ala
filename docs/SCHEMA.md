@@ -636,7 +636,9 @@ Batched client performance **and** product-usage events (Reel stalls, Realtime r
 | `payload` | jsonb | Extra context |
 | `created_at` | timestamptz | |
 
-**RLS (demo):** INSERT anyone; SELECT authenticated. Aggregates still reach `/admin/reports` through `get_admin_reports()` (security definer). Incremental: `supabase/telemetry_logs.sql` then `supabase/usage_reports.sql` (adds `duration_ms` / `channel` / `step` on remotes that still store checkout time in `metric_value`). Client: `apps/mobile/src/frontend/services/TelemetryManager.ts` + `useSurfaceUsage` (flush every 10s or queue size 15).
+**RLS:** INSERT requires a signed-in session (`auth.uid()` is not null), and only the event types the app writes (`video_stall`, `video_first_frame`, `socket_reconnect`, `checkout_latency`, `tab_dwell`, `surface_scroll`, `feature_tap`, `ui_issue`, `flash_unlock`), with text fields ≤120 characters and `payload` ≤4000 bytes. `telemetry_logs_stamp_created_at` sets `created_at` to `now()` on insert so a client cannot backdate a row. `anon` insert is revoked. SELECT stays any authenticated user (still open — STATE §6). The Stripe webhook inserts `stripe_webhook_payment_succeeded` with the service role, which bypasses RLS. Migration `supabase/migrations/20260929190000_telemetry_insert_guard.sql` (**not applied**). Aggregates still reach `/admin/reports` through `get_admin_reports()` (security definer). Client: `apps/mobile/src/frontend/services/TelemetryManager.ts` (holds the batch until a session exists) + `useSurfaceUsage` (flush every 10s or queue size 15).
+
+**2026-09 data-privacy sweep (`docs/STATE.md` §5 "telemetry anon-insert hole"):** INSERT stays `with check (true)` for `anon` on purpose — Tapua'i is browse-first, so guest telemetry is a real flow, not just a hole; requiring `authenticated` would silently drop it. `telemetry_logs_event_type_check` / `_duration_ms_check` / `_attempts_check` (`supabase/migrations/20260929190000_telemetry_logs_bounds.sql`) instead bound the *shape* of a row: `event_type` must be one of the eight values above, `duration_ms` 0–600000, `attempts` 0–1000 — same "stopgap cap on a client-fabricatable field" shape as `tips`/`sponsorships`/`shop_orders`. This does **not** close the volume-based fabrication vector (many rows with small, valid-looking values) — that needs the owner's `docs/STATE.md` §6 item 1 decision (session id / user id + admin-only SELECT) plus Terms copy first.
 
 ---
 
@@ -1116,7 +1118,7 @@ If `aura_points` is unset on a player, the client falls back to `aura_count + se
 | `company_revenue_logs` | **Admin-only** | **Admin-only** (`anon` bypass dropped; real writes flow through a SECURITY DEFINER trigger regardless); amount columns CHECK `>= 0` |
 | `app_runtime_config` | Public (fan chrome boot) | **authenticated** admin only (`anon` bypass dropped; `patch_app_runtime_draft`/`publish_app_runtime` also admin-checked internally since SECURITY DEFINER bypasses this policy) |
 | `app_feedback` | Admin or `anon` | INSERT anyone; admin or `anon` UPDATE — not tightened this pass |
-| `telemetry_logs` | Authenticated | INSERT anyone |
+| `telemetry_logs` | Authenticated (any signed-in user — still open, STATE §6) | INSERT signed-in only, known event types, bounded fields (`anon` revoked; migration `20260929190000`, not applied) |
 | `saved_reels` | Own rows | INSERT / DELETE own rows |
 | `reel_hype_votes` | Own rows | INSERT own rows, **authenticated only** (anon execute on `increment_reel_hype` defeated this table's own per-user dedupe — closed) |
 | `schools_and_teams` | Public | Admin INSERT / UPDATE / DELETE |

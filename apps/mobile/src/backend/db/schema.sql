@@ -806,6 +806,47 @@ alter table public.telemetry_logs add column if not exists duration_ms integer;
 alter table public.telemetry_logs add column if not exists attempts integer;
 alter table public.telemetry_logs add column if not exists payload jsonb not null default '{}'::jsonb;
 
+-- 2026-09 data-privacy sweep (docs/STATE.md §5 "telemetry anon-insert hole"): INSERT is
+-- `with check (true)` for `anon` (the app is browse-first, so guest telemetry is a real, wanted
+-- flow — requiring `authenticated` would silently drop it, not just close a hole). That leaves a
+-- genuinely open volume-based fabrication vector unfixed (an anon-key holder can still insert many
+-- rows with small, valid-looking values) — that needs the owner's §6 item 1 identity decision
+-- (session id / user id + admin-only SELECT), not something to default here. What this constraint
+-- pass *does* close without an owner call: an unbounded row can no longer report a nonsense
+-- `event_type` outside `TelemetryManager.ts`'s own union, or a `duration_ms`/`attempts` value big
+-- enough to single-handedly wreck a Reports/Coverage average (e.g. a fabricated 11-day "video
+-- stall"). Same "stopgap cap on a client-fabricatable field" shape already used for `tips` /
+-- `sponsorships` / `shop_orders` amounts.
+do $$
+begin
+  alter table public.telemetry_logs add constraint telemetry_logs_event_type_check
+    check (event_type in (
+      'video_stall', 'video_first_frame', 'socket_reconnect', 'checkout_latency',
+      'tab_dwell', 'surface_scroll', 'feature_tap', 'ui_issue'
+    ));
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
+do $$
+begin
+  alter table public.telemetry_logs add constraint telemetry_logs_duration_ms_check
+    check (duration_ms is null or (duration_ms >= 0 and duration_ms <= 600000));
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
+do $$
+begin
+  alter table public.telemetry_logs add constraint telemetry_logs_attempts_check
+    check (attempts is null or (attempts >= 0 and attempts <= 1000));
+exception
+  when duplicate_object then null;
+  when duplicate_table then null;
+end $$;
+
 create index if not exists telemetry_logs_created_at_idx on public.telemetry_logs (created_at desc);
 create index if not exists telemetry_logs_event_type_idx on public.telemetry_logs (event_type, created_at desc);
 
@@ -4158,6 +4199,8 @@ create policy "Insert own subscriber requests"
 drop policy if exists "Public read cheer polls" on public.cheer_polls;
 create policy "Public read cheer polls" on public.cheer_polls for select using (true);
 
+-- Closed by the telemetry insert guard at the end of this file (anon revoked, signed-in + allowlist).
+-- This statement remains so a full replay matches the original incremental before that guard runs.
 drop policy if exists "Insert telemetry logs" on public.telemetry_logs;
 create policy "Insert telemetry logs" on public.telemetry_logs for insert with check (true);
 
@@ -9703,3 +9746,57 @@ revoke all on function public.get_my_donation_thanks() from public, anon;
 grant execute on function public.thank_donation(uuid, text) to authenticated;
 grant execute on function public.get_donations_to_thank(uuid) to authenticated;
 grant execute on function public.get_my_donation_thanks() to authenticated;
+
+-- ---------------------------------------------------------------------------------------------
+-- Telemetry insert guard (20260929190000). Closes the anon INSERT on telemetry_logs.
+-- A signed-in session only, known event types, bounded fields. created_at is server-stamped.
+-- Does not add user_id / session_id (STATE §6). Service-role webhook inserts are unchanged.
+-- ---------------------------------------------------------------------------------------------
+
+create or replace function public.telemetry_logs_stamp_created_at()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  new.created_at := now();
+  return new;
+end;
+$$;
+
+revoke all on function public.telemetry_logs_stamp_created_at() from public, anon, authenticated;
+
+drop trigger if exists telemetry_logs_stamp_created_at on public.telemetry_logs;
+create trigger telemetry_logs_stamp_created_at
+  before insert on public.telemetry_logs
+  for each row
+  execute function public.telemetry_logs_stamp_created_at();
+
+drop policy if exists "Insert telemetry logs" on public.telemetry_logs;
+create policy "Insert telemetry logs"
+  on public.telemetry_logs
+  for insert
+  to authenticated
+  with check (
+    auth.uid() is not null
+    and event_type in (
+      'video_stall',
+      'video_first_frame',
+      'socket_reconnect',
+      'checkout_latency',
+      'tab_dwell',
+      'surface_scroll',
+      'feature_tap',
+      'ui_issue',
+      'flash_unlock'
+    )
+    and (video_id is null or char_length(video_id) <= 120)
+    and (channel is null or char_length(channel) <= 120)
+    and (step is null or char_length(step) <= 120)
+    and (duration_ms is null or duration_ms between 0 and 86400000)
+    and (attempts is null or attempts between 0 and 100)
+    and octet_length(coalesce(payload, '{}'::jsonb)::text) <= 4000
+  );
+
+revoke insert on public.telemetry_logs from anon;
+grant insert on public.telemetry_logs to authenticated;

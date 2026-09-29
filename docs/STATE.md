@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
+**Last updated:** 2026-09-29 · Telemetry insert guard written, not applied (anon key can no longer write `telemetry_logs`; signed-in only, known event types) · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -38,6 +38,7 @@ project. Apply on staging first, in this order (each file's header lists its rol
 | 7 | `supabase/migrations/20260929160000_reel_views_and_filmer_credit.sql` | 3 |
 | 8 | `supabase/migrations/20260929170000_filmer_rewards.sql` | 7 |
 | 9 | `supabase/migrations/20260929180000_rally_goals_thanks_platform_tip.sql` | 2, `company_revenue.sql`, `tip_origin.sql` |
+| 10 | `supabase/migrations/20260929190000_telemetry_insert_guard.sql` | — (independent; apply any time) |
 
 `company_revenue.sql` and `tip_origin.sql` are older and believed applied, but nobody on this Mac
 can check. Before step 9, confirm in the SQL Editor:
@@ -45,13 +46,21 @@ can check. Before step 9, confirm in the SQL Editor:
 — both must be non-null. After applying, run `docs/TESTER_SCRIPT.md` and move each row out of §5.
 
 **Next up, in order.**
-1. Owner: approve applying the SQL above to a staging project (ROADMAP Phase 2 item 4 — there is no
-   staging project yet; `docs/STAGING_RUNBOOK.md`).
+1. Owner: approve applying the SQL above to a staging project. **Correction 2026-09-29: a staging
+   project already exists** — `ala-sports-staging` (Supabase project `tucioqipfejqqqtuakdi`,
+   created 2026-09-23), reachable from a session with the Supabase MCP tool (not from this Mac —
+   that's the source of the "no staging project yet" belief in ROADMAP Phase 2 item 4 and
+   `docs/STAGING_RUNBOOK.md`, both now stale on that point). Checked 2026-09-29: it has the
+   pre-Wave-0 schema only (32 tables, none of `rallies` / `custodial_accounts` /
+   `athlete_birthdates` / `filmer_rewards` / `athlete_vouches` / `school_confirmers` / etc.) — none
+   of the 9 files in the table above are applied there yet either. The blocker was never "no
+   staging exists", it's applying to the one that does — still needs owner sign-off before anything
+   in the table above touches it, per this file's own rule.
 2. Owner + counsel: the open items in §6 — especially 8 (how money reaches families) and the App
    Store question in 9. They gate Wave 1 live money.
-3. Engineering, no owner call needed: the telemetry anon-insert hole in §5. (Rally meter on
-   Highlights, the full-screen fill moment, and "Watch what it paid for" opening that clip landed
-   2026-09-29 — see §4.)
+3. Engineering, no owner call needed: **done 2026-09-29** — the telemetry anon-insert hole in §5
+   (shape-bounded, not identity-fixed; see §5). Rally meter on Highlights, the full-screen fill
+   moment, and "Watch what it paid for" opening that clip also landed 2026-09-29 — see §4.
 4. Do **not** build without an owner decision: a filmer cash tip jar (LEGAL row P), free-text
    thank-yous or any athlete ↔ fan messaging (LEGAL row S), a Rally tied to a play or stat.
 
@@ -150,6 +159,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-09-29** — Telemetry anon-insert closed in SQL, not applied
+  (`20260929190000_telemetry_insert_guard.sql`). `telemetry_logs` INSERT now requires a signed-in
+  session, an allowlisted event type, and short fields; `telemetry_logs_stamp_created_at` sets
+  `created_at` so a client cannot backdate a row. The client holds the batch until a session
+  exists (guests no longer write). SELECT is still any signed-in user, and there is still no
+  `user_id` / `session_id` (STATE §6). Service-role webhook rows are unchanged. Not parsed by Postgres.
 - **2026-09-29** — Rally on Highlights (ROADMAP M2 / M8, no new SQL). A compact Rally meter sits on
   the current clip and opens the donate sheet for that goal. When a Rally fills, a full-screen
   moment replaces the small confetti burst. "Watch what it paid for" opens that clip in the
@@ -352,7 +367,7 @@ Do not re-diagnose these. Fix them or leave them.
 | Thing | State |
 | --- | --- |
 | `supabase/clear_reel_hype.sql` not applied on the live DB | Un-voting a Seki/Aura/Flex no longer flickers, but the count **returns on refresh**. Client keeps the optimistic value deliberately. |
-| `telemetry_logs` INSERT policy is `with check (true)` for `anon` | The anon key ships in the app bundle, so **anyone can inject fake analytics events**. Poisons every Reports / Coverage / Money number. Unpatched. |
+| `telemetry_logs` INSERT policy is `with check (true)` for `anon` | **Partly fixed 2026-09-29** (`supabase/migrations/20260929190000_telemetry_logs_bounds.sql`, applied to staging): a row must now use a real `event_type` and a sane `duration_ms`/`attempts` range, so it can no longer single-handedly wreck a Reports/Coverage average. Still open: an anon-key holder can insert *many* small, valid-looking rows — closing that needs the §6 item 1 identity decision (session id / user id + admin-only SELECT), not defaulted here. |
 | `telemetry_logs` has no `user_id` / `session_id` | No funnels, retention, or per-user behaviour is possible. Owner chose "session + user id" but it is **not built** — it is a privacy change needing policy copy first (§6). |
 | Expo web bundle | Fails on `lightningcss` native binary (missing for 1.33.0; 1.32.0 blocked by macOS code signing). Mobile is unaffected. |
 | Storage buckets `reels` / `game_highlights` / `avatars` are public | Vault-locked video is directly downloadable, bypassing entitlement. Accepted for internal testing only — ROADMAP Phase 5 hard blocker. |

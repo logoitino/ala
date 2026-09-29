@@ -4,6 +4,10 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-29
 
+### Telemetry
+
+- Analytics inserts from the public anon key are closed in a new migration (not applied yet). Until it runs, anyone with the key can still write fake events. The app now holds those events until someone is signed in.
+
 ### Audit fixes
 
 - Sign-in sheet: a fast double tap on Apple / Google / email / magic link no longer starts two sign-ins.

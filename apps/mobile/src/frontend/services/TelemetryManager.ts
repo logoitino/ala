@@ -5,6 +5,8 @@ import type { TelemetryLog } from '@/types/database';
 
 const FLUSH_MS = 10_000;
 const MAX_QUEUE = 15;
+/** Guest events wait for a session. Past this, the oldest are dropped so a long browse cannot grow without bound. */
+const HELD_MAX = 60;
 const GLOBAL_KEY = '__tapuaiTelemetryManager';
 
 type TelemetryEventType =
@@ -41,7 +43,7 @@ function asMillis(value: number): number {
 /**
  * @purpose Batch client performance and product-usage events into `telemetry_logs` for `/admin/reports`.
  * @returns Process-wide singleton. `track*` enqueues; flush runs every 10s or when the queue exceeds 15.
- * @sideEffects In-memory queue, `setInterval`, AppState background flush, Supabase INSERT (swallowed if the table is missing).
+ * @sideEffects In-memory queue, `setInterval`, AppState background flush, Supabase INSERT once a session exists (swallowed if the table is missing). Guest events stay queued.
  */
 export class TelemetryManager {
   private queue: QueueRow[] = [];
@@ -81,6 +83,9 @@ export class TelemetryManager {
       payload: event.payload ?? {},
       created_at: nowIso(),
     });
+    if (this.queue.length > HELD_MAX) {
+      this.queue.splice(0, this.queue.length - HELD_MAX);
+    }
     if (this.queue.length >= MAX_QUEUE) void this.flush();
   }
 
@@ -179,6 +184,7 @@ export class TelemetryManager {
 
   /**
    * @purpose Push the in-memory batch to `telemetry_logs`. Safe no-op when Supabase or the table is missing.
+   * Holds the batch until there is a signed-in session — the insert policy rejects `anon`.
    */
   async flush(): Promise<void> {
     if (this.flushing || this.queue.length === 0) return;
@@ -186,6 +192,15 @@ export class TelemetryManager {
       this.queue = [];
       return;
     }
+
+    let signedIn = false;
+    try {
+      const { data } = await supabase.auth.getSession();
+      signedIn = Boolean(data.session);
+    } catch {
+      return;
+    }
+    if (!signedIn) return;
 
     this.flushing = true;
     const batch = this.queue.splice(0, this.queue.length);
