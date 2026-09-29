@@ -1,0 +1,39 @@
+# Repository owner. Department comments document the review lens until the team has
+# separate GitHub handles; replace/add handles here as people join.
+* @logoitino
+
+# BACKEND
+/supabase/ @logoitino
+/apps/mobile/src/backend/ @logoitino
+/apps/mobile/src/frontend/types/database.ts @logoitino
+
+# HIGHLIGHTS + AURA
+/apps/mobile/app/(tabs)/index.tsx @logoitino
+/apps/mobile/src/frontend/components/Reels/ @logoitino
+/apps/mobile/src/frontend/components/Effects/ @logoitino
+/apps/mobile/src/frontend/theme/ @logoitino
+
+# COMMERCE
+/apps/mobile/src/frontend/hooks/useTipCheckout.ts @logoitino
+/apps/mobile/src/frontend/components/TipCheckout.tsx @logoitino
+/apps/mobile/src/frontend/components/TipSheetModal.tsx @logoitino
+/apps/mobile/src/backend/api/createPaymentIntent.ts @logoitino
+/apps/mobile/app/(tabs)/drip.tsx @logoitino
+
+# OPERATOR + LOCAL
+/apps/mobile/app/operator/ @logoitino
+/apps/mobile/src/frontend/components/Operator/ @logoitino
+/apps/mobile/app/(tabs)/local/ @logoitino
+/apps/mobile/src/frontend/components/Local/ @logoitino
+
+# ROLE_HQ + PROFILE
+/apps/mobile/app/(parent)/ @logoitino
+/apps/mobile/app/(booster)/ @logoitino
+/apps/mobile/app/(sponsor)/ @logoitino
+/apps/mobile/src/frontend/components/Custodial/ @logoitino
+/apps/mobile/src/frontend/components/Profile/ @logoitino
+
+# ADMIN — Expo writes; Next is read-only oversight.
+/apps/mobile/app/(admin)/ @logoitino
+/apps/mobile/src/frontend/components/Admin/ @logoitino
+/apps/admin-portal/ @logoitino

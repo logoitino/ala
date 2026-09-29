@@ -2,7 +2,9 @@
 
 **Status:** 2026-09-29. **Step 0 done** (`core.fileMode false`; topic commits on branch
 `wave0-custodial-verification`, not pushed). **Step 1 started:** `supabase/migrations/` exists with
-its README and the first file (athlete verification ladder).
+its README and the first file (athlete verification ladder). **Step 4 core done:** PR template,
+CODEOWNERS, placement READMEs and a CI route-data boundary guard; folder guidance can keep growing
+as large modules are split.
 
 **Owner clarification (2026-09-29): we are not moving hosts.** The goal is to keep the code
 organised so that *if* Tapua'i ever has to move (another Postgres host, another auth or payments
@@ -117,7 +119,7 @@ Where Supabase is baked in today, measured 2026-09-29:
 | `storage.*` policies | 25 lines | Storage buckets are Supabase-specific; client code goes through `services/MediaUploadService`, so a move touches that one file plus these policies. |
 | Realtime | 4 publication lines | Only `useLiveScores` / `useLiveGame` / `useGameEventBroadcast` subscribe. Keep it that way. |
 | Edge Functions | 3 (`create-payment-intent`, `create-stripe-account`, `stripe-webhook`) | Plain Deno HTTP handlers; portable to any serverless host. Keep Stripe logic in them, not in SQL. |
-| Client calls | `lib/supabase.ts` imported in 65 files | **Rule:** screens and components call `lib/*` or `hooks/*`, never `supabase.from/rpc` directly. Then a move rewrites `lib/`, not the UI. **10 files break this today:** `app/(sponsor)/sponsor/index.tsx`, `app/(tabs)/user/[id].tsx`, `app/(guest)/game/[id].tsx`, `app/(athlete)/athlete/index.tsx`, `app/(booster)/booster/index.tsx`, `app/(parent)/parent/index.tsx`, `app/operator/scorer.tsx`, `app/operator/index.tsx`, `app/operator/[gameId].tsx`, `components/Reels/UploadVideoModal.tsx`. Move their queries into `lib/` when those files are next touched (fits step 3). |
+| Client calls | `lib/supabase.ts` imported in 65 files | **Rule:** screens and components call `lib/*` or `hooks/*`, never `supabase.from/rpc` directly. Then a move rewrites `lib/`, not the UI. **8 Expo route files still break this today:** `app/(tabs)/user/[id].tsx`, `app/(tabs)/profile.tsx`, `app/(guest)/game/[id].tsx`, `app/(guest)/player/[id].tsx`, `app/(athlete)/athlete/index.tsx`, `app/(parent)/parent/index.tsx`, `app/operator/scorer.tsx`, `app/operator/[gameId].tsx`; `components/Reels/UploadVideoModal.tsx` is the component exception. Sponsor, Booster and operator check-in moved into `lib/` on 2026-09-29. `pnpm app:data-boundaries` records exact route call counts and fails if debt grows. Move queries into `lib/` when those files are next touched and lower the baseline in the same change. |
 
 Habits that keep this true: every table and RPC documented in `docs/SCHEMA.md` (CI enforces);
 every SQL change a dated file with a header; secrets only in env / the SQL Editor; no vendor SDK

@@ -62,6 +62,9 @@ jobs:
       - name: Check donation language in on-screen copy (docs/VOICE.md)
         run: pnpm copy:check
 
+      - name: Keep data access out of Expo routes
+        run: pnpm app:data-boundaries
+
       - name: Run mobile unit tests
         run: pnpm --filter @tapuai/mobile test -- --ci
 

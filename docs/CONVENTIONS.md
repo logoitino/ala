@@ -68,6 +68,14 @@ packages/shared-types
   *Known debt:* several route files still query Supabase directly — see STATE.md.
 - `src/frontend/**` must **never** import `@backend/*`. Only `app/api/*+api.ts` may.
 - Server-only secrets (`sk_`, `service_role`) never appear under `src/frontend/`. CI greps for this.
+- `pnpm app:data-boundaries` prevents new direct Supabase calls in Expo routes. Existing route debt
+  is counted in `scripts/app-data-boundary-baseline.json`; moving a query into `lib/` or a hook must
+  lower that baseline in the same change.
+
+**Review size:** when a module grows beyond roughly 500 lines, split it by responsibility before
+adding another substantial concern. Keep the public component/helper stable and prove a
+behavior-preserving split with the existing tests. Known large-file work is tracked in
+`docs/CODE_ORGANIZATION_PLAN.md` Step 3.
 
 **Path aliases:** `@/*` → `apps/mobile/src/frontend/*`, `@backend/*` → `apps/mobile/src/backend/*`,
 `@shared/*` → `packages/shared-types/*`. Use `@tapuai/shared-types` for the package import.
