@@ -273,7 +273,7 @@ Do not re-diagnose these. Fix them or leave them.
 | `docs/ROADMAP.md` | North Star (Watch & compete / Rally / Pass it on / Rise), Release waves 0-3 (cheapest first), Phases 0-5, Mission track M1-M10. |
 | `docs/STORY.md` | Mission narrative, marketing lines, and the guardrails that keep athletes eligible. |
 | `docs/ATHLETE_VERIFICATION_DESIGN.md` | Open sign-up, the athlete verification ladder, gifts while pending, safe growth, fake-highlight takedown. Ladder + in-person school confirmation built; §6 (fakes) still a proposal. |
-| `docs/CODE_ORGANIZATION_PLAN.md` | Commit hygiene, Supabase CLI migrations, generated types, big-file splits, PR notes. Step 0 done; step 1 started (`supabase/migrations/`, baseline needs the owner). |
+| `docs/CODE_ORGANIZATION_PLAN.md` | Keep the code easy to review and cheap to move hosts later (we are **not** moving now): commit hygiene, dated SQL files, generated types, big-file splits, a Supabase-coupling map, and the rule that screens call `lib/`, never Supabase directly (10 files break it). Step 0 done. |
 | `supabase/migrations/README.md` | How migrations work here, how to apply without the CLI, the baseline steps, adding a school confirmer. |
 | `docs/STAGING_RUNBOOK.md` | Step-by-step staging project + tester build. |
 | `docs/TESTER_SCRIPT.md` | Phase 3 tasks per role, organised by pillar, plus feel questions. |

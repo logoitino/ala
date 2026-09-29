@@ -2,8 +2,12 @@
 
 **Status:** 2026-09-29. **Step 0 done** (`core.fileMode false`; topic commits on branch
 `wave0-custodial-verification`, not pushed). **Step 1 started:** `supabase/migrations/` exists with
-its README and the first real migration (athlete verification ladder). The baseline still needs the
-owner, because it reads the live database.
+its README and the first file (athlete verification ladder).
+
+**Owner clarification (2026-09-29): we are not moving hosts.** The goal is to keep the code
+organised so that *if* Tapua'i ever has to move (another Postgres host, another auth or payments
+provider), the move is easy to read, plan and do. Nothing here is urgent; the baseline dump in
+step 1 is optional until someone wants a clean rebuild or a move. See "Staying portable" below.
 
 ## Why
 
@@ -101,6 +105,23 @@ tests passing unchanged. They are the proof that nothing moved.
   back.
 - Keep the existing habits: `@purpose` on exported functions, STATE §4 for each change,
   CHANGELOG for anything users see.
+
+## Staying portable (so a future move is cheap)
+
+Where Supabase is baked in today, measured 2026-09-29:
+
+| Coupling | Size | Keep it movable by |
+| --- | --- | --- |
+| Plain Postgres tables, RLS, RPCs | most of `schema.sql` | Already portable — any Postgres runs it. Keep new changes as plain SQL files in `supabase/migrations/`. |
+| `auth.uid()` / `auth.role()` in SQL | 105 / 61 uses | Supabase-only functions. On another host, define `auth.uid()` / `auth.role()` shims that read the JWT; no call site changes. Don't add other Supabase-only SQL features without a note. |
+| `storage.*` policies | 25 lines | Storage buckets are Supabase-specific; client code goes through `services/MediaUploadService`, so a move touches that one file plus these policies. |
+| Realtime | 4 publication lines | Only `useLiveScores` / `useLiveGame` / `useGameEventBroadcast` subscribe. Keep it that way. |
+| Edge Functions | 3 (`create-payment-intent`, `create-stripe-account`, `stripe-webhook`) | Plain Deno HTTP handlers; portable to any serverless host. Keep Stripe logic in them, not in SQL. |
+| Client calls | `lib/supabase.ts` imported in 65 files | **Rule:** screens and components call `lib/*` or `hooks/*`, never `supabase.from/rpc` directly. Then a move rewrites `lib/`, not the UI. **10 files break this today:** `app/(sponsor)/sponsor/index.tsx`, `app/(tabs)/user/[id].tsx`, `app/(guest)/game/[id].tsx`, `app/(athlete)/athlete/index.tsx`, `app/(booster)/booster/index.tsx`, `app/(parent)/parent/index.tsx`, `app/operator/scorer.tsx`, `app/operator/index.tsx`, `app/operator/[gameId].tsx`, `components/Reels/UploadVideoModal.tsx`. Move their queries into `lib/` when those files are next touched (fits step 3). |
+
+Habits that keep this true: every table and RPC documented in `docs/SCHEMA.md` (CI enforces);
+every SQL change a dated file with a header; secrets only in env / the SQL Editor; no vendor SDK
+imported outside `lib/` and `services/`.
 
 ## Order
 

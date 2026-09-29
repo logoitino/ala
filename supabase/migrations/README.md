@@ -3,6 +3,9 @@
 Started 2026-09-29 (docs/CODE_ORGANIZATION_PLAN.md step 1). Every database change from now on is a
 new timestamped file in this folder, applied in filename order.
 
+We are **not** moving hosts. This folder exists so the database history is plain, ordered SQL that
+anyone can read — and, if Tapua'i ever has to move to another Postgres host, can replay in order.
+
 ## Rules
 
 1. **One change per file**, named `YYYYMMDDHHMMSS_short_name.sql` (UTC). Supabase CLI layout, so
@@ -26,10 +29,9 @@ Staging first, then production.
   `insert into supabase_migrations.schema_migrations (version, name) values ('20260929120000', 'athlete_verification_ladder');`
   (skip this line if the `supabase_migrations` schema does not exist yet — the baseline step creates it).
 
-## Baseline — not done yet (needs live database access)
+## Baseline — optional, not done (needs live database access)
 
-This folder has no baseline, because the live schema can only be read with the project's database
-password. The owner, once:
+Only needed before a clean rebuild or a move. It needs the project's database password. The owner, once:
 
 1. `supabase db dump --schema public -f supabase/migrations/20260928000000_baseline.sql` against production.
 2. `supabase migration repair 20260928000000 --status applied` so production knows it has the baseline.
