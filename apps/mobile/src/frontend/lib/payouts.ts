@@ -1,3 +1,4 @@
+import { apiUrl } from '@/lib/apiUrl';
 import { requireAccessToken } from '@/lib/sessionToken';
 
 /**
@@ -11,7 +12,7 @@ export async function requestPayout(input: {
   description: string;
 }): Promise<{ status: string; message: string; id?: string }> {
   const accessToken = await requireAccessToken('Sign in to request a payout.');
-  const response = await fetch('/api/create-payout', {
+  const response = await fetch(apiUrl('/api/create-payout'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

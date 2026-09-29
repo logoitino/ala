@@ -15,6 +15,7 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { NATIVE_STRIPE_UNAVAILABLE_MESSAGE, useStripe } from '@/lib/stripe';
 import { telemetry } from '@/services/TelemetryManager';
 import type { Player } from '@/types/database';
+import { walletPayOptions } from '@/lib/walletPay';
 
 export const MALO_DROPPED_KEY = 'tapuai.maloDroppedCount';
 
@@ -120,6 +121,7 @@ export function useTipCheckout() {
         const { error: initError } = await initPaymentSheet({
           paymentIntentClientSecret: clientSecret,
           merchantDisplayName: "Tapua'i Sports",
+          ...walletPayOptions(),
         });
         telemetry.trackCheckoutLatency('init_sheet', Date.now() - initStartedAt);
 

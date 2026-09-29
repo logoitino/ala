@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 
+import { apiUrl } from '@/lib/apiUrl';
+import { isMissingEdgeFunction } from '@/lib/edgeFunction';
 import { useAuth } from '@/context/AuthContext';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { hasLegalAck } from '@/lib/legal';
@@ -73,18 +75,12 @@ async function requestConnect(
       if (payload.error) throw new Error(payload.error);
       return payload;
     }
-    const status =
-      error && typeof error === 'object' && 'context' in error
-        ? Number((error as { context?: { status?: number } }).context?.status)
-        : 0;
-    const message = error?.message ?? '';
-    const missingFn = status === 404 || /not found|404|failed to send/i.test(message);
-    if (error && !missingFn) {
-      throw new Error(message || 'Could not start Stripe Connect.');
+    if (error && !isMissingEdgeFunction(error)) {
+      throw new Error(error.message || 'Could not start Stripe Connect.');
     }
   }
 
-  const response = await fetch('/api/create-stripe-account', {
+  const response = await fetch(apiUrl('/api/create-stripe-account'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

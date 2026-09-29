@@ -1,33 +1,65 @@
+import { apiUrl } from '@/lib/apiUrl';
+import { isMissingEdgeFunction } from '@/lib/edgeFunction';
 import { requireAccessToken } from '@/lib/sessionToken';
+import { supabase } from '@/lib/supabase';
+
+type IntentPayload = { clientSecret?: string | null; error?: string };
 
 /**
- * @purpose Ask the JWT-gated Expo route for a PaymentIntent client secret (Mālo / exclusive / Drip / booster).
+ * @purpose Ask the JWT-gated server for a PaymentIntent client secret (Mālo / exclusive / Drip / booster).
+ *   Edge Function `create-payment-intent` first, so an installed build works with no hosted Expo server;
+ *   Metro `POST /api/create-payment-intent` only when that function is not deployed. Both run the same
+ *   amount and Mālo-freeze checks.
  * @param amount Integer cents charged by PaymentSheet (min 50, enforced server-side).
  * @param playerId `players.id` this charge is for, when there is one (Mālo tip / vault unlock / exclusive
  *   subscribe) — lets the server reject the charge before it happens when that athlete is Mālo-frozen
  *   (LEGAL_BRIEFING.md §8 item 5). Omit for player-agnostic charges (Drip merch, booster sponsorships).
  * @returns Stripe `clientSecret`.
- * @sideEffects `supabase.auth.getSession`; `POST /api/create-payment-intent` with `Authorization: Bearer`.
+ * @sideEffects `supabase.auth.getSession`; `supabase.functions.invoke('create-payment-intent')`, else
+ *   `POST /api/create-payment-intent` with `Authorization: Bearer`.
  */
 export async function createPaymentIntent(amount: number, playerId?: string | null): Promise<string> {
   const accessToken = await requireAccessToken('Sign in to complete payment.');
-  const response = await fetch('/api/create-payment-intent', {
+  const body = playerId ? { amount, playerId } : { amount };
+
+  const { data: fnData, error: fnError } = await supabase.functions.invoke('create-payment-intent', {
+    body,
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const fnPayload = (fnData ?? null) as IntentPayload | null;
+  if (fnPayload?.clientSecret) return fnPayload.clientSecret;
+  if (fnError && !isMissingEdgeFunction(fnError)) {
+    const detail = await readFunctionError(fnError);
+    throw new Error(detail ?? fnError.message ?? 'PaymentIntent did not return a clientSecret.');
+  }
+  if (!fnError && fnPayload?.error) throw new Error(fnPayload.error);
+
+  const response = await fetch(apiUrl('/api/create-payment-intent'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(playerId ? { amount, playerId } : { amount }),
+    body: JSON.stringify(body),
   });
 
-  const data = (await response.json()) as {
-    clientSecret?: string | null;
-    error?: string;
-  };
+  const data = (await response.json()) as IntentPayload;
 
   if (!response.ok || !data.clientSecret) {
     throw new Error(data.error ?? 'PaymentIntent did not return a clientSecret.');
   }
 
   return data.clientSecret;
+}
+
+/** A non-2xx Edge Function reply (e.g. 403 frozen athlete) carries `{ error }` in its Response body. */
+async function readFunctionError(error: unknown): Promise<string | null> {
+  const context = (error as { context?: unknown }).context;
+  if (!context || typeof (context as Response).json !== 'function') return null;
+  try {
+    const parsed = (await (context as Response).clone().json()) as IntentPayload;
+    return typeof parsed.error === 'string' && parsed.error ? parsed.error : null;
+  } catch {
+    return null;
+  }
 }

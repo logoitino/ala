@@ -10,6 +10,10 @@ import Stripe from 'https://esm.sh/stripe@22.6.2?target=deno';
  * deploy checklist for this repo said to deploy all three `supabase/functions/*` — doing that for
  * this one, unfixed, would have shipped a way to pay a frozen athlete that bypassed the same check
  * every other path enforces. Brought to parity rather than left to drift further.
+ *
+ * 2026-09-29: now the primary checkout path. `lib/stripeIntent.ts` invokes this function first and only
+ * falls back to the Metro route when it is not deployed, because an installed EAS build has no Metro
+ * server to answer `/api/*`. Deploy it to every project testers use. Keep it in step with the Metro route.
  */
 
 const corsHeaders = {

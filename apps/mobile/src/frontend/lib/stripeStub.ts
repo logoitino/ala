@@ -10,6 +10,7 @@ export function StripeProvider({
 }: {
   children: ReactNode;
   publishableKey?: string;
+  merchantIdentifier?: string;
 }) {
   return children;
 }
@@ -19,6 +20,8 @@ export function useStripe() {
     initPaymentSheet: async (_options: {
       paymentIntentClientSecret: string;
       merchantDisplayName: string;
+      applePay?: { merchantCountryCode: string };
+      googlePay?: { merchantCountryCode: string; testEnv?: boolean };
     }) => ({
       error: { code: 'Canceled', message: NATIVE_STRIPE_UNAVAILABLE_MESSAGE },
     }),
