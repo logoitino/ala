@@ -169,7 +169,7 @@ export function MoneyTool() {
           ))}
         </View>
         <Text style={styles.caveat}>
-          Admin model. Fan donation copy still says 100% to the family account until counsel updates MALO_DISCLAIMER (LEGAL row L).
+          Same split the fan sees: the donate sheet discloses 90% to the family account and 10% to Tapua'i (MALO_DISCLAIMER). The optional tip for Tapua'i is its own stream. Wording still with counsel (LEGAL rows L, R).
         </Text>
       </AdminPanel>
 

@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { exclusiveUnlockToast } from '@/data/exclusive';
+import { platformTipCentsFor } from '@/data/malo';
 import { displayValue, getTipCharge, auraPointsForTip } from '@/data/players';
 import { addUserAura, emitPlayerAura, emitProfileAura } from '@/lib/aura';
 import { resolveTipOrigin, type TipEntry, type TipOrigin } from '@/lib/finance';
@@ -30,6 +31,10 @@ type StartCheckoutArgs = {
   entry?: TipEntry;
   /** `wishlist_items.id` when this Mālo funds one locker item. */
   wishlistItemId?: string;
+  /** `rallies.id` when this donation counts toward the athlete's Rally goal. The server re-checks it. */
+  rallyId?: string;
+  /** Optional tip to Tapua'i as a percent of the donation (0 = none). Charged on top, never counted as the donation. */
+  platformTipPercent?: number;
   /** Item title or other detail analysts should see without another join. */
   sourceLabel?: string;
   /** Override Aura grant. Exclusive checkout uses 100 instead of `tipAmount * 10`. */
@@ -72,7 +77,7 @@ function applyAuraAward(
 /**
  * @purpose Native Stripe PaymentSheet for Mālo, exclusive subscribe, Drip, or booster sponsorships. Mālo grants Aura to the tipper and the athlete.
  * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may tip a reel.
- * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on Mālo (`origin`, `entry`, `wishlist_item_id`, `source_label`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
+ * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a donation (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
  */
 export function useTipCheckout() {
   const { user, refreshProfile } = useAuth();
@@ -92,6 +97,8 @@ export function useTipCheckout() {
       origin,
       entry,
       wishlistItemId,
+      rallyId,
+      platformTipPercent = 0,
       sourceLabel,
       auraPoints,
       skipBacker = false,
@@ -108,13 +115,16 @@ export function useTipCheckout() {
       }
 
       const playerName = player ? displayValue(player.name, 'this athlete') : "Tapua'i";
-      const { amountCents } = getTipCharge(tipAmount, coverFees, feeAmount);
+      const { amountCents: donationChargeCents } = getTipCharge(tipAmount, coverFees, feeAmount);
+      // Only a donation to an athlete carries the optional Tapua'i tip (not Drip / subscribe / boosters).
+      const platformTipCents = !skipBacker && player ? platformTipCentsFor(tipAmount, platformTipPercent) : 0;
+      const amountCents = donationChargeCents + platformTipCents;
 
       setBusy(true);
       const checkoutStartedAt = Date.now();
       try {
         const intentStartedAt = Date.now();
-        const clientSecret = await createPaymentIntent(amountCents, player?.id ?? null);
+        const clientSecret = await createPaymentIntent(amountCents, player?.id ?? null, platformTipCents);
         telemetry.trackCheckoutLatency('payment_intent', Date.now() - intentStartedAt);
 
         const initStartedAt = Date.now();
@@ -162,15 +172,17 @@ export function useTipCheckout() {
             fan_id: tipperId,
             reel_id: reelId ?? null,
             aura_points: pointsToAdd,
-            origin: resolveTipOrigin({ origin, reelId, wishlistItemId }),
+            origin: resolveTipOrigin({ origin, reelId, wishlistItemId, rallyId }),
             entry: entry ?? 'in_app',
             wishlist_item_id: wishlistItemId ?? null,
             source_label: sourceLabel?.trim() ?? '',
+            platform_tip_cents: platformTipCents,
+            rally_id: rallyId ?? null,
           };
           let { error: tipError } = await supabase.from('tips').insert(ledger);
           const missingChannel =
             tipError?.code === '42703' ||
-            /origin|entry|wishlist_item_id|source_label/i.test(tipError?.message ?? '');
+            /origin|entry|wishlist_item_id|source_label|platform_tip_cents|rally_id/i.test(tipError?.message ?? '');
           if (tipError && missingChannel) {
             const retry = await supabase.from('tips').insert({
               player_id: ledger.player_id,
@@ -194,10 +206,10 @@ export function useTipCheckout() {
         if (!skipBacker && player && tipInsertSucceeded) {
           nextCount = await incrementBackerCount(player);
           onBacked?.(nextCount);
-          onTipped?.(amountCents);
+          onTipped?.(donationChargeCents);
           if (reelId) {
             const { addReelTips, EMPTY_REEL_HYPE } = await import('@/lib/reels');
-            await addReelTips(reelId, amountCents, EMPTY_REEL_HYPE);
+            await addReelTips(reelId, donationChargeCents, EMPTY_REEL_HYPE);
           }
           await bumpMaloDroppedCount();
         }

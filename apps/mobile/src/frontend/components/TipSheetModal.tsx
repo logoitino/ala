@@ -29,6 +29,8 @@ type TipSheetModalProps = {
   origin?: TipOrigin;
   entry?: TipEntry;
   wishlistItemId?: string;
+  /** Rally goal this donation counts toward (ROADMAP M2). */
+  rallyId?: string;
   sourceLabel?: string;
   onClose: () => void;
   onBacked?: (nextCount: number) => void;
@@ -49,6 +51,7 @@ export function MaloTipModal({
   origin,
   entry,
   wishlistItemId,
+  rallyId,
   sourceLabel,
   onClose,
   onBacked,
@@ -177,6 +180,7 @@ export function MaloTipModal({
               origin={origin}
               entry={entry}
               wishlistItemId={wishlistItemId}
+              rallyId={rallyId}
               sourceLabel={sourceLabel}
               onBusyChange={setBusy}
               onBacked={(nextCount) => {

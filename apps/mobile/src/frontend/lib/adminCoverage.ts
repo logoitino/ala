@@ -98,6 +98,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'tab.activity', label: 'Activity tab', hint: 'Fan bar', surface: 'activity', fanHref: '/activity', adminHref: '/admin/features', flag: 'tabs.activity', telemetry: 'tab.activity' },
   { id: 'activity.receipts', label: 'Open a donation receipt', hint: 'Sent row → /receipts', surface: 'activity', fanHref: '/activity', adminHref: '/admin/features', flag: 'tabs.activity', telemetry: 'activity.receipts' },
   { id: 'activity.tag', label: 'Review a pending tag', hint: 'Tag row → Profile', surface: 'activity', fanHref: '/activity', adminHref: '/admin/spotlight', flag: 'tabs.activity', telemetry: 'activity.tag' },
+  { id: 'activity.thanks', label: 'Say thanks from a donation', hint: 'Received row → Profile donor list', surface: 'activity', fanHref: '/activity', adminHref: '/admin/money', flag: 'tabs.activity', telemetry: 'activity.thanks' },
 
   { id: 'tab.spotlight', label: 'Spotlight tab', hint: 'Fan bar', surface: 'spotlight', fanHref: '/spotlight', adminHref: '/admin/features', flag: 'tabs.spotlight', telemetry: 'tab.spotlight' },
   { id: 'spotlight_card', label: 'Award card', hint: 'Replay Player of the Week', surface: 'spotlight', fanHref: '/spotlight', adminHref: '/admin/spotlight', telemetry: 'spotlight_card' },
@@ -120,6 +121,10 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'wishlist', label: 'Locker Room Wishlist', hint: 'Gear cards on Stats 📊', surface: 'profile', fanHref: '/profile', adminHref: '/admin/wishlist', flag: 'layouts.wishlist' },
   { id: 'wishlist_gift', label: 'Buy this item for them', hint: 'Retailer link per gear goal', surface: 'profile', fanHref: '/profile', adminHref: '/admin/wishlist', flag: 'layouts.wishlist', telemetry: 'wishlist_gift' },
   { id: 'wishlist_chip_in', label: 'Donate to a gear goal', hint: 'Donation toward gear + 500 Aura equip (first Catalogs preset)', surface: 'profile', fanHref: '/profile', adminHref: '/admin/catalog', flag: 'layouts.wishlist', telemetry: 'wishlist_chip_in' },
+  { id: 'rally_card', label: 'Rally goal card', hint: 'Named cost + story + progress on the athlete profile', surface: 'profile', fanHref: '/profile', adminHref: '/admin/money', telemetry: 'rally_card' },
+  { id: 'rally_donate', label: 'Donate to a Rally', hint: 'Rally card → donate sheet (origin rally)', surface: 'profile', fanHref: '/profile', adminHref: '/admin/money', flag: 'buttons.malo', telemetry: 'rally_donate' },
+  { id: 'rally_create', label: 'Start / approve a Rally', hint: 'Athlete starts, guardian approves (Parent HQ)', surface: 'profile', fanHref: '/profile', adminHref: '/admin/money', telemetry: 'rally_create' },
+  { id: 'say_thanks', label: 'Say thanks to donors', hint: 'Preset thank-yous on Support received', surface: 'profile', fanHref: '/profile', adminHref: '/admin/money', telemetry: 'say_thanks' },
   { id: 'share_qr', label: 'Share & Donate QR', hint: 'ShareQrModal gift flyer tapuai.app/gift/{handle}', surface: 'profile', fanHref: '/profile', adminHref: '/admin/people', telemetry: 'share_qr', owner: 'code' },
   { id: 'profile_avatar', label: 'Profile photo', hint: 'ProfileAvatarPicker 1:1 crop → avatars bucket', surface: 'profile', fanHref: '/profile', adminHref: '/admin/people', telemetry: 'profile_avatar', owner: 'code' },
   { id: 'profile_tabs', label: 'Highlights / Stats / Vault tabs', hint: 'Look hides a pane; Sports fills Stats', surface: 'profile', fanHref: '/profile', adminHref: '/admin/look' },

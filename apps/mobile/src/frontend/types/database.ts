@@ -222,6 +222,36 @@ export type TipLedgerEntry = {
   entry?: string | null;
   wishlist_item_id?: string | null;
   source_label?: string | null;
+  /** Optional tip to Tapua'i charged on top of this donation (cents; not part of `amount_cents`). */
+  platform_tip_cents?: number;
+  /** Rally goal this donation counted toward (nulled by the server if the Rally wasn't open). */
+  rally_id?: string | null;
+};
+
+export type RallyCostKind = 'season' | 'gear' | 'travel' | 'camps' | 'college_prep' | 'other';
+export type RallyStatus = 'pending_guardian' | 'live' | 'filled' | 'closed';
+
+/** `public.rallies` — a named sports cost the community donates toward (ROADMAP M2). */
+export type RallyRow = {
+  id: string;
+  player_id: string;
+  created_by: string | null;
+  title: string;
+  story: string;
+  cost_kind: RallyCostKind;
+  target_cents: number;
+  raised_cents: number;
+  donation_count: number;
+  ends_on: string | null;
+  status: RallyStatus;
+  approved_by: string | null;
+  approved_at: string | null;
+  filled_at: string | null;
+  thanks_key: string | null;
+  thanks_reel_id: string | null;
+  thanked_at: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 /** Row from `get_received_malo` (gifts sent to this athlete). */
@@ -430,7 +460,7 @@ export type AppFeedbackRow = {
 export type CompanyRevenueLogRow = {
   id: string;
   transaction_type: string;
-  source?: 'malo' | 'booster' | 'vault' | 'merch' | string;
+  source?: 'malo' | 'booster' | 'vault' | 'merch' | 'tip' | string;
   source_id?: string | null;
   label?: string;
   payee_kind?: 'athlete' | 'operator' | 'none' | string;
@@ -706,6 +736,8 @@ export type Database = {
         WishlistItem,
         Pick<WishlistItem, 'title'> & Partial<WishlistItem>
       >;
+      /** Read-only to clients; writes go through `create_rally` / `approve_rally` / `close_rally` / `thank_rally`. */
+      rallies: Table<RallyRow, Partial<RallyRow>>;
       sport_configs: Table<
         SportConfigRow,
         Pick<SportConfigRow, 'sport'> & Partial<SportConfigRow>
@@ -840,6 +872,49 @@ export type Database = {
       give_filmer_props: {
         Args: { target_reel_id: string };
         Returns: number;
+      };
+      create_rally: {
+        Args: {
+          target_player_id: string;
+          rally_title: string;
+          rally_story: string;
+          rally_cost_kind: string;
+          rally_target_cents: number;
+          rally_ends_on?: string | null;
+        };
+        Returns: RallyRow;
+      };
+      approve_rally: {
+        Args: { target_rally_id: string };
+        Returns: RallyRow;
+      };
+      close_rally: {
+        Args: { target_rally_id: string };
+        Returns: RallyRow;
+      };
+      thank_rally: {
+        Args: { target_rally_id: string; message_key: string; what_it_paid_for_reel?: string | null };
+        Returns: RallyRow;
+      };
+      get_active_rally: {
+        Args: { target_player_id: string };
+        Returns: RallyRow | null;
+      };
+      get_player_rallies: {
+        Args: { target_player_id: string };
+        Returns: RallyRow[];
+      };
+      thank_donation: {
+        Args: { target_tip_id: string; message_key: string };
+        Returns: boolean;
+      };
+      get_donations_to_thank: {
+        Args: { target_player_id: string };
+        Returns: unknown;
+      };
+      get_my_donation_thanks: {
+        Args: Record<string, never>;
+        Returns: unknown;
       };
       get_top_filmers: {
         Args: { period_kind?: string };

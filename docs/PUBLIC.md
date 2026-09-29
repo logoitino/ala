@@ -12,13 +12,14 @@ This page is for parents, athletes, boosters, and schools. It is product copy, n
 
 1. **Watch.** Full-screen highlight Reels, tagged to a player and a school. Tap once to mute. Double-tap to drop Aura (hype). Live scores sit on top of the feed when a game is in progress.
 2. **Cheer.** On Local, pick Live Matches, School Polls, or Top Boosters. School Polls are community votes (home vs away). They are **not bets** and have **no prize**.
-3. **Donate.** Donations run through Stripe (live amounts below). The in-app line is: 100% of your donation, minus standard payment processing unless you cover the fee, is meant to go to the athlete’s custodial account.
-4. **Belong.** Aura points and a 7-tier card are reputation in the app. They are **not money, stock, or a crypto token**.
+3. **Donate.** Donations run through Stripe (live amounts below). The donate sheet says it plainly before you pay: 90% of your donation goes to the athlete's family account, and Tapua'i keeps 10% to run the app, including card processing. You can add an optional tip for Tapua'i — it starts at "No tip" and never comes out of your donation.
+4. **Rally and say thanks.** A family can start a Rally for a real sports cost — season fees, gear, travel, camps, college prep — and share it. Athletes say thank you to every donor with a tap, and thank everyone with a clip of what the Rally paid for.
+5. **Belong.** Aura points and a 7-tier card are reputation in the app. They are **not money, stock, or a crypto token**.
 
 The bar at the bottom is Reel · Local · Upload · Drip · Profile.
 
 <!-- product-facts:start -->
-**Live numbers (from code):** Donations $5 / $10 / $25 or custom. Exclusive $4.99. Boosters Silver $50 / Gold $150 / Platinum $500. Aura 10 points per tip dollar, 7 tiers (Slate Silver → Celestial Prism). Double-tap 1 Aura (Serve Like Me ×2). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. Athlete roster: Football / Basketball / Rugby / Volleyball / Soccer / Baseball / Softball / Wrestling / Track & Field / Lacrosse / Ice Hockey / Tennis, class '26 / '27 / '28, High School or NCAA. Profile tabs: Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar: Home / Spotlight. Stripe is in test mode. The operator PIN is a prototype.
+**Live numbers (from code):** Donations $5 / $10 / $25 or custom. Exclusive $4.99. Boosters Silver $50 / Gold $150 / Platinum $500. Aura 10 points per donated dollar, 7 tiers (Slate Silver → Celestial Prism). Double-tap 1 Aura (Serve Like Me ×2). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. Athlete roster: Football / Basketball / Rugby / Volleyball / Soccer / Baseball / Softball / Wrestling / Track & Field / Lacrosse / Ice Hockey / Tennis, class '26 / '27 / '28, High School or NCAA. Profile tabs: Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar: Home / Spotlight. Stripe is in test mode. The operator PIN is a prototype.
 <!-- product-facts:end -->
 
 ---

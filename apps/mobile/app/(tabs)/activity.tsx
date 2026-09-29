@@ -26,6 +26,7 @@ const KIND_META: Record<ActivityKind, { icon: keyof typeof Ionicons.glyphMap; ti
   malo_received: { icon: 'gift', tint: FOCAL.neonJade },
   malo_sent: { icon: 'heart', tint: FOCAL.ember },
   tag_pending: { icon: 'pricetag', tint: FOCAL.electricGold },
+  thanks_received: { icon: 'happy', tint: FOCAL.neonJade },
 };
 
 /** "3m", "5h", "2d" — short enough to sit on one line beside the title. */
@@ -182,7 +183,7 @@ export default function ActivityTab() {
           <EmptyState
             kicker="Activity"
             title="Nothing yet"
-            lede="When a fan donates to you, or a highlight tags you, it shows up here."
+            lede="When a fan donates to you, an athlete thanks you, or a highlight tags you, it shows up here."
             accent={ACCENT.color}
           />
         ) : null}
@@ -202,7 +203,13 @@ export default function ActivityTab() {
                         trackFeature('activity.tag');
                         router.push('/profile');
                       }
-                    : undefined
+                    : item.kind === 'malo_received'
+                      ? () => {
+                          // Say-thanks lives with the donor list on the athlete's own profile.
+                          trackFeature('activity.thanks');
+                          router.push('/profile');
+                        }
+                      : undefined
               }
             />
           </ScrollFxItem>

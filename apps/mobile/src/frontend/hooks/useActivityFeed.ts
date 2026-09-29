@@ -1,11 +1,13 @@
 import { useCallback, useMemo } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
+import { useMyDonationThanks } from '@/hooks/useDonationThanks';
 import { useFanTipHistory } from '@/hooks/useFanTipHistory';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useReceivedMalo } from '@/hooks/useReceivedMalo';
+import { thanksText } from '@/lib/donationThanks';
 
-export type ActivityKind = 'malo_received' | 'malo_sent' | 'tag_pending';
+export type ActivityKind = 'malo_received' | 'malo_sent' | 'tag_pending' | 'thanks_received';
 
 export type ActivityItem = {
   id: string;
@@ -26,8 +28,8 @@ function centsToUsd(cents: number): string {
 }
 
 /**
- * @purpose The Activity timeline — Mālo received, Mālo sent, and highlight tags waiting on a
- * decision, merged newest-first.
+ * @purpose The Activity timeline — donations received, donations sent, thank-yous from athletes, and
+ * highlight tags waiting on a decision, merged newest-first.
  * @remarks Deliberately derived from sources that already exist (`get_received_malo`,
  * `get_fan_tip_history`, pending tags) rather than a new `notifications` table, so nothing
  * has to be deployed for this to work. The consequence is that there is **no read/unread
@@ -42,6 +44,7 @@ export function useActivityFeed() {
   const received = useReceivedMalo(playerId);
   const sent = useFanTipHistory();
   const tags = usePendingPlayerTags();
+  const thanks = useMyDonationThanks();
 
   // `get_pending_player_tags` returns every tag the viewer may confirm — for admins that is
   // any player, for operators and guardians other athletes too. Only clips tagging this
@@ -60,7 +63,7 @@ export function useActivityFeed() {
         kind: 'malo_received',
         at: row.created_at,
         title: `${row.fan_name || 'A fan'} donated to you`,
-        body: row.source_label?.trim() || 'Thanks for the play.',
+        body: row.source_label?.trim() || 'A donation toward your sports costs. Say thanks from your profile.',
         amountCents: row.amount_cents,
         reelId: row.reel_id,
       });
@@ -75,6 +78,17 @@ export function useActivityFeed() {
         body: row.school_name?.trim() || row.source_label?.trim() || 'Donation received.',
         amountCents: row.amount_cents,
         reelId: row.reel_id,
+      });
+    }
+
+    for (const row of thanks.rows) {
+      rows.push({
+        id: `thanks:${row.tipId}`,
+        kind: 'thanks_received',
+        at: row.thankedAt,
+        title: `${row.athleteName} said thanks`,
+        body: thanksText(row.messageKey) ?? 'Thank you for your donation.',
+        amountCents: row.amountCents,
       });
     }
 
@@ -95,11 +109,11 @@ export function useActivityFeed() {
       if (Boolean(a.actionable) !== Boolean(b.actionable)) return a.actionable ? -1 : 1;
       return Date.parse(b.at || '') - Date.parse(a.at || '');
     });
-  }, [received.rows, sent.receipts, ownTags]);
+  }, [received.rows, sent.receipts, thanks.rows, ownTags]);
 
   const refresh = useCallback(async () => {
-    await Promise.all([received.refresh(), sent.refresh(), tags.refresh()]);
-  }, [received, sent, tags]);
+    await Promise.all([received.refresh(), sent.refresh(), tags.refresh(), thanks.refresh()]);
+  }, [received, sent, tags, thanks]);
 
   return {
     items,

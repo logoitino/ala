@@ -25,6 +25,17 @@ describe('createPaymentIntent', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('sends the optional tip to Tapua\'i only when the donor picked one', async () => {
+    mockInvoke.mockResolvedValue({ data: { clientSecret: 'pi_secret' }, error: null });
+    await createPaymentIntent(1100, 'player-1', 100);
+    expect(mockInvoke).toHaveBeenCalledWith('create-payment-intent', expect.objectContaining({
+      body: { amount: 1100, playerId: 'player-1', platformTipCents: 100 },
+    }));
+    mockInvoke.mockClear();
+    await createPaymentIntent(1000, 'player-1', 0);
+    expect(mockInvoke.mock.calls[0][1].body).toEqual({ amount: 1000, playerId: 'player-1' });
+  });
+
   it('surfaces the server reason for a rejected charge instead of falling back', async () => {
     const context = new Response(JSON.stringify({ error: 'This athlete cannot currently receive Mālo.' }), {
       status: 403,

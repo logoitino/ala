@@ -164,7 +164,7 @@ These four roles already exist. They do not own a tab by themselves — they sta
 ### COMMERCE — Donations, Drip, Wishlist, Connect, receipts
 
 **Call:** `COMMERCE`  
-**Fan:** Mālo sheets · `/drip` · Wishlist Chip In · `/receipts` · `/gift/[handle]` · `PayoutSetupCard`  
+**Fan:** Donate sheet (90 / 10 split line, optional tip for Tapua'i, card-fee box) · Rally card · Say thanks · `/drip` · gear goals · `/receipts` · `/gift/[handle]` · `PayoutSetupCard`  
 **Admin:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers)  
 **What it does:** Stripe **test** PaymentSheet. Mālo $5 / $10 / $25 / Custom → one `tips` row (where it started: Highlight, QR link, wishlist item, profile, or live play) + 10 Aura per tip dollar. Exclusive subscribe +100 Aura. Drip Buy Now. Wishlist Chip In writes that same `tips` row, then `chip_in_wishlist_item` only moves the item total. Connect Express (JWT Edge `create-stripe-account` only). Custodial payout from `profiles.stripe_connect_id`. Legal ack required before Connect and Varsity apply. The prototype terms (`LEGAL_TERMS_VERSION`) and the Mālo sheet say we keep that gift record and use it for receipts, athlete accounting, and to see which parts of the app bring in support.
 
@@ -175,6 +175,9 @@ These four roles already exist. They do not own a tab by themselves — they sta
 | Payout | `app/api/create-payout+api.ts` · `PayoutSetupCard` |
 | Drip | `app/(tabs)/drip.tsx` · `GearCard` · `ProductSheet` · `useDripCatalog` |
 | Receipts | `app/(tabs)/receipts.tsx` · `useFanTipHistory` |
+| Rally goals | `components/Rally/` (`RallyCard`, `CreateRallySheet`) · `useRally` · `lib/rallies.ts` (with `PROFILE`; guardian approval with `ROLE_HQ`) |
+| Say thanks | `components/Thanks/ThanksPicker` · `Profile/ReceivedMaloPanel` · `useDonationThanks` · `lib/donationThanks.ts` (presets only — `LEGAL` row S) |
+| Optional tip | `TipCheckout` chips · `data/malo.ts` `PLATFORM_TIP_*` · `tips.platform_tip_cents` · revenue source `tip` |
 | Catalogs | `/admin/catalog` then `pnpm docs:sync` |
 
 **Do not:** Put `sk_` or `EXPO_PUBLIC_STRIPE_SECRET_KEY` under `src/frontend/`. Trust a client `destinationAccountId`. Change legal copy (`LEGAL`).

@@ -50,6 +50,7 @@ The baseline's timestamp must sort **before** `20260929120000`.
 | `20260929140000_school_badge.sql` | School logo / colours, `athlete_school_badge`, `admin_set_school_branding`, no ✓ in names. [Design §10](../../docs/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Needs `20260929120000` first |
 | `20260929160000_reel_views_and_filmer_credit.sql` | `reels_feed` gains `view_count` / `uploader_name` / `uploader_avatar_url`; `athlete_highlight_views`, `filmer_stats` | **No.** Needs `supabase/leaderboards.sql` (`reels.view_count`) first |
 | `20260929170000_filmer_rewards.sql` | Filmer Aura (tag confirmed, view milestones, Props), `filmer_rewards` ledger, `filmer_props`, `give_filmer_props`, `get_top_filmers`, `filmer_stats` v2 | **No.** Needs `20260929160000` first |
+| `20260929180000_rally_goals_thanks_platform_tip.sql` | Rally goals (`rallies`, create / approve / close / thank RPCs, `tips.rally_id` credits the total), preset donor thank-yous (`donation_thanks`, `thank_donation`), optional tip to Tapua'i at checkout (`tips.platform_tip_cents`, revenue source `tip`, 100% platform) | **No.** Needs `supabase/custodial_money.sql` (`athlete_controls_money`), `company_revenue.sql`, `tip_origin.sql` first |
 
 ## Adding a school confirmer (after the verification migration)
 

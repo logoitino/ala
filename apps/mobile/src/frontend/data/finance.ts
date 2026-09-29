@@ -1,6 +1,7 @@
 /**
  * Admin finance splits (basis points, 10_000 = 100%).
- * Fan Mālo copy (`MALO_DISCLAIMER`) still says 100% to custodial until counsel updates it.
+ * The donate sheet discloses the 10% donation share (`MALO_DISCLAIMER`, owner 2026-09-29) and offers an
+ * optional tip to Tapua'i on top (`tip`, 100% platform, never taken from the athlete's donation).
  * SQL `company_revenue_bps` must stay in lockstep.
  */
 export const MALO_PLATFORM_CUT_BPS = 1000;
@@ -15,7 +16,10 @@ export const VAULT_ATHLETE_SHARE_BPS = 8000;
 export const MERCH_PLATFORM_CUT_BPS = 10000;
 export const MERCH_PAYOUT_BPS = 0;
 
-export type RevenueSource = 'malo' | 'booster' | 'vault' | 'merch';
+/** Optional tip a donor adds for Tapua'i at checkout — all platform, logged apart from the donation. */
+export const PLATFORM_TIP_BPS = 10000;
+
+export type RevenueSource = 'malo' | 'booster' | 'vault' | 'merch' | 'tip';
 
 /**
  * @purpose Split gross cents into platform cut vs athlete/operator payout for one revenue source.
@@ -37,6 +41,7 @@ export function platformBpsForSource(source: RevenueSource): number {
   if (source === 'malo') return MALO_PLATFORM_CUT_BPS;
   if (source === 'booster') return BOOSTER_PLATFORM_CUT_BPS;
   if (source === 'vault') return VAULT_PLATFORM_CUT_BPS;
+  if (source === 'tip') return PLATFORM_TIP_BPS;
   return MERCH_PLATFORM_CUT_BPS;
 }
 
@@ -44,5 +49,6 @@ export function splitLabelForSource(source: RevenueSource): string {
   if (source === 'malo') return '10% platform / 90% athlete';
   if (source === 'booster') return '15% platform / 85% operator';
   if (source === 'vault') return '20% platform / 80% athlete';
+  if (source === 'tip') return '100% platform (donor chose it)';
   return '100% platform';
 }

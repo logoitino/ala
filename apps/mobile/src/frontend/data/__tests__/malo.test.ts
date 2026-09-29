@@ -83,3 +83,37 @@ describe('Malo copy helpers', () => {
     expect(line).not.toMatch(/Mālo|tip/i);
   });
 });
+
+describe('donation split and the optional tip to Tapua\'i', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const malo = require('@/data/malo') as typeof import('@/data/malo');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { MALO_DISCLAIMER } = require('@/data/players') as typeof import('@/data/players');
+
+  it('discloses the 90 / 10 split on the sheet', () => {
+    expect(malo.donationSplitLine('Kaleo')).toBe("90% goes to Kaleo's family account. Tapua'i keeps 10% to run the app.");
+    expect(MALO_DISCLAIMER).toMatch(/^90% of your donation goes to the athlete's family account\. Tapua'i keeps 10%/);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { MALO_ATHLETE_SHARE_BPS, MALO_PLATFORM_CUT_BPS } = require('@/data/finance') as typeof import('@/data/finance');
+    expect(MALO_DISCLAIMER.startsWith(`${MALO_ATHLETE_SHARE_BPS / 100}% `)).toBe(true);
+    expect(MALO_DISCLAIMER).toContain(`keeps ${MALO_PLATFORM_CUT_BPS / 100}% `);
+  });
+
+  it('starts the tip at 0% and computes tip cents from the donation', () => {
+    expect(malo.PLATFORM_TIP_PERCENTS[0]).toBe(0);
+    expect(malo.platformTipChipLabel(0)).toBe('No tip');
+    expect(malo.platformTipChipLabel(10)).toBe('10%');
+    expect(malo.platformTipCentsFor(10, 10)).toBe(100);
+    expect(malo.platformTipCentsFor(12.5, 15)).toBe(188);
+    expect(malo.platformTipCentsFor(10, 0)).toBe(0);
+  });
+
+  it('spells out where every dollar goes', () => {
+    expect(malo.donationBreakdownLine({ athleteName: 'Kaleo', donationDollars: 10, feeDollars: 0, tipPercent: 0 })).toBe(
+      "On a $10.00 donation: $9.00 to Kaleo's family, $1.00 to Tapua'i. You pay $10.00.",
+    );
+    expect(malo.donationBreakdownLine({ athleteName: 'Kaleo', donationDollars: 10, feeDollars: 0.5, tipPercent: 10 })).toBe(
+      "On a $10.00 donation: $9.00 to Kaleo's family, $1.00 to Tapua'i + $0.50 card fee + $1.00 tip to Tapua'i. You pay $11.50.",
+    );
+  });
+});

@@ -337,11 +337,13 @@ Mālo ledger (no separate `video_tips` table).
 | `player_id` | uuid FK → `players` ON DELETE CASCADE | Recipient |
 | `fan_id` | uuid | Tipper (`auth.users.id` / `auth.uid()`) |
 | `reel_id` | uuid FK → `reels` ON DELETE SET NULL | Clip the Mālo was dropped on |
-| `origin` | text | Where the gift started: `highlight`, `qr`, `wishlist`, `profile`, `live`. Default `profile` |
+| `origin` | text | Where the gift started: `highlight`, `qr`, `wishlist`, `profile`, `live`, `rally`. Default `profile` |
 | `entry` | text | How the fan arrived: `in_app` or `qr_link`. A Highlight after a QR scan stays `origin=highlight` and `entry=qr_link` |
 | `wishlist_item_id` | uuid FK → `wishlist_items` ON DELETE SET NULL | Locker item this gift funded |
 | `source_label` | text | Item title (or other detail) so the row still names the gear if the item is renamed |
-| `amount_cents` | integer | Mālo dollars × 100 (processing fee is not stored) |
+| `amount_cents` | integer | Donation dollars × 100 (processing fee and the optional tip are not included). The 90 / 10 split is on this amount |
+| `platform_tip_cents` | integer, default 0 | Optional tip to Tapua'i the donor added at checkout (`0 ≤ x ≤ amount_cents`). 100% platform; never part of the athlete's share. Migration `20260929180000` |
+| `rally_id` | uuid FK → `rallies` ON DELETE SET NULL | Rally goal this donation counts toward. `tips_rally_before_insert` credits the Rally, or nulls this when the Rally is not live / belongs to another athlete |
 | `aura_points` | integer | Fan Aura granted for this tip (`tipAmount * 10`) |
 | `created_at` | timestamptz | |
 
@@ -502,18 +504,19 @@ Admin finance ledger for `/admin/money`. One row per paid Mālo (`tips`), booste
 
 | Source | Platform | Payout |
 | --- | --- | --- |
-| Mālo Micro-Tips | 10% | 90% athlete |
+| Donations (`malo`) | 10% | 90% athlete |
+| Optional tip to Tapua'i (`tip`) | 100% | — (donor chose it; `tips.platform_tip_cents`) |
 | Local District Boosters | 15% | 85% operator |
 | Vault subscribe | 20% | 80% athlete |
 | Drip merch | 100% | — |
 
-Fan `MALO_DISCLAIMER` still says 100% to custodial until counsel updates it. This table is the **admin model**, not fan copy.
+**Decided 2026-09-29 (owner):** keep the 10% and disclose it on the donate sheet — `MALO_DISCLAIMER` and `donationSplitLine` now say 90% to the family account, 10% to Tapua'i (which also covers card processing). The `tip` row is written by trigger `tips_platform_tip_revenue_ai` (migration `20260929180000`, not applied) when `tips.platform_tip_cents > 0`; `source_id` is the tip id. `get_company_revenue_summary` lists it as its own stream.
 
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | uuid PK | |
 | `transaction_type` | text | Same as `source` (legacy stub column) |
-| `source` | text | `malo` \| `booster` \| `vault` \| `merch` |
+| `source` | text | `malo` \| `tip` \| `booster` \| `vault` \| `merch` |
 | `source_id` | text | Unique with `source` (tip / sponsorship / subscription / order id) |
 | `label` | text | Human line for the Money desk |
 | `payee_kind` | text | `athlete` \| `operator` \| `none` |
@@ -1025,6 +1028,29 @@ Migration `supabase/migrations/20260929170000_filmer_rewards.sql` (**not applied
 | `give_filmer_props(target_reel_id)` | authenticated | Confirmed clip with a filmer; not your own; 50 a day. +1 Aura to the filmer. Returns the clip's Props total. |
 | `filmer_stats(target_profile_id)` (replaced) | anon, authenticated | jsonb `{clips, views, hype, props, aura_earned}` over confirmed clips they filmed (not their own-athlete clips). |
 | `get_top_filmers(period_kind default 'week')` | anon, authenticated | Top 10 in the Spotlight window: `{rank, profile_id, name, avatar_url, clips, views, hype, props, score}`, score = views + 3 × hype + 5 × Props on public confirmed clips. No money fields. |
+
+### Rally goals, donation thank-yous, optional tip to Tapua'i
+
+Migration `supabase/migrations/20260929180000_rally_goals_thanks_platform_tip.sql` (**not applied yet**; needs `supabase/custodial_money.sql`, `company_revenue.sql`, `tip_origin.sql`). Client: `lib/rallies.ts` + `useRally`, `components/Rally/` (`RallyCard` on the athlete profile and in Parent HQ, `CreateRallySheet`); `lib/donationThanks.ts` + `useDonationThanks`, `components/Thanks/ThanksPicker`, "Say thanks" in `Profile/ReceivedMaloPanel`, "said thanks" rows in Activity; tip chips in `TipCheckout`. Mission: families raise money for real sports costs next to the athlete's highlights, and donors hear back.
+
+| Object | Who | What |
+| --- | --- | --- |
+| `rallies` | RLS SELECT: `live` / `filled` / `closed` for everyone, every row (pending too) for a manager; no client writes | `id`, `player_id`, `created_by`, `title` (3–60), `story` (≤600), `cost_kind` (`season` / `gear` / `travel` / `camps` / `college_prep` / `other`), `target_cents` (500–2,500,000), `raised_cents`, `donation_count`, `ends_on`, `status` (`pending_guardian` / `live` / `filled` / `closed`), `approved_by` / `approved_at`, `filled_at`, `thanks_key`, `thanks_reel_id`, `thanked_at`, timestamps. One open (`pending_guardian` / `live`) Rally per athlete (partial unique index). |
+| `donation_thanks` | RLS on, no grants (RPCs only) | `tip_id` PK → `tips`, `player_id`, `thanked_by`, `message_key` (`malo` / `season` / `gear` / `family` / `work` — presets only, no free text), `created_at`. One thank-you per donation. |
+| `rally_manager_role(target_player_id)` | authenticated | `admin`, `guardian` (`players.guardian_id`), `athlete` (own verified `profiles.player_id`), else null. |
+| `create_rally(target_player_id, rally_title, rally_story, rally_cost_kind, rally_target_cents, rally_ends_on)` | manager | Live at once for a guardian / admin, or an athlete who already controls their own money (`athlete_controls_money`); otherwise `pending_guardian`. Refuses a frozen athlete, a second open Rally, or an end date outside 1–180 days. Returns the row. |
+| `approve_rally(target_rally_id)` | guardian / admin | `pending_guardian` → `live`. |
+| `close_rally(target_rally_id)` | manager | Open → `closed`. |
+| `thank_rally(target_rally_id, message_key, what_it_paid_for_reel)` | manager | Once the Rally has at least one donation and is not pending: preset key only; the optional clip must be the athlete's own confirmed, non-Vault reel. Shown to every fan on the card. |
+| `get_active_rally(target_player_id)` | anon, authenticated | The live, unexpired Rally, else one filled / thanked in the last 30 days. |
+| `get_player_rallies(target_player_id)` | manager | Every Rally, newest first (pending included). |
+| `tips_rally_before_insert()` trigger (`before insert on tips`) | server | When `rally_id` points at a live Rally of the same athlete: adds `amount_cents` to `raised_cents`, +1 `donation_count`, fills it at the goal. Otherwise sets `rally_id` null. Trusts the client insert like every `tips` row today (§ `tips` RLS note). |
+| `tips_platform_tip_revenue()` trigger (`after insert on tips`) | server | `platform_tip_cents > 0` → one `company_revenue_logs` row, `source = 'tip'`, 100% platform, `payee_kind = 'none'`. |
+| `thank_donation(target_tip_id, message_key)` | athlete / guardian / admin of the recipient | Records one preset thank-you for that donation; returns `found`. |
+| `get_donations_to_thank(target_player_id)` | manager | Recent donations: `tip_id`, `amount_cents`, `created_at`, `fan_name`, `rally_title`, `thanked_key`. |
+| `get_my_donation_thanks()` | authenticated | Thank-yous the caller received as a donor: `tip_id`, `player_id`, `athlete_name`, `message_key`, `amount_cents`, `thanked_at`. |
+
+Also in this migration: `company_revenue_bps('tip')` = 10000, `tip_origin_label('rally')` = "Rally", `get_company_revenue_summary()` re-created with the `tip` stream.
 
 ### Custodial money RPCs
 

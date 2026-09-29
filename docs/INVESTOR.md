@@ -51,22 +51,24 @@ Copy in the UI is Donate / donation (docs/VOICE.md) and Seki. Ledgers stay `tips
 
 ## 4. Business model (designed, not live)
 
+**Decided 2026-09-29 (owner):** Tapua'i keeps **10% of each donation** (which also covers card processing) and says so on the donate sheet; 90% goes to the athlete's family account. Donors can add an **optional tip for Tapua'i** at checkout (GoFundMe model; default No tip), booked as its own revenue stream. Counsel still has to confirm the 10% works with App Store rules for gifts (ROADMAP Wave 1 checklist item 4); the fallback is 0% plus the tip.
+
 Prices below are generated from source (`pnpm docs:sync`). Do not edit inside the markers.
 
 <!-- product-facts:start -->
 | Line | Price (as coded) | Notes |
 | --- | --- | --- |
-| Donations | $5 / $10 / $25 + custom | 100% of your donation (minus standard payment processing unless covered) goes directly to the athlete's custodial account — not the person who uploaded the clip. |
-| Admin splits | Donations 10%/90% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. Fan donation copy unchanged until counsel. |
+| Donations | $5 / $10 / $25 + custom | 90% of your donation goes to the athlete's family account. Tapua'i keeps 10% to run the app, including card processing. Nothing goes to the person who uploaded the clip. |
+| Admin splits | Donations 10%/90% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. The 90 / 10 donation split is disclosed on the donate sheet (owner, 2026-09-29). Optional tips to Tapua'i at checkout are 100% platform. |
 | Exclusive | $4.99 one-time PaymentIntent stored as a `subscriptions` row | +100 Aura to the payer. Not Stripe Billing yet. |
 | Boosters | Silver $50 / Gold $150 / Platinum $500 first month | Silver / Gold / Platinum |
-| Aura | 10 points per tip dollar | 7-tier card (Slate Silver → Celestial Prism). Double-tap 1; Serve Like Me ×2. Not cash. |
+| Aura | 10 points per donated dollar | 7-tier card (Slate Silver → Celestial Prism). Double-tap 1; Serve Like Me ×2. Not cash. |
 | Operator PIN | `1234` | Prototype. Demo RLS: tighten before production. |
 | Athlete roster | Same flow for HS + NCAA | Sports Football / Basketball / Rugby / Volleyball / Soccer / Baseball / Softball / Wrestling / Track & Field / Lacrosse / Ice Hockey / Tennis. Class '26 / '27 / '28. `profiles.school_id` + `athlete_division`. |
 | Athlete profile | Unified sheet | Tabs Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar Home / Spotlight. Vault Lock Vault 🔒 (default locked). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. |
 <!-- product-facts:end -->
 
-Drip SKUs stay in `apps/mobile/src/frontend/data/shop.ts` (payer Aura only). **Not a model:** selling Aura, listing athletes as securities, or taking a rake on donations until counsel signs off. A platform fee is a product decision and a regulatory one.
+Drip SKUs stay in `apps/mobile/src/frontend/data/shop.ts` (payer Aura only). **Not a model:** selling Aura, listing athletes as securities, ranking athletes by money, or charging families to start a Rally.
 
 Payments are **test mode**. There is no live GMV.
 

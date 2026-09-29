@@ -12,6 +12,13 @@ Companions: [ROADMAP.md](ROADMAP.md) (what we are building toward it) ·
 
 ---
 
+## The mission, in one breath
+
+Make donations and highlights easy for families, so they can promote their kid and help them get
+recruited. Give kids the chance to share good workouts with their fans (Train Like Me) and to serve
+like their favourite player (Serve Like Me). Open an avenue for people to donate toward a young
+athlete's sports costs and career growth — and make sure every athlete says thank you.
+
 ## Why we exist
 
 Every Friday night there is a kid on the field whose talent is not the question. Money is.
@@ -79,7 +86,15 @@ you just watched, or from the flyer QR on the fence at the game. The athlete tha
 clip, not a form letter.
 
 *What exists today:* donations from a Highlight or profile, Locker gear goals fans donate toward, an
-"equipped" moment, gift links and QR flyers. *What's next:* ROADMAP Mission track M2 and M8.
+"equipped" moment, gift links and QR flyers — and (built 2026-09-29, going live once the database
+change is applied) **Rally goals** on the athlete's profile with a progress bar, confetti when one
+fills, and a thank-you with a clip of what it paid for. Athletes **say thanks to every donor** with a
+tap. *What's next:* the Rally meter on the Highlights feed (ROADMAP M8).
+
+**How Tapua'i keeps the lights on — said plainly.** 90% of every donation goes to the athlete's family
+account. Tapua'i keeps 10% to run the app, including card processing, and the donate sheet says so
+before anyone pays. Donors can also add an optional tip for Tapua'i — it starts at "No tip", and it
+never comes out of the donation.
 
 ### 3. Every athlete — not just the star
 

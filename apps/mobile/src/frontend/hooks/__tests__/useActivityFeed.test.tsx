@@ -19,6 +19,9 @@ jest.mock('@/hooks/useReceivedMalo', () => ({
 jest.mock('@/hooks/useFanTipHistory', () => ({
   useFanTipHistory: () => ({ receipts: [], loading: false, error: mockErrors.sent, refresh: jest.fn() }),
 }));
+jest.mock('@/hooks/useDonationThanks', () => ({
+  useMyDonationThanks: () => ({ rows: [], loading: false, refresh: jest.fn() }),
+}));
 jest.mock('@/hooks/usePendingPlayerTags', () => ({
   usePendingPlayerTags: () => ({ tags: mockTags, loading: false, error: mockErrors.tags, refresh: jest.fn() }),
 }));

@@ -4,6 +4,8 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { Stack } from 'expo-router';
 
 import { GuardianCustodialCard } from '@/components/Custodial/GuardianCustodialCard';
+import { ReceivedMaloPanel } from '@/components/Profile/ReceivedMaloPanel';
+import { RallyCard } from '@/components/Rally/RallyCard';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
@@ -124,7 +126,12 @@ export default function ParentHomeScreen() {
           </View>
         </DashboardPanel>
         {players.map((player) => (
-          <GuardianCustodialCard key={player.id} playerId={player.id} />
+          <View key={player.id} style={styles.athlete}>
+            {/* Rally goal (start / approve / close / thank) and donations to say thanks for. */}
+            <RallyCard player={player} athleteName={displayValue(player.name, 'your athlete')} manage guardian />
+            <ReceivedMaloPanel playerId={player.id} />
+            <GuardianCustodialCard playerId={player.id} />
+          </View>
         ))}
       </ScrollView>
     </ScreenShell>
@@ -138,6 +145,9 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 10,
+  },
+  athlete: {
+    gap: 14,
   },
   row: {
     flexDirection: 'row',

@@ -5,7 +5,7 @@ import {
 } from '@/data/finance';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
-export type TipOrigin = 'highlight' | 'qr' | 'wishlist' | 'profile' | 'live';
+export type TipOrigin = 'highlight' | 'qr' | 'wishlist' | 'profile' | 'live' | 'rally';
 export type TipEntry = 'in_app' | 'qr_link';
 
 /**
@@ -13,14 +13,17 @@ export type TipEntry = 'in_app' | 'qr_link';
  * @param origin Caller override (QR profile, live feed).
  * @param reelId Highlight clip, when the sheet was opened from one.
  * @param wishlistItemId Locker item being funded. Wins over a clip id.
- * @returns `wishlist`, the caller origin, `highlight`, or `profile`.
+ * @param rallyId Rally goal the donation counts toward. Wins over a caller origin and a clip id.
+ * @returns `wishlist`, `rally`, the caller origin, `highlight`, or `profile`.
  */
 export function resolveTipOrigin(args: {
   origin?: TipOrigin;
   reelId?: string | null;
   wishlistItemId?: string | null;
+  rallyId?: string | null;
 }): TipOrigin {
   if (args.wishlistItemId) return 'wishlist';
+  if (args.rallyId) return 'rally';
   if (args.origin) return args.origin;
   if (args.reelId) return 'highlight';
   return 'profile';
@@ -47,7 +50,9 @@ export function tipChannelLabel(
           ? 'Wishlist'
           : origin === 'live'
             ? 'Live feed'
-            : 'Profile';
+            : origin === 'rally'
+              ? 'Rally'
+              : 'Profile';
   const via = entry === 'qr_link' && origin !== 'qr' ? ' via QR' : '';
   const detail = sourceLabel?.trim() ? ` · ${sourceLabel.trim()}` : '';
   return `${place}${via}${detail}`;
@@ -96,6 +101,17 @@ const EMPTY_STREAMS: CompanyRevenueStream[] = [
     platform_bps: MALO_PLATFORM_CUT_BPS,
     payout_bps: 9000,
     payee: 'Athlete',
+  },
+  {
+    source: 'tip',
+    label: "Optional tips to Tapua'i",
+    split: splitLabelForSource('tip'),
+    gross_cents: 0,
+    platform_cents: 0,
+    payout_cents: 0,
+    platform_bps: 10000,
+    payout_bps: 0,
+    payee: "Tapua'i",
   },
   {
     source: 'booster',
@@ -281,5 +297,6 @@ export function revenueSourceTitle(source: string): string {
   if (source === 'booster') return 'Booster';
   if (source === 'vault') return 'Vault';
   if (source === 'merch') return 'Drip';
+  if (source === 'tip') return "Tip to Tapua'i";
   return source;
 }

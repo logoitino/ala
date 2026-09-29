@@ -21,10 +21,14 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCAN_DIRS = ['apps/mobile/app', 'apps/mobile/src/frontend', 'packages/shared-types', 'apps/admin-portal/app'];
 const SKIP = /(__tests__|\.test\.|\.d\.ts$|node_modules)/;
 
-/** [pattern, why, say instead] — keep in step with docs/VOICE.md "Retired words". */
+/**
+ * [pattern, why, say instead, allow?] — keep in step with docs/VOICE.md "Retired words".
+ * `allow` skips the rule when the snippet or its line matches it: "tip" is fine only for the optional tip
+ * *to Tapua'i* at checkout (owner 2026-09-29) — never for money to an athlete.
+ */
 const RULES = [
   [/M[āĀ]LO(?!!)|Mālo(?!!)/, '"Mālo" is only a thank-you ("Mālo! Your donation is on its way")', 'Donate / donation'],
-  [/\b[Tt]ip(s|ped|ping|per)?\b/, '"tip" sounds like paying for a service or a play', 'donate / donation'],
+  [/\b[Tt]ip(s|ped|ping|per)?\b/, '"tip" sounds like paying for a service or a play', 'donate / donation', /Tapua['’]i/],
   [/\b[Bb]ack(ed|ing|ers?)\b/, '"backing" is vague about money', 'donate / donation / donors'],
   [/\bChip In\b/i, '"Chip In" hides that it is a donation', 'Donate $5 to this goal'],
   [/\b[Ff]und(s|ed|ing)?\b/, '"fund" reads like an investment', 'donate / donations'],
@@ -73,7 +77,9 @@ for (const rel of SCAN_DIRS.flatMap((d) => walk(d))) {
   lines.forEach((line, i) => {
     if (/copy-ok:/.test(line) || /copy-ok:/.test(lines[i - 1] ?? '')) return;
     for (const text of copyOn(line, rel.endsWith('x'))) {
-      for (const [re, why, instead] of RULES) {
+      for (const [re, why, instead, allow] of RULES) {
+        // Test the whole line too: an apostrophe in "Tapua'i" can split JSX text into fake literals.
+        if (allow && (allow.test(text) || allow.test(line))) continue;
         const hit = text.match(re);
         if (hit) problems.push(`${rel}:${i + 1}  "${hit[0]}" — ${why}. Say: ${instead}.\n    ${line.trim().slice(0, 140)}`);
       }

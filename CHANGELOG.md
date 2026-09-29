@@ -4,6 +4,14 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-29
 
+### Rally goals, say thanks, and a clear 90 / 10 split
+
+- **Rally goals.** A family can start a Rally on the athlete's profile for a real sports cost — season fees, gear, travel, camps, college prep — with a goal, a short story and an optional end date. Fans see the progress bar, donate toward it, and share it. Confetti when it fills. A Rally an athlete starts waits for their parent or guardian to approve it in Parent HQ.
+- **Say thanks.** Every donation now has a **Say thanks 🙏** button for the athlete and their parent or guardian (on the profile and in Parent HQ). A filled Rally asks them to thank everyone, optionally with a clip of what it paid for. Donors see "{athlete} said thanks" in Activity. Thank-yous are five preset messages — no free text — because many athletes are minors.
+- **The split, said plainly.** The donate sheet now says 90% goes to the athlete's family account and Tapua'i keeps 10% to run the app, including card processing, with a breakdown line that updates as you choose.
+- **Optional tip for Tapua'i.** Like GoFundMe, donors can add a tip for Tapua'i (No tip / 5% / 10% / 15%). It starts at **No tip** and never comes out of the donation. The "cover card fees" box now starts **unchecked**.
+- Needs migration `20260929180000_rally_goals_thanks_platform_tip.sql` (not applied); until then the Rally card and thank buttons stay hidden. The split line and tip choice show right away; a tip picked before the migration is charged and noted in Stripe metadata, but the donation row is saved without it and no `tip` revenue row is written.
+
 ### Donations, in plain words
 
 - The app now says **Donate** everywhere you give money: "Donate to Kaleo", "Donate $10", "Donation History & Receipts", "Donate $5 to this goal". "Mālo", "tip", "backing", "Chip In" and "Share & Fund" are gone from the screens. "Mālo!" is now only how we say thank you ("Mālo! Your donation to Kaleo is on its way").

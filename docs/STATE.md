@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
+**Last updated:** 2026-09-29 · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -88,6 +88,26 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-09-29** — M2 Rally goals, Say thanks, fee model (owner: keep the 10% and disclose it on the
+  sheet, GoFundMe-style optional tip for Tapua'i at checkout; athletes are encouraged to thank donors).
+  Migration `20260929180000_rally_goals_thanks_platform_tip.sql` (not applied; needs
+  `custodial_money.sql`, `company_revenue.sql`, `tip_origin.sql`): `rallies` (one open per athlete;
+  guardian's Rally live at once, athlete's waits for guardian approval — an adult athlete without a
+  birthdate on file also waits), `create_rally` / `approve_rally` / `close_rally` / `thank_rally`
+  (needs donations + a non-Vault clip) / `get_active_rally` / `get_player_rallies`; `donation_thanks`
+  (preset keys only) with `thank_donation` / `get_donations_to_thank` / `get_my_donation_thanks`;
+  `tips.platform_tip_cents` / `rally_id` / origin `rally`; `company_revenue_logs` source `tip`.
+  Client: `lib/rallies.ts`, `useRally` (`available` is false until the SQL exists, so the "Start a
+  Rally" invite hides), `components/Rally/RallyCard` + `CreateRallySheet` (athlete profile and Parent
+  HQ), `lib/donationThanks.ts`, `useDonationThanks`, `components/Thanks/ThanksPicker`, Say thanks in
+  `ReceivedMaloPanel`; donate sheet shows the 90 / 10 split (`MALO_DISCLAIMER`, now a literal checked
+  against the BPS constants), optional tip for Tapua'i (default No tip) and a total breakdown; the fee
+  box now defaults off. `copy:check` allows "tip" only on a line naming Tapua'i. Not built: filmer tip
+  jar (LEGAL row P), Rally meter on Highlights, full-screen fill celebration; "Watch what it paid for"
+  only switches to the Highlights tab. `tips` inserts are still client-side and not checked against
+  Stripe, so Rally totals can be inflated until Phase 1a. LEGAL rows L, R, S, T; App Store 3.2.1(vii)
+  risk on the 10% is with counsel (fallback: `MALO_PLATFORM_CUT_BPS` = 0 plus the tip). tsc clean,
+  jest 172/172, `copy:check` + `docs:check` ok.
 - **2026-09-29** — Donation language (owner: make it obvious Tapua'i is a donation app, a GoFundMe
   replacement for families; plain words so people keep donating). All on-screen money copy (fan,
   Expo admin, Next portal, `shared-types` hints) now says **Donate / donation / donors / gear goal**;
@@ -97,8 +117,8 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   tie). Rules `docs/VOICE.md`; `scripts/check-copy.mjs` (`pnpm copy:check`, new CI step); VOICE agent
   `.claude/agents/voice.md`; TEAMS/AGENTS updated; LEGAL row Q. Code names (`malo*`, `tips`,
   `buttons.malo`) unchanged. Published `app_runtime_config` copy overrides defaults — re-publish from
-  `/admin/look` if an old Mālo line is live. Open: fan copy says 100% to the athlete while
-  `MALO_PLATFORM_CUT_BPS` is 10% (LEGAL row L) — owner's call.
+  `/admin/look` if an old Mālo line is live. (The 100%-vs-10% gap noted here was closed by the
+  Rally / fee-model entry above: the sheet now discloses 90 / 10.)
 - **2026-09-29** — Filmers: tiers, Top Filmers, Aura and Props (owner: build filmer stats + Aura for
   filmers; pave a quiet future path for Tapua'i to pay filmers out of the app, never from the athlete's
   cut). Migration `20260929170000_filmer_rewards.sql` (not applied; needs `20260929160000`):
@@ -248,30 +268,6 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   `apps/`/`packages/`/`supabase/` without updating it, and `scripts/state-doc-guard.sh` is a
   Claude Code Stop hook covering local agents that never open a PR.
 
-- **2026-09-28** — Activity tab added (`app/(tabs)/activity.tsx`, `hooks/useActivityFeed.ts`),
-  taking Local's slot in the fan bar. Derived from existing sources (`get_received_malo`,
-  `get_fan_tip_history`, pending tags) — **no notifications table, so no unread state and no push.**
-- **2026-09-28** — Local moved out of the fan bar into a navigating pill on the Highlights row;
-  still routable at `/local`. Home/All/Seki pills now carry live clip counts.
-- **2026-09-28** — `ReelCard` wrapped in `React.memo` with an explicit comparator (callbacks made stable 2026-09-29). One hype tap
-  used to re-render every mounted card (video chrome, blur, Skia, action rail) — that cascade,
-  not the counter, was the chip jank.
-- **2026-09-28** — Hype counter races fixed: per-kind generation token discards superseded server
-  responses; an in-flight counter stops the feed's echo overwriting the optimistic value; neither
-  handler adopts a server row that did not move the count.
-- **2026-09-28** — Local tab retinted to its own `TAB_ACCENTS.local` cyan (it was wearing
-  Spotlight's gold). Sponsor rail got elevation + scroll reveal; boosters pane got a reveal;
-  poll heading laid out on one line.
-- **2026-09-28** — Eight bottom sheets unified on a shared `SheetHandle` and
-  `SHEET_BLUR_INTENSITY` (handles had drifted; blur was 40 on some sheets and 48 on others).
-- **2026-09-28** — Aura trading card flips on body tap only; standalone "Flip Card 🔄" button and
-  the duplicate hamburger menu entry both removed.
-- **2026-09-28** — Four 2026-09-25 audit defects fixed (Highlights search jump, Spotlight
-  "Watch Full Highlight" fallback, Soft-Wall age gate blocking *sign in*, seven dead components
-  deleted). Regression tests added and each confirmed to fail when the fix is reverted.
-- **2026-09-28** — Test suite 41 → 54. First component tests in the repo
-  (`SoftWallModal`, `highlights-jump`); Reanimated 4 stubbed in `jest.setup.js`.
-
 ---
 
 ## 5. Known broken / not yet applied
@@ -292,7 +288,7 @@ Do not re-diagnose these. Fix them or leave them.
 | Held gifts have no cap or refund yet | Gifts to an unverified athlete are "held" only because payouts are 503. The design's ~$250 cap and 30-day refunds need the Phase 1a ledger. Future payout code must call `athlete_payout_allowed`. |
 | School confirm link needs the app | `alasports://school-confirm` opens only where Tapua'i is installed (Edge Functions can't serve HTML on the default domain). A web page for staff without the app is not built. Confirmers are added from the SQL Editor — no admin UI yet. |
 | One report hides a clip, with no reason | `report_reel` sets `is_flagged` on the first report and records no reason, so rival fans can hide real clips and moderators can't spot AI fakes. Plan: design doc §6. |
-| `supabase/custodial_money.sql`, `supabase/leaderboards.sql` and `supabase/migrations/20260929120000_athlete_verification_ladder.sql` not applied on the live DB | Written 2026-09-29, never parsed by Postgres. The verification card and school form hide/fail gracefully until the migration is applied. Until applied, the custodial cards and Spotlight Boards hide themselves and view counting no-ops. Apply by hand after review (staging first). |
+| `supabase/custodial_money.sql`, `supabase/leaderboards.sql` and the 2026-09-29 files in `supabase/migrations/` (verification ladder through `20260929180000_rally_goals_thanks_platform_tip.sql`) not applied on the live DB | Written 2026-09-29, never parsed by Postgres. The Rally card and Say thanks buttons hide until the Rally migration is applied. The optional tip for Tapua'i does **not** hide: before the migration it is charged (Stripe metadata `platformTipCents`) but the `tips` row falls back without it and no `tip` revenue row is logged — apply the migration before testers donate. The verification card and school form hide/fail gracefully until the migration is applied. Until applied, the custodial cards and Spotlight Boards hide themselves and view counting no-ops. Apply by hand after review (staging first). |
 
 ---
 
@@ -324,10 +320,11 @@ Do not re-diagnose these. Fix them or leave them.
    to the guardian's account, so gifts never sit in the platform balance and no payout ledger is
    needed. The alternative is today's platform-balance model plus the Phase 1a ledger (B3). Owner +
    payments counsel.
-9. **Fee model.** Fan copy promises 100% to the athlete; the admin split table says 10% platform;
-   App Store 3.2.1(vii) appears to require 100% for non-IAP gifts. Recommended: 0% from gifts plus
-   an optional "tip Tapua'i" at checkout. Owner + counsel. Do not turn on a rake in fan UI until
-   decided.
+9. **Fee model** — *decided 2026-09-29:* keep the 10% platform share, disclosed on the donate sheet
+   (90% to the family account; card processing comes out of Tapua'i's 10%), plus a GoFundMe-style
+   optional tip for Tapua'i at checkout (default No tip, never pre-selected). Built, SQL not applied.
+   Still open: counsel on App Store 3.2.1(vii), which appears to require 100% for non-IAP gifts —
+   fallback is `MALO_PLATFORM_CUT_BPS` = 0 with the tip kept (LEGAL row L).
 
 10. **Athlete verification and fake highlights** — `docs/ATHLETE_VERIFICATION_DESIGN.md`.
     **Decided 2026-09-29:** gifts are held until verified and the athlete sees that in the app; the

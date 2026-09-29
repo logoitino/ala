@@ -22,8 +22,10 @@ to a play, a kid can lose eligibility.
 3. Read each changed screen's copy in context and check:
    - **Words:** Donate / donation / donors / gear goal. "Mālo" only as a thank-you ("Mālo! …").
    - **Three answers** on any screen that takes money: who gets it (the named athlete's family
-     account, not the uploader), what for (sports costs), anything taken out (processing; any
-     Tapua'i share must be shown before paying).
+     account, not the uploader), what for (sports costs), anything taken out (Tapua'i keeps 10%,
+     including processing — must be shown before paying). "Tip" is allowed only for the optional tip
+     *to Tapua'i*, and no platform add-on (tip, fee box) may start pre-selected.
+   - **Thank-yous from athletes** are presets only — flag any free-text box or reply path to a donor.
    - **Never:** money for a play / stat / win / rank; invest, returns, fund-as-investment; "tax-deductible"
      without "not"; ranking kids by dollars; guilt or fake urgency; Aura as cash.
    - **Keeps people donating:** instant thanks naming the athlete, progress toward a goal, next

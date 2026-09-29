@@ -20,6 +20,7 @@ import { AthleteStatsTab } from '@/components/Profile/AthleteStatsTab';
 import { AuraTradingCard } from '@/components/Profile/AuraTradingCard';
 import { LockerRoomWishlist } from '@/components/Profile/LockerRoomWishlist';
 import { ReceivedMaloPanel } from '@/components/Profile/ReceivedMaloPanel';
+import { RallyCard } from '@/components/Rally/RallyCard';
 import { ProfileHeroAvatar } from '@/components/Profile/ProfileHeroAvatar';
 import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { SubscriberQnA } from '@/components/Profile/SubscriberQnA';
@@ -226,6 +227,14 @@ export function AthleteProfileView({
   const setFlipOpen = onAuraCardOpenChange ?? setInternalFlip;
 
   const publicClips = useMemo(() => clips.filter((clip) => !isClipVaultOnly(clip)), [clips]);
+  // Rally thank-you can point at one of the athlete's own confirmed clips ("what it paid for").
+  const rallyClips = useMemo(
+    () =>
+      publicClips
+        .filter((clip) => clip.playerId === player.id && clip.tagStatus !== 'pending' && clip.tagStatus !== 'rejected')
+        .map((clip) => ({ id: clip.id, title: clip.tag })),
+    [player.id, publicClips],
+  );
   const vaultClips = useMemo(() => clips.filter((clip) => isClipVaultOnly(clip)), [clips]);
   const sealed = isVaultSealed(vaultLocked);
   const vaultUnlocked = manageVault || subscribed || !sealed;
@@ -425,6 +434,17 @@ export function AthleteProfileView({
         <VaultLockCard locked={sealed} busy={vaultLockBusy} onToggle={(next) => onVaultLockChange?.(next)} />
       ) : null}
 
+      {live.buttons.malo || ownSheet ? (
+        <RallyCard
+          player={player}
+          athleteName={name}
+          username={username}
+          manage={ownSheet}
+          tipEntry={tipEntry}
+          clips={rallyClips}
+          onOpenClip={() => setTab('highlights')}
+        />
+      ) : null}
       {ownSheet ? <ReceivedMaloPanel playerId={player.id} /> : null}
       <FilterPills
         items={tabs}

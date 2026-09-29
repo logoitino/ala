@@ -7,6 +7,9 @@ type PaymentIntentBody = {
   /** `players.id` this charge is for (Mālo tip / vault unlock / exclusive subscribe). Omitted for
    *  player-agnostic charges (Drip merch, booster sponsorships) that have no freeze target. */
   playerId?: string;
+  /** Optional tip to Tapua'i included in `amount` (cents). Metadata only — the athlete's donation is
+   *  `amount - platformTipCents - fee`. */
+  platformTipCents?: number;
 };
 
 function jsonError(message: string, status: number): Response {
@@ -43,9 +46,13 @@ export async function createPaymentIntentHandler(request: Request): Promise<Resp
     const body = (await request.json()) as PaymentIntentBody;
     const amount = Number(body.amount);
     const playerId = typeof body.playerId === 'string' ? body.playerId.trim() : '';
+    const platformTipCents = Number(body.platformTipCents ?? 0);
 
     if (!Number.isInteger(amount) || amount < 50) {
       return jsonError('amount must be an integer number of cents (min 50).', 400);
+    }
+    if (!Number.isInteger(platformTipCents) || platformTipCents < 0 || platformTipCents >= amount) {
+      return jsonError('platformTipCents must be whole cents, less than amount.', 400);
     }
 
     if (playerId) {
@@ -77,6 +84,7 @@ export async function createPaymentIntentHandler(request: Request): Promise<Resp
       metadata: {
         tapuai_user_id: auth.user.id,
         ...(playerId ? { tapuai_player_id: playerId } : {}),
+        ...(platformTipCents > 0 ? { tapuai_platform_tip_cents: String(platformTipCents) } : {}),
       },
     });
 

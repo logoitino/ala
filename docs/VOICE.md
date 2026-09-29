@@ -22,13 +22,16 @@ Checked two ways:
 | **gear goal** | a Locker wishlist item | "Donate $5 to this goal", "Goal reached" |
 | **Mālo!** | *thank you* — only as a thank-you | "Mālo! Your donation to Kaleo is on its way" |
 | **family account** | where a minor's donations go | "held in the family account for Kaleo" |
+| **Rally** | a named goal for a real sports cost | "New cleats — $140 of $250", "Share the Rally" |
+| **Say thanks** | the athlete thanking a donor | "Say thanks 🙏", "Thanked ✓" |
+| **tip for Tapua'i** | *only* the optional tip to the app at checkout | "Add a tip for Tapua'i (optional)" |
 
 ## Retired words (fan and admin UI)
 
 | Don't say | Why | Say instead |
 | --- | --- | --- |
 | Mālo (as the money) | Nobody outside the islands knows it means money; it means *thank you* | Donate / donation |
-| tip, tipped, tipping | Sounds like paying for a service — or for a play | donate / donation |
+| tip, tipped, tipping | Sounds like paying for a service — or for a play | donate / donation. **One exception:** the optional tip *to Tapua'i* at checkout — the line must name Tapua'i (`copy:check` allows "tip" only on a line that says Tapua'i) |
 | backing, backed, backers | Vague about whether money moved | donated / donors |
 | Chip In | Hides that it's a donation | Donate $5 to this goal |
 | fund, funded, funding | Reads like an investment (STORY.md guardrails) | donate / goal reached |
@@ -44,12 +47,22 @@ renaming them would break the database and live config. Only what people read ch
 1. **Who gets it?** The athlete named on the screen — through their family account — never the
    person who posted the clip. (`donationWhereItGoes` in `data/malo.ts`.)
 2. **What is it for?** Their sports costs — fees, gear, travel. Never a play, a stat, a win or a rank.
-3. **Is anything taken out?** Say it plainly. Today: card processing unless the donor covers it. If
-   Tapua'i ever keeps a share, the screen must say so before the donor pays (LEGAL rows L and Q).
+3. **Is anything taken out?** Say it plainly, before the donor pays. **Decided 2026-09-29:** Tapua'i
+   keeps 10% (which also covers card processing) and 90% goes to the family account —
+   `donationSplitLine` at the top of the sheet, `MALO_DISCLAIMER` at the bottom, and a breakdown line
+   ("On a $10.00 donation: $9.00 to Kaleo's family, $1.00 to Tapua'i. You pay $10.00.") that updates
+   with the optional tip and the card-fee box (LEGAL rows L, Q, R).
+
+**No pre-checked add-ons.** The optional tip to Tapua'i starts at "No tip" and the "cover card fees"
+box starts unchecked. A donor opts in; we never make them opt out.
 
 ## Keep people donating (without pressure)
 
 - Thank every donor right away ("Mālo!"), name the athlete, and show the running total or goal.
+- **Athletes say thank you.** Every donation shows a "Say thanks 🙏" button to the athlete and their
+  guardian; a filled Rally asks them to thank everyone, optionally with a clip of what it paid for.
+  Thank-yous are five preset messages (`THANKS_MESSAGES` in `lib/donationThanks.ts`) — no free text, no
+  replies — because many athletes are minors (LEGAL row S).
 - Show progress toward a goal ("$140 of $250 — new cleats"), not rankings by dollars. Boards rank
   hype and views, never money.
 - Make the next donation one tap, but never guilt ("Don't let Kaleo down") or fake urgency.
@@ -59,7 +72,10 @@ renaming them would break the database and live config. Only what people read ch
 ## Where the mission is said
 
 - First open: `WelcomeOverlay` — `DONATION_MISSION`.
-- Donate sheet: `TipCheckout` header — `donationWhereItGoes(name)`.
+- Donate sheet: `TipCheckout` header — `donationWhereItGoes(name)`, then `donationSplitLine(name)`.
+- Rally card and `CreateRallySheet`: "Raise money for a real sports cost" — never for a play, a stat or a win.
+- Received-donations panel: "Saying thanks keeps people cheering you on."
+
 - Home slang line default: "Donations go to the athlete's family • Seki = Awesome Play".
 - `docs/PUBLIC.md` opening line.
 

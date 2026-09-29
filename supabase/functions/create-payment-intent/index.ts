@@ -62,12 +62,17 @@ Deno.serve(async (req) => {
       return json({ error: 'Invalid or expired session.' }, 401);
     }
 
-    const body = (await req.json()) as { amount?: number; playerId?: string };
+    const body = (await req.json()) as { amount?: number; playerId?: string; platformTipCents?: number };
     const amount = Number(body.amount);
     const playerId = typeof body.playerId === 'string' ? body.playerId.trim() : '';
+    // Optional tip to Tapua'i already included in `amount` — metadata only (same as the Metro route).
+    const platformTipCents = Number(body.platformTipCents ?? 0);
 
     if (!Number.isInteger(amount) || amount < 50) {
       return json({ error: 'amount must be an integer number of cents (min 50).' }, 400);
+    }
+    if (!Number.isInteger(platformTipCents) || platformTipCents < 0 || platformTipCents >= amount) {
+      return json({ error: 'platformTipCents must be whole cents, less than amount.' }, 400);
     }
 
     if (playerId) {
@@ -96,6 +101,7 @@ Deno.serve(async (req) => {
       metadata: {
         tapuai_user_id: authData.user.id,
         ...(playerId ? { tapuai_player_id: playerId } : {}),
+        ...(platformTipCents > 0 ? { tapuai_platform_tip_cents: String(platformTipCents) } : {}),
       },
     });
 

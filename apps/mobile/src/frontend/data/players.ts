@@ -12,8 +12,14 @@ export function auraPointsForTip(tipAmount: number): number {
   return Math.max(0, Math.round(tipAmount * AURA_PER_DOLLAR));
 }
 
+/**
+ * Fee disclosure on the donate sheet (owner, 2026-09-29: keep the 10% and say so before the donor pays;
+ * LEGAL row L). Numbers come from `data/finance.ts` so the words can't drift from the split.
+ */
+// Plain literal so `scripts/sync-front-docs.mjs` can read it; `data/__tests__/malo.test.ts` keeps the
+// numbers in step with MALO_ATHLETE_SHARE_BPS / MALO_PLATFORM_CUT_BPS.
 export const MALO_DISCLAIMER =
-  "100% of your donation (minus standard payment processing unless covered) goes directly to the athlete's custodial account — not the person who uploaded the clip.";
+  "90% of your donation goes to the athlete's family account. Tapua'i keeps 10% to run the app, including card processing. Nothing goes to the person who uploaded the clip.";
 
 export const QUICK_REACTIONS = [
   { id: 'aura', label: 'Aura ⚡', reaction: 'Aura' },

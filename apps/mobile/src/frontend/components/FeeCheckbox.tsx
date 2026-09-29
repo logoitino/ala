@@ -29,8 +29,8 @@ export function FeeCheckbox({ playerName, checked, onChange }: FeeCheckboxProps)
       />
       <View style={styles.copy}>
         <Text style={styles.label}>
-          Add ${fee.toFixed(2)} to cover transaction fees so {playerName} gets 100% of your
-          donation.
+          Add ${fee.toFixed(2)} to cover card fees. {playerName}&apos;s share stays the same — this
+          helps Tapua&apos;i pay the card company.
         </Text>
       </View>
     </Pressable>

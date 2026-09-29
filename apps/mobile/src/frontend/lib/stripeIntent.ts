@@ -14,13 +14,22 @@ type IntentPayload = { clientSecret?: string | null; error?: string };
  * @param playerId `players.id` this charge is for, when there is one (Mālo tip / vault unlock / exclusive
  *   subscribe) — lets the server reject the charge before it happens when that athlete is Mālo-frozen
  *   (LEGAL_BRIEFING.md §8 item 5). Omit for player-agnostic charges (Drip merch, booster sponsorships).
+ * @param platformTipCents Optional tip to Tapua'i already included in `amount`; sent for Stripe metadata.
  * @returns Stripe `clientSecret`.
  * @sideEffects `supabase.auth.getSession`; `supabase.functions.invoke('create-payment-intent')`, else
  *   `POST /api/create-payment-intent` with `Authorization: Bearer`.
  */
-export async function createPaymentIntent(amount: number, playerId?: string | null): Promise<string> {
+export async function createPaymentIntent(
+  amount: number,
+  playerId?: string | null,
+  platformTipCents = 0,
+): Promise<string> {
   const accessToken = await requireAccessToken('Sign in to complete payment.');
-  const body = playerId ? { amount, playerId } : { amount };
+  const body = {
+    amount,
+    ...(playerId ? { playerId } : {}),
+    ...(platformTipCents > 0 ? { platformTipCents } : {}),
+  };
 
   const { data: fnData, error: fnError } = await supabase.functions.invoke('create-payment-intent', {
     body,

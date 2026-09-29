@@ -51,6 +51,13 @@ tell us what you'd want on them.)*
 3. Find an athlete with a Locker goal and donate toward it.
 4. Open Profile → Receipts and find all three gifts.
 5. Open Activity and check what you see.
+6. **Check the sheet.** Before you pay, it should say 90% goes to the athlete's family and 10% to
+   Tapua'i. The **tip for Tapua'i** should start at **No tip** and the card-fee box unchecked. Pick 10%
+   and tick the box — the breakdown line should add both and show the new total.
+7. **Rally.** Find an athlete with a Rally card on their profile. Donate to it — the bar should move
+   after the sheet closes. If your donation fills it, you should see confetti.
+8. After the athlete thanks you (see Athlete step 7), open Activity: you should see "{athlete} said
+   thanks" with their message.
 
 Tell us: *How many taps from "I want to support this kid" to done? Where did you hesitate? Did it
 feel like a gift to the athlete, or like paying for a clip? Did it feel exciting when it went
@@ -65,6 +72,11 @@ through?*
 3. Ask your athlete to approve a small withdrawal, with a note ("cleats"). Then check it says it
    is waiting on them. Try cancelling one too. (Nothing is paid out in this build — it records
    the request only.)
+4. **Rally.** On your athlete's Rally card, tap **Start a Rally**, pick "Gear", name it "New cleats",
+   goal $30, and start it — it should go live at once. (If your athlete started one, you should see
+   **Approve this Rally**.) Share it, then have two test fans fill it.
+5. When it fills, tap **Say thanks to everyone 🙏**, pick a clip and a message. Fans should see it on
+   the card. Under "Support received", thank one donor with **Say thanks 🙏**.
 
 Tell us: *Would you trust this with your kid's money? What would you need to see first? What would
 make you share your kid's page with family?*
@@ -92,6 +104,10 @@ make you share your kid's page with family?*
 6. Open **Activity**. The card at the top should say who holds your donations and until when. When your
    parent sends a withdrawal request, approve one and decline one. (Needs a verified athlete
    account and a linked parent.)
+
+7. **Say thanks.** On your profile, under "Support received", tap **Say thanks 🙏** on a donation and
+   pick a message. It should change to "Thanked ✓". There is no way to type your own message — on
+   purpose. Try **Start a Rally** too: it should say it is waiting for your parent or guardian.
 
 Tell us: *Did the money card make it clear the money is yours and nobody can take it without
 you? Would you send this profile to a college coach? What is missing? What would make you
