@@ -10,6 +10,7 @@ import {
 
 import { ScrollFxItem, ScrollFxParallax, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
 import { ScreenHeading } from '@/components/ScreenHeading';
+import { LeaderboardsBoard } from '@/components/Spotlight/LeaderboardsBoard';
 import { SpotlightAwardCard } from '@/components/Spotlight/SpotlightAwardCard';
 import { SpotlightModal } from '@/components/Spotlight/SpotlightModal';
 import { ReelViewModal } from '@/components/Reels/ReelViewModal';
@@ -22,6 +23,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { displayValue } from '@/data/players';
 import type { HighlightClip } from '@/data/highlights';
+import { useLeaderboards } from '@/hooks/useLeaderboards';
 import { useRoster } from '@/hooks/useRoster';
 import { useSpotlightBoard } from '@/hooks/useSpotlightBoard';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
@@ -32,7 +34,7 @@ import type { Player, SpotlightAward } from '@/types/database';
 
 /**
  * @purpose Fan-bar Spotlight tab: reopen Player of the Week/Month after the Highlights launch popup is dismissed. The featured card zooms in, past awards tilt up as the board scrolls, heading drifts with parallax.
- * @sideEffects `useSpotlightBoard` on focus; `SpotlightModal` replay; `ReelViewModal` for Watch Full Highlight; `MaloTipModal` PaymentSheet; `useSurfaceUsage` dwell / taps.
+ * @sideEffects `useSpotlightBoard` + `useLeaderboards` (Boards, `layouts.leaderboards`) on focus; `SpotlightModal` replay; `ReelViewModal` for Watch Full Highlight; `MaloTipModal` PaymentSheet; `useSurfaceUsage` dwell / taps.
  */
 export default function SpotlightTab() {
   const router = useRouter();
@@ -40,6 +42,8 @@ export default function SpotlightTab() {
   const { requireAuth } = useSoftWall();
   const { players, applyBackerCount } = useRoster();
   const { awards, loading, refresh } = useSpotlightBoard(players);
+  const leaderboards = useLeaderboards('week', live.layouts.leaderboards);
+  const showBoards = live.layouts.leaderboards && !leaderboards.unavailable;
   const { onScroll, trackFeature } = useSurfaceUsage('spotlight');
   const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState<SpotlightAward | null>(null);
@@ -53,11 +57,11 @@ export default function SpotlightTab() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refresh();
+      await Promise.all([refresh(), live.layouts.leaderboards ? leaderboards.refresh() : Promise.resolve()]);
     } finally {
       setRefreshing(false);
     }
-  }, [refresh]);
+  }, [refresh, leaderboards.refresh, live.layouts.leaderboards]);
 
   const featured = awards[0] ?? null;
   const rest = awards.slice(1);
@@ -113,6 +117,22 @@ export default function SpotlightTab() {
             accent={TAB_ACCENTS.spotlight.color}
           />
         )}
+        {showBoards ? (
+          <LeaderboardsBoard
+            boards={leaderboards.boards}
+            loading={leaderboards.loading}
+            error={leaderboards.error}
+            onRetry={() => {
+              trackFeature('leaderboards');
+              void leaderboards.refresh();
+            }}
+            onTabChange={() => trackFeature('leaderboards')}
+            onOpenAthlete={(playerId) => {
+              trackFeature('leaderboards');
+              if (isAuraUuid(playerId)) router.push(userProfileHref(playerId));
+            }}
+          />
+        ) : null}
         {rest.length > 0 ? (
           <View style={styles.list}>
             <Text style={styles.section}>Recent Spotlights</Text>

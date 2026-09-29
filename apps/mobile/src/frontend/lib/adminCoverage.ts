@@ -4,6 +4,7 @@ import { getRuntimeFlag, type AppRuntimeConfig, type AppRuntimeFlagPath } from '
 export type CoverageSurface =
   | 'home'
   | 'local'
+  | 'activity'
   | 'spotlight'
   | 'drip'
   | 'profile'
@@ -31,6 +32,7 @@ export type CoverageControl = {
 export const COVERAGE_SURFACES: { id: CoverageSurface; label: string }[] = [
   { id: 'home', label: 'Home · Highlights ⚡' },
   { id: 'local', label: 'Local' },
+  { id: 'activity', label: 'Activity' },
   { id: 'spotlight', label: 'Spotlight' },
   { id: 'drip', label: 'Drip' },
   { id: 'profile', label: 'Profile' },
@@ -74,7 +76,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'reel_unsave', label: 'Remove bookmark', hint: 'More sheet · saved_reels delete', surface: 'home', fanHref: '/', adminHref: '/admin/features', flag: 'buttons.more' },
   { id: 'reel_category', label: 'Clip category badge', hint: 'Game Play / Train / Serve labels — Catalogs', surface: 'home', fanHref: '/', adminHref: '/admin/catalog' },
 
-  { id: 'tab.local', label: 'Local tab', hint: 'Fan bar', surface: 'local', fanHref: '/local', adminHref: '/admin/features', flag: 'tabs.local', telemetry: 'tab.local' },
+  { id: 'tab.local', label: 'Local', hint: 'Home pill → /local', surface: 'local', fanHref: '/local', adminHref: '/admin/features', flag: 'tabs.local', telemetry: 'tab.local' },
   { id: 'local_search', label: 'Local Explore', hint: 'Players, schools, sponsors', surface: 'local', fanHref: '/local', adminHref: '/admin/features', flag: 'layouts.localSearch' },
   { id: 'hub.matches', label: 'Live Matches', hint: 'Scoreboard list', surface: 'local', fanHref: '/local', adminHref: '/admin/games', flag: 'layouts.liveMatches', telemetry: 'hub.matches' },
   { id: 'live_game', label: 'Open match', hint: '/local/game/[id]', surface: 'local', fanHref: '/local', adminHref: '/admin/games', telemetry: 'live_game' },
@@ -93,8 +95,13 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'game_roster_profile', label: 'Roster athlete', hint: 'Opens /user/[id] from the match roster', surface: 'local', fanHref: '/local', adminHref: '/admin/athletes' },
   { id: 'game_play_malo', label: 'Play-card Mālo', hint: 'Compact tip on a live play', surface: 'local', fanHref: '/local', adminHref: '/admin/money', flag: 'buttons.malo' },
 
+  { id: 'tab.activity', label: 'Activity tab', hint: 'Fan bar', surface: 'activity', fanHref: '/activity', adminHref: '/admin/features', flag: 'tabs.activity', telemetry: 'tab.activity' },
+  { id: 'activity.receipts', label: 'Open a Mālo receipt', hint: 'Sent row → /receipts', surface: 'activity', fanHref: '/activity', adminHref: '/admin/features', flag: 'tabs.activity', telemetry: 'activity.receipts' },
+  { id: 'activity.tag', label: 'Review a pending tag', hint: 'Tag row → Profile', surface: 'activity', fanHref: '/activity', adminHref: '/admin/spotlight', flag: 'tabs.activity', telemetry: 'activity.tag' },
+
   { id: 'tab.spotlight', label: 'Spotlight tab', hint: 'Fan bar', surface: 'spotlight', fanHref: '/spotlight', adminHref: '/admin/features', flag: 'tabs.spotlight', telemetry: 'tab.spotlight' },
   { id: 'spotlight_card', label: 'Award card', hint: 'Replay Player of the Week', surface: 'spotlight', fanHref: '/spotlight', adminHref: '/admin/spotlight', telemetry: 'spotlight_card' },
+  { id: 'leaderboards', label: 'Boards', hint: 'Players (hype / views), Highlights, Schools, Fans — this week', surface: 'spotlight', fanHref: '/spotlight', adminHref: '/admin/features', flag: 'layouts.leaderboards', telemetry: 'leaderboards' },
 
   { id: 'tab.drip', label: 'Drip tab', hint: 'Fan bar', surface: 'drip', fanHref: '/drip', adminHref: '/admin/features', flag: 'tabs.drip', telemetry: 'tab.drip' },
   { id: 'drip_item', label: 'Gear card', hint: 'Opens ProductSheet', surface: 'drip', fanHref: '/drip', adminHref: '/admin/drip', telemetry: 'drip_item' },

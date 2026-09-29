@@ -11,6 +11,7 @@ import { APP_RUNTIME_FLAG_GROUPS } from '@tapuai/shared-types';
 export type AppRuntimeTabs = {
   home: boolean;
   local: boolean;
+  activity: boolean;
   spotlight: boolean;
   drip: boolean;
   profile: boolean;
@@ -45,6 +46,7 @@ export type AppRuntimeLayouts = {
   slangGuide: boolean;
   receipts: boolean;
   wishlist: boolean;
+  leaderboards: boolean;
 };
 
 export type AppRuntimeTheme = {
@@ -107,6 +109,8 @@ export type AppRuntimeCopy = {
   homeBannerBody: string;
   localKicker: string;
   localLede: string;
+  activityKicker: string;
+  activityLede: string;
   localEmpty: string;
   spotlightKicker: string;
   spotlightLede: string;
@@ -181,7 +185,7 @@ export const APP_FLAG_GROUPS: AppFlagGroup[] = APP_RUNTIME_FLAG_GROUPS.filter(
 }));
 
 export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
-  tabs: { home: true, local: true, spotlight: true, drip: true, profile: true, upload: true },
+  tabs: { home: true, local: true, activity: true, spotlight: true, drip: true, profile: true, upload: true },
   buttons: {
     seki: true,
     aura: true,
@@ -209,6 +213,7 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     slangGuide: true,
     receipts: true,
     wishlist: true,
+    leaderboards: true,
   },
   theme: { ...DAYLIGHT_THEME },
   catalog: {
@@ -251,6 +256,8 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     homeBannerBody: '',
     localKicker: 'Friday night',
     localLede: 'Live matches, school polls, and Top Boosters.',
+    activityKicker: 'Your account',
+    activityLede: 'Mālo received, Mālo sent, and highlights that tagged you.',
     localEmpty: 'No live games here',
     spotlightKicker: 'Player of the Week',
     spotlightLede: 'Featured athletes from confirmed Game Play hype — week, month, and year.',
@@ -356,6 +363,8 @@ export const COPY_FIELDS: { key: keyof AppRuntimeCopy; label: string; hint: stri
   { key: 'homeBannerBody', label: 'Home banner body', hint: 'Shows under the title when the banner is on', multiline: true },
   { key: 'localKicker', label: 'Local kicker', hint: 'Above Local' },
   { key: 'localLede', label: 'Local lede', hint: 'Optional line under Local' },
+  { key: 'activityKicker', label: 'Activity kicker', hint: 'Above Activity' },
+  { key: 'activityLede', label: 'Activity lede', hint: 'Optional line under Activity' },
   { key: 'localEmpty', label: 'Local empty title', hint: 'No live games in the region' },
   { key: 'spotlightKicker', label: 'Spotlight kicker', hint: 'Above Spotlight' },
   { key: 'spotlightLede', label: 'Spotlight lede', hint: 'Board explanation' },
@@ -770,6 +779,7 @@ export function moveHighlightRailItem(order: HighlightRailItem[], id: HighlightR
 const TAB_HREF: Record<keyof AppRuntimeTabs, string> = {
   home: '/',
   local: '/local',
+  activity: '/activity',
   spotlight: '/spotlight',
   drip: '/drip',
   profile: '/profile',
@@ -780,7 +790,8 @@ const TAB_HREF: Record<keyof AppRuntimeTabs, string> = {
  * @purpose First live fan-bar destination when a published tab is turned off.
  */
 export function firstEnabledFanHref(config: AppRuntimeConfig): string {
-  const order: (keyof AppRuntimeTabs)[] = ['home', 'local', 'spotlight', 'drip', 'profile'];
+  // Fan-bar order. Local is a Home pill now, not a bar tab, so it is not a fallback target.
+  const order: (keyof AppRuntimeTabs)[] = ['home', 'activity', 'spotlight', 'drip', 'profile'];
   const hit = order.find((key) => config.tabs[key]);
   return hit ? TAB_HREF[hit] : '/profile';
 }
