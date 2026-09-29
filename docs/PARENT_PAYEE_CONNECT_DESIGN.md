@@ -116,10 +116,52 @@ Explicitly **not** implemented (each depends on a §1/§2/§3 sign-off): any new
 
 - [ ] Guardian required before roster-claim, or only before Connect onboarding? (§1)
 - [ ] Parent-athlete link mechanism: invite code, roster-seed import, or scoped self-declare? (§1)
-- [ ] Single guardian per athlete, or multi-guardian join table? (§1)
-- [ ] How do we know an athlete is an adult (skip guardian) given deliberate no-birthdate COPPA design? (§1)
+- [x] Single guardian per athlete, or multi-guardian join table? (§1) — **owner 2026-09-29: single guardian of record per athlete** (`custodial_accounts.player_id` is the PK; §7)
+- [x] How do we know an athlete is an adult (skip guardian) given deliberate no-birthdate COPPA design? (§1) — **birth date collected from the guardian at custodial setup only**, stored in `athlete_birthdates`, never readable by clients; handover computed from it (§7). Still open: athletes who are already 18 at sign-up with no guardian.
 - [x] `players` RLS fix for the self-claim-any-athlete hole — **closed 2026-09** via admin-only `guardian_id` (new `admin_set_player_guardian` RPC) + a narrower parent-update-own-linked-row policy; the *linking mechanism* sign-off itself (§1) is still open (§0, §1)
 - [ ] Connect `display_name` / metadata copy for the parent-of-record account (§2, LEGAL copy)
 - [ ] Does the athlete keep a separate ToS ack in addition to the guardian's Connect-specific ack? (§2)
-- [ ] Athlete-initiates-with-co-sign vs. parent-initiates-directly UI shape (§3)
-- [ ] `useRoster()` unscoped-fetch follow-up once Parent HQ shows real financial state (§3, non-blocking)
+- [x] Athlete-initiates-with-co-sign vs. parent-initiates-directly UI shape (§3) — **parent initiates per athlete in Parent HQ; the athlete co-signs every withdrawal in Activity** (§7)
+- [ ] `useRoster()` unscoped-fetch follow-up once Parent HQ shows real financial state (§3, non-blocking) — Parent HQ now **filters** to `guardian_id` = caller (2026-09-29); the fetch itself is still unscoped
+
+---
+
+## 7. Owner rules (2026-09-29)
+
+The owner set these rules for money held for a minor athlete:
+
+1. **The athlete is told.** Every gift appears in the athlete's Activity, and a card at the top
+   says whose custodial account holds it and until when.
+2. **No withdrawal without the athlete.** The guardian asks; the athlete approves or declines in
+   the app. Nothing leaves the account on the guardian's say alone.
+3. **Automatic handover.** At 18, or the state's age of majority / UTMA transfer age, control
+   passes to the athlete. From that day the athlete can move the money to their own account and
+   the guardian can no longer ask.
+4. **One athlete per custodial account.** The guardian's payout account holds only that athlete's
+   money; a guardian with two athletes has two accounts.
+5. **A bank account in the athlete's name is strongly encouraged.** The guardian oversees
+   everything until the handover age.
+
+**What is built (records only — no money moves).** `supabase/custodial_money.sql`, mirrored in
+`schema.sql`, documented in `SCHEMA.md`: `custodial_accounts`, `athlete_birthdates`,
+`custodial_withdrawals` and the RPCs that enforce rules 1–4 on the server. The athlete side
+requires `verification_status = 'verified'` because `profiles.player_id` is still client-writable
+(STATE §5). Client: `components/Custodial/` in Activity (athlete) and Parent HQ (guardian).
+`handover_age` defaults to 18 and an admin can set 18–21 per athlete (`admin_set_custodial_terms`).
+Payouts still return 503.
+
+**Stripe mechanics to verify before live money** (payments counsel + Stripe support):
+
+- [ ] Set the guardian's Connect account to a **manual payout schedule**, and create a payout only
+      after the athlete approves the matching `custodial_withdrawals` row (status `approved` → `paid`).
+- [ ] At handover, move the remaining balance to the **athlete's own Express account** — a transfer
+      reversal from the guardian's account plus a new transfer, or re-pointing future destination
+      charges. Confirm which Stripe allows and what it costs.
+- [ ] How long funds may sit in a connected account before Stripe pays them out automatically or
+      asks questions.
+- [ ] Whether the guardian's Express account can pay out to a bank account titled in the athlete's
+      name (or a UTMA custodial account), and what KYC that needs.
+- [ ] **Handover age per state** — counsel confirms. Utah's UTMA transfer age is 21, not 18; some
+      states let the custodian choose. Set `handover_age` per athlete from counsel's table.
+- [ ] Whether holding gifts under these rules makes the guardian's account a UTMA custodianship
+      in law, and what disclosures that requires (LEGAL copy).

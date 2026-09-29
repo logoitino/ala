@@ -1,5 +1,17 @@
 {
   "enabledPlugins": {
     "expo@claude-plugins-official": true
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/state-doc-guard.sh\""
+          }
+        ]
+      }
+    ]
   }
 }

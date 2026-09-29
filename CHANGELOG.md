@@ -2,6 +2,68 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-09-29
+
+### Custodial money rules — the athlete stays in the loop
+
+- A guardian's custodial account holds only that one athlete's money. Parent HQ lists only athletes linked to the signed-in guardian, and each gets a card: date of birth (entered once), "Is the payout bank account in the athlete's name?" (strongly encouraged), and **ask the athlete to approve a withdrawal**.
+- The athlete sees a card at the top of Activity: who holds their Mālo, until when, and every pending request with **Approve / Decline**. No withdrawal proceeds without the athlete.
+- At 18 (or the state's age, admin-set 18–21) control passes to the athlete automatically; the guardian can no longer ask, and the athlete's own withdrawals are approved at once.
+- Schema: `custodial_accounts`, `athlete_birthdates`, `custodial_withdrawals` plus seven RPCs (`supabase/custodial_money.sql`). **Records only — no money moves; payouts still return 503.** Not applied to the live DB.
+- Removed the misleading Parent HQ "Set up Stripe custodial payout" button, which sent a hardcoded $25 payout request.
+
+### M1 leaderboards
+
+- Spotlight **Boards**: most-hyped players, most-viewed players, most-viewed Highlights, school standings and top fans for the Spotlight week. Hype and views only — never money. Behind `layouts.leaderboards`.
+- Highlights now count views: one per signed-in viewer per clip per day, after 2 seconds on screen; the uploader and the tagged athlete don't count. Schema: `reels.view_count`, `reel_views`, `record_reel_view`, `get_leaderboards` (`supabase/leaderboards.sql`). Not applied to the live DB.
+
+### Apple Pay and Google Pay
+
+- The Mālo PaymentSheet offers Apple Pay and Google Pay (Google Pay in test mode unless the key is live). Needs a new build; Apple Pay also needs the merchant ID registered with Apple and a Stripe certificate.
+
+## 2026-09-28 (later)
+
+### Activity replaces Local in the fan bar
+
+- New **Activity** tab: Mālo you received, Mālo you sent, and highlights waiting on your tag confirmation, newest first. Rows that need a decision sort above the timeline. Built from sources that already exist (`get_received_malo`, `get_fan_tip_history`, pending tags), so **there is no notifications table yet — no unread state and no push.** Pending tags are filtered to the viewer's own player (the RPC returns every confirmable tag, which for admins is all of them). A failed load shows a Retry state instead of "Nothing yet". Signed-out shows a sign-in prompt. Admin → Features gains a **tabs.activity** switch.
+- **Local** moved out of the fan bar and into a pill at the end of the Highlights row, styled deliberately unlike its neighbours (divider, cyan outline, location pin, chevron) because it navigates rather than filters. Still routable at `/local`. **tabs.local** still works as a kill switch: it hides the pill and pauses the Local screen.
+- **Home / All / Seki** pills now carry live clip counts, so the labels say what is behind them.
+
+### Seki / Aura / Flex stopped glitching
+
+- Tapping a chip used to re-render every mounted `ReelCard` — video chrome, blur, Skia glow and the action rail — because the new count bubbles to the feed, which rebuilds every clip object. `ReelCard` is now `React.memo`'d with an explicit comparator, behind a thin wrapper that passes identity-stable callbacks so a skipped render never holds a stale `onTip` (which captures auth state through `requireAuth`). That cascade, not the counter, was the jank.
+- A per-kind generation token discards superseded server responses, an in-flight counter stops the feed's echo overwriting the optimistic value, and neither handler adopts a server row that did not actually move the count. Un-voting no longer snaps the number back. Counts that arrive while a tap is in flight are adopted once it settles.
+- The burst and shout play only on a tap that adds a vote; tapping a selected chip removes the vote quietly.
+
+### Effects and sheet chrome
+
+- `HypeBurst` is larger and reads on video: 10 rotating sparks, a double shockwave ring, 24pt shout, and a Reduced Motion path. It fires at the tap point only — there is no second centred burst.
+- Eight bottom sheets now share one `SheetHandle` and one `SHEET_BLUR_INTENSITY`. The handles had drifted apart and backdrop blur was 40 on some sheets and 48 on others.
+- The Aura trading card flips on a body tap; the standalone **Flip Card 🔄** button and the duplicate hamburger entry are gone. A 🔄 chip on the card is the affordance.
+
+### Local wears its own colour
+
+- Local was themed in gold, which is Spotlight's accent. Hub switcher, search field, section rules, loading spinner and the sponsor CTA now use `TAB_ACCENTS.local` cyan. Gold stays reserved for sponsor **tier** (`sponsorCardGold` / `sponsorCardOn`). Sponsor rail gained elevation and a scroll reveal, the boosters pane gained a reveal, and the School polls heading sits on one line.
+
+### docs/STATE.md
+
+- New `docs/STATE.md` is the read-first entry point for engineers and AI agents: current state, recent changes, environment constraints, knowingly-broken list, open decisions. `CLAUDE.md` imports it, `AGENTS.md` and `README.md` point at it, and CI fails a pull request that changes `apps/` / `packages/` / `supabase/` without updating it.
+
+## 2026-09-28
+
+### Sign in is no longer age-gated
+
+- The 13+ confirmation on the Soft-Wall email form gated **Sign in** as well as Create account, which locked out returning email accounts that already existed. The checkbox is a COPPA attestation for accounts being *created*, so it now gates Create account and the magic link — both of which can mint a new row — and not Sign in. The rule lives in `softWallEmailGates` (`lib/auth.ts`) with unit tests, rather than inline in `SoftWallModal`, so it cannot quietly come back.
+
+### Highlights search and Spotlight land on the clip
+
+- Searching Highlights and tapping a result did nothing when the **All** pill was already selected: the pending clip was held in a ref and the effect that resolves it only re-ran when the filter actually changed. It is state now, so the jump lands whichever pill is active. Tapping a feed pill cancels a pending jump.
+- Spotlight **Watch Full Highlight** silently did nothing from the Highlights tab when the award's clip sat outside the active filter. It now widens the feed to All and jumps, and if the clip is not in the feed at all it opens the athlete's profile — the same fallback chain the Spotlight tab already had.
+
+### Seven unused components removed
+
+- `ScoreboardBanner`, `GameEventCard`, `ScoreHeader`, `ReactionButtons`, `HighlightClipCard` (an unused alias re-export of `Reels/ReelCard`), `ScorerHeaderButton`, and `Profile/AuraCard` had no importers anywhere. Deleted, and the component lists in `AGENTS.md` / `DOCUMENTATION.md` / `docs/SCHEMA.md` corrected — the live card is `Profile/AuraTradingCard`. `docs/AUDIT_REPORT.md` now marks sections 1-7 as the 2026-09-14 snapshot and records this pass.
+
 ## 2026-09-27
 
 ### Preview installs

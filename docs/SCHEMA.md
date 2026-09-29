@@ -637,6 +637,22 @@ Batched client performance **and** product-usage events (Reel stalls, Realtime r
 
 ---
 
+### `custodial_accounts` / `athlete_birthdates` / `custodial_withdrawals`
+
+Owner money rules of 2026-09-29 ([PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md) §7). Incremental: `supabase/custodial_money.sql`. **Records only — nothing here moves money;** payouts stay 503 until the Phase 1a ledger ships.
+
+| Table | Key columns | Notes |
+| --- | --- | --- |
+| `custodial_accounts` | `player_id` PK → `players`, `guardian_id` → `profiles`, `stripe_connect_id` (unique), `payouts_enabled`, `bank_in_athlete_name`, `handover_age` (18–21, default 18) | One account per athlete, so a guardian's account only ever holds that athlete's money. `handover_age` is admin-set per counsel (state majority / UTMA age). |
+| `athlete_birthdates` | `player_id` PK, `birth_date`, `entered_by`, `entered_at` | Entered once by the guardian at custodial setup (COPPA: sign-up collects no birth date). Only an admin corrects it. No client ever reads the date directly. |
+| `custodial_withdrawals` | `id`, `player_id`, `requested_by`, `requested_role` (`guardian` / `athlete`), `amount_cents` (1–100000), `note` (≤280), `status` (`pending_athlete` / `approved` / `declined` / `cancelled` / `paid`), `decided_by`, `decided_at` | A guardian request before handover waits for the athlete (`pending_athlete`); an athlete request after handover is `approved` at once. One pending request per athlete (partial unique index). |
+
+RLS: SELECT only, when `custodial_role(player_id)` is not null (the verified athlete, their linked guardian, an admin). No client INSERT / UPDATE / DELETE — every write goes through the RPCs below.
+
+### `reel_views` + `reels.view_count`
+
+M1 leaderboards (Release Wave 0). Incremental: `supabase/leaderboards.sql`. `reels.view_count` (int, ≥0) is the counted views for a Highlight; it is not in the `reels` column UPDATE grant, so only `record_reel_view` moves it. `reel_views` (`reel_id`, `viewer_id`, `view_day`, all three the PK) is the throttle: one counted view per signed-in viewer per clip per UTC day. RLS on, no policies, no client grants.
+
 ## Custom functions
 
 Changing a function’s return type requires **`DROP FUNCTION` first** (Postgres `42P13`). `supabase/add_user_aura.sql` already drops `add_user_aura(uuid, integer)` and `get_aura_tier(integer)` before recreate.
@@ -920,6 +936,28 @@ Insert-on-miss seeds `home_name` / `away_name` at 0–0. Featured rivalry `westl
 
 ---
 
+### Custodial money RPCs
+
+All `SECURITY DEFINER`, `search_path = public`. Incremental: `supabase/custodial_money.sql`. Client: `lib/custodial.ts` + `useCustodial`, `components/Custodial/` (Activity for the athlete, Parent HQ for the guardian).
+
+| Function | Who | What |
+| --- | --- | --- |
+| `custodial_role(target_player_id)` | authenticated | `admin`, `guardian` (`players.guardian_id` = caller), `athlete` (caller's `profiles.player_id` = target **and** `verification_status = 'verified'`), else null. The verified check exists because `profiles.player_id` is still client-writable (STATE §5). |
+| `athlete_handover_date(target_player_id)` / `athlete_controls_money(target_player_id)` | internal only (EXECUTE revoked from public / anon / authenticated) | Birth date + `handover_age` years; true on or after that day. Revoked so nobody can derive a minor's birth date. Handover is computed on every call, so it is automatic. |
+| `guardian_setup_custodial(target_player_id, athlete_birth_date, bank_in_athlete_name)` | linked guardian | Birth date once (5–30 years old); refuses if the athlete is already of age; upserts the account for this guardian only. A later call with a null date just updates `bank_in_athlete_name`. |
+| `admin_set_custodial_terms(target_player_id, new_handover_age, corrected_birth_date)` | admin | Sets the state's handover age or corrects a birth date. |
+| `request_custodial_withdrawal(target_player_id, amount_cents, note)` | guardian before handover; athlete after | Returns the `custodial_withdrawals` row. Guardian → `pending_athlete`; athlete of age → `approved`. A guardian after handover is refused. |
+| `decide_custodial_withdrawal(request_id, approve)` | the verified athlete | Pending only → `approved` / `declined`. |
+| `cancel_custodial_withdrawal(request_id)` | the requester | Pending only → `cancelled`. |
+| `get_custodial_summary(target_player_id)` | athlete / guardian / admin | jsonb: `viewer_role`, names, `has_account`, `payouts_enabled`, `bank_in_athlete_name`, `handover_age`, `handover_date`, `athlete_controls`, `received_cents` (sum of `tips` for the athlete), last 20 `requests`. Null for anyone else. |
+
+### `record_reel_view(target_reel_id)` / `get_leaderboards(period_kind)`
+
+Incremental: `supabase/leaderboards.sql`. Client: `lib/leaderboards.ts`, `useLeaderboards`, `useReelViewTracker` (Home feed, 2 s on screen), `Spotlight/LeaderboardsBoard` behind `layouts.leaderboards`.
+
+- `record_reel_view` — `authenticated` only. Counts at most once per viewer per clip per UTC day; skips removed, flagged and Vault-only clips and views by the uploader or the tagged athlete. Returns the new count or null.
+- `get_leaderboards(period_kind default 'week')` — `anon` + `authenticated`. Top 10 per board for the Spotlight window: most-hyped players, most-viewed players, most-viewed Highlights, schools (hype + 10 × Highlights + 5 × distinct fans) and fans (10 × confirmed clips + hype given; username or first name only). Only confirmed-tag, public clips count. **No money fields** — STORY.md guardrail: never rank kids by Mālo.
+
 ## 7-Tier Aura palette
 
 **Earn rate:** `aura_points += tip_dollars × 10` (`$5` Mālo → `+50`).
@@ -936,7 +974,7 @@ Tier = highest band whose minimum the balance meets. Source of truth: `AURA_TIER
 | 6 | **Polished Gold** | 110 | `#FFD700` | `#FFF8DC` | `#8A6400` | |
 | 7 | **Celestial Prism** | 170 | `#00E676` / `#00E5FF` | `#EEFFF6` | `#00733C` | Jade border, cyan glow; Skia sweep |
 
-Badge: `Tier {n} • {title}`. Collectible cards use per-tier `face` + `ink` on Daylight (`AURA_TIERS` in `aura.ts`). `AuraCard` (public athlete) / `AuraTradingCard` (Profile hub, both faces) / `TopAuraBoosters`. Progress fill uses `auraProgressTowardNext` (band min → next min; Celestial Prism is full). Standard Island scheme (`FOCAL` + `TAB_ACCENTS`): Daylight `#F3FAF6`, Jade `#00E676` / `#00733C` (Home / Mālo), Cyan `#00E5FF` (Local / Seki), Gold `#FFD700` / `#8A6400` (kickers / Spotlight / ranks), Ember `#FF1744` (LIVE / Drip), Violet `#7C4DFF` (Profile). Video chrome stays Obsidian `#0F1416`. Source: `apps/mobile/src/frontend/theme/motion.ts`.
+Badge: `Tier {n} • {title}`. Collectible cards use per-tier `face` + `ink` on Daylight (`AURA_TIERS` in `aura.ts`). `Profile/AuraTradingCard` (Profile hub and the public athlete sheet, both faces) / `TopAuraBoosters`. Progress fill uses `auraProgressTowardNext` (band min → next min; Celestial Prism is full). Standard Island scheme (`FOCAL` + `TAB_ACCENTS`): Daylight `#F3FAF6`, Jade `#00E676` / `#00733C` (Home / Mālo), Cyan `#00E5FF` (Local / Seki), Gold `#FFD700` / `#8A6400` (kickers / Spotlight / ranks), Ember `#FF1744` (LIVE / Drip), Violet `#7C4DFF` (Profile). Video chrome stays Obsidian `#0F1416`. Source: `apps/mobile/src/frontend/theme/motion.ts`.
 
 If `aura_points` is unset on a player, the client falls back to `aura_count + seki_count + flex_count`.
 
@@ -1049,4 +1087,4 @@ Prefer full `schema.sql` on a blank project (includes `profiles` / `tips` / oper
 
 1. `players.sql` → `game_events.sql` → `games.sql` (+ `games_clock.sql` + `games_operator.sql`)
 2. `increment_backer.sql` → `increment_hype.sql` (`increment_player_hype`)
-3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `legal_terms_ack.sql` → `athlete_verification.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql` → `media_upload.sql` → `tip_origin.sql` → `malo_ledger.sql`
+3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `legal_terms_ack.sql` → `athlete_verification.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql` → `media_upload.sql` → `tip_origin.sql` → `malo_ledger.sql` → `custodial_money.sql` → `leaderboards.sql`

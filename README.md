@@ -8,7 +8,10 @@ Polynesian-inspired fan & athlete hub. **pnpm monorepo.**
 | [`apps/admin-portal`](apps/admin-portal) | Next.js Soft-Wall **+ Profile** oversight (Overview / Soft-Wall / Profile / Features / People). Live desks still in Expo `/admin` |
 | [`packages/shared-types`](packages/shared-types) | `@tapuai/shared-types` — Profile, ActionStats, Spotlight, RPC shapes |
 
-Docs: [ARCHITECTURE](docs/ARCHITECTURE.md) · [ONBOARDING](docs/ONBOARDING.md) · [SCHEMA](docs/SCHEMA.md) · [DOCUMENTATION](DOCUMENTATION.md)
+**Start with [docs/STATE.md](docs/STATE.md)** — current state, what changed last, environment
+gotchas, and what is knowingly broken. Update it whenever you change code.
+
+Docs: [STATE](docs/STATE.md) · [ARCHITECTURE](docs/ARCHITECTURE.md) · [ONBOARDING](docs/ONBOARDING.md) · [SCHEMA](docs/SCHEMA.md) · [DOCUMENTATION](DOCUMENTATION.md)
 
 ## Quick start
 

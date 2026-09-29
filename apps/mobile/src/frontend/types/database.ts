@@ -1075,6 +1075,43 @@ export type Database = {
         Args: { period_kind?: string };
         Returns: SpotlightStandings;
       };
+      /** 2026-09-29 custodial money rules (`supabase/custodial_money.sql`). Client: `lib/custodial.ts`. */
+      get_custodial_summary: {
+        Args: { target_player_id: string };
+        Returns: Record<string, unknown> | null;
+      };
+      guardian_setup_custodial: {
+        Args: { target_player_id: string; athlete_birth_date: string | null; bank_in_athlete_name?: boolean | null };
+        Returns: void;
+      };
+      admin_set_custodial_terms: {
+        Args: { target_player_id: string; new_handover_age?: number | null; corrected_birth_date?: string | null };
+        Returns: void;
+      };
+      request_custodial_withdrawal: {
+        Args: { target_player_id: string; amount_cents: number; note?: string | null };
+        Returns: Record<string, unknown>;
+      };
+      decide_custodial_withdrawal: {
+        Args: { request_id: string; approve: boolean };
+        Returns: Record<string, unknown>;
+      };
+      cancel_custodial_withdrawal: {
+        Args: { request_id: string };
+        Returns: void;
+      };
+      custodial_role: {
+        Args: { target_player_id: string };
+        Returns: string | null;
+      };
+      get_leaderboards: {
+        Args: { period_kind?: string };
+        Returns: Record<string, unknown>;
+      };
+      record_reel_view: {
+        Args: { target_reel_id: string };
+        Returns: number | null;
+      };
       sync_spotlight_period: {
         Args: { period_kind?: string };
         Returns: Record<string, unknown>;

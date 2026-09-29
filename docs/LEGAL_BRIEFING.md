@@ -104,6 +104,10 @@ Use this as a **cover letter outline** for UHSAA (or the relevant state associat
 3. Whether **sideline operators** (scorekeepers) may use a third-party console.
 4. Age: whether any user under 18 may have an account; whether any user under 13 is prohibited.
 5. Whether a **parent-owned Stripe / custodial** account is an acceptable payee.
+6. The owner's custodial rules (2026-09-29, `PARENT_PAYEE_CONNECT_DESIGN.md` §7): the athlete sees
+   every gift, approves every guardian withdrawal, and takes control at 18. Counsel to confirm the
+   handover age per state (Utah's UTMA transfer age is 21) and whether these rules make the
+   guardian's account a UTMA custodianship with its own disclosures.
 
 ### 4.3 What we would not claim
 
@@ -149,7 +153,7 @@ Safe public lines (must stay consistent with the product):
 - Watch highlights, cheer your school, support athletes.
 - Mālo is optional and is a gift, not a bet.
 - Polls are cheers, not gambling.
-- Parents should expect a real consent and custodial design before any live payout — **the current Parent screen is a prototype toggle**.
+- Parents should expect a real consent and custodial design before any live payout. The Parent screen now records custodial set-up and withdrawal requests the athlete must approve, but **no money moves yet**, and the copy is pending counsel review.
 - Schools and associations may restrict participation; we will comply.
 
 Avoid:

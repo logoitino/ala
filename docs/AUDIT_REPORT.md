@@ -6,6 +6,24 @@
 
 **Method (2026-09-14):** Static pass over `apps/mobile/app/` + `apps/mobile/src/frontend/`; `pnpm typecheck` (mobile + admin); `pnpm docs:check`; shared-types import smoke; `sk_test_` / `sk_live_` grep under `apps/mobile/src/frontend/` (clean); stale path sweep of docs / troubleshooting / CI. Not re-run on a physical device here.
 
+> **Sections 1-7 below are the 2026-09-14 snapshot and have not been re-run in full.** They predate Vault playback, ShareQR, Varsity, the avatar picker, the current auth sheet, the 2026-09-25 compliance copy, the motion pass, and the Mālo ledger. Treat them as history. The section immediately below is current.
+
+---
+
+## Round 2026-09-25 / 2026-09-28 — button & dead-code pass
+
+**Method (2026-09-25, static):** every pressable-family element in `apps/mobile/app/` + `apps/mobile/src/frontend/` checked for a handler; async press handlers checked for a re-entry guard; every `router` target and `ADMIN_NAV_GROUPS` href resolved against a real route; whole-repo import sweep for unreferenced components.
+**Verified and fixed 2026-09-28** with `tsc --noEmit` (mobile + admin) clean, `docs:check` ok, and Jest 45/45.
+
+Clean on the mechanical sweeps: 361 pressable-family elements all have a handler; no unguarded async press handlers; all `router` targets and `ADMIN_NAV_GROUPS` hrefs resolve.
+
+| # | Defect | Severity | Status |
+| --- | --- | --- | --- |
+| 1 | `app/(tabs)/index.tsx` — Highlights search → tap a clip did nothing when the **All** pill was already active. `jumpToClip` wrote a `pendingClipId` *ref* then called `setFeedFilter('all')`; the resolving effect keyed off `[feed, pageHeight]`, so an unchanged filter left `feed` identical and the effect never re-ran. | Medium | **Fixed** — the pending jump is state, not a ref, and is in the effect's deps. Tapping a feed pill clears a pending jump. |
+| 2 | `app/(tabs)/index.tsx` — Spotlight **Watch Full Highlight** silently no-opped from the Highlights tab when the award's clip fell outside the active filter (`jumpToSpotlightClip` ended `if (index < 0) return;`). The Spotlight tab's own `onWatch` already had a fallback chain. | Medium | **Fixed** — falls back to widening the filter to All (via the same pending-jump path), then to the athlete's profile. |
+| 3 | `components/Auth/SoftWallModal.tsx` — `canPassword` required the 13+ checkbox, so it gated **Sign in** as well as Create account, retroactively blocking returning email accounts. Contradicted the deliberate design elsewhere: Apple/Google/Demo skip it, new OAuth accounts get `AgeConfirmModal`, and `signInWithEmailPassword` takes the flag as optional. | High (compliance-adjacent) | **Fixed** — the rule moved to `softWallEmailGates` in `lib/auth.ts` and is unit-tested. Sign in is ungated; Create account and magic link keep the gate, because `signUpWithEmailPassword` and `signInWithOtp` can both mint a new row. |
+| 4 | Seven components never imported anywhere: `ScoreboardBanner`, `GameEventCard`, `ScoreHeader`, `ReactionButtons`, `HighlightClipCard` (an unused alias re-export of `Reels/ReelCard`), `ScorerHeaderButton`, `Profile/AuraCard`. | Low | **Fixed** — deleted. `Profile/ShareQrModal.web.tsx` was checked and kept: it is a legitimate Metro platform file. |
+
 ---
 
 ## 0. Monorepo audit (2026-09-14)
@@ -88,7 +106,6 @@ ReelCard Broadcast banner → Haptics.impactAsync(Light)
 | File | Callbacks | Pending disable |
 | --- | --- | --- |
 | `ReelActionOverlay.tsx` | `@Athlete`, Seki/Aura/Flex, Mālo | Reactions off if `reacting` or no `onReact`; Mālo off if `tipping` / no player |
-| `HighlightClipCard.tsx` | `commitHype` → `bumpReelHype` | `reacting` |
 | `TaggedReelGrid.tsx` | Tile open / lock paywall / modal react | Modal `reacting` during RPC |
 | `ReelViewModal.tsx` | Close, paging `ReelCard`s, nested Mālo | Close clears tip sheet; only the focused page plays |
 | `UploadVideoModal.tsx` | Close, library/record, tags, submit | Close + iOS swipe ignored while `uploading`; form reset on hide |
@@ -115,9 +132,6 @@ ReelCard Broadcast banner → Haptics.impactAsync(Light)
 | `app/(guest)/player/[id].tsx` | Retry; HypeBoard `onBump`; TipCheckout `busy` |
 | `GameCard.tsx` | Single card `onPress` (no nested CTA) |
 | `PlayCard.tsx` | Seki/Aura/Flex + compact Mālo; `reacting` on player hype |
-| `ScoreHeader.tsx` | Pressable **only** when `onPress` is passed (else `View`) |
-
-`ReactionButtons.tsx` is Alert-only and **not imported** anywhere.
 
 ---
 
@@ -139,7 +153,7 @@ Earlier landings still in tree: `HapticPressable` + Light `impactPress`; Payment
 ### Seki 🤙 / Aura ⚡ / Flex 💪 (video overlays)
 
 ```
-HighlightClipCard / TaggedReelGrid
+Reels/ReelCard / TaggedReelGrid
   → bumpReelHype(reelId, kind)
   → rpc increment_reel_hype({ target_reel_id, hype_kind })
   → overlay counts update immediately
@@ -161,7 +175,7 @@ Guest player `HypeBoard` / `PlayCard` increment **`players`** hype, not `reels` 
 TipButton → useTipCheckout
   → PaymentSheet
   → add_user_aura({ target_user_id, points_to_add: tipAmount * 10 })
-  → emitProfileAura + refreshProfile → AuraTradingCard / AuraCard border
+  → emitProfileAura + refreshProfile → AuraTradingCard border
 ```
 
 | Check | Status |
@@ -194,7 +208,6 @@ Realtime teardown:
 | `useGameEventBroadcast` | `removeChannel` |
 | Operator `game_events_${gameId}` Broadcast | `removeChannel` |
 | `useCheerPoll` | `removeChannel` |
-| `ScoreHeader` | `removeChannel` |
 | Guest `game/[id]` | `removeChannel` |
 | Operator index / console / scorer | `removeChannel` |
 | `AuthContext` | `unsubscribe` |
@@ -210,8 +223,7 @@ Realtime teardown:
 1. Seeded demo clips do not write `increment_reel_hype`.
 2. Checkout does not insert `public.tips` rows (backer count, reel cents, Drip, and Aura still update).
 3. Profile Subscribe ($4.99) is local-only.
-4. `ReactionButtons.tsx` unused.
-5. Haptics no-op on web / some simulators.
+4. Haptics no-op on web / some simulators.
 
 ---
 
@@ -233,7 +245,7 @@ Realtime teardown:
 - [ ] Double-tap Aura ⚡: particle + Medium haptic; signed-in fan Aura +1; single tap still mutes (no burst).
 - [ ] Mālo ⚡ opens blurred `MaloTipModal`; Share sheet shows `alasports://…` deep link; Save fills bookmark and survives refresh (`saved_reels`).
 - [ ] Live score banner: swipe up or ✕ hides it (Light haptic); vertical Reel paging still works from the video.
-- [ ] Mālo $5 signed-in: PaymentSheet, +50 Aura, AuraTradingCard / AuraCard border; Close disabled while sheet is open.
+- [ ] Mālo $5 signed-in: PaymentSheet, +50 Aura, AuraTradingCard border; Close disabled while sheet is open.
 - [ ] Upload FAB: Close inert during upload; reopen is a clean form.
 - [ ] Reel → Local → Drip → Profile; no Realtime errors in Metro.
 - [ ] `/athlete/[id]` exclusive CTA unlocks tiles after pay.

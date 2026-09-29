@@ -18,6 +18,8 @@ Friday-night high school sports already have the crowd. What they do not have is
 - Send a small, attributable gift to a named athlete
 - Let a local business show up next to that school
 
+And the money that does reach young athletes is badly concentrated: NIL deals, in college and now in high school, go to the one or two most famous players. Everyone else on the roster — often the families who need it most — gets nothing. The mission is that **money is never the reason a young athlete stops**, and that support reaches **every athlete, not just the star** ([STORY.md](STORY.md)).
+
 College NIL marketplaces do not fit. High-school athletes are usually minors, amateur rules are stricter, and the “platform” is still Instagram plus a booster’s Venmo.
 
 ## 2. The product (three loops)

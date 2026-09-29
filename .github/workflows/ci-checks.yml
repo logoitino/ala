@@ -12,6 +12,31 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # docs/STATE.md is the entry point every agent and engineer reads first. If code moved
+      # and it did not, the next person starts from a stale picture of the project.
+      - name: Require docs/STATE.md to move with the code
+        if: github.event_name == 'pull_request'
+        run: |
+          base="origin/${{ github.base_ref }}"
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}" || true
+          changed=$(git diff --name-only "$base"...HEAD)
+          code=$(echo "$changed" | grep -E '^(apps|packages|supabase)/' || true)
+          if [ -z "$code" ]; then
+            echo "No app/package/supabase changes — STATE.md not required."
+            exit 0
+          fi
+          if echo "$changed" | grep -qx 'docs/STATE.md'; then
+            echo "docs/STATE.md updated alongside the code."
+            exit 0
+          fi
+          echo "::error::Code under apps/, packages/ or supabase/ changed but docs/STATE.md did not."
+          echo "Add a line to docs/STATE.md section 4 (Recent changes) and bump its 'Last updated' header."
+          echo "Changed files:"
+          echo "$code"
+          exit 1
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

@@ -4,6 +4,8 @@
 
 This page is for parents, athletes, boosters, and schools. It is product copy, not a contract.
 
+**Why we exist.** Talent is everywhere; money isn't. Too many young athletes stop because of a camp fee, a pair of cleats or a trip to where the coaches are, and the NIL money that does exist finds the star, not the rest of the roster. Tapua'i lets a whole community rally behind every athlete, so money is never the reason they stop. More in [STORY.md](STORY.md).
+
 ---
 
 ## What you can do

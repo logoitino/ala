@@ -8,6 +8,15 @@ alwaysApply: true
 
 Do not ship code that leaves JSDoc or system docs stale. Project continuity depends on this.
 
+## 0. `docs/STATE.md` is the entry point — read it first, update it last
+
+`docs/STATE.md` is what every agent and engineer reads before touching the repo: current state,
+what changed most recently, environment gotchas, and the list of knowingly-broken things.
+
+**Any change under `apps/`, `packages/` or `supabase/` must add a line to `docs/STATE.md` §4 and
+bump its `Last updated` header, in the same turn as the code.** CI fails pull requests that do
+not. Keep §4 to ~15 entries, newest first; older history belongs in `CHANGELOG.md`.
+
 ## 1. JSDoc is mandatory on hooks, API calls, and complex components
 
 Add a TSDoc/JSDoc header on:
@@ -35,6 +44,7 @@ If you change tables, RLS, RPCs, Storage, Aura tiers, routing, env vars, payment
 
 | If you change… | You also update… |
 | --- | --- |
+| **Anything under `apps/` / `packages/` / `supabase/`** | **`docs/STATE.md` §4 + `Last updated`** |
 | Architecture, folders, roadmap | `DOCUMENTATION.md` · `docs/ARCHITECTURE.md` |
 | Tables, FKs, RLS, RPCs, palette, buckets | `docs/SCHEMA.md` |
 | Clone / env / Metro / Expo Go | `docs/ONBOARDING.md` |
@@ -55,6 +65,7 @@ Aliases to keep honest:
 
 ## 3. Required suite (never delete)
 
+0. `docs/STATE.md` — current state, recent changes, known breakage, open decisions.
 1. `DOCUMENTATION.md` — mission, Expo + Supabase + Stripe test mode, directory map, Phase 1/2/3.
 2. `docs/ARCHITECTURE.md` — monorepo map (mobile / admin-portal / shared-types).
 3. `docs/SCHEMA.md` — `profiles`, `reels`, `games`, video tips, RPCs, 7-tier palette, RLS, `game_highlights`.
