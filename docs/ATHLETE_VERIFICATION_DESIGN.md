@@ -1,7 +1,8 @@
 # Athlete verification, open sign-up, and fake highlights — design
 
-**Status:** proposal, 2026-09-29. Owner direction is recorded below; nothing here is built yet
-except where marked. Companions: [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md)
+**Status:** 2026-09-29. §2–§4 are **built** (migration
+`supabase/migrations/20260929120000_athlete_verification_ladder.sql`, not applied yet) — see §8.
+§3's cap and refunds, §5 and §6 are still proposals. Companions: [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md)
 (who gets paid), [STORY.md](STORY.md) guardrails, [ROADMAP.md](ROADMAP.md) Wave 1 checklist.
 
 ## 0. Owner direction (2026-09-29)
@@ -14,6 +15,11 @@ except where marked. Companions: [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_C
 - Nobody should be able to falsely claim to be an athlete and collect money.
 - Workouts and other videos may be edited. A **game highlight must be real** — take down
   AI-generated fakes.
+- **Decided (second message, 2026-09-29):** gifts to a pending athlete are **held until verified**,
+  and the athlete can see that message in the app.
+- **Decided:** the school confirms from its end. The **athletic director or coach** talks to the
+  student in person and fills in a Tapua'i form that only they can use. That proves the kid attends
+  that school and is on the team.
 
 ## 1. What the code does today (read before changing it)
 
@@ -64,7 +70,7 @@ The owner wants families to be able to start right away. Recommendation:
 - Not verified within 30 days, or verification rejected → **automatic refunds** to the fans.
 - Aura, hype, tags and boards work from the first minute. Only money is held.
 
-Owner to confirm: gifts held while pending (recommended), or no gifts at all until verified.
+**Owner decided: held while pending**, and the athlete is told so on Activity. Built: the message on Activity and the gift sheet. Not built: the cap and automatic refunds (need the Phase 1a ledger). "Held" is true today only because payouts are off (503); any payout code must call `athlete_payout_allowed`.
 
 ## 4. How the school confirms — options (pick one or combine)
 
@@ -87,6 +93,8 @@ Layers that help with any of the options:
   lying is much harder.
 - **Duplicate and anomaly checks:** the same device or payout bank on several athletes, or a
   claim far from the school.
+
+**Owner chose an in-person version of option 1** — built as below (§8).
 
 ## 5. Growing users without false athletes
 
@@ -153,3 +161,29 @@ something they did not do (AI-generated or face-swapped) is banned in every cate
 4. Report reasons, weighted hiding, the upload statement for game play, and strikes.
 5. Held-gift cap and automatic refunds (needs destination charges and a manual payout schedule).
 6. "Filmed at the game" badge, C2PA read, and optional AI detection (Wave 2).
+
+## 8. What was built (2026-09-29)
+
+**In-person school confirmation.**
+
+1. Tapua'i issues each athletic director or coach their own link
+   (`admin_add_school_confirmer` → `alasports://school-confirm?t=TOKEN`), sent to their school
+   email. The token is shown once and stored hashed. A coach link can be limited to one sport.
+2. The athlete claims (onboarding, "Claim", or a school code) → **pending**. Activity shows the
+   pending badge, the held-gifts message and the steps.
+3. At school, the athlete taps **Show my school code**: 6 digits, valid 30 minutes, stored hashed.
+4. The staff member opens their link, sees only their school's (and sport's) pending students —
+   name, sport, class year, jersey, whether a code is live — types the code, ticks *"I met this
+   student in person and they are on my roster"*, signs with their name, and taps **Confirm**. Or
+   **Not on my roster**.
+5. Confirm → the account is verified and linked to the roster row. Five wrong codes void the code.
+   The signature and time are kept on the request.
+
+**Safety rules in the database.** Only the server can set `is_verified`, `verification_status` or
+`profiles.player_id` (trigger). One open claim per account; a second claim on the same athlete
+freezes both (`disputed`) for admin review. Admin approval stamps only the requester. Tag
+confirmation and the public "verified" check no longer match by name. On apply, accounts verified
+only by a shared team code go back to pending.
+
+**Not built yet:** held-gift cap and refunds; a web version of the school form for staff without
+the app; an admin screen to issue confirmer links (SQL Editor for now); parent-registers-kid; §6.

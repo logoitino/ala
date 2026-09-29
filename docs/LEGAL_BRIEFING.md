@@ -78,6 +78,8 @@ Severity is a product judgment for fundraising, not a court ranking.
 | J | **Tax (1099, backup withholding)** | IRS / state | Expected cost of a real payouts business |
 | K | **Demo security / open RLS** | Data incident before launch | High reputational; fixable in engineering |
 | L | **Misleading “100% to athlete”** | Consumer-protection / advertising law if fees or delays differ | Medium |
+| M | **"Held until verified" gifts (new 2026-09-29, needs review)** | Fans are told a gift to an unverified athlete is "held and only paid out after their school confirms them"; the athlete is told the same. Today it is true only because payouts are off. Counsel to review the wording, whether a cap and refund promise must appear at checkout, how long a gift may be held, and whether holding touches money-transmission (C). Copy lives in `data/verification.ts` (`GIFT_HELD_NOTICE`, `VERIFY_HELD_COPY`) | Medium |
+| N | **School staff confirming students** | An athletic director or coach confirms a student is on their roster by signing a Tapua'i form. Counsel: FERPA (roster status is directory information in most districts, but check), whether the school must consent before staff act, and the record we keep (staff name, signature, time) | Medium |
 
 **Short answer for investors:** The app does not automatically fail because “NIL exists.” It **can** fail if high-school associations treat Mālo as an extra benefit or pay-for-play, or if payouts to minors are not structured as parent-controlled custodial funds through a licensed processor. Those are counsel-and-association problems, not code problems.
 

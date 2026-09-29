@@ -39,7 +39,7 @@ resolution, not naming drift. Leave them.
 `components/` subfolders are grouped **by the feature that consumes them**, not by widget type.
 
 - **One consumer, or one feature area** → that feature's subfolder
-  (`Profile/`, `Reels/`, `Local/`, `Operator/`, `Drip/`, `Spotlight/`, `Admin/`, `Auth/`, `Legal/`, `Feedback/`, `Onboarding/`, `Custodial/` — the athlete and guardian money cards, shared by Activity and Parent HQ).
+  (`Profile/`, `Reels/`, `Local/`, `Operator/`, `Drip/`, `Spotlight/`, `Admin/`, `Auth/`, `Legal/`, `Feedback/`, `Onboarding/`, `Custodial/` — the athlete and guardian money cards, shared by Activity and Parent HQ; `Verification/` — the athlete verification card on Activity and the school confirmation form rows).
 - **Generic, reusable primitive** → `UI/` (`AnimatedButton`, `EmptyState`, `HapticPressable`, `SheetHandle`, `FanTabBar`).
 - **Genuinely cross-cutting, used by many unrelated routes** → flat at the top of `components/`.
 

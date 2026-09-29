@@ -1,7 +1,9 @@
 # Code organization plan — reviewable, migratable, well-noted
 
-**Status:** proposal, 2026-09-29. Nothing below has been done. Steps 0 and 1 need the owner:
-step 0 is a commit, and step 1 reads the live database.
+**Status:** 2026-09-29. **Step 0 done** (`core.fileMode false`; topic commits on branch
+`wave0-custodial-verification`, not pushed). **Step 1 started:** `supabase/migrations/` exists with
+its README and the first real migration (athlete verification ladder). The baseline still needs the
+owner, because it reads the live database.
 
 ## Why
 

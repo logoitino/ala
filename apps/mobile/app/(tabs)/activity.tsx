@@ -4,6 +4,7 @@ import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { AthleteMoneyCard } from '@/components/Custodial/AthleteMoneyCard';
+import { AthleteVerificationCard } from '@/components/Verification/AthleteVerificationCard';
 import { ScrollFxItem, ScrollFxParallax, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
 import { RuntimePaused } from '@/components/RuntimePaused';
 import { ScreenHeading } from '@/components/ScreenHeading';
@@ -87,7 +88,7 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
 export default function ActivityTab() {
   const router = useRouter();
   const { live } = useAppRuntime();
-  const { user, profile } = useAuth();
+  const { user, profile, isAthlete } = useAuth();
   const { requireAuth } = useSoftWall();
   const { onScroll, trackFeature } = useSurfaceUsage('activity');
   const { items, loading, error, refresh } = useActivityFeed();
@@ -155,6 +156,7 @@ export default function ActivityTab() {
           />
         </ScrollFxParallax>
 
+        {user ? <AthleteVerificationCard isAthlete={isAthlete} /> : null}
         <AthleteMoneyCard playerId={profile?.player_id} />
 
         {loading && items.length === 0 ? (

@@ -306,6 +306,13 @@ export type VerificationRequest = {
   school_id?: string | null;
   team_code?: string | null;
   created_at?: string;
+  /** Verification ladder (migration 20260929120000). */
+  sport?: string | null;
+  class_year?: string | null;
+  jersey?: string | null;
+  confirmer_name?: string | null;
+  decided_at?: string | null;
+  decision_note?: string | null;
 };
 
 export type Disbursement = {
@@ -792,6 +799,59 @@ export type Database = {
       athlete_is_varsity_verified: {
         Args: { target_player_id: string };
         Returns: boolean;
+      };
+      athlete_payout_allowed: {
+        Args: { target_player_id: string };
+        Returns: boolean;
+      };
+      claim_athlete: {
+        Args: { target_player_id?: string | null; request_notes?: string | null };
+        Returns: Record<string, unknown>;
+      };
+      start_school_check: {
+        Args: Record<string, never>;
+        Returns: Record<string, unknown>;
+      };
+      get_my_verification: {
+        Args: Record<string, never>;
+        Returns: Record<string, unknown>;
+      };
+      get_school_confirmation_queue: {
+        Args: { confirm_token: string };
+        Returns: Record<string, unknown>;
+      };
+      school_confirm_athlete: {
+        Args: {
+          confirm_token: string;
+          request_id: string;
+          approve: boolean;
+          meet_code?: string | null;
+          confirmer_signature?: string | null;
+          note?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      admin_add_school_confirmer: {
+        Args: {
+          target_school_id: string;
+          confirmer_name: string;
+          confirmer_email: string;
+          confirmer_role: string;
+          confirmer_sport?: string | null;
+        };
+        Returns: Record<string, unknown>;
+      };
+      admin_revoke_school_confirmer: {
+        Args: { confirmer_id: string };
+        Returns: Record<string, unknown>;
+      };
+      admin_decide_verification: {
+        Args: { request_id: string; approve: boolean; note?: string | null };
+        Returns: Record<string, unknown>;
+      };
+      admin_revoke_verification: {
+        Args: { target_profile_id: string; note?: string | null };
+        Returns: Record<string, unknown>;
       };
       get_aura_tier: {
         Args: { points: number };

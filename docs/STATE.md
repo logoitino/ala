@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification + code organization proposals (docs only)
+**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) — first migration in `supabase/migrations/`, not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -88,6 +88,29 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-09-29** — Athlete verification ladder (owner decisions: gifts **held** until verified and
+  the athlete sees that in the app; the school's athletic director or coach confirms each student
+  **in person**). First real migration:
+  `supabase/migrations/20260929120000_athlete_verification_ladder.sql` (+ `README.md`; copied onto
+  `schema.sql`). **Not applied, never parsed by Postgres.** SQL: `verification_requests` gains
+  sport / class year / jersey / hashed 6-digit meet code / confirmer / decision; new
+  `school_confirmers` (per-staff link token, stored hashed); trigger `guard_profiles_verification`
+  makes `is_verified` / `verification_status` / `player_id` server-only; `claim_athlete`,
+  `start_school_check`, `get_my_verification`, `get_school_confirmation_queue`,
+  `school_confirm_athlete` (anon; token + live code + signature), `admin_add_school_confirmer`,
+  `admin_revoke_school_confirmer`, `admin_decide_verification`, `admin_revoke_verification`,
+  `athlete_payout_allowed`. `redeem_team_code` now returns **pending**. `athlete_is_varsity_verified`,
+  `can_confirm_player_tag`, `confirm_reel_player_tag` lose their name matching. A data step sends
+  accounts verified only by team code back to pending and unlinks unverified `player_id`s.
+  Client: `lib/verification.ts` (`claimAthlete`, `fetchMyVerification`, `startSchoolCheck`,
+  `fetchPlayerVerified`; direct-write fallback removed; a name match can no longer show "verified"
+  or borrow an avatar), new `lib/schoolConfirm.ts`, `useMyVerification`,
+  `components/Verification/AthleteVerificationCard` (Activity, above the money card) and
+  `SchoolConfirmRow`, route `app/school-confirm.tsx` (`alasports://school-confirm?t=…`), tip sheet
+  "held" notice, `lib/teams.ts` → `claim_athlete`, `adminCatalog.setVerificationStatus` →
+  `admin_decide_verification` (no more name stamping). `supabase/athlete_verification.sql` and
+  `spotlight_auto.sql` marked superseded — do not re-run them after the migration. Tests: 3 new
+  suites (110 total pass), tsc clean, `docs:check` ok.
 - **2026-09-29** — Custodial money rules (owner decision; `PARENT_PAYEE_CONNECT_DESIGN.md` §7).
   New `supabase/custodial_money.sql` (also appended to `schema.sql`): `custodial_accounts` (one per
   athlete, so a guardian's account holds only that athlete's money; `bank_in_athlete_name`;
@@ -191,10 +214,11 @@ Do not re-diagnose these. Fix them or leave them.
 | `auth.role() = 'anon'` bypass on 8+ tables | Studio Unlock and Operator PIN have no real session. Accepted for internal testing, **not** for public beta. |
 | No staging Supabase project | ROADMAP Phase 2 item 4 — the remaining blocker before tester rollout. |
 | `main` is ahead of `origin/main` | Pushing needs interactive GitHub auth. |
-| `profiles.player_id` is client-writable | "Users update own profile" has no column guard, and `lib/teams.ts` links by name match, so **any user can self-link to any athlete** and read that athlete's `get_received_malo`. Custodial RPCs defend by requiring `verification_status = 'verified'`; the hole itself is open. ROADMAP Wave 1 blocker. |
-| Shared team code = instant "verified" | `redeem_team_code` marks any account that types a school/sport's shared code as `verified`. With the self-link hole above, a stranger can become a verified copy of a real athlete. Fix plan: `docs/ATHLETE_VERIFICATION_DESIGN.md` §2–§4. Wave 1 blocker. |
+| Self-verify holes — **fixed in SQL, not applied** | On the live DB today: `profiles.player_id`, `is_verified` and `verification_status` are client-writable (no column guard on "Users update own profile"), so any signed-in user can mark themselves verified and self-link to any athlete; a shared team code verifies instantly; admin approval stamps every profile with the same name. The client no longer does any of this, but the database still allows it until `supabase/migrations/20260929120000_athlete_verification_ladder.sql` is applied. ROADMAP Wave 1 blocker. |
+| Held gifts have no cap or refund yet | Gifts to an unverified athlete are "held" only because payouts are 503. The design's ~$250 cap and 30-day refunds need the Phase 1a ledger. Future payout code must call `athlete_payout_allowed`. |
+| School confirm link needs the app | `alasports://school-confirm` opens only where Tapua'i is installed (Edge Functions can't serve HTML on the default domain). A web page for staff without the app is not built. Confirmers are added from the SQL Editor — no admin UI yet. |
 | One report hides a clip, with no reason | `report_reel` sets `is_flagged` on the first report and records no reason, so rival fans can hide real clips and moderators can't spot AI fakes. Plan: design doc §6. |
-| `supabase/custodial_money.sql` and `supabase/leaderboards.sql` not applied on the live DB | Written 2026-09-29, never parsed by Postgres. Until applied, the custodial cards and Spotlight Boards hide themselves and view counting no-ops. Apply by hand after review (staging first). |
+| `supabase/custodial_money.sql`, `supabase/leaderboards.sql` and `supabase/migrations/20260929120000_athlete_verification_ladder.sql` not applied on the live DB | Written 2026-09-29, never parsed by Postgres. The verification card and school form hide/fail gracefully until the migration is applied. Until applied, the custodial cards and Spotlight Boards hide themselves and view counting no-ops. Apply by hand after review (staging first). |
 
 ---
 
@@ -231,10 +255,11 @@ Do not re-diagnose these. Fix them or leave them.
    an optional "tip Tapua'i" at checkout. Owner + counsel. Do not turn on a rake in fan UI until
    decided.
 
-10. **Athlete verification and fake highlights** — `docs/ATHLETE_VERIFICATION_DESIGN.md`. Owner:
-    open sign-up, one account type with clear badges, school confirms, AI-faked game footage comes
-    down. Open: whether gifts to a not-yet-verified athlete are **held** (recommended: yes, capped,
-    refunded after 30 days if not verified) or blocked, and which school-confirmation option to use.
+10. **Athlete verification and fake highlights** — `docs/ATHLETE_VERIFICATION_DESIGN.md`.
+    **Decided 2026-09-29:** gifts are held until verified and the athlete sees that in the app; the
+    athletic director or coach confirms each student in person on a Tapua'i form. Built (not
+    applied). Still open: the pending-gift cap amount and refund window (need the ledger), and
+    counsel on the "held" copy.
 
 ---
 
@@ -247,8 +272,9 @@ Do not re-diagnose these. Fix them or leave them.
 | `DOCUMENTATION.md` | Engineer onboarding and directory map. |
 | `docs/ROADMAP.md` | North Star (Watch & compete / Rally / Pass it on / Rise), Release waves 0-3 (cheapest first), Phases 0-5, Mission track M1-M10. |
 | `docs/STORY.md` | Mission narrative, marketing lines, and the guardrails that keep athletes eligible. |
-| `docs/ATHLETE_VERIFICATION_DESIGN.md` | Open sign-up, the athlete verification ladder, gifts while pending, safe growth, fake-highlight takedown. Proposal. |
-| `docs/CODE_ORGANIZATION_PLAN.md` | Commit hygiene, Supabase CLI migrations, generated types, big-file splits, PR notes. Proposal. |
+| `docs/ATHLETE_VERIFICATION_DESIGN.md` | Open sign-up, the athlete verification ladder, gifts while pending, safe growth, fake-highlight takedown. Ladder + in-person school confirmation built; §6 (fakes) still a proposal. |
+| `docs/CODE_ORGANIZATION_PLAN.md` | Commit hygiene, Supabase CLI migrations, generated types, big-file splits, PR notes. Step 0 done; step 1 started (`supabase/migrations/`, baseline needs the owner). |
+| `supabase/migrations/README.md` | How migrations work here, how to apply without the CLI, the baseline steps, adding a school confirmer. |
 | `docs/STAGING_RUNBOOK.md` | Step-by-step staging project + tester build. |
 | `docs/TESTER_SCRIPT.md` | Phase 3 tasks per role, organised by pillar, plus feel questions. |
 | `CHANGELOG.md` | Permanent dated record of product and schema shifts. |

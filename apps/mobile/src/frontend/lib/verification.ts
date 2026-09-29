@@ -31,10 +31,12 @@ function asText(raw: unknown): string | null {
 }
 
 /**
- * @purpose Redeem a coach-issued team code for ⚡ VERIFIED VARSITY (school claim + Varsity badge).
+ * @purpose Redeem a school/team code. Since the verification ladder (2026-09-29) the code only
+ *   narrows the school and opens a claim — the account goes to **pending**, and the athletic
+ *   director or coach confirms the student in person (`school_confirm_athlete`).
  * @param rawCode e.g. `WSTLK-RUG-2026`.
- * @returns Status + school after a successful redeem.
- * @sideEffects `redeem_team_code` RPC; fallback `schools_and_teams` lookup + `profiles` UPDATE; demo catalog when offline.
+ * @returns Status (`pending`, or `verified` + `already` for an account that was already verified) + school.
+ * @sideEffects `redeem_team_code` RPC only.
  */
 export async function redeemTeamCode(rawCode: string): Promise<RedeemTeamCodeResult> {
   const parsed = parseTeamCode(rawCode);
@@ -56,10 +58,11 @@ export async function redeemTeamCode(rawCode: string): Promise<RedeemTeamCodeRes
       }
       return {
         ok: true,
-        verification_status: asStatus(row.verification_status ?? 'verified'),
+        verification_status: asStatus(row.verification_status ?? 'pending'),
         school_id: asText(row.school_id),
         school_name: asText(row.school_name),
         sport: asText(row.sport) ?? parsed.sport,
+        already: row.already === true,
       };
     }
     // 2026-09 audit (Round 13 sweep, critical): this used to fall back — on ANY rpc failure,
@@ -79,56 +82,133 @@ export async function redeemTeamCode(rawCode: string): Promise<RedeemTeamCodeRes
 }
 
 /**
- * @purpose Queue a coach/parent Varsity request without a team code. Profile stays public.
- * @param notes Optional message for People / booster queue.
- * @sideEffects `request_athlete_verification` RPC; fallback `verification_requests` INSERT + `profiles.verification_status`.
+ * @purpose Claim athlete status without a team code. The account shows "pending" until the school
+ *   confirms it. Profile stays public.
+ * @param notes Optional message for the admin People queue.
+ * @sideEffects `request_athlete_verification` RPC only. The old direct `profiles` / `verification_requests`
+ *   write fallback is gone — the `guard_profiles_verification` trigger blocks client writes to the
+ *   verification columns, and a missing RPC must surface as an error.
  */
 export async function requestAthleteVerification(notes?: string): Promise<RedeemTeamCodeResult> {
-  if (isSupabaseConfigured) {
-    const { data, error } = await supabase.rpc('request_athlete_verification', {
-      request_notes: notes?.trim() || undefined,
-    });
-    if (!error && data && typeof data === 'object') {
-      const row = data as Record<string, unknown>;
-      return {
-        ok: row.ok !== false,
-        verification_status: asStatus(row.verification_status ?? 'pending'),
-        school_id: asText(row.school_id),
-        already: row.already === true,
-      };
-    }
-    if (error && !rpcMissing(error.message)) {
-      throw new Error(friendlyVerifyError(error.message));
-    }
-
-    const userId = (await supabase.auth.getUser()).data.user?.id;
-    if (userId) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, full_name, player_id, school_id, is_verified, verification_status')
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (profile?.is_verified || profile?.verification_status === 'verified') {
-        return { ok: true, verification_status: 'verified', already: true, school_id: asText(profile.school_id) };
-      }
-      await supabase.from('profiles').update({ verification_status: 'pending' }).eq('user_id', userId);
-      await supabase.from('verification_requests').insert({
-        player_id: profile?.player_id ?? null,
-        full_name: typeof profile?.full_name === 'string' ? profile.full_name : 'Athlete',
-        status: 'pending',
-        notes: notes?.trim() || 'Coach / parent approval requested',
-        requester_user_id: profile?.id ?? null,
-        school_id: profile?.school_id ?? null,
-      });
-      return { ok: true, verification_status: 'pending', school_id: asText(profile?.school_id) };
-    }
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  const { data, error } = await supabase.rpc('request_athlete_verification', {
+    request_notes: notes?.trim() || undefined,
+  });
+  if (error) throw new Error(friendlyVerifyError(error.message));
+  const row = data && typeof data === 'object' ? (data as Record<string, unknown>) : {};
+  if (row.ok === false) {
+    throw new Error(friendlyVerifyError(asText(row.error) ?? 'Could not send the request.'));
   }
-  return { ok: true, verification_status: 'pending' };
+  return {
+    ok: true,
+    verification_status: asStatus(row.verification_status ?? 'pending'),
+    school_id: asText(row.school_id),
+    already: row.already === true,
+  };
+}
+
+/**
+ * @purpose Open (or update) this account's athlete claim, optionally pointing at a roster row.
+ *   The link to `players` is only made when the school confirms.
+ * @param playerId `players.id` the athlete picked, or null.
+ * @returns false when the RPC is not deployed yet (onboarding must not fail on a stale schema).
+ * @sideEffects `claim_athlete` RPC.
+ */
+export async function claimAthlete(playerId: string | null, notes?: string): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  const { error } = await supabase.rpc('claim_athlete', {
+    target_player_id: playerId,
+    request_notes: notes?.trim() || null,
+  });
+  if (error) {
+    if (rpcMissing(error.message)) return false;
+    throw new Error(friendlyVerifyError(error.message));
+  }
+  return true;
+}
+
+export type MyVerification = {
+  status: VerificationStatus;
+  /** `verification_requests.status` of the latest claim: pending / approved / rejected / disputed / revoked. */
+  requestStatus: string | null;
+  schoolName: string | null;
+  hasSchool: boolean;
+  sport: string | null;
+  codeExpiresAt: string | null;
+  confirmerName: string | null;
+  decisionNote: string | null;
+};
+
+/**
+ * @purpose Parse `get_my_verification` JSON into `MyVerification`; null for an empty/invalid payload.
+ */
+export function parseMyVerification(raw: unknown): MyVerification | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const row = raw as Record<string, unknown>;
+  return {
+    status: asStatus(row.verification_status ?? 'unverified'),
+    requestStatus: asText(row.request_status),
+    schoolName: asText(row.school_name),
+    hasSchool: row.has_school === true,
+    sport: asText(row.sport),
+    codeExpiresAt: asText(row.code_expires_at),
+    confirmerName: asText(row.confirmer_name),
+    decisionNote: asText(row.decision_note),
+  };
+}
+
+/**
+ * @purpose Load the signed-in account's own verification state (badge, school, whether a school code is live).
+ * @returns null when signed out, offline, or the RPC is not deployed yet.
+ * @sideEffects `get_my_verification` RPC.
+ */
+export async function fetchMyVerification(): Promise<MyVerification | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase.rpc('get_my_verification');
+  if (error) {
+    if (rpcMissing(error.message)) return null;
+    throw new Error(error.message);
+  }
+  return parseMyVerification(data);
+}
+
+export type SchoolCheckCode = { code: string; expiresAt: string };
+
+/**
+ * @purpose Mint the 6-digit code the student reads to their athletic director or coach in person.
+ *   Valid 30 minutes; a new code replaces the old one.
+ * @sideEffects `start_school_check` RPC (stores only a hash of the code).
+ */
+export async function startSchoolCheck(): Promise<SchoolCheckCode> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  const { data, error } = await supabase.rpc('start_school_check');
+  if (error) throw new Error(error.message);
+  const row = data && typeof data === 'object' ? (data as Record<string, unknown>) : {};
+  const code = asText(row.code);
+  const expiresAt = asText(row.expires_at);
+  if (row.ok === false || !code || !expiresAt) {
+    throw new Error(asText(row.error) ?? 'Could not make a school code. Try again.');
+  }
+  return { code, expiresAt };
+}
+
+/**
+ * @purpose Whether gifts to this athlete are paid out, or held until their school confirms them.
+ * @returns true only when a verified account is linked to the `players` row. Unknown → false (held).
+ * @sideEffects `athlete_is_varsity_verified` RPC.
+ */
+export async function fetchPlayerVerified(playerId: string | null | undefined): Promise<boolean> {
+  if (!playerId || !isSupabaseConfigured) return false;
+  const { data, error } = await supabase.rpc('athlete_is_varsity_verified', { target_player_id: playerId });
+  if (error) return false;
+  return data === true;
 }
 
 /**
  * @purpose Load the claimed-profile Varsity state for a public athlete sheet (`players.id`).
- * @sideEffects `profiles` SELECT by `player_id` then name match (`verification_status`, `school_id`, `avatar_url`).
+ * @sideEffects `profiles` SELECT by `player_id`, then a name match. Only a `player_id` link — which
+ *   only school confirmation creates — can show "verified" or the account's avatar. A name match
+ *   shows at most "pending" and the school, so a stranger with the same name cannot borrow the badge.
  */
 export async function fetchPlayerVerification(
   playerId: string,
@@ -143,22 +223,29 @@ export async function fetchPlayerVerification(
   if (!playerId || !isSupabaseConfigured) return empty;
   const columns = 'is_verified, verification_status, school_id, player_id, full_name, avatar_url';
   const { data: byPlayer } = await supabase.from('profiles').select(columns).eq('player_id', playerId).maybeSingle();
-  let match = byPlayer;
-  if (!match && playerName?.trim()) {
-    const { data: byName } = await supabase
-      .from('profiles')
-      .select(columns)
-      .ilike('full_name', playerName.trim())
-      .limit(1)
-      .maybeSingle();
-    match = byName;
+  if (byPlayer) {
+    return {
+      status: resolveVerificationStatus(byPlayer),
+      schoolClaimed: Boolean(byPlayer.school_id),
+      schoolId: typeof byPlayer.school_id === 'string' ? byPlayer.school_id : null,
+      avatarUrl:
+        typeof byPlayer.avatar_url === 'string' && byPlayer.avatar_url.trim() ? byPlayer.avatar_url.trim() : null,
+    };
   }
-  if (!match) return empty;
+  if (!playerName?.trim()) return empty;
+  const { data: byName } = await supabase
+    .from('profiles')
+    .select(columns)
+    .ilike('full_name', playerName.trim())
+    .limit(1)
+    .maybeSingle();
+  if (!byName) return empty;
+  const claimed = resolveVerificationStatus(byName);
   return {
-    status: resolveVerificationStatus(match),
-    schoolClaimed: Boolean(match.school_id),
-    schoolId: typeof match.school_id === 'string' ? match.school_id : null,
-    avatarUrl: typeof match.avatar_url === 'string' && match.avatar_url.trim() ? match.avatar_url.trim() : null,
+    status: claimed === 'unverified' ? 'unverified' : 'pending',
+    schoolClaimed: Boolean(byName.school_id),
+    schoolId: typeof byName.school_id === 'string' ? byName.school_id : null,
+    avatarUrl: null,
   };
 }
 

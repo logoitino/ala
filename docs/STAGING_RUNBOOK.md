@@ -38,6 +38,19 @@ Check prices on each site before paying; the numbers above are rough.
    update public.schools_and_teams set team_code = '<random code>' where name = '<school>';
    ```
 
+4. Apply each file in `supabase/migrations/` in filename order (`schema.sql` already contains them,
+   so on a fresh project step 1 covers this; on an existing project run only the new ones). See
+   `supabase/migrations/README.md`.
+5. **School confirmers** (athlete verification): for each tester playing an athletic director or
+   coach, run in the SQL Editor —
+
+   ```sql
+   select public.admin_add_school_confirmer('<schools_and_teams.id>', '<name>', '<email>', 'athletic_director', null);
+   ```
+
+   It returns a `link` once (`alasports://school-confirm?t=…`). Send it to that tester directly —
+   never commit or post it. The link only opens on a phone with the build installed.
+
 ## 3. Auth (you)
 
 1. Authentication → URL Configuration → add redirect `alasports://auth/callback`.

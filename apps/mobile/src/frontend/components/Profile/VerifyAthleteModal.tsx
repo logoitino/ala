@@ -23,6 +23,7 @@ import { useCelebration } from '@/context/CelebrationContext';
 import { useLegalAck } from '@/hooks/useLegalAck';
 import {
   CLAIM_VERIFY_CTA,
+  SCHOOL_CODE_ACCEPTED,
   VERIFY_INPUT_LABEL,
   VERIFY_INPUT_PLACEHOLDER,
   VERIFY_REQUEST_LINK,
@@ -45,7 +46,8 @@ type VerifyAthleteModalProps = {
 };
 
 /**
- * @purpose Team-code Varsity bottom sheet — claim school freely, glow only after code or coach/parent approval.
+ * @purpose Athlete-claim bottom sheet — school code or plain claim both lead to "pending"; the ⚡ badge
+ *   turns on only after the athletic director or coach confirms the student in person.
  * @param visible Opens from Profile settings or the 3D trading card CTA.
  * @returns Daylight sheet: team code field, Submit Code & Claim Badge, coach/parent request link.
  * @sideEffects `redeem_team_code` / `request_athlete_verification`; legal ack; telemetry `athlete_verify`; Aura toast.
@@ -112,7 +114,11 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
     void run('redeem', async () => {
       const result = await redeemTeamCode(code);
       telemetry.trackFeature('athlete_verify.redeem', 'profile');
-      showToast(`⚡ VERIFIED VARSITY · ${result.school_name ?? 'badge claimed'}`);
+      showToast(
+        result.already || result.verification_status === 'verified'
+          ? 'Already Varsity verified ⚡'
+          : `${SCHOOL_CODE_ACCEPTED}${result.school_name ? ` · ${result.school_name}` : ''}`,
+      );
       dismiss();
     });
 
@@ -123,7 +129,7 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
       if (result.already || result.verification_status === 'verified') {
         showToast('Already Varsity verified ⚡');
       } else {
-        showToast('Request sent — keep posting while you wait ⚡');
+        showToast('Claim sent — your school confirms you next ⚡');
       }
       dismiss();
     });
@@ -150,8 +156,8 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
               <Text style={styles.kicker}>{VERIFY_SHEET_KICKER}</Text>
               <Text style={styles.title}>{VERIFY_SHEET_TITLE}</Text>
               <Text style={styles.lede}>
-                Anyone can claim a school. Varsity is the fun extra — a team code or coach/parent approval. Highlights
-                stay live while you wait.
+                Anyone can claim to be an athlete. Your athletic director or coach confirms you in person, then the
+                ⚡ badge turns on. Highlights stay live while you wait.
               </Text>
               <VarsityBadge status={status} schoolClaimed={schoolClaimed} />
               {status === 'verified' ? (
@@ -161,7 +167,7 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
               )}
               {!isAthlete ? (
                 <Text style={styles.hint}>
-                  Claim your school in Account Capability first (or submit a team code here to jump straight to Varsity).
+                  Claim your school in Account Capability first, or enter your school code here.
                 </Text>
               ) : null}
 

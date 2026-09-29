@@ -4,6 +4,15 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-29
 
+### Athlete verification — the school confirms, gifts wait
+
+- Anyone can still claim to be an athlete. A claim, or a school/team code, now makes the account **"Verification pending"** — a team code no longer verifies on its own.
+- The athlete's **athletic director or coach confirms them in person**: the athlete taps **Show my school code** on Activity (6 digits, valid 30 minutes), and the staff member types it into the Tapua'i school form (`alasports://school-confirm?t=…`, one link per staff member, issued by Tapua'i), ticks "I met this student in person and they are on my roster", and signs with their name. "Not on my roster" declines.
+- While pending, the athlete sees on Activity: *"Fans can already send you gifts. They're held and only paid out after your school confirms you."* Fans see a matching line on the gift sheet. (Held today simply because payouts are off; the cap and automatic refunds need the payment ledger.)
+- Two accounts claiming the same athlete are both frozen for Tapua'i review.
+- Security: accounts can no longer mark themselves verified or link themselves to an athlete; admin approval stamps only the requester, not everyone with the same name; a same-name stranger can't borrow a verified badge or avatar; tag confirmation no longer matches by name or jersey. **Accounts verified only by a team code go back to pending** when the migration is applied.
+- Schema: first file in the new `supabase/migrations/` folder, `20260929120000_athlete_verification_ladder.sql` — `school_confirmers`, new `verification_requests` columns, a guard trigger and 10 RPCs. **Not applied to the live DB.**
+
 ### Custodial money rules — the athlete stays in the loop
 
 - A guardian's custodial account holds only that one athlete's money. Parent HQ lists only athletes linked to the signed-in guardian, and each gets a card: date of birth (entered once), "Is the payout bank account in the athlete's name?" (strongly encouraged), and **ask the athlete to approve a withdrawal**.

@@ -17,8 +17,10 @@ import { TipCheckout } from '@/components/TipCheckout';
 import { colors, radii } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { maloAthleteCta, maloAthleteSheetSubtitle } from '@/data/malo';
+import { GIFT_HELD_NOTICE } from '@/data/verification';
 import { displayValue, type Player } from '@/data/players';
 import type { TipEntry, TipOrigin } from '@/lib/finance';
+import { fetchPlayerVerified } from '@/lib/verification';
 import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 
 type TipSheetModalProps = {
@@ -37,7 +39,9 @@ const SHEET_OFF = 640;
 
 /**
  * @purpose Bottom-sheet Mālo checkout over a blurred feed backdrop. Copy names the athlete who receives the gift (not the uploader).
- * @sideEffects Unmounts `TipCheckout` on dismiss so custom amount / fee state reset.
+ * Shows a "held until verified" line when the athlete's school has not confirmed them yet
+ * (owner decision 2026-09-29; copy flagged for LEGAL).
+ * @sideEffects Unmounts `TipCheckout` on dismiss so custom amount / fee state reset; `athlete_is_varsity_verified` per athlete.
  */
 export function MaloTipModal({
   player,
@@ -54,6 +58,7 @@ export function MaloTipModal({
   const [open, setOpen] = useState(false);
   const [delivered, setDelivered] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [verified, setVerified] = useState<boolean | null>(null);
   const lastPlayer = useRef<Player | null>(null);
   if (player) lastPlayer.current = player;
   const display = player ?? lastPlayer.current;
@@ -62,6 +67,19 @@ export function MaloTipModal({
   const headerPop = useSharedValue(1);
   const translateY = useSharedValue(SHEET_OFF);
   const dim = useSharedValue(0);
+
+  const playerId = player?.id ?? null;
+  useEffect(() => {
+    if (!playerId) return;
+    let live = true;
+    setVerified(null);
+    void fetchPlayerVerified(playerId).then((result) => {
+      if (live) setVerified(result);
+    });
+    return () => {
+      live = false;
+    };
+  }, [playerId]);
 
   useEffect(() => {
     if (player) {
@@ -149,6 +167,7 @@ export function MaloTipModal({
               {delivered ? `SEKI! Mālo delivered to ${playerName} 🚀` : maloAthleteCta(playerName)}
             </Text>
             <Text style={styles.subtitle}>{maloAthleteSheetSubtitle(playerName)}</Text>
+            {verified === false && !delivered ? <Text style={styles.heldNotice}>{GIFT_HELD_NOTICE}</Text> : null}
           </Animated.View>
           {display ? (
             <TipCheckout
@@ -233,6 +252,17 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: '600',
     color: colors.textMuted,
+  },
+  heldNotice: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
+    color: colors.gold,
+    backgroundColor: colors.goldSoft,
+    borderRadius: radii.md,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    overflow: 'hidden',
   },
   close: {
     alignItems: 'center',

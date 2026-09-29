@@ -110,31 +110,6 @@ function throwIf(error: { message?: string } | null, fallback: string): void {
   if (error) throw new Error(error.message || fallback);
 }
 
-/**
- * @purpose Stamp Varsity on a profile whether the project has `is_verified` or live `is_verified_athlete`.
- * @sideEffects `profiles` UPDATE.
- */
-async function stampProfileVerification(
-  match: { column: 'player_id' | 'full_name'; value: string },
-  verified: boolean,
-): Promise<{ message?: string } | null> {
-  const status = verified ? 'verified' : 'unverified';
-  const bags: Record<string, unknown>[] = [
-    { is_verified: verified, is_verified_athlete: verified, verification_status: status },
-    { is_verified_athlete: verified, verification_status: status },
-    { is_verified: verified, verification_status: status },
-    { verification_status: status },
-  ];
-  let lastError: { message?: string } | null = null;
-  for (const bag of bags) {
-    const { error } = await supabase.from('profiles').update(bag as never).eq(match.column, match.value);
-    if (!error) return null;
-    lastError = error;
-    if (!String(error.message ?? '').includes('does not exist')) return error;
-  }
-  return lastError;
-}
-
 export function slugify(value: string): string {
   const slug = value
     .toLowerCase()
@@ -746,60 +721,33 @@ export async function fetchVerificationQueue(): Promise<VerificationRequest[]> {
 }
 
 /**
- * @purpose Approve or reject a verification request and stamp the matching profile when possible.
- * @sideEffects `verification_requests` UPDATE; `profiles.is_verified` + `verification_status`; optional `players` consent.
+ * @purpose Approve or reject a verification request. Only the requesting account is stamped —
+ *   never "every profile with this name" (the old name stamp could verify strangers).
+ * @sideEffects `admin_decide_verification` RPC (request + requester profile + roster link);
+ *   on approve, `admin_approve_player_consent` for the linked `players` row.
  */
-export async function setVerificationStatus(id: string, status: 'approved' | 'rejected'): Promise<void> {
+export async function setVerificationStatus(
+  id: string,
+  status: 'approved' | 'rejected',
+  note?: string,
+): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-  const { data, error } = await supabase
-    .from('verification_requests')
-    .update({ status })
-    .eq('id', id)
-    .select('player_id, full_name')
-    .single();
+  const approve = status === 'approved';
+  const { error } = await supabase.rpc('admin_decide_verification', {
+    request_id: id,
+    approve,
+    note: note?.trim() || null,
+  });
   throwIf(error, 'Could not update this request.');
-  if (!data) return;
+  if (!approve) return;
 
-  if (status === 'rejected') {
-    if (data.player_id) {
-      throwIf(
-        await stampProfileVerification({ column: 'player_id', value: data.player_id }, false),
-        'Could not update the linked profile.',
-      );
-    }
-    const rejectedName = asText(data.full_name).trim();
-    if (rejectedName) {
-      throwIf(
-        await stampProfileVerification({ column: 'full_name', value: rejectedName }, false),
-        'Could not update a matching profile by name.',
-      );
-    }
-    return;
-  }
-  if (status !== 'approved') return;
-
-  if (data.player_id) {
-    // 2026-09 audit item 2: `parental_consent_approved` / `guardian_consent_at` are no longer
-    // directly UPDATE-able by any authenticated role (column grant narrowed to close the
-    // booster/operator guardian-write hole) — this now goes through the admin-only
-    // `admin_approve_player_consent` SECURITY DEFINER RPC, which bypasses that grant.
+  const { data } = await supabase.from('verification_requests').select('player_id').eq('id', id).maybeSingle();
+  if (data?.player_id) {
+    // 2026-09 audit item 2: consent columns are only writable through this admin-only RPC.
     const { error: playerError } = await supabase.rpc('admin_approve_player_consent', {
       target_player_id: data.player_id,
     });
     throwIf(playerError, 'Verified the request, but could not update the player row.');
-
-    throwIf(
-      await stampProfileVerification({ column: 'player_id', value: data.player_id }, true),
-      'Verified the request, but could not update the linked profile.',
-    );
-  }
-
-  const name = asText(data.full_name).trim();
-  if (name) {
-    throwIf(
-      await stampProfileVerification({ column: 'full_name', value: name }, true),
-      'Verified the request, but could not match a profile by name.',
-    );
   }
 }
 

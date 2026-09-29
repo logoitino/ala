@@ -9,6 +9,7 @@ import {
   type SchoolTeam,
 } from '@/data/teams';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { claimAthlete } from '@/lib/verification';
 
 export type AthleteOnboarding = {
   team: SchoolTeam;
@@ -108,7 +109,7 @@ export async function fetchSchoolTeam(schoolId: string | null | undefined): Prom
  * @purpose Persist HS/college roster fields on `profiles` after the athlete picks a team.
  * @param userId `auth.users.id` when signed in.
  * @param onboard Team + sport + jersey + position + class year.
- * @sideEffects `profiles` UPDATE (`school_id`, `athlete_division`, sport / jersey / position / class year, optional `player_id` name match); AsyncStorage `tapuai.athleteOnboarding`.
+ * @sideEffects `profiles` UPDATE (`school_id`, `athlete_division`, sport / jersey / position / class year, then `claim_athlete` with a name match — never a direct `player_id` write); AsyncStorage `tapuai.athleteOnboarding`.
  */
 export async function saveAthleteOnboardingRemote(
   userId: string | null | undefined,
@@ -128,23 +129,26 @@ export async function saveAthleteOnboardingRemote(
     })
     .eq('user_id', userId);
 
+  // The roster link (`profiles.player_id`) is made only when the school confirms. Here we just
+  // open the claim with the best name match so the athletic director sees who the student says
+  // they are. `claim_athlete` also flags a second account claiming the same athlete.
   const { data: profileRow } = await supabase
     .from('profiles')
-    .select('id, full_name')
+    .select('full_name')
     .eq('user_id', userId)
     .maybeSingle();
   const fullName = typeof profileRow?.full_name === 'string' ? profileRow.full_name.trim() : '';
-  if (profileRow?.id && fullName) {
+  let matchId: string | null = null;
+  if (fullName) {
     const { data: match } = await supabase
       .from('players')
       .select('id')
       .ilike('name', fullName)
       .limit(1)
       .maybeSingle();
-    if (match?.id) {
-      await supabase.from('profiles').update({ player_id: match.id }).eq('id', profileRow.id);
-    }
+    matchId = typeof match?.id === 'string' ? match.id : null;
   }
+  await claimAthlete(matchId);
 }
 
 /**

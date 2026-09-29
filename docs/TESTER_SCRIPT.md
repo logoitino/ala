@@ -66,11 +66,17 @@ make you share your kid's page with family?*
 
 ## Athlete — Rise (does it make you look recruitable?)
 
-1. Claim your profile and enter your team code (we will give you one directly).
-2. Upload a Highlight tagged to yourself.
-3. Look at your profile's Highlights, Stats and Vault tabs. Lock and unlock a Vault clip.
-4. Start Stripe Connect onboarding (test mode — use Stripe's test data, not your real details).
-5. Open **Activity**. The card at the top should say who holds your Mālo and until when. When your
+1. Claim your profile and enter your school code (we will give you one directly). Your profile
+   should say **Verification pending**, and Activity should tell you gifts are held until your
+   school confirms you.
+2. **Get confirmed.** On Activity tap **Show my school code**. Show the 6 digits to whoever is
+   playing your athletic director or coach; they type it into the school form link we sent them,
+   tick "met in person", sign, and tap **Confirm**. Pull to refresh Activity — the card should go
+   away and your ⚡ badge turn on. (Confirmers: also try a wrong code and "Not on my roster".)
+3. Upload a Highlight tagged to yourself.
+4. Look at your profile's Highlights, Stats and Vault tabs. Lock and unlock a Vault clip.
+5. Start Stripe Connect onboarding (test mode — use Stripe's test data, not your real details).
+6. Open **Activity**. The card at the top should say who holds your Mālo and until when. When your
    parent sends a withdrawal request, approve one and decline one. (Needs a verified athlete
    account and a linked parent.)
 

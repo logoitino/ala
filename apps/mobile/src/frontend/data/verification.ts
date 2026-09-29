@@ -4,8 +4,8 @@ export const VERIFY_SHEET_TITLE = 'Verify Your Athlete Status ⚡';
 export const VERIFY_SHEET_KICKER = 'Varsity badge';
 export const VERIFY_INPUT_LABEL = 'Team Code';
 export const VERIFY_INPUT_PLACEHOLDER = 'WSTLK-RUG-2026';
-export const VERIFY_SUBMIT_LABEL = 'Submit Code & Claim Badge';
-export const VERIFY_REQUEST_LINK = "Don't have a code? Request approval from your coach or parent.";
+export const VERIFY_SUBMIT_LABEL = 'Submit School Code';
+export const VERIFY_REQUEST_LINK = "Don't have a code? Claim your athlete status and your school confirms you.";
 export const CLAIM_VERIFY_CTA = 'Claim School Verification ⚡';
 export const VARSITY_VERIFIED_LABEL = '⚡ VERIFIED VARSITY';
 export const VARSITY_PENDING_LABEL = '⏳ VARSITY PENDING';
@@ -13,7 +13,15 @@ export const SCHOOL_CLAIMED_LABEL = 'SCHOOL CLAIMED';
 export const NOT_VERIFIED_LABEL = 'Not verified yet';
 export const VERIFY_UNLOCK_COPY = 'Player of the Week and Spotlight eligibility unlocked.';
 export const VERIFY_WAIT_COPY =
-  'Your name stays public while you wait. Varsity is the glow — team code or a coach/parent thumbs-up.';
+  'Your profile stays public while you wait. Your athletic director or coach confirms you in person — show them your school code from Activity.';
+/** Shown to the athlete while pending. Money copy — LEGAL to review (LEGAL_BRIEFING). */
+export const VERIFY_HELD_COPY =
+  "Fans can already send you gifts. They're held and only paid out after your school confirms you.";
+/** Shown to a fan giving to an athlete who is not verified yet. Money copy — LEGAL to review. */
+export const GIFT_HELD_NOTICE =
+  'Not verified by their school yet — your gift is held and only paid out after their school confirms them.';
+/** Toast after a school code is accepted: it narrows the school, it does not verify. */
+export const SCHOOL_CODE_ACCEPTED = 'School code accepted — your coach or AD confirms you next';
 
 /** Sport tokens used in `WSTLK-RUG-2026` style codes. */
 export const TEAM_CODE_SPORTS: Record<string, string> = {
