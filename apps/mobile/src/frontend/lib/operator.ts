@@ -66,6 +66,27 @@ export async function fetchOperatorGames(): Promise<{ games: Game[]; error: stri
   return { games, error: null };
 }
 
+/**
+ * @purpose Persist a field operator GPS check-in only after device permission and location lookup succeed.
+ * @param latitude Device latitude at check-in.
+ * @param longitude Device longitude at check-in.
+ * @returns Success or a friendly write failure; callers must not show checked-in state on failure.
+ * @sideEffects `operator_checkins` INSERT.
+ */
+export async function saveOperatorCheckIn(
+  latitude: number,
+  longitude: number,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (!isSupabaseConfigured) return { ok: false, message: 'The operator database is not configured.' };
+  try {
+    const { error } = await supabase.from('operator_checkins').insert({ latitude, longitude });
+    if (error) return { ok: false, message: error.message || 'Could not save this field check-in.' };
+    return { ok: true };
+  } catch {
+    return { ok: false, message: 'Could not save this field check-in.' };
+  }
+}
+
 export const OPERATOR_QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4', 'OT'] as const;
 
 export type OperatorQuarter = (typeof OPERATOR_QUARTERS)[number];

@@ -18,6 +18,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useActivityFeed, type ActivityItem, type ActivityKind } from '@/hooks/useActivityFeed';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
+import { userProfileHref } from '@/lib/navigation';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 
 const ACCENT = TAB_ACCENTS.activity;
@@ -209,7 +210,12 @@ export default function ActivityTab() {
                           trackFeature('activity.thanks');
                           router.push('/profile');
                         }
-                      : undefined
+                      : item.kind === 'thanks_received' && item.playerId
+                        ? () => {
+                            trackFeature('activity.thanks_received');
+                            router.push(userProfileHref(item.playerId as string));
+                          }
+                        : undefined
               }
             />
           </ScrollFxItem>

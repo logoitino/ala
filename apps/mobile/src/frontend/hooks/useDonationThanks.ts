@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import {
   fetchDonationsToThank,
-  fetchMyDonationThanks,
+  fetchMyDonationThanksResult,
   thankDonation,
   type DonationToThank,
   type ThankResult,
@@ -56,20 +56,27 @@ export function useMyDonationThanks() {
   const userId = user?.id ?? null;
   const [rows, setRows] = useState<ThanksReceived[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!userId) {
       setRows([]);
+      setError(null);
       return;
     }
     setLoading(true);
-    setRows(await fetchMyDonationThanks());
-    setLoading(false);
+    try {
+      const result = await fetchMyDonationThanksResult();
+      setRows(result.rows);
+      setError(result.error);
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  return { rows, loading, refresh };
+  return { rows, loading, error, refresh };
 }

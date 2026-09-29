@@ -6,12 +6,18 @@ import { Stack } from 'expo-router';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
+import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { telemetry } from '@/services/TelemetryManager';
 import { displayValue } from '@/data/players';
 import { useRoster } from '@/hooks/useRoster';
-import { supabase } from '@/lib/supabase';
+import {
+  fetchBoosterVerificationQueue,
+  insertBoosterRoster,
+  setBoosterVerification,
+  updateBoosterJersey,
+} from '@/lib/boosterPortal';
 import type { VerificationRequest } from '@/types/database';
 
 function parseRosterCsv(raw: string) {
@@ -36,17 +42,20 @@ function parseRosterCsv(raw: string) {
 
 export default function BoosterHomeScreen() {
   const { live } = useAppRuntime();
-  const { players, refresh, setPlayers } = useRoster();
+  const { players, loading: rosterLoading, error: rosterError, refresh, setPlayers } = useRoster();
   const [csv, setCsv] = useState('name,jersey_number,position,school_name\nJane Doe,12,WR,Westlake High');
   const [queue, setQueue] = useState<VerificationRequest[]>([]);
+  const [queueLoading, setQueueLoading] = useState(true);
+  const [queueError, setQueueError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const loadQueue = useCallback(async () => {
-    const { data } = await supabase
-      .from('verification_requests')
-      .select('*')
-      .order('full_name', { ascending: true });
-    setQueue((data as VerificationRequest[] | null) ?? []);
+    setQueueLoading(true);
+    setQueueError(null);
+    const result = await fetchBoosterVerificationQueue();
+    setQueue(result.rows);
+    setQueueError(result.error);
+    setQueueLoading(false);
   }, []);
 
   useEffect(() => {
@@ -63,9 +72,9 @@ export default function BoosterHomeScreen() {
     setBusy(true);
     try {
       telemetry.trackFeature('booster_csv', 'booster');
-      const { error } = await supabase.from('players').insert(rows);
-      if (error) {
-        Alert.alert('Upload failed', error.message);
+      const result = await insertBoosterRoster(rows);
+      if (!result.ok) {
+        Alert.alert('Upload failed', result.message);
         return;
       }
       Alert.alert('Roster updated', `Inserted ${rows.length} player${rows.length === 1 ? '' : 's'}.`);
@@ -78,9 +87,9 @@ export default function BoosterHomeScreen() {
   const updateJersey = async (playerId: string, jersey: string) => {
     const jersey_number = Number(jersey);
     if (!Number.isInteger(jersey_number)) return;
-    const { error } = await supabase.from('players').update({ jersey_number }).eq('id', playerId);
-    if (error) {
-      Alert.alert('Jersey update failed', error.message);
+    const result = await updateBoosterJersey(playerId, jersey_number);
+    if (!result.ok) {
+      Alert.alert('Jersey update failed', result.message);
       return;
     }
     setPlayers((current) =>
@@ -93,9 +102,9 @@ export default function BoosterHomeScreen() {
     setBusy(true);
     try {
       telemetry.trackFeature('booster_verify', 'booster');
-      const { error } = await supabase.from('verification_requests').update({ status }).eq('id', id);
-      if (error) {
-        Alert.alert('Verification failed', error.message);
+      const result = await setBoosterVerification(id, status);
+      if (!result.ok) {
+        Alert.alert('Verification failed', result.message);
         return;
       }
       setQueue((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
@@ -131,7 +140,15 @@ export default function BoosterHomeScreen() {
           </Pressable>
         </DashboardPanel>
         <DashboardPanel title="Jersey number updates">
-          {players.map((player) => (
+          {rosterError ? (
+            <EmptyState
+              kicker="Roster"
+              title="Could not load athletes"
+              lede="Check your connection and try again."
+              actionLabel="Retry"
+              onAction={() => void refresh()}
+            />
+          ) : !rosterLoading ? players.map((player) => (
             <View key={player.id} style={styles.row}>
               <Text style={styles.name}>{displayValue(player.name)}</Text>
               <TextInput
@@ -141,12 +158,20 @@ export default function BoosterHomeScreen() {
                 style={styles.jersey}
               />
             </View>
-          ))}
+          )) : null}
         </DashboardPanel>
         <DashboardPanel title="Profile verification queue">
-          {queue.length === 0 ? (
+          {queueError ? (
+            <EmptyState
+              kicker="Verification"
+              title="Could not load the queue"
+              lede={queueError}
+              actionLabel="Retry"
+              onAction={() => void loadQueue()}
+            />
+          ) : !queueLoading && queue.length === 0 ? (
             <Text style={styles.muted}>No pending verification requests.</Text>
-          ) : (
+          ) : !queueLoading ? (
             queue.map((item) => (
               <View key={item.id} style={styles.row}>
                 <Text style={styles.name}>
@@ -161,7 +186,7 @@ export default function BoosterHomeScreen() {
                 </Pressable>
               </View>
             ))
-          )}
+          ) : null}
         </DashboardPanel>
       </ScrollView>
     </ScreenShell>

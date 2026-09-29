@@ -10,6 +10,7 @@ import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
+import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -23,7 +24,7 @@ import { supabase } from '@/lib/supabase';
 export default function ParentHomeScreen() {
   const { live } = useAppRuntime();
   const { profile } = useAuth();
-  const { players: roster, setPlayers } = useRoster();
+  const { players: roster, loading: rosterLoading, error: rosterError, refresh: refreshRoster, setPlayers } = useRoster();
   // Owner rule 2026-09-29: a guardian sees only the athletes linked to them (`players.guardian_id`,
   // set by an admin after verification), never the whole roster.
   const players = useMemo(
@@ -93,12 +94,21 @@ export default function ParentHomeScreen() {
           body={COMPLIANCE_PARENT}
         >
           <View style={styles.list}>
-            {players.length === 0 ? (
+            {!rosterLoading && rosterError ? (
+              <EmptyState
+                kicker="Roster"
+                title="Could not load linked athletes"
+                lede="Check your connection and try again."
+                actionLabel="Retry"
+                onAction={() => void refreshRoster()}
+              />
+            ) : null}
+            {!rosterLoading && !rosterError && players.length === 0 ? (
               <Text style={styles.muted}>
                 No athletes are linked to you yet. Tapua'i links a guardian after checking who they are.
               </Text>
             ) : null}
-            {players.map((player) => {
+            {!rosterError ? players.map((player) => {
               const approved = Boolean(player.parental_consent_approved);
               return (
                 <View key={player.id} style={styles.row}>
@@ -122,17 +132,17 @@ export default function ParentHomeScreen() {
                   </Pressable>
                 </View>
               );
-            })}
+            }) : null}
           </View>
         </DashboardPanel>
-        {players.map((player) => (
+        {!rosterError ? players.map((player) => (
           <View key={player.id} style={styles.athlete}>
             {/* Rally goal (start / approve / close / thank) and donations to say thanks for. */}
             <RallyCard player={player} athleteName={displayValue(player.name, 'your athlete')} manage guardian />
             <ReceivedMaloPanel playerId={player.id} />
             <GuardianCustodialCard playerId={player.id} />
           </View>
-        ))}
+        )) : null}
       </ScrollView>
     </ScreenShell>
   );

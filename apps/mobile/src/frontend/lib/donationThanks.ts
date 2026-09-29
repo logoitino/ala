@@ -71,6 +71,12 @@ export type ThanksReceived = {
   thankedAt: string;
 };
 
+export type ThanksReceivedResult = {
+  rows: ThanksReceived[];
+  /** Friendly load failure. Missing/unapplied Rally SQL remains a graceful empty state. */
+  error: string | null;
+};
+
 export function parseThanksReceived(raw: unknown): ThanksReceived[] {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -111,13 +117,31 @@ export async function fetchDonationsToThank(playerId: string | null | undefined)
  * @purpose Thank-yous the signed-in donor has received (Activity).
  */
 export async function fetchMyDonationThanks(): Promise<ThanksReceived[]> {
-  if (!isSupabaseConfigured) return [];
+  return (await fetchMyDonationThanksResult()).rows;
+}
+
+/**
+ * @purpose Thank-yous plus a truthful load error for Activity, without treating unapplied Rally SQL as an outage.
+ * @returns Parsed rows and a friendly error; missing RPC/configuration resolves to an empty available state.
+ * @sideEffects `get_my_donation_thanks` RPC.
+ */
+export async function fetchMyDonationThanksResult(): Promise<ThanksReceivedResult> {
+  if (!isSupabaseConfigured) return { rows: [], error: null };
   try {
     const { data, error } = await supabase.rpc('get_my_donation_thanks', {});
-    if (error) return [];
-    return parseThanksReceived(data);
+    if (error) {
+      const missing =
+        error.code === '42883' ||
+        error.code === 'PGRST202' ||
+        /get_my_donation_thanks|could not find the function/i.test(error.message);
+      return {
+        rows: [],
+        error: missing ? null : 'We could not load athlete thank-yous. Check your connection and try again.',
+      };
+    }
+    return { rows: parseThanksReceived(data), error: null };
   } catch {
-    return [];
+    return { rows: [], error: 'We could not load athlete thank-yous. Check your connection and try again.' };
   }
 }
 

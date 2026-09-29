@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import { Stack, type Href, useRouter } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
@@ -83,7 +83,17 @@ export default function AthleteHomeScreen() {
               : 'No linked athlete profile yet. Unlock Athlete from Profile → Account Capability.'
           }
         >
-          {received.rows.length === 0 ? (
+          {received.loading ? (
+            <ActivityIndicator color={colors.deepGreen} />
+          ) : received.error ? (
+            <EmptyState
+              kicker="Donations"
+              title="Could not load donations"
+              lede="Check your connection and try again."
+              actionLabel="Retry"
+              onAction={() => void received.refresh()}
+            />
+          ) : received.rows.length === 0 ? (
             <EmptyState
               kicker="Donations"
               title="No donations yet"

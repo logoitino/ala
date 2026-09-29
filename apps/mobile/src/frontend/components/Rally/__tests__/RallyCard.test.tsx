@@ -113,4 +113,19 @@ describe('RallyCard', () => {
     await render(<RallyCard player={PLAYER} athleteName="Kaleo" />);
     expect(screen.getByText(/Kaleo: Thank you for believing in me/)).toBeTruthy();
   });
+
+  it('opens the attached what-it-paid-for clip from the profile card', async () => {
+    const onOpenClip = jest.fn();
+    mockActive = {
+      ...RALLY,
+      status: 'filled',
+      raisedCents: 25000,
+      thanksKey: 'gear',
+      thanksReelId: 'reel-thanks',
+      thankedAt: '2026-09-30T00:00:00Z',
+    };
+    await render(<RallyCard player={PLAYER} athleteName="Kaleo" onOpenClip={onOpenClip} />);
+    await fireEvent.press(screen.getByText('▶ Watch what it paid for'));
+    expect(onOpenClip).toHaveBeenCalledWith('reel-thanks');
+  });
 });

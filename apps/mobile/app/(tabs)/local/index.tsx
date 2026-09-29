@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import {
@@ -208,6 +208,7 @@ function MatchupSkeleton() {
  */
 export default function LocalTab() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ hub?: string }>();
   const { games, loading, error, refresh } = useLiveScores();
   const { sponsors, recordSponsorship } = useSponsorships();
   const publishedPolls = usePublishedCheerPolls();
@@ -222,6 +223,12 @@ export default function LocalTab() {
   const lastTypeHaptic = useRef(0);
   const sponsorRailRef = useRef<ScrollView>(null);
   const sponsorX = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    if (params.hub && LOCAL_HUB_IDS.includes(params.hub as LocalHubId)) {
+      setHub(params.hub as LocalHubId);
+    }
+  }, [params.hub]);
 
   const hubs = useMemo(
     () =>

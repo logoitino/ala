@@ -19,6 +19,8 @@ export type ActivityItem = {
   amountCents?: number;
   /** Highlight this row refers to, when there is one. */
   reelId?: string | null;
+  /** Athlete profile this event belongs to, when the source provides one. */
+  playerId?: string | null;
   /** Rows the fan is expected to act on float above the plain timeline. */
   actionable?: boolean;
 };
@@ -89,6 +91,7 @@ export function useActivityFeed() {
         title: `${row.athleteName} said thanks`,
         body: thanksText(row.messageKey) ?? 'Thank you for your donation.',
         amountCents: row.amountCents,
+        playerId: row.playerId,
       });
     }
 
@@ -117,9 +120,9 @@ export function useActivityFeed() {
 
   return {
     items,
-    loading: received.loading || sent.loading || tags.loading,
+    loading: received.loading || sent.loading || tags.loading || thanks.loading,
     /** First source that failed to load, so an outage is not mistaken for an empty feed. */
-    error: received.error ?? sent.error ?? tags.error,
+    error: received.error ?? sent.error ?? tags.error ?? thanks.error,
     /** Rows needing a decision. Drives the tab-bar dot — not an unread count. */
     unseenCount: ownTags.length,
     refresh,

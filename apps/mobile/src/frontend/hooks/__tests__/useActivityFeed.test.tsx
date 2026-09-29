@@ -4,10 +4,19 @@ import { useActivityFeed } from '@/hooks/useActivityFeed';
 
 let mockPlayerId: string | null = 'player-me';
 let mockTags: { id: string; player_id: string; title: string; created_at: string }[] = [];
-let mockErrors: { received: string | null; sent: string | null; tags: string | null } = {
+let mockThanks: {
+  tipId: string;
+  playerId: string;
+  athleteName: string;
+  messageKey: 'malo';
+  amountCents: number;
+  thankedAt: string;
+}[] = [];
+let mockErrors: { received: string | null; sent: string | null; tags: string | null; thanks: string | null } = {
   received: null,
   sent: null,
   tags: null,
+  thanks: null,
 };
 
 jest.mock('@/context/AuthContext', () => ({
@@ -20,7 +29,7 @@ jest.mock('@/hooks/useFanTipHistory', () => ({
   useFanTipHistory: () => ({ receipts: [], loading: false, error: mockErrors.sent, refresh: jest.fn() }),
 }));
 jest.mock('@/hooks/useDonationThanks', () => ({
-  useMyDonationThanks: () => ({ rows: [], loading: false, refresh: jest.fn() }),
+  useMyDonationThanks: () => ({ rows: mockThanks, loading: false, error: mockErrors.thanks, refresh: jest.fn() }),
 }));
 jest.mock('@/hooks/usePendingPlayerTags', () => ({
   usePendingPlayerTags: () => ({ tags: mockTags, loading: false, error: mockErrors.tags, refresh: jest.fn() }),
@@ -36,7 +45,8 @@ const tag = (id: string, playerId: string) => ({
 beforeEach(() => {
   mockPlayerId = 'player-me';
   mockTags = [];
-  mockErrors = { received: null, sent: null, tags: null };
+  mockThanks = [];
+  mockErrors = { received: null, sent: null, tags: null, thanks: null };
 });
 
 describe('useActivityFeed', () => {
@@ -60,5 +70,28 @@ describe('useActivityFeed', () => {
     const { result } = await renderHook(() => useActivityFeed());
     expect(result.current.items).toEqual([]);
     expect(result.current.error).toBe('network down');
+  });
+
+  it('keeps the athlete id on a received thank-you so Activity can open that profile', async () => {
+    mockThanks = [{
+      tipId: 'tip-1',
+      playerId: 'player-kaleo',
+      athleteName: 'Kaleo',
+      messageKey: 'malo',
+      amountCents: 500,
+      thankedAt: '2026-09-29T12:00:00Z',
+    }];
+    const { result } = await renderHook(() => useActivityFeed());
+    expect(result.current.items[0]).toMatchObject({
+      id: 'thanks:tip-1',
+      kind: 'thanks_received',
+      playerId: 'player-kaleo',
+    });
+  });
+
+  it('includes thank-you failures in the shared retry state', async () => {
+    mockErrors.thanks = 'thanks unavailable';
+    const { result } = await renderHook(() => useActivityFeed());
+    expect(result.current.error).toBe('thanks unavailable');
   });
 });

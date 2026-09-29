@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { GearCard } from '@/components/Drip/GearCard';
 import { ProductSheet } from '@/components/Drip/ProductSheet';
@@ -9,6 +9,7 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { FilterPills } from '@/components/UI/FilterPills';
+import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { DRIP_FILTERS, type DripFilter, type DripItem } from '@/data/shop';
 import { useDripCatalog } from '@/hooks/useDripCatalog';
@@ -22,10 +23,20 @@ import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
  */
 export default function DripTab() {
   const { live } = useAppRuntime();
-  const { items: catalog } = useDripCatalog();
+  const { items: catalog, loading, error, refresh } = useDripCatalog();
   const { onScroll, trackFeature } = useSurfaceUsage('drip');
   const [filter, setFilter] = useState<DripFilter>('all');
   const [selected, setSelected] = useState<DripItem | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refresh]);
 
   const items = useMemo(
     () => (filter === 'all' ? catalog : catalog.filter((item) => item.category === filter)),
@@ -54,7 +65,19 @@ export default function DripTab() {
 
   return (
     <TabScreen>
-      <ScrollFxScrollView contentContainerStyle={styles.content} onScroll={onScroll}>
+      <ScrollFxScrollView
+        contentContainerStyle={styles.content}
+        onScroll={onScroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            tintColor={TAB_ACCENTS.drip.color}
+            colors={[TAB_ACCENTS.drip.color]}
+            progressBackgroundColor={colors.surface}
+          />
+        }
+      >
         <ScrollFxParallax fadeOver={120}>
           <ScreenHeading
             compact
@@ -76,7 +99,21 @@ export default function DripTab() {
           accent={FOCAL.emberInk}
           mist={FOCAL.mistEmber}
         />
-        {items.length === 0 ? (
+        {loading && catalog.length === 0 ? (
+          <View style={styles.loading}>
+            <ActivityIndicator color={TAB_ACCENTS.drip.color} />
+          </View>
+        ) : null}
+        {!loading && error ? (
+          <EmptyState
+            kicker="Drip"
+            title="Could not load the rack"
+            lede={error}
+            actionLabel="Retry"
+            onAction={() => void onRefresh()}
+            accent={TAB_ACCENTS.drip.color}
+          />
+        ) : !loading && items.length === 0 ? (
           <EmptyState
             kicker="Drip"
             title={live.copy.dripEmpty}
@@ -110,5 +147,9 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 28,
     gap: 12,
+  },
+  loading: {
+    paddingVertical: 32,
+    alignItems: 'center',
   },
 });

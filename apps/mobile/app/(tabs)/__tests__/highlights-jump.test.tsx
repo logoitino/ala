@@ -32,6 +32,8 @@ jest.mock('@/components/TabScreen', () => {
   return { TabScreen: ({ children }: { children?: React.ReactNode }) => <View>{children}</View> };
 });
 jest.mock('@/components/Reels/LiveMatchBanner', () => ({ LiveMatchBanner: () => null }));
+jest.mock('@/components/Local/RivalryWeekBanner', () => ({ RivalryWeekBanner: () => null }));
+jest.mock('@/components/Rally/RallyMeter', () => ({ RallyMeter: () => null }));
 jest.mock('@/components/Onboarding/SlangGuideBanner', () => ({ SlangGuideBanner: () => null }));
 jest.mock('@/components/TipSheetModal', () => ({ MaloTipModal: () => null }));
 jest.mock('@/components/Reels/ReelPage', () => {

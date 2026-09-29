@@ -5,15 +5,20 @@ import { THANKS_MESSAGES } from '@/lib/donationThanks';
 
 const mockThank = jest.fn(async () => ({ ok: true as const }));
 const mockToast = jest.fn();
+const mockRefresh = jest.fn(async () => undefined);
+let mockLoadError: string | null = null;
+let mockRows = [
+  { id: 't1', fan_name: 'Sina', amount_cents: 500, origin: 'rally', entry: 'in_app', source_label: 'New cleats' },
+  { id: 't2', fan_name: 'Tavita', amount_cents: 1000, origin: 'profile', entry: 'in_app', source_label: null },
+];
 
 jest.mock('@/hooks/useReceivedMalo', () => ({
   useReceivedMalo: () => ({
     loading: false,
     totalCents: 1500,
-    rows: [
-      { id: 't1', fan_name: 'Sina', amount_cents: 500, origin: 'rally', entry: 'in_app', source_label: 'New cleats' },
-      { id: 't2', fan_name: 'Tavita', amount_cents: 1000, origin: 'profile', entry: 'in_app', source_label: null },
-    ],
+    rows: mockRows,
+    error: mockLoadError,
+    refresh: mockRefresh,
   }),
 }));
 
@@ -35,6 +40,15 @@ jest.mock('@/components/UI/HapticPressable', () => {
 });
 
 describe('ReceivedMaloPanel say thanks', () => {
+  beforeEach(() => {
+    mockLoadError = null;
+    mockRows = [
+      { id: 't1', fan_name: 'Sina', amount_cents: 500, origin: 'rally', entry: 'in_app', source_label: 'New cleats' },
+      { id: 't2', fan_name: 'Tavita', amount_cents: 1000, origin: 'profile', entry: 'in_app', source_label: null },
+    ];
+    mockRefresh.mockClear();
+  });
+
   it('nudges the athlete and sends a preset thank-you in two taps', async () => {
     await render(<ReceivedMaloPanel playerId="p1" />);
 
@@ -53,5 +67,14 @@ describe('ReceivedMaloPanel say thanks', () => {
     await fireEvent.press(screen.getByLabelText('Say thanks to Sina'));
     for (const message of THANKS_MESSAGES) expect(screen.getByText(message.text)).toBeTruthy();
     expect(screen.getByLabelText('Pick a thank-you message').children).toHaveLength(THANKS_MESSAGES.length + 1);
+  });
+
+  it('shows Retry instead of a false no-donations state after a load failure', async () => {
+    mockRows = [];
+    mockLoadError = 'network down';
+    await render(<ReceivedMaloPanel playerId="p1" />);
+    expect(screen.queryByText(/No donations yet/)).toBeNull();
+    await fireEvent.press(screen.getByText('Retry'));
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
   });
 });

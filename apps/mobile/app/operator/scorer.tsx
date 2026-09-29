@@ -213,6 +213,13 @@ export default function ScorerScreen() {
             <View style={styles.centered}>
               <Text style={styles.errorText}>Couldn’t load the scorer portal.</Text>
               <Text style={styles.statusText}>{error}</Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void fetchData()}
+                style={({ pressed }) => [styles.retry, pressed && styles.retryPressed]}
+              >
+                <Text style={styles.retryLabel}>Retry</Text>
+              </Pressable>
             </View>
           ) : (
             <View style={styles.stack}>
@@ -360,6 +367,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
+  },
+  retry: {
+    marginTop: 6,
+    borderRadius: radii.pill,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  retryPressed: {
+    opacity: 0.82,
+  },
+  retryLabel: {
+    color: colors.onAccent,
+    fontSize: 14,
+    fontWeight: '800',
   },
   errorBanner: {
     backgroundColor: colors.surface,

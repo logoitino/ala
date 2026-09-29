@@ -7,6 +7,7 @@ import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HomeSearchOverlay } from '@/components/Reels/HomeSearchOverlay';
+import { RivalryWeekBanner } from '@/components/Local/RivalryWeekBanner';
 import { RallyMeter } from '@/components/Rally/RallyMeter';
 import { LiveMatchBanner } from '@/components/Reels/LiveMatchBanner';
 import { ReelCard } from '@/components/Reels/ReelCard';
@@ -477,6 +478,9 @@ export default function HighlightsTab() {
           onLayout={(event) => setChromeHeight(event.nativeEvent.layout.height)}
         >
           {runtime.layouts.liveMatches ? <LiveMatchBanner live={liveGame} playToasts={false} /> : null}
+          {runtime.layouts.cheerPolls ? (
+            <RivalryWeekBanner game={liveGame.game} onOpen={() => trackFeature('rivalry_week')} />
+          ) : null}
           <RallyMeter
             player={feed[activeIndex]?.player ?? null}
             onOpenClip={(reelId) => {

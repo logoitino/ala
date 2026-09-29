@@ -6,10 +6,11 @@ import { Stack } from 'expo-router';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
+import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { telemetry } from '@/services/TelemetryManager';
-import { supabase } from '@/lib/supabase';
+import { createSponsorAd, fetchSponsorAds, setSponsorAdActive } from '@/lib/sponsorAds';
 import type { SponsorAd } from '@/types/database';
 
 export default function SponsorHomeScreen() {
@@ -18,10 +19,16 @@ export default function SponsorHomeScreen() {
   const [title, setTitle] = useState('Friday Lights presented by Alpine Credit Union');
   const [rivalry, setRivalry] = useState('Westlake vs Lone Peak');
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadAds = useCallback(async () => {
-    const { data } = await supabase.from('sponsor_ads').select('*').order('title');
-    setAds((data as SponsorAd[] | null) ?? []);
+    setLoading(true);
+    setLoadError(null);
+    const result = await fetchSponsorAds();
+    setAds(result.ads);
+    setLoadError(result.error);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -33,14 +40,13 @@ export default function SponsorHomeScreen() {
     setBusy(true);
     try {
       telemetry.trackFeature(placement === 'rivalry-banner' ? 'sponsor_rivalry' : 'sponsor_sideline', 'sponsor');
-      const { error } = await supabase.from('sponsor_ads').insert({
+      const result = await createSponsorAd({
         title,
         placement,
         rivalry: rivalry || null,
-        is_active: true,
       });
-      if (error) {
-        Alert.alert('Couldn’t save ad', error.message);
+      if (!result.ok) {
+        Alert.alert('Couldn’t save ad', result.message);
         return;
       }
       void loadAds();
@@ -53,12 +59,9 @@ export default function SponsorHomeScreen() {
     if (busy) return;
     setBusy(true);
     try {
-      const { error } = await supabase
-        .from('sponsor_ads')
-        .update({ is_active: !ad.is_active })
-        .eq('id', ad.id);
-      if (error) {
-        Alert.alert('Update failed', error.message);
+      const result = await setSponsorAdActive(ad.id, !ad.is_active);
+      if (!result.ok) {
+        Alert.alert('Update failed', result.message);
         return;
       }
       setAds((current) =>
@@ -101,9 +104,17 @@ export default function SponsorHomeScreen() {
           </Pressable>
         </DashboardPanel>
         <DashboardPanel title="Live placements">
-          {ads.length === 0 ? (
+          {loadError ? (
+            <EmptyState
+              kicker="Placements"
+              title="Could not load live placements"
+              lede={loadError}
+              actionLabel="Retry"
+              onAction={() => void loadAds()}
+            />
+          ) : !loading && ads.length === 0 ? (
             <Text style={styles.muted}>No ads yet.</Text>
-          ) : (
+          ) : !loading ? (
             ads.map((ad) => (
               <View key={ad.id} style={styles.row}>
                 <Text style={styles.name}>
@@ -119,7 +130,7 @@ export default function SponsorHomeScreen() {
                 </Pressable>
               </View>
             ))
-          )}
+          ) : null}
         </DashboardPanel>
       </ScrollView>
     </ScreenShell>

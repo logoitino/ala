@@ -26,6 +26,7 @@ import {
   OPERATOR_TEST_PIN,
   claimOperatorGame,
   fetchOperatorGames,
+  saveOperatorCheckIn,
 } from '@/lib/operator';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Game } from '@/types/database';
@@ -110,11 +111,12 @@ export default function OperatorPortalScreen() {
 
       const position = await Location.getCurrentPositionAsync({});
       const label = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
+      const result = await saveOperatorCheckIn(position.coords.latitude, position.coords.longitude);
+      if (!result.ok) {
+        Alert.alert('Check-in not saved', result.message);
+        return;
+      }
       setCheckIn(`Checked in at ${label}`);
-      await supabase.from('operator_checkins').insert({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      });
     } finally {
       setCheckingIn(false);
     }

@@ -163,7 +163,7 @@ function parseShopProduct(row: Record<string, unknown>): ShopProduct | null {
 }
 
 /**
- * @purpose Live Drip rack for fans (`is_active` only). Falls back to seeded `DRIP_ITEMS` when the table is missing.
+ * @purpose Live Drip rack for fans (`is_active` only). Falls back to seeded `DRIP_ITEMS` only when the table is missing.
  * @sideEffects `shop_products` SELECT.
  */
 export async function fetchLiveDripItems(): Promise<DripItem[]> {
@@ -173,12 +173,20 @@ export async function fetchLiveDripItems(): Promise<DripItem[]> {
     .select('id, name, category, price_cents, blurb, has_sizes, inventory, icon, is_active, sort_order')
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
-  if (error || !Array.isArray(data)) return DRIP_ITEMS;
+  if (error) {
+    const missing =
+      error.code === '42P01' ||
+      error.code === 'PGRST205' ||
+      /shop_products|could not find the table/i.test(error.message);
+    if (missing) return DRIP_ITEMS;
+    throw new Error('We could not load the Drip rack. Check your connection and try again.');
+  }
+  if (!Array.isArray(data)) throw new Error('We could not load the Drip rack. Check your connection and try again.');
   const items = data
     .map((row) => parseShopProduct(row as Record<string, unknown>))
     .filter((row): row is ShopProduct => Boolean(row))
     .map(shopProductToDripItem);
-  return items.length > 0 ? items : DRIP_ITEMS;
+  return items;
 }
 
 /**

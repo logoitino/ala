@@ -111,3 +111,19 @@ export function isRivalryGame(game: {
     ([a, b]) => haystack.includes(a) && haystack.includes(b),
   );
 }
+
+/**
+ * @purpose Pick the first active rivalry for the Home takeover without duplicating Local's rules.
+ * @param games Active or scheduled game rows, already ordered by the caller.
+ * @returns The first rivalry game, or `null` when rivalry week is quiet.
+ */
+export function featuredRivalryGame<T extends {
+  home_team: string;
+  away_team: string;
+  home_school: string;
+  away_school: string;
+  venue?: string;
+  is_active?: boolean;
+}>(games: T[]): T | null {
+  return games.find((game) => game.is_active !== false && isRivalryGame(game)) ?? null;
+}
