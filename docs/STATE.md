@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) — first migration in `supabase/migrations/`, not applied
+**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -88,6 +88,13 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-09-29** — Growth pass (owner: slow sign-up loses users; verification must not hinder
+  growth). `SoftWallModal`: Apple / Google now sit above the email form (divider "or use email");
+  the age checkbox still gates only the email paths. `RoleSwitcherModal` athlete claim: only team +
+  sport are required; roster number, position and graduation class are optional (saved as `null`
+  when blank in `lib/teams.ts` / `AuthContext`). Proposal (not built, needs owner OK because it
+  changes a money rule): school confirmation becomes an optional badge and payouts gate on guardian
+  Stripe KYC + no dispute + a cap — `ATHLETE_VERIFICATION_DESIGN.md` §9. tsc clean, jest 110/110.
 - **2026-09-29** — Athlete verification ladder (owner decisions: gifts **held** until verified and
   the athlete sees that in the app; the school's athletic director or coach confirms each student
   **in person**). First real migration:

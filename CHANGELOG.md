@@ -4,6 +4,11 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-29
 
+### Faster sign-up
+
+- The sign-up sheet now leads with **Continue with Apple / Google**; email and password sit below "or use email".
+- Claiming an athlete profile needs only **team and sport**. Roster number, position and graduation class are optional and can be added later.
+
 ### Athlete verification — the school confirms, gifts wait
 
 - Anyone can still claim to be an athlete. A claim, or a school/team code, now makes the account **"Verification pending"** — a team code no longer verifies on its own.

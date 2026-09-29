@@ -123,9 +123,9 @@ export async function saveAthleteOnboardingRemote(
       school_id: onboard.team.id,
       athlete_division: onboard.team.division,
       athlete_sport: onboard.sport,
-      athlete_jersey: onboard.jersey,
-      athlete_position: onboard.position,
-      athlete_class_year: onboard.classYear,
+      athlete_jersey: onboard.jersey || null,
+      athlete_position: onboard.position || null,
+      athlete_class_year: onboard.classYear || null,
     })
     .eq('user_id', userId);
 

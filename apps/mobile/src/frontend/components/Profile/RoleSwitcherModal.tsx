@@ -162,8 +162,10 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
       showToast('Agree to Terms of Service & NIL Compliance first.');
       return;
     }
-    if (!team || !sport || !classYear || !jersey.trim() || !position.trim()) {
-      showToast('Pick a team, sport, number, position, and class year.');
+    // Growth rule (owner, 2026-09-29): claiming must take seconds. Only team + sport are required;
+    // number, position and class year can be added later from Profile.
+    if (!team || !sport) {
+      showToast('Pick your team and sport.');
       return;
     }
     fireMediumHaptic();
@@ -174,7 +176,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
         sport,
         jersey: jersey.trim(),
         position: position.trim(),
-        classYear,
+        classYear: classYear ?? '',
       });
       showToast(isAthlete ? 'Roster saved 🏆' : 'School claimed 🏆 Get Varsity verified to unlock Player of the Week');
       dismiss();
@@ -278,7 +280,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
                   onChange={(id) => setSport(id)}
                   accessibilityLabel="Sport"
                 />
-                <Text style={styles.fieldLabel}>Roster number</Text>
+                <Text style={styles.fieldLabel}>Roster number (optional)</Text>
                 <TextInput
                   value={jersey}
                   onChangeText={(value) => setJersey(value.replace(/[^\d]/g, '').slice(0, 3))}
@@ -288,7 +290,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
                   accessibilityLabel="Roster number"
                   style={styles.input}
                 />
-                <Text style={styles.fieldLabel}>Position</Text>
+                <Text style={styles.fieldLabel}>Position (optional)</Text>
                 <TextInput
                   value={position}
                   onChangeText={setPosition}
@@ -298,7 +300,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
                   accessibilityLabel="Position"
                   style={styles.input}
                 />
-                <Text style={styles.fieldLabel}>Graduation class</Text>
+                <Text style={styles.fieldLabel}>Graduation class (optional)</Text>
                 <FilterPills
                   items={classYears.map((item) => ({ id: item, label: classYearLabel(item) }))}
                   value={classYear}

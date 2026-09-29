@@ -2,7 +2,7 @@
 
 **Status:** 2026-09-29. §2–§4 are **built** (migration
 `supabase/migrations/20260929120000_athlete_verification_ladder.sql`, not applied yet) — see §8.
-§3's cap and refunds, §5 and §6 are still proposals. Companions: [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md)
+§3's cap and refunds, §5, §6 and §9 are still proposals. Companions: [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md)
 (who gets paid), [STORY.md](STORY.md) guardrails, [ROADMAP.md](ROADMAP.md) Wave 1 checklist.
 
 ## 0. Owner direction (2026-09-29)
@@ -20,6 +20,8 @@
 - **Decided:** the school confirms from its end. The **athletic director or coach** talks to the
   student in person and fills in a Tapua'i form that only they can use. That proves the kid attends
   that school and is on the team.
+- **Growth rule (third message, 2026-09-29):** if creating an account takes too long, people stop
+  using the app. Verification must never slow sign-up or depend on schools to grow. See §9.
 
 ## 1. What the code does today (read before changing it)
 
@@ -187,3 +189,36 @@ only by a shared team code go back to pending.
 
 **Not built yet:** held-gift cap and refunds; a web version of the school form for staff without
 the app; an admin screen to issue confirmer links (SQL Editor for now); parent-registers-kid; §6.
+
+## 9. Growth first — school confirmation as a badge, not a gate (proposal, needs owner OK)
+
+**Rule:** nothing about verification may slow sign-up, watching, hyping, tagging, uploading or
+giving. The only thing verification may hold is **money leaving Tapua'i** (a payout).
+
+Done 2026-09-29 (no money rules changed):
+
+- Guests already browse and watch with no account; the soft wall appears only on give / join a
+  Crew / chip in, and resumes that action after sign-in.
+- Sign-up sheet leads with one-tap Apple / Google; email is below "or use email".
+- Athlete claim needs only team + sport (+ the NIL acknowledgement LEGAL requires). Number,
+  position and class year are optional.
+
+Proposed (changes a money rule, so **not built**):
+
+1. **School confirmation becomes optional** — a "✓ School confirmed" trust badge that ranks
+   higher on boards, not the only road to payouts. Schools that never engage don't block their
+   athletes.
+2. **Payout gate without the school:** guardian (or 18+ athlete) passes **Stripe Connect KYC**
+   (already required, free; a fake parent can't pass it) **+** no open duplicate claim **+** a
+   running cap (e.g. $250) until one extra signal arrives.
+3. **Extra signals that lift the cap** (any one): school confirmation; 3 vouches from teammates who
+   are themselves past the gate; the athlete or guardian confirming tags on real game highlights
+   that other fans uploaded; guardian ↔ athlete mutual confirmation in Parent HQ.
+4. **Held-gift copy** (`GIFT_HELD_NOTICE`, `VERIFY_HELD_COPY`) would change from "after your school
+   confirms you" to "after payout setup" — LEGAL owns this copy; flag for counsel.
+5. **Growth levers to build next** (from §5, none need a school): parent-first QR sign-up on
+   game-day flyers; shell profiles from fan tags with "Invite the family"; teammate invite links;
+   booster clubs as ambassadors; rivalry boards (built); Aura for referrals.
+
+Build cost if approved: one migration updating `athlete_payout_allowed` (KYC + no dispute + cap),
+a vouch table/RPC, and copy changes. The school form stays as the badge path.

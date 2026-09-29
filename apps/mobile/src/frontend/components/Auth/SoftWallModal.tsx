@@ -177,6 +177,44 @@ export function SoftWallModal() {
               <Text style={styles.title}>{title}</Text>
               <Text style={styles.subtitle}>{body}</Text>
 
+              {/* Growth rule (owner, 2026-09-29): one-tap sign-in first. Apple / Google skip typing a
+                  password; the COPPA age question follows as one tap (AgeConfirmModal). */}
+              <View style={styles.group}>
+                <AnimatedButton
+                  accessibilityLabel="Continue with Apple"
+                  disabled={Boolean(busy)}
+                  haptic="medium"
+                  onPress={() => void run('apple', signInWithApple)}
+                  contentStyle={[styles.providerBtn, styles.appleBtn, busy && styles.disabled]}
+                >
+                  {busy === 'apple' ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.appleLabel}>Continue with Apple</Text>
+                  )}
+                </AnimatedButton>
+
+                <AnimatedButton
+                  accessibilityLabel="Continue with Google"
+                  disabled={Boolean(busy)}
+                  haptic="medium"
+                  onPress={() => void run('google', signInWithGoogle)}
+                  contentStyle={[styles.providerBtn, styles.googleBtn, busy && styles.disabled]}
+                >
+                  {busy === 'google' ? (
+                    <ActivityIndicator color={FOCAL.ink} />
+                  ) : (
+                    <Text style={styles.googleLabel}>Continue with Google</Text>
+                  )}
+                </AnimatedButton>
+              </View>
+
+              <View style={styles.orRow}>
+                <View style={styles.orLine} />
+                <Text style={styles.orLabel}>or use email</Text>
+                <View style={styles.orLine} />
+              </View>
+
               <View style={styles.group}>
                 <Text style={styles.sectionLabel}>Email & password</Text>
                 <TextInput
@@ -267,42 +305,6 @@ export function SoftWallModal() {
                   <Text style={styles.secondaryLabel}>Send Magic Link instead</Text>
                 )}
               </AnimatedButton>
-
-              <View style={styles.orRow}>
-                <View style={styles.orLine} />
-                <Text style={styles.orLabel}>continue with</Text>
-                <View style={styles.orLine} />
-              </View>
-
-              <View style={styles.group}>
-                <AnimatedButton
-                  accessibilityLabel="Continue with Apple"
-                  disabled={Boolean(busy)}
-                  haptic="medium"
-                  onPress={() => void run('apple', signInWithApple)}
-                  contentStyle={[styles.providerBtn, styles.appleBtn, busy && styles.disabled]}
-                >
-                  {busy === 'apple' ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.appleLabel}>Continue with Apple</Text>
-                  )}
-                </AnimatedButton>
-
-                <AnimatedButton
-                  accessibilityLabel="Continue with Google"
-                  disabled={Boolean(busy)}
-                  haptic="medium"
-                  onPress={() => void run('google', signInWithGoogle)}
-                  contentStyle={[styles.providerBtn, styles.googleBtn, busy && styles.disabled]}
-                >
-                  {busy === 'google' ? (
-                    <ActivityIndicator color={FOCAL.ink} />
-                  ) : (
-                    <Text style={styles.googleLabel}>Continue with Google</Text>
-                  )}
-                </AnimatedButton>
-              </View>
 
               {/* 2026-09 audit (Round 11 sweep): this signs into (or, on first use, auto-creates)
                   a single shared account with a hardcoded password checked into the repo and
