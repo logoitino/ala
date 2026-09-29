@@ -954,8 +954,8 @@ Migration `supabase/migrations/20260929120000_athlete_verification_ladder.sql` (
 | `allow_verification_write()` | internal | Sets the transaction-local flag `app.tapuai_verification_write` that `guard_profiles_verification` honours. |
 | `hash_secret(raw)` | internal | sha256 hex (pgcrypto). Tokens and meet codes are only stored hashed. |
 | `is_admin_or_db()` | internal | True for an admin, `service_role`, or a direct DB session (`auth.role()` null — SQL Editor). |
-| `athlete_payout_allowed(target_player_id)` | authenticated | True only when a verified account is linked to the roster row. **Any future payout code must call this.** |
-| `athlete_is_varsity_verified(target_player_id)` | anon, authenticated | Redefined to `athlete_payout_allowed` — the name-match fallback is gone. Drives the tip sheet's "held" notice. |
+| `athlete_payout_allowed(target_player_id)` | anon, authenticated | Boolean over `athlete_payout_status` (redefined in the payout-gate migration below). Drives the gift sheet's "held" line. |
+| `athlete_is_varsity_verified(target_player_id)` | anon, authenticated | School confirmed (the public badge) — a school-confirmed account is linked to the roster row. No name matching. Since the payout-gate migration it no longer equals `athlete_payout_allowed`. |
 | `apply_verification(req)` | internal | Marks the requester verified, links `player_id`, school, athlete role. |
 | `guard_profiles_verification()` | trigger on `profiles` | Blocks any non-admin write to `is_verified` / `verification_status` / `player_id` unless the flag is set. |
 | `claim_athlete(target_player_id, request_notes)` | authenticated | Opens or updates the caller's one open claim; account → `pending`. A second account claiming the same athlete (or one already verified as them) → both `disputed`. |
@@ -972,6 +972,32 @@ Migration `supabase/migrations/20260929120000_athlete_verification_ladder.sql` (
 | `admin_revoke_verification(target_profile_id, note)` | admin | Removes the badge and roster link; the request becomes `revoked`. |
 
 `can_confirm_player_tag` / `confirm_reel_player_tag` are also redefined here: name and jersey matching removed, and confirming a tag no longer links `profiles.player_id`.
+
+### Payout gate without the school + teammate vouches
+
+Migration `supabase/migrations/20260929130000_payout_gate_without_school.sql` (design §9, **not applied yet**). All `SECURITY DEFINER`. Client: `lib/payoutGate.ts`, `useMyVerification().payout`, `components/Verification/TeammateVouchCard.tsx`.
+
+| Object | Who | What |
+| --- | --- | --- |
+| table `athlete_vouches` | RPC only | `id`, `request_id` → `verification_requests` (cascade), `voucher_profile_id` → `profiles`, `created_at`; unique (`request_id`, `voucher_profile_id`). RLS on, no client grants. |
+| `athlete_pending_payout_cap_cents()` | anon, authenticated | `25000` ($250). The one place to change the cap. |
+| `athlete_payout_status(target_player_id)` | internal | jsonb `{allowed, path ('school' / 'identity' / null), cap_cents, reason ('disputed' / 'no_claim' / 'needs_payout_setup'), vouches}`. School-confirmed → allowed, no cap. Else one undisputed pending claim **and** Stripe ID check (linked guardian's `custodial_accounts.payouts_enabled`, or the claimant's own `profiles.payouts_enabled` when no guardian holds the money) → allowed, capped until 3 vouches. **Every payout path must read this and honour `cap_cents`.** |
+| `my_claimed_player_id()` | internal | Caller's linked roster row, else their open claim's. |
+| `get_my_payout_status()` | authenticated | `athlete_payout_status` for the caller's claim + `pending_cap_cents`. |
+| `my_vouching_school_id()` | internal | School the caller may vouch at: school-confirmed → their school; else their pending claim's school if their own gate is open. |
+| `get_teammates_to_vouch()` | authenticated | Up to 50 pending claims at that school (not the caller's): `request_id`, `name`, `sport`, `class_year`, `jersey`, `vouches`, `vouched_by_me`. Empty when the caller may not vouch. |
+| `vouch_for_teammate(target_request_id)` | authenticated | Same-school, pending, not self, max 10 a day. Returns the new count. |
+
+### School badge
+
+Migration `supabase/migrations/20260929140000_school_badge.sql` (design §10, **not applied yet**). Client: `lib/schoolBadge.ts`, `useSchoolBadge`, `components/Verification/SchoolCrest.tsx`.
+
+| Object | Who | What |
+| --- | --- | --- |
+| `schools_and_teams` (added) | admin | `logo_url` (https only), `color_primary`, `color_secondary` (`#RRGGBB`); CHECK `schools_and_teams_branding_check`. |
+| `admin_set_school_branding(target_school_id, new_logo_url, new_color_primary, new_color_secondary)` | admin / SQL Editor | Sets the crest and colours. |
+| `athlete_school_badge(target_player_id)` | anon, authenticated | jsonb `{school_id, school_name, mascot, logo_url, color_primary, color_secondary, confirmed_at, confirmed_by ('athletic_director' / 'coach' / 'tapuai')}` — **null unless a school-confirmed account is linked**. Never the staff member's name. |
+| `profiles` CHECK `profiles_name_no_check_marks` | — | `full_name` / `username` may not contain ✓ ✔ ☑ ✅ (NOT VALID: existing rows untouched). |
 
 ### Custodial money RPCs
 

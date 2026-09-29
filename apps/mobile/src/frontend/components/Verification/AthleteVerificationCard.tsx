@@ -2,8 +2,9 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
-import { VERIFY_HELD_COPY } from '@/data/verification';
+import { PAYOUT_SETUP_COPY, VERIFY_HELD_COPY, payoutUnlockedCopy } from '@/data/verification';
 import { useMyVerification } from '@/hooks/useMyVerification';
+import type { MyPayoutStatus } from '@/lib/payoutGate';
 import type { MyVerification, SchoolCheckCode } from '@/lib/verification';
 
 /** "3:42 PM" in the viewer's locale. */
@@ -40,6 +41,7 @@ export function AthleteVerificationCard({ isAthlete }: { isAthlete: boolean }) {
     <AthleteVerificationCardView
       state={state}
       verification={my.verification}
+      payout={my.payout}
       code={my.code}
       error={my.error}
       busy={my.busy}
@@ -55,6 +57,7 @@ export function AthleteVerificationCard({ isAthlete }: { isAthlete: boolean }) {
 export function AthleteVerificationCardView({
   state,
   verification: v,
+  payout = null,
   code,
   error,
   busy,
@@ -63,6 +66,8 @@ export function AthleteVerificationCardView({
 }: {
   state: Exclude<CardState, 'hidden'>;
   verification: MyVerification;
+  /** Payout gate (design §9). Null = unknown / SQL not applied: fall back to the held message. */
+  payout?: MyPayoutStatus | null;
   code: SchoolCheckCode | null;
   error: string | null;
   busy: boolean;
@@ -81,15 +86,24 @@ export function AthleteVerificationCardView({
         {v.schoolName ? <Text style={styles.school}>{v.schoolName}</Text> : null}
       </View>
 
-      <Text style={styles.held}>{VERIFY_HELD_COPY}</Text>
+      {payout?.allowed ? (
+        <Text style={[styles.held, styles.unlocked]}>{payoutUnlockedCopy(payout.capCents, payout.vouches)}</Text>
+      ) : (
+        <>
+          <Text style={styles.held}>{VERIFY_HELD_COPY}</Text>
+          {state === 'pending' && payout?.reason === 'needs_payout_setup' ? (
+            <Text style={styles.body}>{PAYOUT_SETUP_COPY}</Text>
+          ) : null}
+        </>
+      )}
 
       {state === 'pending' ? (
         v.hasSchool ? (
           <>
-            <Text style={styles.stepsTitle}>How to get verified</Text>
+            <Text style={styles.stepsTitle}>Get your ✓ school badge</Text>
             <Text style={styles.step}>1. Find your athletic director or coach at {school}.</Text>
             <Text style={styles.step}>2. Tap “Show my school code” and read them the 6 digits.</Text>
-            <Text style={styles.step}>3. They confirm you on the Tapua’i school form. Your ⚡ badge turns on.</Text>
+            <Text style={styles.step}>3. They confirm you on the Tapua’i school form. Your school crest shows on your profile.</Text>
             {liveCode ? (
               <View style={styles.codeBox} accessibilityLabel={`School code ${liveCode.code.split('').join(' ')}`}>
                 <Text style={styles.code}>{liveCode.code}</Text>
@@ -197,6 +211,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 21,
     fontWeight: '600',
+  },
+  unlocked: {
+    color: colors.deepGreen,
   },
   stepsTitle: {
     color: colors.textMuted,

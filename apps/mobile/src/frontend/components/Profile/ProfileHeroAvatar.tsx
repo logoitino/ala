@@ -1,12 +1,15 @@
 import { StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ProfileAvatarPicker } from '@/components/Profile/ProfileAvatarPicker';
 import { SubscriberCrest } from '@/components/Profile/SubscriberCrest';
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { SchoolCrest, SchoolHeroBand } from '@/components/Verification/SchoolCrest';
 import { colors, radii } from '@/constants/theme';
 import { CLAIM_VERIFY_CTA, type VerificationStatus } from '@/data/verification';
 import { auraBadgeLabel, auraProgressTowardNext, auraTierForPoints } from '@/lib/aura';
+import type { SchoolBadge } from '@/lib/schoolBadge';
 import { FOCAL } from '@/theme/motion';
 
 type ProfileHeroAvatarProps = {
@@ -23,6 +26,8 @@ type ProfileHeroAvatarProps = {
   avatarUrl?: string | null;
   canEditAvatar?: boolean;
   onAvatarUploaded?: (url: string) => void;
+  /** Server-confirmed crest (`useSchoolBadge`). Never build this from editable profile fields. */
+  schoolBadge?: SchoolBadge | null;
 };
 
 function initialsFromName(name: string): string {
@@ -40,6 +45,8 @@ function initialsFromName(name: string): string {
  * @param verificationStatus Viewer-facing Varsity chip next to the name.
  * @param avatarUrl `profiles.avatar_url` when set.
  * @param canEditAvatar Own hub — opens `ProfileAvatarPicker` 1:1 crop.
+ * @param schoolBadge School-confirmed only: school-colour band behind the photo, and the crest pinned
+ *   on the ring edge (outside the photo, so a logo pasted into a picture can't sit where it sits).
  * @sideEffects `ProfileAvatarPicker` camera roll + Storage `avatars` when editable.
  */
 export function ProfileHeroAvatar({
@@ -56,14 +63,16 @@ export function ProfileHeroAvatar({
   avatarUrl,
   canEditAvatar = false,
   onAvatarUploaded,
+  schoolBadge = null,
 }: ProfileHeroAvatarProps) {
   const tier = auraTierForPoints(auraPoints);
   const progress = auraProgressTowardNext(auraPoints);
   const initials = initialsFromName(name);
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.avatarStage}>
+    <View style={[styles.wrap, schoolBadge ? styles.wrapBanded : null]}>
+      {schoolBadge ? <SchoolHeroBand badge={schoolBadge} /> : null}
+      <View style={[styles.avatarStage, schoolBadge ? styles.avatarStageBanded : null]}>
         <View style={[styles.avatarRing, { borderColor: tier.color, backgroundColor: tier.face }]}>
           <ProfileAvatarPicker
             uri={avatarUrl}
@@ -83,6 +92,11 @@ export function ProfileHeroAvatar({
               <Text style={[styles.jerseyLabel, { color: tier.ink }]}>#{jersey}</Text>
             </View>
           ) : null}
+          {schoolBadge ? (
+            <View style={styles.schoolCrest}>
+              <SchoolCrest badge={schoolBadge} athleteName={name} size={46} />
+            </View>
+          ) : null}
         </View>
       </View>
       <Text style={styles.name}>{name}</Text>
@@ -92,7 +106,13 @@ export function ProfileHeroAvatar({
         schoolClaimed={schoolClaimed}
         onPress={onClaimVerification}
       />
-      {school ? <Text style={styles.school}>{school}</Text> : null}
+      {schoolBadge ? (
+        <Text style={styles.schoolConfirmed}>
+          ✓ {schoolBadge.schoolName} athlete{schoolBadge.mascot ? ` · ${schoolBadge.mascot}` : ''}
+        </Text>
+      ) : school ? (
+        <Text style={styles.school}>{school}</Text>
+      ) : null}
       <Text style={[styles.tier, { color: tier.ink }]}>
         {auraBadgeLabel(tier)} · {Math.round(auraPoints)} Aura
       </Text>
@@ -116,9 +136,10 @@ export function ProfileHeroAvatar({
           accessibilityLabel="Flip Aura card"
           haptic="selection"
           onPress={onFlipAura}
-          contentStyle={styles.flipHit}
+          contentStyle={[styles.flipHit, { borderColor: tier.color, backgroundColor: tier.face }]}
         >
-          <Text style={styles.flipLabel}>Flip Aura card</Text>
+          <Ionicons name="sync" size={15} color={tier.ink} />
+          <Text style={[styles.flipLabel, { color: tier.ink }]}>Flip Aura card</Text>
         </AnimatedButton>
       ) : null}
       {onClaimVerification && verificationStatus !== 'verified' ? (
@@ -141,8 +162,25 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 4,
   },
+  wrapBanded: {
+    alignSelf: 'stretch',
+  },
   avatarStage: {
     paddingVertical: 8,
+  },
+  avatarStageBanded: {
+    paddingTop: 40,
+  },
+  schoolCrest: {
+    position: 'absolute',
+    right: -14,
+    bottom: 0,
+  },
+  schoolConfirmed: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: FOCAL.jadeInk,
+    textAlign: 'center',
   },
   avatarRing: {
     width: 132,
@@ -214,14 +252,18 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   flipHit: {
-    marginTop: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 38,
+    borderWidth: 1.5,
+    borderRadius: 999,
+    paddingHorizontal: 16,
   },
   flipLabel: {
     fontSize: 13,
     fontWeight: '800',
-    color: FOCAL.jadeInk,
   },
   verifyHit: {
     marginTop: 2,

@@ -16,10 +16,23 @@ export const VERIFY_WAIT_COPY =
   'Your profile stays public while you wait. Your athletic director or coach confirms you in person — show them your school code from Activity.';
 /** Shown to the athlete while pending. Money copy — LEGAL to review (LEGAL_BRIEFING). */
 export const VERIFY_HELD_COPY =
-  "Fans can already send you gifts. They're held and only paid out after your school confirms you.";
+  "Fans can already send you gifts. They're held until a parent finishes payout setup (or your school confirms you).";
 /** Shown to a fan giving to an athlete who is not verified yet. Money copy — LEGAL to review. */
 export const GIFT_HELD_NOTICE =
-  'Not verified by their school yet — your gift is held and only paid out after their school confirms them.';
+  "Payouts aren't set up for this athlete yet — your gift is held until their family finishes payout setup.";
+/** Athlete on Activity once the identity path unlocks payouts. Money copy — LEGAL to review. */
+export function payoutUnlockedCopy(capCents: number | null, vouches: number): string {
+  if (capCents == null) return 'Payouts are unlocked.';
+  const cap = `$${Math.round(capCents / 100)}`;
+  const need = Math.max(0, 3 - vouches);
+  return `Payouts are unlocked up to ${cap}. The limit lifts when your school confirms you or ${need} more teammate${need === 1 ? '' : 's'} vouch${need === 1 ? 'es' : ''} for you.`;
+}
+/** Athlete on Activity when the family still has to pass the Stripe identity check. */
+export const PAYOUT_SETUP_COPY =
+  'To get paid without waiting on your school, a parent sets up payouts in Parent HQ (Stripe checks their ID — it takes a few minutes).';
+/** Check marks are reserved for the school badge; names cannot use them (`profiles_name_no_check_marks`). */
+export const RESERVED_BADGE_MARKS = /[✓✔☑✅]/;
+export const RESERVED_BADGE_MARKS_ERROR = 'Check marks are reserved for school-confirmed athletes. Remove them from your name.';
 /** Toast after a school code is accepted: it narrows the school, it does not verify. */
 export const SCHOOL_CODE_ACCEPTED = 'School code accepted — your coach or AD confirms you next';
 

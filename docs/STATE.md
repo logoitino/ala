@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport
+**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -87,6 +87,22 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ## 4. Recent changes (rolling — newest first)
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
+
+- **2026-09-29** — Payout gate, school crest, Aura flip fix. (1) Migration
+  `20260929130000_payout_gate_without_school.sql` (not applied): `athlete_payout_status` (school →
+  no cap; else one undisputed claim + guardian/claimant Stripe `payouts_enabled` → $250 cap until
+  3 vouches), `athlete_vouches`, `get_teammates_to_vouch`, `vouch_for_teammate`,
+  `get_my_payout_status`; `athlete_payout_allowed` now granted to anon; `athlete_is_varsity_verified`
+  = school confirmed only. Client `lib/payoutGate.ts`, `Verification/TeammateVouchCard` on Activity,
+  `AthleteVerificationCard` shows unlocked/cap/setup states, held copy changed (LEGAL row M).
+  (2) Migration `20260929140000_school_badge.sql` (not applied): `schools_and_teams.logo_url` /
+  `color_primary` / `color_secondary`, `admin_set_school_branding`, `athlete_school_badge`, names
+  can't contain ✓. Client `lib/schoolBadge.ts`, `useSchoolBadge`, `Verification/SchoolCrest`
+  (crest + proof sheet + hero band) in `ProfileHeroAvatar` and `AuraTradingCard`; Edit Profile
+  blocks ✓ in names. (3) Aura card flip: the Modal had no `GestureHandlerRootView` (taps never
+  reached the card), the "flip" chip sat on the tier badge, and a spin lock only released on the
+  spring's finish callback so an interrupted flip froze the card. Now an Identity / Season stats
+  toggle under the card, retargetable flip, pill "Flip Aura card" button. Design §9–§10.
 
 - **2026-09-29** — Growth pass (owner: slow sign-up loses users; verification must not hinder
   growth). `SoftWallModal`: Apple / Google now sit above the email form (divider "or use email");

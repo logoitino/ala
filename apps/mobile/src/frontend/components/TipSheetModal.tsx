@@ -20,7 +20,7 @@ import { maloAthleteCta, maloAthleteSheetSubtitle } from '@/data/malo';
 import { GIFT_HELD_NOTICE } from '@/data/verification';
 import { displayValue, type Player } from '@/data/players';
 import type { TipEntry, TipOrigin } from '@/lib/finance';
-import { fetchPlayerVerified } from '@/lib/verification';
+import { fetchPayoutAllowed } from '@/lib/payoutGate';
 import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 
 type TipSheetModalProps = {
@@ -39,9 +39,9 @@ const SHEET_OFF = 640;
 
 /**
  * @purpose Bottom-sheet Mālo checkout over a blurred feed backdrop. Copy names the athlete who receives the gift (not the uploader).
- * Shows a "held until verified" line when the athlete's school has not confirmed them yet
+ * Shows a "held" line while payouts to this athlete are not unlocked (no school confirmation and no family Stripe ID check yet)
  * (owner decision 2026-09-29; copy flagged for LEGAL).
- * @sideEffects Unmounts `TipCheckout` on dismiss so custom amount / fee state reset; `athlete_is_varsity_verified` per athlete.
+ * @sideEffects Unmounts `TipCheckout` on dismiss so custom amount / fee state reset; `athlete_payout_allowed` per athlete.
  */
 export function MaloTipModal({
   player,
@@ -73,7 +73,7 @@ export function MaloTipModal({
     if (!playerId) return;
     let live = true;
     setVerified(null);
-    void fetchPlayerVerified(playerId).then((result) => {
+    void fetchPayoutAllowed(playerId).then((result) => {
       if (live) setVerified(result);
     });
     return () => {

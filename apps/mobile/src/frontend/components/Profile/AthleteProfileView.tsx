@@ -1,9 +1,11 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useSchoolBadge } from '@/hooks/useSchoolBadge';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import Reanimated, {
   useAnimatedStyle,
@@ -206,6 +208,7 @@ export function AthleteProfileView({
   const [tab, setTab] = useState<AthleteProfileTab>('highlights');
   const [wishlistFulfilled, setWishlistFulfilled] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const schoolBadge = useSchoolBadge(player.id);
   const [internalFlip, setInternalFlip] = useState(false);
   const flipOpen = auraCardOpen ?? internalFlip;
   const setFlipOpen = onAuraCardOpenChange ?? setInternalFlip;
@@ -296,6 +299,7 @@ export function AthleteProfileView({
       verificationStatus={verificationStatus}
       schoolClaimed={schoolClaimed}
       onClaimVerification={onClaimVerification}
+      schoolBadge={schoolBadge}
     />
   ) : null;
 
@@ -370,6 +374,7 @@ export function AthleteProfileView({
         avatarUrl={avatarUrl}
         canEditAvatar={editAvatar}
         onAvatarUploaded={onAvatarUploaded}
+        schoolBadge={schoolBadge}
       />
       {aboutBio?.trim() || nonEmptySocialLinks(socialLinks).length > 0 ? (
         <View style={styles.about}>
@@ -476,6 +481,8 @@ export function AthleteProfileView({
         visible={flipOpen && Boolean(tradingCard)}
         onRequestClose={() => setFlipOpen(false)}
       >
+        {/* A Modal is its own native root: without this the card's tap-to-flip gesture never fires. */}
+        <GestureHandlerRootView style={styles.flipGestureRoot}>
         <View
           style={[
             styles.flipRoot,
@@ -500,6 +507,7 @@ export function AthleteProfileView({
             </AnimatedButton>
           </View>
         </View>
+        </GestureHandlerRootView>
       </Modal>
       <ShareQrModal
         visible={shareOpen}
@@ -839,6 +847,9 @@ const styles = StyleSheet.create({
   },
   teammatesLabelCompact: {
     fontSize: 12,
+  },
+  flipGestureRoot: {
+    flex: 1,
   },
   flipRoot: {
     flex: 1,

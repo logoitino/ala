@@ -5,6 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { AthleteMoneyCard } from '@/components/Custodial/AthleteMoneyCard';
 import { AthleteVerificationCard } from '@/components/Verification/AthleteVerificationCard';
+import { TeammateVouchCard } from '@/components/Verification/TeammateVouchCard';
 import { ScrollFxItem, ScrollFxParallax, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
 import { RuntimePaused } from '@/components/RuntimePaused';
 import { ScreenHeading } from '@/components/ScreenHeading';
@@ -157,6 +158,7 @@ export default function ActivityTab() {
         </ScrollFxParallax>
 
         {user ? <AthleteVerificationCard isAthlete={isAthlete} /> : null}
+        {user ? <TeammateVouchCard /> : null}
         <AthleteMoneyCard playerId={profile?.player_id} />
 
         {loading && items.length === 0 ? (

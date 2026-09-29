@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -17,7 +17,9 @@ import { CardShine } from '@/components/Effects/CardShine';
 import { GlowingCardWrapper } from '@/components/Profile/GlowingCardWrapper';
 import { SubscriberCrest } from '@/components/Profile/SubscriberCrest';
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
+import { SchoolCrestMark } from '@/components/Verification/SchoolCrest';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { CLAIM_VERIFY_CTA, type VerificationStatus } from '@/data/verification';
 import { formatCompactCount } from '@/lib/hype';
@@ -27,6 +29,7 @@ import {
   auraTierForPoints,
   type AuraTier,
 } from '@/lib/aura';
+import type { SchoolBadge } from '@/lib/schoolBadge';
 import type { UserRole } from '@/types/database';
 import { FOCAL, SPRING_FLIP } from '@/theme/motion';
 
@@ -74,6 +77,8 @@ export type AuraTradingCardProps = {
   verificationStatus?: VerificationStatus;
   schoolClaimed?: boolean;
   onClaimVerification?: () => void;
+  /** Server-confirmed crest (`useSchoolBadge`); shown beside the team line on the identity face. */
+  schoolBadge?: SchoolBadge | null;
 };
 
 export type RoleBadge = {
@@ -172,8 +177,7 @@ function CardChrome({ tier, children }: { tier: AuraTier; children: ReactNode })
  * @param careerPreview Top 3 career stats (Games / Points or Tries / Yards or Tackles) on the back face.
  * @param isAuraMaxed / wishlistFulfilled Lights the Skia neon sweep (`GlowingNeonBorder`) and pulses stroke thickness.
  * @param verificationStatus Neon jade ⚡ VERIFIED VARSITY on the identity face when Varsity is earned.
- * @returns Flippable card. Tapping anywhere on the card flips it; a small 🔄 chip in the
- * corner is the affordance (there is no separate flip button).
+ * @returns Flippable card. Tapping the card or the Identity / Season stats toggle under it flips it.
  * @sideEffects Reanimated `withSpring` `rotateY` 0↔180 (`SPRING_FLIP`, `perspective: 1000`); `Haptics.impactAsync(Medium)` exactly when the rotation crosses 90°; back-face Season Points / Total Tipped fade in with `withDelay`; Skia canvas when the glow is on.
  */
 export function AuraTradingCard({
@@ -206,6 +210,7 @@ export function AuraTradingCard({
   verificationStatus = 'unverified',
   schoolClaimed = false,
   onClaimVerification,
+  schoolBadge = null,
 }: AuraTradingCardProps) {
   const tier = auraTierForPoints(auraPoints);
   const progress = auraProgressTowardNext(auraPoints);
@@ -216,7 +221,8 @@ export function AuraTradingCard({
   const [flipped, setFlipped] = useState(false);
   const [frontH, setFrontH] = useState(200);
   const [backH, setBackH] = useState(280);
-  const spinning = useSharedValue(false);
+  // Which face the card is heading to. Each tap retargets the spring, so a flip can never get stuck.
+  const target = useRef<0 | 180>(0);
   const entrance = useSharedValue(0);
   const progressFill = useSharedValue(0);
 
@@ -284,20 +290,14 @@ export function AuraTradingCard({
     },
   );
 
-  const finishSpin = useCallback(() => {
-    spinning.value = false;
-  }, [spinning]);
-
   const flip = useCallback(() => {
-    if (spinning.value) return;
-    spinning.value = true;
-    const showingBack = rotateY.value >= 90;
-    const next = showingBack ? 0 : 180;
-    rotateY.value = withSpring(next, { ...SPRING_FLIP, overshootClamping: true }, (finished) => {
-      if (finished) runOnJS(finishSpin)();
-    });
+    // No "spinning" lock: it was released only by the spring's finished callback, so an interrupted
+    // spring left the card refusing every later tap.
+    const next = target.current === 180 ? 0 : 180;
+    target.current = next;
+    rotateY.value = withSpring(next, { ...SPRING_FLIP, overshootClamping: true });
     setFlipped(next === 180);
-  }, [finishSpin, rotateY, spinning]);
+  }, [rotateY]);
 
   const tapToFlip = Gesture.Tap()
     .maxDuration(320)
@@ -374,9 +374,12 @@ export function AuraTradingCard({
                     </View>
                     {teamLine ? (
                       <View style={styles.teamBlock}>
-                        <Text style={styles.teamLine} numberOfLines={1}>
-                          {teamLine}
-                        </Text>
+                        <View style={styles.teamRow}>
+                          {schoolBadge ? <SchoolCrestMark badge={schoolBadge} size={24} /> : null}
+                          <Text style={styles.teamLine} numberOfLines={1}>
+                            {teamLine}
+                          </Text>
+                        </View>
                         {divisionLine ? <Text style={styles.divisionBadge}>{divisionLine}</Text> : null}
                       </View>
                     ) : null}
@@ -468,15 +471,32 @@ export function AuraTradingCard({
               </CardChrome>
             </View>
           </Animated.View>
-          {/* Affordance only — the whole card is the target, so this must not eat the tap. */}
-          <View pointerEvents="none" style={styles.flipHint}>
-            <Text style={[styles.flipHintLabel, { color: tier.ink }]}>
-              {flipped ? '🔄 Identity' : '🔄 Season'}
-            </Text>
-          </View>
         </View>
         </GestureDetector>
       </GlowingCardWrapper>
+      {/* The flip control lives below the card: pinned inside it, it sat on top of the tier badge. */}
+      <View style={[styles.faceToggle, { borderColor: `${tier.color}66` }]} accessibilityRole="tablist">
+        {(['identity', 'season'] as const).map((side) => {
+          const active = (side === 'season') === flipped;
+          return (
+            <Pressable
+              key={side}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              accessibilityLabel={side === 'season' ? 'Show season stats' : 'Show identity'}
+              haptic="selection"
+              onPress={() => {
+                if (!active) flip();
+              }}
+              style={[styles.faceToggleItem, active && { backgroundColor: tier.color }]}
+            >
+              <Text style={[styles.faceToggleLabel, { color: active ? '#FFFFFF' : tier.ink }]}>
+                {side === 'season' ? 'Season stats' : 'Identity'}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
 
       {onClaimVerification && verificationStatus !== 'verified' ? (
         <AnimatedButton
@@ -672,7 +692,13 @@ const styles = StyleSheet.create({
     gap: 4,
     marginTop: 4,
   },
+  teamRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   teamLine: {
+    flexShrink: 1,
     color: colors.text,
     fontSize: 13,
     fontWeight: '800',
@@ -808,21 +834,27 @@ const styles = StyleSheet.create({
   earnedLabelOff: {
     color: colors.textMuted,
   },
-  flipHint: {
-    position: 'absolute',
-    top: 10,
-    right: 12,
-    zIndex: 5,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+  faceToggle: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    borderWidth: 1,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.55)',
+    padding: 3,
+    gap: 2,
+    backgroundColor: colors.surface,
   },
-  flipHintLabel: {
-    fontSize: 11,
+  faceToggleItem: {
+    minWidth: 112,
+    minHeight: 36,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  faceToggleLabel: {
+    fontSize: 13,
     fontWeight: '800',
-    letterSpacing: 0.3,
-    opacity: 0.85,
+    letterSpacing: 0.2,
   },
   verifyBtn: {
     minHeight: 40,

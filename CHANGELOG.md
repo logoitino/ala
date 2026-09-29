@@ -4,6 +4,16 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-29
 
+### Payouts without waiting on the school, and the school crest
+
+- **School confirmation is now a badge, not the only way to get paid.** An athlete's payouts can unlock once a parent (or the 18+ athlete) passes Stripe's ID check, with one claim and no dispute. Until **3 teammates vouch** or the school confirms, payouts are capped at **$250**. (Payouts are still switched off; the cap is enforced when the payment ledger lands.)
+- **Vouch for teammates** card on Activity for confirmed athletes: "They're on my team" (same school only, 10 a day).
+- Activity's verification card now says when payouts are unlocked (and the cap), or what setup is missing. Held-gift wording now says "until their family finishes payout setup" (counsel to review).
+- **School crest on confirmed athletes:** the school's colours behind the profile photo, the crest on the edge of the ring, a small crest on the Aura card, and "✓ {School} athlete". Tap the crest to see who confirmed them and when. Tapua'i sets each school's logo and colours.
+- Names can no longer include check marks (✓ ✔ ☑ ✅), so nobody can fake the badge in their name.
+- **Aura card flip fixed:** the flip now works inside the card viewer, the overlapping "flip" chip is gone, and an **Identity / Season stats** switch sits under the card. The profile's "Flip Aura card" button is a proper pill.
+- Schema: `20260929130000_payout_gate_without_school.sql`, `20260929140000_school_badge.sql`. **Not applied to the live DB.**
+
 ### Faster sign-up
 
 - The sign-up sheet now leads with **Continue with Apple / Google**; email and password sit below "or use email".

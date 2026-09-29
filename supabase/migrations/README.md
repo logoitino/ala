@@ -46,6 +46,8 @@ The baseline's timestamp must sort **before** `20260929120000`.
 | File | What | Applied? |
 | --- | --- | --- |
 | `20260929120000_athlete_verification_ladder.sql` | School-confirmed athlete verification: claims go to "pending", the athletic director or coach confirms in person with a 6-digit code; closes the self-verify and name-match holes. [Design](../../docs/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Staging first. No dependency on the other unapplied files |
+| `20260929130000_payout_gate_without_school.sql` | Payouts unlock with Stripe ID check + one undisputed claim, $250 cap until 3 teammate vouches or school confirmation; `athlete_vouches` + vouch RPCs. [Design §9](../../docs/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Needs `20260929120000` and `supabase/custodial_money.sql` (`custodial_accounts`, `athlete_controls_money`) first |
+| `20260929140000_school_badge.sql` | School logo / colours, `athlete_school_badge`, `admin_set_school_branding`, no ✓ in names. [Design §10](../../docs/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Needs `20260929120000` first |
 
 ## Adding a school confirmer (after the verification migration)
 
@@ -60,3 +62,11 @@ select public.admin_add_school_confirmer(
 It returns `{id, token, link}` once. Send the `link` (`alasports://school-confirm?t=…`) to that
 staff member's **school email** only. The token is stored hashed and cannot be shown again; to
 replace a lost link, `select public.admin_revoke_school_confirmer('<id>');` and add a new one.
+
+## Setting a school's crest (after the school badge migration)
+
+```sql
+select public.admin_set_school_branding(
+  '<schools_and_teams.id>', 'https://example.org/crest.png', '#1D3F8F', '#FFFFFF');
+-- logo must be https (or null for a monogram shield); colours #RRGGBB
+```

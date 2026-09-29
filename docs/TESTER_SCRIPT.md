@@ -73,6 +73,14 @@ make you share your kid's page with family?*
    playing your athletic director or coach; they type it into the school form link we sent them,
    tick "met in person", sign, and tap **Confirm**. Pull to refresh Activity — the card should go
    away and your ⚡ badge turn on. (Confirmers: also try a wrong code and "Not on my roster".)
+   Your profile should now show your school's colours behind your photo and the school crest on
+   the edge of the ring. Tap the crest — it should say who confirmed you and when.
+   (Whoever runs the wave sets the crest first:
+   `select public.admin_set_school_branding('<school id>','https://…/logo.png','#1D3F8F','#FFFFFF');`)
+2b. **Vouch.** As a confirmed athlete, open Activity: pending teammates at your school appear
+   under "Vouch for teammates". Tap **They're on my team** — the count goes up by one.
+2c. **Aura card.** On your profile tap **Flip Aura card**, then use **Identity / Season stats**
+   under the card and swipe the card itself. It should flip every time and nothing should overlap.
 3. Upload a Highlight tagged to yourself.
 4. Look at your profile's Highlights, Stats and Vault tabs. Lock and unlock a Vault clip.
 5. Start Stripe Connect onboarding (test mode — use Stripe's test data, not your real details).

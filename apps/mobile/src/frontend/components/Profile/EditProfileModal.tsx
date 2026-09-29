@@ -20,6 +20,7 @@ import { colors, radii } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { useCelebration } from '@/context/CelebrationContext';
+import { RESERVED_BADGE_MARKS, RESERVED_BADGE_MARKS_ERROR } from '@/data/verification';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 import type { ProfileVisibility } from '@/types/database';
 
@@ -101,6 +102,10 @@ export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
 
   const onSave = async () => {
     if (saving) return;
+    if (RESERVED_BADGE_MARKS.test(fullName) || RESERVED_BADGE_MARKS.test(username)) {
+      showToast(RESERVED_BADGE_MARKS_ERROR);
+      return;
+    }
     setSaving(true);
     try {
       const cleanedSocial = Object.fromEntries(

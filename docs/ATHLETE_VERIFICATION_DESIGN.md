@@ -2,7 +2,9 @@
 
 **Status:** 2026-09-29. §2–§4 are **built** (migration
 `supabase/migrations/20260929120000_athlete_verification_ladder.sql`, not applied yet) — see §8.
-§3's cap and refunds, §5, §6 and §9 are still proposals. Companions: [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md)
+§9 (payout gate without the school, teammate vouches) and §10 (school crest) are **built**
+(migrations `20260929130000_payout_gate_without_school.sql`, `20260929140000_school_badge.sql`, not applied).
+§3's refunds, §5 and §6 are still proposals. Companions: [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md)
 (who gets paid), [STORY.md](STORY.md) guardrails, [ROADMAP.md](ROADMAP.md) Wave 1 checklist.
 
 ## 0. Owner direction (2026-09-29)
@@ -190,7 +192,7 @@ only by a shared team code go back to pending.
 **Not built yet:** held-gift cap and refunds; a web version of the school form for staff without
 the app; an admin screen to issue confirmer links (SQL Editor for now); parent-registers-kid; §6.
 
-## 9. Growth first — school confirmation as a badge, not a gate (proposal, needs owner OK)
+## 9. Growth first — school confirmation as a badge, not a gate (built 2026-09-29, owner OK)
 
 **Rule:** nothing about verification may slow sign-up, watching, hyping, tagging, uploading or
 giving. The only thing verification may hold is **money leaving Tapua'i** (a payout).
@@ -203,7 +205,7 @@ Done 2026-09-29 (no money rules changed):
 - Athlete claim needs only team + sport (+ the NIL acknowledgement LEGAL requires). Number,
   position and class year are optional.
 
-Proposed (changes a money rule, so **not built**):
+Approved by the owner 2026-09-29 ("yes") and built — see "As built" below. Original proposal:
 
 1. **School confirmation becomes optional** — a "✓ School confirmed" trust badge that ranks
    higher on boards, not the only road to payouts. Schools that never engage don't block their
@@ -222,3 +224,44 @@ Proposed (changes a money rule, so **not built**):
 
 Build cost if approved: one migration updating `athlete_payout_allowed` (KYC + no dispute + cap),
 a vouch table/RPC, and copy changes. The school form stays as the badge path.
+
+**As built** (`supabase/migrations/20260929130000_payout_gate_without_school.sql`, not applied):
+
+- `athlete_payout_status(player)` is the one question. School confirmed → allowed, no cap. Else
+  held if any claim on that athlete is disputed, or there isn't exactly one pending claim. Else
+  allowed once Stripe's ID check passed — the linked guardian's `custodial_accounts.payouts_enabled`
+  (with `players.guardian_id` matching), or the claimant's own `profiles.payouts_enabled` when no
+  guardian holds the money. Both flags are server-written only.
+- Cap `athlete_pending_payout_cap_cents()` = $250 until **3 teammate vouches** or school
+  confirmation. Payouts are still off everywhere; the Phase 1a ledger must read this and honour
+  `cap_cents`.
+- Vouchers must be school confirmed, or past the gate themselves, at the **same school**; no
+  self-vouch; 10 a day. Activity shows "Vouch for teammates" only to people who can vouch.
+- `athlete_is_varsity_verified` now means school confirmed only (the public badge).
+- Held copy now says "until a parent finishes payout setup (or your school confirms you)" —
+  LEGAL row M.
+- **Deferred:** tag-confirmation and guardian ↔ athlete mutual signals (item 3) — build with the
+  ledger.
+- **Bottleneck:** `players.guardian_id` is still set only by a Tapua'i admin
+  (`admin_set_player_guardian`), so the guardian path waits on us. Next: a self-serve "invite your
+  parent" link from the athlete, accepted in Parent HQ, that sets the link server-side.
+
+## 10. School crest — the visible badge, hard to fake (built 2026-09-29)
+
+Owner: show the school's badge or logo after verification, somewhere noticeable, so a fan profile
+can't imitate it.
+
+- **Data is server-only.** `athlete_school_badge(player)` returns crest data only when a
+  school-confirmed account is linked. Logo and colours live on `schools_and_teams` and only an
+  admin sets them (`admin_set_school_branding`, https logos, `#RRGGBB` colours). No logo → a
+  monogram shield in the school colours (fallback palette hashed from the school id).
+- **Placement no fan can copy:** a school-colour band behind the profile photo (fans have no
+  banner or cover at all), the crest pinned to the ring edge **outside** the photo (so it can't be
+  baked into an avatar), a small crest by the team line on the Aura card, and the school line
+  reading "✓ {School} athlete · {Mascot}".
+- **Motion:** crest and band carry a moving shine; a screenshot pasted into a photo is static.
+- **Proof on tap:** the crest opens a sheet — "Confirmed in person by the athletic director on
+  {date}" (role only, never the staff member's name) and "A school logo inside a profile photo is
+  not a confirmation."
+- **No look-alike marks in names:** ✓ ✔ ☑ ✅ are blocked in `full_name` / `username`
+  (constraint `profiles_name_no_check_marks`, NOT VALID for old rows; Edit Profile shows why).

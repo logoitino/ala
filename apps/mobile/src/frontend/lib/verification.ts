@@ -193,8 +193,9 @@ export async function startSchoolCheck(): Promise<SchoolCheckCode> {
 }
 
 /**
- * @purpose Whether gifts to this athlete are paid out, or held until their school confirms them.
- * @returns true only when a verified account is linked to the `players` row. Unknown → false (held).
+ * @purpose Whether the athlete's school has confirmed them (the public badge). For "is money held?"
+ *   use `fetchPayoutAllowed` in `lib/payoutGate.ts` — since 2026-09-29 the two can differ.
+ * @returns true only when a school-confirmed account is linked to the `players` row. Unknown → false.
  * @sideEffects `athlete_is_varsity_verified` RPC.
  */
 export async function fetchPlayerVerified(playerId: string | null | undefined): Promise<boolean> {

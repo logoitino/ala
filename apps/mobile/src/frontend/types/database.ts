@@ -542,6 +542,10 @@ export type SchoolAndTeam = {
   team_code?: string | null;
   /** Compliance freeze switch (LEGAL_BRIEFING.md §8 item 5). Flip only via `set_malo_freeze`. */
   malo_frozen?: boolean | null;
+  /** Admin-set crest (https) and brand colours (`#RRGGBB`); `admin_set_school_branding`. */
+  logo_url?: string | null;
+  color_primary?: string | null;
+  color_secondary?: string | null;
   created_at?: string;
 };
 
@@ -803,6 +807,35 @@ export type Database = {
       athlete_payout_allowed: {
         Args: { target_player_id: string };
         Returns: boolean;
+      };
+      athlete_pending_payout_cap_cents: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      get_my_payout_status: {
+        Args: Record<string, never>;
+        Returns: Record<string, unknown> | null;
+      };
+      get_teammates_to_vouch: {
+        Args: Record<string, never>;
+        Returns: Record<string, unknown>[];
+      };
+      vouch_for_teammate: {
+        Args: { target_request_id: string };
+        Returns: number;
+      };
+      athlete_school_badge: {
+        Args: { target_player_id: string };
+        Returns: Record<string, unknown> | null;
+      };
+      admin_set_school_branding: {
+        Args: {
+          target_school_id: string;
+          new_logo_url?: string | null;
+          new_color_primary?: string | null;
+          new_color_secondary?: string | null;
+        };
+        Returns: undefined;
       };
       claim_athlete: {
         Args: { target_player_id?: string | null; request_notes?: string | null };
