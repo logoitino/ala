@@ -27,6 +27,9 @@ perfect. "This felt slow" counts as a bug.
 4. Hide one clip. Report one clip (pick any reason — it is a test).
 5. Post a clip of a teammate: you must pick who is in it. Then find it on their profile — it should say
    "🎥 Filmed by" you, and after a few friends each watch it for 3+ seconds the ▶ count on the poster goes up.
+6. Tap "🎥 Filmed by" on a friend's clip: send Props (once — the button should lock), and check the
+   filmer card on your own Profile (tier, clips, views, Aura from filming). Look for your friend on
+   Spotlight → Boards → Top Filmers 🎥.
 
 Tell us: *How long before the first video played? Did anything stutter, go black, or jump? Did the
 hype taps feel satisfying? Would you keep scrolling?*

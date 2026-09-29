@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
+**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -88,6 +88,17 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-09-29** — Filmers: tiers, Top Filmers, Aura and Props (owner: build filmer stats + Aura for
+  filmers; pave a quiet future path for Tapua'i to pay filmers out of the app, never from the athlete's
+  cut). Migration `20260929170000_filmer_rewards.sql` (not applied; needs `20260929160000`):
+  `filmer_rewards` ledger (idempotent `source_key`; `cash_cents` always 0; `funded_by` CHECK
+  `= 'tapuai'` so gifts can never fund it — not shown anywhere in the UI), `filmer_props`, trigger
+  `reels_filmer_rewards` (+10 on tag confirm; +10 / +50 / +200 at 100 / 1K / 10K views),
+  `give_filmer_props` (+1 Aura, 50/day), `get_top_filmers`, `filmer_stats` v2. Client: `lib/filmers.ts`
+  (tiers Rookie / Sideline / Pro / Legend), `useFilmerStats`, `components/Filmers/FilmerCard` (own
+  profile: stats or a "Film a teammate's play" invite; other profiles once they have a clip) and
+  `FilmerSheet` (tap "🎥 Filmed by" → stats, Give Props, how filmers earn Aura), Spotlight Boards
+  "Top Filmers 🎥" tab. No cash tip jar for filmers (money between users, minors — LEGAL row P).
 - **2026-09-29** — Views + filmer credit (owner: per-clip likes from other accounts, views on the
   profile "like other social platforms", reward the athlete in the video, encourage fan uploads).
   View rule moved from "2 s on screen in Home" to **3 s of actual playback** (or 90% of a shorter

@@ -1,5 +1,6 @@
 import { isAuraUuid } from '@/lib/aura';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import type { TopFilmerRow } from '@/lib/filmers';
 import type { SpotlightPeriodKind } from '@/types/database';
 
 /**
@@ -61,6 +62,8 @@ export type Leaderboards = {
   highlights: LeaderboardHighlightRow[];
   schools: LeaderboardSchoolRow[];
   fans: LeaderboardFanRow[];
+  /** `get_top_filmers` (separate RPC, merged in by `useLeaderboards`). Empty until that SQL is applied. */
+  filmers?: TopFilmerRow[];
 };
 
 export type LeaderboardsResult =

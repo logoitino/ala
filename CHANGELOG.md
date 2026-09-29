@@ -4,6 +4,14 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-29
 
+### Filmers: tiers, Top Filmers, Aura and Props
+
+- **Tap "🎥 Filmed by …"** on any clip to see that filmer's clips, views, hype and Props, and send them **Props 🎥** (once per clip, sign-in needed). Mālo still always goes to the athlete in the clip.
+- **Filmer tiers:** Rookie (1 confirmed clip), Sideline (5 clips or 1K views), Pro (25 or 10K), Legend (100 or 100K). Shown on your profile, with how far to the next one; your profile invites you to film a teammate's play if you haven't yet.
+- **Filmers earn Aura:** +10 when the athlete confirms your clip, +10 / +50 / +200 at 100 / 1,000 / 10,000 views, +1 per Props.
+- **Top Filmers 🎥** tab on the Spotlight boards (views + hype + Props on confirmed clips this week / month / year).
+- Needs the new database migration before it shows real numbers.
+
 ### Views, filmer credit, and tagging who's in the clip
 
 - **What counts as a view:** 3 seconds of the video actually playing (or 90% of a clip shorter than that), by a signed-in account that isn't the uploader or the athlete in it, once per account per clip per day. Paused, locked or swiped-past clips don't count.

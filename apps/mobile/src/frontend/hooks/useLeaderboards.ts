@@ -1,15 +1,16 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
+import { fetchTopFilmers } from '@/lib/filmers';
 import { fetchLeaderboards, type Leaderboards } from '@/lib/leaderboards';
 import type { SpotlightPeriodKind } from '@/types/database';
 
 /**
- * @purpose Spotlight Boards (ROADMAP M1): most-hyped / most-viewed players, most-viewed Highlights, school standings, top fans.
+ * @purpose Spotlight Boards (ROADMAP M1): most-hyped / most-viewed players, most-viewed Highlights, school standings, top fans, Top Filmers.
  * @param kind Spotlight window; `week` by default so the boards reset every Monday.
  * @param enabled `layouts.leaderboards`; when false nothing is fetched.
  * @returns `{ boards, unavailable, loading, error, refresh }`. `unavailable` means `get_leaderboards` is not deployed yet — render nothing loud.
- * @sideEffects `get_leaderboards` RPC on focus and on `refresh`.
+ * @sideEffects `get_leaderboards` + `get_top_filmers` RPCs on focus and on `refresh`.
  */
 export function useLeaderboards(kind: SpotlightPeriodKind = 'week', enabled = true) {
   const [boards, setBoards] = useState<Leaderboards | null>(null);
@@ -21,13 +22,13 @@ export function useLeaderboards(kind: SpotlightPeriodKind = 'week', enabled = tr
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchLeaderboards(kind);
+      const [result, filmers] = await Promise.all([fetchLeaderboards(kind), fetchTopFilmers(kind)]);
       if (result.status === 'unavailable') {
         setUnavailable(true);
         setBoards(null);
       } else {
         setUnavailable(false);
-        setBoards(result.boards);
+        setBoards({ ...result.boards, filmers });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load the boards.');

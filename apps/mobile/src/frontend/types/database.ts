@@ -835,7 +835,15 @@ export type Database = {
       };
       filmer_stats: {
         Args: { target_profile_id: string };
-        Returns: { clips: number; views: number; hype: number } | null;
+        Returns: Record<string, unknown> | null;
+      };
+      give_filmer_props: {
+        Args: { target_reel_id: string };
+        Returns: number;
+      };
+      get_top_filmers: {
+        Args: { period_kind?: string };
+        Returns: unknown;
       };
       athlete_school_badge: {
         Args: { target_player_id: string };

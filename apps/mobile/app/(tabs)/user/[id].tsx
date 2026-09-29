@@ -11,6 +11,8 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useOptionalUploadSheet } from '@/context/UploadSheetContext';
+import { FilmerCard } from '@/components/Filmers/FilmerCard';
+import { useFilmerStats } from '@/hooks/useFilmerStats';
 import { markExclusiveClips } from '@/data/exclusive';
 import { displayValue, type Player } from '@/data/players';
 import { useAthleteStats } from '@/hooks/useAthleteStats';
@@ -80,6 +82,7 @@ export default function UserAthleteProfileScreen() {
   const { requireAuth } = useSoftWall();
   const { players: rosterPlayers, applyBackerCount } = useRoster();
   const uploadSheet = useOptionalUploadSheet();
+  const { stats: filmerStats } = useFilmerStats(publicProfile?.id);
 
   const load = useCallback(async () => {
     if (!playerId) {
@@ -296,6 +299,7 @@ export default function UserAthleteProfileScreen() {
           onUnlockVault={unlockExclusive}
         />
         </ScrollFxParallax>
+        <FilmerCard stats={filmerStats} />
       </ScrollFxScrollView>
     </TabScreen>
   );

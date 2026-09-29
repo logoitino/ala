@@ -18,6 +18,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 
 import { ReelActionOverlay } from '@/components/Reels/ReelActionOverlay';
+import { FilmerSheet } from '@/components/Filmers/FilmerSheet';
 import { ReelMoreSheet } from '@/components/Reels/ReelMoreSheet';
 import { ReportContentModal } from '@/components/Reels/ReportContentModal';
 import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
@@ -164,6 +165,7 @@ function ReelCardImpl({
   const [loopFlash, setLoopFlash] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [filmerOpen, setFilmerOpen] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [votes, setVotes] = useState<ReelVoteMap>({ seki: false, aura: false, flex: false });
@@ -742,6 +744,7 @@ function ReelCardImpl({
           schoolName={schoolName}
           caption={clip.tag}
           filmedBy={clip.filmedBy}
+          onOpenFilmer={clip.filmedBy && clip.uploadedBy ? () => setFilmerOpen(true) : undefined}
           auraColor={auraTier.color}
           auraGlow={auraTier.glow}
           auraLabel={auraBadgeLabel(auraTier)}
@@ -785,6 +788,15 @@ function ReelCardImpl({
           }}
         />
       </View>
+      {filmerOpen && clip.filmedBy ? (
+        <FilmerSheet
+          visible
+          filmerName={clip.filmedBy}
+          filmerProfileId={clip.uploadedBy}
+          reelId={clip.id}
+          onClose={() => setFilmerOpen(false)}
+        />
+      ) : null}
       <ReelMoreSheet
         visible={moreOpen}
         athleteName={playerName}
@@ -1118,7 +1130,8 @@ function sameReelCardProps(prev: ReelCardProps, next: ReelCardProps): boolean {
     a.playerId !== b.playerId ||
     a.gameId !== b.gameId ||
     a.sekiPlay !== b.sekiPlay ||
-    a.filmedBy !== b.filmedBy
+    a.filmedBy !== b.filmedBy ||
+    a.uploadedBy !== b.uploadedBy
   ) {
     return false;
   }

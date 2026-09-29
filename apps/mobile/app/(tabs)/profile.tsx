@@ -8,6 +8,7 @@ import { ScrollFxParallax, ScrollFxScrollView } from '@/components/Effects/Scrol
 import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
 import { LegalModal } from '@/components/Legal/LegalModal';
 import { TabScreen } from '@/components/TabScreen';
+import { FilmerCard } from '@/components/Filmers/FilmerCard';
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
 import { EditProfileModal } from '@/components/Profile/EditProfileModal';
 import { PayoutSetupCard } from '@/components/Profile/PayoutSetupCard';
@@ -18,10 +19,12 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
+import { useOptionalUploadSheet } from '@/context/UploadSheetContext';
 import { markExclusiveClips } from '@/data/exclusive';
 import { displayValue, type Player } from '@/data/players';
 import { useAthleteSubscription } from '@/hooks/useAthleteSubscription';
 import { useAthleteStats } from '@/hooks/useAthleteStats';
+import { useFilmerStats } from '@/hooks/useFilmerStats';
 import { countStoredCheerVotes } from '@/hooks/useCheerPoll';
 import { useRoster } from '@/hooks/useRoster';
 import { readMaloDroppedCount, useTipCheckout } from '@/hooks/useTipCheckout';
@@ -49,6 +52,8 @@ const FAN_SELF_PREFIX = 'fan-self';
 export default function MyHubTab() {
   const router = useRouter();
   const { profile, role, roles, isAthlete, isAdmin, activeRole, isGuest, signOut } = useAuth();
+  const { stats: filmerStats } = useFilmerStats(isGuest ? null : profile?.id);
+  const uploadSheet = useOptionalUploadSheet();
   const { live } = useAppRuntime();
   const { requireAuth } = useSoftWall();
   const { players, applyBackerCount, applyVaultLocked } = useRoster();
@@ -453,6 +458,7 @@ export default function MyHubTab() {
           }}
         />
         </ScrollFxParallax>
+        <FilmerCard stats={filmerStats} own onFilm={uploadSheet ? uploadSheet.openUpload : undefined} />
       </ScrollFxScrollView>
       <ProfileMenuSheet
         visible={menuOpen}

@@ -1011,6 +1011,21 @@ A **view** = 3 s of actual playback (or 90% of a shorter clip) by a signed-in ac
 | `athlete_highlight_views(target_player_id)` | anon, authenticated | integer — total `view_count` on the athlete's confirmed, not-removed clips. The profile's "views" number. |
 | `filmer_stats(target_profile_id)` | anon, authenticated | jsonb `{clips, views, hype}` over clips that profile uploaded and the athlete confirmed. Credit only — no money. |
 
+### Filmer rewards
+
+Migration `supabase/migrations/20260929170000_filmer_rewards.sql` (**not applied yet**; needs `supabase/leaderboards.sql` and `20260929160000`). Client: `lib/filmers.ts`, `useFilmerStats`, `components/Filmers/` (`FilmerCard` on profiles, `FilmerSheet` from "🎥 Filmed by"), Spotlight Boards "Top Filmers 🎥" tab. A **filmer** is a clip's uploader when the uploader is not the tagged athlete. Filmers never receive any part of an athlete's Mālo.
+
+| Object | Who | What |
+| --- | --- | --- |
+| `filmer_rewards` | RLS: filmer reads own rows; server writes only | One row per reward: `profile_id`, `reel_id`, `kind` (`tag_confirmed` / `views_milestone` / `props`), `source_key` (unique — makes each reward idempotent), `aura_points`, `cash_cents` (always 0 today), `funded_by` (CHECK `= 'tapuai'`), `created_at`. `cash_cents` / `funded_by` are reserved for a future Tapua'i-funded filmer programme (ROADMAP M11); the CHECK means athlete gifts can never be routed here. |
+| `filmer_props` | no client grants | (`reel_id`, `giver_user_id`) PK — one Props per fan per clip. |
+| `award_filmer_aura(target_profile_id, target_reel_id, reward_kind, reward_key, points)` | internal only | Inserts the reward once and adds the Aura to `profiles.aura_points`. |
+| `reel_filmer_profile_id(target_reel_id)` | internal only | The uploader's `profiles.id` unless they are the tagged athlete. |
+| `reels_filmer_rewards()` trigger (`after update of tag_status, view_count on reels`) | server | Confirmed, not-removed clip with a filmer → +10 Aura (`tag:<reel>`), then +10 / +50 / +200 at 100 / 1,000 / 10,000 views (catches up when a tag is confirmed late). |
+| `give_filmer_props(target_reel_id)` | authenticated | Confirmed clip with a filmer; not your own; 50 a day. +1 Aura to the filmer. Returns the clip's Props total. |
+| `filmer_stats(target_profile_id)` (replaced) | anon, authenticated | jsonb `{clips, views, hype, props, aura_earned}` over confirmed clips they filmed (not their own-athlete clips). |
+| `get_top_filmers(period_kind default 'week')` | anon, authenticated | Top 10 in the Spotlight window: `{rank, profile_id, name, avatar_url, clips, views, hype, props, score}`, score = views + 3 × hype + 5 × Props on public confirmed clips. No money fields. |
+
 ### Custodial money RPCs
 
 All `SECURITY DEFINER`, `search_path = public`. Incremental: `supabase/custodial_money.sql`. Client: `lib/custodial.ts` + `useCustodial`, `components/Custodial/` (Activity for the athlete, Parent HQ for the guardian).

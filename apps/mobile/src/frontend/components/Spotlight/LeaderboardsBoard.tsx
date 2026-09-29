@@ -8,7 +8,7 @@ import { cardShadow, colors, radii, space } from '@/constants/theme';
 import type { Leaderboards } from '@/lib/leaderboards';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 
-export type LeaderboardsTab = 'hype' | 'views' | 'highlights' | 'schools' | 'fans';
+export type LeaderboardsTab = 'hype' | 'views' | 'highlights' | 'schools' | 'fans' | 'filmers';
 
 const TABS: { id: LeaderboardsTab; label: string }[] = [
   { id: 'hype', label: 'Most hyped' },
@@ -16,6 +16,7 @@ const TABS: { id: LeaderboardsTab; label: string }[] = [
   { id: 'highlights', label: 'Highlights' },
   { id: 'schools', label: 'Schools' },
   { id: 'fans', label: 'Fans' },
+  { id: 'filmers', label: 'Top Filmers 🎥' },
 ];
 
 const EMPTY_COPY: Record<LeaderboardsTab, string> = {
@@ -24,6 +25,7 @@ const EMPTY_COPY: Record<LeaderboardsTab, string> = {
   highlights: 'No Highlight has been watched this week yet.',
   schools: 'No school has scored yet this week. Hype your school’s Highlights to climb.',
   fans: 'No fans on the board yet. Tag a clip or hype a play to get on it.',
+  filmers: 'No filmers yet this week. Film a teammate’s play, tag them, and climb when they confirm it.',
 };
 
 type Row = {
@@ -78,6 +80,13 @@ function rowsFor(tab: LeaderboardsTab, boards: Leaderboards, onOpenAthlete: (pla
         subtitle: `${count(row.clipsTagged, 'clip', 'clips')} posted · ${count(row.hypeGiven, 'hype', 'hype')} given`,
         metric: `${row.score.toLocaleString()} pts`,
       }));
+    case 'filmers':
+      return (boards.filmers ?? []).map((row) => ({
+        key: row.profileId,
+        title: `🎥 ${row.name}`,
+        subtitle: `${count(row.views, 'view', 'views')} · ${count(row.hype, 'hype', 'hype')} · ${count(row.props, 'Props', 'Props')}`,
+        metric: `${row.score.toLocaleString()} pts`,
+      }));
   }
 }
 
@@ -91,7 +100,7 @@ type LeaderboardsBoardProps = {
 };
 
 /**
- * @purpose Spotlight "Boards" (ROADMAP M1): this week's most-hyped and most-viewed athletes, most-viewed Highlights, school standings and top fans. Ranks hype and views only — never Mālo.
+ * @purpose Spotlight "Boards" (ROADMAP M1): this week's most-hyped and most-viewed athletes, most-viewed Highlights, school standings, top fans and Top Filmers. Ranks hype and views only — never Mālo.
  * @param boards Parsed `get_leaderboards` payload (`null` before the first load).
  * @param error Load failure copy; shows a Retry card instead of an empty board.
  * @param onOpenAthlete Athlete / Highlight row tap → profile.

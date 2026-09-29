@@ -36,6 +36,8 @@ type ReelActionOverlayProps = {
   caption?: string;
   /** Fan who filmed the clip ("🎥 Filmed by …"). Null when the athlete posted it. */
   filmedBy?: string | null;
+  /** Tap on the filmer credit (opens `FilmerSheet`). */
+  onOpenFilmer?: () => void;
   auraColor: string;
   auraGlow?: string;
   auraLabel: string;
@@ -66,6 +68,7 @@ export function ReelActionOverlay({
   schoolName,
   caption,
   filmedBy,
+  onOpenFilmer,
   auraColor,
   auraGlow,
   auraLabel,
@@ -189,9 +192,18 @@ export function ReelActionOverlay({
         </Text>
       ) : null}
       {filmedBy ? (
-        <Text style={styles.filmedBy} numberOfLines={1} accessibilityLabel={`Filmed by ${filmedBy}`}>
-          🎥 Filmed by {filmedBy}
-        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Filmed by ${filmedBy}. Open filmer`}
+          disabled={!onOpenFilmer}
+          haptic="selection"
+          hitSlop={6}
+          onPress={onOpenFilmer}
+        >
+          <Text style={styles.filmedBy} numberOfLines={1}>
+            🎥 Filmed by {filmedBy}
+          </Text>
+        </Pressable>
       ) : null}
       {rail.showCaption && caption ? (
         <Text style={styles.caption} numberOfLines={2}>

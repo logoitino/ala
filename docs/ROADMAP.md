@@ -225,6 +225,8 @@ Feedback funnels through the existing `app_feedback` table / Admin Feedback desk
 9. **M9 — Feel check on real devices.** The simulator here can't be tapped, so scroll feel, hype bursts and checkout speed have never been felt by hand. Measure on the preview builds: time-to-first-video, scroll jank, taps from Highlight to finished Mālo (target ≤3 after sign-in). Fix what testers call slow or confusing first. *Owner: QA + HIGHLIGHTS.*
 10. **M10 — Rally stories desk.** An Expo `/admin` desk (per the Phase 4 rule) to collect consented athlete stories — before / goal / after, clip, parent consent record, takedown switch — so launch marketing is built from real families. **Exit:** one real, consented story from the test wave is ready to publish. *Owner: ADMIN + LEGAL (consent records); founder owns the stories.*
 
+11. **M11 — Filmer programme (future, Tapua'i-funded).** Filmers already earn Aura, tiers and Props, and every reward is written to the `filmer_rewards` ledger (`20260929170000`). A later programme could pay top filmers **from Tapua'i's own budget** — `cash_cents` on that ledger, `funded_by` constrained to `'tapuai'` so athlete gifts can never be routed there. Preconditions: adults 18+ only, own Stripe Connect / tax forms (LEGAL rows J and P), clear contest-style rules, and owner sign-off on the budget. Possible first shape: a monthly "Filmer of the Month" award or paid "film my kid's game" requests from families. **Not built; nothing in the UI mentions cash.**
+
 ---
 
 ## Phase 4 — Keep advancing existing features (parallel, not blocked on 0-3)
