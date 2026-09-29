@@ -7,6 +7,7 @@ import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HomeSearchOverlay } from '@/components/Reels/HomeSearchOverlay';
+import { RallyMeter } from '@/components/Rally/RallyMeter';
 import { LiveMatchBanner } from '@/components/Reels/LiveMatchBanner';
 import { ReelCard } from '@/components/Reels/ReelCard';
 import { ReelPage } from '@/components/Reels/ReelPage';
@@ -476,6 +477,24 @@ export default function HighlightsTab() {
           onLayout={(event) => setChromeHeight(event.nativeEvent.layout.height)}
         >
           {runtime.layouts.liveMatches ? <LiveMatchBanner live={liveGame} playToasts={false} /> : null}
+          <RallyMeter
+            player={feed[activeIndex]?.player ?? null}
+            onOpenClip={(reelId) => {
+              const index = feed.findIndex((item) => item.clip.id === reelId);
+              if (index >= 0) {
+                setActiveIndex(index);
+                requestAnimationFrame(() => {
+                  try {
+                    listRef.current?.scrollToIndex({ index, animated: true });
+                  } catch {
+                    listRef.current?.scrollToOffset({ offset: pageHeight * index, animated: true });
+                  }
+                });
+                return;
+              }
+              jumpToClip(reelId);
+            }}
+          />
           {runtime.copy.homeBannerTitle.trim() ? (
             <View style={[styles.campaign, { borderColor: FOCAL.electricGold }]}>
               <Text style={[styles.campaignTitle, { color: FOCAL.electricGold }]}>{runtime.copy.homeBannerTitle}</Text>

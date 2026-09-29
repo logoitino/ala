@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
+**Last updated:** 2026-09-29 · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -49,9 +49,9 @@ can check. Before step 9, confirm in the SQL Editor:
    staging project yet; `docs/STAGING_RUNBOOK.md`).
 2. Owner + counsel: the open items in §6 — especially 8 (how money reaches families) and the App
    Store question in 9. They gate Wave 1 live money.
-3. Engineering, no owner call needed: Rally meter on the Highlights feed and the full-screen fill
-   celebration (ROADMAP M2); "Watch what it paid for" should open that clip, not just the tab;
-   the telemetry anon-insert hole in §5.
+3. Engineering, no owner call needed: the telemetry anon-insert hole in §5. (Rally meter on
+   Highlights, the full-screen fill moment, and "Watch what it paid for" opening that clip landed
+   2026-09-29 — see §4.)
 4. Do **not** build without an owner decision: a filmer cash tip jar (LEGAL row P), free-text
    thank-yous or any athlete ↔ fan messaging (LEGAL row S), a Rally tied to a play or stat.
 
@@ -150,6 +150,10 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-09-29** — Rally on Highlights (ROADMAP M2 / M8, no new SQL). A compact Rally meter sits on
+  the current clip and opens the donate sheet for that goal. When a Rally fills, a full-screen
+  moment replaces the small confetti burst. "Watch what it paid for" opens that clip in the
+  profile pager (and jumps the Highlights feed when the clip is loaded).
 - **2026-09-29** — Full audit (owner: no contradictions between policy docs and the app; every
   button works). Five read-only auditors covered Highlights, auth / roles, profile / money, Activity /
   Spotlight / Drip / Local, admin desks + portal, and policy vs code; every claim was checked against

@@ -208,6 +208,7 @@ export function AthleteProfileView({
   const maloAmount = live.catalog.maloAmounts[0] ?? 5;
   const showFanSupport = !ownSheet && (Boolean(onDropMalo && live.buttons.malo) || Boolean(onSubscribe && live.buttons.subscribe));
   const [tab, setTab] = useState<AthleteProfileTab>('highlights');
+  const [openClipId, setOpenClipId] = useState<string | null>(null);
   const [wishlistFulfilled, setWishlistFulfilled] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const schoolBadge = useSchoolBadge(player.id);
@@ -278,6 +279,7 @@ export function AthleteProfileView({
         onBacked={onBacked}
         onVaultChange={onVaultChange}
         onFlashUnlock={onFlashUnlock}
+        openClipId={openClipId}
       />
     ) : (
       <TaggedReelGrid
@@ -290,6 +292,7 @@ export function AthleteProfileView({
         onOpenAthlete={onOpenAthlete}
         onHypeChange={onHypeChange}
         onBacked={onBacked}
+        openClipId={openClipId}
       />
     );
 
@@ -442,7 +445,10 @@ export function AthleteProfileView({
           manage={ownSheet}
           tipEntry={tipEntry}
           clips={rallyClips}
-          onOpenClip={() => setTab('highlights')}
+          onOpenClip={(reelId) => {
+            setTab('highlights');
+            setOpenClipId(reelId);
+          }}
         />
       ) : null}
       {ownSheet ? <ReceivedMaloPanel playerId={player.id} /> : null}

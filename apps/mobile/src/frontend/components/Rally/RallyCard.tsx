@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import ConfettiCannon from 'react-native-confetti-cannon';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { CreateRallySheet } from '@/components/Rally/CreateRallySheet';
+import { RallyFillMoment } from '@/components/Rally/RallyFillMoment';
 import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { ThanksPicker } from '@/components/Thanks/ThanksPicker';
 import { MaloTipModal } from '@/components/TipSheetModal';
@@ -46,12 +46,10 @@ type RallyCardProps = {
   onOpenClip?: (reelId: string) => void;
 };
 
-const CONFETTI_COLORS = [FOCAL.neonJade, FOCAL.electricGold, '#FFFFFF'];
-
 /**
  * @purpose Rally goal on the athlete profile (ROADMAP M2): the named cost, the story, a progress bar,
- *   Donate and Share for fans; Start / Approve / Close / Say thanks for the family. Confetti when a
- *   donation fills it. Hides itself for fans when there is no Rally (or before the SQL is applied).
+ *   Donate and Share for fans; Start / Approve / Close / Say thanks for the family. A full-screen
+ *   moment when a donation fills it. Hides itself for fans when there is no Rally (or before the SQL is applied).
  * @sideEffects `useRally`; Rally RPCs; donate sheet with `rally_id`.
  */
 export function RallyCard({
@@ -74,7 +72,7 @@ export function RallyCard({
   const [thanking, setThanking] = useState(false);
   const [thanksClip, setThanksClip] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [confetti, setConfetti] = useState(0);
+  const [fillMoment, setFillMoment] = useState(false);
   const lastStatus = useRef<string | null>(null);
 
   // The family sees their newest Rally (pending included); fans see the open / recently filled one.
@@ -90,7 +88,7 @@ export function RallyCard({
   useEffect(() => {
     if (!rally) return;
     if (lastStatus.current === 'live' && rally.status === 'filled') {
-      setConfetti((n) => n + 1);
+      setFillMoment(true);
       celebration?.showToast(`Goal reached! ${athleteName}'s community filled "${rally.title}" 🎉`);
     }
     lastStatus.current = rally.status;
@@ -286,9 +284,20 @@ export function RallyCard({
         onTipped={() => void refresh()}
       />
       <ShareQrModal visible={shareOpen} athleteName={athleteName} username={username} onClose={() => setShareOpen(false)} />
-      {confetti > 0 ? (
-        <ConfettiCannon key={confetti} count={90} origin={{ x: 0, y: 0 }} fadeOut colors={CONFETTI_COLORS} autoStart />
-      ) : null}
+      <RallyFillMoment
+        visible={fillMoment}
+        title={rally.title}
+        athleteName={athleteName}
+        onWatch={
+          rally.thanksReelId && onOpenClip
+            ? () => {
+                setFillMoment(false);
+                onOpenClip(rally.thanksReelId as string);
+              }
+            : undefined
+        }
+        onClose={() => setFillMoment(false)}
+      />
     </View>
   );
 }

@@ -36,6 +36,7 @@ jest.mock('@/components/TipSheetModal', () => {
 });
 jest.mock('@/components/Profile/ShareQrModal', () => ({ ShareQrModal: () => null }));
 jest.mock('@/components/Rally/CreateRallySheet', () => ({ CreateRallySheet: () => null }));
+jest.mock('@/components/Rally/RallyFillMoment', () => ({ RallyFillMoment: () => null }));
 jest.mock('react-native-confetti-cannon', () => () => null);
 jest.mock('@/components/UI/HapticPressable', () => {
   const { Pressable } = jest.requireActual('react-native');

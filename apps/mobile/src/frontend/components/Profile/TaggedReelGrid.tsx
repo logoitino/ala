@@ -30,6 +30,8 @@ type TaggedReelGridProps = {
   onOpenAthlete?: (playerId: string) => void;
   onHypeChange?: (reelId: string, hype: ReelHype) => void;
   onBacked?: (nextCount: number) => void;
+  /** Opens this clip in the pager (Rally "Watch what it paid for"). */
+  openClipId?: string | null;
 };
 
 type TaggedReelTileProps = {
@@ -60,6 +62,7 @@ export function TaggedReelGrid({
   onOpenAthlete,
   onHypeChange,
   onBacked,
+  openClipId,
 }: TaggedReelGridProps) {
   const { width } = useWindowDimensions();
   const ordered = useMemo(() => sortClipsNewestFirst(clips), [clips]);
@@ -91,6 +94,14 @@ export function TaggedReelGrid({
       return next;
     });
   }, [ordered]);
+
+  useEffect(() => {
+    if (!openClipId) return;
+    const clip = ordered.find((item) => item.id === openClipId);
+    if (!clip) return;
+    const locked = isClipVaultOnly(clip) && subscribed === false && !isFlashUnlockActive(clip.flashUnlockUntil);
+    if (!locked) setActiveId(openClipId);
+  }, [openClipId, ordered, subscribed]);
 
   useEffect(() => {
     if (!activeId) return;

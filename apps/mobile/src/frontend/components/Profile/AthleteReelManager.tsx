@@ -37,6 +37,8 @@ type AthleteReelManagerProps = {
   onVaultChange?: (reelId: string, vaultOnly: boolean) => void;
   /** Optimistic parent write after `set_reel_flash_unlock`. */
   onFlashUnlock?: (reelId: string, until: string) => void;
+  /** Opens this clip in the pager (Rally "Watch what it paid for"). */
+  openClipId?: string | null;
 };
 
 /**
@@ -56,6 +58,7 @@ export function AthleteReelManager({
   onBacked,
   onVaultChange,
   onFlashUnlock,
+  openClipId,
 }: AthleteReelManagerProps) {
   const frame = useSheetFrame();
   const celebration = useOptionalCelebration();
@@ -136,6 +139,7 @@ export function AthleteReelManager({
         onOpenAthlete={onOpenAthlete}
         onHypeChange={onHypeChange}
         onBacked={onBacked}
+        openClipId={openClipId}
       />
       <Modal
         animationType="fade"
