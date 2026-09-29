@@ -6,7 +6,15 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Telemetry
 
-- Analytics inserts from the public anon key are closed in a new migration (not applied yet). Until it runs, anyone with the key can still write fake events. The app now holds those events until someone is signed in.
+- A new migration (not applied yet) caps what one analytics row can say, so a single fake event cannot wreck Reports. Guest browsing still logs. Signing in is not required to record a visit.
+
+### Tabs, role portals, and operator reliability
+
+- An active school rivalry now appears above Highlights and opens Local directly on the school poll.
+- Activity thank-you rows open the athlete who sent the thank-you. Drip supports pull-to-refresh and distinguishes a load failure from an intentionally empty rack.
+- Athlete, Parent, Booster and Sponsor tools now show Retry when their private data fails to load instead of saying there are no donations, athletes, requests, or placements.
+- Operator check-in only says “Checked in” after the database accepts the coordinates; the scorer portal can retry its initial load.
+- Engineering review now has a PR checklist, CODEOWNERS, folder placement guides, and a CI check that prevents new direct Supabase queries in Expo route files.
 
 ### Audit fixes
 
