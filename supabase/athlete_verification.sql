@@ -1,3 +1,8 @@
+-- SUPERSEDED IN PART (2026-09-29): migrations/20260929120000_athlete_verification_ladder.sql replaces
+-- redeem_team_code, request_athlete_verification, athlete_is_varsity_verified, can_confirm_player_tag
+-- and confirm_reel_player_tag. Do NOT re-run this file after that migration: it would bring back
+-- instant verification by shared team code and name-matched tag confirmation.
+
 -- Team-code Varsity verification. Claiming athlete/school does NOT auto-verify.
 -- Safe to re-run.
 

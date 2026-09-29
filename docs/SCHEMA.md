@@ -16,7 +16,7 @@ Auth (`auth.users`) must exist before `profiles.user_id` can reference it.
 | `video_tips` | `public.tips` (Mālo ledger) + `reels.total_tips_cents` |
 | `add_user_aura(target_user_id, points_to_add)` | Postgres `add_user_aura(uuid, integer)` |
 | `add_user_role(new_role)` | Postgres `add_user_role(text)` → `profiles.roles` (does not mint Varsity; self-service only for `fan`/`athlete` — see `is_admin` row and function doc below) |
-| `redeem_team_code(raw_code)` | Postgres `redeem_team_code(text)` → ⚡ VERIFIED VARSITY |
+| `redeem_team_code(raw_code)` | Postgres `redeem_team_code(text)` → school code accepted, account **pending** (verification ladder, 2026-09-29) |
 | `get_fan_tip_history(fan_user_id)` | Postgres `get_fan_tip_history(uuid)` → Mālo receipts for the tipper |
 | `search_local_entities(search_query, entity_kind)` | Postgres `search_local_entities(text, text)` → athlete / school / booster hits |
 | `search_schools_and_teams(search_query)` | Postgres `search_schools_and_teams(text)` → HS + NCAA catalog |
@@ -44,7 +44,7 @@ Identity for signed-in users.
 | `active_role` | text default `fan` | Fan View vs Athlete Management View (`fan` \| `athlete`). Incremental: `supabase/add_user_role.sql`. |
 | `full_name` | text not null | |
 | `username` | text | Optional; client slugs `full_name` if null |
-| `is_verified` | boolean default false | Varsity badge. **Not** set by claiming athlete/school. True only after team code (`redeem_team_code`) or staff/coach approval. Some hosted DBs also have `is_verified_athlete` (legacy alias). Next `/people` + Expo People read either. Incremental: `supabase/profiles_verified_compat.sql`. |
+| `is_verified` | boolean default false | Varsity badge. **Not** set by claiming athlete/school or by a team code. True only after the school confirms in person (`school_confirm_athlete`) or an admin approves (`admin_decide_verification`) — ladder migration `supabase/migrations/20260929120000_athlete_verification_ladder.sql`; the `guard_profiles_verification` trigger blocks every other write to `is_verified` / `verification_status` / `player_id`. Some hosted DBs also have `is_verified_athlete` (legacy alias). Next `/people` + Expo People read either. Incremental: `supabase/profiles_verified_compat.sql`. |
 | `verification_status` | text default `unverified` | `unverified` \| `pending` \| `verified`. Claimed school stays public while pending. Incremental: `supabase/athlete_verification.sql`. |
 | `spirit_points` | integer | |
 | `aura_points` | integer default 0 | Ranking currency |
@@ -649,6 +649,15 @@ Owner money rules of 2026-09-29 ([PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_C
 
 RLS: SELECT only, when `custodial_role(player_id)` is not null (the verified athlete, their linked guardian, an admin). No client INSERT / UPDATE / DELETE — every write goes through the RPCs below.
 
+### `verification_requests` (ladder columns) / `school_confirmers`
+
+Migration `supabase/migrations/20260929120000_athlete_verification_ladder.sql` ([ATHLETE_VERIFICATION_DESIGN.md](ATHLETE_VERIFICATION_DESIGN.md)). **Not applied yet.**
+
+| Table | Columns | Notes |
+| --- | --- | --- |
+| `verification_requests` (added) | `sport`, `class_year`, `jersey`, `meet_code_hash`, `meet_code_expires_at`, `meet_code_attempts`, `confirmer_id` → `school_confirmers`, `confirmer_name` (typed signature), `decided_at`, `decision_note` | `status` ∈ `pending` / `approved` / `rejected` / `disputed` / `revoked`. One open (`pending` / `disputed`) request per account (partial unique index). `player_id` here is the roster row the athlete *says* is them; `profiles.player_id` is only set on approval. The 6-digit meet code is stored as a sha256 hash, valid 30 minutes, void after 5 wrong tries. |
+| `school_confirmers` | `id`, `school_id` → `schools_and_teams`, `full_name`, `email`, `staff_role` (`athletic_director` / `coach`), `sport` (null = every sport), `token_hash` (unique), `active`, `expires_at` (+1 year), `created_by`, `created_at`, `last_used_at` | One row per athletic director or coach. The link token is shown once by `admin_add_school_confirmer` and stored hashed. RLS: admin SELECT only; no client writes. |
+
 ### `reel_views` + `reels.view_count`
 
 M1 leaderboards (Release Wave 0). Incremental: `supabase/leaderboards.sql`. `reels.view_count` (int, ≥0) is the counted views for a Highlight; it is not in the `reels` column UPDATE grant, so only `record_reel_view` moves it. `reel_views` (`reel_id`, `viewer_id`, `view_day`, all three the PK) is the throttle: one counted view per signed-in viewer per clip per UTC day. RLS on, no policies, no client grants.
@@ -719,7 +728,7 @@ team_code_school_key(raw_code text) returns text
 sport_from_team_code_token(token text) returns text
 ```
 
-`redeem_team_code` matches `schools_and_teams.team_code` (`WSTLK-2026` or `WSTLK-RUG-2026`), requires `legal_terms_accepted_at`, sets `is_verified` + `verification_status = verified`, and writes an approved `verification_requests` row. `request_athlete_verification` queues a pending request (profile stays public). Helpers parse sport tokens (`RUG` → Rugby). `athlete_is_varsity_verified` gates Player of the Week. Incremental: `supabase/athlete_verification.sql`. Client: `VerifyAthleteModal` / `lib/verification.ts`.
+**Superseded 2026-09-29 by the verification ladder (below).** Before it: `redeem_team_code` matched `schools_and_teams.team_code` (`WSTLK-2026` or `WSTLK-RUG-2026`), required `legal_terms_accepted_at`, set `is_verified` + `verification_status = verified`, and wrote an approved `verification_requests` row. `request_athlete_verification` queues a pending request (profile stays public). Helpers parse sport tokens (`RUG` → Rugby). `athlete_is_varsity_verified` gates Player of the Week. Incremental: `supabase/athlete_verification.sql`. Client: `VerifyAthleteModal` / `lib/verification.ts`.
 
 **2026-09 Round 12 sweep — two fixes:** (1) every school's real `team_code` used to be hardcoded in plain text in this repo (`schema.sql` and `supabase/athlete_verification.sql`) — removed; a real school's code must now be set directly via the Supabase SQL Editor and handed to the coach out-of-band, never committed to a file. (2) `redeem_team_code` had no rate limit, and the `SCHOOL-SPORT-YEAR` format is a small enough keyspace to brute-force directly through the RPC even without a leak. Added `profiles.team_code_fail_count` / `profiles.team_code_locked_until`: 5 wrong codes locks that account out of redeeming for 15 minutes (a correct code resets the counter); checked before the code lookup runs, so a locked-out account can't keep using the call to probe codes either.
 
@@ -936,13 +945,41 @@ Insert-on-miss seeds `home_name` / `away_name` at 0–0. Featured rivalry `westl
 
 ---
 
+### Athlete verification ladder RPCs
+
+Migration `supabase/migrations/20260929120000_athlete_verification_ladder.sql` (not applied yet). All `SECURITY DEFINER`. Client: `lib/verification.ts`, `lib/schoolConfirm.ts`, `useMyVerification`, `components/Verification/`, route `app/school-confirm.tsx`. Failures that must keep a counter (wrong meet code) return `{ok:false, error}` instead of raising.
+
+| Function | Who | What |
+| --- | --- | --- |
+| `allow_verification_write()` | internal | Sets the transaction-local flag `app.tapuai_verification_write` that `guard_profiles_verification` honours. |
+| `hash_secret(raw)` | internal | sha256 hex (pgcrypto). Tokens and meet codes are only stored hashed. |
+| `is_admin_or_db()` | internal | True for an admin, `service_role`, or a direct DB session (`auth.role()` null — SQL Editor). |
+| `athlete_payout_allowed(target_player_id)` | authenticated | True only when a verified account is linked to the roster row. **Any future payout code must call this.** |
+| `athlete_is_varsity_verified(target_player_id)` | anon, authenticated | Redefined to `athlete_payout_allowed` — the name-match fallback is gone. Drives the tip sheet's "held" notice. |
+| `apply_verification(req)` | internal | Marks the requester verified, links `player_id`, school, athlete role. |
+| `guard_profiles_verification()` | trigger on `profiles` | Blocks any non-admin write to `is_verified` / `verification_status` / `player_id` unless the flag is set. |
+| `claim_athlete(target_player_id, request_notes)` | authenticated | Opens or updates the caller's one open claim; account → `pending`. A second account claiming the same athlete (or one already verified as them) → both `disputed`. |
+| `request_athlete_verification(request_notes)` | authenticated | Legal-ack check, then `claim_athlete(null)`. |
+| `redeem_team_code(raw_code)` | authenticated | Same lockout as before; sets school + sport, opens a claim, returns **pending**. |
+| `start_school_check()` | authenticated | New 6-digit code for the caller's open claim, valid 30 min. Refuses with no claim, a disputed claim, or no school. |
+| `get_my_verification()` | authenticated | jsonb: `verification_status`, `request_status`, `school_name`, `has_school`, `sport`, `code_expires_at`, `confirmer_name`, `decision_note`. |
+| `school_confirmer_from_token(confirm_token)` | internal | Active, unexpired confirmer for a link token. |
+| `get_school_confirmation_queue(confirm_token)` | anon, authenticated | The confirmer's school (and sport) pending students: name, sport, class year, jersey, whether a code is live. No contact details. |
+| `school_confirm_athlete(confirm_token, request_id, approve, meet_code, confirmer_signature, note)` | anon, authenticated | Signature required. Decline needs no code. Confirm needs the live meet code; re-checks nobody else is verified as that athlete; then `apply_verification`. |
+| `admin_add_school_confirmer(target_school_id, confirmer_name, confirmer_email, confirmer_role, confirmer_sport)` | admin / SQL Editor | Returns `{id, token, link}` once (`alasports://school-confirm?t=…`). |
+| `admin_revoke_school_confirmer(confirmer_id)` | admin | Deactivates a link. |
+| `admin_decide_verification(request_id, approve, note)` | admin | Stamps only the requester (never by name); closes other open claims on that athlete. Used by People → verification queue. |
+| `admin_revoke_verification(target_profile_id, note)` | admin | Removes the badge and roster link; the request becomes `revoked`. |
+
+`can_confirm_player_tag` / `confirm_reel_player_tag` are also redefined here: name and jersey matching removed, and confirming a tag no longer links `profiles.player_id`.
+
 ### Custodial money RPCs
 
 All `SECURITY DEFINER`, `search_path = public`. Incremental: `supabase/custodial_money.sql`. Client: `lib/custodial.ts` + `useCustodial`, `components/Custodial/` (Activity for the athlete, Parent HQ for the guardian).
 
 | Function | Who | What |
 | --- | --- | --- |
-| `custodial_role(target_player_id)` | authenticated | `admin`, `guardian` (`players.guardian_id` = caller), `athlete` (caller's `profiles.player_id` = target **and** `verification_status = 'verified'`), else null. The verified check exists because `profiles.player_id` is still client-writable (STATE §5). |
+| `custodial_role(target_player_id)` | authenticated | `admin`, `guardian` (`players.guardian_id` = caller), `athlete` (caller's `profiles.player_id` = target **and** `verification_status = 'verified'`), else null. The verified check is kept even though the ladder migration makes `profiles.player_id` server-only, because that migration is not applied yet. |
 | `athlete_handover_date(target_player_id)` / `athlete_controls_money(target_player_id)` | internal only (EXECUTE revoked from public / anon / authenticated) | Birth date + `handover_age` years; true on or after that day. Revoked so nobody can derive a minor's birth date. Handover is computed on every call, so it is automatic. |
 | `guardian_setup_custodial(target_player_id, athlete_birth_date, bank_in_athlete_name)` | linked guardian | Birth date once (5–30 years old); refuses if the athlete is already of age; upserts the account for this guardian only. A later call with a null date just updates `bank_in_athlete_name`. |
 | `admin_set_custodial_terms(target_player_id, new_handover_age, corrected_birth_date)` | admin | Sets the state's handover age or corrects a birth date. |
