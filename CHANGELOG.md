@@ -4,6 +4,12 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-29
 
+### Audit fixes
+
+- Sign-in sheet: a fast double tap on Apple / Google / email / magic link no longer starts two sign-ins.
+- Admin → Money: **Mark paid** and **Failed** ask before changing a payout and show an error if the save fails.
+- Admin → People: **Verify / Unverify** and **Grant / Revoke admin** ask before they apply.
+
 ### Rally goals, say thanks, and a clear 90 / 10 split
 
 - **Rally goals.** A family can start a Rally on the athlete's profile for a real sports cost — season fees, gear, travel, camps, college prep — with a goal, a short story and an optional end date. Fans see the progress bar, donate toward it, and share it. Confetti when it fills. A Rally an athlete starts waits for their parent or guardian to approve it in Parent HQ.

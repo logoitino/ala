@@ -117,6 +117,45 @@ export function PeopleTool() {
     );
   };
 
+  /** Verified gates payouts and admin opens every desk, so both ask first (same pattern as freeze). */
+  const confirmVerified = (person: AdminPerson) => {
+    const next = !person.is_verified;
+    Alert.alert(
+      next ? 'Verify this person?' : 'Unverify this person?',
+      next
+        ? `${person.full_name} will show as verified. Only do this after the athlete check is done.`
+        : `${person.full_name} will lose the verified badge, and payouts that need it will be held.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: next ? 'Verify' : 'Unverify',
+          style: next ? 'default' : 'destructive',
+          onPress: () =>
+            void act(person.id, () => patchAdminPerson(person.id, { is_verified: next }), next ? 'Verified.' : 'Unverified.'),
+        },
+      ],
+    );
+  };
+
+  const confirmAdmin = (person: AdminPerson) => {
+    const next = !person.is_admin;
+    Alert.alert(
+      next ? 'Grant admin?' : 'Revoke admin?',
+      next
+        ? `${person.full_name} will be able to open every admin desk, including Money and People.`
+        : `${person.full_name} will lose access to the admin desks.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: next ? 'Grant admin' : 'Revoke admin',
+          style: next ? 'default' : 'destructive',
+          onPress: () =>
+            void act(person.id, () => patchAdminPerson(person.id, { is_admin: next }), next ? 'Admin granted.' : 'Admin revoked.'),
+        },
+      ],
+    );
+  };
+
   return (
     <AdminPage
       title="People"
@@ -188,25 +227,13 @@ export function PeopleTool() {
             <AdminBtn
               label={busyId === person.id ? '…' : person.is_verified ? 'Unverify' : 'Verify'}
               disabled={busyId === person.id}
-              onPress={() =>
-                void act(
-                  person.id,
-                  () => patchAdminPerson(person.id, { is_verified: !person.is_verified }),
-                  person.is_verified ? 'Unverified.' : 'Verified.',
-                )
-              }
+              onPress={() => confirmVerified(person)}
             />
             <AdminBtn
               label={busyId === person.id ? '…' : person.is_admin ? 'Revoke admin' : 'Grant admin'}
               kind={person.is_admin ? 'danger' : 'primary'}
               disabled={busyId === person.id}
-              onPress={() =>
-                void act(
-                  person.id,
-                  () => patchAdminPerson(person.id, { is_admin: !person.is_admin }),
-                  person.is_admin ? 'Admin revoked.' : 'Admin granted.',
-                )
-              }
+              onPress={() => confirmAdmin(person)}
             />
             <AdminBtn
               label={busyId === person.id ? '…' : person.malo_frozen ? 'Unfreeze donations' : 'Freeze donations'}

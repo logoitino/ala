@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { SoftWallModal } from '@/components/Auth/SoftWallModal';
 
@@ -115,5 +115,20 @@ describe('SoftWallModal email form', () => {
 
     expect(createButton()).toBeDisabled();
     expect(signInButton()).toBeEnabled();
+  });
+
+  it('ignores a second tap that lands before the button re-renders as busy', async () => {
+    let finish: () => void = () => undefined;
+    mockSignInWithEmailPassword.mockImplementationOnce(() => new Promise<undefined>((resolve) => { finish = () => resolve(undefined); }));
+    await openSheet();
+    await typeEmail();
+    await typePassword();
+
+    // Two presses in the same frame: neither waits for React to re-render the button as disabled.
+    const button = signInButton();
+    await Promise.all([fireEvent.press(button), fireEvent.press(button)]);
+    expect(mockSignInWithEmailPassword).toHaveBeenCalledTimes(1);
+
+    await act(async () => finish());
   });
 });

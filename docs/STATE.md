@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
+**Last updated:** 2026-09-29 · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -150,6 +150,19 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-09-29** — Full audit (owner: no contradictions between policy docs and the app; every
+  button works). Five read-only auditors covered Highlights, auth / roles, profile / money, Activity /
+  Spotlight / Drip / Local, admin desks + portal, and policy vs code; every claim was checked against
+  the code before changing anything. Fixed: `SoftWallModal` `run` has a ref guard so two taps in one
+  frame can't start two sign-ins (test proves it fails without the guard); Admin → Money "Mark paid" /
+  "Failed" now confirm, show a busy state and surface a failed write (they were fire-and-forget with no
+  catch); Admin → People Verify / Unverify and Grant / Revoke admin confirm first, like Freeze. Retired
+  "Chip In" wording removed from SoftWallModal / SoftWallContext comments. Also checked by script:
+  every literal route resolves, every `.rpc()` / `.from()` name exists in `schema.sql`. Left on
+  purpose: Receipts "Back to Profile" pushes the Profile tab (right for a tab route, safe on deep
+  links); Highlights / Moderation Remove, Vault lock, Drip and Wishlist hide stay one tap (each has a
+  Restore / toggle back); screens still calling `supabase` directly are the known CODE_ORGANIZATION
+  Step 3 debt; LEGAL_BRIEFING still says Mālo for money in prose (LEGAL owns it, already noted there).
 - **2026-09-29** — Hand-off docs (owner: make sure the next AI can pick up and keep the docs
   current). New §0 here: branch, SQL apply order with dependencies and a pre-flight query, next
   steps, what not to build without the owner, green-tree commands, and a doc checklist. §2 page
@@ -327,15 +340,6 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   no longer plays on un-vote. Hype counts that land mid-flight are adopted once it settles.
   `state-doc-guard.sh` ignores mode-bit-only changes. **Not verified on a device** — tests and
   typecheck only. Guard still checks the whole working tree, not just this session.
-- **2026-09-28** — Structure pass. 13 single-consumer components moved out of flat
-  `components/` into their owner subfolder (`Operator/`, `Profile/`, `Local/`); 3 orphans deleted
-  (`components/CheerPollCard.tsx` and `Operator/LiveScoreHeader.tsx` were dead re-export shims,
-  `hooks/usePalette.ts` had no callers). New `docs/CONVENTIONS.md` writes down naming + placement.
-  `AGENTS.md` corrected — it listed 13 components at paths they had already moved away from, named
-  a `MaloTipModal` that does not exist, and omitted the six role-group route trees,
-  `src/backend/services/`, and `api/session.ts`.
-
----
 
 ## 5. Known broken / not yet applied
 

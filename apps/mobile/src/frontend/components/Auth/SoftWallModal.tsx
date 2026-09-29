@@ -32,7 +32,7 @@ const SHEET_TRAVEL = 480;
 type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | 'signup' | null;
 
 /**
- * @purpose High-impact auth sheet when a guest hits Mālo / Crew / Chip In. Resumes the stashed action after sign-in.
+ * @purpose High-impact auth sheet when a guest hits Donate / Crew / a gear goal. Resumes the stashed action after sign-in.
  * @sideEffects Email/password, Apple / Google / Magic Link / Demo Fan via AuthContext; telemetry `auth.*`.
  */
 export function SoftWallModal() {
@@ -50,6 +50,8 @@ export function SoftWallModal() {
   const [password, setPassword] = useState('');
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [busy, setBusy] = useState<AuthBusy>(null);
+  // `disabled={busy}` only lands on the next render; this blocks a second tap in the same frame.
+  const running = useRef(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -118,6 +120,8 @@ export function SoftWallModal() {
   const { canSignIn, canCreate, canMagic } = softWallEmailGates(email, password, ageConfirmed);
 
   const run = async (kind: Exclude<AuthBusy, null>, work: () => Promise<void>) => {
+    if (running.current) return;
+    running.current = true;
     setBusy(kind);
     setError(null);
     setMessage(null);
@@ -142,6 +146,7 @@ export function SoftWallModal() {
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not sign in.');
     } finally {
+      running.current = false;
       setBusy(null);
     }
   };

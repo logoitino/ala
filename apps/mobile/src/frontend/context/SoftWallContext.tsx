@@ -36,7 +36,7 @@ type SoftWallContextValue = {
 const SoftWallContext = createContext<SoftWallContextValue | null>(null);
 
 /**
- * @purpose Browse-first soft wall: guests can watch; Mālo / Crew / Chip In require auth then resume.
+ * @purpose Browse-first soft wall: guests can watch; Donate / Crew / gear goals require auth then resume.
  * @sideEffects Stashes intent until SoftWallModal completes Apple / Google / Magic Link; telemetry `soft_wall.*`.
  */
 export function SoftWallProvider({ children }: { children: ReactNode }) {
@@ -76,7 +76,7 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
     setIntent(null);
   }, [isGuest, session]);
 
-  // Release the stashed action (Mālo checkout, Join Crew, Chip In — all money-adjacent) only once
+  // Release the stashed action (donate checkout, Join Crew, gear goal — all money-adjacent) only once
   // BOTH a session exists AND, for brand-new Apple/Google/Magic-Link accounts, `needsAgeConfirmation`
   // has cleared. `AgeConfirmModal.confirmAge13Plus()` updates `AuthContext`'s `profile` state, which
   // recomputes `needsAgeConfirmation` to false and re-renders here via the `useAuth()` value — so this

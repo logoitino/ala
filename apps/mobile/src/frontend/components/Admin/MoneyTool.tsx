@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';
 
 import {
@@ -61,6 +61,7 @@ export function MoneyTool() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [busyPayout, setBusyPayout] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -134,6 +135,32 @@ export function MoneyTool() {
     } catch (caught) {
       setMessage(caught instanceof Error ? caught.message : 'Could not queue this payout.');
     }
+  };
+
+  /** Paid / failed is the money record of what left Stripe, so confirm first and show a failed write. */
+  const confirmPayoutStatus = (row: Disbursement, status: 'paid' | 'failed') => {
+    const who = `${formatTipDollars(row.amount_cents)} for ${nameFor(row.player_id)}`;
+    Alert.alert(
+      status === 'paid' ? 'Mark this payout paid?' : 'Mark this payout failed?',
+      status === 'paid'
+        ? `Only after Stripe shows ${who} was sent. This records money out.`
+        : `${who} will be marked failed and leave the queue.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: status === 'paid' ? 'Mark paid' : 'Mark failed',
+          style: status === 'paid' ? 'default' : 'destructive',
+          onPress: () => {
+            setBusyPayout(row.id);
+            setMessage(null);
+            void setDisbursementStatus(row.id, status)
+              .then(() => refresh())
+              .catch((caught: unknown) => setMessage(caught instanceof Error ? caught.message : 'Could not update this payout.'))
+              .finally(() => setBusyPayout(null));
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -228,8 +255,18 @@ export function MoneyTool() {
             >
               {row.status === 'queued' ? (
                 <>
-                  <AdminBtn label="Mark paid" kind="primary" onPress={() => void setDisbursementStatus(row.id, 'paid').then(refresh)} />
-                  <AdminBtn label="Failed" kind="danger" onPress={() => void setDisbursementStatus(row.id, 'failed').then(refresh)} />
+                  <AdminBtn
+                    label={busyPayout === row.id ? '…' : 'Mark paid'}
+                    kind="primary"
+                    disabled={busyPayout === row.id}
+                    onPress={() => confirmPayoutStatus(row, 'paid')}
+                  />
+                  <AdminBtn
+                    label={busyPayout === row.id ? '…' : 'Failed'}
+                    kind="danger"
+                    disabled={busyPayout === row.id}
+                    onPress={() => confirmPayoutStatus(row, 'failed')}
+                  />
                 </>
               ) : null}
             </AdminRow>
