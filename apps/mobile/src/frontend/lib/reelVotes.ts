@@ -29,6 +29,30 @@ function parseVotes(raw: string | null): ReelVoteMap {
   }
 }
 
+// Per-key write queue. Every write below is read-modify-write on one AsyncStorage key; run
+// unqueued, a quick Seki then Aura (or a vote load landing mid-tap) read the same old map and the
+// last write erased the other vote.
+const keyQueues = new Map<string, Promise<unknown>>();
+
+function withKey<T>(key: string, task: () => Promise<T>): Promise<T> {
+  const run = (keyQueues.get(key) ?? Promise.resolve()).then(task, task);
+  const tail = run.catch(() => undefined);
+  keyQueues.set(key, tail);
+  void tail.then(() => {
+    if (keyQueues.get(key) === tail) keyQueues.delete(key);
+  });
+  return run;
+}
+
+async function updateVotes(reelId: string, userId: string | null | undefined, patch: Partial<ReelVoteMap>) {
+  const key = storageKey(reelId, userId);
+  return withKey(key, async () => {
+    const next = { ...parseVotes(await AsyncStorage.getItem(key)), ...patch };
+    await AsyncStorage.setItem(key, JSON.stringify(next));
+    return next;
+  });
+}
+
 /**
  * @purpose Load this fan’s one-vote-per-kind flags for a Highlight (local first, then `reel_hype_votes`).
  * @param reelId `reels.id` or seeded `hl-*`.
@@ -47,12 +71,13 @@ export async function loadReelVotes(reelId: string, userId?: string | null): Pro
     .eq('reel_id', reelId);
   if (error || !data) return local;
 
-  const next: ReelVoteMap = { ...local };
+  const fromServer: Partial<ReelVoteMap> = {};
   for (const row of data) {
-    if (row.kind === 'seki' || row.kind === 'aura' || row.kind === 'flex') next[row.kind] = true;
+    if (row.kind === 'seki' || row.kind === 'aura' || row.kind === 'flex') fromServer[row.kind] = true;
   }
-  await AsyncStorage.setItem(storageKey(reelId, userId), JSON.stringify(next));
-  return next;
+  // Merge onto the latest stored map (not the one read before the network call), queued behind
+  // any tap that wrote while the SELECT was in flight.
+  return updateVotes(reelId, userId, fromServer);
 }
 
 /**
@@ -64,10 +89,7 @@ export async function markReelVote(
   kind: PlayReactionId,
   userId?: string | null,
 ): Promise<ReelVoteMap> {
-  const current = parseVotes(await AsyncStorage.getItem(storageKey(reelId, userId)));
-  const next = { ...current, [kind]: true };
-  await AsyncStorage.setItem(storageKey(reelId, userId), JSON.stringify(next));
-  return next;
+  return updateVotes(reelId, userId, { [kind]: true });
 }
 
 /**
@@ -79,8 +101,5 @@ export async function clearReelVote(
   kind: PlayReactionId,
   userId?: string | null,
 ): Promise<ReelVoteMap> {
-  const current = parseVotes(await AsyncStorage.getItem(storageKey(reelId, userId)));
-  const next = { ...current, [kind]: false };
-  await AsyncStorage.setItem(storageKey(reelId, userId), JSON.stringify(next));
-  return next;
+  return updateVotes(reelId, userId, { [kind]: false });
 }

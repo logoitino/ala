@@ -27,6 +27,7 @@ import {
   HIGHLIGHT_FEED_HOME,
   HIGHLIGHT_FEED_SEKI,
   isSekiHighlight,
+  pinFeedOrder,
   rankHomeFeed,
   type HighlightClip,
   type HighlightFeedFilter,
@@ -141,11 +142,25 @@ export default function HighlightsTab() {
     [crewIds, profile?.team?.name],
   );
 
-  const feed = useMemo(() => {
-    if (feedFilter === 'seki') return clips.filter((item) => isSekiHighlight(item.clip));
-    if (feedFilter === 'home') return rankHomeFeed(clips, homeContext);
-    return clips;
-  }, [clips, feedFilter, homeContext]);
+  // Rank when the set of clips, the pill, the viewer's context or a pull-to-refresh changes — never
+  // on a hype tap. Ranking and the Seki filter read hype counts, so re-ranking per tap moved the
+  // clip being watched and slid another video under the fan's finger (see `pinFeedOrder`).
+  const clipsRef = useRef(clips);
+  clipsRef.current = clips;
+  const clipIdsKey = useMemo(() => clips.map((item) => item.clip.id).join('|'), [clips]);
+  const [rankEpoch, setRankEpoch] = useState(0);
+  const feedOrder = useMemo(() => {
+    const current = clipsRef.current;
+    const ranked =
+      feedFilter === 'seki'
+        ? current.filter((item) => isSekiHighlight(item.clip))
+        : feedFilter === 'home'
+          ? rankHomeFeed(current, homeContext)
+          : current;
+    return ranked.map((item) => item.clip.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `clips` is read through the ref on purpose.
+  }, [clipIdsKey, feedFilter, homeContext, rankEpoch]);
+  const feed = useMemo(() => pinFeedOrder(feedOrder, clips), [clips, feedOrder]);
 
   /** Pill badges: "All 24" / "Seki 8" reads as a promise about what is behind the tab. */
   const feedCounts = useMemo<Record<HighlightFeedFilter, number>>(
@@ -347,6 +362,7 @@ export default function HighlightsTab() {
       await refresh();
       const ids = await fetchSquadAthleteIds(user?.id);
       setCrewIds(new Set(ids));
+      setRankEpoch((current) => current + 1);
     } finally {
       setRefreshing(false);
     }

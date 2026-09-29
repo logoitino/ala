@@ -153,6 +153,25 @@ export function rankHomeFeed<T extends { clip: HighlightClip; player?: { id?: st
   return scored.map((row) => row.item);
 }
 
+/**
+ * @purpose Re-apply a feed order that was ranked earlier to fresh clip objects. Home ranking and the
+ *   Seki filter both read hype counts, so re-ranking on every Seki / Aura / Flex tap moved the clip the
+ *   fan was watching and slid a different video under their finger (the flicker, and the un-tap
+ *   landing on the wrong clip). Rank once per list change; hype taps only refresh the objects.
+ * @param orderedIds Clip ids in the order last ranked.
+ * @param clips Current rows (new counts). Ids missing here (hidden, deleted) are dropped.
+ * @returns Rows in `orderedIds` order.
+ */
+export function pinFeedOrder<T extends { clip: { id: string } }>(orderedIds: readonly string[], clips: readonly T[]): T[] {
+  const byId = new Map(clips.map((item) => [item.clip.id, item]));
+  const out: T[] = [];
+  for (const id of orderedIds) {
+    const item = byId.get(id);
+    if (item) out.push(item);
+  }
+  return out;
+}
+
 // 2026-09 fix: these used to point at Google's public `commondatastorage.googleapis.com` sample
 // video bucket, which now rejects every request with a permission error. Combined with a Home feed
 // bug (see ReelCard.tsx) that loaded every mounted card's video eagerly, several dead URLs failing

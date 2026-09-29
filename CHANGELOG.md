@@ -4,6 +4,12 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-29
 
+### Highlights: Seki / Aura / Flex fixed and simplified
+
+- Un-Seki / un-Aura no longer flickers or jumps to another video: the Home feed used to re-sort itself on every tap (and the Seki pill dropped clips that fell below 3 Seki), sliding a different clip under your finger. The order now only changes when you pull to refresh or switch pills.
+- A tap right after swiping onto a clip sticks — it's no longer undone when your saved votes finish loading. Tapping Seki and Aura quickly keeps both.
+- Effects: **Aura** keeps the burst; **Seki's 🤙 turns into a 🏈** for a moment, like YouTube's like button; **Flex** just lights up. Removing a vote is instant with no effect.
+
 ### Payouts without waiting on the school, and the school crest
 
 - **School confirmation is now a badge, not the only way to get paid.** An athlete's payouts can unlock once a parent (or the 18+ athlete) passes Stripe's ID check, with one claim and no dispute. Until **3 teammates vouch** or the school confirms, payouts are capped at **$250**. (Payouts are still switched off; the cap is enforced when the payment ledger lands.)

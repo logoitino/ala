@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied
+**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -87,6 +87,17 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ## 4. Recent changes (rolling — newest first)
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
+
+- **2026-09-29** — Highlights Seki / Aura / Flex glitch. Root cause of the flicker and the
+  "can't un-tap" feel: Home ranking (`rankHomeFeed`) and the Seki pill (`isSekiHighlight`) read hype
+  counts and re-ran on every tap, so un-hyping moved the clip and slid another video under the
+  finger. `app/(tabs)/index.tsx` now ranks only when the clip set / pill / context / pull-to-refresh
+  changes and re-applies that order with `pinFeedOrder` (`data/highlights.ts`). `ReelCard`: a tap
+  made before the clip's saved votes load is no longer overwritten when they land. `lib/reelVotes.ts`:
+  AsyncStorage read-modify-writes queued per key (a quick Seki + Aura kept only one). Effects
+  (`ReelActionOverlay`): only Aura keeps the burst + shout; Seki's 🤙 turns into a 🏈 for ~0.6 s;
+  Flex just lights up; removing a vote never animates. Tests: `data/__tests__/highlights`,
+  `lib/__tests__/reelVotes`, `Reels/__tests__/ReelActionOverlay`.
 
 - **2026-09-29** — Payout gate, school crest, Aura flip fix. (1) Migration
   `20260929130000_payout_gate_without_school.sql` (not applied): `athlete_payout_status` (school →

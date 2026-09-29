@@ -109,7 +109,7 @@ const LIVE_BANNER_RESERVE = 108;
 const OVERLAY_BOTTOM_INSET = 8;
 
 /**
- * @purpose Full-screen Reel feed card: Exclusive mute vs double-tap Aura ⚡, TikTok-style name + caption on the clip just above the fan bar, Train/Serve / Flash Unlock chips, one Seki / Aura / Flex per fan, Mālo for the confirmed athlete on the clip (not the uploader), ⋯ for Share / Save / Report. Vault clips lock when `players.vault_locked` (default) unless the fan is subscribed or a Flash Unlock window is live. Serve Like Me doubles double-tap Aura. Seki / Aura / Flex fire a colored `HypeBurst`.
+ * @purpose Full-screen Reel feed card: Exclusive mute vs double-tap Aura ⚡, TikTok-style name + caption on the clip just above the fan bar, Train/Serve / Flash Unlock chips, one Seki / Aura / Flex per fan, Mālo for the confirmed athlete on the clip (not the uploader), ⋯ for Share / Save / Report. Vault clips lock when `players.vault_locked` (default) unless the fan is subscribed or a Flash Unlock window is live. Serve Like Me doubles double-tap Aura. Only Aura (chip or double-tap) fires a `HypeBurst`; Seki's chip briefly turns into a 🏈, Flex just lights up.
  * @param clip Highlight including `isVaultOnly` from `reels.is_vault_only` (default false), optional `gameId`, `category`, `flashUnlockUntil`, and `tagStatus`.
  * @param onOpenProfile Opens `/user/[id]` so the fan can subscribe when Stripe is unavailable — also used when Mālo is blocked on a pending tag.
  * @param playbackActive When true, play the focused page even if the Expo route is unfocused (profile modal).
@@ -165,6 +165,10 @@ function ReelCardImpl({
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [votes, setVotes] = useState<ReelVoteMap>({ seki: false, aura: false, flex: false });
+  // Kinds the fan tapped since this clip's saved votes started loading. The load is async, so a
+  // tap right after swiping onto a clip used to be overwritten when the stored votes landed —
+  // the chip flipped back and the next tap did the opposite of what the fan meant.
+  const votesTouchedRef = useRef<Set<PlayReactionId>>(new Set());
   const burstId = useRef(0);
   // One counter per hype kind. Every tap bumps it; a server response is only applied if
   // its token is still current. Without this, spamming a chip interleaves
@@ -241,8 +245,11 @@ function ReelCardImpl({
 
   useEffect(() => {
     let live = true;
-    void loadReelVotes(clip.id, user?.id).then((next) => {
+    votesTouchedRef.current = new Set();
+    void loadReelVotes(clip.id, user?.id).then((loaded) => {
       if (!live) return;
+      const next = { ...loaded };
+      for (const kind of votesTouchedRef.current) next[kind] = votesRef.current[kind];
       votesRef.current = next;
       setVotes(next);
     });
@@ -323,6 +330,7 @@ function ReelCardImpl({
   const releaseHype = useCallback(
     (kind: PlayReactionId) => {
       if (!votesRef.current[kind]) return;
+      votesTouchedRef.current.add(kind);
       const token = hypeGenRef.current[kind] + 1;
       hypeGenRef.current[kind] = token;
       const nextVotes = { ...votesRef.current, [kind]: false };
@@ -381,6 +389,7 @@ function ReelCardImpl({
         return;
       }
       telemetry.trackFeature(`hype.${kind}`, surface);
+      votesTouchedRef.current.add(kind);
       const token = hypeGenRef.current[kind] + 1;
       hypeGenRef.current[kind] = token;
       const nextVotes = { ...votesRef.current, [kind]: true };

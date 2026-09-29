@@ -1,6 +1,15 @@
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useState } from 'react';
 
 import { HypeBurst } from '@/components/Effects/HypeBurst';
@@ -12,7 +21,7 @@ import { formatTipDollars, type ReelHype } from '@/lib/reels';
 import type { PlayReactionId } from '@/data/players';
 import { maloAthleteCta } from '@/data/malo';
 import { HYPE_FX } from '@/theme/hypeFx';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, SPRING_BOUNCE } from '@/theme/motion';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 
 export const REEL_REACTIONS = [
@@ -48,7 +57,7 @@ type ReelActionOverlayProps = {
  * @param hype Live clip counters (optimistic local state).
  * @param onReact Toggles the tapped hype kind immediately; `reels` updates in the background. A second tap clears it.
  * @returns Overlay copy + action rail. Pointer-events box-none so video taps pass through.
- * @sideEffects Chip springs (0.88 → 1.15 → 1.0) plus `HypeBurst` particles; ⋯ opens `ReelMoreSheet`.
+ * @sideEffects Chip press spring. Aura adds `HypeBurst` + shout; Seki's 🤙 briefly turns into a 🏈; Flex just lights up. ⋯ opens `ReelMoreSheet`.
  */
 export function ReelActionOverlay({
   athleteName,
@@ -202,6 +211,10 @@ export function ReelActionOverlay({
   );
 }
 
+// Seki's little moment, like YouTube's themed like button: the 🤙 turns into a football for a beat,
+// then turns back. Aura is the only chip with the full burst; Flex just lights up.
+const SEKI_BALL = '🏈';
+
 function ReactionChip({
   kind,
   emoji,
@@ -222,44 +235,65 @@ function ReactionChip({
   onPress: () => void;
 }) {
   const fx = HYPE_FX[kind];
+  const reduceMotion = useReducedMotion();
   const [burstKey, setBurstKey] = useState(0);
   const rise = useSharedValue(0);
   const fade = useSharedValue(0);
-  const badgeStyle = useAnimatedStyle(() => ({
+  // 0 = hand showing, 1 = football showing.
+  const ball = useSharedValue(0);
+  const ballPop = useSharedValue(1);
+  const ballSpin = useSharedValue(0);
+  const shoutStyle = useAnimatedStyle(() => ({
     opacity: fade.value,
     transform: [{ translateY: rise.value }],
+  }));
+  const handStyle = useAnimatedStyle(() => ({
+    opacity: 1 - ball.value,
+    transform: [{ scale: 1 - ball.value * 0.5 }],
+  }));
+  const ballStyle = useAnimatedStyle(() => ({
+    opacity: ball.value,
+    transform: [{ scale: ballPop.value }, { rotate: `${ballSpin.value}deg` }],
   }));
 
   const fire = () => {
     if (disabled) return;
-    // Tapping a selected chip removes the vote, so only an adding tap earns the burst and shout.
-    if (!selected) {
-      rise.value = 0;
-      fade.value = 1;
-      rise.value = withTiming(-36, { duration: 520 });
-      fade.value = withTiming(0, { duration: 520 });
-      setBurstKey((current) => current + 1);
+    // Only an adding tap animates. Removing is instant, so a quick un-tap never fights an effect.
+    if (!selected && !reduceMotion) {
+      if (kind === 'aura') {
+        rise.value = 0;
+        fade.value = 1;
+        rise.value = withTiming(-36, { duration: 520 });
+        fade.value = withTiming(0, { duration: 520 });
+        setBurstKey((current) => current + 1);
+      } else if (kind === 'seki') {
+        cancelAnimation(ball);
+        ball.value = withSequence(withTiming(1, { duration: 110 }), withDelay(520, withTiming(0, { duration: 180 })));
+        ballPop.value = withSequence(withTiming(1.35, { duration: 140 }), withSpring(1, SPRING_BOUNCE));
+        ballSpin.value = withSequence(withTiming(-35, { duration: 0 }), withSpring(0, SPRING_BOUNCE));
+      }
     }
     onPress();
   };
 
   return (
     <View style={styles.chipWrap}>
-      {burstKey > 0 ? (
+      {kind === 'aura' && burstKey > 0 ? (
         <View pointerEvents="none" style={styles.burstLayer}>
           <HypeBurst key={burstKey} kind={kind} scale={1.35} onDone={() => setBurstKey(0)} />
         </View>
       ) : null}
-      <Animated.Text pointerEvents="none" style={[styles.plusOne, { color: fx.color }, badgeStyle]}>
-        {fx.shout}
-      </Animated.Text>
+      {kind === 'aura' ? (
+        <Animated.Text pointerEvents="none" style={[styles.plusOne, { color: fx.color }, shoutStyle]}>
+          {fx.shout}
+        </Animated.Text>
+      ) : null}
       <AnimatedPressable
         accessibilityLabel={selected ? `Remove ${label}` : `${label} ${count}`}
         accessibilityState={{ disabled, selected }}
         disabled={disabled}
-        haptic="medium"
-        scaleTo={0.84}
-        overshoot
+        haptic={kind === 'aura' ? 'medium' : 'light'}
+        scaleTo={0.88}
         onPress={fire}
         contentStyle={[
           styles.react,
@@ -268,7 +302,19 @@ function ReactionChip({
           disabled && !selected && styles.disabled,
         ]}
       >
-        <Text style={styles.reactEmoji}>{emoji}</Text>
+        <View style={styles.emojiSlot}>
+          <Animated.Text style={[styles.reactEmoji, kind === 'seki' && handStyle]}>{emoji}</Animated.Text>
+          {kind === 'seki' ? (
+            <Animated.Text
+              pointerEvents="none"
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+              style={[styles.reactEmoji, styles.ballEmoji, ballStyle]}
+            >
+              {SEKI_BALL}
+            </Animated.Text>
+          ) : null}
+        </View>
         <Text style={[styles.reactCount, selected && { color: ink }]}>{formatCompactCount(count)}</Text>
       </AnimatedPressable>
       <Text style={[styles.reactLabel, selected && { color: fx.color }]}>{label}</Text>
@@ -397,9 +443,18 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.neonJade,
     borderColor: FOCAL.neonJade,
   },
+  emojiSlot: {
+    width: 26,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   reactEmoji: {
     fontSize: 18,
     lineHeight: 22,
+  },
+  ballEmoji: {
+    position: 'absolute',
   },
   reactLabel: {
     color: 'rgba(243,251,247,0.88)',
