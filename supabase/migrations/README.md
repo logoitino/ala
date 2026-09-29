@@ -54,8 +54,7 @@ check: `docs/STATE.md` §0.
 | `20260929160000_reel_views_and_filmer_credit.sql` | `reels_feed` gains `view_count` / `uploader_name` / `uploader_avatar_url`; `athlete_highlight_views`, `filmer_stats` | **No.** Needs `supabase/leaderboards.sql` (`reels.view_count`) first |
 | `20260929170000_filmer_rewards.sql` | Filmer Aura (tag confirmed, view milestones, Props), `filmer_rewards` ledger, `filmer_props`, `give_filmer_props`, `get_top_filmers`, `filmer_stats` v2 | **No.** Needs `20260929160000` first |
 | `20260929180000_rally_goals_thanks_platform_tip.sql` | Rally goals (`rallies`, create / approve / close / thank RPCs, `tips.rally_id` credits the total), preset donor thank-yous (`donation_thanks`, `thank_donation`), optional tip to Tapua'i at checkout (`tips.platform_tip_cents`, revenue source `tip`, 100% platform) | **No.** Needs `supabase/custodial_money.sql` (`athlete_controls_money`), `company_revenue.sql`, `tip_origin.sql` first |
-| `20260929190000_telemetry_insert_guard.sql` | `telemetry_logs` insert requires a signed-in session and a known event type; `created_at` is server-stamped. Closes the anon-key analytics hole. No user id (STATE §6) | **No.** No dependency. Apply any time |
-| `20260929190000_telemetry_logs_bounds.sql` | Bounds `telemetry_logs.event_type` / `duration_ms` / `attempts` so a fabricated row can't wreck a Reports/Coverage average. Does not touch the INSERT policy (guest telemetry stays anon-writable on purpose) or SELECT. [docs/STATE.md](../../docs/STATE.md) §5 / §6 item 1 | **No.** No dependency on the other unapplied files |
+| `20260929190000_telemetry_logs_bounds.sql` | Bounds `telemetry_logs` event type, duration (scroll 0–100, tab dwell 12h, everything else 10 min), attempts, text length and payload. Guest INSERT stays. Re-run replaces an earlier draft. [docs/STATE.md](../../docs/STATE.md) §5 / §6 item 1 | **No.** No dependency. Apply any time |
 
 ## Adding a school confirmer (after the verification migration)
 
