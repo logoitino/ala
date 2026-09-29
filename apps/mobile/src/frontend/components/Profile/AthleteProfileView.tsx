@@ -319,7 +319,7 @@ export function AthleteProfileView({
     <View style={styles.actionRow}>
       {live.buttons.malo && onDropMalo ? (
         <AnimatedButton
-          accessibilityLabel={`Drop ${maloAmount} dollar Mālo for ${name}`}
+          accessibilityLabel={`Donate ${maloAmount} dollars to ${name}`}
           disabled={tipping}
           haptic="medium"
           onPress={onDropMalo}
@@ -327,7 +327,7 @@ export function AthleteProfileView({
           contentStyle={[styles.primaryAction, tipping && styles.disabled]}
         >
           <Text style={styles.primaryActionLabel}>
-            Drop ${maloAmount} Mālo · {name}
+            Donate ${maloAmount} to {name}
           </Text>
         </AnimatedButton>
       ) : null}

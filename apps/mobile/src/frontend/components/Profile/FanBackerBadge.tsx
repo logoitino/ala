@@ -13,7 +13,7 @@ export function FanBackerBadge({ player }: FanBackerBadgeProps) {
 
   return (
     <View style={styles.badge} accessibilityRole="text">
-      <Text style={styles.badgeLabel}>Fan Backer</Text>
+      <Text style={styles.badgeLabel}>Fan Donor</Text>
       <Text style={styles.badgeText}>
         {backerCount} Fans Backed {firstName} Tonight
       </Text>

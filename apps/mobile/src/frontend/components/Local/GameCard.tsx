@@ -41,7 +41,7 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
   return (
     <AnimatedPressable
       accessibilityRole="button"
-      accessibilityLabel={`${home} ${homeScore} against ${away} ${awayScore}. View roster and drop a Mālo.`}
+      accessibilityLabel={`${home} ${homeScore} against ${away} ${awayScore}. View roster and donate.`}
       haptic="light"
       overshoot={false}
       scaleTo={0.97}
@@ -96,7 +96,7 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
       </Text>
 
       <View style={styles.cta}>
-        <Text style={styles.ctaLabel}>View Roster & Drop Mālo</Text>
+        <Text style={styles.ctaLabel}>View Roster & Donate</Text>
       </View>
       {sponsors.length > 0 ? (
         <View style={styles.sponsorRow} accessibilityRole="summary">

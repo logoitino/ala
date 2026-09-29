@@ -56,7 +56,7 @@ function compactStat(player: Player | null, time: string): string {
   const bits: string[] = [];
   if (player?.position) bits.push(player.position);
   if (time) bits.push(time);
-  if (player) bits.push(`${player.backer_count} backers`);
+  if (player) bits.push(`${player.backer_count} donors`);
   return bits.join('  ·  ');
 }
 
@@ -155,7 +155,7 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ expanded: open }}
-          accessibilityLabel={open ? 'Hide Mālo and reactions' : 'Show Mālo and reactions'}
+          accessibilityLabel={open ? 'Hide Donate and reactions' : 'Show Donate and reactions'}
           haptic="selection"
           onPress={toggle}
           style={styles.chevronHit}

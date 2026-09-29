@@ -104,7 +104,7 @@ export async function saveGiftQrToCameraRoll(svg: SvgDataUrlRef | null, handle: 
 export async function copyGiftLink(url: string): Promise<void> {
   const ok = await Clipboard.setStringAsync(url);
   if (Platform.OS === 'web' && ok === false) {
-    throw new Error('Could not copy the tipping link.');
+    throw new Error('Could not copy the donation link.');
   }
   try {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

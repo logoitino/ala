@@ -161,7 +161,7 @@ These four roles already exist. They do not own a tab by themselves — they sta
 
 ---
 
-### COMMERCE — Mālo, Drip, Wishlist, Connect, receipts
+### COMMERCE — Donations, Drip, Wishlist, Connect, receipts
 
 **Call:** `COMMERCE`  
 **Fan:** Mālo sheets · `/drip` · Wishlist Chip In · `/receipts` · `/gift/[handle]` · `PayoutSetupCard`  
@@ -264,6 +264,15 @@ These four roles already exist. They do not own a tab by themselves — they sta
 **What it does:** Parent consent + custodial payout. Booster roster CSV + verify. Sponsor sideline / rivalry boards.
 
 **Do not:** Mix with fan Profile chrome. Features flags `layouts.parentHq` / `boosterHq` / `sponsorHq`.
+
+---
+
+### VOICE — Donation language
+
+**Call:** `VOICE` (`.claude/agents/voice.md`)  
+**Owns:** every word about money on screen and in public docs — Donate / donation, the "who gets it, what for, anything taken out" answers, no performance ties, warm thank-yous that keep people donating.  
+**Source:** [VOICE.md](VOICE.md). CI gate: `pnpm copy:check` (`scripts/check-copy.mjs`).  
+**Pair:** LEGAL for terms, tax and fee wording; COMMERCE for prices and splits. Run after any copy change and before every release.
 
 ---
 

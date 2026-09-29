@@ -19,7 +19,7 @@ export const VERIFY_HELD_COPY =
   "Fans can already send you gifts. They're held until a parent finishes payout setup (or your school confirms you).";
 /** Shown to a fan giving to an athlete who is not verified yet. Money copy — LEGAL to review. */
 export const GIFT_HELD_NOTICE =
-  "Payouts aren't set up for this athlete yet — your gift is held until their family finishes payout setup.";
+  "Payouts aren't set up for this athlete yet — your donation is held until their family finishes payout setup.";
 /** Athlete on Activity once the identity path unlocks payouts. Money copy — LEGAL to review. */
 export function payoutUnlockedCopy(capCents: number | null, vouches: number): string {
   if (capCents == null) return 'Payouts are unlocked.';

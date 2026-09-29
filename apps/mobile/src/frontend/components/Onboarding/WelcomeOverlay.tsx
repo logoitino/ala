@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors } from '@/constants/theme';
+import { DONATION_MISSION } from '@/data/malo';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { ONBOARDING_SEEN_KEY } from '@/lib/auth';
 import { FOCAL } from '@/theme/motion';
@@ -51,9 +52,9 @@ export function WelcomeOverlay() {
       >
         <View style={[styles.card, frame.card]}>
           <Text style={styles.brand}>Tapua&apos;i</Text>
-          <Text style={styles.title}>Back every athlete.</Text>
+          <Text style={styles.title}>Donate to the athletes you cheer for.</Text>
           <Text style={styles.body}>
-            Families capture awesome moments, cheer the school, and send a Mālo when a play hits home — so our kids feel
+            {DONATION_MISSION} Watch their highlights, cheer your school, and donate in a few taps — so our kids feel
             believed in.
           </Text>
           <AnimatedButton
@@ -64,7 +65,7 @@ export function WelcomeOverlay() {
           >
             <Text style={styles.ctaLabel}>Watch highlights</Text>
           </AnimatedButton>
-          <Text style={styles.foot}>You can browse as a guest. Sign in when you are ready to tip or join a Crew.</Text>
+          <Text style={styles.foot}>You can browse as a guest. Sign in when you are ready to donate or join a Crew.</Text>
         </View>
       </View>
     </Modal>

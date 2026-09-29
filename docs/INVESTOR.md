@@ -27,12 +27,12 @@ College NIL marketplaces do not fit. High-school athletes are usually minors, am
 | Loop | Fan action | Persistence |
 | --- | --- | --- |
 | Watch & react | TikTok-style Reels. Seki / Aura / Flex. Live score overlay. | `reels`, `games`, Realtime |
-| Support | **Mālo** via Stripe PaymentSheet | `tips` (amount, athlete, fan, and where the gift started), Stripe PaymentIntent (test) |
+| Support | **Donations** via Stripe PaymentSheet | `tips` (amount, athlete, fan, and where the gift started), Stripe PaymentIntent (test) |
 | Rank | Aura card + points per tip dollar | `add_user_aura`, profile / player points |
 
 **Surfaces today**
 
-- **Reel** — full-screen video, athlete + school top-left, Aura rank top-right, Mālo on the rail, Report / Hide
+- **Reel** — full-screen video, athlete + school top-left, Aura rank top-right, Donate on the rail, Report / Hide
 - **Local** — search, live matches, school cheer polls, booster rail (first-month dollars in product facts)
 - **Upload** — camera FAB, optional Subscriber Exclusive lock
 - **Drip** — merch checkout (same PaymentSheet engine)
@@ -40,12 +40,12 @@ College NIL marketplaces do not fit. High-school athletes are usually minors, am
 - **Operator** — PIN claim, live clock, score, play callouts to the fan feed
 - **Parent** — consent toggle + custodial payout stub
 
-Copy in the UI is Mālo / Seki. Ledgers stay `tips`.
+Copy in the UI is Donate / donation (docs/VOICE.md) and Seki. Ledgers stay `tips`.
 
 ## 3. Why this can work (thesis, not proof)
 
 1. **Capture is already happening** — parents and students film. The missing piece is identity (tagged athlete), liveness (score + callouts), and a legal money path.
-2. **Mālo is a gift, not a wager** — no odds, no prize pool, no “pay this player if they score.” That distinction has to stay true in product and in counsel’s paper.
+2. **A donation is a gift, not a wager** — no odds, no prize pool, no “pay this player if they score.” That distinction has to stay true in product and in counsel’s paper.
 3. **Local money already exists** — booster clubs and Friday-night sponsors. The app gives them a tiered, receipted first month instead of a handshake ad.
 4. **Distribution is the school night, not the algorithm** — operator console + live banner is a sideline wedge Instagram cannot copy without being in the gym.
 
@@ -56,8 +56,8 @@ Prices below are generated from source (`pnpm docs:sync`). Do not edit inside th
 <!-- product-facts:start -->
 | Line | Price (as coded) | Notes |
 | --- | --- | --- |
-| Mālo | $5 / $10 / $25 + custom | 100% of your backing (minus standard payment processing unless covered) goes directly to the athlete's custodial account — not the person who uploaded the clip. |
-| Admin splits | Mālo 10%/90% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. Fan Mālo copy unchanged until counsel. |
+| Donations | $5 / $10 / $25 + custom | 100% of your donation (minus standard payment processing unless covered) goes directly to the athlete's custodial account — not the person who uploaded the clip. |
+| Admin splits | Donations 10%/90% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. Fan donation copy unchanged until counsel. |
 | Exclusive | $4.99 one-time PaymentIntent stored as a `subscriptions` row | +100 Aura to the payer. Not Stripe Billing yet. |
 | Boosters | Silver $50 / Gold $150 / Platinum $500 first month | Silver / Gold / Platinum |
 | Aura | 10 points per tip dollar | 7-tier card (Slate Silver → Celestial Prism). Double-tap 1; Serve Like Me ×2. Not cash. |
@@ -66,7 +66,7 @@ Prices below are generated from source (`pnpm docs:sync`). Do not edit inside th
 | Athlete profile | Unified sheet | Tabs Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar Home / Spotlight. Vault Lock Vault 🔒 (default locked). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. |
 <!-- product-facts:end -->
 
-Drip SKUs stay in `apps/mobile/src/frontend/data/shop.ts` (payer Aura only). **Not a model:** selling Aura, listing athletes as securities, or taking a rake on Mālo until counsel signs off. A platform fee is a product decision and a regulatory one.
+Drip SKUs stay in `apps/mobile/src/frontend/data/shop.ts` (payer Aura only). **Not a model:** selling Aura, listing athletes as securities, or taking a rake on donations until counsel signs off. A platform fee is a product decision and a regulatory one.
 
 Payments are **test mode**. There is no live GMV.
 
@@ -89,7 +89,7 @@ Payments are **test mode**. There is no live GMV.
 1. One association / one metro (Utah high-school demo data already in the app: Westlake, Lone Peak, ALA).
 2. Sideline operator in the press box before a consumer ad campaign.
 3. Booster club as the first paying customer (sponsorship), not the 16-year-old as the first payee.
-4. Pause Mālo to a given athlete if the school or association objects — product must support a kill switch before live money.
+4. Pause donations to a given athlete if the school or association objects — product must support a kill switch before live money.
 
 ## 7. Ask (conversation, not a priced round)
 

@@ -156,12 +156,12 @@ export function athleteMoneyNotice(summary: CustodialSummary): string {
     return `You're ${summary.handoverAge}+. The money fans gave you is yours to move — no one else can withdraw it.`;
   }
   if (!summary.guardianLinked) {
-    return 'Mālo you receive is held for you. A parent or guardian needs to be linked before any of it can be paid out.';
+    return 'Donations you receive are held for you. A parent or guardian needs to be linked before any of it can be paid out.';
   }
   const until = summary.handoverDate
     ? ` until ${formatHandoverDate(summary.handoverDate)}, when you turn ${summary.handoverAge}`
     : ` until you turn ${summary.handoverAge}`;
-  return `Every gift is held for you in ${summary.guardianName}'s custodial account${until}. They can't withdraw any of it without your OK in the app.`;
+  return `Every donation is held for you in ${summary.guardianName}'s custodial account${until}. They can't withdraw any of it without your OK in the app.`;
 }
 
 const STATUS_LABELS: Record<WithdrawalStatus, string> = {

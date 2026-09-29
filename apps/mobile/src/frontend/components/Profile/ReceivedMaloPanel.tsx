@@ -22,7 +22,7 @@ export function ReceivedMaloPanel({ playerId }: { playerId: string }) {
       </Text>
       {loading ? <ActivityIndicator color={colors.deepGreen} /> : null}
       {!loading && rows.length === 0 ? (
-        <Text style={styles.empty}>No Mālo yet. Gifts land here after a fan pays.</Text>
+        <Text style={styles.empty}>No donations yet. They show up here after a fan donates.</Text>
       ) : null}
       {rows.slice(0, 8).map((row) => (
         <View key={row.id} style={styles.row}>

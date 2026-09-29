@@ -69,8 +69,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: 'Commerce',
     items: [
       { href: '/admin/drip', label: 'Drip', hint: 'Marketplace catalog' },
-      { href: '/admin/wishlist', label: 'Locker Room', hint: 'Gear goals fans fund' },
-      { href: '/admin/money', label: 'Money', hint: 'Revenue, Mālo, disbursements' },
+      { href: '/admin/wishlist', label: 'Locker Room', hint: 'Gear goals fans donate to' },
+      { href: '/admin/money', label: 'Money', hint: 'Revenue, donations, disbursements' },
     ],
   },
   {
@@ -97,7 +97,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { href: '/admin/features', label: 'Features', hint: 'Tabs, Soft-Wall, boards' },
       { href: '/admin/look', label: 'Look', hint: 'Daylight colors, copy, profile, Highlights rail' },
-      { href: '/admin/catalog', label: 'Catalogs', hint: 'Mālo, exclusive, chips, tiers' },
+      { href: '/admin/catalog', label: 'Catalogs', hint: 'Donations, exclusive, chips, tiers' },
       { href: '/admin/studio', label: 'Studio', hint: 'Preview roles and surfaces' },
     ],
   },
@@ -569,7 +569,7 @@ function telemetryTitle(eventType: string): string {
   if (eventType === 'video_stall') return 'Video stall';
   if (eventType === 'socket_reconnect') return 'Realtime reconnect';
   if (eventType === 'video_first_frame') return 'Time to first frame';
-  if (eventType === 'checkout_latency') return 'Mālo checkout';
+  if (eventType === 'checkout_latency') return 'Donation checkout';
   if (eventType === 'tab_dwell') return 'Tab time';
   if (eventType === 'surface_scroll') return 'Scroll depth';
   if (eventType === 'feature_tap') return 'Feature tap';
@@ -821,7 +821,7 @@ export function buildAdminHealth(
     },
     {
       id: 'checkout',
-      label: 'Mālo checkout',
+      label: 'Donation checkout',
       category: 'Money',
       status: checkout >= 8000 ? 'fail' : checkout >= 3000 ? 'warn' : 'ok',
       detail: checkout === 0 ? 'No checkout samples in 24h.' : `Avg ${checkout} ms in 24h.`,

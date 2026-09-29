@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 function Bars({ rows }: { rows: MaloSlice[] }) {
   const max = Math.max(1, ...rows.map((row) => row.cents));
-  if (rows.length === 0) return <p className="text-sm text-[var(--text-muted)]">No Mālo yet.</p>;
+  if (rows.length === 0) return <p className="text-sm text-[var(--text-muted)]">No donations yet.</p>;
   return (
     <ul className="space-y-3">
       {rows.map((row) => (
@@ -72,14 +72,14 @@ export default async function MoneyPage() {
       </p>
 
       {malo.error ? (
-        <Panel title="Mālo breakdown unavailable" kicker="tips">
+        <Panel title="Donation breakdown unavailable" kicker="tips">
           <p className="text-sm text-[var(--ink-soft)]">
             {malo.error}. Apply <code>supabase/tip_origin.sql</code> and <code>supabase/malo_ledger.sql</code>.
           </p>
         </Panel>
       ) : null}
 
-      <SectionHeading title="Where Mālo starts" hint="Each gift is one tips row" />
+      <SectionHeading title="Where donations start" hint="Each donation is one row" />
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <Panel title="Surface" kicker="origin">
           <Bars rows={malo.byOrigin} />
@@ -100,10 +100,10 @@ export default async function MoneyPage() {
       </Panel>
 
       <div className="mt-6">
-        <SectionHeading title="Every Mālo" hint="Athlete, fan, amount, and the gift detail" />
+        <SectionHeading title="Every donation" hint="Athlete, fan, amount, and the donation detail" />
         <Panel title="Transactions" kicker="tips">
           {malo.recent.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)]">No Mālo rows yet.</p>
+            <p className="text-sm text-[var(--text-muted)]">No donation rows yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] text-left text-sm">
@@ -143,7 +143,7 @@ export default async function MoneyPage() {
       <SectionHeading title="Revenue split" hint="Per stream, gross → net → payout" />
       <Panel title="Streams" kicker="Split">
         {revenue.streams.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">No stream rows yet. Mālo / booster / merch hit the ledger after checkout.</p>
+          <p className="text-sm text-[var(--text-muted)]">No stream rows yet. Donations / booster / merch hit the ledger after checkout.</p>
         ) : (
           <ul className="divide-y divide-[var(--border)]">
             {revenue.streams.map((stream) => (

@@ -224,7 +224,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
             </View>
           </View>
           <Text style={styles.cardBody}>
-            Discover highlights, drop Mālo ⚡ tips, vote in cheer polls, and level up your Aura Card.
+            Discover highlights, donate to athletes, vote in cheer polls, and level up your Aura Card.
           </Text>
         </View>
 
@@ -242,7 +242,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
             )}
           </View>
           <Text style={styles.cardBody}>
-            Claim a High School or NCAA roster, receive Mālo tips, and host a $
+            Claim a High School or NCAA roster, receive donations, and host a $
             {live.catalog.exclusiveDollars.toFixed(2)}/mo Subscriber Vault 🔒. School claim is not Varsity — fans will
             see Not verified yet until a team code or coach/parent approval.
           </Text>

@@ -54,7 +54,7 @@ export function useReceivedMalo(playerId: string | null | undefined) {
     const { data, error: rpcError } = await supabase.rpc('get_received_malo', { target_player_id: playerId });
     if (rpcError || !Array.isArray(data)) {
       setRows([]);
-      setError(rpcError?.message ?? 'Could not load Mālo received.');
+      setError(rpcError?.message ?? 'Could not load donations received.');
       setLoading(false);
       return;
     }

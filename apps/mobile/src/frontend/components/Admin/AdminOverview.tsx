@@ -167,7 +167,7 @@ export function AdminOverview() {
           <OwnerStat
             label="Browse-first gates"
             value={String(SOFT_WALL_GATES.length)}
-            hint="Mālo · Crew · Chip In"
+            hint="Donations · Crew · Gear goals"
             onPress={() => router.push('/admin/coverage')}
           />
           <OwnerStat
@@ -177,7 +177,7 @@ export function AdminOverview() {
             onPress={() => router.push('/admin/features')}
           />
           <OwnerStat
-            label="Mālo control"
+            label="Donation control"
             value={getRuntimeFlag(live, 'buttons.malo') ? 'On' : 'Off'}
             hint="Soft wall when On"
             onPress={() => router.push('/admin/features')}

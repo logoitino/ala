@@ -49,7 +49,7 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
     setBusy(false);
     if (result.ok) {
       setSent(true);
-      setMessage(`Props sent to ${filmerName}. Thanks for backing the people who film.`);
+      setMessage(`Props sent to ${filmerName}. Thanks for cheering on the people who film.`);
       void refresh();
     } else {
       setMessage(result.message);
@@ -63,7 +63,7 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
         <View style={styles.sheet}>
           <Text style={styles.title}>🎥 Filmed by {filmerName}</Text>
           <Text style={styles.lede}>
-            Fans who film help athletes get seen. Mālo always goes to the athlete in the clip.
+            Fans who film help athletes get seen. Donations always go to the athlete in the clip.
           </Text>
           <FilmerCard stats={stats} />
           <Pressable

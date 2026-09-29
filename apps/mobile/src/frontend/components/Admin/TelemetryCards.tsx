@@ -28,9 +28,9 @@ export function TelemetryCards({ metrics }: TelemetryCardsProps) {
     },
     {
       id: 'malo',
-      kicker: 'Mālo tipping',
+      kicker: 'Donations',
       value: formatTipDollars(metrics.maloCents),
-      hint: 'All Mālo sent on the platform',
+      hint: 'All donations made on the platform',
     },
   ];
 

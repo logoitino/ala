@@ -55,7 +55,7 @@ export default function GiftHandleScreen() {
           <ActivityIndicator color={FOCAL.jadeInk} />
         ) : (
           <>
-            <Text style={styles.kicker}>Tapua'i gift</Text>
+            <Text style={styles.kicker}>Donate on Tapua'i</Text>
             <Text style={styles.title}>Support {name}</Text>
             <Text style={styles.body}>{shareQrSubtitle(name)}</Text>
             <Text style={styles.url}>{formatGiftUrl(username)}</Text>

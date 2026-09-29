@@ -12,7 +12,7 @@
 
 Read the exact versioned docs at [https://docs.expo.dev/versions/v57.0.0/](https://docs.expo.dev/versions/v57.0.0/) before writing any code.
 
-Engineer onboarding: [docs/CONVENTIONS.md](docs/CONVENTIONS.md) (naming + placement) · [DOCUMENTATION.md](DOCUMENTATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/ONBOARDING.md](docs/ONBOARDING.md) · [docs/SCHEMA.md](docs/SCHEMA.md) · [docs/TEAMS.md](docs/TEAMS.md) (department call sheet)
+Engineer onboarding: [docs/CONVENTIONS.md](docs/CONVENTIONS.md) (naming + placement) · [DOCUMENTATION.md](DOCUMENTATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/ONBOARDING.md](docs/ONBOARDING.md) · [docs/SCHEMA.md](docs/SCHEMA.md) · [docs/TEAMS.md](docs/TEAMS.md) (department call sheet) · [docs/VOICE.md](docs/VOICE.md) (donation language)
 
 ## Tapua'i Sports — Project Architecture & Conventions
 
@@ -50,5 +50,5 @@ Path aliases (mobile): `@/*` → `apps/mobile/src/frontend/*`, `@backend/*` → 
 3. **Backend & Realtime:** Supabase PostgreSQL, Auth, Realtime WebSockets, Storage buckets `game_highlights`, `reels`, `avatars`.
 4. **Payments:** Stripe PaymentSheet (`@stripe/stripe-react-native`) + Expo API routes. Connect Express Account Links are minted only by Edge Function `create-stripe-account` with the session JWT (`sk_` never in `apps/mobile/src/frontend/`). Native vs web PaymentSheet is split by Metro platform files.
 5. **Environment:** Mobile client keys must start with `EXPO_PUBLIC_` in `apps/mobile/.env.local`. Admin portal uses `NEXT_PUBLIC_*` in `apps/admin-portal/.env.local`. Never `aladb.env` or secrets under `src/frontend/`.
-6. **Product copy:** UI **Mālo** / **Seki** / **Highlights ⚡**. Persistence still uses `tips` / `reels` / `useTipCheckout`.
+6. **Product copy:** money is always **Donate / donation** (owner, 2026-09-29) — never Mālo-as-money, tip, backing, Chip In or fund; "Mālo!" is only a thank-you. Rules: [docs/VOICE.md](docs/VOICE.md); CI runs `pnpm copy:check`; call the `VOICE` agent for copy reviews. Also **Seki** / **Highlights ⚡**. Persistence still uses `tips` / `reels` / `useTipCheckout` / `malo*`.
 7. **Package manager:** `pnpm` at the repo root (`pnpm-workspace.yaml`). Day-to-day: `pnpm install`, `pnpm mobile`, `pnpm admin`.

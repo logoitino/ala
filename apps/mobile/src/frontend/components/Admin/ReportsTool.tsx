@@ -49,7 +49,7 @@ const SECTIONS: { id: ReportId; label: string; hint: string; href?: Href }[] = [
   { id: 'health', label: 'Health', hint: 'Pass / warn / fail across the stack' },
   { id: 'usage', label: 'Usage', hint: 'Where fans scroll, stay, tap, and report' },
   { id: 'engagement', label: 'Engagement', hint: 'How Highlights ⚡ and Crew are used', href: '/admin/highlights' },
-  { id: 'money', label: 'Money', hint: 'Mālo windows, payouts, subscribe', href: '/admin/money' },
+  { id: 'money', label: 'Money', hint: 'Donation windows, payouts, subscribe', href: '/admin/money' },
   { id: 'content', label: 'Content', hint: 'Vault, flags, Flash Unlock, mix', href: '/admin/moderation' },
   { id: 'audience', label: 'Audience', hint: 'People and schools', href: '/admin/people' },
   { id: 'live', label: 'Live ops', hint: 'Games, polls, Drip, boosters', href: '/admin/games' },
@@ -68,14 +68,14 @@ const LABELS: Record<string, string> = {
   hype_votes: 'Hype votes',
   saves: 'Saves',
   crew_follows: 'Crew follows',
-  malo_cents_all: 'Mālo all-time',
-  malo_count_all: 'Mālo count',
-  malo_cents_24h: 'Mālo (24h)',
-  malo_count_24h: 'Mālo count (24h)',
-  malo_cents_7d: 'Mālo (7d)',
-  malo_count_7d: 'Mālo count (7d)',
-  malo_cents_prev_7d: 'Mālo previous 7d',
-  avg_tip_cents_7d: 'Avg Mālo (7d)',
+  malo_cents_all: 'Donations all-time',
+  malo_count_all: 'Donation count',
+  malo_cents_24h: 'Donations (24h)',
+  malo_count_24h: 'Donation count (24h)',
+  malo_cents_7d: 'Donations (7d)',
+  malo_count_7d: 'Donation count (7d)',
+  malo_cents_prev_7d: 'Donations previous 7d',
+  avg_tip_cents_7d: 'Avg donation (7d)',
   queued_payouts: 'Queued payouts',
   paid_payouts_cents: 'Paid out',
   active_subs: 'Active subscribe',
@@ -104,7 +104,7 @@ const LABELS: Record<string, string> = {
   stalls_24h: 'Stalls (24h)',
   reconnects_24h: 'Reconnects (24h)',
   checkouts_24h: 'Checkout events (24h)',
-  avg_checkout_ms_24h: 'Avg Mālo checkout ms',
+  avg_checkout_ms_24h: 'Avg donation checkout ms',
   events_24h: 'Telemetry events (24h)',
   sessions_24h: 'Tab sessions (24h)',
   dwell_ms_24h: 'Time on tabs (24h)',
@@ -263,7 +263,7 @@ export function ReportsTool() {
       {tab === 'health' ? (
         <>
           <AdminBarChart title="Clips · 7 days" points={reports.series.clips} />
-          <AdminBarChart title="Mālo · 7 days" points={reports.series.malo} formatValue={formatTipDollars} accent={FOCAL.electricGold} />
+          <AdminBarChart title="Donations · 7 days" points={reports.series.malo} formatValue={formatTipDollars} accent={FOCAL.electricGold} />
           {health.map((check) => (
             <HealthRow
               key={check.id}
@@ -305,7 +305,7 @@ export function ReportsTool() {
         </>
       ) : null}
 
-      {tab === 'money' ? <AdminBarChart title="Mālo · 7 days" points={reports.series.malo} formatValue={formatTipDollars} accent={FOCAL.electricGold} /> : null}
+      {tab === 'money' ? <AdminBarChart title="Donations · 7 days" points={reports.series.malo} formatValue={formatTipDollars} accent={FOCAL.electricGold} /> : null}
 
       {tab === 'content' ? (
         <AdminMixChart
@@ -325,12 +325,12 @@ export function ReportsTool() {
       {tab === 'leaders' ? (
         <>
           <AdminBarChart
-            title="Mālo received"
+            title="Donations received"
             points={reports.leaders.malo.map((row) => ({ day: row.label.slice(0, 8), value: row.value }))}
             formatValue={formatTipDollars}
             accent={FOCAL.electricGold}
           />
-          <LeaderList title="Mālo received" rows={reports.leaders.malo} kind="cents" />
+          <LeaderList title="Donations received" rows={reports.leaders.malo} kind="cents" />
           <LeaderList title="Hottest clips" rows={reports.leaders.hype} />
           <LeaderList title="Athletes by school" rows={reports.leaders.schools} />
         </>

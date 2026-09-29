@@ -13,10 +13,10 @@ export default async function SoftWallAuthPage() {
   return (
     <PortalShell active="/auth">
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Mālo Soft Wall" value={oversight.maloLive ? 'Armed' : 'Paused'} hint="buttons.malo" tone={oversight.maloLive ? 'ok' : 'warn'} />
+        <StatCard label="Donate Soft Wall" value={oversight.maloLive ? 'Armed' : 'Paused'} hint="buttons.malo" tone={oversight.maloLive ? 'ok' : 'warn'} />
         <StatCard label="Crew Soft Wall" value={oversight.crewLive ? 'Armed' : 'Paused'} hint="buttons.crew" tone={oversight.crewLive ? 'ok' : 'warn'} />
         <StatCard
-          label="Chip In Soft Wall"
+          label="Gear goal Soft Wall"
           value={oversight.wishlistLive ? 'Armed' : 'Paused'}
           hint="layouts.wishlist"
           tone={oversight.wishlistLive ? 'ok' : 'warn'}
@@ -26,7 +26,7 @@ export default async function SoftWallAuthPage() {
       <Panel title="Zero lost context" kicker="Product lock">
         <p className="text-sm leading-6 text-[var(--ink-soft)]">
           After SoftWallModal completes Apple / Google / Magic Link, SoftWallContext replays the stashed resume
-          (open tip sheet, Crew toggle, or Chip In). Telemetry ids: soft_wall.malo · soft_wall.crew · soft_wall.wishlist
+          (open donate sheet, Crew toggle, or gear-goal donation). Telemetry ids: soft_wall.malo · soft_wall.crew · soft_wall.wishlist
           (Coverage desk in Expo).
         </p>
       </Panel>

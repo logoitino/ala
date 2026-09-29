@@ -40,7 +40,7 @@ export function PlayerListItem({
 
         <View style={styles.backers}>
           <Text style={styles.backersCount}>{displayValue(player.backer_count, '0')}</Text>
-          <Text style={styles.backersLabel}>Backers</Text>
+          <Text style={styles.backersLabel}>Donors</Text>
         </View>
       </Pressable>
       {onToggleFavorite ? (

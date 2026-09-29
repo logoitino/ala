@@ -74,7 +74,7 @@ export function PayoutSetupCard() {
   return (
     <View style={styles.card} accessibilityRole="summary">
       <Text style={styles.title}>Set Up Payouts ⚡</Text>
-      <Text style={styles.lede}>Receive Mālo Tips & Subscription Direct Deposits</Text>
+      <Text style={styles.lede}>Receive Donations & Subscription Direct Deposits</Text>
       <Text style={styles.warn}>{COMPLIANCE_PAYOUT}</Text>
       <LegalAckToggle
         checked={accepted}

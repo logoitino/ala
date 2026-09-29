@@ -33,7 +33,7 @@ export default function ReceiptsScreen() {
     return (
       <RuntimePaused
         title="Receipts are paused"
-        lede="Turn Tip History back on in Admin → Features, then Publish to app."
+        lede="Turn Donation History back on in Admin → Features, then Publish to app."
       />
     );
   }
@@ -62,15 +62,15 @@ export default function ReceiptsScreen() {
             <ScreenHeading
               compact
               kicker={live.copy.receiptsKicker}
-              title="Tip History & Receipts"
+              title="Donation History & Receipts"
             />
           </View>
         </View>
 
-        <View style={styles.metrics} accessibilityRole="summary" accessibilityLabel="Tip history totals">
+        <View style={styles.metrics} accessibilityRole="summary" accessibilityLabel="Donation history totals">
           <View style={styles.metric}>
             <Text style={styles.metricValue}>{formatDollars(summary.totalTippedCents)}</Text>
-            <Text style={styles.metricLabel}>Total Tipped ($)</Text>
+            <Text style={styles.metricLabel}>Total Donated ($)</Text>
           </View>
           <View style={styles.metricRule} />
           <View style={styles.metric}>
@@ -89,8 +89,8 @@ export default function ReceiptsScreen() {
         ) : !signedIn ? (
           <EmptyState
             kicker="Receipts"
-            title="Sign in to see your Mālo receipts"
-            lede="Guest browse stays open. Sign in to keep a ledger of every tip."
+            title="Sign in to see your donation receipts"
+            lede="Guest browse stays open. Sign in to keep a record of every donation."
             actionLabel="Sign in"
             onAction={() =>
               requireAuth({
@@ -104,8 +104,8 @@ export default function ReceiptsScreen() {
         ) : receipts.length === 0 ? (
           <EmptyState
             kicker="Receipts"
-            title="No Mālo receipts yet"
-            lede="Drop a tip on a Highlights ⚡ clip to build your ledger."
+            title="No donation receipts yet"
+            lede="Donate from a Highlights ⚡ clip and your receipts show up here."
             actionLabel="Watch Highlights ⚡"
             onAction={() => router.push('/' as Href)}
             adminHref="/admin/money"

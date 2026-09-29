@@ -198,7 +198,7 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
                   telemetry.trackFeature('share_qr.copy', 'profile');
                   await copyGiftLink(target.url);
                 },
-                'Web tipping link copied.',
+                'Donation link copied.',
               )
             }
             contentStyle={[styles.action, styles.actionGhost, busy && styles.actionOff]}

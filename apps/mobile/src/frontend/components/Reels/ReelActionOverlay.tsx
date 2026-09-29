@@ -113,10 +113,10 @@ export function ReelActionOverlay({
     }
     if (id === 'malo' && live.buttons.malo) {
       const tipLabel = userTipped
-        ? `Mālo sent to ${athleteName}, ${formatTipDollars(hype.total_tips_cents)} total`
+        ? `Donated to ${athleteName}, ${formatTipDollars(hype.total_tips_cents)} total`
         : maloReady
           ? `${maloAthleteCta(athleteName)}, ${formatTipDollars(hype.total_tips_cents)} total`
-          : `Confirm ${athleteName} on this clip before Mālo`;
+          : `Confirm ${athleteName} on this clip before donating`;
       return (
         <AnimatedPressable
           key="malo"
@@ -134,7 +134,7 @@ export function ReelActionOverlay({
           ]}
         >
           <Text style={[styles.maloLabel, { color: userTipped ? ink : jade }]}>
-            {userTipped ? "Mālo'd" : 'Mālo'}
+            {userTipped ? 'Donated' : 'Donate'}
           </Text>
           <Text style={[styles.maloTotal, { color: userTipped ? ink : jade }]} numberOfLines={1}>
             {maloReady || userTipped ? formatTipDollars(hype.total_tips_cents) : 'Tag'}

@@ -312,7 +312,7 @@ function WishlistCard({
           contentStyle={[styles.chipHit, chipping && styles.chipHitBusy]}
           onPress={onChipIn}
         >
-          <Text style={styles.chipLabel}>{chipping ? 'Mālo open…' : chipInLabel}</Text>
+          <Text style={styles.chipLabel}>{chipping ? 'Opening…' : chipInLabel}</Text>
         </AnimatedButton>
       )}
     </View>
@@ -380,7 +380,7 @@ function GearUnlockedOverlay({
           <Text style={styles.unlockKicker}>{WISHLIST_UNLOCKED_TOAST}</Text>
           <Text style={styles.unlockTitle}>{item?.title.toUpperCase()}</Text>
           <Text style={styles.unlockBody}>
-            Fully funded by the Crew. {athleteName} takes the field in new gear.
+            Goal reached, thanks to the Crew. {athleteName} takes the field in new gear.
           </Text>
           <View style={styles.unlockBadge}>
             <Text style={styles.unlockBadgeLabel}>{WISHLIST_EQUIPPED_BADGE}</Text>

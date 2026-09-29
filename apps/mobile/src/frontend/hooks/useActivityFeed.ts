@@ -59,7 +59,7 @@ export function useActivityFeed() {
         id: `malo-in:${row.id}`,
         kind: 'malo_received',
         at: row.created_at,
-        title: `${row.fan_name || 'A fan'} sent you Mālo`,
+        title: `${row.fan_name || 'A fan'} donated to you`,
         body: row.source_label?.trim() || 'Thanks for the play.',
         amountCents: row.amount_cents,
         reelId: row.reel_id,
@@ -71,8 +71,8 @@ export function useActivityFeed() {
         id: `malo-out:${row.id}`,
         kind: 'malo_sent',
         at: row.created_at,
-        title: `You backed ${row.athlete_name || 'an athlete'}`,
-        body: row.school_name?.trim() || row.source_label?.trim() || 'Mālo sent.',
+        title: `You donated to ${row.athlete_name || 'an athlete'}`,
+        body: row.school_name?.trim() || row.source_label?.trim() || 'Donation received.',
         amountCents: row.amount_cents,
         reelId: row.reel_id,
       });
@@ -84,7 +84,7 @@ export function useActivityFeed() {
         kind: 'tag_pending',
         at: row.created_at,
         title: 'A highlight tagged you',
-        body: `${row.title || 'Untitled clip'} — confirm it is you before Mālo can reach you.`,
+        body: `${row.title || 'Untitled clip'} — confirm it is you so donations can reach you.`,
         reelId: row.id,
         actionable: true,
       });

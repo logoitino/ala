@@ -82,21 +82,21 @@ export function BackedCelebration() {
 
         <Animated.View style={[styles.card, frame.card, cardEntranceStyle]}>
           <CardShine loopMs={2400} width={70} tint="rgba(0,230,118,0.35)" />
-          <Text style={styles.kicker}>SEKI! MĀLO DELIVERED! 🚀</Text>
+          <Text style={styles.kicker}>MĀLO! DONATION SENT 🚀</Text>
           <Text style={styles.headline}>
-            YOU BACKED {payload?.playerName.toUpperCase()}! 🏈
+            YOU DONATED TO {payload?.playerName.toUpperCase()}! 🏈
           </Text>
-          <Text style={styles.backers}>{payload?.backerCount ?? 0} Backers Tonight</Text>
+          <Text style={styles.backers}>{payload?.backerCount ?? 0} Donors Tonight</Text>
           {payload?.auraPointsEarned ? (
             <Text style={styles.auraEarned}>+{payload.auraPointsEarned} Aura Points Earned! ⚡</Text>
           ) : null}
           <AnimatedButton
-            accessibilityLabel="Keep dropping Mālo"
+            accessibilityLabel="Keep watching"
             haptic="medium"
             contentStyle={styles.button}
             onPress={dismiss}
           >
-            <Text style={styles.buttonLabel}>Keep dropping Mālo</Text>
+            <Text style={styles.buttonLabel}>Keep watching</Text>
           </AnimatedButton>
         </Animated.View>
       </View>

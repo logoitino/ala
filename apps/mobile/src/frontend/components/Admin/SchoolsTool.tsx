@@ -95,10 +95,10 @@ export function SchoolsTool() {
   const confirmFreeze = (school: SchoolTeam) => {
     const next = !school.malo_frozen;
     Alert.alert(
-      next ? 'Freeze Mālo for this school?' : 'Unfreeze Mālo for this school?',
+      next ? 'Freeze donations for this school?' : 'Unfreeze donations for this school?',
       next
-        ? `Every athlete at ${school.name} will no longer be able to receive Mālo or new exclusive subscriptions. Use this only for a written school/association direction.`
-        : `Athletes at ${school.name} will be able to receive Mālo and new exclusive subscriptions again.`,
+        ? `Every athlete at ${school.name} will no longer be able to receive donations or new exclusive subscriptions. Use this only for a written school/association direction.`
+        : `Athletes at ${school.name} will be able to receive donations and new exclusive subscriptions again.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -176,7 +176,7 @@ export function SchoolsTool() {
           <AdminRow
             key={row.id}
             title={row.name}
-            meta={`${row.mascot} · ${formatTeamBadge(row)}${row.malo_frozen ? ' · Mālo frozen' : ''}`}
+            meta={`${row.mascot} · ${formatTeamBadge(row)}${row.malo_frozen ? ' · Donations frozen' : ''}`}
           >
             <AdminBtn
               label="Edit"
@@ -193,7 +193,7 @@ export function SchoolsTool() {
               }
             />
             <AdminBtn
-              label={row.malo_frozen ? 'Unfreeze Mālo' : 'Freeze Mālo'}
+              label={row.malo_frozen ? 'Unfreeze donations' : 'Freeze donations'}
               kind={row.malo_frozen ? 'ghost' : 'danger'}
               disabled={busy}
               onPress={() => confirmFreeze(row)}

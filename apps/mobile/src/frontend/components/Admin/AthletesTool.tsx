@@ -113,7 +113,7 @@ export function AthletesTool() {
         vertical_jump: form.vertical_jump,
       });
       setForm(empty);
-      setMessage('Athlete saved. Tagging, Mālo, and profiles will pick this up.');
+      setMessage('Athlete saved. Tagging, donations, and profiles will pick this up.');
       await refresh();
     } catch (caught) {
       setMessage(caught instanceof Error ? caught.message : 'Could not save this athlete.');
@@ -194,7 +194,7 @@ export function AthletesTool() {
   return (
     <AdminPage
       title="Athletes"
-      lede="This roster is who fans tag on Highlights ⚡ and Mālo. Pick a school from the catalog so onboarding stays in sync."
+      lede="This roster is who fans tag on Highlights ⚡ and donate to. Pick a school from the catalog so onboarding stays in sync."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}

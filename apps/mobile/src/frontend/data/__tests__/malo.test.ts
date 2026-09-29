@@ -1,4 +1,5 @@
 import {
+  donationWhereItGoes,
   canDropMaloOnHighlight,
   maloAthleteCta,
   maloAthleteSheetSubtitle,
@@ -56,11 +57,11 @@ describe('canDropMaloOnHighlight', () => {
 
 describe('Malo copy helpers', () => {
   it('names the athlete in the CTA', () => {
-    expect(maloAthleteCta('Trey Lawson')).toBe('Drop Mālo · Trey Lawson');
+    expect(maloAthleteCta('Trey Lawson')).toBe('Donate to Trey Lawson');
   });
 
   it('falls back to a generic phrase when the athlete name is missing', () => {
-    expect(maloAthleteCta(undefined)).toBe('Drop Mālo · this athlete');
+    expect(maloAthleteCta(undefined)).toBe('Donate to this athlete');
   });
 
   it('sheet subtitle clarifies the gift goes to the athlete, not the uploader', () => {
@@ -72,5 +73,13 @@ describe('Malo copy helpers', () => {
   it('toast copy exists for both the pending-tag and untagged cases', () => {
     expect(MALO_PENDING_TAG_TOAST.length).toBeGreaterThan(0);
     expect(MALO_UNTAGGED_TOAST.length).toBeGreaterThan(0);
+  });
+
+  it('where-it-goes line names the family account, rules out performance and says not tax-deductible', () => {
+    const line = donationWhereItGoes('Trey Lawson');
+    expect(line).toContain("Trey Lawson's family account");
+    expect(line).toContain('never for a play or a stat');
+    expect(line).toContain('not tax-deductible');
+    expect(line).not.toMatch(/Mālo|tip/i);
   });
 });

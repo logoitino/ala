@@ -4,6 +4,13 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-29
 
+### Donations, in plain words
+
+- The app now says **Donate** everywhere you give money: "Donate to Kaleo", "Donate $10", "Donation History & Receipts", "Donate $5 to this goal". "Mālo", "tip", "backing", "Chip In" and "Share & Fund" are gone from the screens. "Mālo!" is now only how we say thank you ("Mālo! Your donation to Kaleo is on its way").
+- The donate sheet says where the money goes: to the athlete's family account for sports costs, not to whoever posted the clip, never for a play or a stat, and not tax-deductible.
+- First open explains the mission: Tapua'i helps families cover their young athlete's sports costs with donations from their community.
+- New `pnpm copy:check` (runs in CI) and a VOICE agent keep the wording consistent.
+
 ### Filmers: tiers, Top Filmers, Aura and Props
 
 - **Tap "🎥 Filmed by …"** on any clip to see that filmer's clips, views, hype and Props, and send them **Props 🎥** (once per clip, sign-in needed). Mālo still always goes to the athlete in the clip.

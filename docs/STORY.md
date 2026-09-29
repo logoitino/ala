@@ -40,7 +40,7 @@ there competing for them. That is the whole idea. The app just gives the village
 > Malia is a junior. She is the second-best outside hitter on her team, which means nobody outside
 > the gym knows her name. Her mom posts a clip after a big match. By Sunday, her aunties in
 > Auckland, her old youth coach, two families from church and a stranger who just liked the way
-> she plays have all sent Mālo. Her Locker goal — the club-season fee her family had already
+> she plays have all donated. Her Locker goal — the club-season fee her family had already
 > decided they could not cover — fills in four days. The whole feed watches the bar hit 100%.
 >
 > She plays club that summer. A college coach sees her there. Two years later she signs.
@@ -78,7 +78,7 @@ the whole feed can see, and a celebration the moment it fills. You give right fr
 you just watched, or from the flyer QR on the fence at the game. The athlete thanks you with a
 clip, not a form letter.
 
-*What exists today:* Mālo from a Highlight or profile, Locker wishlist goals with Chip In and an
+*What exists today:* donations from a Highlight or profile, Locker gear goals fans donate toward, an
 "equipped" moment, gift links and QR flyers. *What's next:* ROADMAP Mission track M2 and M8.
 
 ### 3. Every athlete — not just the star
@@ -182,7 +182,7 @@ NCAA. One wrong sentence can cost a kid their eligibility. Full reasoning in
 - "Approved NIL." / "Guaranteed scholarship." / promises about recruiting outcomes.
 - "Aura is worth money." Aura is reputation. It is never cash.
 - Naming or ranking kids by how much money they received, in public.
-- Leaderboards by dollars. Boards rank hype and views, never Mālo.
+- Leaderboards by dollars. Boards rank hype and views, never donations.
 
 **Before any campaign ships:** one written position from the state association (Utah first) that
 fan gifts not tied to performance are allowed — ROADMAP Phase 1 item 5.

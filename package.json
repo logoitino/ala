@@ -13,6 +13,7 @@
     "admin:build": "pnpm --filter @tapuai/admin-portal build",
     "docs:sync": "node scripts/sync-front-docs.mjs",
     "docs:check": "node scripts/sync-front-docs.mjs --check",
+    "copy:check": "node scripts/check-copy.mjs",
     "typecheck": "pnpm --filter @tapuai/mobile typecheck && pnpm --filter @tapuai/admin-portal typecheck"
   }
 }

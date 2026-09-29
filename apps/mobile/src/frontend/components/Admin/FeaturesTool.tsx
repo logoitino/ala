@@ -28,7 +28,7 @@ export function FeaturesTool() {
   return (
     <AdminPage
       title="Features"
-      lede="Turn off a tab or a Mālo button for a campaign. That stays a draft until you hit Publish to app. The web portal shows this same state read-only — all changes happen here."
+      lede="Turn off a tab or a Donate button for a campaign. That stays a draft until you hit Publish to app. The web portal shows this same state read-only — all changes happen here."
       saveMode="publish"
     >
       <AdminPublishBar />
@@ -36,7 +36,7 @@ export function FeaturesTool() {
       <View style={styles.group}>
         <AdminSectionTitle>Soft-Wall auth</AdminSectionTitle>
         <Text style={styles.body}>
-          Guests browse Highlights, trading cards, and Locker Room without an account. Mālo, Join Crew, and Chip In open
+          Guests browse Highlights, trading cards, and Locker Room without an account. Donate, Join Crew, and gear-goal donations open
           SoftWallModal (Apple / Google / Magic Link) then resume. Coverage → Soft-Wall auth tracks wall opens.
         </Text>
         {SOFT_WALL_GATES.map((gate) => {
@@ -94,7 +94,7 @@ export function FeaturesTool() {
         </View>
       ))}
 
-      <AdminEmpty text="School names, player stats, captions, Drip prices, and scores save instantly on their own desks. Mālo amounts, exclusive dollars, class years, Local chips, booster tiers, and upload labels live on Catalogs. Soft-Wall gates stay in code; pause Mālo / Crew / Wishlist / Operator here." />
+      <AdminEmpty text="School names, player stats, captions, Drip prices, and scores save instantly on their own desks. Donation amounts, exclusive dollars, class years, Local chips, booster tiers, and upload labels live on Catalogs. Soft-Wall gates stay in code; pause Donate / Crew / Wishlist / Operator here." />
       <View style={styles.linkRow}>
         <AdminBtn label="Open Catalogs" onPress={() => router.push('/admin/catalog' as Href)} />
         <AdminBtn label="Open Look" onPress={() => router.push('/admin/look' as Href)} />

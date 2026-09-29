@@ -143,7 +143,7 @@ export function ReelOwnerPeek({
 
   const stats: { label: string; value: string }[] = [
     { label: 'Crew', value: formatCompactCount(crew.crew_count) },
-    { label: 'Mālo', value: formatTipDollars(totalTipsCents) },
+    { label: 'Donations', value: formatTipDollars(totalTipsCents) },
     { label: 'Seki', value: formatCompactCount(player?.seki_count ?? clip.sekiCount ?? 0) },
     { label: 'Aura', value: formatCompactCount(auraPoints) },
   ];
@@ -262,13 +262,13 @@ export function ReelOwnerPeek({
         ) : null}
         {onTip ? (
           <AnimatedPressable
-            accessibilityLabel={maloReady ? maloAthleteCta(name) : `Confirm ${name} on this clip before Mālo`}
+            accessibilityLabel={maloReady ? maloAthleteCta(name) : `Confirm ${name} on this clip before donating`}
             haptic="medium"
             scaleTo={0.94}
             onPress={onTip}
             contentStyle={[styles.maloBtn, styles.actionHalf, !maloReady && styles.maloBtnPending]}
           >
-            <Text style={styles.maloLabel}>{maloReady ? 'Mālo' : 'Tag'}</Text>
+            <Text style={styles.maloLabel}>{maloReady ? 'Donate' : 'Tag'}</Text>
           </AnimatedPressable>
         ) : null}
       </View>

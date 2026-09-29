@@ -1,16 +1,16 @@
 import type { WishlistItem } from '@/types/database';
 
 export const WISHLIST_TITLE = '👟 Locker Room Wishlist';
-export const WISHLIST_LEDE = 'Gear this athlete needs. Chip in or buy it outright.';
-export const WISHLIST_GIFT_ACTION = '🎁 Gift Item Directly';
-export const WISHLIST_CHIP_IN_ACTION = '⚡ Chip In $5';
+export const WISHLIST_LEDE = 'Gear this athlete needs. Donate toward it or buy it outright.';
+export const WISHLIST_GIFT_ACTION = '🎁 Buy this item for them';
+export const WISHLIST_CHIP_IN_ACTION = '⚡ Donate $5 to this goal';
 
 /**
  * @purpose Chip In label. Catalogs desk first Mālo preset can change the dollar amount after Publish to app.
  */
 export function wishlistChipInAction(dollars = WISHLIST_CHIP_IN_DOLLARS): string {
   const amount = Number.isInteger(dollars) ? String(dollars) : dollars.toFixed(2);
-  return `⚡ Chip In $${amount}`;
+  return `⚡ Donate $${amount} to this goal`;
 }
 export const WISHLIST_EQUIPPED_BADGE = 'EQUIPPED ⚡';
 export const WISHLIST_UNLOCKED_TOAST = 'Gear Unlocked!';
@@ -88,7 +88,7 @@ export function wishlistDollars(cents: number): string {
 export function wishlistFundedLabel(item: WishlistItem): string {
   const raised = wishlistDollars(item.current_amount_cents);
   const goal = wishlistDollars(item.target_amount_cents);
-  if (isWishlistFunded(item)) return `${goal} funded · Fully equipped`;
+  if (isWishlistFunded(item)) return `${goal} goal reached · Fully equipped`;
   return `${raised} of ${goal} · ${wishlistProgressPct(item)}%`;
 }
 

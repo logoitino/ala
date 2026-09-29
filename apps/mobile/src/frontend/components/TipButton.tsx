@@ -33,7 +33,7 @@ export function TipButton({
   wide = false,
   onPress,
 }: TipButtonProps) {
-  const title = label ?? `$${amount} Mālo`;
+  const title = label ?? `Donate $${amount}`;
   const detail = sublabel ?? (amount != null ? `+${auraPointsForTip(amount)} Aura Points ⚡` : undefined);
 
   const selectProgress = useSharedValue(selected ? 1 : 0);

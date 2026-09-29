@@ -23,7 +23,7 @@ export function SlangGuideBanner({ overlay = false }: SlangGuideBannerProps) {
   const insets = useSafeAreaInsets();
   const { live } = useAppRuntime();
   const [visible, setVisible] = useState(false);
-  const copy = live.copy.slangLine.trim() || 'Mālo = Direct Support • Seki = Awesome Play';
+  const copy = live.copy.slangLine.trim() || 'Donations go to the athlete’s family • Seki = Awesome Play';
 
   useEffect(() => {
     let active = true;

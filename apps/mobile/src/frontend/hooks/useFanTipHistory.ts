@@ -114,7 +114,7 @@ export function useFanTipHistory() {
 
     if (fallback.error || !fallback.data) {
       setReceipts([]);
-      setError(fallback.error?.message ?? 'Could not load your Mālo receipts.');
+      setError(fallback.error?.message ?? 'Could not load your donation receipts.');
       setLoading(false);
       return;
     }

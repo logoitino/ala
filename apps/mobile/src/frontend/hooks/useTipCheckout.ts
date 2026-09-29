@@ -184,8 +184,8 @@ export function useTipCheckout() {
           if (tipError) {
             tipInsertSucceeded = false;
             Alert.alert(
-              'Mālo not recorded',
-              'Your payment went through, but this athlete cannot currently receive Mālo. Contact support if this seems wrong.',
+              'Donation not recorded',
+              'Your payment went through, but this athlete cannot currently receive donations. Contact support if this seems wrong.',
             );
           }
         }

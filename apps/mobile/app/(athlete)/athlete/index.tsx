@@ -65,7 +65,7 @@ export default function AthleteHomeScreen() {
         <ScreenHeading
           kicker="Tapua'i athlete"
           title="Athlete HQ"
-          lede="Private Mālo ledger, badges, and confirm fan tags that name you."
+          lede="Your private donation record, badges, and fan tags that name you."
         />
         <TagConfirmList
           tags={pending.tags}
@@ -76,7 +76,7 @@ export default function AthleteHomeScreen() {
           onReject={(id) => void pending.resolve(id, 'reject')}
         />
         <DashboardPanel
-          title="Private Mālo ledger"
+          title="Private donation record"
           body={
             profile?.player_id
               ? `${athleteName} has received $${(total / 100).toFixed(2)} from fans.`
@@ -85,8 +85,8 @@ export default function AthleteHomeScreen() {
         >
           {received.rows.length === 0 ? (
             <EmptyState
-              kicker="Mālo"
-              title="No Mālo yet"
+              kicker="Donations"
+              title="No donations yet"
               lede="Gifts from a Highlight, a QR link, a wishlist item, your profile, or a live play show up here."
               actionLabel="Open Profile"
               onAction={() => router.push('/profile' as Href)}
@@ -101,9 +101,9 @@ export default function AthleteHomeScreen() {
             ))
           )}
         </DashboardPanel>
-        <DashboardPanel title="Training badges" body="Unlocked by live-game volume and fan backing.">
+        <DashboardPanel title="Training badges" body="Unlocked by live-game volume and fan support.">
           <Text style={styles.badge}>Film Room · Starter</Text>
-          <Text style={styles.badge}>Community Backer Magnet</Text>
+          <Text style={styles.badge}>Community Favorite</Text>
           <Text style={styles.badge}>Friday Night Lights</Text>
         </DashboardPanel>
         <DashboardPanel title="Profile customization" body="Display name writes to your fan Profile. Roster (sport, team, class year) lives on Account Capability.">

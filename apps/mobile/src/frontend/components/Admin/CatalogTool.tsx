@@ -49,7 +49,7 @@ export function CatalogTool() {
       <AdminPublishBar note={dirty ? 'Catalog edits are draft until Publish to app.' : 'Live catalog matches this draft.'} />
       <AdminNotice text={message} />
 
-      <MoneyPane catalog={catalog} onSave={(next) => void patch(next, 'Mālo and exclusive prices saved to draft.')} />
+      <MoneyPane catalog={catalog} onSave={(next) => void patch(next, 'Donation amounts and exclusive prices saved to draft.')} />
       <ClassYearPane catalog={catalog} onSave={(next) => void patch(next, 'Class years saved to draft.')} />
       <FilterPane catalog={catalog} onSave={(next) => void patch(next, 'Local chips saved to draft.')} />
       <TierPane catalog={catalog} onSave={(next) => void patch(next, 'Booster tiers saved to draft.')} />
@@ -72,9 +72,9 @@ function MoneyPane({
   const [aura, setAura] = useState(String(catalog.exclusiveAura));
 
   return (
-    <AdminPanel title="Mālo + exclusive">
+    <AdminPanel title="Donations + exclusive">
       <AdminField
-        label="Mālo presets (dollars, comma-separated)"
+        label="Donation presets (dollars, comma-separated)"
         value={amounts}
         onChangeText={setAmounts}
         placeholder="5, 10, 25"

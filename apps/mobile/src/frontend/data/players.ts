@@ -13,7 +13,7 @@ export function auraPointsForTip(tipAmount: number): number {
 }
 
 export const MALO_DISCLAIMER =
-  "100% of your backing (minus standard payment processing unless covered) goes directly to the athlete's custodial account — not the person who uploaded the clip.";
+  "100% of your donation (minus standard payment processing unless covered) goes directly to the athlete's custodial account — not the person who uploaded the clip.";
 
 export const QUICK_REACTIONS = [
   { id: 'aura', label: 'Aura ⚡', reaction: 'Aura' },
@@ -46,7 +46,7 @@ export function getPlayerFirstName(name: string): string {
 export function formatTipTotal(amount: number, includeFee: boolean, feeAmount = FEE_AMOUNT): string {
   const fee = includeFee ? feeAmount : 0;
   const total = amount + fee;
-  return `Total: $${total.toFixed(2)} ($${amount.toFixed(2)} Mālo + $${fee.toFixed(2)} fee)`;
+  return `Total: $${total.toFixed(2)} ($${amount.toFixed(2)} donation + $${fee.toFixed(2)} fee)`;
 }
 
 export function displayValue(value: string | number | null | undefined, fallback = '—'): string {

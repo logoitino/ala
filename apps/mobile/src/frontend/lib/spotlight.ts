@@ -6,7 +6,7 @@ import { resolvePlaybackUrl } from '@/lib/reels';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Player, SpotlightAward, SpotlightPeriodKind } from '@/types/database';
 
-export const SPOTLIGHT_TIP_LABEL = 'Support & Tip Athlete ⚡';
+export const SPOTLIGHT_TIP_LABEL = 'Donate to this athlete ⚡';
 export const SPOTLIGHT_WATCH_LABEL = 'Watch Full Highlight 🎥';
 export const SPOTLIGHT_DISMISS_LABEL = 'Dismiss (seen)';
 export const SPOTLIGHT_CLOSE_LABEL = 'Close';

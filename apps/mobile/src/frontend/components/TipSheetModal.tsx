@@ -164,7 +164,7 @@ export function MaloTipModal({
               <CardShine tint="rgba(0,230,118,0.4)" color="rgba(255,255,255,0.95)" loopMs={2600} />
             ) : null}
             <Text style={[styles.title, delivered && styles.successTitle]}>
-              {delivered ? `SEKI! Mālo delivered to ${playerName} 🚀` : maloAthleteCta(playerName)}
+              {delivered ? `Mālo! Your donation to ${playerName} is on its way 🚀` : maloAthleteCta(playerName)}
             </Text>
             <Text style={styles.subtitle}>{maloAthleteSheetSubtitle(playerName)}</Text>
             {verified === false && !delivered ? <Text style={styles.heldNotice}>{GIFT_HELD_NOTICE}</Text> : null}

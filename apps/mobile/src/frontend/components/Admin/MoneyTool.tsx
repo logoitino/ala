@@ -106,7 +106,7 @@ export function MoneyTool() {
       id: 'gross',
       label: 'Gross Platform Volume',
       value: formatTipDollars(summary.gross_volume_cents),
-      hint: 'All Mālo, boosters, Vault, and Drip that hit Stripe.',
+      hint: 'All donations, boosters, Vault, and Drip that hit Stripe.',
     },
     {
       id: 'net',
@@ -139,14 +139,14 @@ export function MoneyTool() {
   return (
     <AdminPage
       title="Money"
-      lede="Gross in, company cut, athlete and operator share out. Preset Mālo and exclusive prices live on Catalogs."
+      lede="Gross in, company cut, athlete and operator share out. Preset donation amounts and exclusive prices live on Catalogs."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
       saveMode="instant"
     >
       <AdminMetrics items={metrics} />
-      <AdminBtn label="Edit Mālo + exclusive prices" onPress={() => router.push('/admin/catalog' as Href)} />
+      <AdminBtn label="Edit donation amounts + exclusive prices" onPress={() => router.push('/admin/catalog' as Href)} />
 
       <AdminPanel title="Revenue streams">
         <View style={styles.table} accessibilityRole="summary">
@@ -169,13 +169,13 @@ export function MoneyTool() {
           ))}
         </View>
         <Text style={styles.caveat}>
-          Admin model. Fan Mālo copy still says 100% to custodial until counsel updates MALO_DISCLAIMER.
+          Admin model. Fan donation copy still says 100% to the family account until counsel updates MALO_DISCLAIMER (LEGAL row L).
         </Text>
       </AdminPanel>
 
       <AdminPanel title={`Recent transactions · ${summary.recent.length}`}>
         {summary.recent.length === 0 ? (
-          <AdminEmpty text="No company revenue logs yet. Paid Mālo, boosters, Vault, and Drip land here." />
+          <AdminEmpty text="No company revenue logs yet. Paid donations, boosters, Vault, and Drip land here." />
         ) : (
           summary.recent.map((row) => (
             <AdminRow
@@ -236,7 +236,7 @@ export function MoneyTool() {
           ))
         )}
       </AdminPanel>
-      <AdminPanel title="Where Mālo starts">
+      <AdminPanel title="Where donations start">
         <AdminBarChart
           title="All gifts by surface"
           points={originBars.map((row) => ({ day: `${row.label} · ${row.count}`, value: row.cents }))}
@@ -244,9 +244,9 @@ export function MoneyTool() {
           accent={FOCAL.electricGold}
         />
       </AdminPanel>
-      <AdminPanel title={`Recent Mālo · ${formatTipDollars(maloTotal)}`}>
+      <AdminPanel title={`Recent donations · ${formatTipDollars(maloTotal)}`}>
         {tips.length === 0 ? (
-          <AdminEmpty text="No Mālo yet." />
+          <AdminEmpty text="No donations yet." />
         ) : (
           tips.map((row) => (
             <AdminRow

@@ -265,7 +265,7 @@ export function AuraTradingCard({
   const earnedBadges =
     badges ??
     ([
-      { emoji: '⚡', label: 'First Mālo Tip', earned: totalTipsDropped > 0 || totalTipsReceived > 0 },
+      { emoji: '⚡', label: 'First Donation', earned: totalTipsDropped > 0 || totalTipsReceived > 0 },
       { emoji: '🏆', label: 'Season MVP', earned: auraPoints >= 70 },
       { emoji: '🤙', label: 'Seki Contender', earned: sekiCount >= 3 },
     ] satisfies TradingCardBadge[]);
@@ -443,12 +443,12 @@ export function AuraTradingCard({
                   <StatCell color={tier.ink} label="Highlights ⚡" value={uploaded} />
                   <StatCell
                     color={FOCAL.jadeInk}
-                    label={isFan ? 'Total Tipped' : 'Tips Received'}
+                    label={isFan ? 'Total Donated' : 'Donations Received'}
                     value={isFan ? totalTipsDropped : totalTipsReceived}
                     highlight
                     appear={tippedFade}
                   />
-                  {isFan ? <StatCell color={tier.ink} label="Tips Received" value={totalTipsReceived} /> : null}
+                  {isFan ? <StatCell color={tier.ink} label="Donations Received" value={totalTipsReceived} /> : null}
                   {isFan ? <StatCell color={tier.ink} label="Poll Votes" value={pollVotes} /> : null}
                   {gamesPlayed > 0 && !(careerPreview && careerPreview.length > 0) ? (
                     <StatCell color={tier.ink} label="Games Played" value={gamesPlayed} />

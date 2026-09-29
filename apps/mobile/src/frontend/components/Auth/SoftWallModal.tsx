@@ -102,10 +102,10 @@ export function SoftWallModal() {
     intent?.kind === 'crew'
       ? 'Sign in with one tap to join The Crew ⚡ and stay close to the season.'
       : intent?.kind === 'wishlist'
-        ? 'Sign in with one tap to Chip In and help fund the gear they need.'
+        ? 'Sign in with one tap to donate toward the gear they need.'
         : intent?.kind === 'signin'
-          ? 'Use email + password, Demo Fan, Apple, Google, or a Magic Link — then tip Mālo, join Crew, and Chip In.'
-          : 'Sign in with one tap to drop a Mālo tip and power their season.';
+          ? 'Use email + password, Demo Fan, Apple, Google, or a Magic Link — then donate, join Crew, and give toward gear goals.'
+          : 'Sign in with one tap to donate toward their season.';
   const title =
     intent?.kind === 'signin'
       ? "Sign in to Tapua'i"

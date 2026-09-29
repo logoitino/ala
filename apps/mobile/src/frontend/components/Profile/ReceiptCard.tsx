@@ -23,7 +23,7 @@ function initialsFor(name: string): string {
 }
 
 function formatMaloAmount(cents: number): string {
-  return `$${(Math.max(0, cents) / 100).toFixed(2)} Mālo ⚡`;
+  return `$${(Math.max(0, cents) / 100).toFixed(2)} donation ⚡`;
 }
 
 function formatReceiptDate(iso: string): string {

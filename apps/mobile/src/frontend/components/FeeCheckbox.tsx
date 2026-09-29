@@ -30,7 +30,7 @@ export function FeeCheckbox({ playerName, checked, onChange }: FeeCheckboxProps)
       <View style={styles.copy}>
         <Text style={styles.label}>
           Add ${fee.toFixed(2)} to cover transaction fees so {playerName} gets 100% of your
-          Mālo.
+          donation.
         </Text>
       </View>
     </Pressable>

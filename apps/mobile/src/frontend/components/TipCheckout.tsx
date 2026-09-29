@@ -6,6 +6,7 @@ import { FeeCheckbox } from '@/components/FeeCheckbox';
 import { TipButton } from '@/components/TipButton';
 import { colors, radii } from '@/constants/theme';
 import { COMPLIANCE_PAYMENT, GIFT_RECORD_NOTICE } from '@/data/legal';
+import { donationWhereItGoes } from '@/data/malo';
 import { AURA_PER_DOLLAR, MALO_DISCLAIMER, auraPointsForTip, displayValue, type Player } from '@/data/players';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
@@ -96,10 +97,9 @@ export function TipCheckout({
     <View style={[styles.section, compact && styles.compact]}>
       {!compact && !hideHeader ? (
         <View style={styles.header}>
-          <Text style={styles.title}>Drop Mālo · {playerName}</Text>
+          <Text style={styles.title}>Donate to {playerName}</Text>
           <Text style={styles.subtitle}>
-            This gift goes to {playerName} — the athlete — not whoever uploaded a clip. You each earn{' '}
-            {AURA_PER_DOLLAR} Aura Points per $1.
+            {donationWhereItGoes(playerName)}
           </Text>
         </View>
       ) : null}
@@ -132,7 +132,7 @@ export function TipCheckout({
       {customOpen ? (
         <View style={styles.customBlock}>
           <TextInput
-            accessibilityLabel="Custom Mālo amount"
+            accessibilityLabel="Custom donation amount"
             editable={!busy}
             keyboardType="decimal-pad"
             onChangeText={setCustomValue}
@@ -149,7 +149,7 @@ export function TipCheckout({
           </Animated.Text>
           <TipButton
             amount={customAmount ?? undefined}
-            label={customAmount != null ? `Drop $${customAmount} Mālo` : 'Drop custom Mālo'}
+            label={customAmount != null ? `Donate $${customAmount}` : 'Donate a custom amount'}
             sublabel={customAura != null ? `+${customAura} Aura Points ⚡` : 'Enter a valid amount'}
             disabled={busy || customAmount == null}
             wide

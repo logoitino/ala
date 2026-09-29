@@ -54,9 +54,9 @@ export default async function AdminHomePage() {
           tone={revenue.gross_volume_cents ? 'ok' : 'neutral'}
         />
         <StatCard
-          label="Mālo · 7d"
+          label="Donations · 7d"
           value={formatUsd(reports.money.malo_cents_7d ?? 0)}
-          hint={topChannel ? `Most from ${topChannel.label}` : 'Tips window'}
+          hint={topChannel ? `Most from ${topChannel.label}` : 'Donations window'}
           tone={reports.money.malo_cents_7d ? 'ok' : 'neutral'}
         />
         <StatCard
@@ -80,7 +80,7 @@ export default async function AdminHomePage() {
             <p className="text-sm font-extrabold">Soft-Wall gates</p>
             <Badge tone={softWallOn === 3 ? 'ok' : 'warn'}>{softWallOn}/3 live</Badge>
           </div>
-          <p className="mt-2 text-xs text-[var(--text-muted)]">Mālo · Crew · Chip In auth prompts</p>
+          <p className="mt-2 text-xs text-[var(--text-muted)]">Donate · Crew · gear-goal auth prompts</p>
           <p className="mt-3 text-sm font-extrabold text-[var(--jade)]">Open Soft-Wall desk →</p>
         </Link>
         <Link href="/profile" className="block rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--jade)]" style={{ boxShadow: 'var(--shadow-card)' }}>

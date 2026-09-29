@@ -75,9 +75,9 @@ export default async function ReportsPage() {
           tone={usage.taps_24h ? 'ok' : 'neutral'}
         />
         <StatCard
-          label="Mālo · 7d"
+          label="Donations · 7d"
           value={formatUsd(money.malo_cents_7d ?? 0)}
-          hint="tips.amount_cents window"
+          hint="Donations in this window"
           tone={money.malo_cents_7d ? 'ok' : 'neutral'}
         />
         <StatCard
@@ -107,7 +107,7 @@ export default async function ReportsPage() {
         <section>
           <SectionHeading title="Leaderboards" hint="Who the app rewards and what's hot" />
           <div className="grid gap-6 lg:grid-cols-3">
-            <Panel title="Mālo leaders" kicker="Top earners">
+            <Panel title="Donation leaders" kicker="Top earners">
               <LeaderBars rows={reports.leaders.malo} money />
             </Panel>
             <Panel title="Hype leaders" kicker="Hottest clips">
@@ -122,7 +122,7 @@ export default async function ReportsPage() {
         <section>
           <SectionHeading title="Money & engagement" />
           <div className="grid gap-6 lg:grid-cols-2">
-            <Panel title="Money windows" kicker="Mālo">
+            <Panel title="Money windows" kicker="Donations">
               <MetricList section={reports.money} />
             </Panel>
             <Panel title="Engagement" kicker="Highlights ⚡">

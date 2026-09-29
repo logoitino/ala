@@ -298,7 +298,7 @@ export async function upsertWishlistItem(input: WishlistDraft): Promise<void> {
   const title = input.title.trim();
   if (!title) throw new Error('Add gear name.');
   if (!input.player_id) throw new Error('Pick the athlete this gear is for.');
-  if (input.target_amount_cents <= 0) throw new Error('Set a funding goal above $0.');
+  if (input.target_amount_cents <= 0) throw new Error('Set a goal above $0.');
 
   const payload = {
     player_id: input.player_id,
@@ -615,7 +615,7 @@ export async function setMaloFreeze(
     target_id: targetId,
     frozen,
   });
-  throwIf(error, 'Could not update the Mālo freeze.');
+  throwIf(error, 'Could not update the donation freeze.');
 }
 
 /**

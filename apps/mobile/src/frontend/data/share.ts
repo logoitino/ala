@@ -1,7 +1,7 @@
-export const SHARE_FUND_CTA = 'Share & Fund ⚡';
-export const SHARE_QR_TITLE = 'Share & Fund ⚡';
+export const SHARE_FUND_CTA = 'Share & Donate ⚡';
+export const SHARE_QR_TITLE = 'Share & Donate ⚡';
 export const SHARE_SAVE_LABEL = '📸 Save QR Image to Camera Roll';
-export const SHARE_COPY_LABEL = '🔗 Copy Web Tipping Link';
+export const SHARE_COPY_LABEL = '🔗 Copy Donation Link';
 export const SHARE_NATIVE_LABEL = '📱 Share via SMS / Social';
 export const TAPUAI_WEB_ORIGIN = 'https://tapuai.app';
 

@@ -88,7 +88,7 @@ export type CompanyRevenueSummary = {
 const EMPTY_STREAMS: CompanyRevenueStream[] = [
   {
     source: 'malo',
-    label: 'Mālo Micro-Tips',
+    label: 'Donations',
     split: splitLabelForSource('malo'),
     gross_cents: 0,
     platform_cents: 0,
@@ -179,7 +179,7 @@ function parseStream(raw: unknown): CompanyRevenueStream | null {
     source,
     label:
       source === 'malo'
-        ? 'Mālo Micro-Tips'
+        ? 'Donations'
         : source === 'booster'
           ? 'Local District Booster Sponsorships'
           : source === 'merch_vault' || source === 'vault' || source === 'merch'
@@ -277,7 +277,7 @@ export async function recordDripOrder(input: {
 }
 
 export function revenueSourceTitle(source: string): string {
-  if (source === 'malo') return 'Mālo';
+  if (source === 'malo') return 'Donations';
   if (source === 'booster') return 'Booster';
   if (source === 'vault') return 'Vault';
   if (source === 'merch') return 'Drip';

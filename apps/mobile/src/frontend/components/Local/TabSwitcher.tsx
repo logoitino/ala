@@ -29,7 +29,7 @@ export function TabSwitcher({ value, onChange }: TabSwitcherProps) {
         onPress={() => onChange('rosters')}
         style={[styles.tab, value === 'rosters' && styles.tabActive]}
       >
-        <Text style={[styles.label, value === 'rosters' && styles.labelActive]}>Rosters & Mālo</Text>
+        <Text style={[styles.label, value === 'rosters' && styles.labelActive]}>Rosters & Donate</Text>
       </Pressable>
     </View>
   );

@@ -158,7 +158,7 @@ export function WishlistTool() {
   return (
     <AdminPage
       title="Locker Room"
-      lede={`Gear cards fans fund on Profile → Stats 📊. Fans chip in $${WISHLIST_CHIP_IN_DOLLARS} a tap; hitting the goal equips the item and pays the athlete +${WISHLIST_EQUIP_AURA} Aura.`}
+      lede={`Gear goals fans donate to on Profile → Stats 📊. Fans donate $${WISHLIST_CHIP_IN_DOLLARS} a tap; hitting the goal equips the item and pays the athlete +${WISHLIST_EQUIP_AURA} Aura.`}
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
@@ -168,7 +168,7 @@ export function WishlistTool() {
         items={[
           { label: 'Gear goals', value: rows.length, hint: `${rows.filter((row) => row.is_active !== false).length} on athlete racks` },
           { label: 'Raised', value: formatTipDollars(raisedCents), hint: `of ${formatTipDollars(goalCents)} asked` },
-          { label: 'Equipped', value: rows.filter((row) => row.is_equipped).length, hint: 'Fully funded gear' },
+          { label: 'Equipped', value: rows.filter((row) => row.is_equipped).length, hint: 'Gear goals reached' },
         ]}
       />
 
@@ -198,7 +198,7 @@ export function WishlistTool() {
             placeholder="https://…"
           />
           <AdminField
-            label="Retailer link (Gift Item Directly)"
+            label="Retailer link (Buy this item for them)"
             value={form.buyUrl}
             onChangeText={(buyUrl) => setForm((current) => ({ ...current, buyUrl }))}
             placeholder="https://…"
@@ -228,7 +228,7 @@ export function WishlistTool() {
         label="Rack"
         items={[
           { id: 'all', label: 'All' },
-          { id: 'funding', label: 'Funding' },
+          { id: 'funding', label: 'Donations so far' },
           { id: 'equipped', label: 'Equipped' },
           { id: 'hidden', label: 'Hidden' },
         ]}
@@ -253,7 +253,7 @@ export function WishlistTool() {
       )}
 
       <Text style={styles.note}>
-        Chip In runs through Mālo, so every contribution also lands on the Money desk ledger.
+        Gear-goal donations run through the same checkout, so every one also lands on the Money desk ledger.
       </Text>
     </AdminPage>
   );

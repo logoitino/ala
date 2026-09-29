@@ -46,9 +46,9 @@ tell us what you'd want on them.)*
 
 ## Fan — Rally (is giving effortless?)
 
-1. From a Highlight, send Mālo to that athlete with the test card.
-2. From an athlete's **profile** (no clip open), send Mālo again.
-3. Find an athlete with a Locker goal and Chip In toward it.
+1. From a Highlight, tap **Donate** and donate to that athlete with the test card. Check the sheet says where the donation goes.
+2. From an athlete's **profile** (no clip open), donate again.
+3. Find an athlete with a Locker goal and donate toward it.
 4. Open Profile → Receipts and find all three gifts.
 5. Open Activity and check what you see.
 
@@ -89,7 +89,7 @@ make you share your kid's page with family?*
 3. Upload a Highlight tagged to yourself.
 4. Look at your profile's Highlights, Stats and Vault tabs. Lock and unlock a Vault clip.
 5. Start Stripe Connect onboarding (test mode — use Stripe's test data, not your real details).
-6. Open **Activity**. The card at the top should say who holds your Mālo and until when. When your
+6. Open **Activity**. The card at the top should say who holds your donations and until when. When your
    parent sends a withdrawal request, approve one and decline one. (Needs a verified athlete
    account and a linked parent.)
 
