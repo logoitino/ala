@@ -25,6 +25,8 @@ perfect. "This felt slow" counts as a bug.
 2. Double-tap to drop Aura. Try Seki and Flex. Tap again to take one back.
 3. Tap an athlete's name to open their profile, then come back.
 4. Hide one clip. Report one clip (pick any reason — it is a test).
+5. Post a clip of a teammate: you must pick who is in it. Then find it on their profile — it should say
+   "🎥 Filmed by" you, and after a few friends each watch it for 3+ seconds the ▶ count on the poster goes up.
 
 Tell us: *How long before the first video played? Did anything stutter, go black, or jump? Did the
 hype taps feel satisfying? Would you keep scrolling?*

@@ -489,6 +489,11 @@ export type Reel = {
   tag_status?: ReelTagStatus | string | null;
   tag_confirmed_at?: string | null;
   tag_confirmed_by?: string | null;
+  /** Counted views (`record_reel_view`). Read through `reels_feed`. */
+  view_count?: number;
+  /** `reels_feed` only: uploader's handle or first name; null when the athlete posted it. */
+  uploader_name?: string | null;
+  uploader_avatar_url?: string | null;
 };
 
 /** Fan → athlete Crew follow (`public.crew_follows`). */
@@ -823,6 +828,14 @@ export type Database = {
       vouch_for_teammate: {
         Args: { target_request_id: string };
         Returns: number;
+      };
+      athlete_highlight_views: {
+        Args: { target_player_id: string };
+        Returns: number;
+      };
+      filmer_stats: {
+        Args: { target_profile_id: string };
+        Returns: { clips: number; views: number; hype: number } | null;
       };
       athlete_school_badge: {
         Args: { target_player_id: string };

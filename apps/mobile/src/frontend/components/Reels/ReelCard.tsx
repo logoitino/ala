@@ -23,6 +23,8 @@ import { ReportContentModal } from '@/components/Reels/ReportContentModal';
 import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
 import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
 import { HypeBurst } from '@/components/Effects/HypeBurst';
+import { useReelViewTracker } from '@/hooks/useReelViewTracker';
+import { viewThresholdMs } from '@/lib/leaderboards';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, palette, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -165,6 +167,8 @@ function ReelCardImpl({
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [votes, setVotes] = useState<ReelVoteMap>({ seki: false, aura: false, flex: false });
+  // True only while the video is really playing on screen; the view counter adds up this time.
+  const [playing, setPlaying] = useState(false);
   // Kinds the fan tapped since this clip's saved votes started loading. The load is async, so a
   // tap right after swiping onto a clip used to be overwritten when the stored votes landed —
   // the chip flipped back and the next tap did the opposite of what the fan meant.
@@ -591,6 +595,7 @@ function ReelCardImpl({
   });
 
   useEventListener(videoPlayer, 'playingChange', ({ isPlaying, oldIsPlaying }) => {
+    setPlaying(isPlaying);
     if (
       oldIsPlaying &&
       !isPlaying &&
@@ -608,6 +613,13 @@ function ReelCardImpl({
       stallStartedAtRef.current = null;
     }
   });
+
+  useReelViewTracker(
+    clip.id,
+    Boolean(user?.id),
+    playing && isFocused && !locked,
+    viewThresholdMs(playing ? videoPlayer.duration : null),
+  );
 
   useEventListener(videoPlayer, 'playToEnd', () => {
     if (!isFocusedRef.current) return;
@@ -729,6 +741,7 @@ function ReelCardImpl({
           athleteName={playerName}
           schoolName={schoolName}
           caption={clip.tag}
+          filmedBy={clip.filmedBy}
           auraColor={auraTier.color}
           auraGlow={auraTier.glow}
           auraLabel={auraBadgeLabel(auraTier)}
@@ -1104,7 +1117,8 @@ function sameReelCardProps(prev: ReelCardProps, next: ReelCardProps): boolean {
     a.tagStatus !== b.tagStatus ||
     a.playerId !== b.playerId ||
     a.gameId !== b.gameId ||
-    a.sekiPlay !== b.sekiPlay
+    a.sekiPlay !== b.sekiPlay ||
+    a.filmedBy !== b.filmedBy
   ) {
     return false;
   }

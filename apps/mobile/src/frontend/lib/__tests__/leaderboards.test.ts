@@ -3,6 +3,7 @@ import {
   parseLeaderboards,
   recordReelView,
   resetReelViewSessionForTests,
+  viewThresholdMs,
 } from '@/lib/leaderboards';
 
 const mockRpc = jest.fn();
@@ -87,6 +88,16 @@ describe('fetchLeaderboards', () => {
   it('throws on any other failure so the screen can offer Retry', async () => {
     mockRpc.mockResolvedValue({ data: null, error: { code: '57014', message: 'canceling statement due to statement timeout' } });
     await expect(fetchLeaderboards('week')).rejects.toThrow('statement timeout');
+  });
+});
+
+describe('viewThresholdMs', () => {
+  it('is 3 s of play, or 90% of a shorter clip', () => {
+    expect(viewThresholdMs(30)).toBe(3000);
+    expect(viewThresholdMs(NaN)).toBe(3000);
+    expect(viewThresholdMs(0)).toBe(3000);
+    expect(viewThresholdMs(2)).toBe(1800);
+    expect(viewThresholdMs(0.2)).toBe(500);
   });
 });
 

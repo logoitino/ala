@@ -26,6 +26,7 @@ import Constants from 'expo-constants';
 
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   HIGHLIGHT_PUBLISH_LABEL,
   labeledReelCategories,
@@ -139,6 +140,7 @@ function ClipPreview({ uri }: { uri: string }) {
 export function UploadVideoModal({ visible, players, onClose, onUploaded }: UploadVideoModalProps) {
   const insets = useSafeAreaInsets();
   const { live } = useAppRuntime();
+  const { profile } = useAuth();
   const categoryPills = labeledReelCategories(live.catalog.reelCategories);
   const exclusiveDollars = live.catalog.exclusiveDollars;
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -168,7 +170,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const gameLabel = selectedGame
     ? gameMatchupLabel(selectedGame.home_team, selectedGame.away_team)
     : 'No specific game (optional)';
-  const playerLabel = selectedPlayer ? playerTagLabel(selectedPlayer) : 'Tag a player';
+  const playerLabel = selectedPlayer ? playerTagLabel(selectedPlayer) : 'Tag the athlete in this video';
 
   const canSubmit = Boolean(asset && playerId && caption.trim()) && !uploading;
 
@@ -267,13 +269,14 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     };
   }, [visible]);
 
+  // Mālo follows the tag, so never guess it: an athlete posting their own clip starts tagged as
+  // themself; everyone else must pick who is in the video. (This used to preselect a demo athlete,
+  // which quietly credited the wrong kid when a fan didn't open the picker.)
+  const ownPlayerId = profile?.player_id ?? null;
   useEffect(() => {
-    if (!visible || players.length === 0) return;
-    const marcus = players.find(
-      (player) => player.jersey_number === 7 || player.name.toLowerCase().includes('marcus'),
-    );
-    setPlayerId((current) => current || marcus?.id || players[0]?.id || '');
-  }, [visible, players]);
+    if (!visible || !ownPlayerId || !players.some((player) => player.id === ownPlayerId)) return;
+    setPlayerId((current) => current || ownPlayerId);
+  }, [visible, players, ownPlayerId]);
 
   const applyPickedAsset = (source: PickSource, next: ImagePicker.ImagePickerAsset) => {
     if (isHighlightTooLong(next.duration)) {
@@ -532,7 +535,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
             </SelectField>
 
             <SelectField
-              label="Player Tagging"
+              label="Who’s in this clip?"
               value={playerLabel}
               open={openSelect === 'player'}
               disabled={uploading || sortedPlayers.length === 0}

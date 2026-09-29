@@ -103,12 +103,13 @@ export function ReelOwnerPeek({
     let live = true;
     void supabase
       .from('profiles_public')
-      .select('user_id, player_id, username, full_name, avatar_url')
-      .eq('user_id', uploader)
+      .select('id, player_id, username, full_name, avatar_url')
+      // reels.uploaded_by is profiles.id, not the auth user id.
+      .eq('id', uploader)
       .maybeSingle()
       .then(({ data }) => {
         if (!live) return;
-        const row = data as Pick<ProfilePublic, 'user_id' | 'player_id' | 'username' | 'full_name' | 'avatar_url'> | null;
+        const row = data as Pick<ProfilePublic, 'id' | 'player_id' | 'username' | 'full_name' | 'avatar_url'> | null;
         if (!row || (player?.id && row.player_id === player.id)) {
           setPoster(null);
           return;

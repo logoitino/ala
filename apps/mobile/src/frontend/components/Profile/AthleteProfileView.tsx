@@ -54,6 +54,7 @@ import type { VerificationStatus } from '@/data/verification';
 import { useCrew } from '@/hooks/useCrew';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { formatCompactCount } from '@/lib/hype';
+import { fetchAthleteHighlightViews } from '@/lib/leaderboards';
 import { isOwnAthleteSheet } from '@/lib/roster';
 import { nonEmptySocialLinks, resolveSocialLinkUrl, socialLinkLabel } from '@/lib/socialLinks';
 import type { Player, ProfileSocialLinks, UserRole } from '@/types/database';
@@ -209,6 +210,17 @@ export function AthleteProfileView({
   const [wishlistFulfilled, setWishlistFulfilled] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const schoolBadge = useSchoolBadge(player.id);
+  const [highlightViews, setHighlightViews] = useState<number | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setHighlightViews(null);
+    void fetchAthleteHighlightViews(player.id).then((total) => {
+      if (alive) setHighlightViews(total);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [player.id]);
   const [internalFlip, setInternalFlip] = useState(false);
   const flipOpen = auraCardOpen ?? internalFlip;
   const setFlipOpen = onAuraCardOpenChange ?? setInternalFlip;
@@ -293,7 +305,7 @@ export function AthleteProfileView({
       pollVotes={pollVotes}
       seasonPoints={auraPoints}
       sekiCount={sekiCount}
-      highlightViews={player.view_count ?? 0}
+      highlightViews={highlightViews ?? player.view_count ?? 0}
       careerPreview={stats.topThree}
       wishlistFulfilled={wishlistFulfilled}
       verificationStatus={verificationStatus}

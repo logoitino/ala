@@ -34,6 +34,8 @@ type ReelActionOverlayProps = {
   athleteName: string;
   schoolName?: string;
   caption?: string;
+  /** Fan who filmed the clip ("🎥 Filmed by …"). Null when the athlete posted it. */
+  filmedBy?: string | null;
   auraColor: string;
   auraGlow?: string;
   auraLabel: string;
@@ -53,7 +55,7 @@ type ReelActionOverlayProps = {
 };
 
 /**
- * @purpose TikTok-style Highlights chrome: name + school + caption bottom-left (7-tier color on the name), right rail Seki / Aura / Flex / Mālo / ⋯. Mālo is athlete-named; pending tags stay tappable but do not open PaymentSheet.
+ * @purpose TikTok-style Highlights chrome: name + school + filmer credit + caption bottom-left (7-tier color on the name), right rail Seki / Aura / Flex / Mālo / ⋯. Mālo is athlete-named; pending tags stay tappable but do not open PaymentSheet.
  * @param hype Live clip counters (optimistic local state).
  * @param onReact Toggles the tapped hype kind immediately; `reels` updates in the background. A second tap clears it.
  * @returns Overlay copy + action rail. Pointer-events box-none so video taps pass through.
@@ -63,6 +65,7 @@ export function ReelActionOverlay({
   athleteName,
   schoolName,
   caption,
+  filmedBy,
   auraColor,
   auraGlow,
   auraLabel,
@@ -183,6 +186,11 @@ export function ReelActionOverlay({
       {rail.showSchool && schoolName ? (
         <Text style={styles.school} numberOfLines={1}>
           {schoolName}
+        </Text>
+      ) : null}
+      {filmedBy ? (
+        <Text style={styles.filmedBy} numberOfLines={1} accessibilityLabel={`Filmed by ${filmedBy}`}>
+          🎥 Filmed by {filmedBy}
         </Text>
       ) : null}
       {rail.showCaption && caption ? (
@@ -372,6 +380,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   school: {
+    color: 'rgba(243,251,247,0.82)',
+    fontSize: 12,
+    fontWeight: '700',
+    textShadowColor: 'rgba(0,0,0,0.55)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  filmedBy: {
     color: 'rgba(243,251,247,0.82)',
     fontSize: 12,
     fontWeight: '700',

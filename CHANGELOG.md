@@ -4,6 +4,14 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-09-29
 
+### Views, filmer credit, and tagging who's in the clip
+
+- **What counts as a view:** 3 seconds of the video actually playing (or 90% of a clip shorter than that), by a signed-in account that isn't the uploader or the athlete in it, once per account per clip per day. Paused, locked or swiped-past clips don't count.
+- **Views on profiles:** every clip on an athlete's profile shows a ▶ view count, and the Aura card's "views" total now adds up the views on their confirmed clips. Seki / Aura / Flex stay on each clip, like likes.
+- **"🎥 Filmed by …"** on clips a fan posted (handle or first name only; not shown when the athlete posted it themself).
+- **Uploads no longer pre-pick an athlete.** "Who's in this clip?" must be chosen, because Mālo goes to whoever is tagged. An athlete posting their own clip starts tagged as themself.
+- The swipe-for-the-athlete panel now finds who posted a clip (it was looking them up by the wrong ID).
+
 ### Highlights: Seki / Aura / Flex fixed and simplified
 
 - Un-Seki / un-Aura no longer flickers or jumps to another video: the Home feed used to re-sort itself on every tap (and the Seki pill dropped clips that fell below 3 Seki), sliding a different clip under your finger. The order now only changes when you pull to refresh or switch pills.

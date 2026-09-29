@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { formatCompactCount } from '@/lib/hype';
 import { BlurTargetView, BlurView } from 'expo-blur';
 
 import { ReelViewModal } from '@/components/Reels/ReelViewModal';
@@ -227,6 +228,12 @@ function TaggedReelTile({
       <Text style={styles.tag} numberOfLines={1}>
         {clip.tag}
       </Text>
+      {!locked && typeof clip.viewCount === 'number' ? (
+        <View style={styles.views} accessibilityLabel={`${clip.viewCount} views`}>
+          <Ionicons name="play" size={10} color={colors.onVideo} />
+          <Text style={styles.viewsLabel}>{formatCompactCount(clip.viewCount)}</Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -267,6 +274,23 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.2,
     textAlign: 'center',
+  },
+  views: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: colors.videoScrim,
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  viewsLabel: {
+    color: colors.onVideo,
+    fontSize: 10,
+    fontWeight: '800',
   },
   seki: {
     position: 'absolute',

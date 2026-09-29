@@ -1,4 +1,4 @@
-import { useIsFocused, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { clearVideoCacheAsync } from 'expo-video';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -36,7 +36,6 @@ import { useActiveSpotlight } from '@/hooks/useActiveSpotlight';
 import { useFanTipHistory } from '@/hooks/useFanTipHistory';
 import { useLiveGame } from '@/hooks/useLiveGame';
 import { useReels } from '@/hooks/useReels';
-import { useReelViewTracker } from '@/hooks/useReelViewTracker';
 import { useRoster } from '@/hooks/useRoster';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { isAuraUuid } from '@/lib/aura';
@@ -218,12 +217,8 @@ export default function HighlightsTab() {
 
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 80 }).current;
 
-  const tabFocused = useIsFocused();
-  useReelViewTracker(
-    feed[activeIndex]?.clip.id ?? null,
-    Boolean(user?.id),
-    tabFocused && !spotlight.visible && !tipTarget && !searchOpen,
-  );
+  // Views are counted inside `ReelCard` from real playback (3 s played), so every surface that
+  // plays a Highlight — Home, profile grids, Spotlight — counts the same way.
 
   useEffect(() => {
     if (feed.length <= 1) {

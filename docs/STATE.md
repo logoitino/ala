@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈
+**Last updated:** 2026-09-29 · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -87,6 +87,24 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ## 4. Recent changes (rolling — newest first)
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
+
+- **2026-09-29** — Views + filmer credit (owner: per-clip likes from other accounts, views on the
+  profile "like other social platforms", reward the athlete in the video, encourage fan uploads).
+  View rule moved from "2 s on screen in Home" to **3 s of actual playback** (or 90% of a shorter
+  clip) in every `ReelCard` feed: `VIEW_PLAY_MS` / `viewThresholdMs` (`lib/leaderboards.ts`),
+  `useReelViewTracker(reelId, signedIn, playing, thresholdMs)` accumulates play time across pauses;
+  Home no longer calls it. Migration `20260929160000_reel_views_and_filmer_credit.sql` (not applied;
+  needs `supabase/leaderboards.sql`): `reels_feed` + `view_count` / `uploader_name` (null when the
+  athlete posted it) / `uploader_avatar_url`; `athlete_highlight_views`; `filmer_stats` (no client
+  caller yet — for a filmer profile / Top Filmers board if the owner picks that). Client: new top
+  feed tier in `lib/reels.ts` (falls back to the tag tier), `HighlightClip.viewCount` / `filmedBy`,
+  "🎥 Filmed by" in `ReelActionOverlay`, ▶ count on `TaggedReelGrid` posters, profile views from
+  `fetchAthleteHighlightViews` (fallback `players.view_count`). Fixes: `ReelOwnerPeek` matched
+  `uploaded_by` (a `profiles.id`) against `user_id`, so the poster never showed; `UploadVideoModal`
+  preselected a demo athlete ("marcus" / first player), which could send Mālo to the wrong kid —
+  now it preselects only the uploader's own linked player. Fan cash share **not** built (owner +
+  LEGAL decision). Tests: `useReelViewTracker`, `leaderboards`, new `reelCredit`, overlay credit.
+  tsc clean, jest 140/140, `docs:check` ok.
 
 - **2026-09-29** — Highlights Seki / Aura / Flex glitch. Root cause of the flicker and the
   "can't un-tap" feel: Home ranking (`rankHomeFeed`) and the Seki pill (`isSekiHighlight`) read hype

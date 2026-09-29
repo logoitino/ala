@@ -57,4 +57,9 @@ describe('ReelActionOverlay hype chips', () => {
     expect(screen.queryByText(/burst:/)).toBeNull();
     expect(onReact.mock.calls.map(([kind]) => kind)).toEqual(['aura', 'seki']);
   });
+
+  it('shows who filmed the clip when a fan posted it', async () => {
+    await render(<ReelActionOverlay athleteName="Sione" filmedBy="hawksmom" auraColor="#00E676" auraLabel="Rising" hype={hype} />);
+    expect(screen.getByText('🎥 Filmed by hawksmom')).toBeTruthy();
+  });
 });

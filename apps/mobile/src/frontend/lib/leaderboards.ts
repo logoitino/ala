@@ -68,8 +68,27 @@ export type LeaderboardsResult =
   /** `get_leaderboards` is not deployed on this project yet (supabase/leaderboards.sql not applied). */
   | { status: 'unavailable' };
 
-/** Seconds a Highlight must stay on screen before it counts as a view. */
-export const VIEW_DWELL_MS = 2000;
+/**
+ * What counts as a view (owner, 2026-09-29: "the same feeling as other social platforms"):
+ * the clip has actually **played** for 3 seconds — not merely been on screen, so a clip that never
+ * loads, sits buffering or is paused does not count. Clips shorter than that count at 90% played.
+ * Server side (`record_reel_view`): signed-in viewers only, once per viewer per clip per day, never
+ * the uploader or the tagged athlete, never removed / flagged / Vault-only clips.
+ */
+export const VIEW_PLAY_MS = 3000;
+
+/** @deprecated Old name kept for callers; views now need real playback, see `VIEW_PLAY_MS`. */
+export const VIEW_DWELL_MS = VIEW_PLAY_MS;
+
+/**
+ * @purpose Played time that makes a view for a clip of this length.
+ * @param durationSec `VideoPlayer.duration` (0 / NaN until the clip loads).
+ */
+export function viewThresholdMs(durationSec: number | null | undefined): number {
+  const ms = Number(durationSec) * 1000;
+  if (!Number.isFinite(ms) || ms <= 0) return VIEW_PLAY_MS;
+  return Math.max(500, Math.min(VIEW_PLAY_MS, Math.round(ms * 0.9)));
+}
 
 const EMPTY_BOARDS: Omit<Leaderboards, 'periodKind'> = {
   startDate: '',
@@ -233,6 +252,24 @@ export function recordReelView(reelId: string | null | undefined, signedIn: bool
     })
     .catch(() => undefined);
   return true;
+}
+
+/**
+ * @purpose Total counted views on an athlete's confirmed Highlights — the profile's "views" number,
+ *   like the view total on a creator page. Includes Vault clips the viewer can't open.
+ * @returns The total, or null when the RPC is missing (SQL not applied) or fails; callers fall back
+ *   to `players.view_count`.
+ */
+export async function fetchAthleteHighlightViews(playerId: string | null | undefined): Promise<number | null> {
+  if (!playerId || !isAuraUuid(playerId) || !isSupabaseConfigured) return null;
+  try {
+    const { data, error } = await supabase.rpc('athlete_highlight_views', { target_player_id: playerId });
+    if (error) return null;
+    const total = Number(data);
+    return Number.isFinite(total) && total >= 0 ? total : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Test hook: forget which clips were counted this session. */

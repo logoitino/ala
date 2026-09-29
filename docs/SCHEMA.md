@@ -999,6 +999,18 @@ Migration `supabase/migrations/20260929140000_school_badge.sql` (design §10, **
 | `athlete_school_badge(target_player_id)` | anon, authenticated | jsonb `{school_id, school_name, mascot, logo_url, color_primary, color_secondary, confirmed_at, confirmed_by ('athletic_director' / 'coach' / 'tapuai')}` — **null unless a school-confirmed account is linked**. Never the staff member's name. |
 | `profiles` CHECK `profiles_name_no_check_marks` | — | `full_name` / `username` may not contain ✓ ✔ ☑ ✅ (NOT VALID: existing rows untouched). |
 
+### Highlight views + filmer credit
+
+Migration `supabase/migrations/20260929160000_reel_views_and_filmer_credit.sql` (**not applied yet**). Client: `lib/reels.ts` (feed tier), `lib/leaderboards.ts` (`fetchAthleteHighlightViews`), `ReelCard` (credit + views), `TaggedReelGrid` (▶ per poster).
+
+A **view** = 3 s of actual playback (or 90% of a shorter clip) by a signed-in account that is not the uploader or the tagged athlete, at most once per account per clip per UTC day (`VIEW_PLAY_MS`, `record_reel_view`).
+
+| Object | Who | What |
+| --- | --- | --- |
+| `reels_feed` (added columns, appended) | anon, authenticated | `view_count`; `uploader_name` (username, else first name only — never a full name; null when the tagged athlete posted it); `uploader_avatar_url`. Left join `profiles` on `reels.uploaded_by = profiles.id`. |
+| `athlete_highlight_views(target_player_id)` | anon, authenticated | integer — total `view_count` on the athlete's confirmed, not-removed clips. The profile's "views" number. |
+| `filmer_stats(target_profile_id)` | anon, authenticated | jsonb `{clips, views, hype}` over clips that profile uploaded and the athlete confirmed. Credit only — no money. |
+
 ### Custodial money RPCs
 
 All `SECURITY DEFINER`, `search_path = public`. Incremental: `supabase/custodial_money.sql`. Client: `lib/custodial.ts` + `useCustodial`, `components/Custodial/` (Activity for the athlete, Parent HQ for the guardian).
@@ -1016,7 +1028,7 @@ All `SECURITY DEFINER`, `search_path = public`. Incremental: `supabase/custodial
 
 ### `record_reel_view(target_reel_id)` / `get_leaderboards(period_kind)`
 
-Incremental: `supabase/leaderboards.sql`. Client: `lib/leaderboards.ts`, `useLeaderboards`, `useReelViewTracker` (Home feed, 2 s on screen), `Spotlight/LeaderboardsBoard` behind `layouts.leaderboards`.
+Incremental: `supabase/leaderboards.sql`. Client: `lib/leaderboards.ts`, `useLeaderboards`, `useReelViewTracker` (each `ReelCard`, 3 s of playback), `Spotlight/LeaderboardsBoard` behind `layouts.leaderboards`.
 
 - `record_reel_view` — `authenticated` only. Counts at most once per viewer per clip per UTC day; skips removed, flagged and Vault-only clips and views by the uploader or the tagged athlete. Returns the new count or null.
 - `get_leaderboards(period_kind default 'week')` — `anon` + `authenticated`. Top 10 per board for the Spotlight window: most-hyped players, most-viewed players, most-viewed Highlights, schools (hype + 10 × Highlights + 5 × distinct fans) and fans (10 × confirmed clips + hype given; username or first name only). Only confirmed-tag, public clips count. **No money fields** — STORY.md guardrail: never rank kids by Mālo.

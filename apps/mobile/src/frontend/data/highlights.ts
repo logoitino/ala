@@ -114,6 +114,10 @@ export type HighlightClip = {
   tagStatus?: 'pending' | 'confirmed' | 'rejected';
   /** `reels.uploaded_by` — fan who posted the clip (may differ from the tagged athlete). */
   uploadedBy?: string | null;
+  /** `reels.view_count` via `reels_feed` — counted views (see `VIEW_PLAY_MS`). Undefined until the SQL is applied. */
+  viewCount?: number;
+  /** Fan who filmed and posted the clip, when that is not the athlete (`reels_feed.uploader_name`). */
+  filmedBy?: string | null;
 };
 
 export type HomeFeedContext = {

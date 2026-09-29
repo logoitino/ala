@@ -63,6 +63,18 @@ export function formatTipDollars(cents: number): string {
   return Number.isInteger(dollars) ? `$${dollars.toFixed(0)}` : `$${dollars.toFixed(2)}`;
 }
 
+/**
+ * @purpose "Filmed by" name for a fan-posted clip. Null when the athlete posted it themself, when the
+ *   uploader is unknown, or before the credit migration is applied.
+ */
+export function filmerCredit(reel: Reel, player: Player | null): string | null {
+  const name = reel.uploader_name?.trim();
+  if (!name || !reel.uploaded_by) return null;
+  const athlete = player?.name?.trim().toLowerCase();
+  if (athlete && (athlete === name.toLowerCase() || athlete.split(/\s+/)[0] === name.toLowerCase())) return null;
+  return name;
+}
+
 export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
   const hype = hypeFromReel(reel);
   const vaultOnly = Boolean(reel.is_vault_only ?? reel.is_exclusive);
@@ -86,6 +98,8 @@ export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
     flashUnlockUntil: reel.flash_unlock_until ?? null,
     tagStatus: reel.tag_status === 'pending' || reel.tag_status === 'rejected' ? reel.tag_status : 'confirmed',
     uploadedBy: reel.uploaded_by ?? null,
+    viewCount: typeof reel.view_count === 'number' ? Math.max(0, reel.view_count) : undefined,
+    filmedBy: filmerCredit(reel, player),
   };
 }
 
@@ -201,6 +215,8 @@ const REEL_COLUMNS_CATEGORY = `${REEL_COLUMNS_VAULT}, category`;
 const REEL_COLUMNS_FLASH = `${REEL_COLUMNS_CATEGORY}, flash_unlock_until`;
 const REEL_COLUMNS_REMOVED = `${REEL_COLUMNS_FLASH}, is_removed`;
 const REEL_COLUMNS_TAG = `${REEL_COLUMNS_REMOVED}, tag_status, uploaded_by`;
+/** Views + filmer credit (migration 20260929160000). Falls back to the tag tier until applied. */
+const REEL_COLUMNS_CREDIT = `${REEL_COLUMNS_TAG}, view_count, uploader_name, uploader_avatar_url`;
 const REEL_COLUMNS_BASIC = 'id, video_url, title, player_id, game_id, created_at';
 const HIDDEN_REELS_KEY = 'tapuai.hiddenReels';
 
@@ -275,6 +291,15 @@ async function playable(rows: ReelWithPlayer[]): Promise<ReelWithPlayer[]> {
 }
 
 async function queryReels(playerId?: string): Promise<ReelWithPlayer[]> {
+  const credited = await selectReels(`${REEL_COLUMNS_CREDIT}, players (${PLAYER_SELECT})`, playerId);
+  if (!credited.error) {
+    return playable(
+      rowsFromQuery<ReelWithPlayer>(credited.data).filter(
+        (row) => Boolean(row.video_url) && row.is_removed !== true,
+      ),
+    );
+  }
+
   const tagged = await selectReels(`${REEL_COLUMNS_TAG}, players (${PLAYER_SELECT})`, playerId);
   if (!tagged.error) {
     return playable(
