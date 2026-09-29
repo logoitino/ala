@@ -17,6 +17,7 @@ import { CelebrationProvider } from '@/context/CelebrationContext';
 import { UploadSheetProvider } from '@/context/UploadSheetContext';
 import { colors, isLightCanvas } from '@/constants/theme';
 import { StripeProvider } from '@/lib/stripe';
+import { APPLE_PAY_MERCHANT_ID } from '@/lib/walletPay';
 import '@/services/OfflineQueue';
 import '@/services/TelemetryManager';
 
@@ -69,7 +70,10 @@ export default function RootLayout() {
         <SoftWallProvider>
         <CelebrationProvider>
           <UploadSheetProvider>
-            <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}>
+            <StripeProvider
+              publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
+              merchantIdentifier={APPLE_PAY_MERCHANT_ID}
+            >
               <RuntimeApp />
             </StripeProvider>
           </UploadSheetProvider>

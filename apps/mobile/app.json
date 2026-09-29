@@ -70,7 +70,7 @@
         "@stripe/stripe-react-native",
         {
           "merchantIdentifier": "merchant.com.alasports.tapuai",
-          "enableGooglePay": false
+          "enableGooglePay": true
         }
       ],
       "expo-video",
