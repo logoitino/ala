@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-29 · Cross-surface reliability + reviewability: rivalry banner links Highlights to Local polls, Activity thanks opens the athlete, Drip and role HQ failures retry honestly, operator check-in confirms the write, PR/CODEOWNERS/folder guides and route-data CI guard added · Telemetry row bounds written, not applied (guest inserts stay; one fake row can no longer wreck a Reports average) · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
+**Last updated:** 2026-09-30 · September SQL applied to staging only · Wave 0 spend reminder: $99/yr Apple already enrolled; SQL, preview build, and test-card donate are $0 · Cross-surface reliability + reviewability: rivalry banner links Highlights to Local polls, Activity thanks opens the athlete, Drip and role HQ failures retry honestly, operator check-in confirms the write, PR/CODEOWNERS/folder guides and route-data CI guard added · Telemetry row bounds written, not applied (guest inserts stay; one fake row can no longer wreck a Reports average) · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -23,9 +23,9 @@ fans and serve like their favorite player; Tapua'i is the avenue that makes the 
 It replaces GoFundMe for families. Full text: `docs/ROADMAP.md` North Star, `docs/STORY.md`
 "The mission, in one breath". Money words: `docs/VOICE.md`.
 
-**Nothing from 2026-09-29 is applied to Supabase.** All of it is written, typechecked and
-unit-tested, never parsed by Postgres. The owner must approve before anything touches the live
-project. Apply on staging first, in this order (each file's header lists its rollback):
+**Applied to staging on 2026-09-30** (`ala-sports-staging`, `tucioqipfejqqqtuakdi`). Not applied
+to the development project (`ulfapgtabidorgwfjvwz`). Staging was also missing `tip_origin.sql`
+(donation channel tags); that ran first. Each file's header lists its rollback. Order used:
 
 | # | File | Needs |
 | --- | --- | --- |
@@ -40,22 +40,26 @@ project. Apply on staging first, in this order (each file's header lists its rol
 | 9 | `supabase/migrations/20260929180000_rally_goals_thanks_platform_tip.sql` | 2, `company_revenue.sql`, `tip_origin.sql` |
 | 10 | `supabase/migrations/20260929190000_telemetry_logs_bounds.sql` | — (independent; guest inserts stay; apply any time) |
 
-`company_revenue.sql` and `tip_origin.sql` are older and believed applied, but nobody on this Mac
-can check. Before step 9, confirm in the SQL Editor:
-`select to_regprocedure('public.tip_origin_label(text,text,text)'), to_regprocedure('public.athlete_controls_money(uuid)');`
-— both must be non-null. After applying, run `docs/TESTER_SCRIPT.md` and move each row out of §5.
+On staging, `company_revenue.sql` was already present and `tip_origin.sql` was not, so the channel
+tags were applied before the table above. The development project was not touched. After a build
+points at staging, run `docs/TESTER_SCRIPT.md`.
+
+**Spend, every time.** Wave 0 (this test) costs Apple Developer **$99/yr** — already enrolled — and
+Supabase, Expo, and Stripe test mode are free. Nothing comes in. SQL on staging is done ($0). Still **$0**: a
+new preview build and a `4242` test donation, unless the free Expo build quota runs out or
+a free Supabase project pauses (then Pro, about **$25/mo**). Wave 1 is later and is the first real
+spend: LLC, counsel, an association letter, Google Play **$25**, Supabase Pro, video bandwidth, and
+Stripe’s fees. Do not start those for this test. Full table: `docs/ROADMAP.md` release waves.
 
 **Next up, in order.**
-1. Owner: approve applying the SQL above to a staging project. **Correction 2026-09-29: a staging
-   project already exists** — `ala-sports-staging` (Supabase project `tucioqipfejqqqtuakdi`,
-   created 2026-09-23), reachable from a session with the Supabase MCP tool (not from this Mac —
-   that's the source of the "no staging project yet" belief in ROADMAP Phase 2 item 4 and
-   `docs/STAGING_RUNBOOK.md`, both now stale on that point). Checked 2026-09-29: it has the
-   pre-Wave-0 schema only (32 tables, none of `rallies` / `custodial_accounts` /
-   `athlete_birthdates` / `filmer_rewards` / `athlete_vouches` / `school_confirmers` / etc.) — none
-   of the files in the table above are applied there yet either. The blocker was never "no
-   staging exists", it's applying to the one that does — still needs owner sign-off before anything
-   in the table above touches it, per this file's own rule.
+1. iOS preview finished 2026-09-30 and points at staging:
+   https://expo.dev/accounts/logoitino/projects/ala-sports/builds/22ce0d45-10b2-43fb-ace6-bfc3816b4814
+   (installs only on the registered iPad). Android is still in the free Expo queue:
+   https://expo.dev/accounts/logoitino/projects/ala-sports/builds/25203aff-a4bb-41fa-90aa-88c4f6cd1441
+   `create-payment-intent` and the test Stripe secret are on staging. Do not deploy
+   `stripe-webhook`. Before the first sign-in, add redirect `alasports://auth/callback` on staging
+   (STAGING_RUNBOOK §3). Upload buckets: `reels`, `avatars`, `game_highlights`. `reel_vault` is not
+   on staging yet.
 2. Owner + counsel: the open items in §6 — especially 8 (how money reaches families) and the App
    Store question in 9. They gate Wave 1 live money.
 3. Engineering, no owner call needed: **done 2026-09-29** — the telemetry anon-insert hole in §5
@@ -159,6 +163,14 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-09-30** — September SQL is on staging (`ala-sports-staging`), not on the development
+  project. Applied `tip_origin.sql` first (staging had no donation-channel columns), then
+  `clear_reel_hype`, custodial money, leaderboards, and migrations `20260929120000` through
+  `20260929190000`. Rally, custodial accounts, filmer rewards, and view counting now exist there.
+  Preview env now points at staging. iOS preview finished
+  (`22ce0d45-10b2-43fb-ace6-bfc3816b4814`); Android is still in the free queue
+  (`25203aff-a4bb-41fa-90aa-88c4f6cd1441`). The test Stripe secret is on staging.
+  `stripe-webhook` stays off.
 - **2026-09-29** — Cross-surface engineering pass. Highlights shows an active rivalry banner and
   opens Local on School Polls; Activity thank-yous open the athlete; Drip now has pull-to-refresh
   and separates loading, failure and a genuinely empty rack. Donation panels, Athlete HQ, Parent
@@ -378,19 +390,19 @@ Do not re-diagnose these. Fix them or leave them.
 
 | Thing | State |
 | --- | --- |
-| `supabase/clear_reel_hype.sql` not applied on the live DB | Un-voting a Seki/Aura/Flex no longer flickers, but the count **returns on refresh**. Client keeps the optimistic value deliberately. |
+| `clear_reel_hype` is on staging, not the development project | On the development database, un-voting a Seki/Aura/Flex no longer flickers, but the count **returns on refresh**. |
 | `telemetry_logs` INSERT policy is `with check (true)` for `anon` | **Shape-bounded in SQL, not applied** (`20260929190000_telemetry_logs_bounds.sql`). Guest inserts stay on purpose. Until it runs, one row can still report a nonsense event or an 11-day stall and skew Reports / Coverage / Money. After it runs, a single row cannot. Still open: many small valid-looking rows. Closing that needs §6 item 1, not a silent drop of guest telemetry. |
 | `telemetry_logs` has no `user_id` / `session_id` | No funnels, retention, or per-user behaviour is possible. Owner chose "session + user id" but it is **not built** — it is a privacy change needing policy copy first (§6). |
 | Expo web bundle | Fails on `lightningcss` native binary (missing for 1.33.0; 1.32.0 blocked by macOS code signing). Mobile is unaffected. |
 | Storage buckets `reels` / `game_highlights` / `avatars` are public | Vault-locked video is directly downloadable, bypassing entitlement. Accepted for internal testing only — ROADMAP Phase 5 hard blocker. |
 | `auth.role() = 'anon'` bypass on 8+ tables | Studio Unlock and Operator PIN have no real session. Accepted for internal testing, **not** for public beta. |
-| No staging Supabase project | ROADMAP Phase 2 item 4 — the remaining blocker before tester rollout. |
+| Staging has the September SQL; the development project does not | Applied 2026-09-30 to `ala-sports-staging` only. Preview builds still talk to the development project, which does not have Rallies, view counts, or the verification ladder. |
 | Nothing pushed | `wave0-custodial-verification` is well ahead of `origin/main` (local `main` is also ahead). Pushing needs owner approval and interactive GitHub auth. |
-| Self-verify holes — **fixed in SQL, not applied** | On the live DB today: `profiles.player_id`, `is_verified` and `verification_status` are client-writable (no column guard on "Users update own profile"), so any signed-in user can mark themselves verified and self-link to any athlete; a shared team code verifies instantly; admin approval stamps every profile with the same name. The client no longer does any of this, but the database still allows it until `supabase/migrations/20260929120000_athlete_verification_ladder.sql` is applied. ROADMAP Wave 1 blocker. |
+| Self-verify holes — fixed on staging, still open on the development project | On the development database: `profiles.player_id`, `is_verified` and `verification_status` are client-writable (no column guard on "Users update own profile"), so any signed-in user can mark themselves verified and self-link to any athlete; a shared team code verifies instantly; admin approval stamps every profile with the same name. The client no longer does any of this, but the database still allows it until `supabase/migrations/20260929120000_athlete_verification_ladder.sql` is applied. ROADMAP Wave 1 blocker. |
 | Held gifts have no cap or refund yet | Gifts to an unverified athlete are "held" only because payouts are 503. The design's ~$250 cap and 30-day refunds need the Phase 1a ledger. Future payout code must call `athlete_payout_allowed`. |
 | School confirm link needs the app | `alasports://school-confirm` opens only where Tapua'i is installed (Edge Functions can't serve HTML on the default domain). A web page for staff without the app is not built. Confirmers are added from the SQL Editor — no admin UI yet. |
 | One report hides a clip, with no reason | `report_reel` sets `is_flagged` on the first report and records no reason, so rival fans can hide real clips and moderators can't spot AI fakes. Plan: design doc §6. |
-| `supabase/custodial_money.sql`, `supabase/leaderboards.sql` and the 2026-09-29 files in `supabase/migrations/` (verification ladder through `20260929190000_telemetry_logs_bounds.sql`) not applied on the live DB | Written 2026-09-29, never parsed by Postgres. The Rally card and Say thanks buttons hide until the Rally migration is applied. The optional tip for Tapua'i does **not** hide: before the migration it is charged (Stripe metadata `platformTipCents`) but the `tips` row falls back without it and no `tip` revenue row is logged — apply the migration before testers donate. The verification card and school form hide/fail gracefully until the migration is applied. Until applied, the custodial cards and Spotlight Boards hide themselves and view counting no-ops. Telemetry inserts stay open to guests; the bounds file only caps row shape. Apply by hand after review (staging first). |
+| September SQL is on staging only | The development project still hides Rally, Say thanks, custodial cards, Spotlight Boards, and view counting. Testers see those only after a build points at `ala-sports-staging`. Telemetry shape bounds are on staging; guest inserts stay. |
 
 ---
 

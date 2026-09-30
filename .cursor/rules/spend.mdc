@@ -1,0 +1,13 @@
+---
+description: Remind the owner of the spend and the wave budget before any paid step
+alwaysApply: true
+---
+
+# Spend reminder
+
+Before recommending, starting, or confirming any step that costs money or uses a paid quota, say both of these in the same reply. Do this even when the step is free.
+
+1. **About to spend.** Name the item and the price from `docs/ROADMAP.md` (release-wave table) or `docs/STAGING_RUNBOOK.md` §0. If the price is not written there, say so and point at the vendor page. Do not invent a number.
+2. **Budget for this wave.** Wave 0 (test, now): Apple Developer **$99/yr** (already enrolled). Supabase, Expo, and Stripe test mode are **free**. Nothing comes in. Wave 1 (live money, later): LLC, counsel, association letter, Google Play **$25**, Supabase Pro **about $25/mo**, video bandwidth, Stripe’s per-payment fee, Connect per-account fees. Do not pull Wave 1 spend into the test wave.
+
+A new preview build, applying SQL, and a test-card donation (`4242`) are **$0** on this budget. Say that. Call out the only ways they stop being free: Expo’s free build quota runs out, or a free Supabase project pauses and Pro (~$25/mo) is the fix. Live Stripe keys are not this wave.
