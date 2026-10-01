@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
 import { AppState, type NativeEventSubscription } from 'react-native';
 
+import { parseReportReason } from '@/data/contentRights';
 import { addUserAura } from '@/lib/aura';
 import { DOUBLE_TAP_AURA_POINTS } from '@/data/highlights';
 import { isReelUuid, reportReelRemote } from '@/lib/reels';
@@ -46,6 +47,7 @@ export type OfflineBookmarkAction = {
 export type OfflineReportAction = {
   type: 'report_reel';
   reelId: string;
+  reason?: string;
 };
 
 export type OfflineActionPayload =
@@ -155,7 +157,7 @@ async function dispatch(action: OfflineQueuedAction): Promise<void> {
     await persistBookmark(action);
     return;
   }
-  await reportReelRemote(action.reelId);
+  await reportReelRemote(action.reelId, parseReportReason(action.reason));
 }
 
 /**

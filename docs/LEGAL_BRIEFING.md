@@ -70,7 +70,7 @@ Severity is a product judgment for fundraising, not a court ranking.
 | B | **Minors as payees** | Stripe / bank rejects accounts; parents sue; state AG child-privacy action | **Yes, if live payouts go to 16-year-olds without a lawful custodial design** |
 | C | **Holding customer funds** | Money-transmitter licensing (state-by-state) | **Yes, if we wallet funds instead of Stripe Connect / licensed partner** |
 | D | **Pay-for-play appearance** | Same as A, plus consumer-protection claims | High |
-| E | **UGC of minors + school footage** | Likeness, copyright (school / broadcast), takedown volume | High operationally; can become legal |
+| E | **UGC of minors + school footage** | Likeness, copyright (school / broadcast), takedown volume. As of 2026-10-01 the upload screen requires the uploader to confirm they filmed the clip or have permission, that the sound is the original recording or music they have the right to use, and that they are not treating a school logo, team mark, or TV broadcast as theirs. Game play also requires a real-footage confirmation. Reports can name fake footage, impersonation, or music/logo/broadcast, and those leave the public feed for review. Counsel still decides whether school marks may appear at all. | High operationally; can become legal |
 | F | **COPPA / under-13** | FTC; app store removal | High if the app is used by children under 13 |
 | G | **Gambling optics (polls)** | App store / state gaming if anyone can read it as a wager | Medium if product stays vote-only |
 | H | **Aura as value / “trading card”** | Securities or money-service confusion if points become transferable cash | Medium if we never sell or cash out Aura |

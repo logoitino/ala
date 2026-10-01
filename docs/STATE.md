@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-09-30 · September SQL applied to staging only · Wave 0 spend reminder: $99/yr Apple already enrolled; SQL, preview build, and test-card donate are $0 · Cross-surface reliability + reviewability: rivalry banner links Highlights to Local polls, Activity thanks opens the athlete, Drip and role HQ failures retry honestly, operator check-in confirms the write, PR/CODEOWNERS/folder guides and route-data CI guard added · Telemetry row bounds written, not applied (guest inserts stay; one fake row can no longer wreck a Reports average) · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
+**Last updated:** 2026-10-01 · Upload confirms permission, sound, and marks; reports name fake footage, music, logos, and broadcasts · 2026-09-30 · September SQL applied to staging only · Wave 0 spend reminder: $99/yr Apple already enrolled; SQL, preview build, and test-card donate are $0 · Cross-surface reliability + reviewability: rivalry banner links Highlights to Local polls, Activity thanks opens the athlete, Drip and role HQ failures retry honestly, operator check-in confirms the write, PR/CODEOWNERS/folder guides and route-data CI guard added · Telemetry row bounds written, not applied (guest inserts stay; one fake row can no longer wreck a Reports average) · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -52,10 +52,10 @@ spend: LLC, counsel, an association letter, Google Play **$25**, Supabase Pro, v
 Stripe’s fees. Do not start those for this test. Full table: `docs/ROADMAP.md` release waves.
 
 **Next up, in order.**
-1. iOS preview finished 2026-09-30 and points at staging:
-   https://expo.dev/accounts/logoitino/projects/ala-sports/builds/22ce0d45-10b2-43fb-ace6-bfc3816b4814
-   (installs only on the registered iPad). Android is still in the free Expo queue:
+1. Preview builds finished 2026-09-30 and point at staging. Android (any phone):
    https://expo.dev/accounts/logoitino/projects/ala-sports/builds/25203aff-a4bb-41fa-90aa-88c4f6cd1441
+   iOS (registered iPad only):
+   https://expo.dev/accounts/logoitino/projects/ala-sports/builds/22ce0d45-10b2-43fb-ace6-bfc3816b4814
    `create-payment-intent` and the test Stripe secret are on staging. Do not deploy
    `stripe-webhook`. Before the first sign-in, add redirect `alasports://auth/callback` on staging
    (STAGING_RUNBOOK §3). Upload buckets: `reels`, `avatars`, `game_highlights`. `reel_vault` is not
@@ -163,13 +163,21 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-10-01** — Upload and report safeguards. The upload sheet will not publish until the person
+  confirms they filmed the clip or have permission, the sound is the original recording or music
+  they have the right to use, and they are not treating a school logo, team mark, or TV broadcast
+  as theirs. Game play also requires a real-footage confirmation. Reports pick a reason.
+  Fake footage, impersonation, and music/logo/broadcast leave the public feed for review; other
+  reasons wait for the tagged athlete, their guardian, or three accounts. Migration
+  `20261001180000_content_rights_reports.sql` is applied on staging, not the development project.
+  The installed preview builds do not have the new checkboxes until the next build.
 - **2026-09-30** — September SQL is on staging (`ala-sports-staging`), not on the development
   project. Applied `tip_origin.sql` first (staging had no donation-channel columns), then
   `clear_reel_hype`, custodial money, leaderboards, and migrations `20260929120000` through
   `20260929190000`. Rally, custodial accounts, filmer rewards, and view counting now exist there.
-  Preview env now points at staging. iOS preview finished
-  (`22ce0d45-10b2-43fb-ace6-bfc3816b4814`); Android is still in the free queue
-  (`25203aff-a4bb-41fa-90aa-88c4f6cd1441`). The test Stripe secret is on staging.
+  Preview env now points at staging. Android and iOS preview builds both finished
+  (`25203aff-a4bb-41fa-90aa-88c4f6cd1441`, `22ce0d45-10b2-43fb-ace6-bfc3816b4814`).
+  The test Stripe secret is on staging.
   `stripe-webhook` stays off.
 - **2026-09-29** — Cross-surface engineering pass. Highlights shows an active rivalry banner and
   opens Local on School Polls; Activity thank-yous open the athlete; Drip now has pull-to-refresh

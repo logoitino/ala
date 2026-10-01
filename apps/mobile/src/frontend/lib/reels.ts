@@ -1,6 +1,7 @@
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import type { ReportReasonId } from '@/data/contentRights';
 import { parseReelCategory, type HighlightClip, type ReelCategory } from '@/data/highlights';
 import type { PlayReactionId } from '@/data/players';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -570,12 +571,22 @@ export function reelHiddenForUser(
 }
 
 /**
- * @purpose Append `auth.uid()` onto `reels.reported_by` and set `is_flagged` via RPC.
+ * @purpose Record a report reason and hide the clip from the public feed when the reason
+ * is fake footage, impersonation, or music/logo/broadcast, when the athlete or guardian reports it,
+ * or after three separate accounts report it.
  * @param reelId `reels.id` uuid.
- * @sideEffects `report_reel(target_reel_id)` (security definer). Seeded `hl-*` ids are no-ops.
+ * @param reason Report reason. Older databases that only have the one-argument RPC store it as unspecified.
+ * @sideEffects `report_reel(target_reel_id, report_reason)` (security definer). Seeded `hl-*` ids are no-ops.
  */
-export async function reportReelRemote(reelId: string): Promise<void> {
+export async function reportReelRemote(reelId: string, reason: ReportReasonId = 'unspecified'): Promise<void> {
   if (!isSupabaseConfigured || !isReelUuid(reelId)) return;
+  const withReason = await supabase.rpc('report_reel', {
+    target_reel_id: reelId,
+    report_reason: reason,
+  });
+  if (!withReason.error) return;
+  const message = withReason.error.message ?? '';
+  if (!/report_reason|Could not find the function|PGRST202/i.test(message)) throw withReason.error;
   const { error } = await supabase.rpc('report_reel', { target_reel_id: reelId });
   if (error) throw error;
 }

@@ -2,6 +2,14 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-10-01
+
+### Footage, sound, and marks
+
+- Before a Highlight publishes, the uploader confirms they filmed it or have permission, the sound is the original recording or music they have the right to use, and they are not treating a school logo, team mark, or TV broadcast as theirs. A game-play clip also confirms it is real footage, not AI-made or a face swap.
+- Report / Hide asks why: fake or AI-made footage, the wrong athlete, impersonation, music or a logo or a broadcast without permission, inappropriate, or other. Fake footage, impersonation, and music/logo/broadcast leave the public feed for review. Other reports hide the clip after the tagged athlete, their guardian, or three separate accounts report it.
+- Needs migration `20261001180000_content_rights_reports.sql` on the database the app is talking to.
+
 ## 2026-09-29
 
 ### Telemetry

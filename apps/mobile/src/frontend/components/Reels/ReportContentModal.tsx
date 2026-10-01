@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
@@ -7,6 +7,7 @@ import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { REPORT_REASONS, type ReportReasonId } from '@/data/contentRights';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { SPRING_CARD } from '@/theme/motion';
 
@@ -15,13 +16,14 @@ type ReportContentModalProps = {
   athleteName?: string;
   submitting?: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (reason: Exclude<ReportReasonId, 'unspecified'>) => void;
 };
 
 /**
- * @purpose Confirm Report / Hide Highlight 🚩 for a Reel. Confirm writes `report_reel` and hides the clip from this device.
+ * @purpose Confirm Report / Hide Highlight 🚩 for a Reel. The fan picks a reason first.
+ * Confirm writes `report_reel` and hides the clip from this device.
  * @param visible Opens over the Reel feed.
- * @param onConfirm Parent hides the clip, toasts, and calls `report_reel` (or queues it offline).
+ * @param onConfirm Parent hides the clip, toasts, and calls `report_reel` with the reason.
  * @returns Blurred confirm sheet.
  * @sideEffects None here — persistence lives in the parent / OfflineQueue.
  */
@@ -34,6 +36,11 @@ export function ReportContentModal({
 }: ReportContentModalProps) {
   const frame = useSheetFrame();
   const who = athleteName?.trim() ? `@${athleteName.trim()}` : 'this highlight';
+  const [reason, setReason] = useState<Exclude<ReportReasonId, 'unspecified'> | null>(null);
+
+  useEffect(() => {
+    if (!visible) setReason(null);
+  }, [visible]);
 
   const translateY = useSharedValue(24);
   const sheetOpacity = useSharedValue(0);
@@ -73,15 +80,34 @@ export function ReportContentModal({
           <Text style={styles.kicker}>Safety</Text>
           <Text style={styles.title}>Report / Hide Highlight 🚩</Text>
           <Text style={styles.body}>
-            Hide {who} from your feed. We flag the clip for review and it will not show on this account again.
+            Hide {who} from your feed. Tell us what is wrong so we can review it. It will not show on this account again.
           </Text>
+          <View style={styles.reasons}>
+            {REPORT_REASONS.map((row) => {
+              const selected = reason === row.id;
+              return (
+                <Pressable
+                  key={row.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  disabled={submitting}
+                  onPress={() => setReason(row.id)}
+                  style={[styles.reason, selected && styles.reasonOn]}
+                >
+                  <Text style={[styles.reasonLabel, selected && styles.reasonLabelOn]}>{row.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
           <View style={styles.actions}>
             <AnimatedButton
               accessibilityLabel="Report and hide this highlight"
-              disabled={submitting}
+              disabled={submitting || !reason}
               haptic="medium"
-              onPress={onConfirm}
-              contentStyle={[styles.reportBtn, submitting && styles.busy]}
+              onPress={() => {
+                if (reason) onConfirm(reason);
+              }}
+              contentStyle={[styles.reportBtn, (submitting || !reason) && styles.busy]}
             >
               <Text style={styles.reportLabel}>{submitting ? 'Reporting…' : 'Report and hide'}</Text>
             </AnimatedButton>
@@ -138,6 +164,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '600',
+  },
+  reasons: {
+    gap: 8,
+    marginTop: 4,
+  },
+  reason: {
+    minHeight: 44,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  reasonOn: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+  },
+  reasonLabel: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  reasonLabelOn: {
+    color: colors.primary,
   },
   actions: {
     gap: 10,

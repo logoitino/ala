@@ -40,6 +40,7 @@ import {
   HIGHLIGHT_OPTIMIZING,
   HIGHLIGHT_TOO_LONG,
 } from '@/data/media';
+import { rightsChecksFor, rightsReady, type RightsAckId } from '@/data/contentRights';
 import { COMPLIANCE_UPLOAD } from '@/data/legal';
 import { displayValue } from '@/data/players';
 import { gameMatchupLabel, playerTagLabel, uploadSekiPlay } from '@/lib/reels';
@@ -135,7 +136,7 @@ function ClipPreview({ uri }: { uri: string }) {
  * @param players Roster for the player tag picker.
  * @param onClose Dismiss (blocked while uploading).
  * @param onUploaded Pushes the new reel onto the active feed via `UploadSheetContext`.
- * @sideEffects `HighlightPickerModal` camera roll (45s) + compressor overlay; camera URI; expo-video thumbnail; `MediaUploadService` Storage `reels/{user_id}/{timestamp}.mp4` + `reels` insert; Success haptic on Publish Highlight ⚡. iOS Simulator never calls `launchCameraAsync` (native abort).
+ * @sideEffects `HighlightPickerModal` camera roll (45s) + compressor overlay; camera URI; expo-video thumbnail; `MediaUploadService` Storage `reels/{user_id}/{timestamp}.mp4` + `reels` insert with the rights confirmation; Success haptic on Publish Highlight ⚡. iOS Simulator never calls `launchCameraAsync` (native abort).
  */
 export function UploadVideoModal({ visible, players, onClose, onUploaded }: UploadVideoModalProps) {
   const insets = useSafeAreaInsets();
@@ -162,6 +163,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const [statusLabel, setStatusLabel] = useState('Uploading Seki play…');
   const [isExclusive, setIsExclusive] = useState(false);
   const [category, setCategory] = useState<ReelCategory>(REEL_CATEGORY_GAME);
+  const [rights, setRights] = useState<Partial<Record<RightsAckId, boolean>>>({});
   const [showSuccess, setShowSuccess] = useState(false);
 
   const selectedGame = games.find((game) => game.id === gameId) ?? null;
@@ -172,7 +174,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     : 'No specific game (optional)';
   const playerLabel = selectedPlayer ? playerTagLabel(selectedPlayer) : 'Tag the athlete in this video';
 
-  const canSubmit = Boolean(asset && playerId && caption.trim()) && !uploading;
+  const canSubmit = Boolean(asset && playerId && caption.trim()) && rightsReady(rights, category) && !uploading;
 
   const sortedPlayers = useMemo(
     () =>
@@ -229,6 +231,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       setLibraryOpen(false);
       setIsExclusive(false);
       setCategory(REEL_CATEGORY_GAME);
+      setRights({});
       setShowSuccess(false);
       successAnim.setValue(0);
       return;
@@ -687,6 +690,25 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
               </View>
             ) : null}
 
+            <View style={styles.rightsBox}>
+              {rightsChecksFor(category).map((row) => {
+                const checked = rights[row.id] === true;
+                return (
+                  <Pressable
+                    key={row.id}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked, disabled: uploading }}
+                    disabled={uploading}
+                    onPress={() => setRights((current) => ({ ...current, [row.id]: !current[row.id] }))}
+                    style={styles.rightsRow}
+                  >
+                    <Text style={[styles.rightsMark, checked && styles.rightsMarkOn]}>{checked ? '✓' : ''}</Text>
+                    <Text style={styles.rightsLabel}>{row.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
             <AnimatedButton
               accessibilityLabel={HIGHLIGHT_PUBLISH_LABEL}
               disabled={!canSubmit}
@@ -1126,6 +1148,44 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '700',
     fontSize: 13,
+  },
+  rightsBox: {
+    gap: 10,
+    marginTop: 8,
+    padding: 12,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  rightsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  rightsMark: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    textAlign: 'center',
+    lineHeight: 20,
+    color: colors.background,
+    fontWeight: '800',
+    overflow: 'hidden',
+  },
+  rightsMarkOn: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    color: colors.background,
+  },
+  rightsLabel: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '700',
   },
   submit: {
     minHeight: 54,

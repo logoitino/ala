@@ -524,6 +524,10 @@ export type Reel = {
   /** `reels_feed` only: uploader's handle or first name; null when the athlete posted it. */
   uploader_name?: string | null;
   uploader_avatar_url?: string | null;
+  /** When the uploader confirmed permission, sound, and marks. */
+  attested_at?: string | null;
+  /** Which confirmation text they agreed to. */
+  rights_version?: string | null;
 };
 
 /** Fan → athlete Crew follow (`public.crew_follows`). */
@@ -660,7 +664,7 @@ export type Database = {
       reels: {
         Row: Reel;
         Insert: Pick<Reel, 'video_url'> &
-          Partial<Pick<Reel, 'title' | 'player_id' | 'game_id' | 'seki_count' | 'aura_count' | 'flex_count' | 'total_tips_cents' | 'is_exclusive' | 'is_vault_only' | 'category' | 'flash_unlock_until'>>;
+          Partial<Pick<Reel, 'title' | 'player_id' | 'game_id' | 'seki_count' | 'aura_count' | 'flex_count' | 'total_tips_cents' | 'is_exclusive' | 'is_vault_only' | 'category' | 'flash_unlock_until' | 'attested_at' | 'rights_version'>>;
         Update: Partial<Reel>;
         Relationships: [
           {
@@ -1094,11 +1098,13 @@ export type Database = {
         };
       };
       report_reel: {
-        Args: { target_reel_id: string };
+        Args: { target_reel_id: string; report_reason?: string };
         Returns: {
           id: string;
           is_flagged: boolean;
           reported_by: string[];
+          reason?: string;
+          report_count?: number;
         };
       };
       publish_spotlight_award: {

@@ -21,6 +21,7 @@ import { ReelActionOverlay } from '@/components/Reels/ReelActionOverlay';
 import { FilmerSheet } from '@/components/Filmers/FilmerSheet';
 import { ReelMoreSheet } from '@/components/Reels/ReelMoreSheet';
 import { ReportContentModal } from '@/components/Reels/ReportContentModal';
+import type { ReportReasonId } from '@/data/contentRights';
 import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
 import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
 import { HypeBurst } from '@/components/Effects/HypeBurst';
@@ -479,7 +480,7 @@ function ReelCardImpl({
     [clip.category, commitHype],
   );
 
-  const confirmReport = useCallback(async () => {
+  const confirmReport = useCallback(async (reason: Exclude<ReportReasonId, 'unspecified'>) => {
     if (reporting) return;
     setReporting(true);
     try {
@@ -489,7 +490,9 @@ function ReelCardImpl({
       celebration?.showToast('Highlight hidden 🚩');
       setReportOpen(false);
       if (user?.id && isReelUuid(clip.id)) {
-        await offlineQueue.runOrEnqueue({ type: 'report_reel', reelId: clip.id }, () => reportReelRemote(clip.id));
+        await offlineQueue.runOrEnqueue({ type: 'report_reel', reelId: clip.id, reason }, () =>
+          reportReelRemote(clip.id, reason),
+        );
       }
     } finally {
       setReporting(false);
@@ -832,8 +835,8 @@ function ReelCardImpl({
         onClose={() => {
           if (!reporting) setReportOpen(false);
         }}
-        onConfirm={() => {
-          void confirmReport();
+        onConfirm={(reason) => {
+          void confirmReport(reason);
         }}
       />
     </View>

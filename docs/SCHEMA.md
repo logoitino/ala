@@ -153,7 +153,7 @@ Highlight / Seki clips. Files in Storage **`reels`** (fallback **`game_highlight
 | `total_tips_cents` | integer | Mālo on this clip |
 | `is_exclusive` | boolean default false | Legacy subscriber-only flag. Kept in lockstep with `is_vault_only`. |
 | `is_vault_only` | boolean default **false** | Clip lives in the Vault collection (not the free Highlights ⚡ tab). Fans only need a subscription when `players.vault_locked` is true. Athlete long-press calls `toggle_reel_vault_status` (**2026-09:** now checks the caller is the clip's `uploaded_by` or an admin — previously any signed-in user could flip any clip's Vault flag). |
-| `is_flagged` | boolean default false | Set by `report_reel`. Review flag, not a global takedown. |
+| `is_flagged` | boolean default false | Set by `report_reel` when the clip should leave the public feed: fake footage, impersonation, or music/logo/broadcast; a report from the tagged athlete or their guardian; or three separate accounts. One other report does not hide the clip. |
 | `reported_by` | uuid[] default `{}` | Fan ids who reported this clip. Feed hides the row for those users. |
 | `is_removed` | boolean default false | Admin **Remove Content**. Hidden from Highlights ⚡. Incremental: `supabase/admin_dashboard.sql`. |
 | `category` | text default `game_play` | `game_play` \| `train_like_me` \| `serve_like_me`. Upload pills + feed badge. Serve Like Me doubles double-tap Aura (`SERVE_LIKE_ME_AURA_MULTIPLIER`). Incremental: `supabase/reel_category.sql`. |
@@ -161,11 +161,25 @@ Highlight / Seki clips. Files in Storage **`reels`** (fallback **`game_highlight
 | `uploaded_by` | uuid FK → `profiles` ON DELETE SET NULL | Fan who uploaded. Trigger fills from the session profile. Incremental: `supabase/spotlight_auto.sql`. |
 | `tag_status` | text default `pending` | `pending` \| `confirmed` \| `rejected`. Existing rows were backfilled `confirmed`. New fan tags stay pending until the tagged athlete, parent, school operator, or admin confirms. Only confirmed Game Play hype elects Spotlight. |
 | `tag_confirmed_at` / `tag_confirmed_by` | timestamptz / uuid FK → `profiles` | Who verified the jersey. |
+| `attested_at` | timestamptz | When the uploader confirmed permission, sound, and marks. Null on older clips. |
+| `rights_version` | text | Which confirmation text they agreed to (`2026-10-01`). Incremental: `supabase/migrations/20261001180000_content_rights_reports.sql`. |
 | `created_at` | timestamptz | |
 
 **RLS (2026-09 audit — reels RLS tightening):** base-table SELECT is **not** public (**2026-09 paywall-bypass fix**, see below) — only the uploader's own row, or an admin. INSERT requires `authenticated` and `uploaded_by` to equal the caller's own `profiles.id` (the `reels_apply_tag_defaults` BEFORE INSERT trigger fills `uploaded_by` from the session before this check runs, so a real upload always satisfies it; a client cannot attribute a row to someone else's profile). UPDATE is two policies — the uploader may update their own row, or an admin (`current_user_role() = 'admin'`) may update any row — **and** a column-level `GRANT` on top of that narrows a raw client UPDATE to `title` / `category` / `is_exclusive` / `is_vault_only` / `flash_unlock_until` only. Counters (`seki_count` / `aura_count` / `flex_count` / `total_tips_cents`), `is_flagged` / `is_removed` / `reported_by`, and the tag fields are **not** in that grant — they only move through the SECURITY DEFINER RPCs (`increment_reel_hype`, `increment_reel_tips`, `moderate_flagged_reel`, `confirm_reel_player_tag`, `report_reel`), which bypass the column grant because they run as the function owner. Previously `with check (true)` on both INSERT and UPDATE — any anon/authenticated client could insert a Highlight attributed to any player, or vandalize any reel row (caption, video, hype counts, tip totals, vault flags, moderation flags) via a raw REST call.
 
 **`public.reels_feed` (2026-09 paywall-bypass fix):** the base table's SELECT policy used to be `using (true)` — combined with a public `GRANT`, that meant anyone holding the app's public anon key could read `video_url` for every reel via a raw REST call, including Vault-only / Exclusive / Flash-Unlock clips, with no subscription and no login. The `.eq('is_vault_only', false)` filters scattered through `lib/reels.ts` were only ever a feed convenience, never an access boundary. Fixed by narrowing the base table's own SELECT policy to the uploader's own row or an admin, and adding this view as the one real fan-facing read path: it mirrors every `reels` column, but `video_url` comes back as `''` unless the row is unlocked, Flash-Unlocked right now, or the caller is the uploader / an admin / holds an active `subscriptions` row for the tagged athlete. `lib/reels.ts` and `lib/spotlight.ts` (the only two call sites that ever needed `video_url` for someone else's clip) now read from `reels_feed`; `lib/admin.ts` / `lib/adminCatalog.ts` (metadata-only, no `video_url`) and `services/MediaUploadService.ts` (insert-then-read-own-row) still read the base table directly. The view is not marked `security_invoker`, so it reads the full base table as its owner regardless of the narrower base-table policy — Postgres's normal (pre-15) view behavior, used deliberately here.
+
+### `reel_reports`
+
+One row per account per clip. Written only by `report_reel`. Admins can read it (`current_user_role() = 'admin'`). Incremental: `supabase/migrations/20261001180000_content_rights_reports.sql`.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | uuid PK | |
+| `reel_id` | uuid FK → `reels` ON DELETE CASCADE | |
+| `reporter_id` | uuid | `auth.uid()` of the reporter |
+| `reason` | text | `fake_footage` \| `wrong_athlete` \| `impersonation` \| `rights` \| `inappropriate` \| `other` \| `unspecified` |
+| `created_at` | timestamptz | |
 
 ### `saved_reels`
 
@@ -811,13 +825,15 @@ search_local_entities(search_query text, entity_kind text default 'all')
 
 Grant: `EXECUTE` to `anon`, `authenticated`.
 
-### `report_reel(target_reel_id)`
+### `report_reel(target_reel_id, report_reason)`
 
 ```sql
-report_reel(target_reel_id uuid) returns jsonb  -- { id, is_flagged, reported_by }
+report_reel(target_reel_id uuid, report_reason text) returns jsonb
+  -- { id, is_flagged, reported_by, reason, report_count }
+report_reel(target_reel_id uuid) returns jsonb  -- same, reason 'unspecified'
 ```
 
-Requires `auth.uid()`. Appends the reporter onto `reels.reported_by` (no duplicates) and sets `is_flagged`. Grant: `EXECUTE` to `authenticated` only. Incremental: `supabase/report_reel.sql`. Client: `reportReelRemote` + `ReportContentModal` (local hide via `tapuai.hiddenReels` even for guests / seeded `hl-*` ids).
+Requires `auth.uid()`. Writes `reel_reports` (one row per account) and appends the reporter onto `reels.reported_by`. Sets `is_flagged` for fake footage, impersonation, or music/logo/broadcast; for a report from the tagged athlete or their guardian; or after three accounts. Grant: `EXECUTE` to `authenticated` only. Incremental: `supabase/migrations/20261001180000_content_rights_reports.sql` (replaces `supabase/report_reel.sql`). Client: `reportReelRemote` + `ReportContentModal` (local hide via `tapuai.hiddenReels` even for guests / seeded `hl-*` ids).
 
 ### `publish_spotlight_award`
 

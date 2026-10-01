@@ -190,7 +190,10 @@ confirmation and the public "verified" check no longer match by name. On apply, 
 only by a shared team code go back to pending.
 
 **Not built yet:** held-gift cap and refunds; a web version of the school form for staff without
-the app; an admin screen to issue confirmer links (SQL Editor for now); parent-registers-kid; §6.
+the app; an admin screen to issue confirmer links (SQL Editor for now); parent-registers-kid.
+§6 report reasons, the upload confirmation, and weighted hiding landed 2026-10-01
+(`20261001180000_content_rights_reports.sql`). Still open in §6: strikes, appeals, the filmed-at-the-game
+badge, and C2PA.
 
 ## 9. Growth first — school confirmation as a badge, not a gate (built 2026-09-29, owner OK)
 

@@ -1,5 +1,6 @@
 import { Platform, TurboModuleRegistry } from 'react-native';
 
+import { RIGHTS_VERSION } from '@/data/contentRights';
 import {
   HIGHLIGHT_MAX_MS,
   HIGHLIGHT_OPTIMIZING,
@@ -7,7 +8,7 @@ import {
 } from '@/data/media';
 import { parseReelCategory, type ReelCategory } from '@/data/highlights';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import type { Reel } from '@/types/database';
+import type { Database, Reel } from '@/types/database';
 
 export const REELS_BUCKET = 'reels';
 export const HIGHLIGHTS_FALLBACK_BUCKET = 'game_highlights';
@@ -179,65 +180,49 @@ async function insertReelRow(baseRow: {
   is_exclusive: boolean;
   is_vault_only: boolean;
   category: ReelCategory;
+  attested_at?: string;
+  rights_version?: string;
 }): Promise<Reel> {
-  const withCategory = await supabase
-    .from('reels')
-    .insert(baseRow)
-    .select('id, video_url, title, player_id, game_id, created_at, is_exclusive, is_vault_only, category')
-    .single();
-
-  if (!withCategory.error && withCategory.data) {
-    return {
-      ...(withCategory.data as Reel),
-      is_exclusive: baseRow.is_exclusive,
-      is_vault_only: baseRow.is_vault_only,
-      category: baseRow.category,
-    };
-  }
-
-  const insertError = withCategory.error;
-  if (insertError?.message.includes('category') || insertError?.message.includes('is_vault_only')) {
-    const { category: _dropped, ...withoutCategory } = baseRow;
-    const retry = await supabase
+  let row: Database['public']['Tables']['reels']['Insert'] = { ...baseRow };
+  let lastError: { message: string } | null = null;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const withCategory = await supabase
       .from('reels')
-      .insert(withoutCategory)
-      .select('id, video_url, title, player_id, game_id, created_at, is_exclusive, is_vault_only')
+      .insert(row)
+      .select('id, video_url, title, player_id, game_id, created_at, is_exclusive, is_vault_only, category')
       .single();
-    if (!retry.error && retry.data) {
-      return { ...(retry.data as Reel), is_exclusive: baseRow.is_exclusive, is_vault_only: baseRow.is_vault_only, category: baseRow.category };
+    if (!withCategory.error && withCategory.data) {
+      return {
+        ...(withCategory.data as Reel),
+        is_exclusive: Boolean(row.is_exclusive),
+        is_vault_only: Boolean(row.is_vault_only),
+        category: (row.category as ReelCategory) ?? baseRow.category,
+      };
     }
-    if (retry.error?.message.includes('is_vault_only') || insertError.message.includes('is_vault_only')) {
-      const vaultless = await supabase
-        .from('reels')
-        .insert({
-          video_url: baseRow.video_url,
-          title: baseRow.title,
-          player_id: baseRow.player_id,
-          game_id: baseRow.game_id,
-          is_exclusive: baseRow.is_exclusive,
-        })
-        .select('id, video_url, title, player_id, game_id, created_at, is_exclusive')
-        .single();
-      if (!vaultless.error && vaultless.data) {
-        return {
-          ...(vaultless.data as Reel),
-          is_exclusive: baseRow.is_exclusive,
-          is_vault_only: baseRow.is_vault_only,
-          category: baseRow.category,
-        };
-      }
-    }
+    lastError = withCategory.error;
+    const message = withCategory.error?.message ?? '';
+    const drop = (['attested_at', 'rights_version', 'category', 'is_vault_only'] as const).find(
+      (column) => column in row && message.includes(column),
+    );
+    if (!drop) break;
+    const next = { ...row };
+    delete next[drop];
+    row = next;
   }
 
-  throw new Error(
-    insertError?.message.includes('Could not find the table')
-      ? 'The reels table is missing. Run supabase/reels.sql in the SQL editor.'
-      : insertError?.message.includes('is_exclusive')
-        ? 'The reels.is_exclusive column is missing. Run supabase/subscriptions.sql in the SQL editor.'
-        : insertError?.message.includes('category')
-          ? 'The reels.category column is missing. Run supabase/reel_category.sql in the SQL editor.'
-          : insertError?.message ?? 'Could not save that Highlight.',
-  );
+  const insertError = lastError;
+  if (insertError) {
+    throw new Error(
+      insertError.message.includes('Could not find the table')
+        ? 'The reels table is missing. Run supabase/reels.sql in the SQL editor.'
+        : insertError.message.includes('is_exclusive')
+          ? 'The reels.is_exclusive column is missing. Run supabase/subscriptions.sql in the SQL editor.'
+          : insertError.message.includes('category')
+            ? 'The reels.category column is missing. Run supabase/reel_category.sql in the SQL editor.'
+            : insertError.message || 'Could not save that Highlight.',
+    );
+  }
+  throw new Error('Could not save that Highlight.');
 }
 
 /**
@@ -312,6 +297,8 @@ export async function uploadHighlight({
     is_exclusive: isExclusive,
     is_vault_only: isExclusive,
     category: nextCategory,
+    attested_at: new Date().toISOString(),
+    rights_version: RIGHTS_VERSION,
   });
 
   onProgress?.(1);
