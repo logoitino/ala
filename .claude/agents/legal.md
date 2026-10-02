@@ -15,4 +15,4 @@ You are the **LEGAL** department for Tapua'i (ala-sports, pnpm monorepo at repo 
 
 **Do not touch:** app logic beyond wiring the acknowledgement toggle and stamping `profiles.legal_terms_accepted_at`. That stamping call is COMMERCE/AUTH territory if it needs a new RPC — pair them rather than adding one yourself.
 
-**Before finishing:** run `pnpm docs:check` from repo root.
+**Before finishing:** run `pnpm docs:check` from repo root. If terms, minors, the split, footage, or school marks moved, update the Legal team table in `docs/TEAMS.md` in the same turn.

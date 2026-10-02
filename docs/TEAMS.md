@@ -3,7 +3,7 @@
 Use this when you **call a team** to fix or update one area. Command staff stays four people (Facilitator · Mobile · Backend · Ship QA). Product work is split into **departments** so a call has one owner, one fan surface, and a hard “do not touch” list.
 
 **Repo:** `~/Desktop/ala-sports` · GitHub `logoitino/ala` · pnpm monorepo.  
-**Copy:** UI **Mālo** / **Seki** / **Highlights ⚡**. Persistence still `tips` / `reels` / `useTipCheckout`.  
+**Copy:** money on screen is **Donate / donation** ([VOICE.md](VOICE.md)). "Mālo!" is only a thank-you. **Seki** / **Highlights ⚡**. Persistence still `tips` / `reels` / `useTipCheckout`.  
 **Facts:** [DOCUMENTATION.md](../DOCUMENTATION.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [SCHEMA.md](SCHEMA.md) · [ALA_TEAM_BRIEF.md](ALA_TEAM_BRIEF.md) · [CHANGELOG.md](../CHANGELOG.md). Do not invent prices, Aura math, or legal conclusions — run `pnpm docs:sync` or read [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md).
 
 ---
@@ -22,7 +22,13 @@ Read first: docs/TEAMS.md#<anchor>
 Gate: pnpm typecheck && pnpm docs:check
 ```
 
-Department codes: `FACILITATOR` · `HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `COMMERCE` · `AURA` · `ADMIN` · `BACKEND` · `OPERATOR` · `ROLE_HQ` · `QA` · `LEGAL`.
+Say the department in plain words. These calls have an agent that does the work:
+
+`CALL: DESIGN` · `CALL: ENGINEERING` · `CALL: LEGAL` · `CALL: VOICE` · `CALL: QA`
+
+`CALL: COMMERCE` is Finance. `CALL: ROLE_HQ` is Partnerships. `CALL: HIGHLIGHTS` is the Home squad inside Engineering. `FACILITATOR` is you. Marketing and Support have no agent yet.
+
+Screen squads, when the change is only in one place: `HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `COMMERCE` · `AURA` · `ADMIN` · `BACKEND` · `OPERATOR` · `ROLE_HQ`.
 
 If the bug spans two departments, **Facilitator** names a lead and a pair. Schema / RLS / RPC / Storage / Stripe secrets always pull **Backend**. Publish-to-app and docs honesty always pull **QA**.
 
@@ -31,6 +37,85 @@ If the bug spans two departments, **Facilitator** names a lead and a pair. Schem
 Every department except `FACILITATOR` (that's whoever is driving the session — human or the top-level Claude Code assistant, reading this file to route) is a real subagent at `.claude/agents/<code>.md` (lowercase, `ROLE_HQ` → `role-hq.md`). Ask Claude Code to dispatch one directly — "CALL: BACKEND, fix the anon RLS grants" works, or explicitly say "use the backend subagent." Each subagent's file already embeds its fan surface, admin desk, key files, do-not-touch list, and pairing rules from this page, plus any currently-open backlog items relevant to that department, so a call does not need to re-explain context. Subagents run with `Read, Edit, Write, Bash, Grep, Glob` (LEGAL and QA are more restricted — see their files) and are expected to self-gate with `pnpm typecheck` / `pnpm docs:check` before reporting done. Keep this file and the `.claude/agents/*.md` files in sync when a department's surface changes — the agent files are the executable copy, this file is the readable one.
 
 Cursor works in this same tree alongside Claude Code. Claude owns the security sweeps and `docs/ROADMAP.md`; Cursor should extend that work, not replace it or revive a closed audit item. Claude should keep Cursor's later fixes: Account Settings waits for the hamburger modal to dismiss before Soft-Wall opens, and profile photos plus booster logos upload as image bytes to `avatars` (`sponsors/` for logos), not as a `text/plain` blob and not into the video-only `game_highlights` bucket. New Vault / Exclusive videos upload to the private `reel_vault` bucket as `reelvault:{path}` and play through `resolvePlaybackUrl`; free Highlights stay on the public `reels` bucket. That bucket is a bridge only. The video host is still Cloudflare Stream or Mux — pick the cheaper one that still plays well — and neither tool should build transcoding, a CDN, or analytics on Supabase Storage while that choice is open. When either tool lands a schema or copy change, the other treats `docs/SCHEMA.md` and `docs/ROADMAP.md` as the current story.
+
+---
+
+## Business departments
+
+These are the departments a company actually has. The names under **Builds it** are the engineering agents that do the work today. Claude Code reads `.claude/agents/<file>.md`. Cursor uses the same name (`ROLE_HQ` → `role-hq`). A business department can have more than one agent. A new feature does not get a new department or a new agent if one of these already owns it.
+
+**Now** is Wave 0: internal test, Stripe test cards, staging. **Next** has to exist before a public build or live money, and it is not this week's build. **Later** is named so it is not forgotten. Do not start it because it is listed.
+
+| Department | What the business owns | Builds it | Now | Next | Later |
+| --- | --- | --- | --- | --- | --- |
+| **Product** | What ships, for whom, and in what order. Roadmap and the one next move. | `FACILITATOR` (the person driving the session, not a code agent) | Test wave: uploads, donations, Rally, on the staging preview | Owner decisions in STATE §6 before live money | Company formation stays with the founder |
+| **Design (UX/UI)** | How every screen looks, moves, and reads. | `DESIGN` (`.claude/agents/design.md`). `AURA` keeps tier math | Daylight canvas, tab colors, springs, one primary action per sheet, empty vs error | Feel check on a real phone with Quality (M9) | Share card, backer wall, badges, a bigger rivalry takeover (M8) |
+| **Engineering** | The app, the database, and the admin tools. | `ENGINEERING` (`.claude/agents/engineering.md`) leads the squads | Home, Activity, Local, Spotlight, Profile, sign-in, sideline scorer, Expo admin. Staging has the September SQL and the content-rights SQL. Drip tab is off | Magic-link redirect on staging. `reel_vault` so Vault video plays. Real admin and operator sessions. Pick Cloudflare Stream or Mux; do not build a video platform on Storage | Drip marketplace (Wave 1). Low-view lane (M3). Train Like Me / Ask an athlete (M4). Showcase link (M6). Game-day gigs (M5, Wave 3). No licensed music picker |
+| **Finance** | Money in, the split, receipts, and money out. | `COMMERCE`, with `BACKEND` on the ledger | Donate sheet (90 / 10, optional tip for Tapua'i starts at No tip), gear goals, Rally, receipts. Payouts stay blocked. Drip is off | One credit path: the webhook writes the donation, then the app stops inserting it. Parent is the payee. A server balance before any payout | Drip marketplace (Wave 1). Team gift and booster match (counsel first). Pathway labels only, no fund held here (M7). Filmer cash from Tapua'i's own budget (M11) — nothing in the UI mentions cash |
+| **Legal & Compliance** | What the company is allowed to say and do. Counsel decides. The agent only places approved words in the app. | `LEGAL` | Terms and ack toggles. Conclusions stay in `LEGAL_BRIEFING.md` | Counsel reviews the 90 / 10 line and App Store gift rules before live money | Formation, trademark, association letter (company phases L0–L4). The agent does not write those |
+| **Brand** | The words a parent reads. Donate / donation. No money tied to a play. | `VOICE` | `pnpm copy:check` on every money screen | Run again before a release | Every new money screen, including ones listed as Later |
+| **Trust & Safety** | Who may post, what may be reported, and what leaves the public feed. | `HIGHLIGHTS` for the report flow, `LEGAL` for the rules, `ADMIN` when a person has to review | Upload confirms permission, sound, and marks. Reports name a reason. Some reasons hide the clip immediately | A human moderation queue before public video of minors | Strikes, appeals, and a filmed-at-the-game badge. Not built |
+| **Partnerships** | Schools, families, booster clubs, and sponsors. | `ROLE_HQ`, with `LOCAL` for game-day boosters and `PROFILE` for the athlete | Parent, Booster, and Sponsor portals. A guardian approves an athlete's Rally | The parent stays the payee on paper. The payout button stays a stub | Real custodial payout only after Finance has a ledger. Written school permission before a commercial build shows a school mark |
+| **Operations** | Running a game day and the control plane. | `OPERATOR` and `ADMIN` | Sideline PIN, GPS check-in, score and clock. Expo `/admin` is where staff edit. The Next portal is read-only oversight | The operator PIN is for internal test only. It is not a public login | Paid game-day coverage and a light game line (M5). Billing and marketing desks were scoped, not started |
+| **Quality** | Whether a change is safe to hand to a tester. | `QA` | Typecheck, docs, copy, tests, sign-in, Profile, payments | Feel check on the preview installs | A full pass by each department, then the public-beta gate |
+| **Marketing** | How families hear about Tapua'i. | Nobody yet. Product and Brand hold the words until a desk exists | Not staffed. Do not invent campaigns | — | Rally stories from real families, with consent (M10) |
+| **Support** | Helping a parent or athlete when something breaks. | Nobody yet | Not staffed. Testers use the people already on the project | — | A help desk, after there are users outside the test group |
+
+A business call uses the agent named above. A screen call uses the squad (`CALL: HIGHLIGHTS`). Schema, RLS, Storage, and Stripe secrets always include `BACKEND`. Publish-to-app always includes Quality. Money words always include Brand. Anything a parent, a school, or a regulator could read as a promise includes Legal.
+
+### Design team
+
+**Department:** Design (UX/UI). **Agent:** `DESIGN` (`.claude/agents/design.md`). **Call:** `CALL: DESIGN`.
+
+Design produces the screen. The call names the surface. The agent edits that surface in the app, using the tokens that already exist.
+
+| Job | What Design does |
+| --- | --- |
+| **Visual system** | Daylight canvas, tab colors, and the springs in `theme/motion.ts`. One palette. |
+| **Hierarchy** | One primary action on a sheet. A parent can see what to tap. Loading, empty, and error look different. |
+| **Motion** | Uses `SPRING_CARD`, `SPRING_BOUNCE`, `SPRING_FLIP`, `SPRING_PEEK`. No one-off bounce on a button. |
+| **Look desk** | Expo `/admin/look`. A draft waits on Publish to app. |
+| **Hand-off** | The squad that owns the file keeps the data and the payments. Design does not rewrite those. Aura point math stays with `AURA`. Words stay with Brand. |
+
+**Do not:** start the Later list (share card, backer wall, badges) unless that item was asked for.
+
+### Engineering team
+
+**Department:** Engineering. **Agent:** `ENGINEERING` (`.claude/agents/engineering.md`). **Call:** `CALL: ENGINEERING`.
+
+Engineering produces the code. The lead reads `docs/STATE.md`, then either does the change or uses the squad that owns the files: `HIGHLIGHTS`, `LOCAL`, `SPOTLIGHT`, `PROFILE`, `AUTH`, `ADMIN`, `BACKEND`, `OPERATOR`. `AURA` is tier math when Design is not leading the screen.
+
+**Do not:** start a Later item unless it was asked for. Put a Stripe secret in the client. Deploy the webhook. Apply SQL to the development project unless asked.
+
+### Legal team
+
+**Department:** Legal & Compliance. **Agent:** `LEGAL` (`.claude/agents/legal.md`). **Call:** `CALL: LEGAL`.
+
+Legal does not decide the law. A licensed attorney does. This team puts the approved words into the app and keeps the issue map honest. The map is [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md). The order of company paper is [COMPANY_PHASES.md](COMPANY_PHASES.md) (L0–L4). Do not write a new legal conclusion in either file.
+
+| Job | Now | Next | Later |
+| --- | --- | --- | --- |
+| **Terms in the app** | `LegalModal` and the ack on Varsity apply and Connect Bank. The version the app asks people to accept is `LEGAL_TERMS_VERSION`. | Counsel drafts terms, privacy, and parental consent. The app only stores the version they approve. | — |
+| **Money words** | The donate sheet states the 90 / 10 split. Brand (`VOICE`) checks the wording. Legal does not invent the split. | Counsel reviews that line and the App Store gift rule before live money. | Tax reporting is a CPA and payments counsel question (company phase B6). |
+| **Minors** | New sign-up confirms 13+. Thank-yous are presets, with no free-text reply to a donor. A Rally an athlete starts waits for a guardian. | A minor does not get their own payout account. The parent is the payee, on paper, until counsel signs the design. | 1-on-1 video with minors stays off until the safety rules in the roadmap are signed. |
+| **Footage, sound, and marks** | Upload confirms permission, original or licensed sound, and that a school logo, team mark, or TV broadcast is not treated as ours. Game play also confirms real footage. | Counsel still decides whether a school mark may appear at all. | Strikes, appeals, and a filmed-at-the-game badge are not built. A licensed music catalog is not priced and is not this wave. |
+| **Schools and associations** | Demo rosters are not a license to use a school's name or film. | — | A written association or district position before one metro is talked to as a launch (company phase, before live money). |
+| **Company paper** | Not started. Stripe stays in test mode. | Counsel retained before filings. | LLC, trademark, and patent triage. The founder does this with counsel. The agent does not file anything. |
+
+**Pairs:** Brand for words on screen. Finance for prices and the split. Trust & Safety for reports and hiding a clip. Partnerships for a school or guardian. Product when counsel has to decide before anyone builds.
+
+**Do not:** Rewrite conclusions outside the `<!-- product-facts -->` markers. Put `sk_` in the app. Turn on live Stripe keys. Describe the app as patented, tax-deductible, or licensed by a school.
+
+### Keep the roster current
+
+When the app or the code changes who owns a screen, what a department does now, or what is next or later, update this file in the same turn:
+
+1. The row in **Business departments** for the department that owns the outcome.
+2. The engineering squad section if the fan surface, admin desk, or do-not-touch list moved.
+3. `.claude/agents/<file>.md` if that agent's description no longer matches the code.
+4. The Legal team table above if the change touches terms, minors, money wording, footage, school marks, or company paper.
+
+A feature that ships with a stale department row is not done. This is the same turn as `docs/STATE.md` §4. The rule lives in `.cursor/rules/documentation.mdc`.
 
 ---
 
@@ -47,7 +132,9 @@ These four roles already exist. They do not own a tab by themselves — they sta
 
 ---
 
-## Product departments (call these)
+## Engineering squads (call these)
+
+These are not extra companies. They are the Dev team, split by the part of the app they build. The business department that owns the outcome is in the table above.
 
 ### HIGHLIGHTS — Highlights ⚡ / Home
 
@@ -136,7 +223,7 @@ These four roles already exist. They do not own a tab by themselves — they sta
 
 **Do not:** Change tip amounts or Connect onboarding (`COMMERCE`). Do not auto-set Varsity on school claim. Do not split own Profile into a second layout.
 
-**Pair:** `AUTH` for Soft-Wall on Crew / Mālo / Chip In. `AURA` for the flip card. `HIGHLIGHTS` for collage / own-clip manager.
+**Pair:** `AUTH` for Soft-Wall on Crew / Donate / gear-goal donate. `AURA` for the flip card. `HIGHLIGHTS` for collage / own-clip manager.
 
 ---
 
@@ -145,7 +232,7 @@ These four roles already exist. They do not own a tab by themselves — they sta
 **Call:** `AUTH`  
 **Fan:** `SoftWallModal` · `WelcomeOverlay` · `alasports://auth/callback`  
 **Admin:** Expo Coverage Soft-Wall surface · Next `/auth` · Features Mālo / Crew / Wishlist / Operator flags · `/admin/people` (Demo Fan)  
-**What it does:** Guests browse Highlights, cards, wishlist. **Mālo · Join Crew · Chip In** open the wall (email+password, Demo Fan, Apple, Google, Magic Link) then resume. First-open overlay is not an account wall. Fan row via `handle_new_auth_user` + `ensureFanProfile`.
+**What it does:** Guests browse Highlights, cards, wishlist. **Donate · Join Crew · gear-goal donate** open the wall (email+password, Demo Fan, Apple, Google, Magic Link) then resume. First-open overlay is not an account wall. Fan row via `handle_new_auth_user` + `ensureFanProfile`.
 
 | Function | Where |
 | --- | --- |
@@ -279,11 +366,14 @@ These four roles already exist. They do not own a tab by themselves — they sta
 
 ---
 
-### LEGAL — Terms / NIL (Facilitator + briefing only)
+### LEGAL — Legal team (implementation only)
 
-**Call:** `LEGAL` (Facilitator leads; engineers implement copy hooks only)  
+The business write-up is [Legal team](#legal-team) above. This squad only places approved words.
+
+**Call:** `LEGAL` (`.claude/agents/legal.md`)  
 **Fan:** `LegalModal` · `LegalAckToggle` on Varsity apply + Connect Bank  
-**Source of conclusions:** [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) `<!-- product-facts -->` blocks. Do **not** rewrite legal conclusions outside those markers. Price/PIN/Aura changes: `pnpm docs:sync`.
+**Source of conclusions:** [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) `<!-- product-facts -->` blocks. Do **not** rewrite legal conclusions outside those markers. Price/PIN/Aura changes: `pnpm docs:sync`.  
+**Same turn:** if terms, minors, the split, footage, or school marks moved, update the Legal team table above.
 
 ---
 
@@ -296,7 +386,7 @@ Checklist:
 1. `pnpm typecheck`
 2. `pnpm docs:check`
 3. `pnpm --filter @tapuai/mobile test` (Jest — add a test alongside any new money/Aura/eligibility pure-logic file)
-4. Soft-Wall: guest can browse; Mālo/Crew/Chip In resume after sign-in
+4. Soft-Wall: guest can browse; Donate / Join Crew / gear-goal donate resume after sign-in
 5. Profile: own hub hamburger; `/user/[id]` back; no self Mālo
 6. Features: draft vs published; did anyone hit **Publish to app** on purpose?
 7. Press screenshots STALE if Reel / Local / Profile chrome moved
@@ -312,10 +402,11 @@ Full detail and rationale: `.claude/agents/qa.md` (the executable copy of this c
 | Fan section | Route | Department | Features flag (if any) |
 | --- | --- | --- | --- |
 | Home · Highlights ⚡ | `/` | `HIGHLIGHTS` | `tabs.home` |
+| Activity | `/activity` | `HIGHLIGHTS` (thank-you rows pair `COMMERCE`) | `tabs.activity` |
 | Local | `/local` | `LOCAL` | `tabs.local` |
 | Match | `/local/game/[id]` | `LOCAL` | `layouts.liveMatches` |
 | Spotlight | `/spotlight` | `SPOTLIGHT` | `tabs.spotlight` |
-| Drip | `/drip` | `COMMERCE` | `tabs.drip` |
+| Drip | `/drip` | `COMMERCE` (tab off until Wave 1) | `tabs.drip` (default false) |
 | Profile (own) | `/profile` | `PROFILE` | `tabs.profile` |
 | Public athlete | `/user/[id]` | `PROFILE` | — |
 | Gift flyer | `/gift/[handle]` | `PROFILE` + `COMMERCE` | — |
@@ -371,3 +462,4 @@ Next desks: `/` Overview · `/reports` behavior (`ADMIN`) · `/money` ledger (`C
 4. Folder law: routes only in `apps/mobile/app/`; UI in `src/frontend/components/`; no new `GameContext`.
 5. Never commit `.env.local`.
 6. One department per call unless Facilitator names a pair.
+7. If the change moves a screen, a department's Now / Next / Later, or a legal surface, update **Business departments** and the matching squad in this file, and the agent file, in the same turn. See [Keep the roster current](#keep-the-roster-current).
