@@ -27,6 +27,7 @@ import { AthleteReelManager } from '@/components/Profile/AthleteReelManager';
 import { AthleteStatsTab } from '@/components/Profile/AthleteStatsTab';
 import { AuraTradingCard } from '@/components/Profile/AuraTradingCard';
 import { LockerRoomWishlist } from '@/components/Profile/LockerRoomWishlist';
+import { AccountTagInbox } from '@/components/Profile/AccountTagInbox';
 import { ReceivedMaloPanel } from '@/components/Profile/ReceivedMaloPanel';
 import { RallyCard } from '@/components/Rally/RallyCard';
 import { ProfileHeroAvatar } from '@/components/Profile/ProfileHeroAvatar';
@@ -459,6 +460,7 @@ export function AthleteProfileView({
           }}
         />
       ) : null}
+      {ownSheet ? <AccountTagInbox /> : null}
       {ownSheet ? <ReceivedMaloPanel playerId={player.id} /> : null}
       <FilterPills
         items={tabs}

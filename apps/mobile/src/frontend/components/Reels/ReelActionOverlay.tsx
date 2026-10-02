@@ -40,6 +40,8 @@ type ReelActionOverlayProps = {
   athleteName: string;
   schoolName?: string;
   caption?: string;
+  /** Confirmed account mentions, already joined for one line. */
+  withAccounts?: string;
   /** Fan who filmed the clip ("🎥 Filmed by …"). Null when the athlete posted it. */
   filmedBy?: string | null;
   /** Tap on the filmer credit (opens `FilmerSheet`). */
@@ -73,6 +75,7 @@ export function ReelActionOverlay({
   athleteName,
   schoolName,
   caption,
+  withAccounts,
   filmedBy,
   onOpenFilmer,
   auraColor,
@@ -210,6 +213,11 @@ export function ReelActionOverlay({
             🎥 Filmed by {filmedBy}
           </Text>
         </Pressable>
+      ) : null}
+      {withAccounts ? (
+        <Text style={styles.caption} numberOfLines={1}>
+          With {withAccounts}
+        </Text>
       ) : null}
       {rail.showCaption && caption ? (
         <Text style={styles.caption} numberOfLines={2}>

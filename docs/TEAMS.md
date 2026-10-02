@@ -49,8 +49,8 @@ These are the departments a company actually has. The names under **Builds it** 
 | Department | What the business owns | Builds it | Now | Next | Later |
 | --- | --- | --- | --- | --- | --- |
 | **Product** | What ships, for whom, and in what order. Roadmap and the one next move. | `FACILITATOR` (the person driving the session, not a code agent) | Test wave: uploads, donations, Rally, on the staging preview | Owner decisions in STATE §6 before live money | Company formation stays with the founder |
-| **Design (UX/UI)** | How every screen looks, moves, and reads. | `DESIGN` (`.claude/agents/design.md`). `AURA` keeps tier math | Daylight canvas, tab colors, springs, one primary action per sheet, empty vs error | Feel check on a real phone with Quality (M9) | Share card, backer wall, badges, a bigger rivalry takeover (M8) |
-| **Engineering** | The app, the database, and the admin tools. | `ENGINEERING` (`.claude/agents/engineering.md`) leads the squads | Home, Activity, Local, Spotlight, Profile, sign-in, sideline scorer, Expo admin. Staging has the September SQL and the content-rights SQL. Drip tab is off | Magic-link redirect on staging. `reel_vault` so Vault video plays. Real admin and operator sessions. Pick Cloudflare Stream or Mux; do not build a video platform on Storage | Drip marketplace (Wave 1). Low-view lane (M3). Train Like Me / Ask an athlete (M4). Showcase link (M6). Game-day gigs (M5, Wave 3). No licensed music picker |
+| **Design (UX/UI)** | How every screen looks, moves, and reads. | `DESIGN` (`.claude/agents/design.md`). `AURA` keeps tier math | Daylight canvas, tab colors, springs, one primary action per sheet, empty vs error | Feel check on a real phone with Quality (M9) | Share card, backer wall, badges, a bigger rivalry takeover (M8). Fan digital signature on the Aura card |
+| **Engineering** | The app, the database, and the admin tools. | `ENGINEERING` (`.claude/agents/engineering.md`) leads the squads | Home, Activity, Local, Spotlight, Profile, sign-in, sideline scorer, Expo admin. Account tags on a Highlight (SQL not applied). Staging has the September SQL and the content-rights SQL. Drip tab is off | Magic-link redirect on staging. `reel_vault` so Vault video plays. Apply account-tag SQL when the owner asks. Real admin and operator sessions. Pick Cloudflare Stream or Mux; do not build a video platform on Storage | Drip marketplace (Wave 1). Fan digital signature on the Aura card. Low-view lane (M3). Train Like Me / Ask an athlete (M4). Showcase link (M6). Game-day gigs (M5, Wave 3). No licensed music picker |
 | **Finance** | Money in, the split, receipts, and money out. | `COMMERCE`, with `BACKEND` on the ledger | Donate sheet (90 / 10, optional tip for Tapua'i starts at No tip), gear goals, Rally, receipts. Payouts stay blocked. Drip is off | One credit path: the webhook writes the donation, then the app stops inserting it. Parent is the payee. A server balance before any payout | Drip marketplace (Wave 1). Team gift and booster match (counsel first). Pathway labels only, no fund held here (M7). Filmer cash from Tapua'i's own budget (M11) — nothing in the UI mentions cash |
 | **Legal & Compliance** | What the company is allowed to say and do. Counsel decides. The agent only places approved words in the app. | `LEGAL` | Terms and ack toggles. Conclusions stay in `LEGAL_BRIEFING.md` | Counsel reviews the 90 / 10 line and App Store gift rules before live money | Formation, trademark, association letter (company phases L0–L4). The agent does not write those |
 | **Brand** | The words a parent reads. Donate / donation. No money tied to a play. | `VOICE` | `pnpm copy:check` on every money screen | Run again before a release | Every new money screen, including ones listed as Later |
@@ -141,7 +141,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 **Call:** `HIGHLIGHTS`  
 **Fan:** `/` (Home · All · Seki, clip search, live banner, slang line, Player of the Week popup)  
 **Admin:** Expo `/admin/highlights` · `/admin/moderation` · `/admin/features` (hype + Home search) · `/admin/look` (Home copy / banner) · `/admin/catalog` (clip category labels)  
-**What it does:** TikTok-style `expo-video` pager. Seki 🤙 / Aura ⚡ / Flex 💪 rail + double-tap Aura. More sheet (Share / Save / Report). Athlete name opens `/user/[id]`. Offline queue for hype / bookmark / report.
+**What it does:** TikTok-style `expo-video` pager. Seki 🤙 / Aura ⚡ / Flex 💪 rail + double-tap Aura. More sheet (Share / Save / Report). Athlete name opens `/user/[id]`. Upload can also mention up to three accounts; they confirm on their own profile before "With …" shows. Donations stay on the athlete tag. Offline queue for hype / bookmark / report.
 
 | Function | Where |
 | --- | --- |
@@ -221,7 +221,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 **Note:** `profiles_public` is scoped to `bio`/`social_links`/`school_visible` only — it does not close the still-open `docs/ROADMAP.md` Phase 0 item 4 concern about the base `profiles` table's public grant exposing `stripe_connect_id` and other status columns.
 
-**Do not:** Change tip amounts or Connect onboarding (`COMMERCE`). Do not auto-set Varsity on school claim. Do not split own Profile into a second layout.
+**Do not:** Change tip amounts or Connect onboarding (`COMMERCE`). Do not auto-set Varsity on school claim. Do not split own Profile into a second layout. Do not build the fan digital signature on the Aura card — that is a later phase (`docs/ROADMAP.md` M8).
 
 **Pair:** `AUTH` for Soft-Wall on Crew / Donate / gear-goal donate. `AURA` for the flip card. `HIGHLIGHTS` for collage / own-clip manager.
 

@@ -7,6 +7,7 @@
  * @sideEffects Votes, saves, reports and view counts via hooks / lib; haptics.
  */
 
+import { fetchReelAccountTags } from '@/lib/accountTags';
 import { useEventListener } from 'expo';
 import { useIsFocused } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -151,6 +152,7 @@ function ReelCardImpl({
   const isFocused = (playbackActive ?? tabFocused) && active;
   const vaultOnly = isClipVaultOnly(clip);
   const [now, setNow] = useState(Date.now());
+  const [withAccounts, setWithAccounts] = useState('');
   const flashOpen = isFlashUnlockActive(clip.flashUnlockUntil, now);
   const flashChip = flashUnlockChipLabel(clip.flashUnlockUntil, now);
   const { subscribed, grant } = useAthleteSubscription(vaultOnly && !flashOpen ? clip.playerId ?? undefined : undefined);
@@ -314,6 +316,22 @@ function ReelCardImpl({
     stallStartedAtRef.current = null;
     void videoPlayer.replaceAsync(clip.videoUrl);
   }, [active, clip.videoUrl, videoPlayer]);
+
+  useEffect(() => {
+    if (!active || !clip.id) {
+      setWithAccounts('');
+      return;
+    }
+    let live = true;
+    void fetchReelAccountTags(clip.id).then((rows) => {
+      if (!live) return;
+      const names = rows.filter((row) => row.status === 'confirmed').map((row) => row.label);
+      setWithAccounts(names.join(', '));
+    });
+    return () => {
+      live = false;
+    };
+  }, [active, clip.id]);
 
   useEffect(() => {
     videoPlayer.loop = true;
@@ -755,6 +773,7 @@ function ReelCardImpl({
           athleteName={playerName}
           schoolName={schoolName}
           caption={clip.tag}
+          withAccounts={withAccounts}
           filmedBy={clip.filmedBy}
           onOpenFilmer={clip.filmedBy && clip.uploadedBy ? () => setFilmerOpen(true) : undefined}
           auraColor={auraTier.color}

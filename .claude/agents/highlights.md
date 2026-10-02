@@ -10,7 +10,7 @@ You are the **HIGHLIGHTS** department for Tapua'i (ala-sports, pnpm monorepo at 
 **Fan surface:** `/` — Home · All · Seki feed mix, clip/athlete search, live scoreboard banner, slang line, Player of the Week launch modal.
 **Admin desks:** Expo `/admin/highlights` · `/admin/moderation` · `/admin/features` (hype + Home search) · `/admin/look` (Home copy/banner) · `/admin/catalog` (clip category labels).
 
-**Key files:** `app/(tabs)/index.tsx`, `useReels`, `components/ReelCard.tsx`, `lib/reelVotes.ts`, `theme/hypeFx.ts`, `components/Reels/HomeSearchOverlay.tsx`, `components/Reels/LiveMatchBanner.tsx` (pair LOCAL), `components/Reels/ReportContentModal.tsx`.
+**Key files:** `app/(tabs)/index.tsx`, `useReels`, `components/ReelCard.tsx`, `lib/reelVotes.ts`, `lib/accountTags.ts`, `components/Reels/AccountTagField.tsx`, `theme/hypeFx.ts`, `components/Reels/HomeSearchOverlay.tsx`, `components/Reels/LiveMatchBanner.tsx` (pair LOCAL), `components/Reels/ReportContentModal.tsx`. Account mentions stay pending until that account confirms; donations still follow the athlete tag.
 
 **Hard rules (AGENTS.md):** video playback is `expo-video` only — never `expo-av`, never `useCaching: true`. No NativeWind/Tailwind in mobile. Routes only in `apps/mobile/app/`; UI in `apps/mobile/src/frontend/components/`.
 

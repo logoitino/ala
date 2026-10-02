@@ -1,12 +1,14 @@
 /**
  * The "post a highlight" sheet: pick a clip from the camera roll (45 s max) or record one, say which athlete is in it,
- * add a caption and category, confirm rights (filmed it or has permission, sound is original or licensed, no logos
- * or broadcast footage), then upload. Publish stays disabled until a clip, athlete, caption and every rights
- * confirmation are set. Compression and Storage upload go through `MediaUploadService`; the reel row is written
- * by `lib/reels.ts`.
- * @sideEffects Reads `games`; uploads to Storage bucket `reels`; inserts a `reels` row.
+ * add a caption and category, optionally mention up to three accounts, confirm rights (filmed it or has permission,
+ * sound is original or licensed, no logos or broadcast footage), then upload. Publish stays disabled until a clip,
+ * athlete, caption and every rights confirmation are set. Compression and Storage upload go through
+ * `MediaUploadService`; the reel row is written by `lib/reels.ts`. Account mentions are pending until confirmed.
+ * @sideEffects Reads `games`; uploads to Storage bucket `reels`; inserts a `reels` row; `tag_reel_accounts`.
  */
 
+import { AccountTagField } from '@/components/Reels/AccountTagField';
+import { attachAccountTags, type AccountTagHit } from '@/lib/accountTags';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -160,6 +162,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const [games, setGames] = useState<Game[]>([]);
   const [gameId, setGameId] = useState('');
   const [playerId, setPlayerId] = useState('');
+  const [accountTags, setAccountTags] = useState<AccountTagHit[]>([]);
   const [caption, setCaption] = useState('');
   const [asset, setAsset] = useState<PickedVideo | null>(null);
   const [openSelect, setOpenSelect] = useState<OpenSelect>(null);
@@ -230,6 +233,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       setCaption('');
       setGameId('');
       setPlayerId('');
+      setAccountTags([]);
       setProgress(0);
       setUploading(false);
       setOpenSelect(null);
@@ -359,6 +363,9 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         onProgress: setProgress,
         onStatus: setStatusLabel,
       });
+      if (reel.id && accountTags.length > 0) {
+        await attachAccountTags(reel.id, accountTags.map((row) => row.id));
+      }
       setProgress(1);
       setStatusLabel('Seki play uploaded.');
       fireSuccess();
@@ -577,6 +584,8 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
                 );
               })}
             </SelectField>
+
+            <AccountTagField value={accountTags} onChange={setAccountTags} disabled={uploading} />
 
             <Text style={styles.fieldLabel}>Title / Hype Caption</Text>
             <TextInput

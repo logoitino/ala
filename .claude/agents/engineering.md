@@ -29,7 +29,7 @@ If the change crosses squads, you do the work and name the pairs. Schema, RLS, S
 
 1. Read `docs/STATE.md` so you do not re-diagnose a known break.
 2. Implement the smallest change that does what was asked. Expo SDK 57. Routes only in `apps/mobile/app/`. UI in `src/frontend/components/`. Video is `expo-video` only.
-3. Do not start a Later item (Drip marketplace, low-view lane, Train Like Me, showcase link, game-day gigs, a music picker) unless the user asked for that item. Drip's fan tab stays off (`tabs.drip`) until Wave 1.
+3. Do not start a Later item (Drip marketplace, fan digital signature on the Aura card, low-view lane, Train Like Me, showcase link, game-day gigs, a music picker) unless the user asked for that item. Drip's fan tab stays off (`tabs.drip`) until Wave 1. The signature is named only.
 4. Same turn: `docs/STATE.md` §4, and `docs/TEAMS.md` if who owns the screen or Now / Next / Later moved. Update `.claude/agents/<squad>.md` if that squad's description is now wrong.
 5. Money words: Brand (`VOICE`). Terms, minors, footage rights, school marks: Legal. Screen craft the user asked Design for: do not restyle past the ask.
 

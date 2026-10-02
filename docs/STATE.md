@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-10-02 · Support received shows $0 when the ledger is empty or unavailable · Rivalry week swipes away; donate sheet stays on screen · Drip tab is off until Wave 1 · 2026-10-01 · Business departments (Product, Design, Engineering, Finance, and the rest) are in docs/TEAMS.md · Rights-check preview builds finished (iOS still the registered iPad only) · Upload confirms permission, sound, and marks; reports name fake footage, music, logos, and broadcasts · 2026-09-30 · September SQL applied to staging only · Wave 0 spend reminder: $99/yr Apple already enrolled; SQL, preview build, and test-card donate are $0 · Cross-surface reliability + reviewability: rivalry banner links Highlights to Local polls, Activity thanks opens the athlete, Drip and role HQ failures retry honestly, operator check-in confirms the write, PR/CODEOWNERS/folder guides and route-data CI guard added · Telemetry row bounds written, not applied (guest inserts stay; one fake row can no longer wreck a Reports average) · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
+**Last updated:** 2026-10-02 · Review hand-off refreshed · Account tags written, SQL not applied · Fan signature is later · Support received shows $0 when the ledger is empty or unavailable · Rivalry week swipes away; donate sheet stays on screen · Drip tab is off until Wave 1 · 2026-10-01 · Business departments (Product, Design, Engineering, Finance, and the rest) are in docs/TEAMS.md · Rights-check preview builds finished (iOS still the registered iPad only) · Upload confirms permission, sound, and marks; reports name fake footage, music, logos, and broadcasts · 2026-09-30 · September SQL applied to staging only · Wave 0 spend reminder: $99/yr Apple already enrolled; SQL, preview build, and test-card donate are $0 · Cross-surface reliability + reviewability: rivalry banner links Highlights to Local polls, Activity thanks opens the athlete, Drip and role HQ failures retry honestly, operator check-in confirms the write, PR/CODEOWNERS/folder guides and route-data CI guard added · Telemetry row bounds written, not applied (guest inserts stay; one fake row can no longer wreck a Reports average) · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -11,11 +11,21 @@ folder law. Do not skip to the code.
 
 ---
 
-## 0. Pick up here (hand-off, 2026-09-29)
+## 0. Pick up here (hand-off, 2026-10-02)
 
-**Where the code is.** Branch `wave0-custodial-verification` (`git log --oneline origin/main..HEAD`
-lists what is unpushed — every 2026-09-29 commit). **Nothing is pushed** — the owner has not
-approved a push. The working tree should be clean apart from the ~500 mode-flip files (§3).
+**Where the code is.** Branch `wave0-custodial-verification` is on GitHub (`origin/wave0-custodial-verification`).
+`origin/main` is behind it and can fast-forward; it has not been merged. Work after the last push
+(content-rights upload, departments, Drip off, Highlights sheet, Support received, account tags)
+is in the working tree until the review pull request. Do not `git add -A` — about 500 mode-flip
+files from the NAS are noise (§3).
+
+**Outside review.** Read this file, then `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/ARCHITECTURE.md`,
+`docs/SCHEMA.md`, `docs/ROADMAP.md` (Wave 0 is test mode), `docs/LEGAL_BRIEFING.md`,
+`docs/DATA_PRIVACY_MAP.md`, and `docs/VOICE.md`. `docs/PUBLIC.md` and `docs/INVESTOR.md` are not
+the security packet. `docs/AUDIT_REPORT.md` older sections are history. Open on purpose, do not
+treat as surprises: the app still writes `tips` after PaymentSheet (do not turn on `stripe-webhook`
+crediting), payouts stay blocked and do not check the amount owed, Stripe is test mode, and the
+development project does not have the staging SQL.
 
 **The mission — judge every change against it.** Make donations and highlights easy for families,
 so they can promote their kid and hopefully get them recruited; kids encourage good workouts with
@@ -67,13 +77,15 @@ Stripe’s fees. Do not start those for this test. Full table: `docs/ROADMAP.md`
    (shape-bounded, not identity-fixed; see §5). Rally meter on Highlights, the full-screen fill
    moment, and "Watch what it paid for" opening that clip also landed 2026-09-29 — see §4.
 4. Do **not** build without an owner decision: a filmer cash tip jar (LEGAL row P), free-text
-   thank-yous or any athlete ↔ fan messaging (LEGAL row S), a Rally tied to a play or stat.
+   thank-yous or any athlete ↔ fan messaging (LEGAL row S), a Rally tied to a play or stat,
+   a fan digital signature on the Aura card (named for a later wave — see §6).
+5. Account tags on a Highlight are in the app. SQL `20261002160000_reel_account_tags.sql` is
+   **not applied** anywhere. Until it is, the picker stays empty and a publish still succeeds.
 
-**Prove the tree is green before you change anything** (all passed at the last commit):
-`pnpm --filter @tapuai/mobile typecheck` · `pnpm --filter @tapuai/admin-portal typecheck` ·
-`pnpm --filter @tapuai/mobile test -- --watchman=false --runInBand` (40 suites / 191 tests) ·
-from the root: `pnpm copy:check`, `pnpm docs:check`, and `pnpm app:data-boundaries`
-(Node is `~/.local/node/bin`; `pnpm` scripts wrap these but pnpm can't reach the registry here).
+**Prove the tree is green before you change anything:**
+`pnpm typecheck` · `pnpm --filter @tapuai/mobile test -- --watchman=false` ·
+from the root: `pnpm copy:check`, `pnpm docs:check`, `pnpm app:data-boundaries`, and `pnpm comments:check`
+(Node is `~/.local/node/bin`).
 
 **When you finish — the doc checklist.** Code under `apps/` / `packages/` / `supabase/` → a §4
 line here + bump **Last updated**. User-visible → `CHANGELOG.md`. New table / RPC / column →
@@ -164,6 +176,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-10-02** — Review hand-off in §0 matches the branch on GitHub and the local work that is not pushed yet. Highlight account tags are in the app (`reel_account_tags`, up to three, confirm before the name shows). SQL `20261002160000` is written and not applied. A fan digital signature on the Aura card is later only.
 - **2026-10-02** — Support received shows **$0.00** and "No donations yet" when nobody has donated, and also when `get_received_malo` is missing or the call fails. That database message stays off the profile and Athlete HQ.
 - **2026-10-02** — Highlights: Rivalry week dismisses with a swipe left or right and stays gone for the visit. The donate sheet opens at the top of the form, stays inside the screen, and scrolls when the phone is short.
 - **2026-10-02** — Privacy work re-landed and telemetry conflict closed. A parallel session had deleted
@@ -483,6 +496,10 @@ Do not re-diagnose these. Fix them or leave them.
     athletic director or coach confirms each student in person on a Tapua'i form. Built (not
     applied). Still open: the pending-gift cap amount and refund window (need the ledger), and
     counsel on the "held" copy.
+
+11. **Fan digital signature on the Aura card** — *later, not this wave (owner 2026-10-02).* A fan
+    can earn a signature and place it on their Aura card, alongside other card extras in a later
+    phase. Do not build the capture, storage, or card slot now.
 
 ---
 

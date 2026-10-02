@@ -4,6 +4,11 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-10-02
 
+### Account tags
+
+- On a Highlight, the uploader can mention up to three accounts. The name stays hidden until that person taps That's me on their profile. Donations still go to the athlete in the clip. The database change is written and not applied yet, so the search stays empty until then.
+- A fan digital signature on the Aura card is named for a later phase. It is not in the app.
+
 ### Support received
 
 - An athlete with no donations sees **$0.00** and "No donations yet". A missing or failed donations call shows the same empty total, not "Could not load donations".

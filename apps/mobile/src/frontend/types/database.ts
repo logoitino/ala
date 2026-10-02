@@ -1335,6 +1335,26 @@ export type Database = {
         Args: Record<string, never>;
         Returns: string;
       };
+      search_taggable_accounts: {
+        Args: { search_query: string };
+        Returns: { id: string; label: string }[];
+      };
+      tag_reel_accounts: {
+        Args: { target_reel_id: string; profile_ids: string[] };
+        Returns: number;
+      };
+      get_reel_account_tags: {
+        Args: { target_reel_id: string };
+        Returns: { id: string; profile_id: string; label: string; status: string }[];
+      };
+      get_my_account_tags: {
+        Args: Record<string, never>;
+        Returns: { id: string; reel_id: string; reel_title: string; label: string; status: string }[];
+      };
+      confirm_account_tag: {
+        Args: { target_tag_id: string; tag_action: string };
+        Returns: string;
+      };
       upsert_cheer_poll: {
         Args: {
           poll_slug: string;
