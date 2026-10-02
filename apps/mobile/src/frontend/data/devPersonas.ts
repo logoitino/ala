@@ -1,3 +1,9 @@
+/**
+ * Fake athletes and fans for development only: seven personas from a rookie to an Aura legend, so every Aura tier
+ * and profile state can be tried without real accounts. Used by the Studio unlock tool and the Aura boosters mock,
+ * and only when `isDevMode()` (`__DEV__`) is true.
+ */
+
 import { AURA_TIERS } from '@/lib/aura';
 import type { Player } from '@/types/database';
 

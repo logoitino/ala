@@ -1,3 +1,7 @@
+/**
+ * Small badge on an athlete's profile showing how many fans have donated to them.
+ */
+
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, radii } from '@/constants/theme';

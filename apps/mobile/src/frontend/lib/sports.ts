@@ -1,3 +1,11 @@
+/**
+ * Per-sport configuration (positions, scoring actions, stat fields, callouts, measurables) stored in Supabase.
+ * Rows live in `sport_configs`, read with the `get_sport_configs` RPC and written with `upsert_sport_config`. Starters
+ * come from `data/sports.ts`; the Expo /admin Sports desk edits them; scorer and profile screens read them through
+ * `hooks/useSportConfigs`. `parseSportConfig` validates untrusted rows so a bad row cannot crash a screen.
+ * @sideEffects Reads and writes sport configs; `fetchSportUsage` also reads `athlete_career_stats` and `games`.
+ */
+
 import {
   GENERIC_SPORT_CONFIG,
   SPORT_CONFIG_SEEDS,

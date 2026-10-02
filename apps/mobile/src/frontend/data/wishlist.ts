@@ -1,3 +1,8 @@
+/**
+ * Locker Room wishlist content and maths: titles and labels, demo items, the preset donate amount, Aura for an
+ * equipped item, and funded-progress helpers (percent, funded check, labels, applying a donation to an item).
+ */
+
 import type { WishlistItem } from '@/types/database';
 
 export const WISHLIST_TITLE = '👟 Locker Room Wishlist';

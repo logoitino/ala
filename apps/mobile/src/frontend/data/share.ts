@@ -1,3 +1,7 @@
+/**
+ * Gift link text: the canonical web URL encoded in the athlete QR and the family-facing explainer under it.
+ */
+
 export const SHARE_FUND_CTA = 'Share & Donate ⚡';
 export const SHARE_QR_TITLE = 'Share & Donate ⚡';
 export const SHARE_SAVE_LABEL = '📸 Save QR Image to Camera Roll';

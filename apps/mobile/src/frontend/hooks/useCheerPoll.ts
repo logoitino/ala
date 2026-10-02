@@ -1,3 +1,8 @@
+/**
+ * School Polls: load the active polls, remember which side a fan chose (AsyncStorage) and cast a vote.
+ * @sideEffects `cheer_polls` read; `cast_cheer_vote` RPC.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';

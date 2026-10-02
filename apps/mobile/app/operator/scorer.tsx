@@ -1,3 +1,8 @@
+/**
+ * Sideline scorer: pick a game and a side, then tap score steps and plays; plays are saved as `game_events`.
+ * Labels and actions come from `useSportConfigs`; Retry shows when games fail to load.
+ */
+
 import { Stack } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';

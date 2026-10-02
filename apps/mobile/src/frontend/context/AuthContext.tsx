@@ -1,3 +1,11 @@
+/**
+ * Who is using the app: the Supabase session, the signed-in profile and role, guest browse markers, sign-in
+ * (Apple / Google / Magic Link), the fan-or-athlete switch, and the owner "Studio unlock".
+ * Everything else asks this context before gating a feature (`useAuth`). Profile edits write `profiles`;
+ * role, verification and player link are server-owned and cannot be set from here.
+ * @sideEffects Supabase Auth session, `profiles` reads / writes, AsyncStorage guest markers.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { type Session, type User } from '@supabase/supabase-js';
 import { type Href, useRouter } from 'expo-router';

@@ -1,3 +1,8 @@
+/**
+ * Skia glowing outline for the Aura card: a gradient stroke that orbits the card and pulses at the top Aura tier
+ * or when a gear goal is fully funded. Wrap a card in it; the stroke is drawn over the children.
+ */
+
 import { type ReactNode, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { BlurMask, Canvas, RoundedRect, SweepGradient, vec } from '@shopify/react-native-skia';

@@ -1,3 +1,9 @@
+/**
+ * Client view of the payout gate: whether an athlete's gifts can be paid out (school-confirmed, or unlocked by the
+ * family's Stripe ID check with a cap until teammates vouch). Parses `get_my_payout_status`; unknown shapes become
+ * null so the UI shows nothing extra. The rules are enforced in SQL, not here.
+ */
+
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 function rpcMissing(message: string | undefined): boolean {

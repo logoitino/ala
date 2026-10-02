@@ -1,3 +1,8 @@
+/**
+ * Sponsor HQ: create and list sideline / rivalry sponsor banners (title, rivalry name) shown on game day.
+ * Reads and writes go through `lib/sponsorAds.ts`; failures show Retry instead of an empty list.
+ */
+
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';

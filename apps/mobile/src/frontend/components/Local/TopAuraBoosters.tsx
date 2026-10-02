@@ -1,3 +1,8 @@
+/**
+ * Local tab → Boosters hub: ranked fans who have boosted athletes' Aura, with a peek sheet per booster.
+ * Data from `hooks/useAuraBoosters`; tiers and colours from `lib/aura.ts`.
+ */
+
 import { useEffect, useState } from 'react';
 import { Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';

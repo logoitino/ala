@@ -1,3 +1,9 @@
+/**
+ * Booster HQ: bulk-add a roster by pasting CSV (name, jersey_number, position, school_name) and set an
+ * athlete's verification status. `parseRosterCsv` is deliberately forgiving: it skips a header row and blank lines.
+ * @sideEffects Inserts players; updates verification status; telemetry `booster_csv` / `booster_verify`.
+ */
+
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';

@@ -1,3 +1,7 @@
+/**
+ * One athlete row in Local lists: jersey number, name, team, and a favorite star. Tapping opens the athlete.
+ */
+
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';

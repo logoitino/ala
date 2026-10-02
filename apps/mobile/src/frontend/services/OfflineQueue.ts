@@ -1,3 +1,9 @@
+/**
+ * Process-wide queue for actions taken without a connection: Aura taps, cheer votes, bookmarks and reports.
+ * Stored in AsyncStorage while NetInfo says offline, then replayed to the matching Supabase RPCs on reconnect.
+ * @sideEffects AsyncStorage, NetInfo listener, Supabase RPCs on flush.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
 import { AppState, type NativeEventSubscription } from 'react-native';

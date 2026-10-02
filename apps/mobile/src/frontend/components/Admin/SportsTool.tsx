@@ -1,3 +1,9 @@
+/**
+ * Expo /admin → Sports desk: edit a sport's positions, scoring actions, stat fields and sideline callouts,
+ * with a live preview of what the scorer and profile will show. Saves through `lib/sports.ts`.
+ * @sideEffects Writes sport configs to Supabase.
+ */
+
 import { useCallback, useMemo, useState } from 'react';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';

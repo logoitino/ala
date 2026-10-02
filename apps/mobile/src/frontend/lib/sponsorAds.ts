@@ -1,3 +1,7 @@
+/**
+ * Sponsor HQ data: list, publish and switch off sideline and rivalry banners. Used by app/(sponsor).
+ */
+
 import { supabase } from '@/lib/supabase';
 import type { SponsorAd } from '@/types/database';
 

@@ -1,3 +1,8 @@
+/**
+ * Exclusive (Vault) subscription defaults: monthly price and the Aura granted. The owner can change the price from
+ * Expo /admin → Catalogs and "Publish to app".
+ */
+
 import type { HighlightClip } from '@/data/highlights';
 
 export type ExclusivePost = {

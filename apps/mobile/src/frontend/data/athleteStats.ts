@@ -1,3 +1,8 @@
+/**
+ * Athlete stats shapes (career, physicals, game log) and the helpers that pick column headers for a sport or infer
+ * a sport from a roster position when the data does not say.
+ */
+
 import { sportConfigFor, statLabelFor, type SportConfig } from '@/data/sports';
 import type { AthleteSport } from '@/data/teams';
 import type { Player } from '@/types/database';

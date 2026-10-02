@@ -1,3 +1,10 @@
+/**
+ * Donation checkout: opens the native Stripe PaymentSheet for a donation, Exclusive subscription, Drip order or
+ * booster sponsorship, then records the result. Donations grant Aura to the donor and the athlete.
+ * Code names keep `tip` / `malo`; on-screen words follow docs/VOICE.md. Needs a dev or preview build, not Expo Go.
+ * @sideEffects Edge Function `create-payment-intent` (Metro route as fallback), Stripe PaymentSheet, inserts into `tips`.
+ */
+
 import { useCallback, useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';

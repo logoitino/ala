@@ -1,3 +1,11 @@
+/**
+ * Data layer for the Expo /admin catalog desks: shop (Drip) products, wishlist items, people, highlights, the
+ * operations inbox, polls, games and verification. Screens under components/Admin call these instead of Supabase
+ * directly. Also holds money-input helpers (`centsFromDollarsInput`, `dollarsInputFromCents`) and `slugify`.
+ * Admin-only: every write assumes the caller's role is admin and relies on RLS to enforce it.
+ * @sideEffects Reads and writes many tables via the shared Supabase client.
+ */
+
 import { fetchAdminSpotlightAwards } from '@/lib/admin';
 import { DRIP_ITEMS, type DripCategory, type DripItem } from '@/data/shop';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';

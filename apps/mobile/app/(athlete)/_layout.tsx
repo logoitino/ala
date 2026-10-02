@@ -1,3 +1,7 @@
+/**
+ * Athlete route group layout: `athlete` role only (`RoleGate`).
+ */
+
 import { Stack } from 'expo-router';
 
 import { RoleGate } from '@/context/RoleGate';

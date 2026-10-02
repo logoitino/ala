@@ -1,3 +1,8 @@
+/**
+ * Row of an athlete's Seki / Aura / Flex / view counts. `interactive` turns the counts into tap-to-bump buttons
+ * (local-first via `lib/hype.ts`).
+ */
+
 import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 

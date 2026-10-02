@@ -1,3 +1,9 @@
+/**
+ * The production map: every fan-visible control is listed with its admin desk, optional runtime flag and
+ * telemetry id. Powers the Overview and Coverage desks ("what is live, what is paused, what is not instrumented").
+ * Add a row here whenever you add a fan control.
+ */
+
 import type { AdminNavHref } from '@/lib/admin';
 import { getRuntimeFlag, type AppRuntimeConfig, type AppRuntimeFlagPath } from '@/lib/runtime';
 

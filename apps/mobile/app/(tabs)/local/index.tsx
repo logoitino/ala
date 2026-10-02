@@ -1,3 +1,8 @@
+/**
+ * Local tab (game day): Matches, School Polls and Top Boosters hubs, plus search (`SearchResultsOverlay`).
+ * Reached from the Home pill, not the tab bar. The `tabs.local` runtime flag can pause it (`RuntimePaused`).
+ */
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMemo, useRef, useState, useEffect } from 'react';

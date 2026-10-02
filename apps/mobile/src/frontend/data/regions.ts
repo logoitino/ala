@@ -1,3 +1,8 @@
+/**
+ * Utah regions used to group the Local tab: each has ZIP prefixes and school keywords that decide which
+ * region a game or school belongs to. Add a region here to add a Local filter.
+ */
+
 export type UtahRegion = {
   id: string;
   label: string;

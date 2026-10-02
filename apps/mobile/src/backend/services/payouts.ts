@@ -1,3 +1,10 @@
+/**
+ * Server-side payout logic: move custodial funds to the signed-in payee's Stripe Express account, or report them as
+ * queued when Stripe is not configured. Amounts are integer cents (minimum $1.00) and the destination is always
+ * resolved on the server, never taken from the client. Payouts are not live yet; the API route answers 503.
+ * @sideEffects Stripe `transfers.create` when a secret key and destination exist.
+ */
+
 import Stripe from 'stripe';
 
 export type PayoutRequest = {

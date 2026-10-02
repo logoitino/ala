@@ -1,3 +1,7 @@
+/**
+ * Booster HQ layout: `booster` role only; paused screen when the `layouts.boosterHq` flag is off.
+ */
+
 import { Stack } from 'expo-router';
 
 import { RuntimePaused } from '@/components/RuntimePaused';

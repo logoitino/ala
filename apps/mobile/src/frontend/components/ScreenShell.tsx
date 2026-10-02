@@ -1,3 +1,7 @@
+/**
+ * Wrapper for non-tab screens (role HQs, admin desks): safe-area edges plus the runtime background colour.
+ */
+
 import { type ReactNode } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

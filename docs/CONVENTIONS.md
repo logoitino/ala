@@ -91,22 +91,60 @@ re-export shims: three dead ones were deleted on 2026-09-28.
 
 ---
 
-## 5. Every module carries a doc header
+## 5. Comments — every file explains itself
 
-Required on hooks, network/RPC helpers, and complex components — enforced by
-`.cursor/rules/documentation.mdc`:
+Goal: someone outside the team (a reviewer, a volunteer, a new engineer) can open any file and learn,
+in under a minute, **what it is for, where it sits, and what it touches** — without running the app.
+`pnpm comments:check` (CI) fails when a source file under `apps/mobile/app` or `apps/mobile/src` has no
+comment at all.
+
+**Three levels, from most to least required:**
+
+1. **File header — every file.** First thing in the file, before the imports. Two to six lines of plain
+   product language: what this file is, which screen / feature / table it belongs to, and the one rule a
+   reader must not break. Name the neighbours when it matters ("the web twin of `share.ts`", "wrapper
+   that keeps `ReelCardImpl` memoised"). Add `@sideEffects` when it reads or writes Supabase, Realtime,
+   Stripe, Storage, AsyncStorage, or the device (haptics, camera).
+2. **Doc block on each exported hook, network / RPC helper, and complex component.** The
+   `@purpose` / `@param` / `@returns` / `@sideEffects` block below. Skip one-line formatters unless they
+   encode a business rule (Aura maths, the 90 / 10 split, view thresholds).
+3. **Inline comments — the *why*, never the *what*.** Explain a constraint, a bug the line prevents,
+   an order that matters, or a decision the owner made (with the date). Do not narrate code that reads
+   clearly. A good comment answers "why is it done this odd way?"; delete one that only restates the line.
 
 ```ts
 /**
- * @purpose What this does in product language (Mālo, Seki, Aura, operator clock).
+ * Highlights data layer: fetch the feed, hype votes, reports.   <- file header (level 1)
+ * Screens call this, not Supabase.
+ * @sideEffects `reels` and related RPCs; AsyncStorage for local hides.
+ */
+
+/**
+ * @purpose What this does in product language (Donate, Seki, Aura, operator clock).
  * @param name What each input is for.
  * @returns What comes back, or what renders.
  * @sideEffects Supabase, Realtime, Stripe, Storage, AsyncStorage, haptics. Omit if none.
  */
 ```
 
-Product copy is **Mālo** / **Seki** / **Highlights ⚡**. Persistence keeps the old names
-(`tips`, `reels`, `useTipCheckout`) — do not rename them to match the UI.
+**Also comment:**
+
+- **SQL:** every file in `supabase/migrations/` starts with what it changes, why, what it depends on, and a
+  `Rollback:` block (see `supabase/migrations/README.md`). Policies and RPCs get a one-line comment saying
+  who may call them.
+- **Folder README:** a folder with more than a handful of files gets a `README.md` saying what belongs
+  there and what does not (see `components/`, `hooks/`, `lib/`, `supabase/`).
+- **Tests:** the test file names the behaviour under test; a test for a bug says which bug.
+- **Money, privacy, and safety code:** state the rule being enforced and where the owner or counsel decided
+  it (`docs/STATE.md` §6, `docs/LEGAL_BRIEFING.md` row). These are the places outside reviewers look first.
+
+**When you change a file, keep its comments true.** A stale comment is worse than none. If a header still
+describes the old behaviour after your edit, fix it in the same commit.
+
+On-screen words follow `docs/VOICE.md`: money is **Donate / donation**; "Mālo!" is only a thank-you;
+**Seki** / **Highlights ⚡** are the product names. Persistence keeps the old code names (`tips`, `reels`,
+`useTipCheckout`, `malo*`) — do not rename them to match the UI; say "code name `tip` = donation" in a
+comment where it would confuse a reader.
 
 ---
 

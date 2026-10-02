@@ -1,3 +1,7 @@
+/**
+ * Web version of `share.ts`: builds the same gift URL, but copies the link instead of saving to a Camera Roll.
+ */
+
 import { Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 

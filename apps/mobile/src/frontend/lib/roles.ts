@@ -1,3 +1,8 @@
+/**
+ * Role helpers: narrow a string to a known `UserRole` and decide who may open /admin (`is_admin` or the admin role).
+ * Route groups use these through `RoleGate`.
+ */
+
 import type { UserRole } from '@/types/database';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 

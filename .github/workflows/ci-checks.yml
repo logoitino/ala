@@ -65,6 +65,9 @@ jobs:
       - name: Keep data access out of Expo routes
         run: pnpm app:data-boundaries
 
+      - name: Every source file has a header comment (docs/CONVENTIONS.md §5)
+        run: pnpm comments:check
+
       - name: Run mobile unit tests
         run: pnpm --filter @tapuai/mobile test -- --ci
 

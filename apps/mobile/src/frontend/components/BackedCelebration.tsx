@@ -1,3 +1,9 @@
+/**
+ * Full-screen thank-you moment after a donation succeeds (confetti + card).
+ * Driven by `CelebrationContext`: any screen sets a payload, this component, mounted once at the app root,
+ * shows it and clears it on dismiss.
+ */
+
 import { useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,

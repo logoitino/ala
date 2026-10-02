@@ -1,3 +1,9 @@
+/**
+ * Loads the Highlights clips with loading / error state and a manual `refresh`.
+ * Wraps `fetchReels` (lib/reels.ts); shows a readable message when Supabase env vars are missing and ignores
+ * results that arrive after the screen unmounted.
+ */
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { fetchReels, type ReelHype } from '@/lib/reels';

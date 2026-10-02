@@ -1,3 +1,8 @@
+/**
+ * One student row on the school confirmation form: the athletic director or coach attests they met the student
+ * in person and that they are on the roster (`ROSTER_ATTESTATION`). Used by app/school-confirm.tsx.
+ */
+
 import { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';

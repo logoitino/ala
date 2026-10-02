@@ -1,3 +1,12 @@
+/**
+ * One full-screen Highlights clip: video player, hype rail (Seki / Aura / Flex), donate button, save, report,
+ * owner peek, "Filmed by" credit and the live play banner.
+ * `ReelCard` is a thin wrapper that passes identity-stable callbacks to the memoised `ReelCardImpl`; keep that
+ * split or a stale handler can run (see STATE.md, 2026-09-29 pre-merge fixes). View counting needs 3 s of real
+ * playback (`useReelViewTracker`). The Rally meter is not here; Home (app/(tabs)/index.tsx) places it.
+ * @sideEffects Votes, saves, reports and view counts via hooks / lib; haptics.
+ */
+
 import { useEventListener } from 'expo';
 import { useIsFocused } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';

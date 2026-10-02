@@ -1,3 +1,8 @@
+/**
+ * Parent HQ: for a guardian, the linked athletes, consent for each (`parent_set_player_consent`), the custodial
+ * money card and the Rally card. Failures show Retry rather than an empty list.
+ */
+
 import { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';

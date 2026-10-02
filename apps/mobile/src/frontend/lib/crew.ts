@@ -1,3 +1,8 @@
+/**
+ * The Crew: follow an athlete, see Crew and Squad counts, and whether the follow is mutual ("Teammates").
+ * @sideEffects `get_crew_graph` and `toggle_crew_follow` RPCs.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { FLASH_UNLOCK_HOURS } from '@/data/exclusive';

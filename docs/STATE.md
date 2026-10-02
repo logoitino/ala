@@ -164,6 +164,19 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-10-02** — Comment standard (owner: make the code easy to follow for outside reviewers). Every
+  source file under `apps/mobile/app` and `apps/mobile/src` now opens with a short header saying what it
+  is, where it fits and what it touches (about 120 files that had none: lib, hooks, contexts, services,
+  data, route layouts, large components, the Stripe API handlers). New rules in `docs/CONVENTIONS.md` §5
+  (file header, doc block on hooks / RPC helpers / complex components, inline comments explain *why*, SQL and
+  folder READMEs, keep comments true when you edit) mirrored in `.cursor/rules/documentation.mdc`,
+  `AGENTS.md` and the PR template. New guard `scripts/check-comments.mjs` (`pnpm comments:check`, CI step)
+  fails a file with no comment before its first exported function or in its first 60 lines; tests, `.d.ts`
+  and the generated `types/database.ts` are exempt. Comments only — no behaviour changed; tsc, jest
+  (41 suites / 194 tests), `copy:check`, `docs:check`, `app:data-boundaries` pass. Not covered: the guard
+  checks that a comment exists, not that it is accurate or good; Edge Functions, `supabase/*.sql` and
+  `apps/admin-portal` are not scanned. Header text was checked against the code it describes, but a
+  reviewer should still treat any header as a map, not a spec.
 - **2026-10-02** — Privacy work re-landed and telemetry conflict closed. A parallel session had deleted
   this session's uncommitted data-privacy docs and the `operator_checkins` RLS fix (no git history held them);
   they were restored from the session transcript. `docs/DATA_PRIVACY_MAP.md` (data inventory, gaps, recommended

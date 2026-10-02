@@ -1,3 +1,9 @@
+/**
+ * Browse-first "soft wall": guests can watch everything, but donating, joining a Crew or starting a gear goal
+ * needs an account. `requireAuth(intent)` runs the action at once when signed in; otherwise it opens
+ * `SoftWallModal`, remembers the intent, and resumes it after sign-in.
+ */
+
 import {
   createContext,
   type ReactNode,

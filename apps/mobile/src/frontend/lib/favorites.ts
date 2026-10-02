@@ -1,3 +1,8 @@
+/**
+ * Device-local list of favorited athletes (AsyncStorage key `tapuai.favoritePlayerIds`).
+ * Never leaves the phone. Used by the Profile tab and the guest game page. Bad or missing data reads as an empty list.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = 'tapuai.favoritePlayerIds';

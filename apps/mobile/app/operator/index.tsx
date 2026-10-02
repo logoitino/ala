@@ -1,3 +1,8 @@
+/**
+ * Operator console home: PIN claim, GPS check-in, the list of live games to score, and pending player tags.
+ * Check-in only reports success after `operator_checkins` saves.
+ */
+
 import * as Location from 'expo-location';
 import { Stack, type Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';

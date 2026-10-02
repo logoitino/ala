@@ -1,3 +1,11 @@
+/**
+ * Seki / Aura / Flex / view counts on an athlete, with a local-first tap record.
+ * Counts come from the `players` row. `bumpPlayerHype` records a tap in AsyncStorage (`tapuai.hype.<id>`) so the UI
+ * responds at once, then calls the `increment_player_hype` RPC and falls back to updating `players` directly.
+ * `HypeKind` is a view or a play reaction id.
+ * @sideEffects AsyncStorage; Supabase RPC / `players` update.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';

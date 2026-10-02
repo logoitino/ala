@@ -1,3 +1,10 @@
+/**
+ * Sideline scorer helpers: listing live games, saving the GPS check-in, quarter and scoring-step constants,
+ * sideline callouts, and the Realtime channel + payload for broadcasting a play to fans watching the game.
+ * Used by app/operator/** and `hooks/useGameEventBroadcast`. `OPERATOR_TEST_PIN` is a testing PIN only.
+ * @sideEffects Reads `games`, writes `operator_checkins`, AsyncStorage.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {

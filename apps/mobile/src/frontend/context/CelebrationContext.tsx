@@ -1,3 +1,9 @@
+/**
+ * Tiny global store for the two "moment" overlays: the full-screen thank-you after a donation and the Aura /
+ * exclusive-unlock toast. Any screen calls `useCelebration` to trigger one; `BackedCelebration` and `AuraToast`,
+ * mounted once in app/_layout.tsx, render it.
+ */
+
 import { useCallback, useContext, createContext, type ReactNode, useMemo, useState } from 'react';
 
 export type CelebrationPayload = {

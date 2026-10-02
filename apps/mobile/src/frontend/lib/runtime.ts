@@ -1,3 +1,12 @@
+/**
+ * Live app configuration ("runtime config") read from `app_runtime_config` and merged over built-in defaults.
+ * Defines the shape of every switch the owner can change without a release: tabs, buttons, layouts, theme,
+ * profile, highlights, catalog, and on-screen copy. `AppRuntimeContext` loads and distributes it; Expo
+ * /admin → Features / Look edits it; "Publish to app" writes it. The defaults here apply until a published
+ * row overrides them, so a stale published row can hide a newer default (see STATE.md on copy overrides).
+ * @sideEffects Reads (and, from admin screens, writes) `app_runtime_config`.
+ */
+
 import { EXCLUSIVE_AURA_GRANT, EXCLUSIVE_MONTHLY_DOLLARS } from '@/data/exclusive';
 import { REEL_CATEGORY_PILLS } from '@/data/highlights';
 import { FEE_AMOUNT, TIP_AMOUNTS } from '@/data/players';

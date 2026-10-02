@@ -1,3 +1,8 @@
+/**
+ * Shared auth gate for the Expo API routes: read the Bearer token and resolve the user from the Supabase JWT with the
+ * anon key (no Stripe calls happen before this passes). Used by the PaymentIntent, Connect and payout handlers.
+ */
+
 import { createClient, type User } from '@supabase/supabase-js';
 
 export type AuthedRequest =

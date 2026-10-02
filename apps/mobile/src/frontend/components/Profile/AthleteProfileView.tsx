@@ -1,3 +1,11 @@
+/**
+ * The public athlete page shown at /user/[id]: hero card, Aura trading card, crew and teammate badges, Rally,
+ * filmer card, and the Highlights / Stats / Vault tabs.
+ * Used by both the fan tab's own profile and any athlete opened from elsewhere. `onOpenClip` lets other
+ * components (for example a Rally thank-you) jump to a specific clip in the Highlights tab.
+ * @sideEffects Reads athlete, crew, school badge, leaderboard and reel data through hooks / lib.
+ */
+
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';

@@ -1,3 +1,9 @@
+/**
+ * The Activity tab timeline: donations received, donations sent, thank-yous from athletes, and pending tags,
+ * merged into one list with loading and error states. Builds on `useFanTipHistory`, `useReceivedMalo`,
+ * `useMyDonationThanks` and `usePendingPlayerTags`.
+ */
+
 import { useCallback, useMemo } from 'react';
 
 import { useAuth } from '@/context/AuthContext';

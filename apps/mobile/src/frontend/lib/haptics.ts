@@ -1,3 +1,7 @@
+/**
+ * One place for tap feedback: every real button maps to a light impact unless it opts out with `none`.
+ */
+
 import * as Haptics from 'expo-haptics';
 
 export type PressHaptic = 'light' | 'medium' | 'selection' | 'none';

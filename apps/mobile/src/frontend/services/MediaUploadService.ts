@@ -1,3 +1,11 @@
+/**
+ * Picking-to-upload pipeline for media: names the Storage buckets (`reels`, `game_highlights`, `avatars`, `reel_vault`),
+ * enforces the 45 s Highlight cap (normalising picker durations that arrive in seconds or milliseconds), compresses
+ * video with `react-native-compressor`, and uploads Highlights and avatars. Process-wide helper, so it lives in
+ * services/ (PascalCase) rather than lib/.
+ * @sideEffects Reads device media; writes Supabase Storage.
+ */
+
 import { Platform, TurboModuleRegistry } from 'react-native';
 
 import { RIGHTS_VERSION } from '@/data/contentRights';

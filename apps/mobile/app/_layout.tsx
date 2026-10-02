@@ -1,3 +1,8 @@
+/**
+ * Root layout, the first thing the app renders: mounts every provider (runtime config, auth, soft wall,
+ * celebration, upload sheet, Stripe) and the root navigation Stack. Status-bar colour follows the runtime theme.
+ */
+
 import 'react-native-gesture-handler';
 import { LogBox, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';

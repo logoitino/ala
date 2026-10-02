@@ -1,3 +1,8 @@
+/**
+ * Donate sheet checkbox that lets a donor cover the optional processing fee. Amount comes from
+ * `live.catalog.maloFeeDollars` (runtime config). Defaults to off.
+ */
+
 import { Checkbox } from 'expo-checkbox';
 import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';

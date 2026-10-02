@@ -1,3 +1,11 @@
+/**
+ * The single Supabase client for the whole app.
+ * Reads EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY (apps/mobile/.env.local) and exports `supabase`
+ * plus `isSupabaseConfigured`, which callers check before querying so a missing .env shows a readable error
+ * instead of a crash. Auth sessions persist in AsyncStorage on device (an in-memory map where that is unavailable).
+ * Only the anon key lives here; secret keys never belong in src/frontend.
+ */
+
 import 'react-native-url-polyfill/auto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';

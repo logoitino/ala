@@ -1,3 +1,10 @@
+/**
+ * Server handler for Stripe Connect account set-up (Accounts v2). Authenticates the caller from the Bearer JWT,
+ * creates or resumes the Express account for that user only, and stores the flags on `profiles`. First onboarding
+ * requires the Terms acknowledgement. Installed builds call the Edge Function `create-stripe-account` instead;
+ * this handler serves the Metro route. Secret keys are read from the server environment only.
+ */
+
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 

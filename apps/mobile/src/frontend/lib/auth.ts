@@ -1,3 +1,8 @@
+/**
+ * Sign-in helpers behind the soft wall: what the email form may enable for a given field state, password length
+ * checks for sign-up, and the Apple / Google / Magic Link flows. Session handling lives in `context/AuthContext`.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as AuthSession from 'expo-auth-session';

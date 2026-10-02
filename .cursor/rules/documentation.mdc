@@ -17,7 +17,11 @@ what changed most recently, environment gotchas, and the list of knowingly-broke
 bump its `Last updated` header, in the same turn as the code.** CI fails pull requests that do
 not. Keep §4 to ~15 entries, newest first; older history belongs in `CHANGELOG.md`.
 
-## 1. JSDoc is mandatory on hooks, API calls, and complex components
+## 1. Comments: every file has a header; JSDoc on hooks, API calls, and complex components
+
+Every source file under `apps/mobile/app` and `apps/mobile/src` starts with a short header comment (what it is,
+where it fits, what it touches). `pnpm comments:check` enforces it in CI. Inline comments explain *why*, not
+*what*. Full rules: `docs/CONVENTIONS.md` §5.
 
 Add a TSDoc/JSDoc header on:
 
@@ -27,7 +31,7 @@ Add a TSDoc/JSDoc header on:
 
 ```
 /**
- * @purpose What this does in product language (Mālo, Seki, Aura, operator clock).
+ * @purpose What this does in product language (Donate, Seki, Aura, operator clock).
  * @param name Description of each input.
  * @returns Description of the return value or rendered UI.
  * @sideEffects Supabase queries, Realtime channels, Stripe, Storage, AsyncStorage, haptics.
@@ -36,7 +40,7 @@ Add a TSDoc/JSDoc header on:
 
 - Omit `@sideEffects` only when there are none.
 - Skip one-liner formatters unless they encode business rules (e.g. Aura point math).
-- UI copy: **Mālo** / **Seki**. Persistence: `tips` / `useTipCheckout`.
+- UI copy: **Donate / donation** (docs/VOICE.md), **Seki**. Persistence keeps the code names: `tips` / `useTipCheckout`.
 
 ## 2. Schema or architecture changes MUST sync docs in the same turn
 
@@ -45,6 +49,8 @@ If you change tables, RLS, RPCs, Storage, Aura tiers, routing, env vars, payment
 | If you change… | You also update… |
 | --- | --- |
 | **Anything under `apps/` / `packages/` / `supabase/`** | **`docs/STATE.md` §4 + `Last updated`** |
+| Who owns a screen, or what a department does now / next / later | **`docs/TEAMS.md`** business row + squad section, and `.claude/agents/<file>.md` if that agent's description moved |
+| Terms, minors, the donation split, footage rights, or school marks | **`docs/TEAMS.md`** Legal team table. Do not write a new legal conclusion. |
 | Architecture, folders, roadmap | `DOCUMENTATION.md` · `docs/ARCHITECTURE.md` |
 | Tables, FKs, RLS, RPCs, palette, buckets | `docs/SCHEMA.md` |
 | Clone / env / Metro / Expo Go | `docs/ONBOARDING.md` |

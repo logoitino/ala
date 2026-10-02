@@ -1,3 +1,8 @@
+/**
+ * Booster sponsorship tiers (Silver and up): price, Aura points granted, badge, perks and accent colour.
+ * Prices can be changed from Expo /admin → Catalogs and applied with "Publish to app".
+ */
+
 import type { Sponsorship, SponsorshipTierId } from '@/types/database';
 import { FOCAL } from '@/theme/motion';
 

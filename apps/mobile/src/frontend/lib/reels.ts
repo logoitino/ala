@@ -1,3 +1,11 @@
+/**
+ * Highlights data layer: fetch the feed (tiered ranking) and one athlete's clips, hype votes (`bumpReelHype` /
+ * `clearReelHype`), donation totals on a clip, hiding a clip locally, reporting and Vault toggling, playback URL
+ * resolution (including Vault signing), deep links, and the "Filmed by" credit. Also pure helpers for the owner-peek drag.
+ * Screens call this, not Supabase. Uploading a clip is `services/MediaUploadService` plus `UploadVideoModal`.
+ * @sideEffects `reels`, `reel_hype_votes` and related RPCs; AsyncStorage for local hides and the peek hint.
+ */
+
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

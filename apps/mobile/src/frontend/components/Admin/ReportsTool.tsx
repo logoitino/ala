@@ -1,3 +1,9 @@
+/**
+ * Expo /admin → Reports desk: leaders (who the app is rewarding), health checks that link to the desk that can
+ * fix them, and 7-day charts (clips, donations). Read-only; data from `get_admin_reports` and the ops inbox.
+ * @sideEffects Reads via `lib/admin` and `lib/adminCatalog`.
+ */
+
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';

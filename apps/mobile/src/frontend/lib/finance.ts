@@ -1,3 +1,8 @@
+/**
+ * Money labelling helpers: pick the channel stored on a donation (`tips.origin`) and the short channel line shown
+ * on receipts and the admin Money desk. Wording follows docs/VOICE.md.
+ */
+
 import {
   MALO_PLATFORM_CUT_BPS,
   splitLabelForSource,

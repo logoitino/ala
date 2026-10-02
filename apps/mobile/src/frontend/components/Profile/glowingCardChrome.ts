@@ -1,3 +1,8 @@
+/**
+ * Shared padding and styles for the glowing Aura card frame (see Effects/GlowingNeonBorder). `GLOW_PAD` is the
+ * room the glow needs around the card so it is not clipped.
+ */
+
 import { type ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 

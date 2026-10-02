@@ -1,3 +1,8 @@
+/**
+ * The card revealed by swiping a Highlight sideways: the tagged athlete, their Crew and hype counts, Join Crew,
+ * donate, and Open profile. Fetches lazily, only once the panel has opened.
+ */
+
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';

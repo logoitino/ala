@@ -1,3 +1,9 @@
+/**
+ * Reads and stamps the Terms / NIL / minor-safety acknowledgement on a profile. Required before payouts and
+ * athlete verification. The wording itself comes from counsel, not from this file.
+ * @sideEffects `profiles.legal_*` read and write.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { LEGAL_TERMS_VERSION } from '@/data/legal';

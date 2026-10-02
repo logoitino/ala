@@ -1,3 +1,7 @@
+/**
+ * Legacy URL kept alive: /operator/console/<id> redirects to /operator/<id>.
+ */
+
 import { Redirect, useLocalSearchParams, type Href } from 'expo-router';
 
 export default function OperatorConsoleRedirect() {

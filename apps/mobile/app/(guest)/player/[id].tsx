@@ -1,3 +1,8 @@
+/**
+ * Public athlete detail for guests (no sign-in): loads one player by id and shows the donor badge, hype counts
+ * and basic details (position and so on). Shows a readable error when Supabase is not configured.
+ */
+
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {

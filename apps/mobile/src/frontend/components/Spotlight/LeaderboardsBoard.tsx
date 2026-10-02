@@ -1,3 +1,9 @@
+/**
+ * Spotlight → Boards: tabbed leaderboards (hype, views, highlights, schools, fans, filmers) with loading,
+ * error + Retry, and "open athlete". Data arrives as props from `hooks/useLeaderboards`; no money amounts are
+ * shown on any board.
+ */
+
 import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 

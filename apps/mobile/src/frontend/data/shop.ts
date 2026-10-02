@@ -1,3 +1,8 @@
+/**
+ * Drip (merch marketplace) catalog defaults and price formatting. The Drip tab is off until Wave 1; the owner edits
+ * the live catalog from Expo /admin → Drip.
+ */
+
 import { auraPointsForTip } from '@/data/players';
 
 export const DRIP_SIZES = ['S', 'M', 'L', 'XL', '2XL'] as const;

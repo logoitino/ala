@@ -1,3 +1,9 @@
+/**
+ * Small donation helpers: re-exports `createPaymentIntent` and bumps an athlete's `backer_count`.
+ * `incrementBackerCount` prefers the `increment_backer_count` RPC and falls back to a plain update when the RPC
+ * is not deployed. Checkout itself lives in `hooks/useTipCheckout` and `lib/stripeIntent.ts`.
+ */
+
 import { createPaymentIntent } from '@/lib/stripe';
 import { supabase } from '@/lib/supabase';
 import type { Player } from '@/types/database';

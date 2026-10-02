@@ -1,3 +1,9 @@
+/**
+ * Athlete and donation constants plus small helpers: preset donation amounts, the processing fee, the 90 / 10
+ * donation split disclosure, Aura per dollar, hype reaction ids, scorer actions, and `displayValue` / clock parsing.
+ * `Player` and `Game` types come from `types/database.ts`. Code name `tip` = donation.
+ */
+
 import type { Player } from '@/types/database';
 
 export type { Game, GameStatus, Player } from '@/types/database';

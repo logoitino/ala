@@ -1,3 +1,8 @@
+/**
+ * Route helpers: `roleStackOptions` (shared header style for role groups) and typed href builders for the routes that
+ * must keep the fan tab bar mounted (`localGameHref`, `userProfileHref`), so screens do not hand-write route strings.
+ */
+
 import type { Href } from 'expo-router';
 
 import { colors } from '@/constants/theme';

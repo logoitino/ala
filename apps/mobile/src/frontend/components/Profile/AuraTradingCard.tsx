@@ -1,3 +1,8 @@
+/**
+ * The Aura trading card: identity and season-stats faces, tier colours and glow, school crest, role badges and
+ * the flip control. Tier palette and thresholds come from `lib/aura.ts`.
+ */
+
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';

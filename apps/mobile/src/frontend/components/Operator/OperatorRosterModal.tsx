@@ -1,3 +1,8 @@
+/**
+ * Sideline scorer: bottom sheet that lists a team's players so the operator can credit a score or play to one.
+ * Locks closing while `busy` so a play is not dropped mid-send.
+ */
+
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

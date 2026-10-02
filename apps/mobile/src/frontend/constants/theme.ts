@@ -1,3 +1,9 @@
+/**
+ * Colour and style tokens for the whole app. `palette` holds the raw hexes; `LIGHT_COLORS` / `DARK_COLORS` map them to
+ * roles (background, surface, text, accent); `colors` is the light set that components import. `DAYLIGHT_THEME` is the
+ * default look the owner can override from Expo /admin → Look. Focal and motion tokens live in `theme/motion.ts`.
+ */
+
 import { Platform, type ViewStyle } from 'react-native';
 
 import { FOCAL } from '@/theme/motion';

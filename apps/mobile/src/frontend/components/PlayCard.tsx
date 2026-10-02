@@ -1,3 +1,9 @@
+/**
+ * A live game play in the Local feed: who made it and what happened, with a hype tap for that athlete.
+ * `resolveEventPlayer` picks the athlete a play event belongs to; `onBacked` reports the new count after a tap.
+ * @sideEffects Hype taps go through `bumpPlayerHype` (lib/hype.ts).
+ */
+
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';

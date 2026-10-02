@@ -1,3 +1,8 @@
+/**
+ * School and team lookup over `schools_and_teams`: autocomplete for the athlete claim, and the school row shown
+ * on the trading card. Also saves the athlete claim (team + sport; number, position, class optional).
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {

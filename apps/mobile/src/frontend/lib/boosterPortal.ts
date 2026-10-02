@@ -1,3 +1,7 @@
+/**
+ * Booster HQ data: the athlete-verification queue and bulk roster (CSV) inserts. Used by app/(booster).
+ */
+
 import { supabase } from '@/lib/supabase';
 import type { VerificationRequest } from '@/types/database';
 

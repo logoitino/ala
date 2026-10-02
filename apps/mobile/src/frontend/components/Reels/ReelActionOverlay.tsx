@@ -1,3 +1,9 @@
+/**
+ * Highlights overlay on top of each clip: athlete name and school, "Filmed by" credit, caption, and the right-hand
+ * rail (Seki / Aura / Flex / donate / more). Only Aura plays a burst; Seki swaps its emoji briefly; Flex lights up;
+ * removing a vote never animates.
+ */
+
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, {

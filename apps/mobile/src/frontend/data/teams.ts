@@ -1,3 +1,8 @@
+/**
+ * School / team data: the level chip shown in autocomplete and the title line on the trading card (name plus mascot).
+ * Class-year and sport options for the athlete claim also come from here.
+ */
+
 export type SchoolTeamLevel = 'high_school' | 'college';
 
 export type SchoolTeam = {

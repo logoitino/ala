@@ -1,3 +1,10 @@
+/**
+ * Process-wide usage and performance logger. Batches events (video stalls, first frame, tab dwell, scroll depth,
+ * feature taps, checkout latency, UI issues) and inserts them into `telemetry_logs`, which feeds the admin Reports
+ * and Coverage desks. See docs/DATA_PRIVACY_MAP.md for what is collected.
+ * @sideEffects Inserts into `telemetry_logs`.
+ */
+
 import { AppState, type NativeEventSubscription } from 'react-native';
 
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';

@@ -1,3 +1,8 @@
+/**
+ * Titled card used by the role dashboards (Athlete / Parent / Booster / Sponsor HQ): gold left edge, a title,
+ * optional body text and children.
+ */
+
 import { type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 

@@ -1,3 +1,10 @@
+/**
+ * Verification wording and rules: the on-screen labels for the Verify sheet and badges (unverified / pending /
+ * verified, held-gift and payout-setup notices), check-mark reservation for school-confirmed names, `parseTeamCode`
+ * (coach-issued codes into a school key plus optional sport) and `resolveVerificationStatus`.
+ * Money-adjacent notices are LEGAL-owned; change them through docs/LEGAL_BRIEFING.md.
+ */
+
 export type VerificationStatus = 'unverified' | 'pending' | 'verified';
 
 export const VERIFY_SHEET_TITLE = 'Verify Your Athlete Status ⚡';

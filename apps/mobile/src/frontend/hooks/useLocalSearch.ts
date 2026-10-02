@@ -1,3 +1,9 @@
+/**
+ * Debounced search for the Local tab (athletes, schools, games) plus the "recent searches" list.
+ * `useLocalSearch` queries Supabase after a short pause in typing; `useRecentLocalSearches` keeps the last few
+ * searches in AsyncStorage on the device.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useRef, useState } from 'react';
 

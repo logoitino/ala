@@ -1,3 +1,8 @@
+/**
+ * The animated amount button on the donate sheet (preset amounts, custom, selected state).
+ * (Code name `Tip` = donation; on-screen words follow docs/VOICE.md.)
+ */
+
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {

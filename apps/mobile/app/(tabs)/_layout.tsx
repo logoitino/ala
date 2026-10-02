@@ -1,3 +1,8 @@
+/**
+ * Fan tab bar (Highlights / Activity / Spotlight / Drip / Profile) and the global upload sheet.
+ * Hidden routes (`local`, `user/[id]`, `receipts`) live in this group but are not bar items.
+ */
+
 import { Platform, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';

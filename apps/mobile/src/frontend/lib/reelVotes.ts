@@ -1,3 +1,9 @@
+/**
+ * One vote per kind (Seki / Aura / Flex) per fan per clip. Reads the fan's votes local-first, then from
+ * `reel_hype_votes`. AsyncStorage writes are queued per key so two quick taps cannot overwrite each other.
+ * @sideEffects AsyncStorage; `reel_hype_votes` and `clear_reel_hype`.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { PlayReactionId } from '@/data/players';

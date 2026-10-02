@@ -1,3 +1,9 @@
+/**
+ * Local Team Boosters: loads active sponsorships (a demo rail when there are none) and uploads a booster logo to
+ * Storage `avatars/sponsors/`.
+ * @sideEffects `sponsorships` read; Storage upload.
+ */
+
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 

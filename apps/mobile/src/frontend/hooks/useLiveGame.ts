@@ -1,3 +1,9 @@
+/**
+ * Live game state: subscribes to one `games` row over Realtime so fan screens follow the operator's score and
+ * clock, and ticks the clock locally between updates.
+ * @sideEffects Supabase Realtime subscription.
+ */
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { formatClock, isGameClockLive, parseClockToSeconds } from '@/data/players';

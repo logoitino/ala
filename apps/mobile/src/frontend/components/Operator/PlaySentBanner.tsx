@@ -1,3 +1,7 @@
+/**
+ * Green confirmation banner the scorer sees after a play is broadcast. Announced politely to screen readers.
+ */
+
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, radii } from '@/constants/theme';

@@ -12,7 +12,7 @@
 
 Read the exact versioned docs at [https://docs.expo.dev/versions/v57.0.0/](https://docs.expo.dev/versions/v57.0.0/) before writing any code.
 
-Engineer onboarding: [docs/CONVENTIONS.md](docs/CONVENTIONS.md) (naming + placement) · [DOCUMENTATION.md](DOCUMENTATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/ONBOARDING.md](docs/ONBOARDING.md) · [docs/SCHEMA.md](docs/SCHEMA.md) · [docs/TEAMS.md](docs/TEAMS.md) (department call sheet) · [docs/VOICE.md](docs/VOICE.md) (donation language)
+Engineer onboarding: [docs/CONVENTIONS.md](docs/CONVENTIONS.md) (naming + placement) · [DOCUMENTATION.md](DOCUMENTATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/ONBOARDING.md](docs/ONBOARDING.md) · [docs/SCHEMA.md](docs/SCHEMA.md) · [docs/TEAMS.md](docs/TEAMS.md) (department call sheet) · [docs/VOICE.md](docs/VOICE.md) (donation language) · [docs/CONVENTIONS.md](docs/CONVENTIONS.md) §5 (**comment every file you touch** — header on every file, *why* not *what* inline; CI runs `pnpm comments:check`)
 
 ## Tapua'i Sports — Project Architecture & Conventions
 

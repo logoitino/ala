@@ -1,3 +1,8 @@
+/**
+ * Account settings sheet opened from the Profile hamburger (sign in / out, role, receipts, legal). Nested sheets
+ * open only after this one has fully dismissed, to avoid overlapping native modals (see STATE.md, 2026-09-29).
+ */
+
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';

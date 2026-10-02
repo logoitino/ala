@@ -1,3 +1,12 @@
+/**
+ * The "post a highlight" sheet: pick a clip from the camera roll (45 s max) or record one, say which athlete is in it,
+ * add a caption and category, confirm rights (filmed it or has permission, sound is original or licensed, no logos
+ * or broadcast footage), then upload. Publish stays disabled until a clip, athlete, caption and every rights
+ * confirmation are set. Compression and Storage upload go through `MediaUploadService`; the reel row is written
+ * by `lib/reels.ts`.
+ * @sideEffects Reads `games`; uploads to Storage bucket `reels`; inserts a `reels` row.
+ */
+
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { useVideoPlayer, VideoView } from 'expo-video';

@@ -27,6 +27,7 @@
 - [ ] `pnpm docs:check`
 - [ ] `pnpm copy:check`
 - [ ] `pnpm app:data-boundaries`
+- [ ] `pnpm comments:check` (new or changed files explain themselves; stale comments fixed)
 - [ ] Real-device or installed-build check
 
 Tests added or changed:

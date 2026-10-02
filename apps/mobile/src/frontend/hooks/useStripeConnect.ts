@@ -1,3 +1,9 @@
+/**
+ * Stripe Connect onboarding for payees. Asks the JWT-gated Edge Function for an Express account link; the secret key
+ * and link creation stay on the server, never on the device.
+ * @sideEffects Edge Function `create-stripe-account`; opens the Stripe link in the browser.
+ */
+
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';

@@ -1,3 +1,8 @@
+/**
+ * Gift link and QR flyer helpers (native): build the public gift URL and save the QR as a PNG to the Camera Roll.
+ * The web build uses `share.web.ts`.
+ */
+
 import { Platform, Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';

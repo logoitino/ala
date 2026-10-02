@@ -1,3 +1,8 @@
+/**
+ * Hand-drawn bar and mix charts for the admin desks (plain Views, because the npm registry is blocked on this
+ * machine and Recharts cannot be added). Used by the Reports and Money desks.
+ */
+
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, radii } from '@/constants/theme';

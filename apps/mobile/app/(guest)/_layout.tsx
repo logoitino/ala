@@ -1,3 +1,7 @@
+/**
+ * Public route group: open to every role, including signed-out guests (browse-first). Add public pages here.
+ */
+
 import { Stack } from 'expo-router';
 
 import { RoleGate } from '@/context/RoleGate';

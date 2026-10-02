@@ -1,3 +1,8 @@
+/**
+ * Wrapper for each fan tab: safe-area handling, runtime background colour, and a short fade between tabs.
+ * `dark` switches to the night background and drops the top inset (full-bleed screens such as Highlights).
+ */
+
 import { type ReactNode } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

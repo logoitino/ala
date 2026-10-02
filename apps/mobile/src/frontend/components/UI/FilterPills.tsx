@@ -1,3 +1,8 @@
+/**
+ * Horizontal pill row, generic over the pill id type, with optional counts. Used by the search overlays, the athlete
+ * profile and the role switcher.
+ */
+
 import { useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';

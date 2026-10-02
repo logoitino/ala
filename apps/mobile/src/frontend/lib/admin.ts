@@ -1,3 +1,10 @@
+/**
+ * Data and navigation helpers for the Expo /admin shell: which sidebar groups each lens (Marketing / Owner / Engineer /
+ * All) shows, which desk the current path belongs to, and the admin reads and actions behind the desks (Spotlight awards,
+ * flagged-clip moderation, platform metrics, telemetry digest, reports and health checks).
+ * @sideEffects Reads and writes through the shared Supabase client; admin role enforced by RLS.
+ */
+
 import { parseSpotlightAward, utcWeekStart } from '@/lib/spotlight';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Player, ReelWithPlayer, SpotlightAward } from '@/types/database';

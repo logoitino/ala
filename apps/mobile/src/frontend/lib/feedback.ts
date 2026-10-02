@@ -1,3 +1,9 @@
+/**
+ * In-app feedback: types, the kind / surface option lists, and the Supabase reads and writes behind the Feedback sheet
+ * and the Expo /admin feedback desk (status moves new → reviewing → planned → shipping → shipped / declined).
+ * @sideEffects Reads and writes `app_feedback` through the shared Supabase client.
+ */
+
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export type AppFeedbackKind = 'suggestion' | 'bug' | 'look' | 'other';

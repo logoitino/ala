@@ -1,3 +1,7 @@
+/**
+ * Parent HQ layout: `parent` role only; paused screen when the `layouts.parentHq` flag is off.
+ */
+
 import { Stack } from 'expo-router';
 
 import { RuntimePaused } from '@/components/RuntimePaused';

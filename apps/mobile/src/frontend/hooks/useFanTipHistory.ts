@@ -1,3 +1,10 @@
+/**
+ * A signed-in fan's own donation history, with totals (donated, athletes supported, Aura earned).
+ * Feeds the Activity tab through `hooks/useActivityFeed`. Reloads whenever the screen regains focus and returns
+ * `error` so the screen can offer Retry instead of an empty list. (Code name `tip` = donation.)
+ * @sideEffects Reads the fan's donation rows from Supabase.
+ */
+
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 

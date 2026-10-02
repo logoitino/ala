@@ -1,3 +1,8 @@
+/**
+ * Operator console layout: only the `operator` role gets in (`RoleGate`); shows a paused screen when the
+ * `layouts.operatorConsole` flag is off.
+ */
+
 import { Stack } from 'expo-router';
 
 import { RuntimePaused } from '@/components/RuntimePaused';

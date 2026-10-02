@@ -1,3 +1,11 @@
+/**
+ * Athlete verification client: claim athlete status, redeem a team code, start the school check, and read the
+ * account's current state. Since the verification ladder (2026-09-29) none of these can mark anyone verified:
+ * they request, and the school's athletic director or coach confirms in person. Server rules live in the migration
+ * `20260929120000_athlete_verification_ladder.sql`.
+ * @sideEffects Calls the `claim_athlete`, `start_school_check` and `get_my_verification` RPCs.
+ */
+
 import {
   parseTeamCode,
   resolveVerificationStatus,

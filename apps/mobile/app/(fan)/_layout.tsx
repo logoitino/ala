@@ -1,3 +1,7 @@
+/**
+ * Fan route group layout: `fan` and `athlete` roles only (`RoleGate`).
+ */
+
 import { Stack } from 'expo-router';
 
 import { RoleGate } from '@/context/RoleGate';

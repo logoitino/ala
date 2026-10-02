@@ -1,3 +1,9 @@
+/**
+ * Locker Room gear goals: load an athlete's list (falling back to the seeded rack when the table is missing) and
+ * move an item's funded total after a donation has been recorded.
+ * @sideEffects Reads / updates `wishlist_items`.
+ */
+
 import { WISHLIST_DEMO_ITEMS, applyWishlistChipIn, isWishlistFunded } from '@/data/wishlist';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { WishlistItem } from '@/types/database';

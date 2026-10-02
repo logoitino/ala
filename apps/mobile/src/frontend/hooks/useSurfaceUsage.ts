@@ -1,3 +1,8 @@
+/**
+ * Measures how each screen is used for the admin Reports desk: tab dwell, deepest scroll, feature taps and control
+ * failures. Sends through `TelemetryManager`, so guests are included and rows stay anonymous.
+ */
+
 import { useCallback, useRef } from 'react';
 import { type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useFocusEffect } from 'expo-router';

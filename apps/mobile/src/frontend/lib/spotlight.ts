@@ -1,3 +1,10 @@
+/**
+ * Spotlight (Player of the Week / Month / Year): UTC week, month and year boundaries that match Postgres
+ * `date_trunc`, parsing and fetching awards and the board, "seen" markers for the launch modal, and the labels
+ * shown on Spotlight cards.
+ * @sideEffects Reads Spotlight awards; AsyncStorage for the seen marker.
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { HIGHLIGHT_CLIPS } from '@/data/highlights';

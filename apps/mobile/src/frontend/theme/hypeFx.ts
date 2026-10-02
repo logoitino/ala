@@ -1,3 +1,8 @@
+/**
+ * Per-hype colours and shout words so Seki, Aura and Flex each look and sound different on the Highlights rail and
+ * on Local play cards.
+ */
+
 import { FOCAL } from '@/theme/motion';
 import type { PlayReactionId } from '@/data/players';
 

@@ -1,3 +1,8 @@
+/**
+ * Foil-card light sweep: a soft diagonal streak that glides across the surface it is placed in
+ * (the parent needs `overflow: hidden`). Used on the Aura card and Spotlight portraits. Runs on Reanimated, not Skia.
+ */
+
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
