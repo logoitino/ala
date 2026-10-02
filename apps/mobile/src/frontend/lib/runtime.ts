@@ -194,7 +194,7 @@ export const APP_FLAG_GROUPS: AppFlagGroup[] = APP_RUNTIME_FLAG_GROUPS.filter(
 }));
 
 export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
-  tabs: { home: true, local: true, activity: true, spotlight: true, drip: true, profile: true, upload: true },
+  tabs: { home: true, local: true, activity: true, spotlight: true, drip: false, profile: true, upload: true },
   buttons: {
     seki: true,
     aura: true,

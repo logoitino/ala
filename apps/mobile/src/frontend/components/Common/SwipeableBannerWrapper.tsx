@@ -26,7 +26,11 @@ type SwipeableBannerWrapperProps = {
   children: ReactNode;
   onDismiss: () => void;
   onPress?: () => void;
+  /** Spoken name for the tap that opens the destination. Defaults to the live-score banner. */
+  pressAccessibilityLabel?: string;
   accessibilityLabel?: string;
+  /** Compact bars (Rivalry week) dismiss by swipe only, so the chevron stays clear. */
+  showClose?: boolean;
 };
 
 function fireLightHaptic() {
@@ -41,15 +45,19 @@ function fireLightHaptic() {
  * @purpose Swipe up, left, or right — or tap ✕ — to dismiss a top banner or toast.
  * @param children Banner body (score chip, callout, or Aura toast).
  * @param onDismiss Fired after the banner animates off-screen.
- * @param onPress Optional tap on the banner body (live scoreboard → Local game). ✕ still dismisses.
- * @returns Reanimated `Gesture.Pan` container with a semi-transparent ✕.
+ * @param onPress Optional tap on the banner body (live scoreboard → Local game). ✕ still dismisses when shown.
+ * @param pressAccessibilityLabel Spoken name for that tap.
+ * @param showClose When false, swipe left or right (or up) is the only dismiss. Defaults to showing ✕.
+ * @returns Reanimated `Gesture.Pan` container. Swipe left or right slides it off.
  * @sideEffects `Haptics.impactAsync(Light)` on swipe or tap dismiss.
  */
 export function SwipeableBannerWrapper({
   children,
   onDismiss,
   onPress,
+  pressAccessibilityLabel = 'Open live match',
   accessibilityLabel = 'Dismiss banner',
+  showClose = true,
 }: SwipeableBannerWrapperProps) {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -108,7 +116,7 @@ export function SwipeableBannerWrapper({
         {onPress ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Open live match"
+            accessibilityLabel={pressAccessibilityLabel}
             haptic="selection"
             onPress={onPress}
           >
@@ -117,15 +125,17 @@ export function SwipeableBannerWrapper({
         ) : (
           children
         )}
-        <Pressable
-          accessibilityLabel={accessibilityLabel}
-          haptic="none"
-          hitSlop={8}
-          onPress={slideAway}
-          style={styles.close}
-        >
-          <Text style={styles.closeLabel}>✕</Text>
-        </Pressable>
+        {showClose ? (
+          <Pressable
+            accessibilityLabel={accessibilityLabel}
+            haptic="none"
+            hitSlop={8}
+            onPress={slideAway}
+            style={styles.close}
+          >
+            <Text style={styles.closeLabel}>✕</Text>
+          </Pressable>
+        ) : null}
       </Animated.View>
     </GestureDetector>
   );

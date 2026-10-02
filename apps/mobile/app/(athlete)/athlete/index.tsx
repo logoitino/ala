@@ -85,14 +85,6 @@ export default function AthleteHomeScreen() {
         >
           {received.loading ? (
             <ActivityIndicator color={colors.deepGreen} />
-          ) : received.error ? (
-            <EmptyState
-              kicker="Donations"
-              title="Could not load donations"
-              lede="Check your connection and try again."
-              actionLabel="Retry"
-              onAction={() => void received.refresh()}
-            />
           ) : received.rows.length === 0 ? (
             <EmptyState
               kicker="Donations"

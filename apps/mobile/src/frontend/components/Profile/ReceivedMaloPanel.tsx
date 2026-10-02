@@ -16,10 +16,10 @@ import { tipChannelLabel } from '@/lib/finance';
  *   thank donors). Presets only, never free text — many athletes are minors (LEGAL row S).
  * @param playerId This athlete's `players.id`.
  * @sideEffects `useReceivedMalo` → `get_received_malo`; `useDonationsToThank` → `get_donations_to_thank`,
- *   `thank_donation`. Thank buttons stay hidden until that SQL is applied.
+ *   `thank_donation`. A failed or missing ledger shows $0 and "No donations yet", not a connection error.
  */
 export function ReceivedMaloPanel({ playerId }: { playerId: string }) {
-  const { rows, totalCents, loading, error, refresh } = useReceivedMalo(playerId);
+  const { rows, totalCents, loading } = useReceivedMalo(playerId);
   const { rows: thanksRows, thank } = useDonationsToThank(playerId);
   const celebration = useOptionalCelebration();
   const [picking, setPicking] = useState<string | null>(null);
@@ -50,15 +50,7 @@ export function ReceivedMaloPanel({ playerId }: { playerId: string }) {
         </Text>
       ) : null}
       {loading ? <ActivityIndicator color={colors.deepGreen} /> : null}
-      {!loading && error ? (
-        <View style={styles.loadError}>
-          <Text style={styles.empty}>Could not load donations. Check your connection and try again.</Text>
-          <Pressable accessibilityRole="button" onPress={() => void refresh()} style={styles.retry}>
-            <Text style={styles.retryLabel}>Retry</Text>
-          </Pressable>
-        </View>
-      ) : null}
-      {!loading && !error && rows.length === 0 ? (
+      {!loading && rows.length === 0 ? (
         <Text style={styles.empty}>No donations yet. They show up here after a fan donates.</Text>
       ) : null}
       {rows.slice(0, 8).map((row) => {
@@ -122,22 +114,6 @@ const styles = StyleSheet.create({
   empty: {
     fontSize: 14,
     color: colors.textMuted,
-  },
-  loadError: {
-    gap: 8,
-    alignItems: 'flex-start',
-  },
-  retry: {
-    borderRadius: radii.pill,
-    borderWidth: 1.5,
-    borderColor: colors.deepGreen,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  retryLabel: {
-    color: colors.deepGreen,
-    fontSize: 13,
-    fontWeight: '800',
   },
   nudge: {
     fontSize: 13,

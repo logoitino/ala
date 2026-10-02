@@ -15,7 +15,7 @@ let mockRows = [
 jest.mock('@/hooks/useReceivedMalo', () => ({
   useReceivedMalo: () => ({
     loading: false,
-    totalCents: 1500,
+    totalCents: mockRows.reduce((sum, row) => sum + row.amount_cents, 0),
     rows: mockRows,
     error: mockLoadError,
     refresh: mockRefresh,
@@ -69,12 +69,13 @@ describe('ReceivedMaloPanel say thanks', () => {
     expect(screen.getByLabelText('Pick a thank-you message').children).toHaveLength(THANKS_MESSAGES.length + 1);
   });
 
-  it('shows Retry instead of a false no-donations state after a load failure', async () => {
+  it('shows $0 and no connection error when the ledger is empty or the call failed', async () => {
     mockRows = [];
-    mockLoadError = 'network down';
+    mockLoadError = 'Could not find the function public.get_received_malo';
     await render(<ReceivedMaloPanel playerId="p1" />);
-    expect(screen.queryByText(/No donations yet/)).toBeNull();
-    await fireEvent.press(screen.getByText('Retry'));
-    expect(mockRefresh).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('$0.00 from fans')).toBeTruthy();
+    expect(screen.getByText(/No donations yet/)).toBeTruthy();
+    expect(screen.queryByText(/Could not load donations/)).toBeNull();
+    expect(screen.queryByText('Retry')).toBeNull();
   });
 });

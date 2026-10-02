@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-10-01 · Upload confirms permission, sound, and marks; reports name fake footage, music, logos, and broadcasts · 2026-09-30 · September SQL applied to staging only · Wave 0 spend reminder: $99/yr Apple already enrolled; SQL, preview build, and test-card donate are $0 · Cross-surface reliability + reviewability: rivalry banner links Highlights to Local polls, Activity thanks opens the athlete, Drip and role HQ failures retry honestly, operator check-in confirms the write, PR/CODEOWNERS/folder guides and route-data CI guard added · Telemetry row bounds written, not applied (guest inserts stay; one fake row can no longer wreck a Reports average) · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
+**Last updated:** 2026-10-02 · Support received shows $0 when the ledger is empty or unavailable · Rivalry week swipes away; donate sheet stays on screen · Drip tab is off until Wave 1 · 2026-10-01 · Business departments (Product, Design, Engineering, Finance, and the rest) are in docs/TEAMS.md · Rights-check preview builds finished (iOS still the registered iPad only) · Upload confirms permission, sound, and marks; reports name fake footage, music, logos, and broadcasts · 2026-09-30 · September SQL applied to staging only · Wave 0 spend reminder: $99/yr Apple already enrolled; SQL, preview build, and test-card donate are $0 · Cross-surface reliability + reviewability: rivalry banner links Highlights to Local polls, Activity thanks opens the athlete, Drip and role HQ failures retry honestly, operator check-in confirms the write, PR/CODEOWNERS/folder guides and route-data CI guard added · Telemetry row bounds written, not applied (guest inserts stay; one fake row can no longer wreck a Reports average) · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -53,10 +53,10 @@ spend: LLC, counsel, an association letter, Google Play **$25**, Supabase Pro, v
 Stripe’s fees. Do not start those for this test. Full table: `docs/ROADMAP.md` release waves.
 
 **Next up, in order.**
-1. Preview builds finished 2026-09-30 and point at staging. Android (any phone):
-   https://expo.dev/accounts/logoitino/projects/ala-sports/builds/25203aff-a4bb-41fa-90aa-88c4f6cd1441
-   iOS (registered iPad only):
-   https://expo.dev/accounts/logoitino/projects/ala-sports/builds/22ce0d45-10b2-43fb-ace6-bfc3816b4814
+1. Preview builds with the upload confirmations finished 2026-10-01 and point at staging. Android (any phone):
+   https://expo.dev/accounts/logoitino/projects/ala-sports/builds/061946c8-a25d-4a32-b5be-bab316819c1d
+   iOS (registered iPad only — the iPhone is not on the profile yet):
+   https://expo.dev/accounts/logoitino/projects/ala-sports/builds/a93f562d-d122-48a4-a20f-3e466368aa4a
    `create-payment-intent` and the test Stripe secret are on staging. Do not deploy
    `stripe-webhook`. Before the first sign-in, add redirect `alasports://auth/callback` on staging
    (STAGING_RUNBOOK §3). Upload buckets: `reels`, `avatars`, `game_highlights`. `reel_vault` is not
@@ -164,6 +164,18 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-10-02** — Support received shows **$0.00** and "No donations yet" when nobody has donated, and also when `get_received_malo` is missing or the call fails. That database message stays off the profile and Athlete HQ.
+- **2026-10-02** — Highlights: Rivalry week dismisses with a swipe left or right and stays gone for the visit. The donate sheet opens at the top of the form, stays inside the screen, and scrolls when the phone is short.
+- **2026-10-02** — Privacy work re-landed and telemetry conflict closed. A parallel session had deleted
+  this session's uncommitted data-privacy docs and the `operator_checkins` RLS fix (no git history held them);
+  they were restored from the session transcript. `docs/DATA_PRIVACY_MAP.md` (data inventory, gaps, recommended
+  structure, keep-current rule) is back, linked from COMPANY_PHASES S2 item 6 / L4, LEGAL_BRIEFING and
+  DOCUMENTATION; ROADMAP Round 35 restated. The `operator_checkins` fix is now a proper migration,
+  `20261002120000_operator_checkins_role_check.sql` (anon demo-PIN, operator, admin — parity with
+  `operator_gigs`), copied onto `schema.sql`, **not applied anywhere**. Telemetry: the competing authenticated-only
+  insert policy and `insert_guard` migration were removed in `6742a35`, so guest inserts stay; staging's CHECKs
+  were read back and match `20260929190000_telemetry_logs_bounds.sql`. Stale "not applied" wording corrected in
+  the migration header, README and SCHEMA.md. Not verified: no Postgres here, so the new policy is unparsed.
 - **2026-10-02** — Comment standard (owner: make the code easy to follow for outside reviewers). Every
   source file under `apps/mobile/app` and `apps/mobile/src` now opens with a short header saying what it
   is, where it fits and what it touches (about 120 files that had none: lib, hooks, contexts, services,
@@ -177,16 +189,8 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   checks that a comment exists, not that it is accurate or good; Edge Functions, `supabase/*.sql` and
   `apps/admin-portal` are not scanned. Header text was checked against the code it describes, but a
   reviewer should still treat any header as a map, not a spec.
-- **2026-10-02** — Privacy work re-landed and telemetry conflict closed. A parallel session had deleted
-  this session's uncommitted data-privacy docs and the `operator_checkins` RLS fix (no git history held them);
-  they were restored from the session transcript. `docs/DATA_PRIVACY_MAP.md` (data inventory, gaps, recommended
-  structure, keep-current rule) is back, linked from COMPANY_PHASES S2 item 6 / L4, LEGAL_BRIEFING and
-  DOCUMENTATION; ROADMAP Round 35 restated. The `operator_checkins` fix is now a proper migration,
-  `20261002120000_operator_checkins_role_check.sql` (anon demo-PIN, operator, admin — parity with
-  `operator_gigs`), copied onto `schema.sql`, **not applied anywhere**. Telemetry: the competing authenticated-only
-  insert policy and `insert_guard` migration were removed in `6742a35`, so guest inserts stay; staging's CHECKs
-  were read back and match `20260929190000_telemetry_logs_bounds.sql`. Stale "not applied" wording corrected in
-  the migration header, README and SCHEMA.md. Not verified: no Postgres here, so the new policy is unparsed.
+- **2026-10-02** — Drip is off. `tabs.drip` defaults to false, and the published flag is false on staging and the development project. The screen and `/admin/drip` stay. Wave 1 is when the marketplace comes back (`docs/ROADMAP.md`). Finance (`COMMERCE`) still owns the code. A preview already installed picks this up on the next open; no new build.
+- **2026-10-01** — Callable department agents. `CALL: DESIGN` (`.claude/agents/design.md`) produces the screen. `CALL: ENGINEERING` (`.claude/agents/engineering.md`) produces the code and routes to the squad that owns the files. Legal, Brand (`VOICE`), and Quality (`QA`) were already callable. Marketing and Support still have no agent.
 - **2026-10-01** — Upload and report safeguards. The upload sheet will not publish until the person
   confirms they filmed the clip or have permission, the sound is the original recording or music
   they have the right to use, and they are not treating a school logo, team mark, or TV broadcast
@@ -194,7 +198,9 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   Fake footage, impersonation, and music/logo/broadcast leave the public feed for review; other
   reasons wait for the tagged athlete, their guardian, or three accounts. Migration
   `20261001180000_content_rights_reports.sql` is applied on staging, not the development project.
-  The installed preview builds do not have the new checkboxes until the next build.
+  Those preview builds finished the same day (Android
+  `061946c8-a25d-4a32-b5be-bab316819c1d`, iOS `a93f562d-d122-48a4-a20f-3e466368aa4a`).
+  iOS still installs only on the registered iPad. The 2026-09-30 installs do not ask the questions.
 - **2026-09-30** — September SQL is on staging (`ala-sports-staging`), not on the development
   project. Applied `tip_origin.sql` first (staging had no donation-channel columns), then
   `clear_reel_hype`, custodial money, leaderboards, and migrations `20260929120000` through

@@ -7,6 +7,15 @@ const mockPush = jest.fn();
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn() } }));
+jest.mock('expo-haptics', () => ({ impactAsync: jest.fn(), ImpactFeedbackStyle: { Light: 'light' } }));
+jest.mock('react-native-gesture-handler', () => {
+  const chain: Record<string, unknown> = {};
+  for (const key of ['minDistance', 'onUpdate', 'onEnd']) chain[key] = () => chain;
+  return {
+    Gesture: { Pan: () => chain },
+    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
 jest.mock('@/components/UI/HapticPressable', () => {
   const { Pressable } = jest.requireActual('react-native');
   return { HapticPressable: Pressable };

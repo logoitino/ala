@@ -2,6 +2,21 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-10-02
+
+### Support received
+
+- An athlete with no donations sees **$0.00** and "No donations yet". A missing or failed donations call shows the same empty total, not "Could not load donations".
+
+### Highlights
+
+- Rivalry week on Highlights can be swiped left or right to dismiss. A tap still opens the school poll.
+- The donate sheet opens at the title, stays on the screen, and scrolls when there is more to read.
+
+### Drip waits
+
+- The Drip tab is off. The marketplace stays in the app and comes back in Wave 1. Admin → Features can turn `tabs.drip` on later, then Publish to app.
+
 ## 2026-10-01
 
 ### Footage, sound, and marks
