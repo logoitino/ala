@@ -3917,10 +3917,11 @@ create policy "Operators write gigs"
   with check (auth.role() = 'anon' or public.current_user_role() in ('operator', 'admin'));
 
 drop policy if exists "Operators write checkins" on public.operator_checkins;
+-- Role check added 2026-10-02 (migration 20261002120000): parity with operator_gigs above.
 create policy "Operators write checkins"
   on public.operator_checkins for all
-  using (true)
-  with check (true);
+  using (auth.role() = 'anon' or public.current_user_role() in ('operator', 'admin'))
+  with check (auth.role() = 'anon' or public.current_user_role() in ('operator', 'admin'));
 
 drop policy if exists "Public read sponsorships" on public.sponsorships;
 create policy "Public read sponsorships" on public.sponsorships for select using (true);

@@ -24,7 +24,7 @@
 -- valid-looking values. Closing that needs the owner's STATE.md §6 item 1 decision (session id /
 -- user id on every row, then admin-only SELECT) plus Terms copy first. Do not default that here.
 --
--- Depends on: none. Not applied yet.
+-- Depends on: none. Applied to staging (`ala-sports-staging`) on 2026-09-30; not the development project.
 --
 -- Rollback:
 --   alter table public.telemetry_logs drop constraint if exists telemetry_logs_event_type_check;

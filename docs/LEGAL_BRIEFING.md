@@ -4,7 +4,7 @@
 **Date:** 13 September 2026  
 **This is not legal advice.** It is a map of issues a licensed attorney in the relevant states — and, where money moves, payments counsel — must actually opine on. Nothing here is a promise that Tapua'i is lawful to operate with live money.
 
-Read with [INVESTOR.md](INVESTOR.md) and [PUBLIC.md](PUBLIC.md). The order for formation, trademark, patent triage, billing, and security is [COMPANY_PHASES.md](COMPANY_PHASES.md). Engineer source of truth: [DOCUMENTATION.md](../DOCUMENTATION.md), [SCHEMA.md](SCHEMA.md).
+Read with [INVESTOR.md](INVESTOR.md) and [PUBLIC.md](PUBLIC.md). The order for formation, trademark, patent triage, billing, and security is [COMPANY_PHASES.md](COMPANY_PHASES.md). [DATA_PRIVACY_MAP.md](DATA_PRIVACY_MAP.md) is the current inventory of what the product actually collects — a starting point for the Privacy Policy counsel drafts (§8), not a substitute for it. Engineer source of truth: [DOCUMENTATION.md](../DOCUMENTATION.md), [SCHEMA.md](SCHEMA.md).
 
 ---
 

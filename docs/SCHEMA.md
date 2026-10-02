@@ -650,7 +650,7 @@ Batched client performance **and** product-usage events (Reel stalls, Realtime r
 | `payload` | jsonb | Extra context |
 | `created_at` | timestamptz | |
 
-**RLS (demo):** INSERT anyone (guest browse included); SELECT authenticated. **Checks** (`20260929190000_telemetry_logs_bounds.sql`, not applied): `event_type` must be one of the values above; `surface_scroll` duration is 0–100 (it stores depth); `tab_dwell` up to 12 hours; other durations up to 10 minutes; `attempts` 0–1000; text fields ≤80/160/80; `payload` ≤4000 bytes. A CHECK binds the service role too, so the webhook event type is in the list. This does not stop many small valid-looking rows — that needs STATE §6 item 1. Aggregates still reach `/admin/reports` through `get_admin_reports()` (security definer). Incremental: `supabase/telemetry_logs.sql` then `supabase/usage_reports.sql`. Client: `TelemetryManager.ts` + `useSurfaceUsage` (flush every 10s or queue size 15).
+**RLS (demo):** INSERT anyone (guest browse included); SELECT authenticated. **Checks** (`20260929190000_telemetry_logs_bounds.sql`, applied to staging only): `event_type` must be one of the values above; `surface_scroll` duration is 0–100 (it stores depth); `tab_dwell` up to 12 hours; other durations up to 10 minutes; `attempts` 0–1000; text fields ≤80/160/80; `payload` ≤4000 bytes. A CHECK binds the service role too, so the webhook event type is in the list. This does not stop many small valid-looking rows — that needs STATE §6 item 1. Aggregates still reach `/admin/reports` through `get_admin_reports()` (security definer). Incremental: `supabase/telemetry_logs.sql` then `supabase/usage_reports.sql`. Client: `TelemetryManager.ts` + `useSurfaceUsage` (flush every 10s or queue size 15).
 
 ---
 
@@ -1132,7 +1132,7 @@ If `aura_points` is unset on a player, the client falls back to `aura_count + se
 | `company_revenue_logs` | **Admin-only** | **Admin-only** (`anon` bypass dropped; real writes flow through a SECURITY DEFINER trigger regardless); amount columns CHECK `>= 0` |
 | `app_runtime_config` | Public (fan chrome boot) | **authenticated** admin only (`anon` bypass dropped; `patch_app_runtime_draft`/`publish_app_runtime` also admin-checked internally since SECURITY DEFINER bypasses this policy) |
 | `app_feedback` | Admin or `anon` | INSERT anyone; admin or `anon` UPDATE — not tightened this pass |
-| `telemetry_logs` | Authenticated (any signed-in user — still open, STATE §6) | INSERT anyone, including anon (guest browse). Row shape is bounded by CHECKs in `20260929190000_telemetry_logs_bounds.sql` (not applied) |
+| `telemetry_logs` | Authenticated (any signed-in user — still open, STATE §6) | INSERT anyone, including anon (guest browse). Row shape is bounded by CHECKs in `20260929190000_telemetry_logs_bounds.sql` (staging only) |
 | `saved_reels` | Own rows | INSERT / DELETE own rows |
 | `reel_hype_votes` | Own rows | INSERT own rows, **authenticated only** (anon execute on `increment_reel_hype` defeated this table's own per-user dedupe — closed) |
 | `schools_and_teams` | Public | Admin INSERT / UPDATE / DELETE |

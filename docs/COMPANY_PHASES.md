@@ -48,6 +48,7 @@ These are already written as public-beta blockers. Do not re-decide them here.
 3. A named person owns an incident: who gets called, how a school or parent reports a clip, how fast Mālo can be frozen for one athlete or one school (the freeze flags already exist).
 4. Moderation is a queue with a human, not only `is_flagged`. [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) already says there is no CSAM pipeline in this codebase. That pipeline is a vendor plus a policy, bought before public video of minors.
 5. Repeat the Roadmap security sweep when a new table, RPC, Storage bucket, or Realtime channel lands.
+6. **Repeat the data-privacy sweep** ([DATA_PRIVACY_MAP.md](DATA_PRIVACY_MAP.md)) on the same trigger — a new table/column/RPC that holds anything about a real person gets a row added to that doc's data inventory in the same pass, not a separate later cleanup. That doc is the working inventory counsel needs for the real Privacy Policy (L4 item 2 below); keeping it current as code ships is cheaper than reconstructing it from the schema once.
 
 **Exit:** a stranger with the app binary cannot write money, grant admin, read a Vault file, or confirm a Varsity tag.
 
@@ -146,7 +147,7 @@ A patent is not part of forming the company, and filing one is not assumed.
 Counsel drafts, the repo only stores the version the app asks users to accept (`LEGAL_TERMS_VERSION`, `LegalModal`).
 
 1. Terms of Use.
-2. Privacy policy (video of minors, school, location for operator check-in, Stripe).
+2. Privacy policy (video of minors, school, location for operator check-in, Stripe). [DATA_PRIVACY_MAP.md](DATA_PRIVACY_MAP.md) is the current data inventory to start counsel's draft from — it is not the policy itself.
 3. Parental consent, separate from a boolean on `players`.
 4. Athlete / creator agreement. Parent signs if the athlete is a minor.
 5. Booster insertion order (what a Silver / Gold / Platinum buy actually is).

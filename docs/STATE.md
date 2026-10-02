@@ -39,6 +39,7 @@ to the development project (`ulfapgtabidorgwfjvwz`). Staging was also missing `t
 | 8 | `supabase/migrations/20260929170000_filmer_rewards.sql` | 7 |
 | 9 | `supabase/migrations/20260929180000_rally_goals_thanks_platform_tip.sql` | 2, `company_revenue.sql`, `tip_origin.sql` |
 | 10 | `supabase/migrations/20260929190000_telemetry_logs_bounds.sql` | — (independent; guest inserts stay; apply any time) |
+| 11 | `supabase/migrations/20261002120000_operator_checkins_role_check.sql` | — (written 2026-10-02, **not applied anywhere**; the demo-PIN console keeps working because `anon` stays allowed) |
 
 On staging, `company_revenue.sql` was already present and `tip_origin.sql` was not, so the channel
 tags were applied before the table above. The development project was not touched. After a build
@@ -163,6 +164,16 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-10-02** — Privacy work re-landed and telemetry conflict closed. A parallel session had deleted
+  this session's uncommitted data-privacy docs and the `operator_checkins` RLS fix (no git history held them);
+  they were restored from the session transcript. `docs/DATA_PRIVACY_MAP.md` (data inventory, gaps, recommended
+  structure, keep-current rule) is back, linked from COMPANY_PHASES S2 item 6 / L4, LEGAL_BRIEFING and
+  DOCUMENTATION; ROADMAP Round 35 restated. The `operator_checkins` fix is now a proper migration,
+  `20261002120000_operator_checkins_role_check.sql` (anon demo-PIN, operator, admin — parity with
+  `operator_gigs`), copied onto `schema.sql`, **not applied anywhere**. Telemetry: the competing authenticated-only
+  insert policy and `insert_guard` migration were removed in `6742a35`, so guest inserts stay; staging's CHECKs
+  were read back and match `20260929190000_telemetry_logs_bounds.sql`. Stale "not applied" wording corrected in
+  the migration header, README and SCHEMA.md. Not verified: no Postgres here, so the new policy is unparsed.
 - **2026-10-01** — Upload and report safeguards. The upload sheet will not publish until the person
   confirms they filmed the clip or have permission, the sound is the original recording or music
   they have the right to use, and they are not treating a school logo, team mark, or TV broadcast
@@ -399,7 +410,7 @@ Do not re-diagnose these. Fix them or leave them.
 | Thing | State |
 | --- | --- |
 | `clear_reel_hype` is on staging, not the development project | On the development database, un-voting a Seki/Aura/Flex no longer flickers, but the count **returns on refresh**. |
-| `telemetry_logs` INSERT policy is `with check (true)` for `anon` | **Shape-bounded in SQL, not applied** (`20260929190000_telemetry_logs_bounds.sql`). Guest inserts stay on purpose. Until it runs, one row can still report a nonsense event or an 11-day stall and skew Reports / Coverage / Money. After it runs, a single row cannot. Still open: many small valid-looking rows. Closing that needs §6 item 1, not a silent drop of guest telemetry. |
+| `telemetry_logs` INSERT policy is `with check (true)` for `anon` | **Shape-bounded on staging, not on the development project** (`20260929190000_telemetry_logs_bounds.sql`; the five CHECKs on staging were read back 2026-10-02 and match the file). Guest inserts stay on purpose. On the development project one row can still report a nonsense event or an 11-day stall and skew Reports / Coverage / Money; on staging a single row cannot. Still open: many small valid-looking rows. Closing that needs §6 item 1, not a silent drop of guest telemetry. |
 | `telemetry_logs` has no `user_id` / `session_id` | No funnels, retention, or per-user behaviour is possible. Owner chose "session + user id" but it is **not built** — it is a privacy change needing policy copy first (§6). |
 | Expo web bundle | Fails on `lightningcss` native binary (missing for 1.33.0; 1.32.0 blocked by macOS code signing). Mobile is unaffected. |
 | Storage buckets `reels` / `game_highlights` / `avatars` are public | Vault-locked video is directly downloadable, bypassing entitlement. Accepted for internal testing only — ROADMAP Phase 5 hard blocker. |
