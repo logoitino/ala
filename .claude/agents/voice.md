@@ -47,3 +47,15 @@ to a play, a kid can lose eligibility.
 **Before finishing:** `node scripts/check-copy.mjs`, `pnpm docs:check`, and the mobile tests if you
 touched strings a test asserts (`cd apps/mobile && ../../node_modules/.bin/jest --watchman=false`).
 Code changes under `apps/` need a `docs/STATE.md` §4 line; user-visible copy needs a CHANGELOG line.
+
+## Expanded specialist routing (2026-10-07)
+
+Read `docs/STATE.md` first and follow `docs/TEAMS.md` §Specialist operating contract. Reporting lead: `FACILITATOR`. Registry: `.claude/agents/registry.json`.
+
+Coordinate with specialists listed in the hierarchy; keep this role accountable for its surface and typed boundaries.
+
+Use `docs/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
+
+## Documentation handoff
+
+Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.

@@ -1,9 +1,11 @@
 # Tapua'i department call sheet
 
-Use this when you **call a team** to fix or update one area. Command staff stays four people (Facilitator · Mobile · Backend · Ship QA). Product work is split into **departments** so a call has one owner, one fan surface, and a hard “do not touch” list.
+**Org chart (who reports where):** [TEAM_HIERARCHY.md](TEAM_HIERARCHY.md) — open that first if you only need the hierarchy and agent list.
 
-**Repo:** `~/Desktop/ala-sports` · GitHub `logoitino/ala` · pnpm monorepo.  
-**Copy:** money on screen is **Donate / donation** ([VOICE.md](VOICE.md)). "Mālo!" is only a thank-you. **Seki** / **Highlights ⚡**. Persistence still `tips` / `reels` / `useTipCheckout`.  
+Use this when you **call a team** to fix or update one area. The Facilitator routes work through department leads and functional specialists. Every critical function has an accountable owner and a verification partner; activate agents only for assigned work.
+
+**Repo:** `/Users/seiuliian/Downloads/ala-sports` · GitHub `logoitino/ala` · pnpm monorepo.
+**Copy:** money on screen is **Donate / donation** ([VOICE.md](VOICE.md)). "Mālo!" is only a thank-you. **Seki** / **Highlights ⚡**. Persistence still `tips` / `reels` / `useTipCheckout`.
 **Facts:** [DOCUMENTATION.md](../DOCUMENTATION.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [SCHEMA.md](SCHEMA.md) · [ALA_TEAM_BRIEF.md](ALA_TEAM_BRIEF.md) · [CHANGELOG.md](../CHANGELOG.md). Do not invent prices, Aura math, or legal conclusions — run `pnpm docs:sync` or read [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md).
 
 ---
@@ -26,7 +28,7 @@ Say the department in plain words. These calls have an agent that does the work:
 
 `CALL: DESIGN` · `CALL: ENGINEERING` · `CALL: FULLSTACK` · `CALL: BACKEND` · `CALL: LEGAL` · `CALL: COMPLIANCE` · `CALL: VOICE` · `CALL: QA`
 
-`CALL: COMMERCE` is Finance. `CALL: ROLE_HQ` is Partnerships. `CALL: HIGHLIGHTS` is the Home squad inside Engineering. `FACILITATOR` is you. Marketing and Support have no agent yet.
+`CALL: COMMERCE` is Finance. `CALL: ROLE_HQ` is Partnerships. `CALL: HIGHLIGHTS` is the Home squad inside Engineering. `FACILITATOR` is you. Marketing (`MARKETING`) and Support (`SUPPORT`) now have callable leads and specialist support.
 
 **Engineering roles:** `ENGINEERING` (lead) · `BACKEND` (database engineer) · `FULLSTACK` (full-stack developer). Screen squads when the change is only in one place: `HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `COMMERCE` · `AURA` · `ADMIN` · `OPERATOR` · `ROLE_HQ`.
 
@@ -42,26 +44,28 @@ Cursor works in this same tree alongside Claude Code. Claude owns the security s
 
 ## Business departments
 
-These are the departments a company actually has. The names under **Builds it** are the engineering agents that do the work today. Claude Code reads `.claude/agents/<file>.md`. Cursor uses the same name (`ROLE_HQ` → `role-hq`). A business department can have more than one agent. A new feature does not get a new department or a new agent if one of these already owns it.
+These are the departments a company actually has. The names under **Builds it** are the engineering agents that do the work today. Claude Code reads `.claude/agents/<file>.md`. Cursor uses the same name (`ROLE_HQ` → `role-hq`). A business department can have more than one agent. Use the existing functional specialist when a responsibility already has an owner; add a specialist only for a distinct function or required independent gate.
 
 **Now** is Wave 0: internal test, Stripe test cards, staging. **Next** has to exist before a public build or live money, and it is not this week's build. **Later** is named so it is not forgotten. Do not start it because it is listed.
 
 | Department | What the business owns | Builds it | Now | Next | Later |
 | --- | --- | --- | --- | --- | --- |
-| **Product** | What ships, for whom, and in what order. Roadmap and the one next move. | `FACILITATOR` (the person driving the session, not a code agent) | Test wave: uploads, donations, Rally, on the staging preview | Owner decisions in STATE §6 before live money | Company formation stays with the founder |
-| **Design (UX/UI)** | How every screen looks, moves, and reads. | `DESIGN` (`.claude/agents/design.md`). `AURA` keeps tier math | Daylight canvas, tab colors, springs, one primary action per sheet, empty vs error | Feel check on a real phone with Quality (M9) | Share card, backer wall, badges, a bigger rivalry takeover (M8). Fan digital signature on the Aura card |
-| **Engineering** | The app, the database, and the admin tools — industry practice, no shortcuts. | `ENGINEERING` lead · `BACKEND` (database) · `FULLSTACK` · screen squads | Home, Activity, Local, Spotlight, Profile, sign-in, sideline scorer, Expo admin. Account tags on a Highlight (SQL not applied). Staging has the September SQL and the content-rights SQL. Drip tab is off | Magic-link redirect on staging. `reel_vault` so Vault video plays. Apply account-tag SQL when the owner asks. Real admin and operator sessions. Pick Cloudflare Stream or Mux; do not build a video platform on Storage | Drip marketplace (Wave 1). Fan digital signature on the Aura card. Low-view lane (M3). Train Like Me / Ask an athlete (M4). Showcase link (M6). Game-day gigs (M5, Wave 3). No licensed music picker |
-| **Finance** | Money in, the split, receipts, and money out. | `COMMERCE`, with `BACKEND` on the ledger | Donate sheet (90 / 10, optional tip for Tapua'i starts at No tip), gear goals, Rally, receipts. Payouts stay blocked. Drip is off | One credit path: the webhook writes the donation, then the app stops inserting it. Parent is the payee. A server balance before any payout | Drip marketplace (Wave 1). Team gift and booster match (counsel first). Pathway labels only, no fund held here (M7). Filmer cash from Tapua'i's own budget (M11) — nothing in the UI mentions cash |
-| **Legal & Compliance** | What the company is allowed to say and do. Counsel decides. Agents place approved words and refuse false claims. | `LEGAL` (terms ack) · `COMPLIANCE` (privacy / ToS checklist) | Terms and ack toggles. `DATA_PRIVACY_MAP.md` inventory. No invented SOC 2 or uptime SLA. Conclusions stay in `LEGAL_BRIEFING.md` | Counsel: Privacy Policy, ToS liability, parental consent. Export / deletion product path. Processor list stays honest. Auto-renewal only if Billing lands | Formation, trademark, association letter (L0–L4). DPA for booster/sponsor/school B2B. Measured uptime SLO only after Ops exists. Agents do not file or draft counsel paper |
+| **Product** | What ships, for whom, and in what order. Roadmap and the one next move. | `PRODUCT` · `RESEARCH`, directed by `FACILITATOR` | Test wave: compact uploads/donations and shared menu energy; staged device acceptance in TESTER_SCRIPT | Owner decisions in STATE §6 before live money | Company formation stays with the founder |
+| **Design (UX/UI)** | How every screen looks, moves, and reads. | `DESIGN` · `ACCESSIBILITY` · `MOTION`; `AURA` keeps tier math | Daylight canvas, tab colors, springs, one primary action per sheet, empty vs error | Feel check on a real phone with Quality (M9) | Share card, backer wall, badges, a bigger rivalry takeover (M8). Fan digital signature on the Aura card |
+| **Engineering** | The app, the database, and the admin tools — industry practice, no shortcuts. | `ENGINEERING` lead · `BACKEND` (database) · `FULLSTACK` · `DOCUMENTATION` · screen squads | Shared Daylight sheets/pages and code/doc handoffs. Home, Activity, Local, Spotlight, Profile, sign-in, sideline scorer, Expo admin. Account tags on a Highlight (SQL not applied). Staging has the September SQL and the content-rights SQL. Drip tab is off | Magic-link redirect on staging. `reel_vault` so Vault video plays. Apply account-tag SQL when the owner asks. Real admin and operator sessions. Pick Cloudflare Stream or Mux; do not build a video platform on Storage | Drip marketplace (Wave 1). Fan digital signature on the Aura card. Low-view lane (M3). Train Like Me / Ask an athlete (M4). Showcase link (M6). Game-day gigs (M5, Wave 3). No licensed music picker |
+| **Finance** | Money in, the split, receipts, and money out. | `COMMERCE` lead · `CHECKOUT` · `LEDGER` · `RECONCILIATION` · `REFUNDS` · `CONNECT` · `CUSTODIAL` · `RALLY` · `DONATION_THANKS` · `BILLING` · `DRIP` · `WISHLIST` · `RECEIPTS`, with `BACKEND` | Staged Amount → Options → Review Donate popup (90 / 10, optional tip for Tapua'i starts at No tip), gear goals, Rally, receipts. Payouts stay blocked. Drip is off | One credit path: the webhook writes the donation, then the app stops inserting it. Parent is the payee. A server balance before any payout | Drip marketplace (Wave 1). Team gift and booster match (counsel first). Pathway labels only, no fund held here (M7). Filmer cash from Tapua'i's own budget (M11) — nothing in the UI mentions cash |
+| **Legal & Compliance** | What the company is allowed to say and do. Counsel decides. Agents place approved words and refuse false claims. | `LEGAL` · `COMPLIANCE` · `PRIVACY_ENGINEERING` · `CONTENT_RIGHTS` | Terms and ack toggles. `DATA_PRIVACY_MAP.md` inventory. No invented SOC 2 or uptime SLA. Conclusions stay in `LEGAL_BRIEFING.md` | Counsel: Privacy Policy, ToS liability, parental consent. Export / deletion product path. Processor list stays honest. Auto-renewal only if Billing lands | Formation, trademark, association letter (L0–L4). DPA for booster/sponsor/school B2B. Measured uptime SLO only after Ops exists. Agents do not file or draft counsel paper |
 | **Brand** | The words a parent reads. Donate / donation. No money tied to a play. | `VOICE` | `pnpm copy:check` on every money screen | Run again before a release | Every new money screen, including ones listed as Later |
-| **Trust & Safety** | Who may post, what may be reported, and what leaves the public feed. | `HIGHLIGHTS` for the report flow, `LEGAL` for the rules, `ADMIN` when a person has to review | Upload confirms permission, sound, and marks. Reports name a reason. Some reasons hide the clip immediately | A human moderation queue before public video of minors | Strikes, appeals, and a filmed-at-the-game badge. Not built |
-| **Partnerships** | Schools, families, booster clubs, and sponsors. | `ROLE_HQ`, with `LOCAL` for game-day boosters and `PROFILE` for the athlete | Parent, Booster, and Sponsor portals. A guardian approves an athlete's Rally | The parent stays the payee on paper. The payout button stays a stub | Real custodial payout only after Finance has a ledger. Written school permission before a commercial build shows a school mark |
-| **Operations** | Running a game day and the control plane. | `OPERATOR` and `ADMIN` | Sideline PIN, GPS check-in, score and clock. Expo `/admin` is where staff edit. The Next portal is read-only oversight | The operator PIN is for internal test only. It is not a public login | Paid game-day coverage and a light game line (M5). Billing and marketing desks were scoped, not started |
-| **Quality** | Whether a change is safe to hand to a tester — automated + product + compliance hygiene. | `QA` | Typecheck, docs, copy, boundaries, comments, Jest, Soft-Wall, Profile, payments, no fake SOC 2 / SLA / trackers-before-consent | Feel check on the preview installs. Export/deletion path once built | A full pass by each department, then the public-beta gate |
-| **Marketing** | How families hear about Tapua'i. | Nobody yet. Product and Brand hold the words until a desk exists | Not staffed. Do not invent campaigns | — | Rally stories from real families, with consent (M10) |
-| **Support** | Helping a parent or athlete when something breaks. | Nobody yet | Not staffed. Testers use the people already on the project | — | A help desk, after there are users outside the test group |
+| **Trust & Safety** | Who may post, what may be reported, and what leaves the public feed. | `TRUST_SAFETY` · `MODERATION` · `ATHLETE_VERIFICATION` · `MINOR_SAFETY`, paired with `CONTENT_RIGHTS`, `LEGAL` and `ADMIN` | Upload confirms permission, sound, and marks. Reports name a reason. Some reasons hide the clip immediately | A human moderation queue before public video of minors | Strikes, appeals, and a filmed-at-the-game badge. Not built |
+| **Partnerships** | Schools, families, booster clubs, and sponsors. | `PARTNERSHIPS` · `ROLE_HQ` · `SCHOOL_PARTNERS` · `SPONSOR_ADS`, paired with `LOCAL` and `PROFILE` | Parent, Booster, and Sponsor portals. A guardian approves an athlete's Rally | The parent stays the payee on paper. The payout button stays a stub | Real custodial payout only after Finance has a ledger. Written school permission before a commercial build shows a school mark |
+| **Operations** | Running a game day and the control plane. | `OPERATIONS` · `OPERATOR` · `RELEASE` · `CI` · `RELIABILITY` · `TELEMETRY` · `RECOVERY` · `COST_OPERATIONS`, with `ADMIN` | Sideline PIN, GPS check-in, score and clock. Expo `/admin` is where staff edit. The Next portal is read-only oversight | The operator PIN is for internal test only. It is not a public login | Paid game-day coverage and a light game line (M5). Billing and marketing desks were scoped, not started |
+| **Quality** | Whether a change is safe to hand to a tester — automated + product + compliance hygiene. | `QA` · `TEST_AUTOMATION` · `DEVICE_QA` | UX-02 small-phone/keyboard/review checks in TESTER_SCRIPT; typecheck, docs, copy, boundaries, comments, Jest, Soft-Wall, Profile, payments, no fake SOC 2 / SLA / trackers-before-consent | Feel check on the preview installs. Export/deletion path once built | A full pass by each department, then the public-beta gate |
+| **Marketing** | How families hear about Tapua'i. | `MARKETING` · `GROWTH_ANALYTICS`, with `PRODUCT` and `VOICE` | Internal messaging and measurement definitions; no external campaigns | Reviewed launch plan after Product/Legal gates | Rally stories from real families, with consent (M10) |
+| **Support** | Helping a parent or athlete when something breaks. | `SUPPORT` · `INCIDENT_TRIAGE` | Internal tester triage, compact Donate/upload journeys and menu evidence from TESTER_SCRIPT | Minimal-data support escalation before external users | A help desk after approved launch |
 
 A business call uses the agent named above. A screen call uses the squad (`CALL: HIGHLIGHTS`). Schema, RLS, Storage, and Stripe secrets always include `BACKEND`. Publish-to-app always includes Quality. Money words always include Brand. Anything a parent, a school, or a regulator could read as a promise includes Legal.
+
+See **Functional specialist roster** below for the complete accountable owner map. Existing squad sections remain the detailed surface inventory.
 
 ### Design team
 
@@ -71,13 +75,15 @@ Design produces the screen. The call names the surface. The agent edits that sur
 
 | Job | What Design does |
 | --- | --- |
-| **Visual system** | Daylight canvas, tab colors, and the springs in `theme/motion.ts`. One palette. |
+| **Visual system** | Daylight canvas, tab colors, and the springs in `theme/motion.ts`. One palette; shared Daylight menu/page chrome and compact step navigation. |
 | **Hierarchy** | One primary action on a sheet. A parent can see what to tap. Loading, empty, and error look different. |
 | **Motion** | Uses `SPRING_CARD`, `SPRING_BOUNCE`, `SPRING_FLIP`, `SPRING_PEEK`. No one-off bounce on a button. |
 | **Look desk** | Expo `/admin/look`. A draft waits on Publish to app. |
 | **Hand-off** | The squad that owns the file keeps the data and the payments. Design does not rewrite those. Aura point math stays with `AURA`. Words stay with Brand. |
 
 **Do not:** start the Later list (share card, backer wall, badges) unless that item was asked for.
+
+**UX-02 coverage:** Shared menu/page primitives align rounded cards, accent washes and step indicators. `CHECKOUT` owns donation review/payment; `UPLOAD` owns drafts/rights; `DESIGN` owns appearance; `ACCESSIBILITY` / `DEVICE_QA` verify actual device behavior. `DOCUMENTATION` maintains [MENU_STYLE_MAP.md](MENU_STYLE_MAP.md) and synchronizes all team handoffs.
 
 ### Engineering team
 
@@ -90,6 +96,7 @@ Engineering produces the code to an industry bar: typed boundaries, least-privil
 | **Engineering lead** | `ENGINEERING` | `CALL: ENGINEERING` | Routes the work, integrates cross-squad changes, enforces the professional bar. |
 | **Database engineer** | `BACKEND` | `CALL: BACKEND` | Postgres, RLS, RPCs, migrations, Storage, Realtime, Edge Functions, server Stripe secrets. Canonical file: `schema.sql`. |
 | **Full-stack developer** | `FULLSTACK` | `CALL: FULLSTACK` | Expo screens, hooks, lib clients, and Expo API routes end to end — without leaking secrets or inventing a second architecture. |
+| **Documentation specialist** | `DOCUMENTATION` | `CALL: DOCUMENTATION` | Synchronize affected system docs, all team contracts and code-documentation evidence in the same turn. |
 | **Screen squads** | `HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `ADMIN` · `OPERATOR` · `AURA` | `CALL: <SQUAD>` | One surface when the change stays there. |
 
 **Do not:** start a Later item unless it was asked for. Put a Stripe secret in the client. Deploy webhook crediting while the client still inserts `tips`. Apply SQL to the development project unless asked. Claim SOC 2 or publish a fake uptime SLA.
@@ -113,7 +120,7 @@ Legal does not decide the law. A licensed attorney does. This team puts approved
 | **Publish processors** | Stripe + Supabase named in `DATA_PRIVACY_MAP` §2. | Keep list honest when a vendor is added. | Show in Privacy Policy counsel drafts. |
 | **ToS tickbox** | Ack on Varsity apply + Connect Bank. | Counsel may require ack on sign-up too. | — |
 | **Real uptime SLA** | Do not publish 99.x% while Wave 0 hosting is best-effort. | — | Measured SLO only after Ops + paid hosting exist. |
-| **Money words** | Donate sheet states 90 / 10. Brand (`VOICE`) checks wording. | Counsel reviews that line and App Store gift rules before live money. | Tax reporting is CPA / payments counsel (B6). |
+| **Money words** | Compact Donate review retains 90 / 10, No tip default, optional fees, total and held-gift notice. Brand (`VOICE`) checks wording. | Counsel reviews that line and App Store gift rules before live money. | Tax reporting is CPA / payments counsel (B6). |
 | **Minors** | Sign-up confirms 13+. Thank-yous presets only. Athlete Rally waits for guardian. | Parent is the payee until counsel signs the design. | 1-on-1 with minors stays off until safety rules are signed. |
 | **Footage, sound, and marks** | Upload confirms permission, sound, marks; game play confirms real footage. | Counsel decides whether school marks may appear at all. | Strikes, appeals, filmed-at-the-game badge — not this wave. |
 | **Schools and associations** | Demo rosters are not a license to use a school's name or film. | — | Written association / district position before a metro launch. |
@@ -138,7 +145,7 @@ A feature that ships with a stale department row is not done. This is the same t
 
 ## Command staff (Grok ALA channel)
 
-These four roles already exist. They do not own a tab by themselves — they staff a department call.
+These four historical command roles remain a compatibility view of integration responsibilities. Department leads and the specialist roster below are the current dispatch hierarchy.
 
 | Role | Call as | Owns | Does not |
 | --- | --- | --- | --- |
@@ -155,15 +162,17 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### HIGHLIGHTS — Highlights ⚡ / Home
 
-**Call:** `HIGHLIGHTS`  
-**Fan:** `/` (Home · All · Seki, clip search, live banner, slang line, Player of the Week popup)  
-**Admin:** Expo `/admin/highlights` · `/admin/moderation` · `/admin/features` (hype + Home search) · `/admin/look` (Home copy / banner) · `/admin/catalog` (clip category labels)  
+**Call:** `HIGHLIGHTS`
+**Fan:** `/` (Home · All · Seki, clip search, live banner, slang line, Player of the Week popup)
+**Admin:** Expo `/admin/highlights` · `/admin/moderation` · `/admin/features` (hype + Home search) · `/admin/look` (Home copy / banner) · `/admin/catalog` (clip category labels)
+**Upload UX (owner 2026-10-07):** `UPLOAD` + `DESIGN` own the compact Clip → Details → Review composer; game/account/Vault settings open separately, searchable athlete/game selection replaces expanded lists, and Back keeps the draft. Rights still require explicit confirmation before publishing.
+
 **What it does:** TikTok-style `expo-video` pager. Seki 🤙 / Aura ⚡ / Flex 💪 rail + double-tap Aura. More sheet (Share / Save / Report). Athlete name opens `/user/[id]`. Upload can also mention up to three accounts; they confirm on their own profile before "With …" shows. Donations stay on the athlete tag. Offline queue for hype / bookmark / report.
 
 | Function | Where |
 | --- | --- |
 | Feed mix pills Home / All / Seki | `app/(tabs)/index.tsx` · `useReels` |
-| Reel player + hype | `components/ReelCard.tsx` · `lib/reelVotes.ts` · `theme/hypeFx.ts` |
+| Reel player + hype | `components/Reels/ReelCard.tsx` · `lib/reelVotes.ts` · `theme/hypeFx.ts` |
 | Search overlay | `components/Reels/HomeSearchOverlay.tsx` |
 | Live scoreboard banner | `components/Reels/LiveMatchBanner.tsx` (pair `LOCAL`) |
 | Report / hide | `components/Reels/ReportContentModal.tsx` · `/admin/moderation` |
@@ -177,9 +186,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### LOCAL — Game day (matches, polls, boosters)
 
-**Call:** `LOCAL`  
-**Fan:** `/local` · `/local/game/[id]` · public `/game/[id]`  
-**Admin:** `/admin/games` · `/admin/polls` · `/admin/boosters` · `/admin/sports` · `/admin/catalog` (region chips + sponsor dollars)  
+**Call:** `LOCAL`
+**Fan:** `/local` · `/local/game/[id]` · public `/game/[id]`
+**Admin:** `/admin/games` · `/admin/polls` · `/admin/boosters` · `/admin/sports` · `/admin/catalog` (region chips + sponsor dollars)
 **What it does:** Explore search. Boards: Live Matches, School Polls (`cast_cheer_vote`), Top Boosters (Silver / Gold / Platinum PaymentSheet). Match sheet: feed + roster. Roster name opens `/user/[id]`. Play-card compact Mālo.
 
 | Function | Where |
@@ -198,9 +207,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### SPOTLIGHT — Player of the Week
 
-**Call:** `SPOTLIGHT`  
-**Fan:** `/spotlight` · Home launch modal  
-**Admin:** `/admin/spotlight`  
+**Call:** `SPOTLIGHT`
+**Fan:** `/spotlight` · Home launch modal
+**Admin:** `/admin/spotlight`
 **What it does:** Week / Month / Year board. Watch Full Highlight opens the clip. Athlete sheet only when `player_id` is a real UUID (null seed ids must not invent `spotlight-{id}`). Auto-elect needs Varsity (`athlete_is_varsity_verified`). That's them / Not them tag queue.
 
 | Function | Where |
@@ -215,9 +224,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### PROFILE — Identity, Crew, Vault, roster
 
-**Call:** `PROFILE`  
-**Fan:** `/profile` (own hub, hamburger) · `/user/[id]` (public, back) · `/athlete/[id]` redirect  
-**Admin:** Expo Look · Profile · `/admin/athletes` · `/admin/people` · `/admin/sports` (Stats) · `/admin/wishlist` · Next `/profile`  
+**Call:** `PROFILE`
+**Fan:** `/profile` (own hub, hamburger) · `/user/[id]` (public, back) · `/athlete/[id]` redirect
+**Admin:** Expo Look · Profile · `/admin/athletes` · `/admin/people` · `/admin/sports` (Stats) · `/admin/wishlist` · Next `/profile`
 **What it does:** One `AthleteProfileView` for own and tapped athletes. Hero avatar + picker. Slim Crew. Share & Fund QR (`tapuai.app/gift/{handle}`). Highlights / Stats / Vault pills. Active Team Roster (Claimed = `profiles.player_id`). Join Crew / Drop Mālo / Subscribe hide on your own claimed row. Flip Aura card from hamburger (`profile.showCard`). Varsity ⚡ badge (team code or staff). Legal modal + ack. Role switcher (claim athlete ≠ Varsity). **Edit Profile** (hamburger): bio, social links, display name/username, and per-field Bio / School / Stats / Social-links visibility toggles — hiding is enforced server-side for other users via `profiles_public` (`reels_feed`-style conditional-null view) and `athlete_stats_visible()`, not just a client-side flag.
 
 | Function | Where |
@@ -246,9 +255,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### AUTH — Soft-Wall / browse-first
 
-**Call:** `AUTH`  
-**Fan:** `SoftWallModal` · `WelcomeOverlay` · `alasports://auth/callback`  
-**Admin:** Expo Coverage Soft-Wall surface · Next `/auth` · Features Mālo / Crew / Wishlist / Operator flags · `/admin/people` (Demo Fan)  
+**Call:** `AUTH`
+**Fan:** `SoftWallModal` · `WelcomeOverlay` · `alasports://auth/callback`
+**Admin:** Expo Coverage Soft-Wall surface · Next `/auth` · Features Mālo / Crew / Wishlist / Operator flags · `/admin/people` (Demo Fan)
 **What it does:** Guests browse Highlights, cards, wishlist. **Donate · Join Crew · gear-goal donate** open the wall (email+password, Demo Fan, Apple, Google, Magic Link) then resume. First-open overlay is not an account wall. Fan row via `handle_new_auth_user` + `ensureFanProfile`.
 
 | Function | Where |
@@ -267,14 +276,14 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### COMMERCE — Donations, Drip, Wishlist, Connect, receipts
 
-**Call:** `COMMERCE`  
-**Fan:** Donate sheet (90 / 10 split line, optional tip for Tapua'i, card-fee box) · Rally card · Say thanks · `/drip` · gear goals · `/receipts` · `/gift/[handle]` · `PayoutSetupCard`  
-**Admin:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers)  
+**Call:** `COMMERCE`
+**Fan:** Donate sheet (90 / 10 split line, optional tip for Tapua'i, card-fee box) · Rally card · Say thanks · `/drip` · gear goals · `/receipts` · `/gift/[handle]` · `PayoutSetupCard`
+**Admin:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers)
 **What it does:** Stripe **test** PaymentSheet. Mālo $5 / $10 / $25 / Custom → one `tips` row (where it started: Highlight, QR link, wishlist item, profile, or live play) + 10 Aura per tip dollar. Exclusive subscribe +100 Aura. Drip Buy Now. Wishlist Chip In writes that same `tips` row, then `chip_in_wishlist_item` only moves the item total. Connect Express (JWT Edge `create-stripe-account` only). Custodial payout from `profiles.stripe_connect_id`. Legal ack required before Connect and Varsity apply. The prototype terms (`LEGAL_TERMS_VERSION`) and the Mālo sheet say we keep that gift record and use it for receipts, athlete accounting, and to see which parts of the app bring in support.
 
 | Function | Where |
 | --- | --- |
-| Checkout | `hooks/useTipCheckout.ts` · `MaloTipModal` / `TipSheetModal` |
+| Checkout | `TipSheetModal` Amount / Options / Review frame · `TipCheckout` state/selection · `hooks/useTipCheckout.ts` payment execution |
 | Connect | `hooks/useStripeConnect.ts` · Edge `create-stripe-account` |
 | Payout | `app/api/create-payout+api.ts` · `PayoutSetupCard` |
 | Drip | `app/(tabs)/drip.tsx` · `GearCard` · `ProductSheet` · `useDripCatalog` |
@@ -292,9 +301,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### AURA — Tiers, trading card, Look canvas
 
-**Call:** `AURA`  
-**Fan:** Flip Aura card · Top Boosters peek · hype bursts  
-**Admin:** `/admin/look` (theme + Profile chrome + copy) · `/admin/features` (hype buttons)  
+**Call:** `AURA`
+**Fan:** Flip Aura card · Top Boosters peek · hype bursts
+**Admin:** `/admin/look` (theme + Profile chrome + copy) · `/admin/features` (hype buttons)
 **What it does:** 7-tier palette (Slate Silver → Celestial Prism). `add_user_aura`. Skia `GlowingNeonBorder` on the card. Daylight canvas + `TAB_ACCENTS`. Look drafts wait on **Publish to app**.
 
 | Function | Where |
@@ -310,8 +319,8 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### ADMIN — Control plane (Expo desks + Next portal)
 
-**Call:** `ADMIN`  
-**Fan:** none (operators with `profiles.is_admin` or Studio unlock)  
+**Call:** `ADMIN`
+**Fan:** none (operators with `profiles.is_admin` or Studio unlock)
 **Expo `/admin` groups:**
 
 | Group | Desks | Saves |
@@ -341,9 +350,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### BACKEND — Database engineer
 
-**Call:** `BACKEND` (`.claude/agents/backend.md`)  
-**Fan:** all (invisible)  
-**Admin:** n/a (SQL editor / MCP)  
+**Call:** `BACKEND` (`.claude/agents/backend.md`)
+**Fan:** all (invisible)
+**Admin:** n/a (SQL editor / MCP)
 **What it does:** Database engineer for Tapua'i. Canonical `apps/mobile/src/backend/db/schema.sql`. Migrations under `supabase/migrations/`, then copied onto schema. RLS in schema.sql — least privilege, no convenience `using (true)` on money or PII. Storage `reels` / `reel_vault` / `game_highlights` / `avatars`. Realtime publications. Edge JWT functions. Personal-data columns stay listed in [DATA_PRIVACY_MAP.md](DATA_PRIVACY_MAP.md).
 
 **Same-turn docs:** [SCHEMA.md](SCHEMA.md) · [DOCUMENTATION.md](../DOCUMENTATION.md) if tables/RPCs/architecture move. `pnpm docs:check` must name every public table and `create or replace function`.
@@ -352,18 +361,18 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### FULLSTACK — Full-stack developer
 
-**Call:** `FULLSTACK` (`.claude/agents/fullstack.md`)  
-**Fan:** whatever surface the feature needs  
-**Admin:** Expo desks when the feature has one  
+**Call:** `FULLSTACK` (`.claude/agents/fullstack.md`)
+**Fan:** whatever surface the feature needs
+**Admin:** Expo desks when the feature has one
 **What it does:** End-to-end features across Expo routes, components, hooks, lib clients, and Expo API routes. Industry practice: typed RPC boundaries, no secret leakage, empty vs error UI, JSDoc on hooks/network helpers. Pairs BACKEND when data moves.
 
 **Do not:** Client-only "fixes" for RLS holes. Credit money from PaymentSheet alone when Phase 1a says webhook-or-server. Add trackers before consent. Claim SOC 2 or invent an uptime SLA.
 
 ### COMPLIANCE — Privacy & commercial controls
 
-**Call:** `COMPLIANCE` (`.claude/agents/compliance.md`)  
-**Fan:** Terms / privacy / consent surfaces  
-**Admin:** none (issue map + gates)  
+**Call:** `COMPLIANCE` (`.claude/agents/compliance.md`)
+**Fan:** Terms / privacy / consent surfaces
+**Admin:** none (issue map + gates)
 **What it does:** Tracks Privacy Policy wiring, export/deletion scope, auto-renewal disclosure, no false SOC 2, cookie/tracker posture, ToS liability and DPA needs, processor list, ToS tickbox, honest uptime claims. Does not draft counsel paper.
 
 **Do not:** Invent Privacy Policy / ToS / DPA / SLA text. Soften a real gap without naming it in LEGAL_BRIEFING or DATA_PRIVACY_MAP.
@@ -372,9 +381,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### OPERATOR — Sideline console
 
-**Call:** `OPERATOR`  
-**Fan:** `/operator` · `/operator/[gameId]` · `/operator/scorer`  
-**Admin:** `/admin/games` · `/admin/sports` (points, periods, callouts) · Features `layouts.operatorConsole` (default **off** until Publish)  
+**Call:** `OPERATOR`
+**Fan:** `/operator` · `/operator/[gameId]` · `/operator/scorer`
+**Admin:** `/admin/games` · `/admin/sports` (points, periods, callouts) · Features `layouts.operatorConsole` (default **off** until Publish)
 **What it does:** PIN claim, GPS check-in, live score buttons, clock, sideline callouts fans see on Local.
 
 **Do not:** Enable Operator from AUTH. Change sport point math without Sports desk + SCHEMA if RPCs move.
@@ -383,9 +392,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### ROLE_HQ — Parent / Booster / Sponsor portals
 
-**Call:** `ROLE_HQ`  
-**Fan:** `/parent` · `/booster` · `/sponsor`  
-**Admin:** `/admin/people` (consent, verify) · `/admin/athletes` (CSV) · `/admin/boosters` (ads) · `/admin/money` (custodial)  
+**Call:** `ROLE_HQ`
+**Fan:** `/parent` · `/booster` · `/sponsor`
+**Admin:** `/admin/people` (consent, verify) · `/admin/athletes` (CSV) · `/admin/boosters` (ads) · `/admin/money` (custodial)
 **What it does:** Parent consent + custodial payout. Booster roster CSV + verify. Sponsor sideline / rivalry boards.
 
 **Do not:** Mix with fan Profile chrome. Features flags `layouts.parentHq` / `boosterHq` / `sponsorHq`.
@@ -394,9 +403,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ### VOICE — Donation language
 
-**Call:** `VOICE` (`.claude/agents/voice.md`)  
-**Owns:** every word about money on screen and in public docs — Donate / donation, the "who gets it, what for, anything taken out" answers, no performance ties, warm thank-yous that keep people donating.  
-**Source:** [VOICE.md](VOICE.md). CI gate: `pnpm copy:check` (`scripts/check-copy.mjs`).  
+**Call:** `VOICE` (`.claude/agents/voice.md`)
+**Owns:** every word about money on screen and in public docs — Donate / donation, the "who gets it, what for, anything taken out" answers, no performance ties, warm thank-yous that keep people donating.
+**Source:** [VOICE.md](VOICE.md). CI gate: `pnpm copy:check` (`scripts/check-copy.mjs`).
 **Pair:** LEGAL for terms, tax and fee wording; COMMERCE for prices and splits. Run after any copy change and before every release.
 
 ---
@@ -405,9 +414,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 The business write-up is [Legal team](#legal-team) above. This squad only places approved words.
 
-**Call:** `LEGAL` (`.claude/agents/legal.md`)  
-**Fan:** `LegalModal` · `LegalAckToggle` on Varsity apply + Connect Bank  
-**Source of conclusions:** [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) `<!-- product-facts -->` blocks. Do **not** rewrite legal conclusions outside those markers. Price/PIN/Aura changes: `pnpm docs:sync`.  
+**Call:** `LEGAL` (`.claude/agents/legal.md`)
+**Fan:** `LegalModal` · `LegalAckToggle` on Varsity apply + Connect Bank
+**Source of conclusions:** [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) `<!-- product-facts -->` blocks. Do **not** rewrite legal conclusions outside those markers. Price/PIN/Aura changes: `pnpm docs:sync`.
 **Same turn:** if terms, minors, the split, footage, or school marks moved, update the Legal team table above.
 
 ---
@@ -496,5 +505,138 @@ Next desks: `/` Overview · `/reports` behavior (`ADMIN`) · `/money` ledger (`C
 3. Schema or architecture in the same turn: `DOCUMENTATION.md` · `docs/SCHEMA.md` · `CHANGELOG.md` as required by `.cursor/rules/documentation.mdc`.
 4. Folder law: routes only in `apps/mobile/app/`; UI in `src/frontend/components/`; no new `GameContext`.
 5. Never commit `.env.local`.
-6. One department per call unless Facilitator names a pair.
+6. One primary owner per task; name dependency specialists and an independent reviewer for cross-functional work.
 7. If the change moves a screen, a department's Now / Next / Later, or a legal surface, update **Business departments** and the matching squad in this file, and the agent file, in the same turn. See [Keep the roster current](#keep-the-roster-current).
+
+
+---
+
+## Specialist operating contract
+
+**Aligned:** 2026-10-07. **Registry:** `.claude/agents/registry.json`. Agent definitions describe available roles; they are not evidence that agents have run or features are complete. This roster does not hire people or staff a live moderation desk. The hierarchy is responsibility and escalation routing, not different levels of model capability.
+
+1. Read STATE before work, then AGENTS, CONVENTIONS and the relevant schema/privacy/voice/architecture docs. Use repo-root paths. Verify stale statements against current evidence; distinguish written, applied to staging, applied to development and tested.
+2. One task gets one accountable specialist, explicit acceptance criteria, exact files, dependency owners and an independent reviewer where financial/security behavior changes. Department leads integrate. Leads and reviewers may overlap path ownership; each functional task has one primary specialist. Assign scoped work only within available concurrency; specialist definitions need not all run simultaneously.
+3. Coordinate shared-file edits before writing. Never overwrite existing work. Root/session integration owns STATE/ROADMAP/queue aggregation unless explicitly assigned. Schema changes still require migration, canonical schema, SCHEMA, migration README and privacy inventory updates in the same change.
+4. **Wave 0 gates:** Stripe test mode; payouts blocked; no parallel webhook/client donation crediting; Drip fan tab off; guest browsing remains; Next portal remains read-only and Expo admin owns writes. A Next or Later assignment is preparation until dependencies and owner/legal/release gates are met.
+5. No role authorizes applying hosted SQL, deploying functions, publishing runtime flags/builds/campaigns, contacting others, enabling live money, buying services or making legal decisions. Continue local reviewable work; escalate concrete dependent action to the session lead under current authorization.
+6. For changed behavior run relevant existing gates and focused tests. Known machine limits stay explicit: blocked registry, Expo web native binary, untappable simulator and staging-only migrations. Use STATE §3 direct-node/local-bin commands when pnpm fails. Device, hosted SQL and counsel checks remain **not run** until evidence exists.
+7. Report task ID, changed files, behavior/why, exact executed checks and results, unverified dependencies, remaining risks, next owner and completion status. QA owns the final gate and can reject; a prepared checklist is not a test pass.
+8. Update the registry, call sheet, hierarchy and agent definition together for role changes. Keep practical functions split; do not create an agent for every helper or hook. CI's `agents:check` validates unique calls, definition files, parent graph, existing ownership paths and document entries. Leads review semantic ownership; the structural guard cannot prove a task description is correct.
+
+9. Pair every active specialist with `DOCUMENTATION` for same-turn documentation synchronization. Feature owners supply exact behavior, changed APIs and verification evidence; DOCUMENTATION updates affected team/agent definitions, architecture, tester journeys, STATE and CHANGELOG. Preserve generated facts and approved legal conclusions.
+
+## Functional specialist roster
+
+**83 callable agents** (18 existing roles plus 65 new functional specialists/leads), coordinated by the Facilitator. All rows map to actionable definitions; exact Now/Next/Later tasks live in each definition. Existing product surface sections above remain the route inventory.
+
+| Call | Department | Reports to | Owns / primary function | Definition |
+| --- | --- | --- | --- | --- |
+| `ACCESSIBILITY` | Design | `DESIGN` | Audit screen-reader labels, focus order, touch targets, contrast, text scaling and reduced motion. | [accessibility.md](../.claude/agents/accessibility.md) |
+| `ACCOUNT_TAGS` | Engineering | `UPLOAD` | Account mention request/confirm/hide lifecycle, honest RPC errors and concurrent three-tag limit | [account-tags.md](../.claude/agents/account-tags.md) |
+| `ACTIVITY` | Engineering | `HIGHLIGHTS` | Own activity rows, pagination, actor navigation and empty/error states. | [activity.md](../.claude/agents/activity.md) |
+| `ADMIN` | Engineering | `ENGINEERING` | Expo write control plane and read-only Next oversight | [admin.md](../.claude/agents/admin.md) |
+| `API` | Engineering | `ENGINEERING` | Own request validation, JWT verification, authorization, typed responses and server error boundaries. | [api.md](../.claude/agents/api.md) |
+| `ATHLETE_STATS` | Engineering | `PROFILE` | Own athlete bio/stat/social visibility and sport-specific stat shapes. | [athlete-stats.md](../.claude/agents/athlete-stats.md) |
+| `ATHLETE_VERIFICATION` | Trust and Safety | `TRUST_SAFETY` | Own claim/vouch/school confirmation ladder, token validity and verified badge semantics. | [athlete-verification.md](../.claude/agents/athlete-verification.md) |
+| `AURA` | Engineering | `ENGINEERING` | Aura tiers and card reward math | [aura.md](../.claude/agents/aura.md) |
+| `AUTH` | Engineering | `ENGINEERING` | Guest browse, sign-in and role flow integration | [auth.md](../.claude/agents/auth.md) |
+| `BACKEND` | Engineering | `ENGINEERING` | Database architecture and migration/security integration | [backend.md](../.claude/agents/backend.md) |
+| `BILLING` | Finance | `COMMERCE` | Own current one-time Exclusive purchase semantics and future recurring billing design. | [billing.md](../.claude/agents/billing.md) |
+| `CATALOGS` | Engineering | `ADMIN` | Own sport/region/category/price catalog consistency and generated product facts. | [catalogs.md](../.claude/agents/catalogs.md) |
+| `CHECKOUT` | Finance | `COMMERCE` | Own staged Amount / Options / Review donation UI, PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling. | [checkout.md](../.claude/agents/checkout.md) |
+| `CI` | Operations | `OPERATIONS` | Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation. | [ci.md](../.claude/agents/ci.md) |
+| `COMMERCE` | Finance | `FACILITATOR` | Financial design and payment specialist integration | [commerce.md](../.claude/agents/commerce.md) |
+| `COMPLIANCE` | Legal and Compliance | `FACILITATOR` | Privacy, commercial disclosures and evidence-backed claims | [compliance.md](../.claude/agents/compliance.md) |
+| `CONNECT` | Finance | `COMMERCE` | Own JWT-gated Express links, bank onboarding state and verification/payout readiness. | [connect.md](../.claude/agents/connect.md) |
+| `CONTENT_RIGHTS` | Legal and Compliance | `LEGAL` | Own implementation of approved filming, audio, mark permissions and rights-report language. | [content-rights.md](../.claude/agents/content-rights.md) |
+| `COST_OPERATIONS` | Operations | `OPERATIONS` | Wave budgets, free quotas, media bandwidth and vendor cost evidence | [cost-operations.md](../.claude/agents/cost-operations.md) |
+| `CREW` | Engineering | `PROFILE` | Own Join Crew, follow counts, self-action restrictions and sign-in resume. | [crew.md](../.claude/agents/crew.md) |
+| `CUSTODIAL` | Finance | `COMMERCE` | Own guardian approval, payee relationship, age handover and server payout policy invariants. | [custodial.md](../.claude/agents/custodial.md) |
+| `DATABASE_MIGRATIONS` | Engineering | `BACKEND` | Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent. | [database-migrations.md](../.claude/agents/database-migrations.md) |
+| `DESIGN` | Design | `FACILITATOR` | Visual design and interaction integration | [design.md](../.claude/agents/design.md) |
+| `DEVICE_QA` | Quality | `QA` | Own real-device fan/athlete/guardian/operator/booster journey evidence. | [device-qa.md](../.claude/agents/device-qa.md) |
+| `DISCOVERY` | Engineering | `LOCAL` | Local, team and Highlight search, pagination and eligibility-filtered discovery | [discovery.md](../.claude/agents/discovery.md) |
+| `DOCUMENTATION` | Engineering | `ENGINEERING` | Synchronize code comments, system docs, team ownership and verified handoff evidence across departments. | [documentation.md](../.claude/agents/documentation.md) |
+| `DONATION_THANKS` | Finance | `COMMERCE` | Own preset-only thanks, donor/athlete linkage and optional thank-you clip references. | [donation-thanks.md](../.claude/agents/donation-thanks.md) |
+| `DRIP` | Finance | `COMMERCE` | Own marketplace catalog, order lifecycle and unavailable/retry presentation. | [drip.md](../.claude/agents/drip.md) |
+| `ENGINEERING` | Engineering | `FACILITATOR` | Technical architecture, typed contracts and specialist integration | [engineering.md](../.claude/agents/engineering.md) |
+| `FILMER_REWARDS` | Engineering | `HIGHLIGHTS` | Own Filmed by credit, Props/Aura noncash rewards and Top Filmers eligibility. | [filmer-rewards.md](../.claude/agents/filmer-rewards.md) |
+| `FULLSTACK` | Engineering | `ENGINEERING` | Cross-feature implementation and end-to-end integration | [fullstack.md](../.claude/agents/fullstack.md) |
+| `GROWTH_ANALYTICS` | Marketing | `MARKETING` | Own measurement definitions for browsing, claim, upload and donation conversion. | [growth-analytics.md](../.claude/agents/growth-analytics.md) |
+| `HIGHLIGHTS` | Engineering | `ENGINEERING` | Highlights feed and media specialist integration | [highlights.md](../.claude/agents/highlights.md) |
+| `INCIDENT_TRIAGE` | Support | `SUPPORT` | Own severity classification, reproduction evidence and financial/security escalation routing. | [incident-triage.md](../.claude/agents/incident-triage.md) |
+| `LEADERBOARDS` | Engineering | `AURA` | Own donor/filmer ranking aggregation, windows, ties and privacy-safe display. | [leaderboards.md](../.claude/agents/leaderboards.md) |
+| `LEDGER` | Finance | `COMMERCE` | Own immutable financial events, exactly-once credits, revenue/owed balances and lifecycle invariants. | [ledger.md](../.claude/agents/ledger.md) |
+| `LEGAL` | Legal and Compliance | `FACILITATOR` | Approved legal wording and counsel decision tracking | [legal.md](../.claude/agents/legal.md) |
+| `LOCAL` | Engineering | `ENGINEERING` | Game-day fan surfaces and live engagement integration | [local.md](../.claude/agents/local.md) |
+| `MARKETING` | Marketing | `FACILITATOR` | Own consented family-story positioning and accurate release communications. | [marketing.md](../.claude/agents/marketing.md) |
+| `MINOR_SAFETY` | Trust and Safety | `TRUST_SAFETY` | Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria. | [minor-safety.md](../.claude/agents/minor-safety.md) |
+| `MOBILE_PERFORMANCE` | Engineering | `ENGINEERING` | Feed rendering, media memory, startup and measured interaction performance | [mobile-performance.md](../.claude/agents/mobile-performance.md) |
+| `MODERATION` | Trust and Safety | `TRUST_SAFETY` | Own report reasons, immediate-hide versus review threshold, review evidence and appeals design. | [moderation.md](../.claude/agents/moderation.md) |
+| `MOTION` | Design | `DESIGN` | Maintain motion tokens, haptics, sheet geometry and reduced-motion behavior. | [motion.md](../.claude/agents/motion.md) |
+| `NOTIFICATIONS` | Engineering | `CREW` | crew_push_queue privacy, deduplication and authorized delivery design | [notifications.md](../.claude/agents/notifications.md) |
+| `OFFLINE` | Engineering | `ENGINEERING` | Own durable action queue, retry policy, duplicate prevention and logout boundary behavior. | [offline.md](../.claude/agents/offline.md) |
+| `ONBOARDING` | Engineering | `AUTH` | Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume. | [onboarding.md](../.claude/agents/onboarding.md) |
+| `OPERATIONS` | Operations | `FACILITATOR` | Coordinate staging readiness, releases, reliability, observability and game-day operations. | [operations.md](../.claude/agents/operations.md) |
+| `OPERATOR` | Operations | `OPERATIONS` | Sideline PIN/check-in/score/clock console | [operator.md](../.claude/agents/operator.md) |
+| `PARTNERSHIPS` | Partnerships | `FACILITATOR` | Coordinate guardian, school, booster and sponsor requirements without inventing permissions. | [partnerships.md](../.claude/agents/partnerships.md) |
+| `PLAYBACK` | Engineering | `HIGHLIGHTS` | Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting. | [playback.md](../.claude/agents/playback.md) |
+| `POLLS` | Engineering | `LOCAL` | Own cheer eligibility, vote math, poll lifecycle and offline vote semantics. | [polls.md](../.claude/agents/polls.md) |
+| `PRIVACY_ENGINEERING` | Legal and Compliance | `COMPLIANCE` | Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation. | [privacy-engineering.md](../.claude/agents/privacy-engineering.md) |
+| `PRODUCT` | Product | `FACILITATOR` | Translate the family donation and recruitment mission into acceptance criteria and dependencies. | [product.md](../.claude/agents/product.md) |
+| `PROFILE` | Engineering | `ENGINEERING` | Own/public athlete identity and feature integration | [profile.md](../.claude/agents/profile.md) |
+| `QA` | Quality | `FACILITATOR` | Independent final verification gate | [qa.md](../.claude/agents/qa.md) |
+| `RALLY` | Finance | `COMMERCE` | Own guardian-approved donation goals, progress aggregation and fill celebration. | [rally.md](../.claude/agents/rally.md) |
+| `REALTIME` | Engineering | `ENGINEERING` | Own subscription lifecycle, live score/event consistency and reconnect behavior. | [realtime.md](../.claude/agents/realtime.md) |
+| `RECEIPTS` | Finance | `COMMERCE` | Donor receipt/history access, payment status and fee/split disclosure | [receipts.md](../.claude/agents/receipts.md) |
+| `RECONCILIATION` | Finance | `COMMERCE` | Own Stripe-event versus ledger reconciliation, discrepancies, receipts and revenue reporting evidence. | [reconciliation.md](../.claude/agents/reconciliation.md) |
+| `RECOVERY` | Operations | `OPERATIONS` | Migration rollback, backup/restore evidence and data recovery runbooks | [recovery.md](../.claude/agents/recovery.md) |
+| `REFUNDS` | Finance | `COMMERCE` | Own refund/dispute lifecycle design and reversal effects on revenue, entitlements and owed funds. | [refunds.md](../.claude/agents/refunds.md) |
+| `RELEASE` | Operations | `OPERATIONS` | Own preview profiles, environment binding, signing/device eligibility and rollback artifact evidence. | [release.md](../.claude/agents/release.md) |
+| `RELIABILITY` | Operations | `OPERATIONS` | Own failure recovery, incident runbooks, dependency availability and measured service objectives. | [reliability.md](../.claude/agents/reliability.md) |
+| `RESEARCH` | Product | `PRODUCT` | Test family, athlete, guardian, filmer and operator journeys using consented feedback. | [research.md](../.claude/agents/research.md) |
+| `RLS_SECURITY` | Engineering | `BACKEND` | Audit grants, RLS, security-definer RPCs, storage policies and ownership boundaries. | [rls-security.md](../.claude/agents/rls-security.md) |
+| `ROLE_HQ` | Partnerships | `PARTNERSHIPS` | Parent, booster and sponsor role portal integration | [role-hq.md](../.claude/agents/role-hq.md) |
+| `ROSTERS` | Engineering | `LOCAL` | Own roster claim identity, team search, CSV import validation and athlete navigation. | [rosters.md](../.claude/agents/rosters.md) |
+| `RUNTIME_CONFIG` | Engineering | `ADMIN` | Own draft/published flag states, pause behavior, role lenses and fan control coverage. | [runtime-config.md](../.claude/agents/runtime-config.md) |
+| `SCHOOL_PARTNERS` | Partnerships | `PARTNERSHIPS` | Own school onboarding requirements, AD/coach confirmation workflow and marks permission records design. | [school-partners.md](../.claude/agents/school-partners.md) |
+| `SESSION_SECURITY` | Engineering | `AUTH` | Own JWT/session handling, role boundaries, OAuth redirect integrity and server identity checks. | [session-security.md](../.claude/agents/session-security.md) |
+| `SHARED_CONTRACTS` | Engineering | `ENGINEERING` | Shared RPC/domain types, generated database type provenance and mobile/admin contract parity | [shared-contracts.md](../.claude/agents/shared-contracts.md) |
+| `SHARING` | Engineering | `PROFILE` | Own public athlete QR, share links, deep links and safe preview content. | [sharing.md](../.claude/agents/sharing.md) |
+| `SPONSOR_ADS` | Partnerships | `PARTNERSHIPS` | Own approved sponsor placement, booster tier display and role portal consistency. | [sponsor-ads.md](../.claude/agents/sponsor-ads.md) |
+| `SPOTLIGHT` | Engineering | `ENGINEERING` | Awards board, real athlete IDs and tag queue | [spotlight.md](../.claude/agents/spotlight.md) |
+| `STORAGE` | Engineering | `BACKEND` | Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle | [storage.md](../.claude/agents/storage.md) |
+| `SUPPORT` | Support | `FACILITATOR` | Own help/runbook content, tester intake taxonomy and guardian-safe issue handling. | [support.md](../.claude/agents/support.md) |
+| `TELEMETRY` | Operations | `OPERATIONS` | Own bounded telemetry payloads, data minimization, dashboard interpretation and logging failure behavior. | [telemetry.md](../.claude/agents/telemetry.md) |
+| `TEST_AUTOMATION` | Quality | `QA` | Own meaningful regression, boundary/security and finance invariant checks. | [test-automation.md](../.claude/agents/test-automation.md) |
+| `TRUST_SAFETY` | Trust and Safety | `FACILITATOR` | Coordinate moderation, identity, minor safety and rights safeguards as independent release gates. | [trust-safety.md](../.claude/agents/trust-safety.md) |
+| `UPLOAD` | Engineering | `HIGHLIGHTS` | Own compact Clip → Details → Review composer, optional settings, draft navigation, compression, upload progress and athlete/account consent. | [upload.md](../.claude/agents/upload.md) |
+| `VAULT` | Engineering | `PROFILE` | Own private video entitlements, signed playback URLs and subscription-request access. | [vault.md](../.claude/agents/vault.md) |
+| `VOICE` | Brand | `FACILITATOR` | Donation language and honest product copy | [voice.md](../.claude/agents/voice.md) |
+| `WISHLIST` | Finance | `COMMERCE` | Gear-goal configuration, donation allocation and confirmed progress | [wishlist.md](../.claude/agents/wishlist.md) |
+
+### Critical task routing
+
+| Work | Primary owner | Required pair / independent gate |
+| --- | --- | --- |
+| Roadmap / Wave 0 acceptance | PRODUCT | RESEARCH, department lead, QA |
+| Donation quote and native wallet | CHECKOUT | API, LEDGER, VOICE; QA |
+| Authoritative credit path | LEDGER | API, BACKEND, CHECKOUT, RECONCILIATION; RLS_SECURITY + QA |
+| Refund/dispute reversal | REFUNDS | LEDGER, RECONCILIATION, LEGAL; QA |
+| Account links / payout readiness | CONNECT | SESSION_SECURITY, CUSTODIAL; RLS_SECURITY + QA |
+| Parent payee / handover / amount owed | CUSTODIAL | MINOR_SAFETY, LEDGER, BACKEND, LEGAL; QA |
+| Account-tag / operator SQL preparation | DATABASE_MIGRATIONS | UPLOAD or OPERATOR, RLS_SECURITY; QA |
+| Player / upload / private entitlement | PLAYBACK / UPLOAD / VAULT respectively | BACKEND, CONTENT_RIGHTS, BILLING; DEVICE_QA |
+| Feed / thank-you / Rally | ACTIVITY / DONATION_THANKS / RALLY respectively | HIGHLIGHTS, LEDGER, MINOR_SAFETY; QA |
+| Offline actions / live scores | OFFLINE / REALTIME respectively | LOCAL, OPERATOR, AUTH; TEST_AUTOMATION |
+| Privacy export / deletion | PRIVACY_ENGINEERING | PRODUCT, BACKEND, LEGAL, COMPLIANCE; RLS_SECURITY + QA |
+| School confirm / public moderation | ATHLETE_VERIFICATION / MODERATION respectively | SCHOOL_PARTNERS, CONTENT_RIGHTS, MINOR_SAFETY; QA |
+| Flags / catalogs / admin oversight | RUNTIME_CONFIG / CATALOGS respectively; ADMIN integrates | Owning surface, BACKEND, VOICE; QA |
+| Build / CI / service failure / metrics | RELEASE / CI / RELIABILITY / TELEMETRY respectively | OPERATIONS, SUPPORT; QA |
+| Accessibility / animation | ACCESSIBILITY / MOTION respectively | DESIGN, surface owner; DEVICE_QA |
+| Partner / launch / support plans | PARTNERSHIPS / MARKETING / SUPPORT respectively | PRODUCT, LEGAL, VOICE; no external contact without authorization |
+
+### Dispatch next work
+
+Use [WORK_QUEUE.md](WORK_QUEUE.md) for evidence, dependencies and assigned execution tasks when available. A roster assignment means ownership; queue status identifies what actually ran. The immediate sequence is baseline verification, current staging/device blockers, security and money architecture preparation, then public-launch prerequisites. Current code and hosted status remain in [STATE.md](STATE.md).

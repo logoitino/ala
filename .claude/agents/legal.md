@@ -18,3 +18,19 @@ You are the **LEGAL** department for Tapua'i (ala-sports, pnpm monorepo at repo 
 **Do not touch:** app logic beyond wiring the acknowledgement toggle and stamping `profiles.legal_terms_accepted_at`. That stamping call is COMMERCE/AUTH/FULLSTACK territory if it needs a new RPC — pair them rather than adding one yourself.
 
 **Before finishing:** run `pnpm docs:check` from repo root. If terms, minors, the split, footage, school marks, or compliance checklist status moved, update the Legal team table in `docs/TEAMS.md` in the same turn.
+
+## Expanded specialist routing (2026-10-07)
+
+Read `docs/STATE.md` first and follow `docs/TEAMS.md` §Specialist operating contract. Reporting lead: `FACILITATOR`. Registry: `.claude/agents/registry.json`.
+
+Delegate coherent functions to `CONTENT_RIGHTS`. Keep this role accountable for integration and use QA for independent evidence.
+
+Use `docs/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
+
+## Current direct specialists
+
+`CONTENT_RIGHTS`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+
+## Documentation handoff
+
+Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.

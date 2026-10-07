@@ -1,0 +1,1157 @@
+{
+  "version": 1,
+  "agents": [
+    {
+      "call": "ACCESSIBILITY",
+      "file": ".claude/agents/accessibility.md",
+      "department": "Design",
+      "lead": "DESIGN",
+      "owns": [
+        "apps/mobile/src/frontend/components/UI",
+        "apps/mobile/src/frontend/components/Common",
+        "apps/admin-portal"
+      ],
+      "tasks": [
+        "Audit screen-reader labels, focus order, touch targets, contrast, text scaling and reduced motion."
+      ]
+    },
+    {
+      "call": "ACCOUNT_TAGS",
+      "file": ".claude/agents/account-tags.md",
+      "department": "Engineering",
+      "lead": "UPLOAD",
+      "owns": [
+        "apps/mobile/src/frontend/lib/accountTags.ts",
+        "supabase/migrations/20261002160000_reel_account_tags.sql"
+      ],
+      "tasks": [
+        "Account mention request/confirm/hide lifecycle, honest RPC errors and concurrent three-tag limit"
+      ]
+    },
+    {
+      "call": "ACTIVITY",
+      "file": ".claude/agents/activity.md",
+      "department": "Engineering",
+      "lead": "HIGHLIGHTS",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useActivityFeed.ts",
+        "apps/mobile/app/(tabs)/activity.tsx"
+      ],
+      "tasks": [
+        "Own activity rows, pagination, actor navigation and empty/error states."
+      ]
+    },
+    {
+      "call": "ADMIN",
+      "file": ".claude/agents/admin.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/app/(admin)",
+        "apps/admin-portal"
+      ],
+      "tasks": [
+        "Expo write control plane and read-only Next oversight"
+      ]
+    },
+    {
+      "call": "API",
+      "file": ".claude/agents/api.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/backend/api",
+        "apps/mobile/src/backend/services",
+        "apps/mobile/app/api",
+        "apps/mobile/src/frontend/lib/edgeFunction.ts",
+        "apps/mobile/src/frontend/lib/apiUrl.ts"
+      ],
+      "tasks": [
+        "Own request validation, JWT verification, authorization, typed responses and server error boundaries."
+      ]
+    },
+    {
+      "call": "ATHLETE_STATS",
+      "file": ".claude/agents/athlete-stats.md",
+      "department": "Engineering",
+      "lead": "PROFILE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/athleteStats.ts",
+        "apps/mobile/src/frontend/hooks/useAthleteStats.ts",
+        "apps/mobile/src/frontend/lib/socialLinks.ts"
+      ],
+      "tasks": [
+        "Own athlete bio/stat/social visibility and sport-specific stat shapes."
+      ]
+    },
+    {
+      "call": "ATHLETE_VERIFICATION",
+      "file": ".claude/agents/athlete-verification.md",
+      "department": "Trust and Safety",
+      "lead": "TRUST_SAFETY",
+      "owns": [
+        "apps/mobile/src/frontend/lib/verification.ts",
+        "apps/mobile/src/frontend/lib/schoolConfirm.ts",
+        "apps/mobile/src/frontend/lib/schoolBadge.ts",
+        "apps/mobile/src/frontend/hooks/useMyVerification.ts",
+        "apps/mobile/app/school-confirm.tsx"
+      ],
+      "tasks": [
+        "Own claim/vouch/school confirmation ladder, token validity and verified badge semantics."
+      ]
+    },
+    {
+      "call": "AURA",
+      "file": ".claude/agents/aura.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/frontend/lib/aura.ts"
+      ],
+      "tasks": [
+        "Aura tiers and card reward math"
+      ]
+    },
+    {
+      "call": "AUTH",
+      "file": ".claude/agents/auth.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/frontend/context/AuthContext.tsx"
+      ],
+      "tasks": [
+        "Guest browse, sign-in and role flow integration"
+      ]
+    },
+    {
+      "call": "BACKEND",
+      "file": ".claude/agents/backend.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/backend/db",
+        "supabase"
+      ],
+      "tasks": [
+        "Database architecture and migration/security integration"
+      ]
+    },
+    {
+      "call": "BILLING",
+      "file": ".claude/agents/billing.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useAthleteSubscription.ts",
+        "apps/mobile/src/frontend/hooks/useSubscriberRequests.ts",
+        "apps/mobile/src/frontend/lib/vault.ts"
+      ],
+      "tasks": [
+        "Own current one-time Exclusive purchase semantics and future recurring billing design."
+      ]
+    },
+    {
+      "call": "CATALOGS",
+      "file": ".claude/agents/catalogs.md",
+      "department": "Engineering",
+      "lead": "ADMIN",
+      "owns": [
+        "apps/mobile/src/frontend/lib/adminCatalog.ts",
+        "apps/mobile/src/frontend/lib/sports.ts",
+        "apps/mobile/src/frontend/hooks/useSportConfigs.ts",
+        "scripts/sync-front-docs.mjs"
+      ],
+      "tasks": [
+        "Own sport/region/category/price catalog consistency and generated product facts."
+      ]
+    },
+    {
+      "call": "CHECKOUT",
+      "file": ".claude/agents/checkout.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useTipCheckout.ts",
+        "apps/mobile/src/frontend/lib/payments.ts",
+        "apps/mobile/src/frontend/lib/stripeIntent.ts",
+        "apps/mobile/src/frontend/lib/walletPay.ts",
+        "apps/mobile/src/frontend/components/TipSheetModal.tsx",
+        "apps/mobile/src/frontend/components/TipCheckout.tsx"
+      ],
+      "tasks": [
+        "Own PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling."
+      ]
+    },
+    {
+      "call": "CI",
+      "file": ".claude/agents/ci.md",
+      "department": "Operations",
+      "lead": "OPERATIONS",
+      "owns": [
+        ".github/workflows",
+        "scripts",
+        "package.json"
+      ],
+      "tasks": [
+        "Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation."
+      ]
+    },
+    {
+      "call": "COMMERCE",
+      "file": ".claude/agents/commerce.md",
+      "department": "Finance",
+      "lead": "FACILITATOR",
+      "owns": [
+        "apps/mobile/src/frontend/lib/finance.ts",
+        "apps/mobile/src/backend/api"
+      ],
+      "tasks": [
+        "Financial design and payment specialist integration"
+      ]
+    },
+    {
+      "call": "COMPLIANCE",
+      "file": ".claude/agents/compliance.md",
+      "department": "Legal and Compliance",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/DATA_PRIVACY_MAP.md",
+        "docs/LEGAL_BRIEFING.md"
+      ],
+      "tasks": [
+        "Privacy, commercial disclosures and evidence-backed claims"
+      ]
+    },
+    {
+      "call": "CONNECT",
+      "file": ".claude/agents/connect.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "supabase/functions/create-stripe-account",
+        "apps/mobile/src/frontend/hooks/useStripeConnect.ts",
+        "apps/mobile/src/frontend/lib/payoutGate.ts",
+        "apps/mobile/app/stripe-connect.tsx"
+      ],
+      "tasks": [
+        "Own JWT-gated Express links, bank onboarding state and verification/payout readiness."
+      ]
+    },
+    {
+      "call": "CONTENT_RIGHTS",
+      "file": ".claude/agents/content-rights.md",
+      "department": "Legal and Compliance",
+      "lead": "LEGAL",
+      "owns": [
+        "apps/mobile/src/frontend/components/Reels",
+        "docs/LEGAL_BRIEFING.md"
+      ],
+      "tasks": [
+        "Own implementation of approved filming, audio, mark permissions and rights-report language."
+      ]
+    },
+    {
+      "call": "COST_OPERATIONS",
+      "file": ".claude/agents/cost-operations.md",
+      "department": "Operations",
+      "lead": "OPERATIONS",
+      "owns": [
+        "docs/ROADMAP.md",
+        "docs/COMPANY_PHASES.md",
+        "docs/STAGING_RUNBOOK.md"
+      ],
+      "tasks": [
+        "Wave budgets, free quotas, media bandwidth and vendor cost evidence"
+      ]
+    },
+    {
+      "call": "CREW",
+      "file": ".claude/agents/crew.md",
+      "department": "Engineering",
+      "lead": "PROFILE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/crew.ts",
+        "apps/mobile/src/frontend/hooks/useCrew.ts"
+      ],
+      "tasks": [
+        "Own Join Crew, follow counts, self-action restrictions and sign-in resume."
+      ]
+    },
+    {
+      "call": "CUSTODIAL",
+      "file": ".claude/agents/custodial.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/custodial.ts",
+        "apps/mobile/src/frontend/hooks/useCustodial.ts",
+        "apps/mobile/src/frontend/components/Custodial",
+        "apps/mobile/src/frontend/lib/payouts.ts"
+      ],
+      "tasks": [
+        "Own guardian approval, payee relationship, age handover and server payout policy invariants."
+      ]
+    },
+    {
+      "call": "DATABASE_MIGRATIONS",
+      "file": ".claude/agents/database-migrations.md",
+      "department": "Engineering",
+      "lead": "BACKEND",
+      "owns": [
+        "apps/mobile/src/backend/db/schema.sql",
+        "supabase/migrations",
+        "docs/SCHEMA.md"
+      ],
+      "tasks": [
+        "Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent."
+      ]
+    },
+    {
+      "call": "DESIGN",
+      "file": ".claude/agents/design.md",
+      "department": "Design",
+      "lead": "FACILITATOR",
+      "owns": [
+        "apps/mobile/src/frontend/theme",
+        "apps/mobile/src/frontend/components",
+        "apps/mobile/src/frontend/constants/theme.ts",
+        "apps/mobile/src/frontend/hooks/useSheetFrame.ts"
+      ],
+      "tasks": [
+        "Visual design and interaction integration"
+      ]
+    },
+    {
+      "call": "DEVICE_QA",
+      "file": ".claude/agents/device-qa.md",
+      "department": "Quality",
+      "lead": "QA",
+      "owns": [
+        "docs/TESTER_SCRIPT.md",
+        "docs/AUDIT_REPORT.md"
+      ],
+      "tasks": [
+        "Own real-device fan/athlete/guardian/operator/booster journey evidence."
+      ]
+    },
+    {
+      "call": "DISCOVERY",
+      "file": ".claude/agents/discovery.md",
+      "department": "Engineering",
+      "lead": "LOCAL",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useLocalSearch.ts",
+        "apps/mobile/src/frontend/hooks/useTeamSearch.ts",
+        "apps/mobile/src/frontend/hooks/useReels.ts",
+        "apps/mobile/src/frontend/components/Reels/HomeSearchOverlay.tsx"
+      ],
+      "tasks": [
+        "Local, team and Highlight search, pagination and eligibility-filtered discovery"
+      ]
+    },
+    {
+      "call": "DOCUMENTATION",
+      "file": ".claude/agents/documentation.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "AGENTS.md",
+        "DOCUMENTATION.md",
+        "CHANGELOG.md",
+        "docs",
+        ".claude/agents",
+        ".cursor/rules/documentation.mdc"
+      ],
+      "tasks": [
+        "Synchronize code comments, current state, team ownership, architecture, tester journeys and product evidence across departments in the same change; preserve generated facts and approved legal conclusions."
+      ]
+    },
+    {
+      "call": "DONATION_THANKS",
+      "file": ".claude/agents/donation-thanks.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/donationThanks.ts",
+        "apps/mobile/src/frontend/hooks/useDonationThanks.ts",
+        "apps/mobile/src/frontend/components/Thanks"
+      ],
+      "tasks": [
+        "Own preset-only thanks, donor/athlete linkage and optional thank-you clip references."
+      ]
+    },
+    {
+      "call": "DRIP",
+      "file": ".claude/agents/drip.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useDripCatalog.ts",
+        "apps/mobile/src/frontend/components/Drip",
+        "apps/mobile/app/(tabs)/drip.tsx"
+      ],
+      "tasks": [
+        "Own marketplace catalog, order lifecycle and unavailable/retry presentation."
+      ]
+    },
+    {
+      "call": "ENGINEERING",
+      "file": ".claude/agents/engineering.md",
+      "department": "Engineering",
+      "lead": "FACILITATOR",
+      "owns": [
+        "apps/mobile",
+        "apps/admin-portal",
+        "packages/shared-types",
+        "supabase"
+      ],
+      "tasks": [
+        "Technical architecture, typed contracts and specialist integration"
+      ]
+    },
+    {
+      "call": "FILMER_REWARDS",
+      "file": ".claude/agents/filmer-rewards.md",
+      "department": "Engineering",
+      "lead": "HIGHLIGHTS",
+      "owns": [
+        "apps/mobile/src/frontend/lib/filmers.ts",
+        "apps/mobile/src/frontend/hooks/useFilmerStats.ts",
+        "apps/mobile/src/frontend/components/Filmers"
+      ],
+      "tasks": [
+        "Own Filmed by credit, Props/Aura noncash rewards and Top Filmers eligibility."
+      ]
+    },
+    {
+      "call": "FULLSTACK",
+      "file": ".claude/agents/fullstack.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile",
+        "packages/shared-types"
+      ],
+      "tasks": [
+        "Cross-feature implementation and end-to-end integration"
+      ]
+    },
+    {
+      "call": "GROWTH_ANALYTICS",
+      "file": ".claude/agents/growth-analytics.md",
+      "department": "Marketing",
+      "lead": "MARKETING",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useSurfaceUsage.ts",
+        "docs/PRODUCT_FACTS.md"
+      ],
+      "tasks": [
+        "Own measurement definitions for browsing, claim, upload and donation conversion."
+      ]
+    },
+    {
+      "call": "HIGHLIGHTS",
+      "file": ".claude/agents/highlights.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/app/(tabs)/index.tsx",
+        "apps/mobile/src/frontend/components/Reels"
+      ],
+      "tasks": [
+        "Highlights feed and media specialist integration"
+      ]
+    },
+    {
+      "call": "INCIDENT_TRIAGE",
+      "file": ".claude/agents/incident-triage.md",
+      "department": "Support",
+      "lead": "SUPPORT",
+      "owns": [
+        "TROUBLESHOOTING.md",
+        "docs/STAGING_RUNBOOK.md",
+        "docs/STATE.md"
+      ],
+      "tasks": [
+        "Own severity classification, reproduction evidence and financial/security escalation routing."
+      ]
+    },
+    {
+      "call": "LEADERBOARDS",
+      "file": ".claude/agents/leaderboards.md",
+      "department": "Engineering",
+      "lead": "AURA",
+      "owns": [
+        "apps/mobile/src/frontend/lib/leaderboards.ts",
+        "apps/mobile/src/frontend/hooks/useLeaderboards.ts"
+      ],
+      "tasks": [
+        "Own donor/filmer ranking aggregation, windows, ties and privacy-safe display."
+      ]
+    },
+    {
+      "call": "LEDGER",
+      "file": ".claude/agents/ledger.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/finance.ts",
+        "supabase/functions/stripe-webhook",
+        "apps/mobile/src/frontend/hooks/useReceivedMalo.ts"
+      ],
+      "tasks": [
+        "Own immutable financial events, exactly-once credits, revenue/owed balances and lifecycle invariants."
+      ]
+    },
+    {
+      "call": "LEGAL",
+      "file": ".claude/agents/legal.md",
+      "department": "Legal and Compliance",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/LEGAL_BRIEFING.md",
+        "apps/mobile/src/frontend/components/Legal"
+      ],
+      "tasks": [
+        "Approved legal wording and counsel decision tracking"
+      ]
+    },
+    {
+      "call": "LOCAL",
+      "file": ".claude/agents/local.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/app/(tabs)/local",
+        "apps/mobile/src/frontend/components/Local",
+        "apps/mobile/src/frontend/lib/guestGames.ts"
+      ],
+      "tasks": [
+        "Game-day fan surfaces and live engagement integration",
+        "Typed guest game claims, check-ins and roster access through guestGames.ts; route-layer data boundaries"
+      ]
+    },
+    {
+      "call": "MARKETING",
+      "file": ".claude/agents/marketing.md",
+      "department": "Marketing",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/PUBLIC.md",
+        "docs/STORY.md",
+        "docs/VOICE.md"
+      ],
+      "tasks": [
+        "Own consented family-story positioning and accurate release communications."
+      ]
+    },
+    {
+      "call": "MINOR_SAFETY",
+      "file": ".claude/agents/minor-safety.md",
+      "department": "Trust and Safety",
+      "lead": "TRUST_SAFETY",
+      "owns": [
+        "apps/mobile/src/frontend/components/Custodial",
+        "apps/mobile/src/frontend/components/Verification",
+        "docs/LEGAL_BRIEFING.md"
+      ],
+      "tasks": [
+        "Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria."
+      ]
+    },
+    {
+      "call": "MOBILE_PERFORMANCE",
+      "file": ".claude/agents/mobile-performance.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/frontend/components/Reels",
+        "apps/mobile/src/frontend/services",
+        "apps/mobile/src/frontend/theme"
+      ],
+      "tasks": [
+        "Feed rendering, media memory, startup and measured interaction performance"
+      ]
+    },
+    {
+      "call": "MODERATION",
+      "file": ".claude/agents/moderation.md",
+      "department": "Trust and Safety",
+      "lead": "TRUST_SAFETY",
+      "owns": [
+        "apps/mobile/src/frontend/components/Reels/ReportContentModal.tsx",
+        "apps/mobile/app/(admin)/admin/moderation.tsx"
+      ],
+      "tasks": [
+        "Own report reasons, immediate-hide versus review threshold, review evidence and appeals design."
+      ]
+    },
+    {
+      "call": "MOTION",
+      "file": ".claude/agents/motion.md",
+      "department": "Design",
+      "lead": "DESIGN",
+      "owns": [
+        "apps/mobile/src/frontend/theme/motion.ts",
+        "apps/mobile/src/frontend/theme/hypeFx.ts",
+        "apps/mobile/src/frontend/lib/haptics.ts",
+        "apps/mobile/src/frontend/components/Effects"
+      ],
+      "tasks": [
+        "Maintain motion tokens, haptics, sheet geometry and reduced-motion behavior."
+      ]
+    },
+    {
+      "call": "NOTIFICATIONS",
+      "file": ".claude/agents/notifications.md",
+      "department": "Engineering",
+      "lead": "CREW",
+      "owns": [
+        "apps/mobile/src/frontend/lib/crew.ts",
+        "apps/mobile/src/backend/db/schema.sql"
+      ],
+      "tasks": [
+        "crew_push_queue privacy, deduplication and authorized delivery design"
+      ]
+    },
+    {
+      "call": "OFFLINE",
+      "file": ".claude/agents/offline.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/frontend/services/OfflineQueue.ts"
+      ],
+      "tasks": [
+        "Own durable action queue, retry policy, duplicate prevention and logout boundary behavior."
+      ]
+    },
+    {
+      "call": "ONBOARDING",
+      "file": ".claude/agents/onboarding.md",
+      "department": "Engineering",
+      "lead": "AUTH",
+      "owns": [
+        "apps/mobile/src/frontend/components/Onboarding",
+        "apps/mobile/src/frontend/components/Auth",
+        "apps/mobile/src/frontend/context/SoftWallContext.tsx"
+      ],
+      "tasks": [
+        "Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume."
+      ]
+    },
+    {
+      "call": "OPERATIONS",
+      "file": ".claude/agents/operations.md",
+      "department": "Operations",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/STAGING_RUNBOOK.md",
+        "docs/TESTER_SCRIPT.md",
+        "docs/STATE.md"
+      ],
+      "tasks": [
+        "Coordinate staging readiness, releases, reliability, observability and game-day operations."
+      ]
+    },
+    {
+      "call": "OPERATOR",
+      "file": ".claude/agents/operator.md",
+      "department": "Operations",
+      "lead": "OPERATIONS",
+      "owns": [
+        "apps/mobile/app/operator",
+        "apps/mobile/src/frontend/lib/operator.ts"
+      ],
+      "tasks": [
+        "Sideline PIN/check-in/score/clock console"
+      ]
+    },
+    {
+      "call": "PARTNERSHIPS",
+      "file": ".claude/agents/partnerships.md",
+      "department": "Partnerships",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/STORY.md",
+        "docs/COMPANY_PHASES.md",
+        "apps/mobile/src/frontend/lib/boosterPortal.ts"
+      ],
+      "tasks": [
+        "Coordinate guardian, school, booster and sponsor requirements without inventing permissions."
+      ]
+    },
+    {
+      "call": "PLAYBACK",
+      "file": ".claude/agents/playback.md",
+      "department": "Engineering",
+      "lead": "HIGHLIGHTS",
+      "owns": [
+        "apps/mobile/src/frontend/components/Reels",
+        "apps/mobile/src/frontend/lib/reels.ts",
+        "apps/mobile/src/frontend/hooks/useReelViewTracker.ts"
+      ],
+      "tasks": [
+        "Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting."
+      ]
+    },
+    {
+      "call": "POLLS",
+      "file": ".claude/agents/polls.md",
+      "department": "Engineering",
+      "lead": "LOCAL",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useCheerPoll.ts",
+        "apps/mobile/src/frontend/components/Local/CheerPollCard.tsx"
+      ],
+      "tasks": [
+        "Own cheer eligibility, vote math, poll lifecycle and offline vote semantics."
+      ]
+    },
+    {
+      "call": "PRIVACY_ENGINEERING",
+      "file": ".claude/agents/privacy-engineering.md",
+      "department": "Legal and Compliance",
+      "lead": "COMPLIANCE",
+      "owns": [
+        "docs/DATA_PRIVACY_MAP.md",
+        "apps/mobile/src/frontend/lib/socialLinks.ts",
+        "apps/mobile/src/backend/db/schema.sql"
+      ],
+      "tasks": [
+        "Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation."
+      ]
+    },
+    {
+      "call": "PRODUCT",
+      "file": ".claude/agents/product.md",
+      "department": "Product",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/ROADMAP.md",
+        "docs/STORY.md",
+        "docs/STATE.md"
+      ],
+      "tasks": [
+        "Translate the family donation and recruitment mission into acceptance criteria and dependencies."
+      ]
+    },
+    {
+      "call": "PROFILE",
+      "file": ".claude/agents/profile.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/frontend/components/Profile",
+        "apps/mobile/app/(tabs)/profile.tsx"
+      ],
+      "tasks": [
+        "Own/public athlete identity and feature integration"
+      ]
+    },
+    {
+      "call": "QA",
+      "file": ".claude/agents/qa.md",
+      "department": "Quality",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/AUDIT_REPORT.md",
+        "docs/TESTER_SCRIPT.md"
+      ],
+      "tasks": [
+        "Independent final verification gate"
+      ]
+    },
+    {
+      "call": "RALLY",
+      "file": ".claude/agents/rally.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/rallies.ts",
+        "apps/mobile/src/frontend/hooks/useRally.ts",
+        "apps/mobile/src/frontend/components/Rally"
+      ],
+      "tasks": [
+        "Own guardian-approved donation goals, progress aggregation and fill celebration."
+      ]
+    },
+    {
+      "call": "REALTIME",
+      "file": ".claude/agents/realtime.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useLiveScores.ts",
+        "apps/mobile/src/frontend/hooks/useLiveGame.ts",
+        "apps/mobile/src/frontend/hooks/useGameEventBroadcast.ts"
+      ],
+      "tasks": [
+        "Own subscription lifecycle, live score/event consistency and reconnect behavior."
+      ]
+    },
+    {
+      "call": "RECEIPTS",
+      "file": ".claude/agents/receipts.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useFanTipHistory.ts",
+        "apps/mobile/app/(tabs)/receipts.tsx"
+      ],
+      "tasks": [
+        "Donor receipt/history access, payment status and fee/split disclosure"
+      ]
+    },
+    {
+      "call": "RECONCILIATION",
+      "file": ".claude/agents/reconciliation.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/finance.ts",
+        "apps/mobile/src/frontend/hooks/useFanTipHistory.ts",
+        "apps/mobile/src/frontend/hooks/useReceivedMalo.ts"
+      ],
+      "tasks": [
+        "Own Stripe-event versus ledger reconciliation, discrepancies, receipts and revenue reporting evidence."
+      ]
+    },
+    {
+      "call": "RECOVERY",
+      "file": ".claude/agents/recovery.md",
+      "department": "Operations",
+      "lead": "OPERATIONS",
+      "owns": [
+        "docs/STAGING_RUNBOOK.md",
+        "docs/SCHEMA.md",
+        "supabase/migrations"
+      ],
+      "tasks": [
+        "Migration rollback, backup/restore evidence and data recovery runbooks"
+      ]
+    },
+    {
+      "call": "REFUNDS",
+      "file": ".claude/agents/refunds.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "supabase/functions/stripe-webhook",
+        "apps/mobile/src/backend/services/payouts.ts"
+      ],
+      "tasks": [
+        "Own refund/dispute lifecycle design and reversal effects on revenue, entitlements and owed funds."
+      ]
+    },
+    {
+      "call": "RELEASE",
+      "file": ".claude/agents/release.md",
+      "department": "Operations",
+      "lead": "OPERATIONS",
+      "owns": [
+        "apps/mobile/eas.json",
+        "apps/mobile/app.json",
+        "apps/admin-portal/package.json",
+        "docs/STAGING_RUNBOOK.md"
+      ],
+      "tasks": [
+        "Own preview profiles, environment binding, signing/device eligibility and rollback artifact evidence."
+      ]
+    },
+    {
+      "call": "RELIABILITY",
+      "file": ".claude/agents/reliability.md",
+      "department": "Operations",
+      "lead": "OPERATIONS",
+      "owns": [
+        "apps/mobile/src/frontend/services",
+        "TROUBLESHOOTING.md"
+      ],
+      "tasks": [
+        "Own failure recovery, incident runbooks, dependency availability and measured service objectives."
+      ]
+    },
+    {
+      "call": "RESEARCH",
+      "file": ".claude/agents/research.md",
+      "department": "Product",
+      "lead": "PRODUCT",
+      "owns": [
+        "docs/TESTER_SCRIPT.md",
+        "docs/STORY.md"
+      ],
+      "tasks": [
+        "Test family, athlete, guardian, filmer and operator journeys using consented feedback."
+      ]
+    },
+    {
+      "call": "RLS_SECURITY",
+      "file": ".claude/agents/rls-security.md",
+      "department": "Engineering",
+      "lead": "BACKEND",
+      "owns": [
+        "apps/mobile/src/backend/db/schema.sql",
+        "supabase/migrations"
+      ],
+      "tasks": [
+        "Audit grants, RLS, security-definer RPCs, storage policies and ownership boundaries."
+      ]
+    },
+    {
+      "call": "ROLE_HQ",
+      "file": ".claude/agents/role-hq.md",
+      "department": "Partnerships",
+      "lead": "PARTNERSHIPS",
+      "owns": [
+        "apps/mobile/app/(parent)",
+        "apps/mobile/app/(booster)",
+        "apps/mobile/app/(sponsor)"
+      ],
+      "tasks": [
+        "Parent, booster and sponsor role portal integration"
+      ]
+    },
+    {
+      "call": "ROSTERS",
+      "file": ".claude/agents/rosters.md",
+      "department": "Engineering",
+      "lead": "LOCAL",
+      "owns": [
+        "apps/mobile/src/frontend/lib/roster.ts",
+        "apps/mobile/src/frontend/lib/teams.ts",
+        "apps/mobile/src/frontend/hooks/useRoster.ts",
+        "apps/mobile/src/frontend/hooks/useTeamSearch.ts"
+      ],
+      "tasks": [
+        "Own roster claim identity, team search, CSV import validation and athlete navigation."
+      ]
+    },
+    {
+      "call": "RUNTIME_CONFIG",
+      "file": ".claude/agents/runtime-config.md",
+      "department": "Engineering",
+      "lead": "ADMIN",
+      "owns": [
+        "apps/mobile/src/frontend/lib/runtime.ts",
+        "apps/mobile/src/frontend/context/AppRuntimeContext.tsx",
+        "apps/mobile/src/frontend/context/AdminLensContext.tsx"
+      ],
+      "tasks": [
+        "Own draft/published flag states, pause behavior, role lenses and fan control coverage."
+      ]
+    },
+    {
+      "call": "SCHOOL_PARTNERS",
+      "file": ".claude/agents/school-partners.md",
+      "department": "Partnerships",
+      "lead": "PARTNERSHIPS",
+      "owns": [
+        "apps/mobile/src/frontend/lib/schoolConfirm.ts",
+        "apps/mobile/src/frontend/lib/teams.ts",
+        "docs/LEGAL_BRIEFING.md"
+      ],
+      "tasks": [
+        "Own school onboarding requirements, AD/coach confirmation workflow and marks permission records design."
+      ]
+    },
+    {
+      "call": "SESSION_SECURITY",
+      "file": ".claude/agents/session-security.md",
+      "department": "Engineering",
+      "lead": "AUTH",
+      "owns": [
+        "apps/mobile/src/frontend/lib/sessionToken.ts",
+        "apps/mobile/src/frontend/lib/roles.ts",
+        "apps/mobile/src/backend/api/session.ts",
+        "apps/mobile/src/frontend/lib/auth.ts"
+      ],
+      "tasks": [
+        "Own JWT/session handling, role boundaries, OAuth redirect integrity and server identity checks."
+      ]
+    },
+    {
+      "call": "SHARED_CONTRACTS",
+      "file": ".claude/agents/shared-contracts.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "packages/shared-types/index.ts",
+        "apps/mobile/src/frontend/types/database.ts"
+      ],
+      "tasks": [
+        "Shared RPC/domain types, generated database type provenance and mobile/admin contract parity"
+      ]
+    },
+    {
+      "call": "SHARING",
+      "file": ".claude/agents/sharing.md",
+      "department": "Engineering",
+      "lead": "PROFILE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/share.ts",
+        "apps/mobile/src/frontend/lib/share.web.ts",
+        "apps/mobile/src/frontend/lib/share.types.ts",
+        "apps/mobile/app/gift"
+      ],
+      "tasks": [
+        "Own public athlete QR, share links, deep links and safe preview content."
+      ]
+    },
+    {
+      "call": "SPONSOR_ADS",
+      "file": ".claude/agents/sponsor-ads.md",
+      "department": "Partnerships",
+      "lead": "PARTNERSHIPS",
+      "owns": [
+        "apps/mobile/src/frontend/lib/sponsorAds.ts",
+        "apps/mobile/src/frontend/hooks/useSponsorships.ts",
+        "apps/mobile/src/frontend/lib/boosterPortal.ts"
+      ],
+      "tasks": [
+        "Own approved sponsor placement, booster tier display and role portal consistency."
+      ]
+    },
+    {
+      "call": "SPOTLIGHT",
+      "file": ".claude/agents/spotlight.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/frontend/lib/spotlight.ts",
+        "apps/mobile/src/frontend/lib/tags.ts"
+      ],
+      "tasks": [
+        "Awards board, real athlete IDs and tag queue"
+      ]
+    },
+    {
+      "call": "STORAGE",
+      "file": ".claude/agents/storage.md",
+      "department": "Engineering",
+      "lead": "BACKEND",
+      "owns": [
+        "apps/mobile/src/backend/db/schema.sql",
+        "apps/mobile/src/frontend/services/MediaUploadService.ts"
+      ],
+      "tasks": [
+        "Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle"
+      ]
+    },
+    {
+      "call": "SUPPORT",
+      "file": ".claude/agents/support.md",
+      "department": "Support",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/TESTER_SCRIPT.md",
+        "TROUBLESHOOTING.md",
+        "docs/STATE.md"
+      ],
+      "tasks": [
+        "Own help/runbook content, tester intake taxonomy and guardian-safe issue handling."
+      ]
+    },
+    {
+      "call": "TELEMETRY",
+      "file": ".claude/agents/telemetry.md",
+      "department": "Operations",
+      "lead": "OPERATIONS",
+      "owns": [
+        "apps/mobile/src/frontend/services/TelemetryManager.ts",
+        "apps/mobile/src/frontend/hooks/useSurfaceUsage.ts",
+        "apps/mobile/src/frontend/hooks/useReelViewTracker.ts"
+      ],
+      "tasks": [
+        "Own bounded telemetry payloads, data minimization, dashboard interpretation and logging failure behavior."
+      ]
+    },
+    {
+      "call": "TEST_AUTOMATION",
+      "file": ".claude/agents/test-automation.md",
+      "department": "Quality",
+      "lead": "QA",
+      "owns": [
+        "apps/mobile/src/frontend/lib/__tests__",
+        "apps/mobile/src/frontend/hooks/__tests__",
+        "apps/mobile/src/frontend/components",
+        "scripts"
+      ],
+      "tasks": [
+        "Own meaningful regression, boundary/security and finance invariant checks."
+      ]
+    },
+    {
+      "call": "TRUST_SAFETY",
+      "file": ".claude/agents/trust-safety.md",
+      "department": "Trust and Safety",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/LEGAL_BRIEFING.md",
+        "apps/mobile/src/frontend/components/Verification"
+      ],
+      "tasks": [
+        "Coordinate moderation, identity, minor safety and rights safeguards as independent release gates."
+      ]
+    },
+    {
+      "call": "UPLOAD",
+      "file": ".claude/agents/upload.md",
+      "department": "Engineering",
+      "lead": "HIGHLIGHTS",
+      "owns": [
+        "apps/mobile/src/frontend/services/MediaUploadService.ts",
+        "apps/mobile/src/frontend/context/UploadSheetContext.tsx",
+        "apps/mobile/src/frontend/components/Filmers",
+        "apps/mobile/src/frontend/components/Reels/UploadVideoModal.tsx",
+        "apps/mobile/src/frontend/components/Reels/HighlightPickerModal.tsx",
+        "apps/mobile/src/frontend/components/Reels/UploadVideoComposer.tsx"
+      ],
+      "tasks": [
+        "Own staged video selection, details, review and optional settings; preserve required rights, draft navigation and safe publishing.",
+        "Own compression, MIME/bucket routing, upload progress/cancellation and athlete/account tag consent."
+      ]
+    },
+    {
+      "call": "VAULT",
+      "file": ".claude/agents/vault.md",
+      "department": "Engineering",
+      "lead": "PROFILE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/vault.ts",
+        "apps/mobile/src/frontend/hooks/useAthleteSubscription.ts",
+        "apps/mobile/src/frontend/hooks/useSubscriberRequests.ts"
+      ],
+      "tasks": [
+        "Own private video entitlements, signed playback URLs and subscription-request access."
+      ]
+    },
+    {
+      "call": "VOICE",
+      "file": ".claude/agents/voice.md",
+      "department": "Brand",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/VOICE.md",
+        "scripts/check-copy.mjs"
+      ],
+      "tasks": [
+        "Donation language and honest product copy"
+      ]
+    },
+    {
+      "call": "WISHLIST",
+      "file": ".claude/agents/wishlist.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/wishlist.ts",
+        "apps/mobile/src/frontend/components/Profile/LockerRoomWishlist.tsx"
+      ],
+      "tasks": [
+        "Gear-goal configuration, donation allocation and confirmed progress"
+      ]
+    }
+  ]
+}

@@ -33,3 +33,27 @@ You produce the screen. You do not wait for a separate mock unless the user aske
 - Change prices, the 90 / 10 line, or legal conclusions.
 
 **Before finishing:** `pnpm typecheck` and `pnpm docs:check` from repo root. If on-screen words changed, `pnpm copy:check`.
+
+## Expanded specialist routing (2026-10-07)
+
+Read `docs/STATE.md` first and follow `docs/TEAMS.md` §Specialist operating contract. Reporting lead: `FACILITATOR`. Registry: `.claude/agents/registry.json`.
+
+Delegate coherent functions to `ACCESSIBILITY` · `MOTION`. Keep this role accountable for integration and use QA for independent evidence.
+
+Use `docs/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
+
+## Current direct specialists
+
+`ACCESSIBILITY` · `MOTION`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+
+## Current upload assignment
+
+UX-01: with UPLOAD, build compact Clip → Details → Review screens. Keep Back and primary actions fixed, move optional settings and searchable lists to separate screens, respect keyboard/text scaling, and preserve every mandatory rights confirmation. Real-device layout remains a QA check.
+
+## Documentation handoff
+
+Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## UX-02 shared presentation ownership
+
+Own `constants/theme.ts` MENU_METRICS, `components/UI/MenuChrome.tsx`, `hooks/useSheetFrame.ts`, shared `ScreenShell` / `TabScreen` / `ScreenHeading`, and UI control presentation. Use MENU_STYLE_MAP for consumer coverage and intentional video/operator/admin exceptions. Pair CHECKOUT for donation review and UPLOAD for rights/drafts; DEVICE_QA records actual native fit.

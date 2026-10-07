@@ -16,6 +16,7 @@
     "copy:check": "node scripts/check-copy.mjs",
     "app:data-boundaries": "node scripts/check-app-data-boundaries.mjs",
     "comments:check": "node scripts/check-comments.mjs",
+    "agents:check": "node scripts/check-agents.mjs",
     "typecheck": "pnpm --filter @tapuai/mobile typecheck && pnpm --filter @tapuai/admin-portal typecheck"
   }
 }

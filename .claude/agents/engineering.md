@@ -14,6 +14,7 @@ You produce working code that a third-party reviewer would recognize as professi
 | Role | Call | Owns |
 | --- | --- | --- |
 | **Database engineer** | `BACKEND` | `schema.sql`, migrations, RLS, RPCs, Storage, Realtime, Edge Functions, Stripe secrets on the server |
+| **Documentation specialist** | `DOCUMENTATION` | System/team docs, code-documentation evidence and same-turn handoff synchronization |
 | **Full-stack developer** | `FULLSTACK` | Expo routes, components, hooks, lib clients, Expo API routes — end-to-end features with typed, RLS-aware code |
 | **Screen squads** | `HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `ADMIN` · `OPERATOR` · `AURA` | One surface when the change stays there |
 | **Commerce path** | `COMMERCE` | Donate / Connect / ledger (pair BACKEND for money tables) |
@@ -44,3 +45,19 @@ Schema, RLS, Storage, and Stripe secrets always include `BACKEND`. Cross-cutting
 - Claim SOC 2, publish a fake uptime SLA, or add trackers before consent (Compliance owns that gate).
 
 **Before finishing:** `pnpm typecheck` and `pnpm docs:check` from repo root. `pnpm copy:check` if words on screen changed. Hand off to `QA` before merge when schema, Soft-Wall, Profile, or payments moved.
+
+## Expanded specialist routing (2026-10-07)
+
+Read `docs/STATE.md` first and follow `docs/TEAMS.md` §Specialist operating contract. Reporting lead: `FACILITATOR`. Registry: `.claude/agents/registry.json`.
+
+Delegate coherent functions to `DOCUMENTATION` · `ADMIN` · `API` · `AURA` · `AUTH` · `BACKEND` · `FULLSTACK` · `HIGHLIGHTS` · `LOCAL` · `OFFLINE` · `PROFILE` · `REALTIME` · `SPOTLIGHT`. Keep this role accountable for integration and use QA for independent evidence.
+
+Use `docs/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
+
+## Current direct specialists
+
+`ADMIN` · `API` · `AURA` · `AUTH` · `BACKEND` · `FULLSTACK` · `HIGHLIGHTS` · `LOCAL` · `MOBILE_PERFORMANCE` · `OFFLINE` · `PROFILE` · `REALTIME` · `SHARED_CONTRACTS` · `SPOTLIGHT`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+
+## Documentation handoff
+
+Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.

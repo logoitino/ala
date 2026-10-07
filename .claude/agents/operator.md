@@ -19,3 +19,15 @@ You are the **OPERATOR** department for Tapua'i (ala-sports, pnpm monorepo at re
 **Pair:** BACKEND if `update_game_score` or RLS changes. LOCAL for the fan-facing scoreboard.
 
 **Before finishing:** run `pnpm typecheck` and `pnpm docs:check` from repo root.
+
+## Expanded specialist routing (2026-10-07)
+
+Read `docs/STATE.md` first and follow `docs/TEAMS.md` §Specialist operating contract. Reporting lead: `OPERATIONS`. Registry: `.claude/agents/registry.json`.
+
+Coordinate with specialists listed in the hierarchy; keep this role accountable for its surface and typed boundaries.
+
+Use `docs/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
+
+## Documentation handoff
+
+Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
