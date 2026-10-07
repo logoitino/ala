@@ -1,3 +1,9 @@
+/**
+ * Profile identity hero shared by own and public sheets, with a compact sideline-style identity row.
+ * Athlete details are optional; community profiles must never inherit a favorite player's credentials.
+ * School crests remain server-confirmed and avatar editing stays controlled by the parent sheet.
+ * @sideEffects `ProfileAvatarPicker` can upload the owner's chosen photo to Storage `avatars`.
+ */
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -8,6 +14,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { SchoolCrest, SchoolHeroBand } from '@/components/Verification/SchoolCrest';
 import { colors, radii } from '@/constants/theme';
 import { CLAIM_VERIFY_CTA, type VerificationStatus } from '@/data/verification';
+import { classYearLabel } from '@/data/teams';
 import { auraBadgeLabel, auraProgressTowardNext, auraTierForPoints } from '@/lib/aura';
 import type { SchoolBadge } from '@/lib/schoolBadge';
 import { FOCAL } from '@/theme/motion';
@@ -16,6 +23,12 @@ type ProfileHeroAvatarProps = {
   name: string;
   school?: string | null;
   jersey?: string | number | null;
+  athlete?: boolean;
+  /** Compact photo/name row and credential pills for the sports profile overview. */
+  compact?: boolean;
+  sport?: string | null;
+  position?: string | null;
+  classYear?: string | null;
   auraPoints: number;
   subscriberCrest?: boolean;
   showFlipControl?: boolean;
@@ -38,13 +51,16 @@ function initialsFromName(name: string): string {
 }
 
 /**
- * @purpose Large profile-photo hero so the avatar dominates before Crew / Highlights collage.
+ * @purpose Sports identity header with photo, school and known credentials before Crew / Highlights.
  * @param name Display name under the circle.
  * @param auraPoints Drives tier ring color + slim progress.
  * @param onFlipAura Opens the Aura trading card sheet (menu or control).
  * @param verificationStatus Viewer-facing Varsity chip next to the name.
  * @param avatarUrl `profiles.avatar_url` when set.
  * @param canEditAvatar Own hub — opens `ProfileAvatarPicker` 1:1 crop.
+ * @param athlete Community accounts hide jersey and athlete details even when a favorite roster is supplied.
+ * @param compact Keeps identity, known credentials and Aura together without a tall centered hero.
+ * @param sport / position / classYear Known athlete metadata; absent fields have no placeholder claims.
  * @param schoolBadge School-confirmed only: school-colour band behind the photo, and the crest pinned
  *   on the ring edge (outside the photo, so a logo pasted into a picture can't sit where it sits).
  * @sideEffects `ProfileAvatarPicker` camera roll + Storage `avatars` when editable.
@@ -53,6 +69,11 @@ export function ProfileHeroAvatar({
   name,
   school,
   jersey,
+  athlete = true,
+  compact = false,
+  sport,
+  position,
+  classYear,
   auraPoints,
   subscriberCrest = false,
   showFlipControl = false,
@@ -63,16 +84,95 @@ export function ProfileHeroAvatar({
   avatarUrl,
   canEditAvatar = false,
   onAvatarUploaded,
-  schoolBadge = null,
+  schoolBadge: suppliedSchoolBadge = null,
 }: ProfileHeroAvatarProps) {
+  // A community sheet may carry a favorite roster row; its school proof belongs to that athlete.
+  const schoolBadge = athlete ? suppliedSchoolBadge : null;
   const tier = auraTierForPoints(auraPoints);
   const progress = auraProgressTowardNext(auraPoints);
   const initials = initialsFromName(name);
+  // Omit unknown fields rather than turning an inferred sport or missing year into a credential.
+  const details = athlete ? [
+    { label: 'Sport', value: sport?.trim() },
+    { label: 'Position', value: position?.trim() },
+    { label: 'Class', value: classYear?.trim() && classYear.trim() !== '—' ? classYearLabel(classYear.trim()) : null },
+  ].filter((detail) => detail.value && detail.value !== '—') : [];
+
+  if (compact) {
+    const progressPct = Math.round(progress.ratio * 100);
+    return (
+      <View style={[styles.wrap, styles.compactWrap]}>
+        <View style={styles.compactIdentityRow}>
+          <View style={styles.compactAvatarStage}>
+            {schoolBadge ? <View style={styles.compactSchoolBand}><SchoolHeroBand badge={schoolBadge} /></View> : null}
+            <View style={[styles.avatarRing, styles.compactAvatarRing, { borderColor: tier.color, backgroundColor: tier.face }]}>
+              <ProfileAvatarPicker uri={avatarUrl} editable={canEditAvatar} size={80} onUploaded={onAvatarUploaded}>
+                <Text style={[styles.initials, styles.compactInitials, { color: tier.ink }]}>{initials}</Text>
+              </ProfileAvatarPicker>
+              {subscriberCrest ? <View style={styles.crest}><SubscriberCrest /></View> : null}
+              {athlete && jersey != null && String(jersey).trim() ? (
+                <View style={[styles.jerseyChip, { borderColor: tier.color }]}>
+                  <Text style={[styles.jerseyLabel, { color: tier.ink }]}>#{jersey}</Text>
+                </View>
+              ) : null}
+              {schoolBadge ? (
+                <View style={styles.compactSchoolCrest}><SchoolCrest badge={schoolBadge} athleteName={name} size={32} /></View>
+              ) : null}
+            </View>
+          </View>
+          <View style={styles.compactIdentity}>
+            <Text style={[styles.kicker, styles.compactLeft]}>{athlete ? 'Athlete profile' : 'Community profile'}</Text>
+            <Text accessibilityRole="header" style={[styles.name, styles.compactName]}>{name}</Text>
+            <VarsityBadge compact status={verificationStatus} schoolClaimed={schoolClaimed} onPress={onClaimVerification} />
+            {schoolBadge ? (
+              <Text style={[styles.schoolConfirmed, styles.compactSchool]}>
+                ✓ {schoolBadge.schoolName} athlete{schoolBadge.mascot ? ` · ${schoolBadge.mascot}` : ''}
+              </Text>
+            ) : school ? <Text style={[styles.school, styles.compactSchool]}>{school}</Text> : null}
+          </View>
+        </View>
+        {details.length > 0 ? (
+          <View style={styles.compactDetails}>
+            {details.map((detail) => (
+              <View key={detail.label} style={styles.compactDetail} accessible accessibilityLabel={`${detail.label}: ${detail.value}`}>
+                <Text style={styles.compactDetailValue}>{detail.label === 'Class' ? `Class ${detail.value}` : detail.value}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+        <View style={styles.compactAuraRow}>
+          <View style={styles.compactAura} accessible accessibilityRole="progressbar" accessibilityLabel="Aura progress"
+            accessibilityValue={{ min: 0, max: 100, now: progressPct,
+              text: `${Math.round(auraPoints)} Aura, ${auraBadgeLabel(tier)}. ${progress.next ? `${progressPct}% to ${progress.next.title}` : 'Max Aura band'}` }}>
+            <Text style={[styles.tier, styles.compactAuraLabel, { color: tier.ink }]}>{Math.round(auraPoints)} Aura · {tier.title}</Text>
+            <View style={[styles.progressTrack, styles.compactProgressTrack]}>
+              <View style={[styles.progressFill, { width: `${progressPct}%`, backgroundColor: tier.color }]} />
+            </View>
+          </View>
+          {showFlipControl && onFlipAura ? (
+            <AnimatedButton accessibilityLabel="Flip Aura card" haptic="selection" onPress={onFlipAura}
+              contentStyle={[styles.flipHit, styles.compactFlip, { borderColor: tier.color, backgroundColor: tier.face }]}>
+              <Ionicons name="sync" size={15} color={tier.ink} />
+              <Text style={[styles.flipLabel, { color: tier.ink }]}>Aura card</Text>
+            </AnimatedButton>
+          ) : null}
+        </View>
+        {onClaimVerification && verificationStatus !== 'verified' ? (
+          <AnimatedButton accessibilityLabel={CLAIM_VERIFY_CTA} haptic="selection" onPress={onClaimVerification}
+            contentStyle={[styles.verifyHit, styles.compactVerify]}>
+            <Text style={styles.verifyLabel}>{CLAIM_VERIFY_CTA}</Text>
+          </AnimatedButton>
+        ) : null}
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.wrap, schoolBadge ? styles.wrapBanded : null]}>
-      {schoolBadge ? <SchoolHeroBand badge={schoolBadge} /> : null}
+      <View style={styles.identityRail} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      <Text style={styles.kicker}>{athlete ? 'Athlete profile' : 'Community profile'}</Text>
       <View style={[styles.avatarStage, schoolBadge ? styles.avatarStageBanded : null]}>
+        {schoolBadge ? <View style={styles.schoolBand}><SchoolHeroBand badge={schoolBadge} /></View> : null}
         <View style={[styles.avatarRing, { borderColor: tier.color, backgroundColor: tier.face }]}>
           <ProfileAvatarPicker
             uri={avatarUrl}
@@ -87,7 +187,7 @@ export function ProfileHeroAvatar({
               <SubscriberCrest />
             </View>
           ) : null}
-          {jersey != null && String(jersey).trim() ? (
+          {athlete && jersey != null && String(jersey).trim() ? (
             <View style={[styles.jerseyChip, { borderColor: tier.color }]}>
               <Text style={[styles.jerseyLabel, { color: tier.ink }]}>#{jersey}</Text>
             </View>
@@ -99,7 +199,7 @@ export function ProfileHeroAvatar({
           ) : null}
         </View>
       </View>
-      <Text style={styles.name}>{name}</Text>
+      <Text accessibilityRole="header" style={styles.name}>{name}</Text>
       <VarsityBadge
         compact
         status={verificationStatus}
@@ -112,6 +212,16 @@ export function ProfileHeroAvatar({
         </Text>
       ) : school ? (
         <Text style={styles.school}>{school}</Text>
+      ) : null}
+      {details.length > 0 ? (
+        <View style={styles.details}>
+          {details.map((detail) => (
+            <View key={detail.label} style={styles.detail} accessible accessibilityLabel={`${detail.label}: ${detail.value}`}>
+              <Text style={styles.detailLabel}>{detail.label}</Text>
+              <Text style={styles.detailValue}>{detail.value}</Text>
+            </View>
+          ))}
+        </View>
       ) : null}
       <Text style={[styles.tier, { color: tier.ink }]}>
         {auraBadgeLabel(tier)} · {Math.round(auraPoints)} Aura
@@ -157,16 +267,106 @@ export function ProfileHeroAvatar({
 }
 
 const styles = StyleSheet.create({
+  compactWrap: {
+    alignItems: 'stretch',
+    padding: 12,
+    paddingTop: 12,
+    paddingBottom: 12,
+    gap: 10,
+    borderTopWidth: 3,
+    borderTopColor: FOCAL.electricViolet,
+  },
+  // The identity can take a second line at large text sizes instead of shrinking the athlete's name.
+  compactIdentityRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
+  compactAvatarStage: { width: 88, paddingTop: 2, paddingBottom: 8 },
+  compactAvatarRing: { width: 88, height: 88, borderRadius: 44 },
+  compactInitials: { fontSize: 28 },
+  compactSchoolBand: { position: 'absolute', top: 8, left: 0, right: 0, height: 64, borderRadius: radii.sm, overflow: 'hidden' },
+  compactSchoolCrest: { position: 'absolute', right: -8, bottom: 2 },
+  compactIdentity: { flexGrow: 1, flexShrink: 1, flexBasis: 120, minWidth: 0, gap: 3 },
+  compactLeft: { textAlign: 'left', letterSpacing: 0.9 },
+  compactName: { marginTop: 0, fontSize: 25, lineHeight: 29, letterSpacing: -0.6, textAlign: 'left' },
+  compactSchool: { fontSize: 12, textAlign: 'left' },
+  compactDetails: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  compactDetail: { maxWidth: '100%', flexShrink: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: FOCAL.mistViolet },
+  compactDetailValue: { color: FOCAL.violetInk, fontSize: 12, fontWeight: '800' },
+  compactAuraRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  compactAura: { flexGrow: 1, flexShrink: 1, flexBasis: 120, gap: 5 },
+  compactAuraLabel: { textAlign: 'left', fontWeight: '900' },
+  compactProgressTrack: { width: '100%', maxWidth: undefined, marginTop: 0, height: 4 },
+  compactFlip: { marginTop: 0, paddingHorizontal: 12, paddingVertical: 6, flexShrink: 1 },
+  compactVerify: { alignSelf: 'flex-start', marginTop: 0 },
   wrap: {
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 4,
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 18,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  identityRail: {
+    width: 48,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: FOCAL.electricViolet,
+  },
+  kicker: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+    color: FOCAL.violetInk,
+  },
+  details: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
+    gap: 8,
+    marginVertical: 6,
+  },
+  detail: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 90,
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: radii.sm,
+    backgroundColor: FOCAL.mistViolet,
+  },
+  detailLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: FOCAL.violetInk,
+    textAlign: 'center',
+  },
+  detailValue: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
   },
   wrapBanded: {
     alignSelf: 'stretch',
   },
+  schoolBand: {
+    position: 'absolute',
+    top: 0,
+    left: -16,
+    right: -16,
+    height: 104,
+  },
   avatarStage: {
     paddingVertical: 8,
+    alignSelf: 'stretch',
+    alignItems: 'center',
   },
   avatarStageBanded: {
     paddingTop: 40,
@@ -216,8 +416,9 @@ const styles = StyleSheet.create({
   },
   name: {
     marginTop: 10,
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 30,
+    lineHeight: 35,
+    fontWeight: '900',
     color: colors.text,
     letterSpacing: -0.3,
     textAlign: 'center',
@@ -256,7 +457,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    minHeight: 38,
+    minHeight: 44,
     borderWidth: 1.5,
     borderRadius: 999,
     paddingHorizontal: 16,
@@ -267,6 +468,8 @@ const styles = StyleSheet.create({
   },
   verifyHit: {
     marginTop: 2,
+    minHeight: 44,
+    justifyContent: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
   },

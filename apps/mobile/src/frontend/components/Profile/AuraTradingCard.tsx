@@ -1,5 +1,5 @@
 /**
- * The Aura trading card: identity and season-stats faces, tier colours and glow, school crest, role badges and
+ * The Aura trading card: identity and sport-stats faces, tier colours and glow, school crest, role badges and
  * the flip control. Tier palette and thresholds come from `lib/aura.ts`.
  */
 
@@ -61,6 +61,8 @@ export type AuraTradingCardProps = {
   subscriberCrest?: boolean;
   bio?: string;
   gamesPlayed?: number;
+  /** Canonical sport shared with the profile stats; Aura points are a separate reward metric. */
+  sport?: string | null;
   highlightReels?: number;
   totalTipsReceived?: number;
   totalTipsDropped?: number;
@@ -172,7 +174,7 @@ function CardChrome({ tier, children }: { tier: AuraTier; children: ReactNode })
 }
 
 /**
- * @purpose Interactive 7-tier Aura trading card with a 3D `rotateY` flip (front identity / back season stats). Each band uses a light `face` wash + `ink` so the collectible stays fun on Daylight (Obsidian stays on Highlights ⚡).
+ * @purpose Interactive 7-tier Aura trading card with a 3D `rotateY` flip (front identity / back sport stats). Each band uses a light `face` wash + `ink` so the collectible stays fun on Daylight (Obsidian stays on Highlights ⚡).
  * @param name Display name on the front face.
  * @param username Handle shown as `@username`.
  * @param roleTag Athlete / Fan / Booster chip. Falls back to `role` / `roles` when omitted.
@@ -182,8 +184,8 @@ function CardChrome({ tier, children }: { tier: AuraTier; children: ReactNode })
  * @param careerPreview Top 3 career stats (Games / Points or Tries / Yards or Tackles) on the back face.
  * @param isAuraMaxed / wishlistFulfilled Lights the Skia neon sweep (`GlowingNeonBorder`) and pulses stroke thickness.
  * @param verificationStatus Neon jade ⚡ VERIFIED VARSITY on the identity face when Varsity is earned.
- * @returns Flippable card. Tapping the card or the Identity / Season stats toggle under it flips it.
- * @sideEffects Reanimated `withSpring` `rotateY` 0↔180 (`SPRING_FLIP`, `perspective: 1000`); `Haptics.impactAsync(Medium)` exactly when the rotation crosses 90°; back-face Season Points / Total Tipped fade in with `withDelay`; Skia canvas when the glow is on.
+ * @returns Flippable card. Tapping the card or the Identity / Stats toggle under it flips it.
+ * @sideEffects Reanimated `withSpring` `rotateY` 0↔180 (`SPRING_FLIP`, `perspective: 1000`); `Haptics.impactAsync(Medium)` exactly when the rotation crosses 90°; back-face Aura points / donation totals fade in with `withDelay`; Skia canvas when the glow is on.
  */
 export function AuraTradingCard({
   name,
@@ -210,6 +212,7 @@ export function AuraTradingCard({
   mascot,
   divisionBadge,
   careerPreview,
+  sport,
   isAuraMaxed,
   wishlistFulfilled = false,
   verificationStatus = 'unverified',
@@ -330,7 +333,7 @@ export function AuraTradingCard({
         <GestureDetector gesture={tapToFlip}>
         <View
           accessibilityRole="button"
-          accessibilityLabel={`${name}, ${auraBadgeLabel(tier)}, ${flipped ? 'season stats' : 'identity'} face. Tap to flip.`}
+          accessibilityLabel={`${name}, ${auraBadgeLabel(tier)}, ${flipped ? 'stats' : 'identity'} face. Tap to flip.`}
           collapsable={false}
           style={[styles.stage, { height: flipped ? backH : frontH }]}
         >
@@ -422,8 +425,9 @@ export function AuraTradingCard({
               <CardChrome tier={tier}>
                 <Text style={styles.backKicker}>
                   {rankLabel}
+                  {isAthleteFace && sport?.trim() ? ` · ${sport.trim()}` : ''}
                   {teamLine ? ` · ${teamLine}` : ''}
-                  {divisionLine ? ` · ${divisionLine}` : isFan && isAthleteFace ? ' · Fan + athlete sheet' : ' · Season sheet'}
+                  {divisionLine ? ` · ${divisionLine}` : isFan && isAthleteFace ? ' · Fan + athlete sheet' : ' · Stats sheet'}
                 </Text>
                 <View style={styles.grid}>
                   {careerPreview && careerPreview.length > 0
@@ -440,7 +444,7 @@ export function AuraTradingCard({
                     : null}
                   <StatCell
                     color={FOCAL.jadeInk}
-                    label="Season Points"
+                    label="Aura points"
                     value={athletePoints}
                     highlight
                     appear={careerPreview?.length ? tippedFade : seasonFade}
@@ -488,7 +492,7 @@ export function AuraTradingCard({
               key={side}
               accessibilityRole="tab"
               accessibilityState={{ selected: active }}
-              accessibilityLabel={side === 'season' ? 'Show season stats' : 'Show identity'}
+              accessibilityLabel={side === 'season' ? 'Show stats' : 'Show identity'}
               haptic="selection"
               onPress={() => {
                 if (!active) flip();
@@ -496,7 +500,7 @@ export function AuraTradingCard({
               style={[styles.faceToggleItem, active && { backgroundColor: tier.color }]}
             >
               <Text style={[styles.faceToggleLabel, { color: active ? '#FFFFFF' : tier.ink }]}>
-                {side === 'season' ? 'Season stats' : 'Identity'}
+                {side === 'season' ? 'Stats' : 'Identity'}
               </Text>
             </Pressable>
           );

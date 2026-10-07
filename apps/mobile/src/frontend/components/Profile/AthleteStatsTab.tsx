@@ -1,11 +1,12 @@
+/** Profile Stats uses the athlete's exact sport playbook for published career rows and measurables. Missing values
+ * stay as dashes; an unrelated caller playbook must never relabel another sport's stored numbers. */
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
-import type { AthleteStatsBundle } from '@/data/athleteStats';
+import { athleteStatsPlaybookForSport, type AthleteStatsBundle } from '@/data/athleteStats';
 import {
-  sportConfigFor,
   visibleMeasurables,
   visibleStatFields,
   type SportConfig,
@@ -27,16 +28,16 @@ function formatLogDate(iso: string): string {
 }
 
 /**
- * @purpose Stats 📊 pane: combine measurables, career table, recent game log — all shaped by the sport's playbook.
+ * @purpose Sports stat tiles lead the pane; recorded measurables and game logs follow the same playbook.
  * @param stats Bundle from `useAthleteStats`.
  * @param loading Shows a compact spinner over the table while the first fetch is in flight.
  * @param config Sport playbook (`sport_configs`); falls back to the seeded catalog for this athlete's sport.
  */
 export function AthleteStatsTab({ stats, loading = false, config }: AthleteStatsTabProps) {
   const { physicals, career, logs } = stats;
-  const playbook = config ?? sportConfigFor(career.sport);
+  const playbook = athleteStatsPlaybookForSport(career.sport, config ? [config] : undefined);
   const combine = visibleMeasurables(playbook);
-  const careerValues: Record<SportStatSource, number> = {
+  const careerValues: Record<SportStatSource, number | null> = {
     games: career.gamesPlayed,
     scoring: career.scoringValue,
     volume: career.volumeValue,
@@ -44,11 +45,35 @@ export function AthleteStatsTab({ stats, loading = false, config }: AthleteStats
   };
   const rows = visibleStatFields(playbook).map((field) => ({
     label: field.label,
-    value: String(careerValues[field.source] ?? 0),
+    value: String(careerValues[field.source] ?? '—'),
   }));
 
   return (
     <View style={styles.wrap}>
+      <View style={styles.tableHead}>
+        <Text style={styles.kicker}>
+          {playbook.emoji} {career.sport || 'Sport not set'} · Career stats
+        </Text>
+        {loading ? <ActivityIndicator color={colors.primary} size="small" /> : null}
+      </View>
+      {rows.length === 0 ? (
+        <EmptyState
+          kicker="Career"
+          title="No career stats published for this sport"
+          lede="Career stats appear here once this athlete's sport is set and stats are published."
+          adminHref="/admin/sports"
+          adminLabel="Open Sports"
+        />
+      ) : (
+        <View style={styles.metrics}>
+          {rows.map((row) => <View key={row.label} style={styles.statTile}
+            accessible accessibilityLabel={`${row.label}: ${row.value}`}>
+            <Text style={styles.statValue}>{row.value}</Text>
+            <Text style={styles.statLabel}>{row.label}</Text>
+          </View>)}
+        </View>
+      )}
+
       {combine.length > 0 ? (
         <>
           <Text style={styles.kicker}>Combine</Text>
@@ -59,35 +84,6 @@ export function AthleteStatsTab({ stats, loading = false, config }: AthleteStats
           </View>
         </>
       ) : null}
-
-      <View style={styles.tableHead}>
-        <Text style={styles.kicker}>
-          Career summary · {playbook.emoji} {career.sport}
-        </Text>
-        {loading ? <ActivityIndicator color={colors.primary} size="small" /> : null}
-      </View>
-      {rows.length === 0 ? (
-        <EmptyState
-          kicker="Career"
-          title="No career stats published for this sport"
-          lede="The Sports playbook decides which rows fans see. Add stats fields, then they land here."
-          adminHref="/admin/sports"
-          adminLabel="Open Sports"
-        />
-      ) : (
-        <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <Text style={[styles.cell, styles.cellHead]}>Stat</Text>
-            <Text style={[styles.cell, styles.cellHead, styles.cellRight]}>Value</Text>
-          </View>
-          {rows.map((row) => (
-            <View key={row.label} style={styles.tableRow}>
-              <Text style={styles.cell}>{row.label}</Text>
-              <Text style={[styles.cell, styles.cellRight, styles.cellValue]}>{row.value}</Text>
-            </View>
-          ))}
-        </View>
-      )}
 
       <Text style={styles.kicker}>Game log</Text>
       {logs.length === 0 ? (
@@ -159,48 +155,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
+  statTile: { flexGrow: 1, flexBasis: '44%', minWidth: 100, padding: 14, gap: 4, borderRadius: radii.md, backgroundColor: FOCAL.mistJade, borderTopWidth: 3, borderTopColor: FOCAL.neonJade },
+  statValue: { color: FOCAL.jadeInk, fontSize: 30, fontWeight: '900' },
+  statLabel: { color: FOCAL.jadeInk, fontSize: 12, fontWeight: '800' },
   tableHead: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
-  },
-  table: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  cell: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-    flex: 1,
-  },
-  cellHead: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  cellRight: {
-    textAlign: 'right',
-    flex: 0.6,
-  },
-  cellValue: {
-    color: FOCAL.jadeInk,
-    fontWeight: '800',
   },
   log: {
     backgroundColor: colors.surface,

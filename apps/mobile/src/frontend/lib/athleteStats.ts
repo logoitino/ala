@@ -1,8 +1,15 @@
+/**
+ * Load recorded profile statistics for the athlete's canonical sport. Missing or denied live records stay empty;
+ * generated numbers are restricted to demo identities and another sport's totals are never relabelled.
+ * @sideEffects Reads `players`, `athlete_career_stats` and `athlete_game_logs` through Supabase.
+ */
 import {
   careerColumnsForSport,
   careerPreviewStats,
   demoAthleteStats,
+  emptyAthleteStats,
   inferAthleteSport,
+  isDemoAthleteId,
   type AthleteGameLogRow,
   type AthleteStatsBundle,
 } from '@/data/athleteStats';
@@ -41,36 +48,41 @@ function mapLogs(rows: AthleteGameLog[] | null | undefined): AthleteGameLogRow[]
  * @purpose Load combine measurables, sport-specific career totals, and recent game log for Stats 📊.
  * @param playerId `players.id`.
  * @param player Optional already-fetched roster row (avoids a second SELECT).
- * @returns Bundle for `AthleteStatsTab` + trading-card `careerPreview`. Falls back to demo numbers.
+ * @param targetSport Explicit selected sport on the linked athlete's profile, when available.
+ * @returns Recorded bundle for Stats and Aura; missing totals are null and missing logs are empty.
  * @sideEffects `players` SELECT; `athlete_career_stats`; `athlete_game_logs`.
  */
 export async function fetchAthleteStats(
   playerId: string | null | undefined,
   player?: Player | null,
+  targetSport?: string | null,
 ): Promise<AthleteStatsBundle> {
   const id = playerId?.trim();
-  if (!id) return demoAthleteStats(asPlayer(player, 'demo-athlete'));
+  // A route can change ids before its old roster request completes; that row belongs to another athlete.
+  const hydratedPlayer = player?.id === id ? player : null;
+  const initial = emptyAthleteStats(hydratedPlayer, targetSport);
+  if (!id) return initial;
 
-  if (!isSupabaseConfigured || !isAuraUuid(id) || id.startsWith('demo-') || id.startsWith('dev-')) {
-    return demoAthleteStats(asPlayer(player, id));
-  }
+  if (isDemoAthleteId(id)) return demoAthleteStats(asPlayer(hydratedPlayer, id), targetSport);
+  if (!isSupabaseConfigured || !isAuraUuid(id)) return initial;
 
   const [playerResult, careerResult, logResult] = await Promise.all([
-    player
-      ? Promise.resolve({ data: player, error: null })
+    hydratedPlayer
+      ? Promise.resolve({ data: hydratedPlayer, error: null })
       : supabase.from('players').select('*').eq('id', id).maybeSingle(),
     supabase.from('athlete_career_stats').select('*').eq('player_id', id).maybeSingle(),
     supabase.from('athlete_game_logs').select('*').eq('player_id', id).order('played_on', { ascending: false }).limit(12),
   ]);
 
-  const nextPlayer = asPlayer((playerResult.data as Player | null) ?? player, id);
-  const demo = demoAthleteStats(nextPlayer);
-  const careerRow = careerResult.data as AthleteCareerStat | null;
-  const logs = mapLogs(logResult.data as AthleteGameLog[] | null);
-
-  if (careerResult.error && !careerRow) return { ...demo, logs: logs.length ? logs : demo.logs };
-
-  const sport = inferAthleteSport(nextPlayer.position, careerRow?.sport);
+  const nextPlayer = asPlayer((playerResult.data as Player | null) ?? hydratedPlayer, id);
+  const storedCareer = careerResult.error ? null : careerResult.data as AthleteCareerStat | null;
+  const sport = inferAthleteSport(nextPlayer.position, targetSport?.trim() || storedCareer?.sport);
+  // Logs have no sport column. Require the parent career sport to match before presenting their values.
+  const matchingCareer = Boolean(storedCareer?.sport.trim()
+    && inferAthleteSport(null, storedCareer.sport).toLowerCase() === sport.toLowerCase());
+  const careerRow = matchingCareer ? storedCareer : null;
+  const logs = matchingCareer && !logResult.error ? mapLogs(logResult.data as AthleteGameLog[] | null) : [];
+  const empty = emptyAthleteStats(nextPlayer, sport);
   const columns = careerColumnsForSport(sport);
   const career = careerRow
     ? {
@@ -81,17 +93,12 @@ export async function fetchAthleteStats(
         mvpBadges: careerRow.mvp_badges,
         columns,
       }
-    : demo.career;
+    : empty.career;
 
   return {
-    physicals: {
-      height: nextPlayer.height?.trim() || demo.physicals.height,
-      weight: nextPlayer.weight?.trim() || demo.physicals.weight,
-      fortyYard: nextPlayer.forty_yard?.trim() || demo.physicals.fortyYard,
-      verticalJump: nextPlayer.vertical_jump?.trim() || demo.physicals.verticalJump,
-    },
+    physicals: empty.physicals,
     career,
-    logs: logs.length ? logs : demo.logs,
+    logs,
     topThree: careerPreviewStats(career),
   };
 }

@@ -1,3 +1,4 @@
+/** Own profile shares the public sports layout; only the exact linked athlete supplies selected sport stats. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';
@@ -29,7 +30,6 @@ import { countStoredCheerVotes } from '@/hooks/useCheerPoll';
 import { useRoster } from '@/hooks/useRoster';
 import { readMaloDroppedCount, useTipCheckout } from '@/hooks/useTipCheckout';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
-import { loadFavoritePlayerIds } from '@/lib/favorites';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst } from '@/lib/reels';
 import { formatCapabilityLine } from '@/lib/roles';
 import { handleFromName, resolveAuraPoints, subscribePlayerAura } from '@/lib/aura';
@@ -46,7 +46,7 @@ import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
 const FAN_SELF_PREFIX = 'fan-self';
 
 /**
- * @purpose Own Profile tab uses the same `AthleteProfileView` as `/user/[id]` — hamburger overlays the sheet instead of a YOUR HUB heading; Mālo / Subscribe only when this is not your claimed row. Pull past the top stretches the hero (`ScrollFxParallax`).
+ * @purpose Own Profile tab uses the same `AthleteProfileView` as `/user/[id]` — hamburger opens account settings; compact sections expose owner tools without borrowing another athlete. Pull past the top stretches the hero (`ScrollFxParallax`).
  * @sideEffects Soft-Wall sign-in; Stripe PaymentSheet; `RoleSwitcherModal`; `LegalModal`; `VerifyAthleteModal`; `PayoutSetupCard`; receipts; vault lock; roster claim map.
  */
 export default function MyHubTab() {
@@ -59,7 +59,6 @@ export default function MyHubTab() {
   const { players, applyBackerCount, applyVaultLocked } = useRoster();
   const { startCheckout, busy } = useTipCheckout();
   const { onScroll, trackFeature } = useSurfaceUsage('profile');
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [tips, setTips] = useState<TipLedgerEntry[]>([]);
   const [taggedRows, setTaggedRows] = useState<ReelWithPlayer[]>([]);
   const [auraById, setAuraById] = useState<Record<string, number>>({});
@@ -76,7 +75,6 @@ export default function MyHubTab() {
   const [localOnboardTeam, setLocalOnboardTeam] = useState<SchoolTeam | null>(null);
 
   useEffect(() => {
-    void loadFavoritePlayerIds().then(setFavoriteIds);
   }, []);
 
   useEffect(() => {
@@ -100,19 +98,8 @@ export default function MyHubTab() {
       const claimed = players.find((player) => player.id === profile.player_id);
       if (claimed) return claimed;
     }
-    const named = players.find(
-      (player) => player.name.trim().toLowerCase() === (profile?.full_name ?? '').trim().toLowerCase(),
-    );
-    if (named) return named;
-    const favorite = players.find((player) => favoriteIds.includes(player.id));
-    if (favorite) return favorite;
-    // 2026-09 fix: this used to fall back to `players[0]` (a real, unrelated athlete's roster row —
-    // whichever one happens to sort first) or a hardcoded "Marcus Rivera" demo object. Either way, a
-    // plain fan with no claimed or name-matched athlete saw someone else's jersey, stats, backer
-    // count, and Vault lock state presented as their own Hub. Synthesizing a lightweight placeholder
-    // from the fan's own profile instead — represents "you, with no athlete claimed yet," not a
-    // stand-in for a real (or fake celebrity) athlete. The `FAN_SELF_PREFIX` id keeps the
-    // demo-id / dev-id skip below from trying to fetch reels for this synthetic row.
+    // A matching name or a favorite is another athlete, never ownership of this profile.
+    // Until the exact claimed row loads, use the owner's own empty identity.
     return {
       id: `${FAN_SELF_PREFIX}-${profile?.user_id ?? 'guest'}`,
       name: profile?.full_name?.trim() || 'Fan',
@@ -123,7 +110,7 @@ export default function MyHubTab() {
       backer_count: 0,
       vault_locked: false,
     } satisfies Player;
-  }, [favoriteIds, players, profile?.full_name, profile?.player_id, profile?.user_id]);
+  }, [players, profile?.full_name, profile?.player_id, profile?.user_id]);
 
   const athlete = useMemo(() => {
     const base = rosterAthlete;
@@ -131,7 +118,8 @@ export default function MyHubTab() {
     return typeof override === 'number' ? { ...base, aura_points: override } : base;
   }, [auraById, rosterAthlete]);
 
-  const { stats, loading: statsLoading } = useAthleteStats(athlete.id, athlete);
+  const ownsRoster = Boolean(isAthlete && profile?.player_id && profile.player_id === athlete.id);
+  const { stats, loading: statsLoading } = useAthleteStats(athlete.id, athlete, isAthlete && profile?.player_id === athlete.id ? profile.athlete_sport : undefined);
   const { subscribed, grant } = useAthleteSubscription(athlete.id);
 
   const hubAuraPoints = useMemo(() => {
@@ -360,6 +348,7 @@ export default function MyHubTab() {
       <ScrollFxScrollView contentContainerStyle={styles.content} onScroll={onScroll}>
         <ScrollFxParallax factor={0} fadeOver={0}>
         <AthleteProfileView
+          key={`${profile?.id ?? 'guest'}:${athlete.id}`}
           player={athlete}
           clips={taggedReels}
           stats={stats}
@@ -382,7 +371,7 @@ export default function MyHubTab() {
           pollVotes={pollVotes}
           sekiCount={athlete.seki_count ?? 0}
           subscribed={subscribed}
-          manageVault={isAthlete && activeRole === 'athlete'}
+          manageVault={ownsRoster && activeRole === 'athlete'}
           vaultLocked={athlete.vault_locked}
           vaultLockBusy={vaultLockBusy}
           tipping={busy}

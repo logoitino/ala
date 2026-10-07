@@ -4,7 +4,7 @@
  * removing a vote never animates.
  */
 
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, {
   cancelAnimation,
@@ -16,7 +16,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { HypeBurst } from '@/components/Effects/HypeBurst';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
@@ -39,6 +39,9 @@ export const REEL_REACTIONS = [
 type ReelActionOverlayProps = {
   athleteName: string;
   schoolName?: string;
+  /** Actual roster context only; unknown jersey/position values remain absent. */
+  jerseyNumber?: number | null;
+  position?: string | null;
   caption?: string;
   /** Confirmed account mentions, already joined for one line. */
   withAccounts?: string;
@@ -74,6 +77,8 @@ type ReelActionOverlayProps = {
 export function ReelActionOverlay({
   athleteName,
   schoolName,
+  jerseyNumber,
+  position,
   caption,
   withAccounts,
   filmedBy,
@@ -99,6 +104,9 @@ export function ReelActionOverlay({
   const rail = live.highlights;
   const jade = live.theme.jade;
   const ink = live.theme.background;
+  const [auraBurst, setAuraBurst] = useState<{ x: number; y: number; key: number } | null>(null);
+  const railFrame = useRef({ x: 0, y: 0, width: 56 });
+  const railScrollY = useRef(0);
 
   const railNodes = rail.railOrder.map((id) => {
     if (id === 'seki' || id === 'aura' || id === 'flex') {
@@ -116,6 +124,11 @@ export function ReelActionOverlay({
           selected={Boolean(voted?.[reaction.id])}
           disabled={reacting || !onReact}
           ink={ink}
+          onAuraBurst={(chipY) => setAuraBurst({
+            x: railFrame.current.x + railFrame.current.width / 2 - 110,
+            y: railFrame.current.y + chipY - railScrollY.current + 24 - 110,
+            key: Date.now(),
+          })}
           onPress={() => onReact?.(reaction.id)}
         />
       );
@@ -170,64 +183,79 @@ export function ReelActionOverlay({
     return null;
   });
 
+  const rosterDetails = [
+    typeof jerseyNumber === 'number' && Number.isFinite(jerseyNumber) && jerseyNumber >= 0 ? `#${jerseyNumber}` : '',
+    position?.trim() || '',
+  ].filter(Boolean).join(' · ');
   const copy = (
     <View style={styles.copy}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Open ${athleteName} profile, ${auraLabel}`}
-        disabled={!canOpenAthlete || !onOpenAthlete}
-        onPress={onOpenAthlete}
-        style={({ pressed }) => [
-          styles.athleteHit,
-          {
-            borderColor: auraColor,
-            shadowColor: auraColor,
-            ...Platform.select({
-              web: auraGlow ? { boxShadow: `0 0 10px ${auraGlow}` } : {},
-              default: {},
-            }),
-          },
-          pressed && styles.pressed,
-          (!canOpenAthlete || !onOpenAthlete) && styles.disabled,
-        ]}
-      >
-        <Text style={styles.athleteName} numberOfLines={1}>
-          {athleteName}
-        </Text>
-      </Pressable>
-      {rail.showSchool && schoolName ? (
-        <Text style={styles.school} numberOfLines={1}>
-          {schoolName}
-        </Text>
-      ) : null}
-      {filmedBy ? (
+      <ScrollView style={styles.copyScroll} contentContainerStyle={styles.copyContent} nestedScrollEnabled>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Filmed by ${filmedBy}. Open filmer`}
-          disabled={!onOpenFilmer}
-          haptic="selection"
-          hitSlop={6}
-          onPress={onOpenFilmer}
+          accessibilityLabel={`Open ${athleteName} profile, ${auraLabel}${rosterDetails ? `, ${rosterDetails}` : ''}`}
+          accessibilityState={{ disabled: !canOpenAthlete || !onOpenAthlete }}
+          disabled={!canOpenAthlete || !onOpenAthlete}
+          onPress={onOpenAthlete}
+          style={({ pressed }) => [
+            styles.athleteHit,
+            {
+              borderColor: auraColor,
+              shadowColor: auraColor,
+              ...Platform.select({
+                web: auraGlow ? { boxShadow: `0 0 10px ${auraGlow}` } : {},
+                default: {},
+              }),
+            },
+            pressed && styles.pressed,
+            (!canOpenAthlete || !onOpenAthlete) && styles.disabled,
+          ]}
         >
-          <Text style={styles.filmedBy} numberOfLines={1}>
-            🎥 Filmed by {filmedBy}
+          <Text style={styles.athleteName} numberOfLines={2}>
+            {athleteName}
           </Text>
         </Pressable>
-      ) : null}
-      {withAccounts ? (
-        <Text style={styles.caption} numberOfLines={1}>
-          With {withAccounts}
-        </Text>
-      ) : null}
-      {rail.showCaption && caption ? (
-        <Text style={styles.caption} numberOfLines={2}>
-          {caption}
-        </Text>
-      ) : null}
+        {rosterDetails ? <Text style={styles.rosterDetails} numberOfLines={2}>{rosterDetails}</Text> : null}
+        {rail.showSchool && schoolName ? (
+          <Text style={styles.school} numberOfLines={2}>
+            {schoolName}
+          </Text>
+        ) : null}
+        {filmedBy ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Filmed by ${filmedBy}. Open filmer`}
+            disabled={!onOpenFilmer}
+            haptic="selection"
+            hitSlop={6}
+            onPress={onOpenFilmer}
+          >
+            <Text style={styles.filmedBy} numberOfLines={1}>
+              🎥 Filmed by {filmedBy}
+            </Text>
+          </Pressable>
+        ) : null}
+        {withAccounts ? (
+          <Text style={styles.caption} numberOfLines={1}>
+            With {withAccounts}
+          </Text>
+        ) : null}
+        {rail.showCaption && caption ? (
+          <Text style={styles.caption} numberOfLines={2}>
+            {caption}
+          </Text>
+        ) : null}
+      </ScrollView>
     </View>
   );
 
-  const railCol = <View style={styles.rail}>{railNodes}</View>;
+  const railCol = <ScrollView
+    style={styles.railScroll}
+    contentContainerStyle={styles.rail}
+    nestedScrollEnabled
+    onLayout={({ nativeEvent }) => { railFrame.current = nativeEvent.layout; }}
+    onScroll={({ nativeEvent }) => { railScrollY.current = nativeEvent.contentOffset.y; }}
+    scrollEventThrottle={16}
+  >{railNodes}</ScrollView>;
 
   return (
     <View
@@ -241,6 +269,12 @@ export function ReelActionOverlay({
     >
       {copy}
       {railCol}
+      {auraBurst ? (
+        // Effects live beside the scroll viewport so its clipping cannot cut off the Aura burst.
+        <View pointerEvents="none" style={[styles.burstLayer, { left: auraBurst.x, top: auraBurst.y }]}>
+          <HypeBurst key={auraBurst.key} kind="aura" scale={1.35} onDone={() => setAuraBurst(null)} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -258,6 +292,7 @@ function ReactionChip({
   disabled,
   ink,
   onPress,
+  onAuraBurst,
 }: {
   kind: PlayReactionId;
   emoji: string;
@@ -267,10 +302,11 @@ function ReactionChip({
   disabled: boolean;
   ink: string;
   onPress: () => void;
+  onAuraBurst: (chipY: number) => void;
 }) {
   const fx = HYPE_FX[kind];
   const reduceMotion = useReducedMotion();
-  const [burstKey, setBurstKey] = useState(0);
+  const chipY = useRef(0);
   const rise = useSharedValue(0);
   const fade = useSharedValue(0);
   // 0 = hand showing, 1 = football showing.
@@ -299,7 +335,7 @@ function ReactionChip({
         fade.value = 1;
         rise.value = withTiming(-36, { duration: 520 });
         fade.value = withTiming(0, { duration: 520 });
-        setBurstKey((current) => current + 1);
+        onAuraBurst(chipY.current);
       } else if (kind === 'seki') {
         cancelAnimation(ball);
         ball.value = withSequence(withTiming(1, { duration: 110 }), withDelay(520, withTiming(0, { duration: 180 })));
@@ -311,12 +347,7 @@ function ReactionChip({
   };
 
   return (
-    <View style={styles.chipWrap}>
-      {kind === 'aura' && burstKey > 0 ? (
-        <View pointerEvents="none" style={styles.burstLayer}>
-          <HypeBurst key={burstKey} kind={kind} scale={1.35} onDone={() => setBurstKey(0)} />
-        </View>
-      ) : null}
+    <View style={styles.chipWrap} onLayout={({ nativeEvent }) => { chipY.current = nativeEvent.layout.y; }}>
       {kind === 'aura' ? (
         <Animated.Text pointerEvents="none" style={[styles.plusOne, { color: fx.color }, shoutStyle]}>
           {fx.shout}
@@ -377,6 +408,12 @@ const styles = StyleSheet.create({
   copy: {
     flex: 1,
     minWidth: 0,
+    maxHeight: '100%',
+    flexGrow: 1,
+  },
+  copyScroll: { maxHeight: '100%', flexGrow: 0 },
+  // When text grows, scroll inside the available clip area instead of covering the scoreboard.
+  copyContent: {
     gap: 4,
     paddingBottom: 4,
     paddingRight: 4,
@@ -385,7 +422,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     maxWidth: '100%',
     borderWidth: 2,
-    borderRadius: 999,
+    borderRadius: 12,
+    minHeight: 44,
+    justifyContent: 'center',
     paddingHorizontal: 10,
     paddingVertical: 4,
     backgroundColor: colors.videoScrim,
@@ -401,9 +440,19 @@ const styles = StyleSheet.create({
   },
   athleteName: {
     color: colors.onVideo,
-    fontSize: 16,
+    fontSize: 21,
+    fontWeight: '900',
+    letterSpacing: -0.4,
+  },
+  rosterDetails: {
+    color: colors.onVideo,
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: '800',
-    letterSpacing: 0.2,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   school: {
     color: 'rgba(243,251,247,0.82)',
@@ -433,10 +482,11 @@ const styles = StyleSheet.create({
   rail: {
     gap: 6,
     alignItems: 'center',
-    width: 56,
+    minWidth: 56,
   },
+  railScroll: { maxHeight: '100%', flexGrow: 0, flexShrink: 0, minWidth: 56, maxWidth: '40%' },
   chipWrap: {
-    width: 56,
+    minWidth: 56,
     alignItems: 'center',
     overflow: 'visible',
     zIndex: 2,
@@ -463,8 +513,9 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   react: {
-    width: 48,
-    height: 48,
+    minWidth: 48,
+    minHeight: 48,
+    paddingVertical: 4,
     borderRadius: 24,
     backgroundColor: colors.videoScrim,
     borderWidth: 1.5,
@@ -486,8 +537,8 @@ const styles = StyleSheet.create({
     borderColor: FOCAL.neonJade,
   },
   emojiSlot: {
-    width: 26,
-    height: 22,
+    minWidth: 26,
+    minHeight: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -514,7 +565,7 @@ const styles = StyleSheet.create({
     color: FOCAL.ink,
   },
   malo: {
-    width: 48,
+    minWidth: 48,
     minHeight: 48,
     borderRadius: 24,
     backgroundColor: FOCAL.videoBase,
@@ -523,6 +574,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 4,
+    paddingHorizontal: 4,
   },
   maloLabel: {
     color: FOCAL.neonJade,

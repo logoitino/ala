@@ -1,3 +1,4 @@
+/** Shared dismissible scoreboards/toasts; preserve separate destination and full-size close buttons. */
 import { type ReactNode, useCallback, useRef } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -127,6 +128,7 @@ export function SwipeableBannerWrapper({
         )}
         {showClose ? (
           <Pressable
+            accessibilityRole="button"
             accessibilityLabel={accessibilityLabel}
             haptic="none"
             hitSlop={8}
@@ -144,15 +146,18 @@ export function SwipeableBannerWrapper({
 const styles = StyleSheet.create({
   frame: {
     position: 'relative',
+    maxWidth: '100%',
+    flexShrink: 1,
   },
   close: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: colors.videoScrimSoft,
+    top: 0,
+    right: 0,
+    // Hit slop can be clipped by the parent; the close control owns the minimum touch target.
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
@@ -162,6 +167,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     opacity: 0.85,
-    lineHeight: 16,
+    lineHeight: 26,
+    width: 26,
+    height: 26,
+    textAlign: 'center',
+    borderRadius: 13,
+    backgroundColor: colors.videoScrimSoft,
   },
 });

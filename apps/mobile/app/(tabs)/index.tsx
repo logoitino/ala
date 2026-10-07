@@ -458,6 +458,7 @@ export default function HighlightsTab() {
                     player={item.player}
                     active={index === activeIndex}
                     height={pageHeight}
+                    overlayInsetTop={chromeHeight + 8}
                     tipping={Boolean(tipTarget) || spotlight.visible}
                     playbackActive={!spotlight.visible && !tipTarget}
                     sekiPlay={item.clip.sekiPlay}

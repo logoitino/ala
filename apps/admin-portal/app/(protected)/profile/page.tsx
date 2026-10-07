@@ -1,3 +1,4 @@
+/** Read-only Profile oversight; staff change and publish profile chrome in Expo Admin. */
 import { Badge, FlagStatusList, Panel, PortalShell, SectionHeading, StatCard } from '@/components/PortalShell';
 import { fetchProfileOversight } from '@/lib/profile';
 import { fetchPortalRuntime } from '@/lib/softWall';
@@ -53,8 +54,8 @@ export default async function ProfileOversightPage() {
       <Panel title="Clean Profile hierarchy" kicker="Fan surface">
         <p className="text-sm leading-6 text-[var(--ink-soft)]">
           Own Profile and `/user/[id]` share <code className="rounded bg-[var(--jade-soft)] px-1.5">AthleteProfileView</code>.
-          Hamburger is hub-only; Join Crew / Donate / Subscribe hide on your claimed row. Toggle chrome below (same
-          RPCs as Expo Look · Profile), then Publish to app.
+          Hamburger is hub-only; Join Crew / Donate / Subscribe hide on your claimed row. The badges below show
+          published chrome. Change it in Expo Admin → Look → Profile, then Publish to app there.
         </p>
         <div className="grid gap-2 pt-1 sm:grid-cols-2 lg:grid-cols-3">
           {chromeRows.map((row) => (

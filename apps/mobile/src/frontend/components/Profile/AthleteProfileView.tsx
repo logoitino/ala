@@ -1,6 +1,6 @@
 /**
  * The public athlete page shown at /user/[id]: hero card, Aura trading card, crew and teammate badges, Rally,
- * filmer card, and the Highlights / Stats / Vault tabs.
+ * filmer card, and direct Highlights / Stats / Goals / Vault / owner Manage navigation.
  * Used by both the fan tab's own profile and any athlete opened from elsewhere. `onOpenClip` lets other
  * components (for example a Rally thank-you) jump to a specific clip in the Highlights tab.
  * @sideEffects Reads athlete, crew, school badge, leaderboard and reel data through hooks / lib.
@@ -37,7 +37,6 @@ import { TeamRosterStrip } from '@/components/Profile/TeamRosterStrip';
 import { VaultLockCard } from '@/components/Profile/VaultLockCard';
 import { TaggedReelGrid } from '@/components/Profile/TaggedReelGrid';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -58,14 +57,13 @@ import {
   type HighlightClip,
 } from '@/data/highlights';
 import { SHARE_FUND_CTA } from '@/data/share';
-import type { AthleteStatsBundle } from '@/data/athleteStats';
+import { applyAthleteStatsPlaybook, emptyAthleteStats, type AthleteStatsBundle } from '@/data/athleteStats';
 import { isWishlistFunded } from '@/data/wishlist';
 import type { VerificationStatus } from '@/data/verification';
 import { useCrew } from '@/hooks/useCrew';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { formatCompactCount } from '@/lib/hype';
 import { fetchAthleteHighlightViews } from '@/lib/leaderboards';
-import { isOwnAthleteSheet } from '@/lib/roster';
 import { nonEmptySocialLinks, resolveSocialLinkUrl, socialLinkLabel } from '@/lib/socialLinks';
 import type { Player, ProfileSocialLinks, UserRole } from '@/types/database';
 import type { ReelHype } from '@/lib/reels';
@@ -73,12 +71,15 @@ import { isVaultSealed } from '@/lib/vault';
 import { fetchWishlistItems } from '@/lib/wishlist';
 import { FOCAL } from '@/theme/motion';
 
-export type AthleteProfileTab = 'highlights' | 'stats' | 'vault';
+export type AthleteProfileTab = 'highlights' | 'stats' | 'goals' | 'vault' | 'team' | 'manage';
 
 const PROFILE_TABS: { id: AthleteProfileTab; label: string }[] = [
   { id: 'highlights', label: HIGHLIGHT_TAB_LABEL },
   { id: 'stats', label: STATS_TAB_LABEL },
+  { id: 'goals', label: 'Goals' },
   { id: 'vault', label: VAULT_TAB_LABEL },
+  { id: 'team', label: 'Team' },
+  { id: 'manage', label: 'Manage' },
 ];
 
 type AthleteProfileViewProps = {
@@ -87,6 +88,8 @@ type AthleteProfileViewProps = {
   stats: AthleteStatsBundle;
   statsLoading?: boolean;
   name: string;
+  /** Public visibility flag prevents roster fallback/confirmed crest from restoring a hidden school. */
+  schoolVisible?: boolean;
   username?: string | null;
   jersey?: string | number;
   bio?: string;
@@ -147,7 +150,7 @@ type AthleteProfileViewProps = {
 };
 
 /**
- * @purpose One athlete sheet for the Profile tab and `/user/[id]`: hero, Crew, fan Mālo/Subscribe (when not you), Share & Fund, Highlights / Stats / Vault, roster.
+ * @purpose One athlete sheet for the Profile tab and `/user/[id]`: hero, Crew, compact Donate/Subscribe/Share and direct Highlights / Stats / Goals / Vault / Manage sections.
  * @param onBack Public sheet back control (stack header is hidden so chrome matches the hub).
  * @param headerRight Own-hub account menu.
  * @param onDropMalo / onSubscribe Fan support — hidden on your own claimed row.
@@ -159,6 +162,7 @@ export function AthleteProfileView({
   stats,
   statsLoading = false,
   name,
+  schoolVisible = true,
   username,
   jersey,
   bio,
@@ -212,15 +216,25 @@ export function AthleteProfileView({
   const { live } = useAppRuntime();
   const { profile } = useAuth();
   const { configFor } = useSportConfigs();
-  const ownSheet = isOwnAthleteSheet(profile, player);
-  const editAvatar = Boolean(canEditAvatar && ownSheet);
+  const athleteIdentity = role === 'athlete' || Boolean(roles?.includes('athlete'));
+  // Matching display names are not proof that another roster row owns the viewer's credentials.
+  const ownCredentials = athleteIdentity && Boolean(profile?.player_id && profile.player_id === player.id);
+  const editAvatar = Boolean(canEditAvatar && (ownCredentials || headerRight));
+  const ownerTools = ownCredentials || Boolean(headerRight);
+  // Stats, hero and Aura use one sport. Old totals cannot become another sport's numbers by relabeling.
+  const selectedSport = (ownCredentials ? profile?.athlete_sport?.trim() : '') || stats.career.sport;
+  const sportStats = applyAthleteStatsPlaybook(
+    selectedSport.trim().toLowerCase() === stats.career.sport.trim().toLowerCase()
+      ? stats : emptyAthleteStats(player, selectedSport),
+    configFor(selectedSport),
+  );
   const maloAmount = live.catalog.maloAmounts[0] ?? 5;
-  const showFanSupport = !ownSheet && (Boolean(onDropMalo && live.buttons.malo) || Boolean(onSubscribe && live.buttons.subscribe));
+  const showFanSupport = !ownCredentials && !headerRight && (Boolean(onDropMalo && live.buttons.malo) || Boolean(onSubscribe && live.buttons.subscribe));
   const [tab, setTab] = useState<AthleteProfileTab>('highlights');
   const [openClipId, setOpenClipId] = useState<string | null>(null);
   const [wishlistFulfilled, setWishlistFulfilled] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const schoolBadge = useSchoolBadge(player.id);
+  const schoolBadge = useSchoolBadge(athleteIdentity && schoolVisible ? player.id : null);
   const [highlightViews, setHighlightViews] = useState<number | null>(null);
   useEffect(() => {
     let alive = true;
@@ -248,21 +262,24 @@ export function AthleteProfileView({
   const vaultClips = useMemo(() => clips.filter((clip) => isClipVaultOnly(clip)), [clips]);
   const sealed = isVaultSealed(vaultLocked);
   const vaultUnlocked = manageVault || subscribed || !sealed;
+  const schoolLabel = schoolVisible ? teamName?.trim() || player.school_name : '';
   const tabs = PROFILE_TABS.filter((item) => {
     if (item.id === 'vault') return live.buttons.vault && live.profile.showVault;
-    if (item.id === 'stats') return live.profile.showStats;
+    if (item.id === 'stats') return athleteIdentity && live.profile.showStats;
+    if (item.id === 'goals') return athleteIdentity && (live.layouts.wishlist || live.buttons.malo || ownCredentials);
+    if (item.id === 'team') return athleteIdentity && rosterPlayers.some(row => row.school_name?.trim() === schoolLabel?.trim());
+    if (item.id === 'manage') return ownerTools;
     return true;
   });
-  const schoolLabel = teamName?.trim() || player.school_name;
 
   useEffect(() => {
     if (tab === 'vault' && (!live.buttons.vault || !live.profile.showVault)) setTab('highlights');
-    if (tab === 'stats' && !live.profile.showStats) setTab('highlights');
-  }, [live.buttons.vault, live.profile.showStats, live.profile.showVault, tab]);
+    if (!tabs.some(item => item.id === tab)) setTab('highlights');
+  }, [live.buttons.vault, live.profile.showStats, live.profile.showVault, live.layouts.wishlist, live.buttons.malo, athleteIdentity, ownerTools, rosterPlayers, schoolLabel, tab]);
 
   useEffect(() => {
-    if (live.profile.statsFirst && live.profile.showStats) setTab('stats');
-  }, [live.profile.showStats, live.profile.statsFirst]);
+    if (athleteIdentity && live.profile.statsFirst && live.profile.showStats) setTab('stats');
+  }, [athleteIdentity, live.profile.showStats, live.profile.statsFirst]);
 
   useEffect(() => {
     let cancelled = false;
@@ -315,10 +332,10 @@ export function AthleteProfileView({
       auraPoints={auraPoints}
       subscriberCrest={subscriberCrest}
       bio={bio}
-      teamName={teamName}
-      mascot={mascot}
-      divisionBadge={divisionBadge}
-      gamesPlayed={stats.career.gamesPlayed}
+      teamName={schoolVisible ? teamName : undefined}
+      mascot={schoolVisible ? mascot : undefined}
+      divisionBadge={schoolVisible ? divisionBadge : undefined}
+      gamesPlayed={athleteIdentity ? sportStats.career.gamesPlayed ?? undefined : undefined}
       highlightReels={publicClips.length}
       reelsUploaded={clips.length}
       totalTipsReceived={totalTipsReceived}
@@ -327,12 +344,13 @@ export function AthleteProfileView({
       seasonPoints={auraPoints}
       sekiCount={sekiCount}
       highlightViews={highlightViews ?? player.view_count ?? 0}
-      careerPreview={stats.topThree}
+      careerPreview={athleteIdentity ? sportStats.topThree : undefined}
+      sport={athleteIdentity ? sportStats.career.sport : undefined}
       wishlistFulfilled={wishlistFulfilled}
       verificationStatus={verificationStatus}
       schoolClaimed={schoolClaimed}
       onClaimVerification={onClaimVerification}
-      schoolBadge={schoolBadge}
+      schoolBadge={schoolVisible ? schoolBadge : null}
     />
   ) : null;
 
@@ -348,7 +366,7 @@ export function AthleteProfileView({
           contentStyle={[styles.primaryAction, tipping && styles.disabled]}
         >
           <Text style={styles.primaryActionLabel}>
-            Donate ${maloAmount} to {name}
+            Donate ${maloAmount}
           </Text>
         </AnimatedButton>
       ) : null}
@@ -357,7 +375,7 @@ export function AthleteProfileView({
           accessibilityLabel={
             subscribed
               ? 'Subscribed to exclusive feed'
-              : `Subscribe for ${live.catalog.exclusiveDollars.toFixed(2)} a month`
+              : `Subscribe for ${live.catalog.exclusiveDollars.toFixed(2)} dollars, one-time exclusive access`
           }
           disabled={subscribed || vaultBusy}
           onPress={onSubscribe}
@@ -365,7 +383,7 @@ export function AthleteProfileView({
           contentStyle={[styles.secondaryAction, subscribed && styles.secondaryActionOn]}
         >
           <Text style={[styles.secondaryActionLabel, subscribed && styles.secondaryActionLabelOn]}>
-            {subscribed ? 'Subscribed' : `Subscribe ($${live.catalog.exclusiveDollars.toFixed(2)}/mo)`}
+            {subscribed ? 'Subscribed' : `Subscribe $${live.catalog.exclusiveDollars.toFixed(2)}`}
           </Text>
         </AnimatedButton>
       ) : null}
@@ -394,9 +412,14 @@ export function AthleteProfileView({
       ) : null}
       {leading}
       <ProfileHeroAvatar
+        compact
         name={name}
         school={schoolLabel}
         jersey={jersey}
+        athlete={athleteIdentity}
+        sport={athleteIdentity ? selectedSport : undefined}
+        position={athleteIdentity ? (ownCredentials ? profile?.athlete_position?.trim() || player.position : player.position) : undefined}
+        classYear={ownCredentials ? profile?.athlete_class_year : undefined}
         auraPoints={auraPoints}
         subscriberCrest={subscriberCrest}
         showFlipControl={live.profile.showCard}
@@ -407,77 +430,65 @@ export function AthleteProfileView({
         avatarUrl={avatarUrl}
         canEditAvatar={editAvatar}
         onAvatarUploaded={onAvatarUploaded}
-        schoolBadge={schoolBadge}
+        schoolBadge={schoolVisible ? schoolBadge : null}
       />
-      {aboutBio?.trim() || nonEmptySocialLinks(socialLinks).length > 0 ? (
-        <View style={styles.about}>
-          {aboutBio?.trim() ? <Text style={styles.aboutBio}>{aboutBio.trim()}</Text> : null}
-          {nonEmptySocialLinks(socialLinks).length > 0 ? (
-            <View style={styles.socialRow}>
-              {nonEmptySocialLinks(socialLinks).map(([platform, value]) => (
-                <Pressable
-                  key={platform}
-                  accessibilityRole="link"
-                  accessibilityLabel={`Open ${socialLinkLabel(platform)}`}
-                  haptic="selection"
-                  onPress={() => void WebBrowser.openBrowserAsync(resolveSocialLinkUrl(platform, value))}
-                  style={styles.socialChip}
-                >
-                  <Text style={styles.socialChipLabel}>{socialLinkLabel(platform)}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-        </View>
-      ) : null}
       {live.profile.showCrew ? <CrewStatsBar player={player} /> : null}
-      {!live.profile.actionsOnTop ? fanSupport : null}
-      {actions}
-      <AnimatedButton
-        accessibilityLabel={SHARE_FUND_CTA}
-        haptic="selection"
-        onPress={() => setShareOpen(true)}
-        contentStyle={styles.shareHit}
-      >
-        <Text style={styles.shareLabel}>{SHARE_FUND_CTA}</Text>
-      </AnimatedButton>
-      {trailing}
-      {manageVault && live.buttons.vault ? (
-        <VaultLockCard locked={sealed} busy={vaultLockBusy} onToggle={(next) => onVaultLockChange?.(next)} />
-      ) : null}
-
-      {live.buttons.malo || ownSheet ? (
-        <RallyCard
-          player={player}
-          athleteName={name}
-          username={username}
-          manage={ownSheet}
-          tipEntry={tipEntry}
-          clips={rallyClips}
-          onOpenClip={(reelId) => {
-            setTab('highlights');
-            setOpenClipId(reelId);
-          }}
-        />
-      ) : null}
-      {ownSheet ? <AccountTagInbox /> : null}
-      {ownSheet ? <ReceivedMaloPanel playerId={player.id} /> : null}
-      <FilterPills
-        items={tabs}
-        value={tab}
-        onChange={(id) => setTab(id ?? 'highlights')}
-        accessibilityLabel="Athlete profile sections"
-        accent={FOCAL.goldInk}
-        mist={FOCAL.mistGold}
-      />
+      <View style={styles.quickActions}>
+        {fanSupport}
+        <AnimatedButton accessibilityLabel={SHARE_FUND_CTA} haptic="selection"
+          onPress={() => setShareOpen(true)} contentStyle={styles.shareHit}>
+          <Ionicons name="share-outline" size={17} color={FOCAL.jadeInk} />
+          <Text style={styles.shareLabel}>Share</Text>
+        </AnimatedButton>
+      </View>
+      <View accessibilityRole="tablist" accessibilityLabel="Athlete profile sections" style={styles.sectionNav}>
+        {tabs.map(item => <AnimatedButton key={item.id} accessibilityRole="tab"
+          accessibilityLabel={item.label} accessibilityState={{ selected: tab === item.id }}
+          haptic="selection" onPress={() => setTab(item.id)} style={styles.sectionItem}
+          contentStyle={[styles.sectionButton, tab === item.id && styles.sectionButtonOn]}>
+          <Ionicons name={({ highlights: 'flash-outline', stats: 'stats-chart-outline', goals: 'gift-outline',
+            vault: 'lock-closed-outline', team: 'people-outline', manage: 'settings-outline' } as const)[item.id]}
+            size={16} color={tab === item.id ? colors.onAccent : FOCAL.jadeInk} />
+          <Text style={[styles.sectionLabel, tab === item.id && styles.sectionLabelOn]}>
+            {item.id === 'highlights' ? 'Highlights' : item.id === 'stats' ? 'Stats' : item.id === 'vault' ? 'Vault' : item.label}
+          </Text>
+        </AnimatedButton>)}
+      </View>
 
       {tab === 'highlights' ? (
         <View style={styles.highlightsPane}>
+          {aboutBio?.trim() || nonEmptySocialLinks(socialLinks).length > 0 ? (
+            <View style={styles.about}>
+              {aboutBio?.trim() ? <Text style={styles.aboutBio}>{aboutBio.trim()}</Text> : null}
+              {nonEmptySocialLinks(socialLinks).length > 0 ? (
+                <View style={styles.socialRow}>
+                  {nonEmptySocialLinks(socialLinks).map(([platform, value]) => (
+                    <Pressable
+                      key={platform}
+                      accessibilityRole="link"
+                      accessibilityLabel={`Open ${socialLinkLabel(platform)}`}
+                      haptic="selection"
+                      onPress={() => void WebBrowser.openBrowserAsync(resolveSocialLinkUrl(platform, value))}
+                      style={styles.socialChip}
+                    >
+                      <Text style={styles.socialChipLabel}>{socialLinkLabel(platform)}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+
           {publicClips.length === 0 ? (
             <Text style={styles.empty}>No Highlights ⚡ tagged yet.</Text>
           ) : (
             grid(publicClips)
           )}
+
+        </View>
+      ) : null}
+
+      {tab === 'team' ? <View style={styles.statsPane}>
           <TeamRosterStrip
             schoolName={schoolLabel}
             players={rosterPlayers}
@@ -485,19 +496,40 @@ export function AthleteProfileView({
             showClaimBadges={showClaimBadges}
             onOpenPlayer={(id) => onOpenAthlete?.(id)}
           />
-        </View>
-      ) : null}
+      </View> : null}
 
       {tab === 'stats' ? (
         <View style={styles.statsPane}>
-          <AthleteStatsTab stats={stats} loading={statsLoading} config={configFor(stats.career.sport)} />
-          <LockerRoomWishlist
-            player={player}
-            athleteName={name}
-            username={username}
-            tipEntry={tipEntry}
-            onEquipped={() => setWishlistFulfilled(true)}
-          />
+          <AthleteStatsTab stats={sportStats} loading={statsLoading} config={configFor(selectedSport)} />
+        </View>
+      ) : null}
+
+      {tab === 'goals' ? (
+        <View style={styles.statsPane}>
+          <View style={styles.sectionHeading}>
+            <Ionicons name="gift-outline" size={22} color={FOCAL.goldInk} />
+            <View style={styles.sectionCopy}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>Sports goals</Text>
+              <Text style={styles.sectionHint}>Wishlist and donations for sports costs.</Text>
+            </View>
+          </View>
+          {live.layouts.wishlist ? <LockerRoomWishlist player={player} athleteName={name}
+            username={username} tipEntry={tipEntry} onEquipped={() => setWishlistFulfilled(true)} /> : null}
+          {live.buttons.malo || ownCredentials ? <RallyCard player={player} athleteName={name}
+            username={username} manage={ownCredentials} tipEntry={tipEntry} clips={rallyClips}
+            onOpenClip={(reelId) => { setTab('highlights'); setOpenClipId(reelId); }} /> : null}
+        </View>
+      ) : null}
+
+      {tab === 'manage' && ownerTools ? (
+        <View style={styles.statsPane}>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>Your locker room</Text>
+          {actions}
+          {trailing}
+          {manageVault && live.buttons.vault ? <VaultLockCard locked={sealed} busy={vaultLockBusy}
+            onToggle={(next) => onVaultLockChange?.(next)} /> : null}
+          {ownCredentials ? <AccountTagInbox /> : null}
+          {ownCredentials ? <ReceivedMaloPanel playerId={player.id} /> : null}
         </View>
       ) : null}
 
@@ -521,7 +553,7 @@ export function AthleteProfileView({
         </View>
       ) : null}
 
-      {live.profile.actionsOnTop ? fanSupport : null}
+
 
       <Modal
         transparent
@@ -577,7 +609,7 @@ function CrewStatsBar({ player }: { player: Player }) {
   const { live } = useAppRuntime();
   const { requireAuth } = useSoftWall();
   const crew = useCrew(player.id);
-  const isOwn = isOwnAthleteSheet(profile, player);
+  const isOwn = Boolean(profile?.player_id && profile.player_id === player.id);
 
   const onJoin = () => {
     requireAuth({
@@ -729,16 +761,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,115,60,0.18)',
   },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
+  sectionNav: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  sectionItem: { flexGrow: 1, minWidth: 78 },
+  sectionButton: { minHeight: 44, paddingHorizontal: 10, paddingVertical: 8, borderRadius: radii.md, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistJade },
+  sectionButtonOn: { backgroundColor: FOCAL.jadeInk },
+  sectionLabel: { color: FOCAL.jadeInk, fontSize: 12, fontWeight: '800' },
+  sectionLabelOn: { color: colors.onAccent },
+  quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'stretch' },
+  actionRow: { flex: 1, flexDirection: 'row', gap: 8, minWidth: 180 },
+  sectionHeading: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  sectionCopy: { flex: 1 },
+  sectionTitle: { fontSize: 21, fontWeight: '900', color: colors.text },
+  sectionHint: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
   actionFlex: {
     flex: 1,
   },
   primaryAction: {
     flex: 1,
-    minHeight: 52,
+    minHeight: 44,
     borderRadius: radii.md,
     backgroundColor: FOCAL.goldInk,
     alignItems: 'center',
@@ -747,12 +787,13 @@ const styles = StyleSheet.create({
   },
   primaryActionLabel: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
+    textAlign: 'center',
   },
   secondaryAction: {
     flex: 1,
-    minHeight: 52,
+    minHeight: 44,
     borderRadius: radii.md,
     backgroundColor: FOCAL.mistEmber,
     borderWidth: 1.5,
@@ -777,7 +818,9 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   shareHit: {
-    minHeight: 48,
+    flexDirection: 'row',
+    gap: 6,
+    minHeight: 44,
     borderRadius: radii.md,
     borderWidth: 1.5,
     borderColor: FOCAL.neonJade,
@@ -790,6 +833,7 @@ const styles = StyleSheet.create({
     color: FOCAL.jadeInk,
     fontSize: 15,
     fontWeight: '800',
+    textAlign: 'center',
   },
   empty: {
     color: colors.textMuted,
@@ -839,7 +883,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   joinCrew: {
-    minHeight: 36,
+    minHeight: 44,
     borderRadius: radii.md,
     backgroundColor: FOCAL.electricGold,
     alignItems: 'center',
@@ -868,7 +912,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   teammatesHitCompact: {
-    minHeight: 36,
+    minHeight: 44,
   },
   teammatesGlow: {
     ...StyleSheet.absoluteFill,

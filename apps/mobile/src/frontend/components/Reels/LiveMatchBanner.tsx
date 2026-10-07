@@ -1,3 +1,4 @@
+/** Highlight scoreboard uses recorded game identity and state; the parent retains the live subscription. */
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -15,7 +16,7 @@ import Animated, {
 
 import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
 import { colors, palette, radii } from '@/constants/theme';
-import { displayValue, getQuarterCode } from '@/data/players';
+import { gameScore, gameScoreboardStatus, gameTeamName } from '@/components/Local/gamePresentation';
 import { useLiveGame } from '@/hooks/useLiveGame';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { localGameHref } from '@/lib/navigation';
@@ -52,17 +53,17 @@ export function LiveMatchBanner({
 }: LiveMatchBannerProps) {
   const router = useRouter();
   const hooked = useLiveGame(gameId, { enabled: !liveFromParent });
-  const {
-    game,
-    homeTeam,
-    awayTeam,
-    homeScore,
-    awayScore,
-    clockLabel,
-    isLive,
-    lastPlay,
-    clearLastPlay,
-  } = liveFromParent ?? hooked;
+  const { game, clockLabel, lastPlay, clearLastPlay } = liveFromParent ?? hooked;
+  const homeTeam = gameTeamName(game?.home_team, game?.home_school);
+  const awayTeam = gameTeamName(game?.away_team, game?.away_school);
+  const homeScore = game?.home_score ?? null;
+  const awayScore = game?.away_score ?? null;
+  // Use local ticks only for clocks the live hook can parse; preserve longer recorded clocks.
+  const status = game ? gameScoreboardStatus({
+    ...game,
+    clock: /^\d{1,2}:[0-5]\d$/.test(game.clock?.trim() ?? '') ? clockLabel : game.clock,
+  }) : null;
+  const isLive = status?.isLive === true;
   const { configFor } = useSportConfigs();
   const insets = useSafeAreaInsets();
   const [isDismissed, setIsDismissed] = useState(false);
@@ -82,8 +83,8 @@ export function LiveMatchBanner({
       setIsDismissed(id ? dismissedLiveGames.has(id) : false);
       return;
     }
-    const homeUp = prevHome.current !== null && homeScore > prevHome.current;
-    const awayUp = prevAway.current !== null && awayScore > prevAway.current;
+    const homeUp = prevHome.current !== null && homeScore !== null && homeScore > prevHome.current;
+    const awayUp = prevAway.current !== null && awayScore !== null && awayScore > prevAway.current;
     prevHome.current = homeScore;
     prevAway.current = awayScore;
     if (!homeUp && !awayUp) return;
@@ -123,10 +124,13 @@ export function LiveMatchBanner({
     transform: [{ scale: 0.85 + (1 - pulse.value) * 0.35 }],
   }));
 
-  if (!game) return null;
+  if (!game || !status) return null;
   if (isDismissed && !(playToasts && lastPlay)) return null;
 
-  const quarterLabel = getQuarterCode(game);
+  const homeDisplay = status.isScheduled ? '—' : gameScore(homeScore);
+  const awayDisplay = status.isScheduled ? '—' : gameScore(awayScore);
+  const spokenScore = (name: string, value: string) => `${name} ${value === '—' ? 'score not reported' : value}`;
+  const scoreboardLabel = `${status.label}${status.detail ? `, ${status.detail}` : ''}. ${spokenScore(homeTeam, homeDisplay)} against ${spokenScore(awayTeam, awayDisplay)}. Open game and roster`;
   const callout = lastPlay
     ? configFor(game.sport).callouts.find((item) => item.eventType === lastPlay.eventType)
     : null;
@@ -143,7 +147,8 @@ export function LiveMatchBanner({
     >
       {isDismissed ? null : (
         <SwipeableBannerWrapper
-          accessibilityLabel="Dismiss live scoreboard"
+          accessibilityLabel="Dismiss scoreboard"
+          pressAccessibilityLabel={scoreboardLabel}
           onPress={() => {
             if (!game.id) return;
             telemetry.trackFeature('live_banner', 'home');
@@ -154,22 +159,24 @@ export function LiveMatchBanner({
             setIsDismissed(true);
           }}
         >
-          <View style={styles.badge} accessibilityRole="summary" accessibilityLabel="Live match">
+          <View style={styles.badge}>
             <View style={styles.metaRow}>
               <View style={styles.liveChip}>
                 <Animated.View style={[styles.pulse, !isLive && styles.pulseIdle, pulseStyle]} />
-                <Text style={styles.liveLabel}>{isLive ? 'LIVE' : quarterLabel}</Text>
+                <Text style={[styles.liveLabel, !isLive && styles.idleLabel]}>{status.label}</Text>
               </View>
-              <Text style={styles.quarter}>
-                {quarterLabel} · {clockLabel}
-              </Text>
+              <Text style={styles.quarter}>{status.detail || game.sport?.trim() || 'Game day'}</Text>
             </View>
-            <Text style={styles.matchup} numberOfLines={1}>
-              {displayValue(homeTeam)} vs {displayValue(awayTeam)}
-            </Text>
-            <Animated.Text style={[styles.scoreline, scoreStyle]} numberOfLines={1}>
-              {displayValue(homeTeam)} {homeScore} - {awayScore} {displayValue(awayTeam)}
-            </Animated.Text>
+            <Animated.View style={[styles.scoreboard, scoreStyle]}>
+              <View style={styles.teamRow}>
+                <Text style={styles.matchup} numberOfLines={2}>{homeTeam}</Text>
+                <Text style={styles.scoreline}>{homeDisplay}</Text>
+              </View>
+              <View style={styles.teamRow}>
+                <Text style={styles.matchup} numberOfLines={2}>{awayTeam}</Text>
+                <Text style={styles.scoreline}>{awayDisplay}</Text>
+              </View>
+            </Animated.View>
           </View>
         </SwipeableBannerWrapper>
       )}
@@ -225,6 +232,7 @@ const styles = StyleSheet.create({
   },
   badge: {
     alignSelf: 'stretch',
+    maxWidth: '100%',
     backgroundColor: colors.videoScrim,
     borderRadius: radii.lg,
     borderWidth: 1,
@@ -239,6 +247,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
+    flexWrap: 'wrap',
   },
   liveChip: {
     flexDirection: 'row',
@@ -260,20 +269,29 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1,
   },
+  idleLabel: { color: colors.onVideoMuted },
+  scoreboard: { gap: 2 },
+  teamRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   quarter: {
+    flexShrink: 1,
     color: colors.onVideoMuted,
     fontSize: 11,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
   },
   matchup: {
-    color: colors.onVideoMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    flex: 1,
+    minWidth: 0,
+    color: colors.onVideo,
+    fontSize: 14,
+    fontWeight: '800',
   },
   scoreline: {
-    color: colors.primary,
-    fontSize: 16,
+    flexShrink: 1,
+    maxWidth: '45%',
+    color: colors.onVideo,
+    fontSize: 24,
+    fontVariant: ['tabular-nums'],
     fontWeight: '800',
     letterSpacing: -0.2,
   },

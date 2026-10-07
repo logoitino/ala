@@ -1,5 +1,6 @@
+/** Public profiles read sport identity from the privacy-filtered view, then share it with Stats and Aura. */
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
@@ -66,6 +67,10 @@ export default function UserAthleteProfileScreen() {
   const fromQr = (Array.isArray(entry) ? entry[0] : entry) === 'qr';
   const rawId = Array.isArray(id) ? id[0] : id;
   const playerId = rawId && isAuraUuid(rawId) ? rawId : undefined;
+  const currentId = useRef(playerId);
+  currentId.current = playerId;
+  const loadRequest = useRef(0);
+  const [loadedId, setLoadedId] = useState<string | undefined>();
   const [player, setPlayer] = useState<Player | null>(null);
   const [reels, setReels] = useState<ReelWithPlayer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +79,7 @@ export default function UserAthleteProfileScreen() {
   const [schoolClaimed, setSchoolClaimed] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [publicProfile, setPublicProfile] = useState<ProfilePublic | null>(null);
-  const { stats, loading: statsLoading } = useAthleteStats(playerId, player);
+  const { stats, loading: statsLoading } = useAthleteStats(playerId, player, publicProfile?.player_id === playerId ? publicProfile?.athlete_sport : undefined);
   const { subscribed, grant } = useAthleteSubscription(playerId);
   const { startCheckout, busy } = useTipCheckout();
   const { live } = useAppRuntime();
@@ -85,56 +90,56 @@ export default function UserAthleteProfileScreen() {
   const { stats: filmerStats } = useFilmerStats(publicProfile?.id);
 
   const load = useCallback(async () => {
+    const request = ++loadRequest.current;
+    const current = () => loadRequest.current === request && currentId.current === playerId;
+    setLoading(true);
+    setError(null);
+    setPublicProfile(null);
     if (!playerId) {
-      setError(
-        rawId
-          ? 'This Spotlight highlight is not linked to an athlete profile yet. Watch the clip from Spotlight instead.'
-          : 'Missing athlete id.',
-      );
+      setError(rawId ? 'This Spotlight highlight is not linked to an athlete profile yet. Watch the clip from Spotlight instead.' : 'Missing athlete id.');
+      setLoadedId(playerId);
       setLoading(false);
       return;
     }
-
-    setError(null);
-
     if (!isSupabaseConfigured) {
       console.warn('[UserAthleteProfileScreen]', CONFIG_ERROR);
       setError(FRIENDLY_CONFIG_ERROR);
+      setLoadedId(playerId);
       setLoading(false);
       return;
     }
-
-    const { data, error: queryError } = await supabase.from('players').select('*').eq('id', playerId).single();
-    if (queryError || !data) {
-      setPlayer(null);
-      setReels([]);
-      setError(queryError?.message ?? 'Athlete not found.');
-      setLoading(false);
-      return;
+    try {
+      const { data, error: queryError } = await supabase.from('players').select('*').eq('id', playerId).single();
+      if (!current()) return;
+      if (queryError || !data) {
+        setPlayer(null); setReels([]);
+        setError(queryError?.message ?? 'Athlete not found.');
+        setLoadedId(playerId); setLoading(false);
+        return;
+      }
+      const nextPlayer = await hydratePlayerHype(data as Player);
+      const [tagged, verification, publicResult] = await Promise.all([
+        fetchReelsForPlayer(playerId), fetchPlayerVerification(playerId, nextPlayer.name),
+        supabase.from('profiles_public').select('*').eq('player_id', playerId).maybeSingle(),
+      ]);
+      // Commit the whole sheet together: no old profile or late result can replace the active athlete.
+      if (!current()) return;
+      setPlayer(nextPlayer);
+      setReels(mergeUploadedReel(tagged, uploadSheet?.lastUploaded, playerId, nextPlayer));
+      setVerificationStatus(verification.status); setSchoolClaimed(verification.schoolClaimed);
+      setAvatarUrl(verification.avatarUrl);
+      setPublicProfile((publicResult.data as ProfilePublic | null) ?? null);
+      setLoadedId(playerId); setLoading(false);
+    } catch {
+      if (!current()) return;
+      setError('Please try again.'); setLoadedId(playerId); setLoading(false);
     }
-
-    const nextPlayer = await hydratePlayerHype(data as Player);
-    setPlayer(nextPlayer);
-    const tagged = await fetchReelsForPlayer(playerId);
-    setReels(mergeUploadedReel(tagged, uploadSheet?.lastUploaded, playerId, nextPlayer));
-    const verification = await fetchPlayerVerification(playerId, nextPlayer.name);
-    setVerificationStatus(verification.status);
-    setSchoolClaimed(verification.schoolClaimed);
-    setAvatarUrl(verification.avatarUrl);
-    const { data: publicRow } = await supabase
-      .from('profiles_public')
-      .select('*')
-      .eq('player_id', playerId)
-      .maybeSingle();
-    setPublicProfile((publicRow as ProfilePublic | null) ?? null);
-    setLoading(false);
   }, [playerId, rawId, uploadSheet?.lastUploaded]);
 
-  useFocusEffect(
-    useCallback(() => {
-      void load();
-    }, [load]),
-  );
+  useFocusEffect(useCallback(() => {
+    void load();
+    return () => { loadRequest.current += 1; };
+  }, [load]));
 
   useEffect(() => {
     return subscribePlayerAura((auraId, auraPoints) => {
@@ -220,7 +225,7 @@ export default function UserAthleteProfileScreen() {
     );
   };
 
-  if (loading) {
+  if (loading || loadedId !== playerId) {
     return (
       <TabScreen>
         <View style={styles.missing}>
@@ -260,7 +265,9 @@ export default function UserAthleteProfileScreen() {
       <ScrollFxScrollView contentContainerStyle={styles.content}>
         <ScrollFxParallax factor={0} fadeOver={0}>
         <AthleteProfileView
+          key={player.id}
           player={player}
+          schoolVisible={schoolVisible}
           clips={clips}
           stats={stats}
           statsLoading={statsLoading}

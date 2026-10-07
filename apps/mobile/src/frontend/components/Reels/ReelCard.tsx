@@ -85,6 +85,8 @@ export type ReelCardProps = {
   player: Player | null;
   active: boolean;
   height: number;
+  /** Measured feed header clearance; oversized text stays scrollable below its scoreboard. */
+  overlayInsetTop?: number;
   tipping: boolean;
   sekiPlay?: boolean;
   /** When true, play if `active` even if the host route is not focused (profile / athlete modal). */
@@ -134,6 +136,7 @@ function ReelCardImpl({
   player,
   active,
   height,
+  overlayInsetTop = 0,
   tipping,
   sekiPlay: _sekiPlay = false,
   playbackActive,
@@ -768,10 +771,12 @@ function ReelCardImpl({
         {loopFlash ? <Text style={styles.loopFlash}>Full replay</Text> : null}
       </View>
 
-      <View pointerEvents="box-none" style={styles.actionsLayer}>
+      <View pointerEvents="box-none" style={[styles.actionsLayer, { top: overlayInsetTop }]}>
         <ReelActionOverlay
           athleteName={playerName}
           schoolName={schoolName}
+          jerseyNumber={player?.jersey_number}
+          position={player?.position}
           caption={clip.tag}
           withAccounts={withAccounts}
           filmedBy={clip.filmedBy}
@@ -1129,6 +1134,7 @@ function sameReelCardProps(prev: ReelCardProps, next: ReelCardProps): boolean {
   if (
     prev.active !== next.active ||
     prev.height !== next.height ||
+    prev.overlayInsetTop !== next.overlayInsetTop ||
     prev.tipping !== next.tipping ||
     prev.playbackActive !== next.playbackActive ||
     prev.userTipped !== next.userTipped ||

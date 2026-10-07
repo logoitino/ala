@@ -1,3 +1,4 @@
+/** Clip identity keeps real roster context, accessible profile access and existing hype behavior. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { ReelActionOverlay } from '@/components/Reels/ReelActionOverlay';
@@ -61,5 +62,14 @@ describe('ReelActionOverlay hype chips', () => {
   it('shows who filmed the clip when a fan posted it', async () => {
     await render(<ReelActionOverlay athleteName="Sione" filmedBy="hawksmom" auraColor="#00E676" auraLabel="Rising" hype={hype} />);
     expect(screen.getByText('🎥 Filmed by hawksmom')).toBeTruthy();
+  });
+  it('includes jersey zero and real position in profile context without inventing missing fields', async () => {
+    const onOpenAthlete = jest.fn();
+    const view = await render(<ReelActionOverlay athleteName="Sione Tui" jerseyNumber={0} position="Point guard" auraColor="#00E676" auraLabel="Rising" hype={hype} canOpenAthlete onOpenAthlete={onOpenAthlete} />);
+    expect(screen.getByText('#0 · Point guard')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Open Sione Tui profile, Rising, #0 · Point guard'));
+    expect(onOpenAthlete).toHaveBeenCalledTimes(1);
+    await view.rerender(<ReelActionOverlay athleteName="Sione Tui" auraColor="#00E676" auraLabel="Rising" hype={hype} />);
+    expect(screen.queryByText('#0 · Point guard')).toBeNull();
   });
 });
