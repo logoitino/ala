@@ -28,6 +28,8 @@ Read with [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) (the issue map — COP
 
 ## 2. Who we share data with
 
+**Public sport identity (2026-10-07, prepared):** `profiles_public.athlete_sport` adds the selected sport only for linked athlete accounts, so public hero/Stats/Aura agree. Existing bio/social/stat visibility rules remain; no private numeric stats or financial fields are added. Migration `20261007211500_public_profile_sport.sql` is local and unapplied.
+
 - **Stripe** — email (for Connect account contact), a Supabase-generated user id in metadata, and payment amounts. No name, DOB, or tax id is sent by this app's code (`createStripeAccount.ts`, `createPaymentIntent.ts`, `payouts.ts`). Stripe Connect Express accounts are built as **US individual** accounts — `LEGAL_BRIEFING.md` §5 already flags this as a likely mismatch for a 16-year-old payee; `COMPANY_PHASES.md` §B2 has the parent-as-payee redesign this needs before minors connect their own account.
 - **Supabase Storage** — raw video/image bytes, uploaded verbatim with no metadata stripping (§3).
 - No other third party receives personal data today (no analytics SDK, ad network, or data broker found in the dependency tree during this audit).

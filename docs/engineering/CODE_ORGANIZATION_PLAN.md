@@ -20,9 +20,28 @@ production database is only safe once the schema can be rebuilt from migrations.
 | Phase | Goal | Detailed steps | Status |
 | --- | --- | --- | --- |
 | **R1. Tidy and make it readable** | An outsider can clone, run, find things and review a PR. No behaviour change. | Step 0, Step 4, repo/docs layout below | **Mostly done 2026-10-07** — merge/push and private docs pending |
-| **R2. Rebuildable database** | The schema is rebuilt from `supabase/migrations/` alone; types and `schema.sql` are generated. | Step 1, Step 2 | Started (11 migrations; baseline not dumped) |
+| **R2. Rebuildable database** | The schema is rebuilt from `supabase/migrations/` alone; types and `schema.sql` are generated. | Step 1, Step 2 | Incremental migrations exist; clean rebuild not verified and baseline not dumped |
 | **R3. Production environment** | Dev, staging and production are separate projects, builds and keys; changes flow dev → staging → prod through CI. | "R3" section below | Not started; gated on R2 and the Wave 1 owner decisions |
 | **R4. Easier to change** | One backend, enforced style, smaller files, real test coverage, monitoring. | Step 3, "R4" section below | Not started (route data debt already falling: 17 → 12 calls) |
+
+### Current verification and next actions (2026-10-07)
+
+- Expo web export passed locally with `EXPO_NO_DOTENV=1`: **52 static routes and 3 API routes**.
+  This verifies bundling without loading local env files; it does not verify hosted API secrets,
+  authenticated data, native modules or test payments.
+- Separate iOS and Android exports with `--max-workers 1` passed, including Hermes bytecode
+  (8.2 MB / 8.4 MB). A combined export initially received SIGKILL. These exports verify native
+  JavaScript/assets compilation, not signed binaries, native linking or device interaction.
+- Next optimized production build passed locally for all routes. No hosted deployment or
+  real-account browser acceptance was performed.
+- The final `pnpm check` passed: both app typechecks, 50 suites / 242 tests and all guards,
+  including `docs:links` and `security:client-keys`. Both new guards also rejected intentional
+  invalid fixtures. Native interaction and hosted database replay remain pending.
+- R1 next: review the local changes, then the owner selects the private documentation home and
+  approves branch integration/protection. R2 next: prepare a Supabase baseline/replay plan from
+  recorded staging state and obtain authorized database access before capturing it.
+- R3 waits on R2 and Wave 1 decisions. R4 file splits and tests may proceed alongside R2;
+  retiring API routes waits on verified Edge Function deployments.
 
 ### R1 checklist — tidy and make it readable
 
@@ -31,8 +50,8 @@ production database is only safe once the schema can be rebuilt from migrations.
 - [x] Archive clutter without deleting it: `my-app/` → `archive/my-app/` (see `archive/README.md`);
       `.tmp/` and `.smoke/` untracked and ignored (files stay on disk).
 - [x] Docs into folders: entry points (`README`, `STATE`, `ONBOARDING`, `GLOSSARY`) at `docs/`;
-      `engineering/` (with `design/`), `product/`, `legal/`, `company/`, `agents/`. Every link and repo
-      path rewritten; 0 broken links before and after. Root `TROUBLESHOOTING.md` moved in;
+      `engineering/` (with `design/`), `product/`, `legal/`, `company/`, `agents/`. Relative file links and repo
+      paths rewritten; the current tracked Markdown relative file-link audit found 0 broken links. Root `TROUBLESHOOTING.md` moved in;
       root `DOCUMENTATION.md` became `docs/engineering/SYSTEM_OVERVIEW.md`.
 - [x] Front door for humans: root `README.md` rewritten (repo map, run, check, how we work),
       `docs/README.md` index, `docs/GLOSSARY.md` (code names ↔ product words, verified against the
@@ -59,6 +78,11 @@ production database is only safe once the schema can be rebuilt from migrations.
 - [ ] No more SQL Editor pastes: migrations apply with `supabase db push` from CI.
 
 ### R3 — production environment
+
+The table describes the **target**, not the current deployment. Development and staging
+projects exist, but `app.json` is still static, automatic database deployment is not configured,
+production is not created and side-by-side installation is not verified. All R3 checkboxes
+below remain open.
 
 | | Development | Staging | Production |
 | --- | --- | --- | --- |
@@ -97,10 +121,11 @@ production database is only safe once the schema can be rebuilt from migrations.
 
 ---
 
-The sections below are the detailed how-to for each step, written 2026-09-29. Counts in "Why"
-are from that date.
+The sections below retain the 2026-09-29 problem inventory and update the implementation
+steps where needed. Counts and uncommitted-work claims in "Why" are **historical**, not the
+current working tree; use STATE §0/§4 and the work queue for current completion evidence.
 
-## Why
+## Why — historical inventory, 2026-09-29
 
 - **Nothing is committed since 2026-09-27.** There are 549 changed files. About 500 are mode-bit
   flips from a NAS copy (STATE §3), and they bury the roughly 50 real changes. No reviewer can
@@ -136,31 +161,41 @@ The target is the standard Supabase layout:
 supabase/
   config.toml
   migrations/
-    20260929000000_baseline.sql        ← dumped from the live database, not written by hand
-    20260930120000_verification_ladder.sql
+    <cutoff>_baseline.sql              ← authorized staging snapshot at an agreed cutoff
+    <later>_new_change.sql              ← only changes after that cutoff
     ...
   seed.sql                              ← demo data only, never real people
   functions/                            ← Edge Functions (already here)
 ```
 
-1. **Baseline from what is actually live.** `supabase db dump --schema public` against the live
-   project → `migrations/<timestamp>_baseline.sql`. Then `supabase migration repair <timestamp>
-   --status applied`, so the live database records that it already has the baseline. Read-only
-   plus one history row; the owner runs it or approves it.
-2. **Compare the baseline with `schema.sql`.** Every difference is either a file that was never
-   applied (apply it as a new migration) or dead SQL (delete it). This one pass settles STATE §5's
-   "not applied" rows.
+1. **Agree a baseline cutoff from staging.** First inventory recorded/applied migrations and
+   compare the authorized staging snapshot with the repo. A current snapshot already contains
+   older applied changes: do not put it before those files and replay them as new work. Prepare
+   a reviewed squash/reconciliation plan that preserves original applied files for reference,
+   includes only post-cutoff changes in the fresh replay path and reconciles hosted migration
+   history. Any migration-history repair is a hosted write requiring its own authorization.
+   `supabase db dump --schema public` is the public-schema input, not the whole Supabase setup:
+   explicitly capture/recreate Storage bucket configuration and policies, required auth roles,
+   extensions and grants, Realtime setup and synthetic seed prerequisites. No user records or
+   secrets belong in the committed baseline.
+2. **Compare the snapshot with `schema.sql` and migration history.** Classify every difference:
+   unapplied work, hosted-only changes, obsolete definitions, seed/configuration data or dump
+   representation differences. Resolve or document each item before selecting the baseline;
+   do not automatically delete or apply a difference. Record STATE §5's unapplied rows separately.
 3. **Every later change is a new timestamped migration file**, reviewed in a PR and applied with
    `supabase db push`, staging first and then production. Never edit an applied migration.
 4. **Retire the copies.** `schema.sql` becomes generated (`supabase db dump` into it, marked
    "generated — do not edit"). The 52 standalone files move to `supabase/legacy/` with a README,
    then get deleted once the baseline covers them.
-5. **CI:** start a throwaway local Postgres (`supabase db start` or a `postgres` service
-   container), apply every migration from zero, and fail if any breaks. This is the "no Postgres
-   on this Mac" gap from STATE §4 closed for good.
+5. **CI:** start an isolated local Supabase stack with `supabase start`, then run
+   `supabase db reset` to apply the agreed baseline, later migrations and synthetic seed from
+   zero. Exercise auth/role and private Storage policy checks as well as SQL replay. A plain
+   Postgres container alone lacks Supabase auth/storage schemas, roles and functions; it is
+   insufficient unless equivalent prerequisites are explicitly provisioned and verified.
 
-Moving hosts later is then `supabase db push` against the new project, or plain `psql -f` over
-the migrations folder in order. It is ordinary SQL, so there is no lock-in.
+Moving to another Supabase project later uses the verified baseline and later migrations.
+Another Postgres host needs an explicit auth, Storage, Realtime, role and extension adapter
+plan; running SQL files alone does not reproduce the full application backend.
 
 Caveat for this Mac: the Supabase CLI comes from npm or Homebrew. npmjs.org is blocked (STATE §3).
 Try Homebrew or the GitHub release binary; failing that, CI runs it.
@@ -178,8 +213,11 @@ stop.
 | `ReelCard.tsx` | `ReelVideo`, `ReelActionRail`, `ReelCaption`, `ReelCard` (composition + memo) |
 | `UploadVideoModal.tsx` | UX-01 splits draft/picker/upload controller from `UploadVideoComposer.tsx` (short steps, selection screens, fixed footer); compression stays in existing picker/service |
 | `lib/adminCatalog.ts` | one file per catalog under `lib/admin/catalogs/` |
-| `lib/admin.ts` | `lib/admin/{games,people,content,money}.ts` + an index re-export |
+| `lib/admin.ts` | `lib/admin/{games,people,content,money}.ts`; update consumers to direct imports, without a barrel or re-export shim |
 | `app/operator/[gameId].tsx` | move sections into `components/Operator/` |
+
+[CONVENTIONS.md](CONVENTIONS.md) §4 prohibits barrels/re-export shims in `lib/`, `hooks/`
+and `components/`. Update direct imports in the same split.
 
 Rule of thumb in CONVENTIONS.md: over ~500 lines, split by responsibility, and keep existing
 tests passing unchanged. They are the proof that nothing moved.
@@ -203,11 +241,11 @@ Where Supabase is baked in today, measured 2026-09-29:
 
 | Coupling | Size | Keep it movable by |
 | --- | --- | --- |
-| Plain Postgres tables, RLS, RPCs | most of `schema.sql` | Already portable — any Postgres runs it. Keep new changes as plain SQL files in `supabase/migrations/`. |
-| `auth.uid()` / `auth.role()` in SQL | 105 / 61 uses | Supabase-only functions. On another host, define `auth.uid()` / `auth.role()` shims that read the JWT; no call site changes. Don't add other Supabase-only SQL features without a note. |
+| Postgres tables, RLS, RPCs | most of `schema.sql` | Keep new changes in `supabase/migrations/`. Their auth roles/functions, extensions and Storage references need a verified adapter on another host. |
+| `auth.uid()` / `auth.role()` in SQL | 105 / 61 uses (historical) | On another host, verify JWT validation, request identity, grants and RLS semantics before providing compatible functions. Document additional Supabase-specific dependencies. |
 | `storage.*` policies | 25 lines | Storage buckets are Supabase-specific; client code goes through `services/MediaUploadService`, so a move touches that one file plus these policies. |
-| Realtime | 4 publication lines | Only `useLiveScores` / `useLiveGame` / `useGameEventBroadcast` subscribe. Keep it that way. |
-| Edge Functions | 3 (`create-payment-intent`, `create-stripe-account`, `stripe-webhook`) | Plain Deno HTTP handlers; portable to any serverless host. Keep Stripe logic in them, not in SQL. |
+| Realtime | 4 publication lines (historical) | Keep subscriptions in hooks/lib; inventory current channels, private Broadcast authorization and publication settings before moving providers. |
+| Edge Functions | 3 (`create-payment-intent`, `create-stripe-account`, `stripe-webhook`; historical count) | Deno HTTP handlers need runtime, secrets and authorization verified on another host. Keep Stripe logic in handlers, not SQL. |
 | Client calls | `lib/supabase.ts` imported in 65 files | **Rule:** screens and components call `lib/*` or `hooks/*`, never `supabase.from/rpc` directly. Then a move rewrites `lib/`, not the UI. **6 Expo route files still break this as of 2026-10-07:** `app/(tabs)/user/[id].tsx`, `app/(tabs)/profile.tsx`, `app/(athlete)/athlete/index.tsx`, `app/(parent)/parent/index.tsx`, `app/operator/scorer.tsx`, `app/operator/[gameId].tsx`; `components/Reels/UploadVideoModal.tsx` is the component exception. Sponsor, Booster and operator check-in moved into `lib/` on 2026-09-29. Guest match queries/Realtime moved to `lib/guestGames.ts` and guest player lookup to `lib/roster.ts` on 2026-10-07; the baseline fell from 17 to 12 direct calls. `pnpm app:data-boundaries` records exact route call counts and fails if debt grows. Move queries into `lib/` when those files are next touched and lower the baseline in the same change. |
 
 Habits that keep this true: every table and RPC documented in `docs/engineering/SCHEMA.md` (CI enforces);

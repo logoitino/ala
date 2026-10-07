@@ -225,3 +225,13 @@ work in ROADMAP Phase 1a unresolved; they make no settlement or reconciliation g
 The card-fee accessible label includes the exact optional fee and unchanged family share.
 Source/evidence map:
 [MENU_STYLE_MAP.md](../engineering/MENU_STYLE_MAP.md), [WORK_QUEUE.md](../agents/WORK_QUEUE.md) UX-02.
+
+
+### Profile navigation and copy follow-up — 2026-10-07
+
+Compact Profile actions keep the named athlete's Donate entry, direct Goals/wishlist access, and
+existing checkout disclosures/locks. Subscribe shows the unchanged price and announces one-time
+exclusive access, matching the existing non-renewing checkout. Share remains Share & Donate in
+accessibility wording. Aura points are labeled separately from career stats; donations are not tied
+to a play/stat. This records UI wording/navigation only; no fee, legal conclusion or payment-flow
+change, and native PaymentSheet verification remains pending.

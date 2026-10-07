@@ -34,6 +34,52 @@ perfect. "This felt slow" counts as a bug.
 Tell us: *How long before the first video played? Did anything stutter, go black, or jump? Did the
 hype taps feel satisfying? Would you keep scrolling?*
 
+## Profile sport and navigation follow-up (2026-10-07)
+
+1. Use Football, Volleyball, Basketball, and unknown/ambiguous position profiles. Hero, Stats and
+   Aura card must share sport. Volleyball uses Matches/Kills/Digs and its measurables; no football
+   yards or 40-yard tile. Recorded zeroes remain zero, absent totals are dashes. Change an owner's
+   chosen sport: old totals/logs from another sport must not be relabeled.
+2. Open Goals directly: wishlist is first, Rally follows; donation review and locks still operate.
+   Open Stats: no wishlist below it. Open Team, choose another athlete, and return with Back.
+3. Open your exact linked athlete: Manage has inbox/thank-yous/Vault tools. A same-name public
+   athlete retains Donate/Join but no owner tools. Community profile shows no borrowed stats.
+4. Rapidly switch profiles while requests are slow; old identity/totals must not flash or overwrite
+   the new athlete. Hide school: hero/Aura/Team must not restore school/crest from the roster.
+5. Check compact hero, wrapping navigation and 44-point controls at narrow/large native text;
+   readers announce selected tabs, Aura progress and subscription's one-time price. Check Aura
+   identity/stats flip, avatars, payment and native navigation on devices.
+6. After approved staging application of `20261007211500_public_profile_sport.sql`, confirm public
+   selected sport while private bio/social/stats remain hidden; older DBs must remain usable.
+   SQL is prepared locally; this is an unrun hosted acceptance check.
+
+## Sports identity — Local, Profile and Highlights (UX-03)
+
+Current local verification passes `pnpm check` (both typechecks, 55 suites / 261 tests and all guards).
+Browser Bridge checks and controlled 320/390-pixel fixtures are recorded in [AUDIT_REPORT.md](AUDIT_REPORT.md).
+CSS 200% text checks do not certify native font scaling; native checks below remain pending.
+Record build, device/viewport, text scale and reader
+used; use existing recorded test data or controlled fixtures for missing/scheduled/final states.
+
+1. Open Local with long team and school names. Each score must sit beside its own team, names
+   and venue must remain readable, and View game & roster must open the existing game route.
+   Letter tiles are neutral identifiers, not confirmed school crests.
+2. Check scheduled, live, halftime, final and unavailable data. Scheduled/final must override
+   stale running clocks; scheduled scores are dashes, missing live/final scores are unreported,
+   recorded zeroes stay zero, and untimed sports do not acquire a clock.
+3. Open your athlete profile and another athlete’s profile, including a different athlete with the same name. Check supplied sport/position/class
+   only; the other athlete must not inherit your sport/class. Open a community profile: it must
+   hide athlete credentials and a favorite athlete’s school-confirmation crest. Test jersey zero, a long name/position, Aura flip and avatar editing;
+   school crests must still require the existing confirmation.
+4. On Highlights, check actual jersey/position when present and no invented roster details when
+   absent. Tap the athlete name, react and open Donate. With a long name, school, caption, account
+   mentions and filmer credit, check that the live banner and action rail do not overlap or hide
+   necessary controls. Enlarged copy and the rail scroll below the measured header; reach More/Donate
+   after scrolling and verify video paging/owner peek still work outside those scroll columns.
+   Test narrow screens and large text while playing/paging clips.
+5. With VoiceOver/TalkBack, check athlete heading/details, scoreboard status and each team’s
+   score, unavailable score wording, profile action disabled state and scoreboard dismissal.
+
 ## Upload composer — phone layout and keyboard
 
 1. Tap Upload. The first screen has only video selection. Pick a clip; Details opens with a preview.

@@ -26,8 +26,13 @@ Check prices on each site before paying; the numbers above are rough.
 
 ## 2. Apply the schema
 
+The steps below record the manual staging bootstrap. A clean replay of the current canonical
+SQL has not been verified against a fresh Supabase database. Readiness R2 requires a staging
+baseline, dependency review and successful local reset before this becomes the production path.
+
 1. SQL Editor → paste all of `apps/mobile/src/backend/db/schema.sql` → Run. It is written to run on a
-   blank project and re-run cleanly (Rounds 8 / 11.5). It already includes `clear_reel_hype`, the four
+   blank project; historical re-run fixes are recorded in Rounds 8 / 11.5, but are not a current
+   replay guarantee. It includes `clear_reel_hype`, the four
    Storage buckets (`reels`, `game_highlights`, `avatars`, private `reel_vault`) and seed schools,
    games, players and Drip products. It seeds **no reels**, so Highlights is empty until someone uploads.
 2. Do **not** run the standalone `supabase/*.sql` files on top — `schema.sql` is canonical.
@@ -112,8 +117,9 @@ Never put `STRIPE_SECRET_KEY` or the service-role key in EAS build env. Do not s
 variables for preview.
 
 `EXPO_PUBLIC_API_ORIGIN` is only needed if you later host the Metro `/api/*` routes (EAS Hosting).
-That is blocked today anyway: EAS Hosting deploys `expo export --platform web`, and web bundling is
-broken (STATE.md §5, `lightningcss`). Payouts are hard-disabled (503) regardless.
+Local `expo export --platform web` passed on 2026-10-07 (52 static routes and three API bundles),
+with dotenv disabled. This verifies bundling, not EAS Hosting deployment or configured payment
+access. Native PaymentSheet still requires an installed device build. Payouts remain blocked.
 
 ## 7. Build and hand out
 

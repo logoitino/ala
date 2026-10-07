@@ -77,6 +77,8 @@ Identity for signed-in users.
 
 Read-only mirror of `profiles` used by every "viewing someone else's account" surface (public `/user/[id]`, Team Roster Strip, etc.) instead of the base table. Same shape concern as `reels_feed` (base table is publicly `using (true)` and can't be narrowed to a per-row/per-column REVOKE without breaking the owner's own `select('*')`), same fix shape: a view that nulls the hidden columns for anyone who isn't the owner or admin. Columns: `id`, `user_id`, `player_id`, `username`, `full_name`, `avatar_url`, `is_verified`, `is_verified_athlete`, `school_visible` (mirrors `profile_visibility->>'school'`, client-enforced), `bio` (null unless `profile_visibility.bio` is true, or caller is the owner/admin), `social_links` (`{}` under the same condition). Not marked `security_invoker`, so it reads the full base table as its owner regardless of the base table's own policy — same as `reels_feed`. Granted `select` to `anon, authenticated`.
 
+`20261007211500_public_profile_sport.sql` appends nullable `athlete_sport` for linked accounts with the athlete role. This is public sport identity, independent of the private numeric Stats flag; no career values or payment fields enter the view. Existing bio/social visibility cases and grants are preserved. Prepared locally; not applied to a hosted database. Older databases omit the optional client field and fall back to career sport / unique roster position.
+
 ### `schools_and_teams`
 
 Universal High School + college catalog for Athlete onboarding. Fuzzy search is `ILIKE '%query%'` on name, mascot, division, region, and city.

@@ -23,14 +23,17 @@ Everything else is listed in the [docs index](README.md).
 
 **Your first day:**
 
-- [ ] App running in Expo Go against the development Supabase project (sections 1–4).
+- [ ] App running in a development client against the development Supabase project (sections 1–4).
+      Use a staging preview build for installed-build acceptance; Expo Go covers only supported
+      browsing and upload fallback behavior, without native Stripe or video compression.
 - [ ] `pnpm check` passes on your machine.
 - [ ] You can find, for one screen, its route in `apps/mobile/app/`, its components in
       `src/frontend/components/<Feature>/`, its hook, and the `lib/` call that reaches Supabase.
 - [ ] You know the three environments: **development** (your `.env.local`), **staging** (tester
       builds) and **production** (not created yet — see
       [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md), readiness phase R3).
-- [ ] Small first PR: branch from `main`, keep the header comment true, add a line to
+- [ ] Small first PR: confirm the active integration branch in `STATE.md` §0; branch from
+      `main` after that integration is merged. Keep the header comment true, add a line to
       `STATE.md` §4 if you touched `apps/`, `packages/` or `supabase/`.
 
 Machine-specific traps on the owner's Mac (blocked npm registry, Watchman, no Simulator taps) are
@@ -52,6 +55,8 @@ cd ala-sports
 ---
 
 ## 2. Install (pnpm)
+
+Use Node 24, matching CI, and the pnpm version in the root `packageManager` field.
 
 ```bash
 # If `pnpm` is missing from PATH after Corepack prepare:
@@ -114,12 +119,19 @@ NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
 
-Then `pnpm admin` → http://localhost:3001 — Overview, Soft-Wall, Profile (claimed athletes + Look chrome **toggles**), Features (same flag catalog as Expo Features / Look + Publish to app), People (recent Soft-Wall fans, Claimed / Varsity). Use the same project URL and anon key as `apps/mobile/.env.local`. Games, Drip, Sports, and catalogs remain Expo `/admin`.
+Then `pnpm admin` → http://localhost:3001 — Overview, Reports, Money, Soft-Wall, Profile
+(claimed athletes + published Look chrome status), Features (published flag status), and People
+(recent Soft-Wall fans, Claimed / Varsity). This portal is read-only. Toggle and Publish to app
+from Expo `/admin/features` or `/admin/look`; edit games, Drip, sports and catalogs in Expo
+`/admin`. Use the same project URL and anon key as `apps/mobile/.env.local`.
 ---
 
 ## 4. Run
 
-**Do not** run `npx expo start` from the repo root. After the monorepo move there is no root `App` / `app.json` — that yields `Unable to resolve module ../../App from …/expo/AppEntry.js`.
+Run Expo from `apps/mobile/` through the workspace commands below. The root `app.json`
+(`{"expo": {}}`) is an intentional placeholder; the application config is
+`apps/mobile/app.json`. Starting Expo from the root uses the wrong project and can produce
+`Unable to resolve module ../../App from …/expo/AppEntry.js`.
 
 ```bash
 # Expo (fan app + Expo /admin) — always via workspace filter
@@ -130,13 +142,21 @@ pnpm mobile
 pnpm mobile:ios
 pnpm mobile:web
 
-# Next admin portal stub (port 3001)
+# Next read-only admin portal (port 3001)
 pnpm admin
 ```
 
 Confirm `apps/mobile/babel.config.js` has `presets: ['babel-preset-expo']`.
 
-**iOS Simulator + Expo Go:** Highlights **Library** works. **Record** is blocked — the Simulator camera has no video types and Expo Go 57 aborts. Drag a clip into the Simulator Photos app, or use a physical iPhone. Native `react-native-compressor` needs a dev client (`npx expo prebuild`); Expo Go still uploads the original clip.
+**Native acceptance:** use a development client or staging preview build for Stripe
+PaymentSheet and `react-native-compressor`. Expo Go does not include the complete native
+module set and does not verify those features. The upload service can upload the original
+clip when compression is unavailable.
+
+**iOS Simulator:** use Highlights **Library** with a clip dragged into Photos; Record needs
+a physical device. Build a development client with `pnpm mobile:ios` or
+`pnpm mobile:android` (requires the native toolchain). Device acceptance still includes
+sign-in callbacks, keyboard/layout and a Stripe test payment; web export is a separate check.
 
 After changing media buckets, run `supabase/media_upload.sql` so Storage `reels` + `avatars` and `profiles.avatar_url` exist.
 
@@ -147,7 +167,7 @@ After changing media buckets, run `supabase/media_upload.sql` so Storage `reels`
 Before every PR:
 
 ```bash
-pnpm check      # typechecks, mobile tests, and every repo guard CI runs
+pnpm check      # typechecks, mobile tests, docs/links, copy, boundaries, headers, agents, client-key guard
 ```
 
 After changing donation amounts, the 90 / 10 split, Aura tiers, PIN, Connect identity, or Highlight labels:

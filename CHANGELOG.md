@@ -4,6 +4,30 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-10-07
 
+### Compact sport profiles and direct goals
+
+- Profiles and Aura cards share the selected sport and published stat labels: Volleyball uses Matches/Kills/Digs, other sports their playbooks. Missing real data stays unreported; old totals from another sport are excluded. Aura points have their own label.
+- Shorter photo/name hero and compact 44-point actions; wrapping sections bring Goals/wishlist, Stats, Team and owner Manage into reach. Goals shows wishlist first; Team opens teammates; Manage holds thank-yous and owner Vault tools.
+- Public profile switching rejects stale loads, hidden schools remain hidden, and exact player links govern ownership. One-time exclusive-access wording is consistent with checkout.
+- Public selected-sport view migration prepared locally and mirrored in canonical SQL; not applied. Figma profiles/Aura and Canva sports-direction designs created. Native/hosted verification remains pending.
+
+### Sports identity across Local, Profile and Highlights
+
+- Browser verification follow-up: exact player links prevent same-name credential borrowing; community heroes suppress favorite-athlete school proof; spoken scoreboards include school names; dismissal has a 44-point button target.
+- Narrow large-text fixes let Local scores wrap and Highlight copy/actions scroll beneath measured header chrome, with Aura bursts outside rail clipping. Full check passes 55 suites / 261 tests; browser evidence is in AUDIT_REPORT. Native accessibility/playback/paging verification remains pending.
+
+- Local cards pair full team/school names with separate scores and recorded game status; scheduled games no longer look like live 0–0 results, and missing scores/clocks stay unreported.
+- Profile hero gives athlete identity more emphasis and shows only supplied sport, position and class details. Community profiles hide athlete credentials; confirmed school crests keep their existing rule.
+- Highlight overlays add actual roster jersey/position and more room for athlete/school names; match banners use the same scoreboard presentation rules.
+- Full integration passes both app typechecks, 53 suites / 256 tests and all project guards; 17 targeted Local/Profile/Reel/banner checks cover the changed surfaces. Local Expo web export passed in the initial pass. Browser follow-up is recorded above; native layout/accessibility checks remain pending.
+
+### Organization verification and readiness
+
+- Verified the reorganized documentation and workspace paths; added persistent local-link and client-credential checks to `pnpm check` and CI, with CI on Node 24.
+- Corrected read-only Next Profile instructions and onboarding/build guidance.
+- Reconciled saved staging migration dates and clarified R1–R4 requirements, baseline replay, and production dependencies.
+- Both app typechecks, 50 suites / 242 tests, all guards, Expo web and iOS/Android bundle exports, and Next optimized build pass locally. Native interaction, real test payments and hosted database replay remain pending.
+
 ### Compact donations and shared Daylight menus
 
 - Donate now stays in one popup with Amount, Options and Review pages; Back/Next and the final Donate action stay outside scrolling content.

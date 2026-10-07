@@ -10,6 +10,68 @@
 
 ---
 
+## UX-04 sport profiles and navigation — 2026-10-07
+
+Owner screenshot shows a tall centered hero, repeated full-width actions and no direct wishlist
+access. Read-through confirmed separate hero/profile sport selection, Football guessing and live
+missing stats filled with generated demo values. New contract shares explicit sport/playbook
+between hero, Stats and Aura, with real missing values unreported and stale navigation guarded.
+
+Regressions were observed failing before fixes: sport data/fetch17 failures; hook/UI7; identity
+navigation/shared-position6; Goals/Manage/mismatched profile3; hidden school1; public route3.
+Compact hero identity tests run in both modes. Final automated gate: **60 suites / 311 tests**, both app typechecks and all `pnpm check` guards pass.
+Fresh Expo web export passes (52 static / 3 API bundles, dotenv disabled, one worker),
+output `/tmp/ala-sports-profile-final-web`. Browser 320 normal/CSS200% checks retain width; final 390 capture shows compact identity,
+44-point Donate/Subscribe/Share and wrapping section navigation. Direct Stats shows volleyball
+Matches/Kills/Digs/MVP and Height/Vertical Jump, no football labels. Goals opens wishlist ahead of
+Rally; Team tap logs `demo-teammate`; Aura flips to Stats and contains Volleyball/Matches Played/Kills/Digs/Aura points with missing values as dashes. Settled Aura screenshot confirms the animated fields are visible. Scratch Goals capture has
+wishlist loading (fixture lacks native navigation focus), so item content/payment is not verified.
+Final scratch server serves the real Ionicons font; final screenshots verify those glyphs. Evidence: `/tmp/ala-sports-profile-final` (screenshots/callback JSON); normal/CSS200% narrow captures in `/tmp/ala-sports-ux03/profile-new*`. Viewport emulation restored. No PostgreSQL replay or hosted migration application was performed.
+`20261007211500_public_profile_sport.sql` is prepared; view column order/bio/social cases match the
+existing SELECT with only nullable athlete sport appended. Existing base-table privacy risk remains.
+
+Figma editable public/owner/Aura references and Canva direction are linked in ARCHITECTURE.
+Public Figma rendering inspected; final owner/Aura render blocked by View-seat tool limit. Canva
+is visual direction, not an exact navigation specification. Browser evidence imports real Profile
+components with synthetic inputs, disabled backend and callback logs, using 320/390 normal text
+and CSS200% stress. Scratch server icon-font404 means glyphs are not verified by these captures.
+Native readers/text scaling, avatar, Aura motion, payments and device navigation remain pending.
+
+---
+
+## UX-03 browser verification — 2026-10-07
+
+**Scope:** sports identity across Local cards, Profile hero and Highlight overlays. Browser Bridge
+connected to the owner's Chrome and the existing local Expo server (`localhost:8081`). Controlled
+fixtures import the real components; backend writes/payments are replaced by local callback logs.
+This is web rendering evidence, not native or hosted acceptance. Browser runs use normal text and
+an explicit CSS 200% stress test (font size and line height doubled on rendered text nodes).
+The scratch server returns 404 for the Ionicons font request; these captures do not verify icon glyphs.
+
+| Check | Evidence / result |
+| --- | --- |
+| Initial project gate | `pnpm check`: both typechecks, 53 suites / 256 tests, all guards passed before edits. |
+| Identity regressions | New tests failed before fixes: same-name public athlete received viewer sport/class; community hero retained favorite-athlete school proof; Local accessible name omitted distinct schools; close control lacked button role. Exact player link / badge gating / spoken school identity / 44-point close target now pass. |
+| Local browser | Existing Expo Local checked at 320 pixels; controlled live/scheduled/final/missing/zero/volleyball rows captured at 320×568 and 390×844, normal and CSS 200%. Found a three-digit enlarged score compressing the name to single letters; `flexWrap` and a minimum identity width fix it. Final 320×568 normal/200% recheck retains document width 320; scores wrap while long names remain readable across lines. |
+| Profile browser | Controlled long name/position, jersey zero, confirmed athlete, community and missing metadata rendered at both viewports/text settings with no document horizontal overflow. Identity wraps vertically; photo/crest/editor and actual native typography require devices. |
+| Highlights browser | Controlled long athlete/school/position/caption, three account names, filmer and all rail actions. Original 320/200% rendered copy overlapped the scoreboard and enlarged badge overflowed. Fix reserves measured feed header space, bounds copy/rail scrolling and caps scoreboard width. Corrected 320 normal/200% capture has document width 320 and identity top at/below header bottom; rail can scroll to lower controls. |
+| Effects/geometry review | QA found and corrected native Yoga width risk in a flex-zero scroll column and Aura clipping; horizontal wrapper allocates width, burst sits outside the scroll viewport. Nested native paging/owner-peek interaction remains unrun. |
+| Browser interactions | Local card logs `fixture-game`; Profile flip logs `flip`. At 320/200%, scrolling exposes Highlight profile, Seki, Aura, Flex, filmer, Donate and More; each logs its callback. Dismissal removes the scoreboard close control from the DOM. These are controlled UI callbacks; native navigation, effects and payments still require device verification. |
+| Updated automated gate | `pnpm check`: both typechecks, **55 suites / 261 tests**, all docs/links/copy/boundary/comments/agents/client-key guards passed after behavior fixes. Final same-turn gate recorded in STATE. |
+| Updated web bundle | Expo web export exits 0 with **52 static routes / 3 API bundles**, dotenv disabled, one worker; output `/tmp/ala-sports-ux03-web`. Confirms bundling; Expo's force-exit message and missing disabled-environment client keys do not establish hosted acceptance. |
+
+**Evidence location:** `/tmp/ala-sports-ux03` has viewport/text screenshots and geometry JSON;
+`.smoke/sports-ui` keeps the ignored fixture source/scripts. These scratch files are local and
+are not committed evidence. Historical press stills remain stale. No auth/session tokens are
+included in evidence. Browser viewport emulation is reset after the run.
+
+**Native checks still required (DEVICE_QA/QA):** Android + registered iPad narrow/large-text,
+VoiceOver/TalkBack focus/disabled states, video playback/paging and horizontal owner peek with
+nested scroll columns, scoreboard dismissal, camera/avatar editing, haptics and test PaymentSheet.
+No SQL/configuration/build publication, real payment or hosted changes were made.
+
+---
+
 ## Round 2026-09-25 / 2026-09-28 — button & dead-code pass
 
 **Method (2026-09-25, static):** every pressable-family element in `apps/mobile/app/` + `apps/mobile/src/frontend/` checked for a handler; async press handlers checked for a re-entry guard; every `router` target and `ADMIN_NAV_GROUPS` href resolved against a real route; whole-repo import sweep for unreferenced components.

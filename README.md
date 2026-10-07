@@ -28,7 +28,9 @@ folder rules: [docs/engineering/CONVENTIONS.md](docs/engineering/CONVENTIONS.md)
 ## Get running
 
 You need Node 24, pnpm (via Corepack) and a Supabase project URL plus anon key from the team.
-For a phone, install **Expo Go**.
+For full native testing, use a development client or the staging preview build. Native Stripe
+and video compression require those native modules; Expo Go is limited to supported browsing
+and upload fallback checks.
 
 ```bash
 git clone <this-repo> ala-sports && cd ala-sports
@@ -38,7 +40,7 @@ pnpm install
 cp apps/mobile/.env.example apps/mobile/.env.local
 # fill in EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
-pnpm mobile          # Expo dev server; open exp://<your-LAN-IP>:8081 in Expo Go
+pnpm mobile          # Expo dev server; connect a matching development client
 pnpm admin           # admin portal on http://localhost:3001 (needs apps/admin-portal/.env.local)
 ```
 
@@ -54,13 +56,17 @@ pnpm check
 ```
 
 It runs everything CI runs: both typechecks, the mobile tests, and the repo guards (product facts
-in sync, donation wording, no database calls from routes, a header comment on every file, the
-agent registry). Single pieces: `pnpm typecheck`, `pnpm test`, `pnpm docs:check`,
-`pnpm copy:check`, `pnpm app:data-boundaries`, `pnpm comments:check`, `pnpm agents:check`.
+in sync, relative documentation file links, donation wording, route data-access debt, mobile
+source headers, the agent registry and client credential markers). Single pieces:
+`pnpm typecheck`, `pnpm test`, `pnpm docs:check`, `pnpm docs:links`, `pnpm copy:check`,
+`pnpm app:data-boundaries`, `pnpm comments:check`, `pnpm agents:check`,
+`pnpm security:client-keys`. Link checks cover file destinations, not anchors or external URLs.
 
 ## How we work
 
-1. Branch from `main`; open a pull request; CI must pass. Do not push straight to `main`.
+1. Check [STATE §0](docs/STATE.md) for the active branch before creating a branch. The current
+   integration branch awaits merge into `main`; after that merge, branch from `main`. Open a pull
+   request and require passing CI; do not push straight to `main`.
 2. Every file starts with a header comment saying what it is and why it exists; comments explain
    *why*, not *what* ([CONVENTIONS §5](docs/engineering/CONVENTIONS.md)).
 3. A change under `apps/`, `packages/` or `supabase/` adds a line to
