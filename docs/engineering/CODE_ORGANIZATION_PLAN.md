@@ -1,15 +1,104 @@
-# Code organization plan — reviewable, migratable, well-noted
+# Code organization plan — from dev-only to a separate production environment
 
-**Status:** 2026-09-29. **Step 0 done** (`core.fileMode false`; topic commits on branch
-`wave0-custodial-verification`, not pushed). **Step 1 started:** `supabase/migrations/` exists with
-its README and the first file (athlete verification ladder). **Step 4 core done:** PR template,
-CODEOWNERS, placement READMEs and a CI route-data boundary guard; folder guidance can keep growing
-as large modules are split.
+**Owner goal (2026-10-07):** organise the code, folders, docs and data to the level where outside
+engineers can read the comments and the structure and help straight away, and so Tapua'i can run a
+real **production** environment separate from development and staging.
 
 **Owner clarification (2026-09-29): we are not moving hosts.** The goal is to keep the code
 organised so that *if* Tapua'i ever has to move (another Postgres host, another auth or payments
-provider), the move is easy to read, plan and do. Nothing here is urgent; the baseline dump in
-step 1 is optional until someone wants a clean rebuild or a move. See "Staying portable" below.
+provider), the move is easy to read, plan and do. Production in R3 is a new Supabase project
+on the same host. See "Staying portable" below.
+
+## The four readiness phases (R1–R4)
+
+These are **engineering readiness** phases. They are not the product phases 0–5 in
+[ROADMAP.md](../product/ROADMAP.md); ROADMAP's Wave 1 checklist links here.
+
+Each phase leaves the app working and can stop at any point. R3 depends on R2: a
+production database is only safe once the schema can be rebuilt from migrations.
+
+| Phase | Goal | Detailed steps | Status |
+| --- | --- | --- | --- |
+| **R1. Tidy and make it readable** | An outsider can clone, run, find things and review a PR. No behaviour change. | Step 0, Step 4, repo/docs layout below | **Mostly done 2026-10-07** — merge/push and private docs pending |
+| **R2. Rebuildable database** | The schema is rebuilt from `supabase/migrations/` alone; types and `schema.sql` are generated. | Step 1, Step 2 | Started (11 migrations; baseline not dumped) |
+| **R3. Production environment** | Dev, staging and production are separate projects, builds and keys; changes flow dev → staging → prod through CI. | "R3" section below | Not started; gated on R2 and the Wave 1 owner decisions |
+| **R4. Easier to change** | One backend, enforced style, smaller files, real test coverage, monitoring. | Step 3, "R4" section below | Not started (route data debt already falling: 17 → 12 calls) |
+
+### R1 checklist — tidy and make it readable
+
+- [x] Commit the 2026-10-07 work as topic commits (agents roster, guest routes, account tags,
+      UX-01/UX-02, docs) on `wave0-custodial-verification`. Step 0 was first done 2026-09-29.
+- [x] Archive clutter without deleting it: `my-app/` → `archive/my-app/` (see `archive/README.md`);
+      `.tmp/` and `.smoke/` untracked and ignored (files stay on disk).
+- [x] Docs into folders: entry points (`README`, `STATE`, `ONBOARDING`, `GLOSSARY`) at `docs/`;
+      `engineering/` (with `design/`), `product/`, `legal/`, `company/`, `agents/`. Every link and repo
+      path rewritten; 0 broken links before and after. Root `TROUBLESHOOTING.md` moved in;
+      root `DOCUMENTATION.md` became `docs/engineering/SYSTEM_OVERVIEW.md`.
+- [x] Front door for humans: root `README.md` rewritten (repo map, run, check, how we work),
+      `docs/README.md` index, `docs/GLOSSARY.md` (code names ↔ product words, verified against the
+      code), `docs/ONBOARDING.md` "Start here" reading order and first-day checklist.
+- [x] One command for every CI check: `pnpm check` (plus `pnpm test`).
+- [x] PR template, CODEOWNERS, folder READMEs, header comment on every file with a CI guard
+      (Step 4, done 2026-09-29 – 2026-10-02).
+- [ ] **Owner:** merge the branch into `main`, push, and turn on branch protection for `main`
+      (pull request + passing CI required). Needs GitHub access and owner approval.
+- [ ] **Owner:** before giving anyone outside the company repo access, move `docs/legal/` and
+      `docs/company/` to a private location (private repo or shared drive) and leave a pointer.
+- [ ] Confirm whether the root `app.json` (`{"expo": {}}`, added 2026-10-01) is still needed; the real
+      config is `apps/mobile/app.json`. An empty `apps/mobile/apps/` folder is left in place (owner:
+      do not delete); git ignores it.
+
+### R2 checklist — rebuildable database
+
+- [ ] `supabase/config.toml` and a `seed.sql` with fake athletes, games and clips (never real people);
+      move the Demo Fan account and demo PIN into seed data.
+- [ ] Baseline migration dumped from staging (Step 1.1), compared with `schema.sql` (Step 1.2).
+- [ ] The 52 loose `supabase/*.sql` files moved to `supabase/legacy/` with a README (Step 1.4).
+- [ ] `schema.sql` and `types/database.ts` generated, with CI checks that the committed copies match (Step 2).
+- [ ] CI applies every migration to a throwaway Postgres from zero (Step 1.5).
+- [ ] No more SQL Editor pastes: migrations apply with `supabase db push` from CI.
+
+### R3 — production environment
+
+| | Development | Staging | Production |
+| --- | --- | --- | --- |
+| Supabase project | `ulfapgtabidorgwfjvwz` (exists) | `ala-sports-staging` (exists) | **new** project (Supabase Pro, about $25/mo) |
+| Stripe | test keys | test keys | live keys — only after STATE §6 items 8 and 9 are decided |
+| App build (EAS) | `development` profile, "Tapua'i Dev", own bundle ID | `preview` channel, "Tapua'i Beta" | `production` channel, "Tapua'i" |
+| Database changes | `supabase db push` locally | automatically when `main` changes | when a release is tagged |
+| Who has dashboard access | engineers | engineers | owner + named on-call only |
+
+- [ ] Replace `apps/mobile/app.json` with `app.config.ts` that reads `APP_ENV` (already set per
+      profile in `eas.json` but read by nothing today) and sets name, bundle ID, icon and scheme per
+      environment, so the three builds install side by side.
+- [ ] Client keys per environment in EAS environment variables; secrets only in Supabase secrets per
+      project. No secret in any `.env.local` (Stripe secret moved out 2026-10-07; rotate it).
+- [ ] CI pipeline: PR → checks; merge to `main` → migrations + Edge Functions to staging and a
+      preview build; release tag → the same to production.
+- [ ] Production hardening before real users (from STATE §5): private storage buckets, no
+      `auth.role() = 'anon'` bypasses, no demo PIN, webhook-based crediting instead of the client
+      `tips` insert (ROADMAP Phase 1a ledger), telemetry identity decision.
+- [ ] Backups (point-in-time recovery) and a tested restore drill; error monitoring (e.g. Sentry)
+      on all three environments.
+
+### R4 — easier to change
+
+- [ ] One backend: retire the Expo API routes in `apps/mobile/src/backend/api/` once the Edge
+      Functions are confirmed deployed with secrets on every project; `src/backend/db/schema.sql`
+      moves to `supabase/` when it becomes generated.
+- [ ] ESLint + Prettier enforced in CI (needs registry access; set up from CI or a machine where
+      npm works — not the owner's Mac).
+- [ ] Split the 900+ line files (Step 3), one PR each, no behaviour change.
+- [ ] Route data-boundary debt to zero (6 files / 12 calls left).
+- [ ] Screen tests for donate, upload and sign-in; first admin-portal tests; an end-to-end smoke
+      test on a device build.
+- [ ] Rename code names toward product words only where it is cheap (new code uses product words;
+      old tables keep their names — the glossary covers the gap).
+
+---
+
+The sections below are the detailed how-to for each step, written 2026-09-29. Counts in "Why"
+are from that date.
 
 ## Why
 
@@ -127,6 +216,6 @@ imported outside `lib/` and `services/`.
 
 ## Order
 
-Step 0 → Step 1 (baseline) → Step 2 → the verification-ladder SQL
-(`ATHLETE_VERIFICATION_DESIGN.md` §7) as the **first real migration** → Step 3 splits in quiet
-weeks → Step 4 alongside.
+R1 (Step 0 + Step 4 + layout) → R2 (Step 1 baseline → Step 2) → R3 (production) → R4 (Step 3
+splits and the rest) in quiet weeks. R4 items that need no database change (splits, tests,
+data-boundary debt) can run alongside R2 and R3.

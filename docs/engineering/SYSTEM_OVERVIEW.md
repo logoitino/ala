@@ -92,12 +92,16 @@ apps/mobile/src/backend/db/schema.sql Canonical Postgres + RLS
 apps/admin-portal/                Next web admin, read-only oversight (Overview / Reports / Money / Soft-Wall / Profile / Features / People) at :3001. Reports + Money RPCs match Expo. Every write happens only in Expo `/admin`
 packages/shared-types/            @tapuai/shared-types
 scripts/                          Node generators (`sync-front-docs.mjs` → product facts; reads apps/mobile constants)
-docs/agents/TEAMS.md                     Department call sheet and specialist operating contract
-docs/agents/TEAM_HIERARCHY.md            Reporting hierarchy and complete callable agent index
-docs/agents/WORK_QUEUE.md                Ordered specialist tasks, acceptance criteria and gates
+supabase/                         Incremental SQL (DROP FUNCTION before return-type changes); new changes go in migrations/
+supabase/migrations/              Timestamped migrations (the target single source of truth — CODE_ORGANIZATION_PLAN readiness phase R2)
+supabase/functions/               Edge Functions (`create-stripe-account` JWT Connect, `create-payment-intent` JWT, `stripe-webhook`)
+docs/                             Entry points: README (index), STATE, ONBOARDING, GLOSSARY
+docs/engineering/                 Architecture, conventions, schema, runbooks, plans; design/ for design docs
+docs/product/                     Roadmap, story, voice, public one-pager, generated product facts
+docs/legal/  docs/company/        Legal briefing; investor, company phases, team brief, press (move private before outside access)
+docs/agents/                      Specialist roster: TEAMS, TEAM_HIERARCHY, WORK_QUEUE
 .claude/agents/registry.json      Functional ownership registry (pnpm agents:check)
-supabase/                         Incremental SQL (DROP FUNCTION before return-type changes)
-supabase/functions/               Edge Functions (`create-stripe-account` JWT Connect, `create-payment-intent` JWT)
+archive/                          Reference-only code (old my-app playground); never built or imported
 ```
 
 The elevated **center camera uploader** is a FAB (`UploadSheetContext`), not a tab route. `apps/mobile/babel.config.js` must include `babel-preset-expo`.

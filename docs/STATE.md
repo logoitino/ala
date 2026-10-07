@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-10-07 · Stripe secret moved out of `.env.local` (Edge Functions hold it); native-module quarantine cleared · Compact donation/menu integration verified locally (UX-02; 50 suites / 242 tests) · Compact staged video upload complete locally (UX-01) · 83 callable agents with functional ownership and CI registry validation · Specialist work queue in WORK_QUEUE.md · Guest route data boundaries reduced to 6 routes / 12 calls · Account-tag write/confirmation fixes prepared; SQL remains unapplied · Staging/build readiness and custodial DOB inventory corrected from local evidence · Wave 0 test mode; device and hosted SQL verification remain pending.
+**Last updated:** 2026-10-07 · Readiness R1 done locally: docs reorganized into folders, README/GLOSSARY/ONBOARDING front door, `pnpm check`, plan R1–R4 written · Stripe secret moved out of `.env.local` (Edge Functions hold it); native-module quarantine cleared · Compact donation/menu integration verified locally (UX-02; 50 suites / 242 tests) · Compact staged video upload complete locally (UX-01) · 83 callable agents with functional ownership and CI registry validation · Specialist work queue in WORK_QUEUE.md · Guest route data boundaries reduced to 6 routes / 12 calls · Account-tag write/confirmation fixes prepared; SQL remains unapplied · Staging/build readiness and custodial DOB inventory corrected from local evidence · Wave 0 test mode; device and hosted SQL verification remain pending.
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -87,6 +87,11 @@ primary owner and required reviewer. Local code completion is separate from host
    **not applied** anywhere. Its cap/confirmation behavior was hardened locally on 2026-10-07.
    Before staging application, run concurrent cap, pending privacy and wrong-actor checks (WORK_QUEUE W0-08).
    Until it is applied, the picker stays empty and a publish still succeeds.
+6. **Engineering readiness R1–R4** (owner, 2026-10-07: organise for outside engineers and a
+   separate production environment). Plan and checklists: `docs/engineering/CODE_ORGANIZATION_PLAN.md`;
+   tasks R1-01 … R4-03 in `docs/agents/WORK_QUEUE.md`. R1 is done locally. **Owner next:** approve
+   merging this branch into `main`, pushing, and protecting `main` (R1-02), and pick a private home
+   for `docs/legal/` and `docs/company/` (R1-03). Then R2 (rebuildable database) before R3 (production).
 
 **Prove the tree is green before you change anything:**
 `pnpm typecheck` · `pnpm --filter @tapuai/mobile test -- --watchman=false` ·
@@ -194,6 +199,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+- **2026-10-07 — Readiness R1: repo and docs organized for outside engineers (owner request).** Committed the day's work as five topic commits, then: `my-app/` → `archive/my-app/` (with `archive/README.md`); `.tmp/` and `.smoke/` untracked and ignored, files kept; docs moved into `docs/engineering/` (+ `design/`), `docs/product/`, `docs/legal/`, `docs/company/`, `docs/agents/`, with root `TROUBLESHOOTING.md` moved in and root `DOCUMENTATION.md` renamed `docs/engineering/SYSTEM_OVERVIEW.md`. A script rewrote every relative link and repo path in docs, agent definitions, registry, scripts, rules, CI, PR template and SQL comments (0 broken links before and after); `sync-front-docs.mjs` emits the new relative links. New: root `README.md` rewrite, `docs/README.md` index, `docs/GLOSSARY.md` (names checked against the code), ONBOARDING "Start here", `pnpm test` and `pnpm check` (runs every CI check). `CODE_ORGANIZATION_PLAN.md` now carries readiness phases R1–R4 (distinct from ROADMAP Phases 0–5); ROADMAP Wave 1 checklist item 9 requires R3; WORK_QUEUE has R1-01 … R4-03. **Verified:** `pnpm check` passes (both typechecks, 50 suites / 242 tests, all guards). **Not done:** merge/push/branch protection (owner approval), moving legal/company docs private, root `app.json` and the empty `apps/mobile/apps/` folder left in place. No app behaviour changed.
 - **2026-10-07 — UX-02 integration recovered after the session disconnect:** Fixed payment startup during the close animation with a synchronous host interaction guard. Stripe success now enters a terminal paid state even if donation recording or counters fail; post-payment errors explicitly say the payment went through. Recipient generations prevent an old inline payment from updating a replacement athlete or its parent callbacks. Optional card-fee screen-reader labels include the exact charge and unchanged family share. Repaired the filmer test fixture with a safe-area provider. Independent QA reviewed and rechecked all four findings. **Verified:** both app typechecks; full Jest **50 suites / 242 tests pass**, followed by the latest checkout callback regression (**8 tests pass**); docs/copy/comments/data-boundaries/agents and whitespace guards pass. Two existing SoftWall test act warnings remain non-failing. **Pending:** native small-screen/keyboard/text-scale/screen-reader and Stripe-device evidence, plus hosted configuration/SQL checks. Payment still uses the existing client `tips` insert after Stripe; this UI guard does not establish authoritative crediting or reconciliation. No build, SQL application, deployment, push or live payment in this recovery pass. Next: WORK_QUEUE W0-05 staging sign-in/test checkout and UX-02 native smoke using TESTER_SCRIPT.
 
 
@@ -548,11 +554,14 @@ Do not re-diagnose these. Fix them or leave them.
 | `docs/engineering/MENU_STYLE_MAP.md` | Shared menu/page APIs, modal consumer coverage, intentional visual exceptions and device verification gaps. |
 | `docs/agents/TEAMS.md` | Call sheet: Now / Next / Later, surfaces, do-not-touch. |
 | `AGENTS.md` | Folder law, path aliases, tech-stack guardrails. `CLAUDE.md` imports it. |
-| `docs/engineering/SYSTEM_OVERVIEW.md` | Engineer onboarding and directory map. |
+| `docs/README.md` | Index of every document, by folder. |
+| `docs/ONBOARDING.md` · `docs/GLOSSARY.md` | Human entry point (reading order, setup, first day) · code names ↔ product words. |
+| `docs/engineering/SYSTEM_OVERVIEW.md` | System overview and directory map (was root `DOCUMENTATION.md`). |
+| `archive/README.md` | Reference-only code (old `my-app/` playground). Never built or imported. |
 | `docs/product/ROADMAP.md` | North Star (Watch & compete / Rally / Pass it on / Rise), Release waves 0-3 (cheapest first), Phases 0-5, Mission track M1-M10. |
 | `docs/product/STORY.md` | Mission narrative, marketing lines, and the guardrails that keep athletes eligible. |
 | `docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md` | Open sign-up, the athlete verification ladder, gifts while pending, safe growth, fake-highlight takedown. Ladder + in-person school confirmation built; §6 (fakes) still a proposal. |
-| `docs/engineering/CODE_ORGANIZATION_PLAN.md` | Keep the code easy to review and cheap to move hosts later (we are **not** moving now): commit hygiene, dated SQL files, generated types, big-file splits, a Supabase-coupling map, and the rule that screens call `lib/`, never Supabase directly (8 Expo route files still break it; CI blocks growth). Step 0 + reviewer notes/guard done. |
+| `docs/engineering/CODE_ORGANIZATION_PLAN.md` | **Readiness phases R1–R4** (tidy → rebuildable database → production environment → easier to change) with checklists; R1 done locally 2026-10-07. Also keeps the code cheap to move hosts later (we are **not** moving now): commit hygiene, dated SQL files, generated types, big-file splits, a Supabase-coupling map, and the rule that screens call `lib/`, never Supabase directly (6 Expo route files / 12 calls still break it as of 2026-10-07; CI blocks growth). Step 0 + reviewer notes/guard done. |
 | `supabase/migrations/README.md` | How migrations work here, how to apply without the CLI, the baseline steps, adding a school confirmer. |
 | `docs/engineering/STAGING_RUNBOOK.md` | Step-by-step staging project + tester build. |
 | `docs/engineering/TESTER_SCRIPT.md` | Phase 3 tasks per role, organised by pillar, plus feel questions. |

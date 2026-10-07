@@ -27,6 +27,27 @@ Do W0-05 through W0-09 on staging with the applicable account/device access. App
 changing hosted configuration, publishing a build, and live money have distinct gates; a local
 passing Jest run does not certify any of them. Current build links are in STATE §0.
 
+## Engineering readiness (R1–R4)
+
+The plan and its checklists live in
+[CODE_ORGANIZATION_PLAN.md](../engineering/CODE_ORGANIZATION_PLAN.md). These are not the product
+phases in ROADMAP. R3 (production) waits on R2 and on the Wave 1 owner decisions.
+
+| ID | Owner and review | Task | Acceptance / evidence | Status |
+| --- | --- | --- | --- | --- |
+| R1-01 | `ENGINEERING`, `DOCUMENTATION`; `QA` review | Repo and docs tidy for outside engineers | Topic commits; clutter in `archive/`; docs in engineering/product/legal/company/agents with 0 broken links; README, docs index, GLOSSARY, ONBOARDING start-here; `pnpm check` | Done locally 2026-10-07; `pnpm check` passes |
+| R1-02 | Owner; `RELEASE`, `CI` | Merge `wave0-custodial-verification` into `main`, push, protect `main` | PR merged with CI green; `main` requires PR + passing checks; no direct pushes | Needs owner approval and GitHub access |
+| R1-03 | Owner; `COMPLIANCE`, `DOCUMENTATION` | Move `docs/legal/` and `docs/company/` to a private location before outside access | Folders replaced by a pointer README; links updated; `pnpm check` passes | Waiting on owner choice of location |
+| R2-01 | `DATABASE_MIGRATIONS`, `BACKEND`; `RLS_SECURITY` review | Supabase CLI layout: `config.toml`, synthetic `seed.sql` (Demo Fan, demo PIN, sample games/clips) | `supabase db reset` builds a working dev database from the repo alone | Not started; CLI not installable on the owner's Mac (run in CI or elsewhere) |
+| R2-02 | `DATABASE_MIGRATIONS`, `RELEASE` | Baseline migration from staging; diff against `schema.sql`; legacy SQL to `supabase/legacy/` | Baseline marked applied on staging; every `schema.sql` difference resolved or listed; 52 loose files moved with README | Not started; read-only dump needs owner approval |
+| R2-03 | `SHARED_CONTRACTS`, `CI` | Generate `types/database.ts` and `schema.sql`; CI fails on drift; CI applies all migrations to a throwaway Postgres | Generated headers; drift check and migration replay green in CI | Not started |
+| R3-01 | `RELEASE`, `FULLSTACK`; `SESSION_SECURITY` review | `app.config.ts` per `APP_ENV` (name, bundle ID, icon, scheme); EAS env vars per profile | Dev, preview and production builds install side by side and point at the right project | Not started |
+| R3-02 | Owner; `RELEASE`, `RLS_SECURITY`, `STORAGE`, `RECOVERY` | Production Supabase project with secrets, private buckets, backups and restore drill | Migrations applied by CI; no anon bypass or demo PIN; restore drill recorded | Gated on R2 and STATE §6 items 8–9 |
+| R3-03 | `CI`, `RELEASE`, `RELIABILITY` | Deploy pipeline: `main` → staging, release tag → production; error monitoring | A tagged release reaches production with no manual SQL; errors visible per environment | Not started |
+| R4-01 | `API`, `BACKEND`; `QA` review | Retire Expo API routes in `apps/mobile/src/backend/api/` in favour of the Edge Functions | Checkout, Connect and payouts work on every project with the routes removed; tests updated | Not started; confirm Edge Function secrets on each project first |
+| R4-02 | `CI`, `ENGINEERING` | ESLint + Prettier enforced in CI | Config committed; CI lint step green; formatting PR is behaviour-free | Not started; needs a machine with npm registry access |
+| R4-03 | `ENGINEERING`, feature owners; `TEST_AUTOMATION` | Split 900+ line files; route data debt to zero; screen tests for donate/upload/sign-in; admin-portal tests | One behaviour-free PR per split; `app:data-boundaries` baseline at 0; new suites green | Not started (debt 6 files / 12 calls) |
+
 ## Specialist backlog beyond the immediate sequence
 
 | Function | Accountable specialist | Next bounded assignment |
