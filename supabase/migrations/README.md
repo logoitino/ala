@@ -29,35 +29,46 @@ Staging first, then production.
   `insert into supabase_migrations.schema_migrations (version, name) values ('20260929120000', 'athlete_verification_ladder');`
   (skip this line if the `supabase_migrations` schema does not exist yet — the baseline step creates it).
 
-## Baseline — optional, not done (needs live database access)
+## Baseline — required for readiness R2, not done
 
-Only needed before a clean rebuild or a move. It needs the project's database password. The owner, once:
+Required before a clean rebuild and production setup. It needs staging database access.
+A read-only dump can be reviewed locally; repairing remote migration history changes the
+project and follows the approval recorded in STATE. Production does not exist yet.
 
-1. `supabase db dump --schema public -f supabase/migrations/20260928000000_baseline.sql` against production.
-2. `supabase migration repair 20260928000000 --status applied` so production knows it has the baseline.
+1. Dump staging's current public schema to a review file outside `migrations/` first.
+2. Determine which existing migrations the dump already includes. Choose a reviewed baseline
+   strategy that does not replay those changes on top of themselves; verify it from an empty
+   local Supabase instance before repairing staging migration history.
 3. Diff the baseline with `schema.sql`. Each difference is either a standalone `supabase/*.sql` file
    that was never applied (turn it into a migration) or dead SQL (delete it).
 4. Move the standalone `supabase/*.sql` files to `supabase/legacy/`.
 
-The baseline's timestamp must sort **before** `20260929120000`.
+Do not give a current snapshot an older filename and assume all later files can safely replay.
+If using a historical baseline sorted before `20260929120000`, it must represent the schema
+before those migrations. A current squashed baseline requires a documented treatment of the
+included history. Auth, Storage, grants and other dependencies need Supabase-aware validation.
 
 ## Files
+
+Application dates below are saved records, not a fresh remote query.
 
 Apply order, including the standalone `supabase/*.sql` files these depend on, and a pre-flight
 check: `docs/STATE.md` §0.
 
 | File | What | Applied? |
 | --- | --- | --- |
-| `20260929120000_athlete_verification_ladder.sql` | School-confirmed athlete verification: claims go to "pending", the athletic director or coach confirms in person with a 6-digit code; closes the self-verify and name-match holes. [Design](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Staging first. No dependency on the other unapplied files |
-| `20260929130000_payout_gate_without_school.sql` | Payouts unlock with Stripe ID check + one undisputed claim, $250 cap until 3 teammate vouches or school confirmation; `athlete_vouches` + vouch RPCs. [Design §9](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Needs `20260929120000` and `supabase/custodial_money.sql` (`custodial_accounts`, `athlete_controls_money`) first |
-| `20260929140000_school_badge.sql` | School logo / colours, `athlete_school_badge`, `admin_set_school_branding`, no ✓ in names. [Design §10](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Needs `20260929120000` first |
-| `20260929160000_reel_views_and_filmer_credit.sql` | `reels_feed` gains `view_count` / `uploader_name` / `uploader_avatar_url`; `athlete_highlight_views`, `filmer_stats` | **No.** Needs `supabase/leaderboards.sql` (`reels.view_count`) first |
-| `20260929170000_filmer_rewards.sql` | Filmer Aura (tag confirmed, view milestones, Props), `filmer_rewards` ledger, `filmer_props`, `give_filmer_props`, `get_top_filmers`, `filmer_stats` v2 | **No.** Needs `20260929160000` first |
-| `20260929180000_rally_goals_thanks_platform_tip.sql` | Rally goals (`rallies`, create / approve / close / thank RPCs, `tips.rally_id` credits the total), preset donor thank-yous (`donation_thanks`, `thank_donation`), optional tip to Tapua'i at checkout (`tips.platform_tip_cents`, revenue source `tip`, 100% platform) | **No.** Needs `supabase/custodial_money.sql` (`athlete_controls_money`), `company_revenue.sql`, `tip_origin.sql` first |
+| `20260929120000_athlete_verification_ladder.sql` | School-confirmed athlete verification: claims go to "pending", the athletic director or coach confirms in person with a 6-digit code; closes the self-verify and name-match holes. [Design](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **Recorded on staging 2026-09-30; not development.** No dependency on the other unapplied files |
+| `20260929130000_payout_gate_without_school.sql` | Payouts unlock with Stripe ID check + one undisputed claim, $250 cap until 3 teammate vouches or school confirmation; `athlete_vouches` + vouch RPCs. [Design §9](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **Recorded on staging 2026-09-30; not development.** Needs `20260929120000` and `supabase/custodial_money.sql` (`custodial_accounts`, `athlete_controls_money`) first |
+| `20260929140000_school_badge.sql` | School logo / colours, `athlete_school_badge`, `admin_set_school_branding`, no ✓ in names. [Design §10](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **Recorded on staging 2026-09-30; not development.** Needs `20260929120000` first |
+| `20260929160000_reel_views_and_filmer_credit.sql` | `reels_feed` gains `view_count` / `uploader_name` / `uploader_avatar_url`; `athlete_highlight_views`, `filmer_stats` | **Recorded on staging 2026-09-30; not development.** Needs `supabase/leaderboards.sql` (`reels.view_count`) first |
+| `20260929170000_filmer_rewards.sql` | Filmer Aura (tag confirmed, view milestones, Props), `filmer_rewards` ledger, `filmer_props`, `give_filmer_props`, `get_top_filmers`, `filmer_stats` v2 | **Recorded on staging 2026-09-30; not development.** Needs `20260929160000` first |
+| `20260929180000_rally_goals_thanks_platform_tip.sql` | Rally goals (`rallies`, create / approve / close / thank RPCs, `tips.rally_id` credits the total), preset donor thank-yous (`donation_thanks`, `thank_donation`), optional tip to Tapua'i at checkout (`tips.platform_tip_cents`, revenue source `tip`, 100% platform) | **Recorded on staging 2026-09-30; not development.** Needs `supabase/custodial_money.sql` (`athlete_controls_money`), `company_revenue.sql`, `tip_origin.sql` first |
 | `20260929190000_telemetry_logs_bounds.sql` | Bounds `telemetry_logs` event type, duration (scroll 0–100, tab dwell 12h, everything else 10 min), attempts, text length and payload. Guest INSERT stays. Re-run replaces an earlier draft. [docs/STATE.md](../../docs/STATE.md) §5 / §6 item 1 | **Staging 2026-09-30.** Not the development project. No dependency. |
 | `20261001180000_content_rights_reports.sql` | Uploader confirmation columns on `reels`, `reel_reports`, and `report_reel` reasons. Fake footage, impersonation, and music/logo/broadcast leave the public feed; other reasons wait for the athlete, the guardian, or three accounts. | **Staging 2026-10-01.** Not the development project. Needs `custodial_accounts`. |
 | `20261002120000_operator_checkins_role_check.sql` | Puts a role check (demo-PIN `anon`, operator, admin) on `operator_checkins`, which stored GPS check-ins behind `using (true)`. Matches `operator_gigs`. Needs `current_user_role()` (already in schema). | **No.** Not applied to any project. |
 | `20261002160000_reel_account_tags.sql` | Highlight account mentions (`reel_account_tags`). Uploader adds up to three active mentions under a reel row lock; confirmation returns a status only for an owned pending row actually changed. Donations stay on the athlete tag. Revised 2026-10-07 before first application; no local Postgres verification. | **No.** Not applied to any project. |
+
+| `20261007211500_public_profile_sport.sql` | Appends nullable selected athlete sport to `profiles_public`, preserving bio/social visibility and grants. Public hero/Stats/Aura share sport selection. | **No.** Prepared locally, PostgreSQL replay and hosted application pending. Needs existing profiles_public and current_user_role. |
 
 ## Adding a school confirmer (after the verification migration)
 

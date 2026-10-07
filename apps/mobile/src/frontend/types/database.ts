@@ -86,6 +86,8 @@ export type ProfilePublic = {
   is_verified: boolean;
   is_verified_athlete: boolean;
   school_visible: boolean;
+  /** Nullable public athlete identity; absent until public_profile_sport migration is applied. */
+  athlete_sport?: string | null;
   bio: string | null;
   social_links: ProfileSocialLinks;
 };
