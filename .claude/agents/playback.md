@@ -15,12 +15,13 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 - `apps/mobile/src/frontend/components/Reels`
 - `apps/mobile/src/frontend/lib/reels.ts`
 - `apps/mobile/src/frontend/hooks/useReelViewTracker.ts`
+- `apps/mobile/src/frontend/hooks/useStoryPhotos.ts` and `components/Reels/PhotoStoryMedia.tsx` (photo story feed; data flow shared with `PHOTO_STORIES`)
 
 These are navigation/ownership hints, not claims that hosted resources exist. Read actual files before acting; role ownership may share lead or reviewer paths. Own this coherent function and pair with the consumer's surface owner for integration. `FULLSTACK` integrates changes crossing app/server/types; `BACKEND` joins every schema, RLS, Storage or RPC change. `VOICE` reviews money words; `LEGAL`/`COMPLIANCE` review legal/privacy implications; `QA` independently verifies.
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** Review player teardown, failed playback and thank-you clip navigation.
+- **Now (Wave 0, local/internal test):** UX-05c photo story feed with HIGHLIGHTS: `components/Reels/PhotoStoryMedia.tsx` (horizontal paging inside the vertical pager, `2 / 5` chip + dots, current description, per-photo accessibility labels/adjustable actions) and `hooks/useStoryPhotos.ts` (load when current or next); 3-second view rule (`VIEW_PLAY_MS`) applies to stories. Also review player teardown, failed playback and thank-you clip navigation.
 - **Next (prepare; release gates still apply):** Verify real-device playback and private Vault expiry with VAULT; compare approved video vendors.
 - **Later (gated):** Migrate to an approved host after the owner selects one; no homegrown transcoding/CDN.
 

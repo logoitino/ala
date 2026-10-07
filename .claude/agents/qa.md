@@ -55,13 +55,17 @@ If the change touched tips, subscriptions, Aura RPCs, wishlist, or admin RPCs: s
 
 Read `docs/STATE.md` first and follow `docs/agents/TEAMS.md` §Specialist operating contract. Reporting lead: `FACILITATOR`. Registry: `.claude/agents/registry.json`.
 
-Delegate coherent functions to `DEVICE_QA` · `TEST_AUTOMATION`. Keep this role accountable for integration and use QA for independent evidence.
+Delegate coherent functions to `DEVICE_QA` · `TEST_AUTOMATION` · `VISUAL_QA`. Keep this role accountable for integration and use QA for independent evidence.
 
 Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
 
 ## Current direct specialists
 
-`DEVICE_QA` · `TEST_AUTOMATION`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+`DEVICE_QA` · `TEST_AUTOMATION` · `VISUAL_QA`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+
+## Now: UX-05e (2026-10-07)
+
+Verify photo stories and the BRAND-01 tagline: `TEST_AUTOMATION` for helper/RPC-fallback/metadata-stripping tests, `VISUAL_QA` for Playwright browser evidence (narrow widths, large text) in AUDIT_REPORT, `DEVICE_QA` for native picker, orientation after stripping and paging. An unapplied migration is not a passed schema gate.
 
 ## Documentation handoff
 

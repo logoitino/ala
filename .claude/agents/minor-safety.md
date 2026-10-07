@@ -20,7 +20,7 @@ These are navigation/ownership hints, not claims that hosted resources exist. Re
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** Check 13+ new-account rule, preset thanks and guardian-approved Rally without retroactive account blocking.
+- **Now (Wave 0, local/internal test):** UX-05b photo metadata and minors: confirm photos carry no GPS/EXIF after `stripJpegMetadata` (unit tests; device orientation check with DEVICE_QA), photo stories stay public-only with Vault hidden, and photos of other people's children follow LEGAL_BRIEFING minor rules. Also check 13+ new-account rule, preset thanks and guardian-approved Rally without retroactive account blocking.
 - **Next (prepare; release gates still apply):** Review custodial payee and public video release conditions with counsel and PRIVACY_ENGINEERING.
 - **Later (gated):** Private messaging, free-text thanks or direct fan contact stay gated.
 

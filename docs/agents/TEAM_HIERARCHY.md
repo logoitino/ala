@@ -29,6 +29,7 @@ FACILITATOR — owner/session decisions and integration
 │   ├── PRIVACY_ENGINEERING (Legal and Compliance)
 ├── DESIGN (Design)
 │   ├── ACCESSIBILITY (Design)
+│   ├── DESIGN_TOOLING (Design)
 │   ├── MOTION (Design)
 ├── ENGINEERING (Engineering)
 │   ├── ADMIN (Engineering)
@@ -49,6 +50,7 @@ FACILITATOR — owner/session decisions and integration
 │   ├── HIGHLIGHTS (Engineering)
 │   │   ├── ACTIVITY (Engineering)
 │   │   ├── FILMER_REWARDS (Engineering)
+│   │   ├── PHOTO_STORIES (Engineering)
 │   │   ├── PLAYBACK (Engineering)
 │   │   ├── UPLOAD (Engineering)
 │   │   │   ├── ACCOUNT_TAGS (Engineering)
@@ -70,6 +72,7 @@ FACILITATOR — owner/session decisions and integration
 ├── LEGAL (Legal and Compliance)
 │   ├── CONTENT_RIGHTS (Legal and Compliance)
 ├── MARKETING (Marketing)
+│   ├── BRAND (Marketing)
 │   ├── GROWTH_ANALYTICS (Marketing)
 ├── OPERATIONS (Operations)
 │   ├── CI (Operations)
@@ -88,6 +91,7 @@ FACILITATOR — owner/session decisions and integration
 ├── QA (Quality)
 │   ├── DEVICE_QA (Quality)
 │   ├── TEST_AUTOMATION (Quality)
+│   ├── VISUAL_QA (Quality)
 ├── SUPPORT (Support)
 │   ├── INCIDENT_TRIAGE (Support)
 ├── TRUST_SAFETY (Trust and Safety)
@@ -101,19 +105,19 @@ FACILITATOR — owner/session decisions and integration
 flowchart TB
   F[Facilitator]
   F --> P[PRODUCT / RESEARCH]
-  F --> D[DESIGN / ACCESSIBILITY / MOTION]
+  F --> D[DESIGN / ACCESSIBILITY / MOTION / DESIGN_TOOLING]
   F --> E[ENGINEERING]
   E --> BE[BACKEND / MIGRATIONS / RLS]
   E --> C[API / AUTH / SESSION / REALTIME / OFFLINE]
-  E --> S[Surface squads and media specialists]
+  E --> S[Surface squads and media specialists incl. PHOTO_STORIES]
   E --> DOC[DOCUMENTATION / all team handoffs]
   F --> FI[COMMERCE and finance specialists]
   F --> L[LEGAL / COMPLIANCE / RIGHTS / PRIVACY]
   F --> T[TRUST_SAFETY / MODERATION / VERIFICATION / MINORS]
   F --> O[OPERATIONS / RELEASE / CI / RELIABILITY / TELEMETRY]
-  F --> Q[QA / TEST_AUTOMATION / DEVICE_QA]
+  F --> Q[QA / TEST_AUTOMATION / DEVICE_QA / VISUAL_QA]
   F --> PA[PARTNERSHIPS / SCHOOL_PARTNERS / ROLE_HQ / SPONSOR_ADS]
-  F --> M[MARKETING / GROWTH_ANALYTICS]
+  F --> M[MARKETING / GROWTH_ANALYTICS / BRAND]
   F --> SU[SUPPORT / INCIDENT_TRIAGE]
   F --> B[VOICE]
   Q -. independent evidence .-> E
@@ -126,17 +130,31 @@ flowchart TB
 | Department | Lead | Specialist scope |
 | --- | --- | --- |
 | Product | PRODUCT | Roadmap, acceptance criteria, RESEARCH |
-| Design | DESIGN | ACCESSIBILITY, MOTION and visual integration |
-| Engineering | ENGINEERING | Database/API, identity, realtime/offline, fan/admin surfaces, media and DOCUMENTATION |
+| Design | DESIGN | ACCESSIBILITY, MOTION, DESIGN_TOOLING (MCP/Figma/Canva/Playwright/Expo tooling) and visual integration |
+| Engineering | ENGINEERING | Database/API, identity, realtime/offline, fan/admin surfaces, media (incl. PHOTO_STORIES) and DOCUMENTATION |
 | Finance | COMMERCE | Checkout, ledger, reconciliation, refunds, Connect, custodial, Rally, thanks, billing, Drip |
 | Legal and Compliance | LEGAL / COMPLIANCE | Counsel-approved language, CONTENT_RIGHTS and PRIVACY_ENGINEERING |
 | Trust and Safety | TRUST_SAFETY | MODERATION, ATHLETE_VERIFICATION, MINOR_SAFETY |
 | Operations | OPERATIONS | OPERATOR, RELEASE, CI, RELIABILITY, TELEMETRY |
-| Quality | QA | TEST_AUTOMATION, DEVICE_QA, independent final gate |
+| Quality | QA | TEST_AUTOMATION, DEVICE_QA (native), VISUAL_QA (browser/visual), independent final gate |
 | Partnerships | PARTNERSHIPS | ROLE_HQ, SCHOOL_PARTNERS, SPONSOR_ADS |
-| Marketing | MARKETING | GROWTH_ANALYTICS and reviewed launch planning |
+| Marketing | MARKETING | GROWTH_ANALYTICS, BRAND (approved message) and reviewed launch planning |
 | Support | SUPPORT | INCIDENT_TRIAGE and internal tester help |
 | Brand | VOICE | Donation words and honest product copy |
+
+## Current cross-team builds (2026-10-07)
+
+| Work | Primary | Pair / independent review | Lead chain |
+| --- | --- | --- | --- |
+| UX-05a photo story schema | DATABASE_MIGRATIONS, BACKEND | RLS_SECURITY, STORAGE | BACKEND → ENGINEERING |
+| UX-05b photo story upload | PHOTO_STORIES, UPLOAD | CONTENT_RIGHTS, MINOR_SAFETY, ACCESSIBILITY | HIGHLIGHTS → ENGINEERING |
+| UX-05c feed + Game Day label | HIGHLIGHTS, PLAYBACK | DESIGN, ACCESSIBILITY | ENGINEERING |
+| UX-05d copy / legal / privacy | VOICE, MARKETING | LEGAL, PRIVACY_ENGINEERING | FACILITATOR |
+| UX-05e verification | QA, VISUAL_QA, DEVICE_QA | — | QA |
+| BRAND-01 tagline placements | BRAND, VOICE | LEGAL | MARKETING |
+| TOOL-01 MCP tooling | DESIGN_TOOLING | ENGINEERING | DESIGN |
+
+Detail and status: [WORK_QUEUE.md](WORK_QUEUE.md). Build contract: [PHOTO_STORIES_DESIGN.md](../engineering/design/PHOTO_STORIES_DESIGN.md).
 
 ## Pairing and escalation
 
@@ -163,6 +181,7 @@ flowchart TB
 | `AUTH` | Engineering | `ENGINEERING` | [auth.md](../../.claude/agents/auth.md) |
 | `BACKEND` | Engineering | `ENGINEERING` | [backend.md](../../.claude/agents/backend.md) |
 | `BILLING` | Finance | `COMMERCE` | [billing.md](../../.claude/agents/billing.md) |
+| `BRAND` | Marketing | `MARKETING` | [brand.md](../../.claude/agents/brand.md) |
 | `CATALOGS` | Engineering | `ADMIN` | [catalogs.md](../../.claude/agents/catalogs.md) |
 | `CHECKOUT` | Finance | `COMMERCE` | [checkout.md](../../.claude/agents/checkout.md) |
 | `CI` | Operations | `OPERATIONS` | [ci.md](../../.claude/agents/ci.md) |
@@ -175,6 +194,7 @@ flowchart TB
 | `CUSTODIAL` | Finance | `COMMERCE` | [custodial.md](../../.claude/agents/custodial.md) |
 | `DATABASE_MIGRATIONS` | Engineering | `BACKEND` | [database-migrations.md](../../.claude/agents/database-migrations.md) |
 | `DESIGN` | Design | `FACILITATOR` | [design.md](../../.claude/agents/design.md) |
+| `DESIGN_TOOLING` | Design | `DESIGN` | [design-tooling.md](../../.claude/agents/design-tooling.md) |
 | `DEVICE_QA` | Quality | `QA` | [device-qa.md](../../.claude/agents/device-qa.md) |
 | `DISCOVERY` | Engineering | `LOCAL` | [discovery.md](../../.claude/agents/discovery.md) |
 | `DOCUMENTATION` | Engineering | `ENGINEERING` | [documentation.md](../../.claude/agents/documentation.md) |
@@ -201,6 +221,7 @@ flowchart TB
 | `OPERATIONS` | Operations | `FACILITATOR` | [operations.md](../../.claude/agents/operations.md) |
 | `OPERATOR` | Operations | `OPERATIONS` | [operator.md](../../.claude/agents/operator.md) |
 | `PARTNERSHIPS` | Partnerships | `FACILITATOR` | [partnerships.md](../../.claude/agents/partnerships.md) |
+| `PHOTO_STORIES` | Engineering | `HIGHLIGHTS` | [photo-stories.md](../../.claude/agents/photo-stories.md) |
 | `PLAYBACK` | Engineering | `HIGHLIGHTS` | [playback.md](../../.claude/agents/playback.md) |
 | `POLLS` | Engineering | `LOCAL` | [polls.md](../../.claude/agents/polls.md) |
 | `PRIVACY_ENGINEERING` | Legal and Compliance | `COMPLIANCE` | [privacy-engineering.md](../../.claude/agents/privacy-engineering.md) |
@@ -233,10 +254,11 @@ flowchart TB
 | `TRUST_SAFETY` | Trust and Safety | `FACILITATOR` | [trust-safety.md](../../.claude/agents/trust-safety.md) |
 | `UPLOAD` | Engineering | `HIGHLIGHTS` | [upload.md](../../.claude/agents/upload.md) |
 | `VAULT` | Engineering | `PROFILE` | [vault.md](../../.claude/agents/vault.md) |
+| `VISUAL_QA` | Quality | `QA` | [visual-qa.md](../../.claude/agents/visual-qa.md) |
 | `VOICE` | Brand | `FACILITATOR` | [voice.md](../../.claude/agents/voice.md) |
 | `WISHLIST` | Finance | `COMMERCE` | [wishlist.md](../../.claude/agents/wishlist.md) |
 
-**83 callable agents** + Facilitator (18 existing roles, 65 new roles). Responsibility is assigned to every critical function; execution and launch status are tracked separately in the work queue and STATE.
+**87 callable agents** + Facilitator (18 existing roles, 69 new roles; PHOTO_STORIES, DESIGN_TOOLING, VISUAL_QA and BRAND added 2026-10-07). Responsibility is assigned to every critical function; execution and launch status are tracked separately in the work queue and STATE.
 
 ## Paste to call someone
 

@@ -54,6 +54,8 @@ Read `docs/STATE.md` first and follow `docs/agents/TEAMS.md` §Specialist operat
 
 Coordinate with specialists listed in the hierarchy; keep this role accountable for its surface and typed boundaries.
 
+**Now (2026-10-07):** review the BRAND-01 tagline "Donate. Elevate. Celebrate." (*Support their journey. Elevate their opportunities. Celebrate their story.*) in each placement — `BRAND` owns the message, you own the money words around it, LEGAL confirms "Elevate their opportunities" promises no recruiting/scholarship/exposure outcome. UX-05d: photo story upload/rights copy and the Game Day label stay plain and Donate-only.
+
 Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
 
 ## Documentation handoff

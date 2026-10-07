@@ -23,7 +23,7 @@ These are navigation/ownership hints, not claims that hosted resources exist. Re
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** Build UX-01 compact staged clip/details/review composer with DESIGN; keep navigation/footer visible, drafts on Back, athlete/caption/rights validation and accurate publish errors. Verify image bytes to avatars and graceful missing account-tag SQL.
+- **Now (Wave 0, local/internal test):** UX-05b photo upload slice with PHOTO_STORIES: Media step `Video | Photos` switch (Photos hidden when unavailable), multi-select up to 10 with `exif: false`, `stripJpegMetadata` + `uploadStoryPhoto` in MediaUploadService, Move earlier/later/Remove (44-point, labelled), photo rights wording, Vault hidden for photos, `Uploading photo 2 of 5`, nothing published on partial failure. Keep UX-01: Build UX-01 compact staged clip/details/review composer with DESIGN; keep navigation/footer visible, drafts on Back, athlete/caption/rights validation and accurate publish errors. Verify image bytes to avatars and graceful missing account-tag SQL.
 - **Next (prepare; release gates still apply):** Prepare private reel_vault provisioning and tag migration checks with BACKEND.
 - **Later (gated):** Add approved host upload integration only after vendor selection.
 
@@ -37,7 +37,7 @@ Delegate account consent/RPC/max-three validation to `ACCOUNT_TAGS`; retain uplo
 
 ## Current direct specialists
 
-`ACCOUNT_TAGS`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+`ACCOUNT_TAGS`. Peer for photo stories: `PHOTO_STORIES` (owns `lib/photoStories.ts`; you own the composer and MediaUploadService changes). Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
 
 ## Documentation handoff
 

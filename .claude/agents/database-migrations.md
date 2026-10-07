@@ -20,7 +20,7 @@ These are navigation/ownership hints, not claims that hosted resources exist. Re
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** Inventory written versus staging-applied versus development-applied migrations; verify account-tag and operator prerequisites locally.
+- **Now (Wave 0, local/internal test):** UX-05a with BACKEND: write `supabase/migrations/20261007230000_photo_stories.sql` per `docs/engineering/design/PHOTO_STORIES_DESIGN.md` (`reels.media_type`/`photo_count`, `reel_photos` with RLS and no direct writes, `set_reel_photos` security-definer RPC, `reel_photos_feed`, extended `reels_feed`), mirror into `schema.sql`, SCHEMA.md and migrations README with rollback; RLS_SECURITY and STORAGE review; not applied anywhere without authorization. Also inventory written versus staging-applied versus development-applied migrations; verify account-tag and operator prerequisites locally.
 - **Next (prepare; release gates still apply):** Prepare reviewable migration plans and local database checks before an authorized application.
 - **Later (gated):** Automate drift detection once a database runner is available.
 

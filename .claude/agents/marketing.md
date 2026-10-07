@@ -20,7 +20,7 @@ These are navigation/ownership hints, not claims that hosted resources exist. Re
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** Prepare internal-test messaging from verified product facts; no campaign publication.
+- **Now (Wave 0, local/internal test):** BRAND-01 with BRAND: the owner-approved message "Donate. Elevate. Celebrate." in its approved placements (welcome overlay, donate sheet header, profile donate area, public docs, store copy); UX-05d photo story copy with VOICE. Prepare internal-test messaging from verified product facts; no campaign publication.
 - **Next (prepare; release gates still apply):** Plan reviewed launch material after Product/Legal gates and real tester evidence.
 - **Later (gated):** Publish campaigns or contact audiences only when explicitly authorized.
 
@@ -32,7 +32,7 @@ Return: task ID; files changed; behavior and reason; checks actually run with re
 
 ## Current direct specialists
 
-`GROWTH_ANALYTICS`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+`BRAND` · `GROWTH_ANALYTICS`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
 
 ## Documentation handoff
 

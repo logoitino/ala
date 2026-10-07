@@ -152,6 +152,21 @@
       ]
     },
     {
+      "call": "BRAND",
+      "file": ".claude/agents/brand.md",
+      "department": "Marketing",
+      "lead": "MARKETING",
+      "owns": [
+        "docs/product/VOICE.md",
+        "docs/product/STORY.md",
+        "docs/product/PUBLIC.md",
+        "docs/product/STORE_LISTING.md"
+      ],
+      "tasks": [
+        "Own the approved message \"Donate. Elevate. Celebrate.\" and its consistent use in the approved placements; VOICE reviews money words, LEGAL reviews claims."
+      ]
+    },
+    {
       "call": "CATALOGS",
       "file": ".claude/agents/catalogs.md",
       "department": "Engineering",
@@ -320,6 +335,20 @@
       ],
       "tasks": [
         "Visual design and interaction integration"
+      ]
+    },
+    {
+      "call": "DESIGN_TOOLING",
+      "file": ".claude/agents/design-tooling.md",
+      "department": "Design",
+      "lead": "DESIGN",
+      "owns": [
+        ".mcp.json",
+        "docs/engineering/TOOLING.md"
+      ],
+      "tasks": [
+        "Own MCP/design-tool workflows: Figma/Canva handoff, Playwright screenshot evidence setup and Expo MCP build tooling.",
+        "Never connect to production or grant write access without owner approval."
       ]
     },
     {
@@ -680,6 +709,22 @@
       ],
       "tasks": [
         "Coordinate guardian, school, booster and sponsor requirements without inventing permissions."
+      ]
+    },
+    {
+      "call": "PHOTO_STORIES",
+      "file": ".claude/agents/photo-stories.md",
+      "department": "Engineering",
+      "lead": "HIGHLIGHTS",
+      "owns": [
+        "apps/mobile/src/frontend/lib/photoStories.ts",
+        "apps/mobile/src/frontend/components/Reels/PhotoStoryMedia.tsx",
+        "apps/mobile/src/frontend/hooks/useStoryPhotos.ts",
+        "docs/engineering/design/PHOTO_STORIES_DESIGN.md"
+      ],
+      "tasks": [
+        "Own photo story upload and data flow: 1–10 photos, reorder, per-photo descriptions, set_reel_photos client and story photo reads.",
+        "Keep photo stories graceful before the SQL exists and never publish a partially uploaded story."
       ]
     },
     {
@@ -1125,6 +1170,18 @@
       ],
       "tasks": [
         "Own private video entitlements, signed playback URLs and subscription-request access."
+      ]
+    },
+    {
+      "call": "VISUAL_QA",
+      "file": ".claude/agents/visual-qa.md",
+      "department": "Quality",
+      "lead": "QA",
+      "owns": [
+        "docs/engineering/AUDIT_REPORT.md"
+      ],
+      "tasks": [
+        "Record browser/visual regression evidence with the Playwright MCP on Expo web: narrow widths, large text and screenshots in AUDIT_REPORT; native sign-off stays with DEVICE_QA."
       ]
     },
     {

@@ -19,7 +19,7 @@ These are navigation/ownership hints, not claims that hosted resources exist. Re
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** Review upload declarations and rights report reasons against staged migration.
+- **Now (Wave 0, local/internal test):** UX-05b photo consent: review photo rights wording ("I took these photos or have permission from the people in them") in `data/contentRights.ts`, the rights attestation on photo stories and report reasons for photos of other people. Also review upload declarations and rights report reasons against staged migration.
 - **Next (prepare; release gates still apply):** Track written school/association rights requirements with SCHOOL_PARTNERS and LEGAL.
 - **Later (gated):** Licensed music picker, commercial footage or marks require explicit licensing decisions.
 

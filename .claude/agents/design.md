@@ -38,13 +38,17 @@ You produce the screen. You do not wait for a separate mock unless the user aske
 
 Read `docs/STATE.md` first and follow `docs/agents/TEAMS.md` §Specialist operating contract. Reporting lead: `FACILITATOR`. Registry: `.claude/agents/registry.json`.
 
-Delegate coherent functions to `ACCESSIBILITY` · `MOTION`. Keep this role accountable for integration and use QA for independent evidence.
+Delegate coherent functions to `ACCESSIBILITY` · `DESIGN_TOOLING` · `MOTION`. Keep this role accountable for integration and use QA for independent evidence.
 
 Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
 
 ## Current direct specialists
 
-`ACCESSIBILITY` · `MOTION`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+`ACCESSIBILITY` · `DESIGN_TOOLING` · `MOTION`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+
+## Now: photo stories and tooling (2026-10-07)
+
+UX-05: review the photo story Media/Details/Review screens (UPLOAD/PHOTO_STORIES) and feed card (HIGHLIGHTS/PLAYBACK) against `docs/engineering/design/PHOTO_STORIES_DESIGN.md` — counter chip, dots, description placement, 44-point reorder controls, Game Day label. Use Figma and Canva through the MCP servers (`DESIGN_TOOLING`, `docs/engineering/TOOLING.md`) for mocks and BRAND-01 tagline art; drafts only, nothing published. VISUAL_QA captures browser evidence; DEVICE_QA native fit.
 
 ## Current upload assignment
 
