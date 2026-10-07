@@ -24,13 +24,13 @@ Gate: pnpm typecheck && pnpm docs:check
 
 Say the department in plain words. These calls have an agent that does the work:
 
-`CALL: DESIGN` · `CALL: ENGINEERING` · `CALL: LEGAL` · `CALL: VOICE` · `CALL: QA`
+`CALL: DESIGN` · `CALL: ENGINEERING` · `CALL: FULLSTACK` · `CALL: BACKEND` · `CALL: LEGAL` · `CALL: COMPLIANCE` · `CALL: VOICE` · `CALL: QA`
 
 `CALL: COMMERCE` is Finance. `CALL: ROLE_HQ` is Partnerships. `CALL: HIGHLIGHTS` is the Home squad inside Engineering. `FACILITATOR` is you. Marketing and Support have no agent yet.
 
-Screen squads, when the change is only in one place: `HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `COMMERCE` · `AURA` · `ADMIN` · `BACKEND` · `OPERATOR` · `ROLE_HQ`.
+**Engineering roles:** `ENGINEERING` (lead) · `BACKEND` (database engineer) · `FULLSTACK` (full-stack developer). Screen squads when the change is only in one place: `HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `COMMERCE` · `AURA` · `ADMIN` · `OPERATOR` · `ROLE_HQ`.
 
-If the bug spans two departments, **Facilitator** names a lead and a pair. Schema / RLS / RPC / Storage / Stripe secrets always pull **Backend**. Publish-to-app and docs honesty always pull **QA**.
+If the bug spans two departments, **Facilitator** names a lead and a pair. Schema / RLS / RPC / Storage / Stripe secrets always pull **Backend**. Cross-cutting app + API work pulls **Fullstack**. Publish-to-app and docs honesty always pull **QA**. Privacy / ToS / processor / claim hygiene pulls **Compliance**.
 
 ### Dispatching in Claude Code
 
@@ -50,14 +50,14 @@ These are the departments a company actually has. The names under **Builds it** 
 | --- | --- | --- | --- | --- | --- |
 | **Product** | What ships, for whom, and in what order. Roadmap and the one next move. | `FACILITATOR` (the person driving the session, not a code agent) | Test wave: uploads, donations, Rally, on the staging preview | Owner decisions in STATE §6 before live money | Company formation stays with the founder |
 | **Design (UX/UI)** | How every screen looks, moves, and reads. | `DESIGN` (`.claude/agents/design.md`). `AURA` keeps tier math | Daylight canvas, tab colors, springs, one primary action per sheet, empty vs error | Feel check on a real phone with Quality (M9) | Share card, backer wall, badges, a bigger rivalry takeover (M8). Fan digital signature on the Aura card |
-| **Engineering** | The app, the database, and the admin tools. | `ENGINEERING` (`.claude/agents/engineering.md`) leads the squads | Home, Activity, Local, Spotlight, Profile, sign-in, sideline scorer, Expo admin. Account tags on a Highlight (SQL not applied). Staging has the September SQL and the content-rights SQL. Drip tab is off | Magic-link redirect on staging. `reel_vault` so Vault video plays. Apply account-tag SQL when the owner asks. Real admin and operator sessions. Pick Cloudflare Stream or Mux; do not build a video platform on Storage | Drip marketplace (Wave 1). Fan digital signature on the Aura card. Low-view lane (M3). Train Like Me / Ask an athlete (M4). Showcase link (M6). Game-day gigs (M5, Wave 3). No licensed music picker |
+| **Engineering** | The app, the database, and the admin tools — industry practice, no shortcuts. | `ENGINEERING` lead · `BACKEND` (database) · `FULLSTACK` · screen squads | Home, Activity, Local, Spotlight, Profile, sign-in, sideline scorer, Expo admin. Account tags on a Highlight (SQL not applied). Staging has the September SQL and the content-rights SQL. Drip tab is off | Magic-link redirect on staging. `reel_vault` so Vault video plays. Apply account-tag SQL when the owner asks. Real admin and operator sessions. Pick Cloudflare Stream or Mux; do not build a video platform on Storage | Drip marketplace (Wave 1). Fan digital signature on the Aura card. Low-view lane (M3). Train Like Me / Ask an athlete (M4). Showcase link (M6). Game-day gigs (M5, Wave 3). No licensed music picker |
 | **Finance** | Money in, the split, receipts, and money out. | `COMMERCE`, with `BACKEND` on the ledger | Donate sheet (90 / 10, optional tip for Tapua'i starts at No tip), gear goals, Rally, receipts. Payouts stay blocked. Drip is off | One credit path: the webhook writes the donation, then the app stops inserting it. Parent is the payee. A server balance before any payout | Drip marketplace (Wave 1). Team gift and booster match (counsel first). Pathway labels only, no fund held here (M7). Filmer cash from Tapua'i's own budget (M11) — nothing in the UI mentions cash |
-| **Legal & Compliance** | What the company is allowed to say and do. Counsel decides. The agent only places approved words in the app. | `LEGAL` | Terms and ack toggles. Conclusions stay in `LEGAL_BRIEFING.md` | Counsel reviews the 90 / 10 line and App Store gift rules before live money | Formation, trademark, association letter (company phases L0–L4). The agent does not write those |
+| **Legal & Compliance** | What the company is allowed to say and do. Counsel decides. Agents place approved words and refuse false claims. | `LEGAL` (terms ack) · `COMPLIANCE` (privacy / ToS checklist) | Terms and ack toggles. `DATA_PRIVACY_MAP.md` inventory. No invented SOC 2 or uptime SLA. Conclusions stay in `LEGAL_BRIEFING.md` | Counsel: Privacy Policy, ToS liability, parental consent. Export / deletion product path. Processor list stays honest. Auto-renewal only if Billing lands | Formation, trademark, association letter (L0–L4). DPA for booster/sponsor/school B2B. Measured uptime SLO only after Ops exists. Agents do not file or draft counsel paper |
 | **Brand** | The words a parent reads. Donate / donation. No money tied to a play. | `VOICE` | `pnpm copy:check` on every money screen | Run again before a release | Every new money screen, including ones listed as Later |
 | **Trust & Safety** | Who may post, what may be reported, and what leaves the public feed. | `HIGHLIGHTS` for the report flow, `LEGAL` for the rules, `ADMIN` when a person has to review | Upload confirms permission, sound, and marks. Reports name a reason. Some reasons hide the clip immediately | A human moderation queue before public video of minors | Strikes, appeals, and a filmed-at-the-game badge. Not built |
 | **Partnerships** | Schools, families, booster clubs, and sponsors. | `ROLE_HQ`, with `LOCAL` for game-day boosters and `PROFILE` for the athlete | Parent, Booster, and Sponsor portals. A guardian approves an athlete's Rally | The parent stays the payee on paper. The payout button stays a stub | Real custodial payout only after Finance has a ledger. Written school permission before a commercial build shows a school mark |
 | **Operations** | Running a game day and the control plane. | `OPERATOR` and `ADMIN` | Sideline PIN, GPS check-in, score and clock. Expo `/admin` is where staff edit. The Next portal is read-only oversight | The operator PIN is for internal test only. It is not a public login | Paid game-day coverage and a light game line (M5). Billing and marketing desks were scoped, not started |
-| **Quality** | Whether a change is safe to hand to a tester. | `QA` | Typecheck, docs, copy, tests, sign-in, Profile, payments | Feel check on the preview installs | A full pass by each department, then the public-beta gate |
+| **Quality** | Whether a change is safe to hand to a tester — automated + product + compliance hygiene. | `QA` | Typecheck, docs, copy, boundaries, comments, Jest, Soft-Wall, Profile, payments, no fake SOC 2 / SLA / trackers-before-consent | Feel check on the preview installs. Export/deletion path once built | A full pass by each department, then the public-beta gate |
 | **Marketing** | How families hear about Tapua'i. | Nobody yet. Product and Brand hold the words until a desk exists | Not staffed. Do not invent campaigns | — | Rally stories from real families, with consent (M10) |
 | **Support** | Helping a parent or athlete when something breaks. | Nobody yet | Not staffed. Testers use the people already on the project | — | A help desk, after there are users outside the test group |
 
@@ -81,30 +81,47 @@ Design produces the screen. The call names the surface. The agent edits that sur
 
 ### Engineering team
 
-**Department:** Engineering. **Agent:** `ENGINEERING` (`.claude/agents/engineering.md`). **Call:** `CALL: ENGINEERING`.
+**Department:** Engineering. **Lead:** `ENGINEERING` (`.claude/agents/engineering.md`). **Call:** `CALL: ENGINEERING`.
 
-Engineering produces the code. The lead reads `docs/STATE.md`, then either does the change or uses the squad that owns the files: `HIGHLIGHTS`, `LOCAL`, `SPOTLIGHT`, `PROFILE`, `AUTH`, `ADMIN`, `BACKEND`, `OPERATOR`. `AURA` is tier math when Design is not leading the screen.
+Engineering produces the code to an industry bar: typed boundaries, least-privilege data access, tests on money/eligibility math, docs in the same turn. **No shortcuts** — a client-only patch that leaves open RLS or trusts PaymentSheet alone for the ledger is not done.
 
-**Do not:** start a Later item unless it was asked for. Put a Stripe secret in the client. Deploy the webhook. Apply SQL to the development project unless asked.
+| Role | Agent | Call | What they do |
+| --- | --- | --- | --- |
+| **Engineering lead** | `ENGINEERING` | `CALL: ENGINEERING` | Routes the work, integrates cross-squad changes, enforces the professional bar. |
+| **Database engineer** | `BACKEND` | `CALL: BACKEND` | Postgres, RLS, RPCs, migrations, Storage, Realtime, Edge Functions, server Stripe secrets. Canonical file: `schema.sql`. |
+| **Full-stack developer** | `FULLSTACK` | `CALL: FULLSTACK` | Expo screens, hooks, lib clients, and Expo API routes end to end — without leaking secrets or inventing a second architecture. |
+| **Screen squads** | `HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `ADMIN` · `OPERATOR` · `AURA` | `CALL: <SQUAD>` | One surface when the change stays there. |
+
+**Do not:** start a Later item unless it was asked for. Put a Stripe secret in the client. Deploy webhook crediting while the client still inserts `tips`. Apply SQL to the development project unless asked. Claim SOC 2 or publish a fake uptime SLA.
 
 ### Legal team
 
-**Department:** Legal & Compliance. **Agent:** `LEGAL` (`.claude/agents/legal.md`). **Call:** `CALL: LEGAL`.
+**Department:** Legal & Compliance. **Agents:** `LEGAL` (`.claude/agents/legal.md`) · `COMPLIANCE` (`.claude/agents/compliance.md`). **Calls:** `CALL: LEGAL` · `CALL: COMPLIANCE`.
 
-Legal does not decide the law. A licensed attorney does. This team puts the approved words into the app and keeps the issue map honest. The map is [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md). The order of company paper is [COMPANY_PHASES.md](COMPANY_PHASES.md) (L0–L4). Do not write a new legal conclusion in either file.
+Legal does not decide the law. A licensed attorney does. This team puts approved words into the app, keeps the issue map honest, and **refuses false claims**. The map is [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md). Privacy inventory is [DATA_PRIVACY_MAP.md](DATA_PRIVACY_MAP.md). Company paper order is [COMPANY_PHASES.md](COMPANY_PHASES.md) (L0–L4). Do not write a new legal conclusion in those files.
 
 | Job | Now | Next | Later |
 | --- | --- | --- | --- |
-| **Terms in the app** | `LegalModal` and the ack on Varsity apply and Connect Bank. The version the app asks people to accept is `LEGAL_TERMS_VERSION`. | Counsel drafts terms, privacy, and parental consent. The app only stores the version they approve. | — |
-| **Money words** | The donate sheet states the 90 / 10 split. Brand (`VOICE`) checks the wording. Legal does not invent the split. | Counsel reviews that line and the App Store gift rule before live money. | Tax reporting is a CPA and payments counsel question (company phase B6). |
-| **Minors** | New sign-up confirms 13+. Thank-yous are presets, with no free-text reply to a donor. A Rally an athlete starts waits for a guardian. | A minor does not get their own payout account. The parent is the payee, on paper, until counsel signs the design. | 1-on-1 video with minors stays off until the safety rules in the roadmap are signed. |
-| **Footage, sound, and marks** | Upload confirms permission, original or licensed sound, and that a school logo, team mark, or TV broadcast is not treated as ours. Game play also confirms real footage. | Counsel still decides whether a school mark may appear at all. | Strikes, appeals, and a filmed-at-the-game badge are not built. A licensed music catalog is not priced and is not this wave. |
-| **Schools and associations** | Demo rosters are not a license to use a school's name or film. | — | A written association or district position before one metro is talked to as a launch (company phase, before live money). |
-| **Company paper** | Not started. Stripe stays in test mode. | Counsel retained before filings. | LLC, trademark, and patent triage. The founder does this with counsel. The agent does not file anything. |
+| **Terms in the app** | `LegalModal` and the ack on Varsity apply and Connect Bank. Version: `LEGAL_TERMS_VERSION`. | Counsel drafts terms, privacy, and parental consent. The app only stores the version they approve. | — |
+| **Privacy Policy** | Inventory only (`DATA_PRIVACY_MAP.md`). Not a published Privacy Policy. | Counsel drafts. App links the approved version. | Keep inventory current when tables change. |
+| **Data export & deletion** | Not built (`DATA_PRIVACY_MAP` §3.4). | Product + BACKEND + FULLSTACK scope soft-delete / export; COMPLIANCE tracks disclosure of what is kept. | Hard deletes only if counsel and ledger rules allow. |
+| **Auto-renewal disclosure** | Exclusive is one-time PaymentIntent — no auto-renew today. | If Stripe Billing / renewing Exclusive lands, clear pre-buy disclosure + cancel path before launch. | — |
+| **No false SOC 2** | Agents and QA reject invented "SOC 2" / "certified" claims. | Same. | Real audit only if the company buys one. |
+| **Cookie / tracker posture** | No analytics/ad SDK found that phones home on first open. Prefer none. | Any tracker stays off until affirmative consent. Reject "accept all or leave" cookie walls. | — |
+| **Cap liability in ToS** | Not drafted by agents. | Counsel ToS. | Wire ack to the approved version only. |
+| **DPA for business users** | Not started (no school/booster B2B contract desk). | — | When sponsors/schools are real customers, counsel DPA. |
+| **Publish processors** | Stripe + Supabase named in `DATA_PRIVACY_MAP` §2. | Keep list honest when a vendor is added. | Show in Privacy Policy counsel drafts. |
+| **ToS tickbox** | Ack on Varsity apply + Connect Bank. | Counsel may require ack on sign-up too. | — |
+| **Real uptime SLA** | Do not publish 99.x% while Wave 0 hosting is best-effort. | — | Measured SLO only after Ops + paid hosting exist. |
+| **Money words** | Donate sheet states 90 / 10. Brand (`VOICE`) checks wording. | Counsel reviews that line and App Store gift rules before live money. | Tax reporting is CPA / payments counsel (B6). |
+| **Minors** | Sign-up confirms 13+. Thank-yous presets only. Athlete Rally waits for guardian. | Parent is the payee until counsel signs the design. | 1-on-1 with minors stays off until safety rules are signed. |
+| **Footage, sound, and marks** | Upload confirms permission, sound, marks; game play confirms real footage. | Counsel decides whether school marks may appear at all. | Strikes, appeals, filmed-at-the-game badge — not this wave. |
+| **Schools and associations** | Demo rosters are not a license to use a school's name or film. | — | Written association / district position before a metro launch. |
+| **Company paper** | Stripe stays in test mode. | Counsel retained before filings. | LLC, trademark, patent triage — founder + counsel. Agents do not file. |
 
-**Pairs:** Brand for words on screen. Finance for prices and the split. Trust & Safety for reports and hiding a clip. Partnerships for a school or guardian. Product when counsel has to decide before anyone builds.
+**Pairs:** Brand for words on screen. Finance for prices and the split. Trust & Safety for reports. Partnerships for a school or guardian. Engineering (BACKEND / FULLSTACK) for export, deletion, and processors. Quality fails false SOC 2 / fake SLA / trackers-before-consent. Product when counsel must decide before anyone builds.
 
-**Do not:** Rewrite conclusions outside the `<!-- product-facts -->` markers. Put `sk_` in the app. Turn on live Stripe keys. Describe the app as patented, tax-deductible, or licensed by a school.
+**Do not:** Rewrite conclusions outside the `<!-- product-facts -->` markers. Put `sk_` in the app. Turn on live Stripe keys. Describe the app as patented, tax-deductible, SOC 2 certified, covered by a fake SLA, or licensed by a school.
 
 ### Keep the roster current
 
@@ -113,7 +130,7 @@ When the app or the code changes who owns a screen, what a department does now, 
 1. The row in **Business departments** for the department that owns the outcome.
 2. The engineering squad section if the fan surface, admin desk, or do-not-touch list moved.
 3. `.claude/agents/<file>.md` if that agent's description no longer matches the code.
-4. The Legal team table above if the change touches terms, minors, money wording, footage, school marks, or company paper.
+4. The Legal team table above if the change touches terms, minors, money wording, footage, school marks, company paper, privacy export/deletion, processors, SOC 2 / SLA claims, or trackers.
 
 A feature that ships with a stale department row is not done. This is the same turn as `docs/STATE.md` §4. The rule lives in `.cursor/rules/documentation.mdc`.
 
@@ -322,16 +339,34 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 ---
 
-### BACKEND — Data, Auth, Storage, RPCs
+### BACKEND — Database engineer
 
-**Call:** `BACKEND`  
+**Call:** `BACKEND` (`.claude/agents/backend.md`)  
 **Fan:** all (invisible)  
 **Admin:** n/a (SQL editor / MCP)  
-**What it does:** Canonical `apps/mobile/src/backend/db/schema.sql`. Incremental `supabase/*.sql`. RLS in schema.sql. Storage `reels` / `game_highlights` / `avatars`. Realtime `games`, `game_events`, `cheer_polls`, `app_runtime_config`. Edge JWT functions.
+**What it does:** Database engineer for Tapua'i. Canonical `apps/mobile/src/backend/db/schema.sql`. Migrations under `supabase/migrations/`, then copied onto schema. RLS in schema.sql — least privilege, no convenience `using (true)` on money or PII. Storage `reels` / `reel_vault` / `game_highlights` / `avatars`. Realtime publications. Edge JWT functions. Personal-data columns stay listed in [DATA_PRIVACY_MAP.md](DATA_PRIVACY_MAP.md).
 
 **Same-turn docs:** [SCHEMA.md](SCHEMA.md) · [DOCUMENTATION.md](../DOCUMENTATION.md) if tables/RPCs/architecture move. `pnpm docs:check` must name every public table and `create or replace function`.
 
-**Do not:** Change UI copy. Skip SCHEMA.md. Add `is_verified` writes that the hosted DB cannot accept without a fallback.
+**Do not:** Change UI copy. Skip SCHEMA.md. Apply SQL to development unless asked. Enable webhook ledger crediting while the client still inserts `tips`. Add `is_verified` writes the hosted DB cannot accept without a fallback.
+
+### FULLSTACK — Full-stack developer
+
+**Call:** `FULLSTACK` (`.claude/agents/fullstack.md`)  
+**Fan:** whatever surface the feature needs  
+**Admin:** Expo desks when the feature has one  
+**What it does:** End-to-end features across Expo routes, components, hooks, lib clients, and Expo API routes. Industry practice: typed RPC boundaries, no secret leakage, empty vs error UI, JSDoc on hooks/network helpers. Pairs BACKEND when data moves.
+
+**Do not:** Client-only "fixes" for RLS holes. Credit money from PaymentSheet alone when Phase 1a says webhook-or-server. Add trackers before consent. Claim SOC 2 or invent an uptime SLA.
+
+### COMPLIANCE — Privacy & commercial controls
+
+**Call:** `COMPLIANCE` (`.claude/agents/compliance.md`)  
+**Fan:** Terms / privacy / consent surfaces  
+**Admin:** none (issue map + gates)  
+**What it does:** Tracks Privacy Policy wiring, export/deletion scope, auto-renewal disclosure, no false SOC 2, cookie/tracker posture, ToS liability and DPA needs, processor list, ToS tickbox, honest uptime claims. Does not draft counsel paper.
+
+**Do not:** Invent Privacy Policy / ToS / DPA / SLA text. Soften a real gap without naming it in LEGAL_BRIEFING or DATA_PRIVACY_MAP.
 
 ---
 
