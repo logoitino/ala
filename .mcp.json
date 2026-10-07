@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["--prefer-offline", "-y", "@playwright/mcp@0.0.83", "--browser", "chrome", "--output-dir", ".playwright-mcp"],
+      "env": { "NODE_USE_ENV_PROXY": "1" }
+    },
+    "expo": {
+      "type": "http",
+      "url": "https://mcp.expo.dev/mcp"
+    },
+    "canva": {
+      "type": "http",
+      "url": "https://mcp.canva.com/mcp"
+    },
+    "supabase-dev": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=ulfapgtabidorgwfjvwz&read_only=true&features=database,docs,debugging,development"
+    }
+  }
+}
