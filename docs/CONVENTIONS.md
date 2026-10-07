@@ -152,3 +152,17 @@ comment where it would confuse a reader.
 
 Update [docs/STATE.md](STATE.md) §4 and its `Last updated` header. CI fails a pull request that
 changes `apps/`, `packages/` or `supabase/` without it.
+
+
+## 7. Compact menus and the Daylight visual system
+
+Use the shared menu chrome in `components/UI/MenuChrome.tsx` and metrics from
+`constants/theme.ts`; use `useSheetFrame` for safe-area sheet geometry. Shared page headings
+and shells keep fan pages aligned with the same palette. See [MENU_STYLE_MAP.md](MENU_STYLE_MAP.md)
+for coverage and deliberate exceptions; avoid copying a one-off palette into a feature.
+
+For composition or payment, split lengthy forms into short steps within one popup and place
+Back/Next/final action outside the scroll area. Preserve drafts on Back. Show rights or financial
+review before the final action; lock dismissal/submission during upload or payment. Small screens,
+large text and keyboard layouts can still need a short scroll. Check those on real devices.
+Pair every owner with `DOCUMENTATION` for accurate team/docs and code-comment handoff.

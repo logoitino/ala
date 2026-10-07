@@ -32,7 +32,7 @@ pnpm docs:check      # front-of-house facts vs code
 
 Never commit `.env`, `.env.local`, or `.env.production`.
 
-- **Mobile:** `apps/mobile/.env.local` — `EXPO_PUBLIC_*`, server `STRIPE_SECRET_KEY` for JWT-gated API routes
+- **Mobile:** `apps/mobile/.env.local` — `EXPO_PUBLIC_*` only; `STRIPE_SECRET_KEY` lives in Supabase secrets (and, for local Metro API routes, a private file outside the repo — see `docs/ONBOARDING.md`)
 - **Admin portal:** `apps/admin-portal/.env.local` — `NEXT_PUBLIC_SUPABASE_*`
 
 ## Workspace scripts
@@ -44,7 +44,10 @@ Never commit `.env`, `.env.local`, or `.env.production`.
 | `pnpm admin` | Next.js admin stub |
 | `pnpm docs:sync` / `docs:check` | Product facts |
 | `pnpm typecheck` | Mobile + admin `tsc` |
+| `pnpm agents:check` | Specialist files, ownership and hierarchy consistency |
 
 ## Architecture note
 
 Backend SQL stays at repo-root [`supabase/`](supabase/). Canonical app schema copy: `apps/mobile/src/backend/db/schema.sql`. Stripe stays in test mode until production keys + legal sign-off.
+
+Specialist roster: [TEAM_HIERARCHY](docs/TEAM_HIERARCHY.md) · [TEAMS](docs/TEAMS.md) · [WORK_QUEUE](docs/WORK_QUEUE.md).

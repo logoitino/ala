@@ -13,3 +13,9 @@ Do not present these as App Store screenshots. They are prototype captures in St
 **STALE:** Highlights ⚡ TikTok overlay (name + caption on the clip just above the fan bar, ⋯ more sheet, Home / All / Seki + search), one Seki / Aura / Flex, Mālo'd fill, fan-bar Upload slot, unified Profile tabs (Highlights / Stats / Vault), **Clean Profile hierarchy** (hamburger `ProfileMenuSheet`, large avatar hero instead of full-width Aura card, slim Crew · Squad strip, Highlights collage first, Active Team Roster Claimed/Unclaimed), trading-card career preview behind Flip, **Lock Vault 🔒 / Open Vault 🌐**, Player of the Week `SpotlightModal`, the **Spotlight** fan-bar tab, **Serve Like Me / Train Like Me** upload pills + feed badges, **The Crew ⚡ / Your Squad 🛡️**, **Flash Unlock** countdown chips, Daylight canvas, the Skia neon sweep on Celestial Prism / funded wishlist cards, **Island Daylight** per-tier collectible faces, and the **tab scheme** (gold kickers, ember LIVE, per-tab fan-bar accents, gold Spotlight cards, ember Drip tiles) landed after these stills. Recapture all three PNGs from Expo Go when Metro is running.
 
 If Reel / Local / Profile chrome changes, recapture these PNGs from Expo Go when Metro is running. If you cannot recapture in the same turn, mark **STALE** here instead of inventing a headless screenshot pipeline.
+
+**2026-10-07 still STALE:** account-mention failure messages on upload and the Profile inbox changed. No device captures made this session.
+
+**2026-10-07 upload composer STALE:** Video → Details → Review and More options replace the long upload form. No native screenshots captured; small-phone/keyboard fit requires a device check.
+
+**2026-10-07 UX-02 STALE:** staged Donate popup, polished upload steps, shared Daylight sheet/page chrome. No new native screenshots captured; device and keyboard fit remain unverified.

@@ -3,6 +3,11 @@
 Companion to [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md), [COMPANY_PHASES.md](COMPANY_PHASES.md) (security, billing, and legal phases, including LLC / trademark / patent triage), [AUDIT_REPORT.md](AUDIT_REPORT.md), and [TEAMS.md](TEAMS.md#qa--ship-gate). This is the live tracker for closing the pre-launch security/compliance gaps, standing up real testing infrastructure, and running an internal test wave before any public beta. Update the status line under each phase as work lands — do not let this drift into a one-time snapshot.
 
 
+**Current execution (2026-10-07):** the specialist roster has 83 callable roles, including the DOCUMENTATION sync owner. UX-02 compact Donate review and consistent Daylight menu/page presentation are complete locally. Full Jest passes 50 suites / 242 tests, with the latest checkout callback guard verified by an additional 8-test targeted run; both app typechecks pass. Native visual/accessibility/payment acceptance, hosted verification and build verification remain pending.
+[WORK_QUEUE.md](WORK_QUEUE.md) assigns the next Wave 0 tasks and separates local completion
+from hosted/device verification and owner decisions. Guest route boundaries and account-tag
+reliability are implemented and locally verified this session; Phase 2 below records the corrected staging status.
+
 ## North Star — what all of this is for
 
 Tapua'i is where a community rallies behind a young athlete so **money is never the reason they stop** — and where support reaches **every athlete, not just the star** the NIL money already finds. Full narrative, marketing lines and guardrails: [STORY.md](STORY.md).
@@ -59,7 +64,7 @@ Two audits found: (1) money/Aura/admin-data could be fabricated because RLS trus
 
 Internal dogfooding runs now, in Stripe test mode, in parallel with Phase 1 — it is **not** gated on legal/compliance work. Only a public beta with real money is gated on Phase 1 + a written association position.
 
-**Where things stand for testing, as of Round 33 (2026-09-22):** Phase 0's security work is done to the point that internal testing (Phase 3) is not blocked on it. Every table/RPC-fabrication bug found across 33 rounds is fixed, the admin login chain (four independent bugs, see Round 21) is fixed and verified live, and the two remaining "Hard Blocker" items below are explicitly scoped as *internal-testing-acceptable, public-beta-blocking* — meaning they do not need to close before Phase 3 testers get in, only before Phase 5. The two genuinely open items from this session (Round 23's payout balance ledger, Round 24's Stripe webhook wiring) are real product/feature decisions, not security holes blocking testing — payouts are simply disabled today (a stub, same as Phase 1 item 3 already notes), which is fine for testers who aren't expected to withdraw real money yet. **The actual bottleneck to opening Phase 3 is a staging Supabase project.** The EAS preview install already exists (iPad ad hoc + Android APK). See Phase 2 below.
+**Where things stand for testing, as of Round 33 (2026-09-22):** Phase 0's security work is done to the point that internal testing (Phase 3) is not blocked on it. Every table/RPC-fabrication bug found across 33 rounds is fixed, the admin login chain (four independent bugs, see Round 21) is fixed and verified live, and the two remaining "Hard Blocker" items below are explicitly scoped as *internal-testing-acceptable, public-beta-blocking* — meaning they do not need to close before Phase 3 testers get in, only before Phase 5. The two genuinely open items from this session (Round 23's payout balance ledger, Round 24's Stripe webhook wiring) are real product/feature decisions, not security holes blocking testing — payouts are simply disabled today (a stub, same as Phase 1 item 3 already notes), which is fine for testers who aren't expected to withdraw real money yet. **Historical Round 33 bottleneck:** staging was not yet created. STATE §0 records it created on 2026-09-30; Phase 2 now tracks the remaining installed-build verification. The EAS preview install already exists (iPad ad hoc + Android APK). See Phase 2 below.
 
 ---
 
@@ -174,17 +179,36 @@ Internal dogfooding runs now, in Stripe test mode, in parallel with Phase 1 — 
 
 ## Phase 2 — Testing infrastructure
 
-**Staging is the remaining blocker before Phase 3.** Phase 0 and admin sign-in are done. A preview install link now exists. Testers still need a database that is not the one development writes to.
+**Staging is recorded ready; installed-build smoke remains to be verified.** STATE §0 records
+September SQL applied to `ala-sports-staging` on 2026-09-30 and new staging preview builds on
+2026-10-01. The 2026-10-07 local review did not query Supabase or EAS, so it does not certify
+current hosted configuration or a device run. [WORK_QUEUE.md](WORK_QUEUE.md) assigns the remaining checks.
 
-*Status (2026-09-27): Jest + `@testing-library/react-native` (`pnpm --filter @tapuai/mobile test`; Aura tier math, Mālo tag-gating, age-gate). CI runs typecheck, docs:check, tests, and a secret-leak grep. EAS project `@logoitino/ala-sports` is linked. Preview builds finished 2026-09-27: [iOS](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/b4b8c235-cbc6-4ae7-ada8-4dadb4a25835) (ad hoc, the one registered iPad) and [Android](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/1c8b92f0-36b6-48ca-b7d8-c35a1ca02a19) (APK, any Android device). Still needed: a staging Supabase project or branch, with `schema.sql` applied, and the test build pointed at it. QA checklist already includes the Phase 1 flows.*
+*Status (2026-10-07): local docs, copy, comments and data-boundary guards pass. Verification covers 47 suites / 222 tests (full run plus repaired upload fixture rerun)
+and both app typechecks; exact evidence and limitations are in STATE §4. UX-01 subsequently rebuilt the upload form into short steps; the latest full suite passes **47 suites / 228 tests** and mobile typecheck. Native upload/keyboard smoke remains pending.
+CI includes the specialist roster consistency gate. Recorded current builds:
+[iOS](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/a93f562d-d122-48a4-a20f-3e466368aa4a)
+(registered iPad only) and
+[Android](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/061946c8-a25d-4a32-b5be-bab316819c1d)
+(APK). Earlier September build links are historical.*
 
-1. Automated tests, narrow and money-adjacent first — tier math, eligibility gating, fee/split calculations — not full Detox/Maestro e2e yet.
-2. CI (`.github/workflows/ci-checks.yml`) runs typecheck, docs:check, the test suite, and a secret-leak grep (now covering `service_role` too, not just `sk_test_`).
-3. ~~Link EAS and produce a preview install.~~ **Done 2026-09-23.** `eas.json` profiles are development (dev client), preview (internal), and production. Preview iOS is ad hoc for the registered iPad only. A new iPhone needs its UDID on that profile and a new iOS build. Android preview is an APK.
-4. **Blocking:** step-by-step in [STAGING_RUNBOOK.md](STAGING_RUNBOOK.md). Deploying Edge Function `create-payment-intent` is now **required** (checkout calls it first since 2026-09-29), reversing Round 10's "optional". A second, throwaway Supabase project for staging — create one in the Supabase dashboard (or a branch; none exist yet), run `schema.sql` against it fresh, and point the tester env at it. Keep the current project as the development database.
-5. QA's standing checklist (`.claude/agents/qa.md`, mirrored in `TEAMS.md#qa--ship-gate`) now includes the automated test run and the Phase 1 compliance flows.
+1. Automated tests cover money/eligibility, feed behavior, auth and other implemented flows;
+   preserve these while improving route/data boundaries.
+2. CI (`.github/workflows/ci-checks.yml`) runs typecheck, docs, copy, boundaries, comments,
+   specialist roster validation, tests and leaked-key checks.
+3. **Recorded done:** EAS project and preview builds. iOS remains ad hoc for the registered
+   iPad; a new iPhone needs registration and a new build. `RELEASE` owns build evidence.
+4. **Recorded done, remote state not re-verified:** staging project, September migrations,
+   test `create-payment-intent` function and test secret. `AUTH` / `RELEASE` verify redirect
+   `alasports://auth/callback`, sign-in and test checkout on the installed build.
+   Private `reel_vault` setup and unapplied October migrations remain separate work items.
+   Never enable webhook crediting while the client still inserts `tips`.
+5. `QA` owns device smoke and result recording using [TESTER_SCRIPT.md](TESTER_SCRIPT.md).
+   Confirm project and build before judging a missing feature; development is behind staging.
 
-**Exit criterion:** `pnpm test` passes in CI (done), a tester can install a real build from a link with no dev-machine dependency (done for the registered iPad and for Android), and that build talks to staging (item 4, still open).
+**Exit criterion:** automated gates pass, a tester installs the recorded build without a dev
+machine, and device evidence proves staging sign-in, upload and one test donation. Infrastructure
+provisioning is recorded complete; device verification is still pending.
 
 ---
 

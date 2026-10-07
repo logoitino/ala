@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-10-07 · Engineering roster: lead + database (BACKEND) + full-stack (FULLSTACK); Compliance agent for privacy/ToS checklist; QA is the testing gate · 2026-10-02 · Review hand-off refreshed · Account tags written, SQL not applied · Fan signature is later · Support received shows $0 when the ledger is empty or unavailable · Rivalry week swipes away; donate sheet stays on screen · Drip tab is off until Wave 1 · 2026-10-01 · Business departments (Product, Design, Engineering, Finance, and the rest) are in docs/TEAMS.md · Rights-check preview builds finished (iOS still the registered iPad only) · Upload confirms permission, sound, and marks; reports name fake footage, music, logos, and broadcasts · 2026-09-30 · September SQL applied to staging only · Wave 0 spend reminder: $99/yr Apple already enrolled; SQL, preview build, and test-card donate are $0 · Cross-surface reliability + reviewability: rivalry banner links Highlights to Local polls, Activity thanks opens the athlete, Drip and role HQ failures retry honestly, operator check-in confirms the write, PR/CODEOWNERS/folder guides and route-data CI guard added · Telemetry row bounds written, not applied (guest inserts stay; one fake row can no longer wreck a Reports average) · Rally meter on Highlights, full-screen fill moment, thank-you clip opens in the pager · full button + policy audit: payout Mark paid / Failed and People Verify / Admin now confirm first, sign-in sheet ignores a same-frame double tap · M2 Rally goals + preset "Say thanks" + fee model decided (90 / 10 disclosed on the donate sheet, optional tip for Tapua'i, default No tip) — migration not applied · Wave 0 build: Apple Pay / Google Pay, M1 leaderboards, custodial money rules (athlete approves, auto handover at 18) — SQL written, not applied; release waves in ROADMAP · athlete verification ladder built (school AD/coach confirms in person; gifts held until verified) · filmer tiers, Props, Aura and Top Filmers (SQL not applied) · money copy is now Donate / donation everywhere (`pnpm copy:check`, VOICE agent) — first migration in `supabase/migrations/`, not applied · growth pass: one-tap sign-in first, athlete claim needs only team + sport · payouts no longer need the school (Stripe ID check + $250 cap until 3 teammate vouches) · school crest on confirmed athletes · Aura card flip fixed — two migrations, not applied · Highlights hype chips: Home feed no longer reorders on a tap (the flicker), only Aura bursts, Seki 🤙 → 🏈 · views = 3 s of playback, ▶ counts on profile grids, "Filmed by" credit, upload must tag who's in the clip — migration not applied
+**Last updated:** 2026-10-07 · Stripe secret moved out of `.env.local` (Edge Functions hold it); native-module quarantine cleared · Compact donation/menu integration verified locally (UX-02; 50 suites / 242 tests) · Compact staged video upload complete locally (UX-01) · 83 callable agents with functional ownership and CI registry validation · Specialist work queue in WORK_QUEUE.md · Guest route data boundaries reduced to 6 routes / 12 calls · Account-tag write/confirmation fixes prepared; SQL remains unapplied · Staging/build readiness and custodial DOB inventory corrected from local evidence · Wave 0 test mode; device and hosted SQL verification remain pending.
 
 This is the living state of `ala-sports` (Tapua'i Sports). Every other document describes how
 things *should* work; this one describes **where the project actually is right now** — what
@@ -11,13 +11,13 @@ folder law. Do not skip to the code.
 
 ---
 
-## 0. Pick up here (hand-off, 2026-10-02)
+## 0. Pick up here (hand-off, 2026-10-07)
 
-**Where the code is.** Branch `wave0-custodial-verification` is on GitHub (`origin/wave0-custodial-verification`).
-`origin/main` is behind it and can fast-forward; it has not been merged. Work after the last push
-(content-rights upload, departments, Drip off, Highlights sheet, Support received, account tags)
-is in the working tree until the review pull request. Do not `git add -A` — about 500 mode-flip
-files from the NAS are noise (§3).
+**Where the code is.** Branch `wave0-custodial-verification` matches the cached
+`origin/wave0-custodial-verification` at `ba212b2` on the 2026-10-07 local review. It is 33 commits
+ahead of cached `origin/main`; no fetch was performed, so these are local tracking refs.
+The earlier feature work is committed. This session expands specialist ownership and continues
+Wave 0 engineering in the working tree. Preserve existing org-doc edits; stage by path (§3).
 
 **Outside review.** Read this file, then `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/ARCHITECTURE.md`,
 `docs/SCHEMA.md`, `docs/ROADMAP.md` (Wave 0 is test mode), `docs/LEGAL_BRIEFING.md`,
@@ -62,6 +62,10 @@ a free Supabase project pauses (then Pro, about **$25/mo**). Wave 1 is later and
 spend: LLC, counsel, an association letter, Google Play **$25**, Supabase Pro, video bandwidth, and
 Stripe’s fees. Do not start those for this test. Full table: `docs/ROADMAP.md` release waves.
 
+**Specialist execution:** [WORK_QUEUE.md](WORK_QUEUE.md) assigns the Wave 0 sequence,
+acceptance criteria and dependent decisions. Use the registry and hierarchy to dispatch its
+primary owner and required reviewer. Local code completion is separate from hosted/device evidence.
+
 **Next up, in order.**
 1. Preview builds with the upload confirmations finished 2026-10-01 and point at staging. Android (any phone):
    https://expo.dev/accounts/logoitino/projects/ala-sports/builds/061946c8-a25d-4a32-b5be-bab316819c1d
@@ -80,11 +84,13 @@ Stripe’s fees. Do not start those for this test. Full table: `docs/ROADMAP.md`
    thank-yous or any athlete ↔ fan messaging (LEGAL row S), a Rally tied to a play or stat,
    a fan digital signature on the Aura card (named for a later wave — see §6).
 5. Account tags on a Highlight are in the app. SQL `20261002160000_reel_account_tags.sql` is
-   **not applied** anywhere. Until it is, the picker stays empty and a publish still succeeds.
+   **not applied** anywhere. Its cap/confirmation behavior was hardened locally on 2026-10-07.
+   Before staging application, run concurrent cap, pending privacy and wrong-actor checks (WORK_QUEUE W0-08).
+   Until it is applied, the picker stays empty and a publish still succeeds.
 
 **Prove the tree is green before you change anything:**
 `pnpm typecheck` · `pnpm --filter @tapuai/mobile test -- --watchman=false` ·
-from the root: `pnpm copy:check`, `pnpm docs:check`, `pnpm app:data-boundaries`, and `pnpm comments:check`
+from the root: `pnpm copy:check`, `pnpm docs:check`, `pnpm app:data-boundaries`, `pnpm comments:check`, and `pnpm agents:check`
 (Node is `~/.local/node/bin`).
 
 **When you finish — the doc checklist.** Code under `apps/` / `packages/` / `supabase/` → a §4
@@ -136,7 +142,7 @@ Polynesian-inspired fan and athlete hub. pnpm monorepo:
 - `supabase/` — SQL applied by hand to the live project. `apps/mobile/src/backend/db/schema.sql`
   is the canonical copy.
 
-Stripe is in **test mode**. There is no staging database yet (ROADMAP Phase 2 item 4).
+Stripe is in **test mode**. Staging was created and the September SQL applied there on 2026-09-30 (§0). Development remains separate and lacks those changes. Remote state was not re-queried during the 2026-10-07 local review.
 
 ---
 
@@ -162,20 +168,49 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
   `Contents/Developer/Applications`, so no Simulator.app and no GUI; `idb_companion` is a dead
   wrapper. `simctl` can boot, install, `openurl` and screenshot only. Interaction has to be
   covered by component tests instead.
-- **Expo web does not bundle.** `lightningcss` is missing its native binary for 1.33.0, and the
-  1.32.0 copy is blocked by macOS code-signing policy. Unfixed — see §5.
+- **macOS quarantine on native modules.** The project came out of a Firefox-downloaded zip, so
+  every file carries `com.apple.quarantine` and macOS refuses to `dlopen` ad-hoc-signed `.node` /
+  `.dylib` files ("Apple could not verify … is free of malware"). Clicking **Move to Trash** on
+  that popup deletes the binary (that is how lightningcss 1.33.0 went missing). Fixed 2026-10-07:
+  quarantine removed from the seven native files (fsevents, lightningcss 1.32/1.33, next-swc,
+  tailwind oxide, sharp + its `libvips-cpp` dylib) and the 1.33.0 binary restored from Trash; all
+  load in Node. If a fresh copy of the zip is unpacked, check with
+  `find node_modules/.pnpm \( -name '*.node' -o -name '*.dylib' \) -xattrname com.apple.quarantine`.
+- **Expo web bundling** was blocked by the lightningcss binaries above. Both now load; a full
+  `expo export --platform web` has not been re-run — see §5.
+- **Expo writes loaded env values to `apps/mobile/.expo/dev/logs/start.log`.** Never keep
+  `STRIPE_SECRET_KEY` (or any secret) in `.env.local`. On this Mac it lives in
+  `~/.config/ala-sports/stripe-secret.env` (mode 600); load it into the shell only when the
+  local Metro `/api/*` fallback is needed: `set -a; source ~/.config/ala-sports/stripe-secret.env; set +a`.
 - **`node_modules` is a hybrid** of a stale npm install and the pnpm install. Duplicate `react`
   broke Jest (null hook dispatcher) until `node_modules/react` was repointed at the pnpm copy.
   Other stale duplicates remain and may bite the same way.
-- **`git status` shows ~500 modified files that are pure mode flips** (`100644 → 100755`) from a
-  NAS round trip. Filter with `git diff --numstat | awk '$1!="0" || $2!="0"'`. **Never `git add -A`.**
+- **Historical NAS mode flips:** older sessions saw ~500 `100644 → 100755` changes. The
+  2026-10-07 starting tree contains only `docs/STATE.md`, `docs/TEAMS.md`, and the new hierarchy
+  document; that old count is not the current status. Preserve user edits and stage by path.
+  **Never `git add -A`.**
 
 ---
 
 ## 4. Recent changes (rolling — newest first)
 
+- **2026-10-07 — UX-02 integration recovered after the session disconnect:** Fixed payment startup during the close animation with a synchronous host interaction guard. Stripe success now enters a terminal paid state even if donation recording or counters fail; post-payment errors explicitly say the payment went through. Recipient generations prevent an old inline payment from updating a replacement athlete or its parent callbacks. Optional card-fee screen-reader labels include the exact charge and unchanged family share. Repaired the filmer test fixture with a safe-area provider. Independent QA reviewed and rechecked all four findings. **Verified:** both app typechecks; full Jest **50 suites / 242 tests pass**, followed by the latest checkout callback regression (**8 tests pass**); docs/copy/comments/data-boundaries/agents and whitespace guards pass. Two existing SoftWall test act warnings remain non-failing. **Pending:** native small-screen/keyboard/text-scale/screen-reader and Stripe-device evidence, plus hosted configuration/SQL checks. Payment still uses the existing client `tips` insert after Stripe; this UI guard does not establish authoritative crediting or reconciliation. No build, SQL application, deployment, push or live payment in this recovery pass. Next: WORK_QUEUE W0-05 staging sign-in/test checkout and UX-02 native smoke using TESTER_SCRIPT.
+
+
 Keep ~15. Older entries live in `CHANGELOG.md`.
 
+- **2026-10-07 — Stripe secret out of the repo (owner request).** `STRIPE_SECRET_KEY` (test key) sat in `apps/mobile/.env.local` and root `.env.local`, and Expo had logged it in plain text to `apps/mobile/.expo/dev/logs/start.log` 104 times. Moved the value to `~/.config/ala-sports/stripe-secret.env` (600), replaced both lines with a pointer, redacted the log in place (nothing deleted). Checkout and Connect are unaffected: `create-payment-intent` and `create-stripe-account` are deployed on the development project (probed 2026-10-07: 401 without auth vs 404 for a missing function), so the client never reaches the Metro fallback. Without the key, `POST /api/create-payout` returns `queued` (it already refused real transfers). `apps/mobile/.env.example`, ONBOARDING, TROUBLESHOOTING, README and ARCHITECTURE now say the secret belongs in Supabase secrets, never `.env.local`. **Not verified:** that the development project's Edge Functions have their own `STRIPE_SECRET_KEY` secret set (no Supabase CLI token here), and no test donation was run. **Owner:** rotate this test key in the Stripe dashboard, since it sat in world-readable files and logs, then update Supabase secrets on staging and development and the private file. No code changed.
+- **2026-10-07 — Native modules unblocked (environment, no repo change).** Cleared macOS quarantine on the seven native binaries and restored the lightningcss 1.33.0 binary that a "Move to Trash" click had removed (see §3). All load in Node; lightningcss 1.33.0 transforms CSS. Expo web export and `pnpm admin` were not re-run.
+- **2026-10-07 — UX-02 (owner request):** Donate now uses Amount → Options → Review in one popup with fixed navigation; Back retains amount/extras and only the final reviewed Donate action starts payment. Pending payment locks navigation, exit and duplicate submissions. Upload and shared fan sheets/pages use playful Island Daylight chrome, accent washes and shared rounded geometry. MENU_STYLE_MAP inventories all modal-bearing components and visual exceptions. Added DOCUMENTATION under ENGINEERING (83 callable agents); all 82 existing definitions now hand off synchronization evidence. Teams/hierarchy/registry, architecture, conventions, voice/legal implementation notes, tester journeys and press staleness updated. Local integration is now verified above; native layout/keyboard/screen-reader/Stripe-device verification remains pending. No hosted changes in this UX-02 pass.
+
+
+- **2026-10-07 — UX-01 (owner request):** Rebuild the long uploader as Video → Details → Review, with fixed Back/Next/Publish, optional settings and searchable athlete/game screens. Draft state stays in the controller; selecting another clip resets rights; no implicit demo game. Mandatory athlete/caption/category-specific rights and the published-clip/unsaved-mentions warning remain. Implemented: controller 386 lines plus composer 271 replace the 1,238-line form; optional account targets have 44-point minimums. Seven upload scenarios cover validation, draft/back/reset, optional choices, rights resets, duplicate/exit locking, failed-upload retry and partial mention failure. Full Jest **47 suites / 228 tests pass**; mobile typecheck and project guards pass. Independent design/code review passed. Native layout, keyboard, screen readers and picker checks not run; short-page scrolling may remain on smaller phones or larger text. Existing library picker still has its own selection screen.
+
+- **2026-10-07** — Expanded from 18 to **82 callable agents** with specialist ownership for media, money, identity, privacy, safety, runtime/admin, operations, quality, partnerships and product/support. Updated all existing definitions, TEAMS and hierarchy; registry validates files, leads, paths and documentation through `pnpm agents:check` in CI. WORK_QUEUE assigns acceptance criteria and release gates. Definitions are available roles, not continuously running workers.
+- **2026-10-07** — Guest match queries and Realtime moved to `lib/guestGames.ts`; guest athlete lookup moved to `lib/roster.ts`. Route data debt fell **8 → 6 files, 17 → 12 direct calls**. Late subscription callbacks and asynchronous play joins are silenced after cleanup; request generations also prevent an older overview response from replacing the current match. Five data-layer regression checks cover match/feed failures, roster fallback, event filtering, cleanup and unconfigured access; two route scenarios prove older overview success/failure cannot replace the current match. Initial integration: both app typechecks and 44 suites / 204 tests pass. Final verification covers 47 suites / 222 tests: the full run passed 46 suites / 221 tests and the new upload fixture initially failed on missing safe-area context; after fixing only its fixture, its targeted suite / test passed. Both app typechecks, docs/copy/comments/boundaries/agents checks and diff whitespace pass. Live database, native device and Stripe checks not run.
+- **2026-10-07** — Account-tag hardening: serialize additions on the owned reel before enforcing max 3; only an owned pending confirmation reports success. Genuine attachment failures reach an accurate published-clip warning; failed inbox decisions remain visible. Updated still-unapplied `20261002160000` and canonical schema together; no SQL applied. Helper and component tests verify rejected confirmations and published-upload failure messaging. Database concurrency/RLS execution remains unverified without Postgres. Staging/build/branch claims reconciled to dated records and cached Git refs; no remote refresh. Privacy map now lists the existing custodial DOB exception, verification contacts, account mentions, reports and Rally/thanks records.
+
+- **2026-10-07** — Org chart for the whole roster: `docs/TEAM_HIERARCHY.md` (Facilitator → departments → agents, Engineering/Legal/QA zoom-ins, A–Z index). Call detail stays in `docs/TEAMS.md`.
 - **2026-10-07** — Agent roster: Engineering lead + **Database** (`BACKEND`) + **Full-stack** (`FULLSTACK`) with an explicit no-shortcuts / industry-practice bar; **COMPLIANCE** owns the privacy/ToS checklist (export/deletion, processors, no false SOC 2, no fake SLA, trackers before consent); **QA** is the testing ship gate. Call sheet: `docs/TEAMS.md`.
 - **2026-10-02** — Review hand-off in §0 matches the branch on GitHub and the local work that is not pushed yet. Highlight account tags are in the app (`reel_account_tags`, up to three, confirm before the name shows). SQL `20261002160000` is written and not applied. A fan digital signature on the Aura card is later only.
 - **2026-10-02** — Support received shows **$0.00** and "No donations yet" when nobody has donated, and also when `get_received_malo` is missing or the call fails. That database message stays off the profile and Athlete HQ.
@@ -445,15 +480,15 @@ Do not re-diagnose these. Fix them or leave them.
 | `clear_reel_hype` is on staging, not the development project | On the development database, un-voting a Seki/Aura/Flex no longer flickers, but the count **returns on refresh**. |
 | `telemetry_logs` INSERT policy is `with check (true)` for `anon` | **Shape-bounded on staging, not on the development project** (`20260929190000_telemetry_logs_bounds.sql`; the five CHECKs on staging were read back 2026-10-02 and match the file). Guest inserts stay on purpose. On the development project one row can still report a nonsense event or an 11-day stall and skew Reports / Coverage / Money; on staging a single row cannot. Still open: many small valid-looking rows. Closing that needs §6 item 1, not a silent drop of guest telemetry. |
 | `telemetry_logs` has no `user_id` / `session_id` | No funnels, retention, or per-user behaviour is possible. Owner chose "session + user id" but it is **not built** — it is a privacy change needing policy copy first (§6). |
-| Expo web bundle | Fails on `lightningcss` native binary (missing for 1.33.0; 1.32.0 blocked by macOS code signing). Mobile is unaffected. |
+| Expo web bundle | Was failing on `lightningcss` native binaries (1.33.0 trashed, 1.32.0 quarantined). Both restored and loading as of 2026-10-07 (§3); a full web export has **not** been re-run, so treat as unverified. Mobile is unaffected. |
 | Storage buckets `reels` / `game_highlights` / `avatars` are public | Vault-locked video is directly downloadable, bypassing entitlement. Accepted for internal testing only — ROADMAP Phase 5 hard blocker. |
 | `auth.role() = 'anon'` bypass on 8+ tables | Studio Unlock and Operator PIN have no real session. Accepted for internal testing, **not** for public beta. |
-| Staging has the September SQL; the development project does not | Applied 2026-09-30 to `ala-sports-staging` only. Preview builds still talk to the development project, which does not have Rallies, view counts, or the verification ladder. |
-| Nothing pushed | `wave0-custodial-verification` is well ahead of `origin/main` (local `main` is also ahead). Pushing needs owner approval and interactive GitHub auth. |
+| Staging has the September SQL; the development project does not | Applied 2026-09-30 to `ala-sports-staging` only. The 2026-10-01 preview builds are recorded as pointing at staging (§0); older installed builds may still use development. Confirm the installed build before device testing. No remote re-verification this session. |
+| Branch integration pending | At local review, `wave0-custodial-verification` matches its cached origin ref and is 33 commits ahead of cached `origin/main`. This session's changes are uncommitted. No push or merge performed; remote freshness unverified. |
 | Self-verify holes — fixed on staging, still open on the development project | On the development database: `profiles.player_id`, `is_verified` and `verification_status` are client-writable (no column guard on "Users update own profile"), so any signed-in user can mark themselves verified and self-link to any athlete; a shared team code verifies instantly; admin approval stamps every profile with the same name. The client no longer does any of this, but the database still allows it until `supabase/migrations/20260929120000_athlete_verification_ladder.sql` is applied. ROADMAP Wave 1 blocker. |
 | Held gifts have no cap or refund yet | Gifts to an unverified athlete are "held" only because payouts are 503. The design's ~$250 cap and 30-day refunds need the Phase 1a ledger. Future payout code must call `athlete_payout_allowed`. |
 | School confirm link needs the app | `alasports://school-confirm` opens only where Tapua'i is installed (Edge Functions can't serve HTML on the default domain). A web page for staff without the app is not built. Confirmers are added from the SQL Editor — no admin UI yet. |
-| One report hides a clip, with no reason | `report_reel` sets `is_flagged` on the first report and records no reason, so rival fans can hide real clips and moderators can't spot AI fakes. Plan: design doc §6. |
+| Report reasons built; moderation process pending | `20261001180000_content_rights_reports.sql` stores a reason and hides on athlete/guardian reports, high-risk reasons, or three distinct reporters. One ordinary rival report no longer hides a clip. Staging application is recorded in TEAMS; not re-queried here. Human review, strikes, and appeals remain pending. |
 | September SQL is on staging only | The development project still hides Rally, Say thanks, custodial cards, Spotlight Boards, and view counting. Testers see those only after a build points at `ala-sports-staging`. Telemetry shape bounds are on staging; guest inserts stay. |
 
 ---
@@ -488,14 +523,13 @@ Do not re-diagnose these. Fix them or leave them.
    payments counsel.
 9. **Fee model** — *decided 2026-09-29:* keep the 10% platform share, disclosed on the donate sheet
    (90% to the family account; card processing comes out of Tapua'i's 10%), plus a GoFundMe-style
-   optional tip for Tapua'i at checkout (default No tip, never pre-selected). Built, SQL not applied.
+   optional tip for Tapua'i at checkout (default No tip, never pre-selected). Built; SQL recorded applied to staging on 2026-09-30, not development.
    Still open: counsel on App Store 3.2.1(vii), which appears to require 100% for non-IAP gifts —
    fallback is `MALO_PLATFORM_CUT_BPS` = 0 with the tip kept (LEGAL row L).
 
 10. **Athlete verification and fake highlights** — `docs/ATHLETE_VERIFICATION_DESIGN.md`.
     **Decided 2026-09-29:** gifts are held until verified and the athlete sees that in the app; the
-    athletic director or coach confirms each student in person on a Tapua'i form. Built (not
-    applied). Still open: the pending-gift cap amount and refund window (need the ledger), and
+    athletic director or coach confirms each student in person on a Tapua'i form. Built; verification SQL recorded applied to staging, not development. Still open: the pending-gift cap amount and refund window (need the ledger), and
     counsel on the "held" copy.
 
 11. **Fan digital signature on the Aura card** — *later, not this wave (owner 2026-10-02).* A fan
@@ -509,6 +543,10 @@ Do not re-diagnose these. Fix them or leave them.
 | Document | Purpose |
 | --- | --- |
 | **`docs/STATE.md`** | **This file.** Current state, recent work, known breakage. |
+| `docs/TEAM_HIERARCHY.md` | Org chart: departments → agents → `.claude/agents` files. Easy lookup. |
+| `docs/WORK_QUEUE.md` | Ordered specialist assignments, acceptance criteria, current evidence and owner gates. |
+| `docs/MENU_STYLE_MAP.md` | Shared menu/page APIs, modal consumer coverage, intentional visual exceptions and device verification gaps. |
+| `docs/TEAMS.md` | Call sheet: Now / Next / Later, surfaces, do-not-touch. |
 | `AGENTS.md` | Folder law, path aliases, tech-stack guardrails. `CLAUDE.md` imports it. |
 | `DOCUMENTATION.md` | Engineer onboarding and directory map. |
 | `docs/ROADMAP.md` | North Star (Watch & compete / Rally / Pass it on / Rise), Release waves 0-3 (cheapest first), Phases 0-5, Mission track M1-M10. |

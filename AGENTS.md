@@ -32,7 +32,7 @@ Root keeps `supabase/`, `docs/`, `scripts/`, `AGENTS.md`, `DOCUMENTATION.md`. Pl
 - `apps/mobile/src/frontend/components/` → Reusable UI, grouped **by consuming feature**; see [docs/CONVENTIONS.md](docs/CONVENTIONS.md) §2 for the placement rule. Subfolders: `Admin/`, `Auth/`, `Common/`, `Custodial/`, `Drip/`, `Effects/`, `Feedback/`, `Filmers/`, `Legal/`, `Local/`, `Onboarding/`, `Operator/`, `Profile/`, `Rally/`, `Reels/`, `Spotlight/`, `Thanks/`, `UI/`, `Verification/`. Flat is reserved for genuinely cross-cutting pieces (`ScreenShell`, `ScreenHeading`, `TabScreen`, `RuntimePaused`, `TipSheetModal`, `AuraToast`, `BackedCelebration`, `DashboardPanel`, `TipCheckout`, `PlayCard`, `TipButton`, `FeeCheckbox`) — anything with a single consumer belongs in that consumer's subfolder.
 - `apps/mobile/src/frontend/context/` → React context (`AuthContext`, `SoftWallContext`, `CelebrationContext`, `RoleGate`, `UploadSheetContext`, `AppRuntimeContext`, `AdminLensContext`). There is **no** `GameContext`. Auth helpers live in `lib/auth.ts` (guest markers, Apple / Google / Magic Link). Soft wall UI: `components/Auth/SoftWallModal`, first-open `components/Onboarding/WelcomeOverlay`.
 - `apps/mobile/src/frontend/hooks/` → Data hooks (`useLiveScores`, `useLiveGame`, `useGameEventBroadcast`, `useTipCheckout`, `useStripeConnect`, `useLegalAck`, `useAthleteSubscription`, `useRoster`, `useReels`, `useSavedReel`, `useAuraBoosters`, `useCheerPoll`, `useFanTipHistory`, `useReceivedMalo`, `useSponsorships`, `useLocalSearch`, `useTeamSearch`, `useAthleteStats`, `useActiveSpotlight`, `useSpotlightBoard`, `usePendingPlayerTags`, `useCrew`, `useAdminDashboard`, `useDripCatalog`, `useSurfaceUsage`, `useSportConfigs`, `useSheetFrame` (also exports `SHEET_BLUR_INTENSITY`), `useActivityFeed`, `useCustodial`, `useLeaderboards`, `useReelViewTracker`, `useMyVerification`, `useSchoolBadge`, `useFilmerStats`, `useRally`, `useDonationThanks`). There is **no** `useLiveFeed` / `useStripePayment`.
-- `apps/mobile/src/frontend/lib/` → Client SDKs (`supabase.ts`, `stripe.native.ts` / `stripe.web.ts`, `aura.ts`, `reels.ts`, `reelVotes.ts`, `athleteStats.ts`, `teams.ts`, `roster.ts`, `vault.ts`, `spotlight.ts`, `tags.ts`, `crew.ts`, `finance.ts`, `legal.ts`, `verification.ts`, `share.ts`, `admin.ts`, `adminCoverage.ts`, `runtime.ts`, `feedback.ts`, `wishlist.ts`, `sports.ts`, `socialLinks.ts`, `custodial.ts`, `leaderboards.ts`, `walletPay.ts`, `schoolConfirm.ts`, `payoutGate.ts`, `schoolBadge.ts`, `filmers.ts`, `rallies.ts`, `donationThanks.ts`, `boosterPortal.ts`, `sponsorAds.ts`).
+- `apps/mobile/src/frontend/lib/` → Client SDKs (`supabase.ts`, `stripe.native.ts` / `stripe.web.ts`, `aura.ts`, `reels.ts`, `reelVotes.ts`, `athleteStats.ts`, `teams.ts`, `roster.ts`, `guestGames.ts`, `vault.ts`, `spotlight.ts`, `tags.ts`, `crew.ts`, `finance.ts`, `legal.ts`, `verification.ts`, `share.ts`, `admin.ts`, `adminCoverage.ts`, `runtime.ts`, `feedback.ts`, `wishlist.ts`, `sports.ts`, `socialLinks.ts`, `custodial.ts`, `leaderboards.ts`, `walletPay.ts`, `schoolConfirm.ts`, `payoutGate.ts`, `schoolBadge.ts`, `filmers.ts`, `rallies.ts`, `donationThanks.ts`, `boosterPortal.ts`, `sponsorAds.ts`).
 - `apps/mobile/src/frontend/theme/` → Motion tokens (`motion.ts`: `SPRING_CARD` / `SPRING_BOUNCE` / `SPRING_FLIP`, Island Daylight `FOCAL` + `TAB_ACCENTS` — Home jade / Local cyan / Activity violet / Spotlight gold / Drip ember / Profile violet plus `mist*` washes; `hypeFx.ts` Seki / Aura / Flex burst colors).
 - `apps/mobile/src/frontend/services/` → Process-wide clients (`TelemetryManager` singleton → `telemetry_logs`; `OfflineQueue` singleton → AsyncStorage + NetInfo flush of Aura / cheer / bookmark / report; `MediaUploadService` → `react-native-compressor` + Storage `reels` / `avatars`).
 - `apps/mobile/src/backend/api/` → Stripe handlers imported by `apps/mobile/app/api/*+api.ts` (`createPaymentIntent.ts`, `createPayout.ts`, `createStripeAccount.ts`, `session.ts`).
@@ -52,3 +52,27 @@ Path aliases (mobile): `@/*` → `apps/mobile/src/frontend/*`, `@backend/*` → 
 5. **Environment:** Mobile client keys must start with `EXPO_PUBLIC_` in `apps/mobile/.env.local`. Admin portal uses `NEXT_PUBLIC_*` in `apps/admin-portal/.env.local`. Never `aladb.env` or secrets under `src/frontend/`.
 6. **Product copy:** money is always **Donate / donation** (owner, 2026-09-29) — never Mālo-as-money, tip, backing, Chip In or fund (the one exception is the optional **tip for Tapua'i** at checkout, and that line must name Tapua'i); the donate sheet discloses the 90 / 10 split; athletes thank donors with presets only; "Mālo!" is only a thank-you. Rules: [docs/VOICE.md](docs/VOICE.md); CI runs `pnpm copy:check`; call the `VOICE` agent for copy reviews. Also **Seki** / **Highlights ⚡**. Persistence still uses `tips` / `reels` / `useTipCheckout` / `malo*`.
 7. **Package manager:** `pnpm` at the repo root (`pnpm-workspace.yaml`). Day-to-day: `pnpm install`, `pnpm mobile`, `pnpm admin`.
+
+
+### Specialist dispatch and ownership
+
+Use [docs/TEAM_HIERARCHY.md](docs/TEAM_HIERARCHY.md) to find a specialist and
+[docs/WORK_QUEUE.md](docs/WORK_QUEUE.md) for ordered tasks and acceptance criteria.
+`.claude/agents/registry.json` maps callable roles to definitions, reporting leads, paths and
+functional responsibilities; `pnpm agents:check` validates it against the files and team docs.
+Read the specialist operating contract in `docs/TEAMS.md` before dispatching. Assign one primary
+owner and the required reviewers, agree shared-file ownership, and integrate status updates.
+Specialists are instruction files, not evidence that a feature exists or a release is approved.
+Keep registry, definitions, TEAMS and hierarchy synchronized in the same turn as ownership changes.
+
+Upload composition stays under `components/Reels/`: `UploadVideoModal.tsx` owns draft/picker/upload;
+`UploadVideoComposer.tsx` owns short steps and fixed navigation. Preserve required athlete/caption/rights
+checks and never lose draft state on Back.
+
+`DOCUMENTATION` reports to `ENGINEERING` and synchronizes same-turn docs across all departments.
+Every specialist supplies behavior/API changes and actual verification evidence. Shared menu/page
+coverage and exceptions are tracked in `docs/MENU_STYLE_MAP.md`; preserve approved legal and generated facts.
+
+Donate composition stays in `TipSheetModal` / `TipCheckout`: Amount → Options → Review inside
+one popup, fixed navigation, final reviewed action only starts payment. Preserve quote/recipient,
+No tip defaults, rights/held notices and checkout locks. Generic menu chrome stays in `UI/MenuChrome.tsx`.

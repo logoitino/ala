@@ -34,6 +34,58 @@ perfect. "This felt slow" counts as a bug.
 Tell us: *How long before the first video played? Did anything stutter, go black, or jump? Did the
 hype taps feel satisfying? Would you keep scrolling?*
 
+## Upload composer — phone layout and keyboard
+
+1. Tap Upload. The first screen has only video selection. Pick a clip; Details opens with a preview.
+2. Add a caption and select the athlete/category. Next stays visible above the home indicator;
+   on a short phone with the keyboard open, only this page may need a short scroll.
+3. Next opens Review. Open More options to add accounts, a game or Vault access. Tap Done: all choices remain.
+4. On Review, each rights confirmation is initially unchecked; Publish requires every
+   confirmation applicable to the selected category. Back returns to the same caption and athlete.
+5. Replace the clip and return to Review. Rights must be checked again for the new footage.
+6. Try a game/athlete search and cancel the library picker. The draft should remain intact.
+7. Double-tap Publish: there should be only one upload. If optional mentions fail after upload,
+   the clip stays published and the warning identifies the unsaved mentions.
+8. Close/reopen the composer. It starts at video selection with the old draft cleared. Check
+   screen reader labels, larger text and Android Back on each subpage; no essential action is
+   hidden in a long scroll.
+
+Record phone/window size, keyboard state and screenshots. These are device checks; mocked
+component tests do not establish visual fit or native picker behavior.
+
+## Donate popup — short steps and review
+
+1. Open Donate from a Highlight, profile, gear goal, Rally and QR link. Confirm the recipient
+   and source remain correct while moving through Amount → Options → Review in one popup.
+2. Choose a preset, then Custom. Reject blank, zero, negative and malformed amounts. Back/Next
+   remains reachable with the keyboard open on a small phone; Back preserves the amount.
+3. Options starts at **No tip** for Tapua'i and unchecked card-fee coverage. Choose optional
+   amounts, go Back, then forward again: the choices and calculated total remain consistent.
+4. Review shows donation, optional tip, optional card-fee amount, total and the 90 / 10 split.
+   The gift-held notice remains present when applicable. No payment starts on Next.
+5. Tap the final Donate action twice: start one payment. While payment is preparing, Back,
+   close and Android Back must not discard checkout. Cancel Stripe: selections remain and
+   another attempt is possible. Check failure messaging, retry and one recorded test donation.
+6. Close/reopen after cancellation; a new popup starts on Amount with default optional choices.
+   Check screen-reader labels and 200% text scaling. Record device/build/window and screenshots.
+7. On Review, tap Close and immediately tap Donate while the card slides away. No payment
+   should start. Check Android Back and backdrop dismissal as well.
+8. With synthetic test data, simulate a recording/counter failure after Stripe succeeds.
+   The popup says payment was received and removes Donate; it must not invite another charge.
+9. Change the recipient during an inline checkout and let the old test payment finish.
+   The new recipient must not show the old thank-you or inherit its donation/count callbacks.
+10. Use a screen reader on card-fee coverage: it announces the exact added fee and that
+    the family's share stays the same. Record device evidence rather than inferring it from Jest.
+
+## Shared menus and page energy
+
+Use [MENU_STYLE_MAP.md](MENU_STYLE_MAP.md) to cover every modal family and page shell. Check
+rounded cards, jade/cyan/gold/violet accents, readable labels, close controls and visible focus
+with reduced motion and larger text. Include Profile menu/edit/Aura, search/report, sign-in,
+Rally/thanks, legal/verification, Drip and enabled role HQ menus. Video player and operator/admin
+workspaces retain their functional contrast and density. Verify no sheet overlaps the keyboard
+or home indicator. A shared token update does not establish device fit for every consumer.
+
 ## Fan — Compete (is it fun to root for your school?)
 
 1. Open Spotlight and find this week's standings. Is your school's athlete on it?

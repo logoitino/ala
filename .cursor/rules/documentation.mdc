@@ -17,6 +17,8 @@ what changed most recently, environment gotchas, and the list of knowingly-broke
 bump its `Last updated` header, in the same turn as the code.** CI fails pull requests that do
 not. Keep §4 to ~15 entries, newest first; older history belongs in `CHANGELOG.md`.
 
+**Synchronization specialist:** Dispatch `DOCUMENTATION` for changes spanning teams or user journeys. Each feature owner supplies changed files/APIs and actual verification evidence. The update agent synchronizes affected documents and definitions; preserve generated fact blocks and approved legal conclusions.
+
 ## 1. Comments: every file has a header; JSDoc on hooks, API calls, and complex components
 
 Every source file under `apps/mobile/app` and `apps/mobile/src` starts with a short header comment (what it is,
@@ -49,7 +51,7 @@ If you change tables, RLS, RPCs, Storage, Aura tiers, routing, env vars, payment
 | If you change… | You also update… |
 | --- | --- |
 | **Anything under `apps/` / `packages/` / `supabase/`** | **`docs/STATE.md` §4 + `Last updated`** |
-| Who owns a screen, or what a department does now / next / later | **`docs/TEAMS.md`** business row + squad section, and `.claude/agents/<file>.md` if that agent's description moved |
+| Who owns a screen, or what a department does now / next / later | **`docs/TEAMS.md`** business row + squad section, and `.claude/agents/<file>.md`, `registry.json`, and `docs/TEAM_HIERARCHY.md`; run `pnpm agents:check` |
 | Terms, minors, the donation split, footage rights, or school marks | **`docs/TEAMS.md`** Legal team table. Do not write a new legal conclusion. |
 | Architecture, folders, roadmap | `DOCUMENTATION.md` · `docs/ARCHITECTURE.md` |
 | Tables, FKs, RLS, RPCs, palette, buckets | `docs/SCHEMA.md` |

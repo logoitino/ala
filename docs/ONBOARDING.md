@@ -47,10 +47,9 @@ If you already had a root `.env.local` from before the monorepo move, copy it in
 EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
-STRIPE_SECRET_KEY=sk_test_your_secret_key
 ```
 
-`STRIPE_SECRET_KEY` is server-only for JWT-gated `POST /api/create-payment-intent` and `POST /api/create-payout` (and Connect). Do not set `EXPO_PUBLIC_STRIPE_SECRET_KEY`. Sign in before Mālo or payouts — handlers call `supabase.auth.getUser` on the Bearer token.
+Do not put `STRIPE_SECRET_KEY` in `.env.local`: Expo writes loaded env values to `.expo/dev/logs/start.log`. Checkout and Connect use the Edge Functions, which read the Supabase secret (`STAGING_RUNBOOK` §secrets). For the local Metro fallback only, keep the key in a private file outside the repo and run `set -a; source ~/.config/ala-sports/stripe-secret.env; set +a; pnpm mobile`. It is server-only for JWT-gated `POST /api/create-payment-intent` and `POST /api/create-payout` (and Connect). Do not set `EXPO_PUBLIC_STRIPE_SECRET_KEY`. Sign in before Mālo or payouts — handlers call `supabase.auth.getUser` on the Bearer token.
 
 ### Soft-Wall auth (Supabase Dashboard)
 

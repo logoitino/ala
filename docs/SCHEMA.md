@@ -183,7 +183,7 @@ One row per account per clip. Written only by `report_reel`. Admins can read it 
 
 ### `reel_account_tags`
 
-Mentions of Tapua'i accounts on a Highlight. The uploader may add up to three. The name stays off the clip until that account confirms. Donations still follow `reels.player_id`. Direct writes are revoked; the RPCs below are the only writers. Incremental: `supabase/migrations/20261002160000_reel_account_tags.sql` (not applied). Client: `lib/accountTags.ts`.
+Mentions of Tapua'i accounts on a Highlight. The uploader may add up to three active (pending or confirmed) mentions; the RPC locks the owned reel before counting so concurrent attachments share that cap. The name stays off the clip until that account confirms. Donations still follow `reels.player_id`. Direct writes are revoked; the RPCs below are the only writers. Incremental: `supabase/migrations/20261002160000_reel_account_tags.sql` (not applied). Client: `lib/accountTags.ts`.
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -195,7 +195,7 @@ Mentions of Tapua'i accounts on a Highlight. The uploader may add up to three. T
 
 **RLS:** anyone can read `confirmed`. The tagged account and the uploader can also read their pending rows. No client INSERT/UPDATE.
 
-RPCs: `search_taggable_accounts(search_query)` (username or first name only), `tag_reel_accounts(target_reel_id, profile_ids)`, `get_reel_account_tags(target_reel_id)`, `get_my_account_tags()`, `confirm_account_tag(target_tag_id, tag_action)`. `account_tag_label` builds the public name and is not granted to the app.
+RPCs: `search_taggable_accounts(search_query)` (username or first name only), `tag_reel_accounts(target_reel_id, profile_ids)`, `get_reel_account_tags(target_reel_id)`, `get_my_account_tags()`, `confirm_account_tag(target_tag_id, tag_action)`. `account_tag_label` builds the public name and is not granted to the app. `tag_reel_accounts` rejects missing identity and non-uploader writes. `confirm_account_tag` returns the new status only when it updates an owned pending mention; missing, foreign, or already answered rows return SQL `NULL`. Revised before first application on 2026-10-07; not parsed or exercised against Postgres locally.
 
 ### `saved_reels`
 

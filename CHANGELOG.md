@@ -2,6 +2,39 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-10-07
+
+### Compact donations and shared Daylight menus
+
+- Donate now stays in one popup with Amount, Options and Review pages; Back/Next and the final Donate action stay outside scrolling content.
+- Amount and optional extras survive Back; only the reviewed final action opens payment. Pending checkout locks duplicate taps and dismissal, and a closing popup cannot start payment.
+- A completed payment cannot be charged again in the same checkout when saving the donation or updating counters fails; the warning distinguishes this from payment failure. Replacing the inline recipient prevents the previous recipient’s completion from changing the new checkout or firing its callbacks.
+- The optional card-fee control announces the exact fee and unchanged family share to screen readers.
+- Upload and shared fan menus/pages gain rounded cards, accent washes and step chips using the existing Island Daylight palette; full-screen video retains its contrast.
+- Added DOCUMENTATION under Engineering, bringing the callable roster to 83. All existing agents now hand off documentation evidence; MENU_STYLE_MAP records modal/page coverage and tester gaps.
+- Local integration: full Jest passes 50 suites / 242 tests; the latest checkout callback guard also passes all 8 targeted checkout tests. Both app typechecks pass; independent review found the four checkout issues addressed.
+- No native screenshots, keyboard checks or Stripe-device verification recorded for this pass; press stills are stale.
+
+### Compact video upload
+
+- Upload now has three short steps: Video, Details, and Review. Back and Next/Publish stay outside the scrolling content.
+- Athlete and game choices open searchable selection screens. Game links, account mentions and Vault access live under More options.
+- Back preserves the draft; choosing another clip resets rights confirmations. An optional game starts unset instead of silently linking to a demo matchup.
+- Publishing remains gated on an athlete, caption and all applicable rights confirmations; a duplicate tap cannot start a second upload.
+
+
+### Account mention reliability
+
+- Failed mention confirmation keeps the request visible and explains how to try again.
+- A successfully published Highlight remains published when account mentions fail; the uploader sees an accurate warning.
+- Pending account-tag SQL now serializes additions to enforce three active mentions across concurrent requests and returns no success for a missing, foreign or already answered tag. The migration remains unapplied.
+
+### Specialist ownership and maintainability
+
+- Expanded the roster to 82 callable agents, updated all existing definitions and reporting hierarchy, and assigned work through `docs/WORK_QUEUE.md`.
+- Added registry consistency checks to CI. Guest game/player routes now use data helpers, reducing route database exceptions from eight to six.
+- Corrected historical staging/branch status and the privacy inventory's custodial birthdate exception.
+
 ## 2026-10-02
 
 ### Account tags

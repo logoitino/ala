@@ -92,7 +92,10 @@ apps/mobile/src/backend/db/schema.sql Canonical Postgres + RLS
 apps/admin-portal/                Next web admin, read-only oversight (Overview / Reports / Money / Soft-Wall / Profile / Features / People) at :3001. Reports + Money RPCs match Expo. Every write happens only in Expo `/admin`
 packages/shared-types/            @tapuai/shared-types
 scripts/                          Node generators (`sync-front-docs.mjs` → product facts; reads apps/mobile constants)
-docs/TEAMS.md                     Department call sheet (who owns each tab / admin desk)
+docs/TEAMS.md                     Department call sheet and specialist operating contract
+docs/TEAM_HIERARCHY.md            Reporting hierarchy and complete callable agent index
+docs/WORK_QUEUE.md                Ordered specialist tasks, acceptance criteria and gates
+.claude/agents/registry.json      Functional ownership registry (pnpm agents:check)
 supabase/                         Incremental SQL (DROP FUNCTION before return-type changes)
 supabase/functions/               Edge Functions (`create-stripe-account` JWT Connect, `create-payment-intent` JWT)
 ```
@@ -171,3 +174,20 @@ await supabase.rpc('add_user_aura', {
 3. Changing RPC return types: `DROP FUNCTION …` first (`42P13`).
 4. After Babel / env changes: `pnpm --filter @tapuai/mobile start -- --clear` (or stop Metro and `pnpm mobile`).
 5. After Mālo / exclusive / booster / Aura / PIN / Connect / athlete-sport constant changes: `pnpm docs:sync` so PUBLIC / INVESTOR / LEGAL fact blocks match code. CI runs `pnpm docs:check` (SCHEMA must name every table and RPC in `apps/mobile/src/backend/db/schema.sql`).
+
+### Upload composer (UX-01)
+
+`components/Reels/UploadVideoModal.tsx` owns the in-memory draft, picker and upload.
+`UploadVideoComposer.tsx` renders Video → Details → Review, optional settings and searchable
+athlete/game choices. Header/footer stay outside the active page scroll area. Required rights
+are explicit on Review; choosing a replacement clip clears them.
+
+
+### Donation and shared menu presentation (UX-02)
+
+The Donate popup uses Amount → Options → Review within the same modal. Back/Next and the
+final donation action stay outside the page scroll. Changing steps preserves choices; payment
+still uses `TipCheckout` / `useTipCheckout` and the existing native/web Stripe boundary.
+`DOCUMENTATION` synchronizes affected team contracts and tester evidence. The shared Daylight
+menu/page APIs, consumer inventory and deliberate visual exceptions are in
+[docs/MENU_STYLE_MAP.md](docs/MENU_STYLE_MAP.md).

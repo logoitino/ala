@@ -69,6 +69,13 @@ box starts unchecked. A donor opts in; we never make them opt out.
 - Talk about the community ("the town showed up"), not what the donor gets back. Aura is
   reputation, never cash.
 
+## Checkout failure copy
+
+A failure after payment completes must say payment completed and identify the failed
+recording/update. It must not imply no charge occurred or invite another payment. The optional
+card-fee control announces its exact fee and the unchanged family share; the existing split and
+No tip default remain. These messages do not promise settled credit or automatic reconciliation.
+
 ## Where the mission is said
 
 - First open: `WelcomeOverlay` — `DONATION_MISSION`.
@@ -88,3 +95,12 @@ money. Read it as "donation"; fix it when you touch the section.
 
 **Legal:** LEGAL_BRIEFING row Q covers the switch to "donate". Counsel owns the final wording of the
 tax line and anything about fees.
+
+
+## Compact Donate review (2026-10-07)
+
+Amount / Options / Review may use warm, sports-inspired presentation. Financial review remains
+plain: donation, optional **tip for Tapua'i**, optional card-fee coverage, total and the 90 / 10
+split. Start optional choices at No tip / unchecked; do not imply that Next charges the card.
+Donation recipients and held-gift notices remain explicit. Layout changes do not approve new
+money rules or legal claims.

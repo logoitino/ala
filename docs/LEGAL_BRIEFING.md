@@ -210,3 +210,18 @@ Legal / BD (outside this repo):
 5. Tax reporting design.
 
 Until those exist, **keep Stripe in test mode.** That is a control, not a footnote.
+
+
+## UX-02 implementation evidence — 2026-10-07
+
+The Donate popup is reorganized into Amount / Options / Review with financial disclosure
+on Review. This changes presentation: the 90 / 10 split, optional tip for Tapua'i starting at
+No tip, unchecked card-fee coverage, totals and applicable held-gift notice retain their existing
+rules. No approved legal conclusion, fee model or payout decision is revised. Brand copy and
+payment/device verification remain subject to the existing recorded gates. Checkout now blocks
+a new charge after reported payment success even if recording or counters fail, and labels that
+failure separately. These local UI guards leave client-written `tips` and the authoritative-credit
+work in ROADMAP Phase 1a unresolved; they make no settlement or reconciliation guarantee.
+The card-fee accessible label includes the exact optional fee and unchanged family share.
+Source/evidence map:
+[MENU_STYLE_MAP.md](MENU_STYLE_MAP.md), [WORK_QUEUE.md](WORK_QUEUE.md) UX-02.
