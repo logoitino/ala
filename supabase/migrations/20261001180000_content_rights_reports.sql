@@ -1,5 +1,5 @@
 -- Upload rights confirmation + report reasons.
--- Design: docs/ATHLETE_VERIFICATION_DESIGN.md §6, plus music / logo / broadcast reports.
+-- Design: docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md §6, plus music / logo / broadcast reports.
 -- Depends on public.reels, public.profiles, public.players, public.custodial_accounts.
 --
 -- A clip leaves the public feed (is_flagged) when:

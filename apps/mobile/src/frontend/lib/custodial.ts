@@ -1,7 +1,7 @@
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 /**
- * Custodial money rules (owner decision 2026-09-29, `docs/PARENT_PAYEE_CONNECT_DESIGN.md` §7):
+ * Custodial money rules (owner decision 2026-09-29, `docs/engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md` §7):
  * the guardian holds one payout account per athlete, the athlete sees every gift and approves
  * every guardian withdrawal, and control passes to the athlete at the handover age (default 18).
  * The server enforces all of it (`supabase/custodial_money.sql`); this file only reads and asks.

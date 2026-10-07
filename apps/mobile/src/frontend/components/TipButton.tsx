@@ -1,6 +1,6 @@
 /**
  * The animated amount button on the donate sheet (preset amounts, custom, selected state).
- * (Code name `Tip` = donation; on-screen words follow docs/VOICE.md.)
+ * (Code name `Tip` = donation; on-screen words follow docs/product/VOICE.md.)
  */
 
 import { useEffect } from 'react';

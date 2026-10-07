@@ -4,7 +4,7 @@
 -- read RPC that returns every board for a Spotlight window: most-hyped players, most-viewed players,
 -- most-viewed Highlights, school standings and top fans.
 --
--- Guardrail (docs/STORY.md): boards rank hype and views only. No tips, Mālo amounts or backer counts
+-- Guardrail (docs/product/STORY.md): boards rank hype and views only. No tips, Mālo amounts or backer counts
 -- appear anywhere in `get_leaderboards` — never rank kids by money.
 --
 -- Standalone copy for applying by hand; `apps/mobile/src/backend/db/schema.sql` is canonical.

@@ -1,6 +1,6 @@
 # Specialist work queue
 
-Last updated: 2026-10-07. Entry point: [STATE.md](STATE.md). Owners and executable
+Last updated: 2026-10-07. Entry point: [STATE.md](../STATE.md). Owners and executable
 instructions: [TEAMS.md](TEAMS.md), [TEAM_HIERARCHY.md](TEAM_HIERARCHY.md), and the agent registry.
 
 This is the next execution sequence. A named owner owns the outcome and evidence; paired
@@ -21,7 +21,7 @@ An agent definition is an instruction file, not a continuously running worker.
 | W0-06 | `STORAGE`, `VAULT`, `DATABASE_MIGRATIONS`, `RLS_SECURITY`, `QA` | Review and prepare private Vault bucket setup | Private bucket and correct policy/dependency order; uploader/entitled viewer allowed, unrelated account denied; public uploads still work | Staging bucket recorded missing; setup not applied |
 | W0-07 | `DATABASE_MIGRATIONS`, `OPERATOR`, `RLS_SECURITY`, `QA` | Validate operator check-in role policy migration | Signed-in fan denied GPS reads/inserts; operator/admin allowed; anon demo exception explicitly internal-only; rollback verified | `20261002120000` written, not applied; SQL execution pending |
 | W0-08 | `ACCOUNT_TAGS`, `DATABASE_MIGRATIONS`, `RLS_SECURITY`, `TEST_AUTOMATION` | Validate and stage account-tag migration after W0-03 | Two-user pending/privacy/confirm/reject tests, wrong actor denied, parallel writes max 3, athlete remains donation recipient | Local fix first; database execution pending |
-| W0-09 | `DEVICE_QA`, `QA`, feature owners | Run enabled-role device smoke | Android + registered iPad evidence for upload, rights/reports, donation, receipts, Rally/thanks, profile, retry; every P0/P1 assigned | Pending real devices; [TESTER_SCRIPT.md](TESTER_SCRIPT.md) |
+| W0-09 | `DEVICE_QA`, `QA`, feature owners | Run enabled-role device smoke | Android + registered iPad evidence for upload, rights/reports, donation, receipts, Rally/thanks, profile, retry; every P0/P1 assigned | Pending real devices; [TESTER_SCRIPT.md](../engineering/TESTER_SCRIPT.md) |
 
 Do W0-05 through W0-09 on staging with the applicable account/device access. Applying SQL,
 changing hosted configuration, publishing a build, and live money have distinct gates; a local

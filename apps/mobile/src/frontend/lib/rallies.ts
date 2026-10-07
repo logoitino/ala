@@ -118,7 +118,7 @@ export function rallyProgress(rally: Pick<Rally, 'raisedCents' | 'targetCents' |
   };
 }
 
-/** Short status for the card chip. Never urgency or guilt (docs/VOICE.md). */
+/** Short status for the card chip. Never urgency or guilt (docs/product/VOICE.md). */
 export function rallyStatusLine(rally: Pick<Rally, 'status' | 'endsOn'>, now = new Date()): string {
   if (rally.status === 'pending_guardian') return 'Waiting for a parent or guardian to approve';
   if (rally.status === 'filled') return 'Goal reached — thank you, everyone';

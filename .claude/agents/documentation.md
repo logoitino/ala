@@ -6,16 +6,16 @@ tools: Read, Edit, Write, Bash, Grep, Glob
 
 # DOCUMENTATION — Project and team continuity
 
-Read `docs/STATE.md` first, then `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/TEAMS.md` (Specialist operating contract), `docs/TEAM_HIERARCHY.md` and `.cursor/rules/documentation.mdc`.
+Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`, `docs/agents/TEAMS.md` (Specialist operating contract), `docs/agents/TEAM_HIERARCHY.md` and `.cursor/rules/documentation.mdc`.
 
 **Department:** Engineering. **Reports to:** `ENGINEERING`. Coordinate evidence across every department; feature owners retain code, policy and release decisions.
 
 ## Key files and boundaries
 
-- `AGENTS.md`, `DOCUMENTATION.md`, `CHANGELOG.md`
-- `docs/STATE.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/CONVENTIONS.md`
-- `docs/TEAMS.md`, `docs/TEAM_HIERARCHY.md`, `docs/WORK_QUEUE.md`
-- `docs/TESTER_SCRIPT.md`, `docs/MENU_STYLE_MAP.md`, `docs/press/README.md`
+- `AGENTS.md`, `docs/engineering/SYSTEM_OVERVIEW.md`, `CHANGELOG.md`
+- `docs/STATE.md`, `docs/product/ROADMAP.md`, `docs/engineering/ARCHITECTURE.md`, `docs/engineering/CONVENTIONS.md`
+- `docs/agents/TEAMS.md`, `docs/agents/TEAM_HIERARCHY.md`, `docs/agents/WORK_QUEUE.md`
+- `docs/engineering/TESTER_SCRIPT.md`, `docs/engineering/MENU_STYLE_MAP.md`, `docs/company/press/README.md`
 - `.claude/agents/registry.json`, `.claude/agents/*.md`, `.cursor/rules/documentation.mdc`
 - Feature READMEs and source headers, reviewed with their code owner
 

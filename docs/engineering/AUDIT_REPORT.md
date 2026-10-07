@@ -39,7 +39,7 @@ Clean on the mechanical sweeps: 361 pressable-family elements all have a handler
 | Secrets in client | Pass — no `sk_test_` / `sk_live_` under `apps/mobile/src/frontend/` |
 | Env convention | Pass — `apps/mobile/.env.local` (`EXPO_PUBLIC_*`); `apps/admin-portal/.env.example` (`NEXT_PUBLIC_*`); root `.env.local` gitignored |
 | Expo `/admin` | Pass — desks remain in mobile; Next portal is scaffold only (by design) |
-| Stale root paths | Fixed this pass — `TROUBLESHOOTING.md`, `docs/SCHEMA.md` body refs, `docs/INVESTOR.md` / `LEGAL_BRIEFING.md` (`pnpm docs:sync`), `DOCUMENTATION.md` clear command |
+| Stale root paths | Fixed this pass — `docs/engineering/TROUBLESHOOTING.md`, `docs/engineering/SCHEMA.md` body refs, `docs/company/INVESTOR.md` / `LEGAL_BRIEFING.md` (`pnpm docs:sync`), `docs/engineering/SYSTEM_OVERVIEW.md` clear command |
 | Touchables | Pass — **0** `TouchableOpacity` / `TouchableHighlight` / `TouchableWithoutFeedback` under `apps/mobile/app` + `apps/mobile/src/frontend` |
 | Push to origin | **Blocked in agent** — HTTPS remote needs interactive GitHub auth (`gh auth login` or IDE Source Control push). Local `main` stays ahead until pushed |
 

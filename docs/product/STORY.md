@@ -8,7 +8,7 @@ read like it came from here. The guardrails at the bottom are not optional. They
 this story true and keeps athletes eligible.
 
 Companions: [ROADMAP.md](ROADMAP.md) (what we are building toward it) ·
-[LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) (why the guardrails exist) · [PUBLIC.md](PUBLIC.md).
+[LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) (why the guardrails exist) · [PUBLIC.md](PUBLIC.md).
 
 ---
 
@@ -171,7 +171,7 @@ up."*
 
 High-school athletes are mostly minors, and state associations treat money differently from the
 NCAA. One wrong sentence can cost a kid their eligibility. Full reasoning in
-[LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) §3 and §6.
+[LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) §3 and §6.
 
 **Always:**
 

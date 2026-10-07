@@ -1,6 +1,6 @@
 /**
  * Money labelling helpers: pick the channel stored on a donation (`tips.origin`) and the short channel line shown
- * on receipts and the admin Money desk. Wording follows docs/VOICE.md.
+ * on receipts and the admin Money desk. Wording follows docs/product/VOICE.md.
  */
 
 import {

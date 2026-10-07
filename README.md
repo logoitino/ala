@@ -11,7 +11,7 @@ Polynesian-inspired fan & athlete hub — the GoFundMe replacement for families:
 **Start with [docs/STATE.md](docs/STATE.md)** — current state, what changed last, environment
 gotchas, and what is knowingly broken; §0 is the hand-off for the next person or AI. Update it whenever you change code.
 
-Docs: [STATE](docs/STATE.md) · [ARCHITECTURE](docs/ARCHITECTURE.md) · [ONBOARDING](docs/ONBOARDING.md) · [SCHEMA](docs/SCHEMA.md) · [DOCUMENTATION](DOCUMENTATION.md)
+Docs: [STATE](docs/STATE.md) · [ARCHITECTURE](docs/engineering/ARCHITECTURE.md) · [ONBOARDING](docs/ONBOARDING.md) · [SCHEMA](docs/engineering/SCHEMA.md) · [DOCUMENTATION](docs/engineering/SYSTEM_OVERVIEW.md)
 
 ## Quick start
 
@@ -50,4 +50,4 @@ Never commit `.env`, `.env.local`, or `.env.production`.
 
 Backend SQL stays at repo-root [`supabase/`](supabase/). Canonical app schema copy: `apps/mobile/src/backend/db/schema.sql`. Stripe stays in test mode until production keys + legal sign-off.
 
-Specialist roster: [TEAM_HIERARCHY](docs/TEAM_HIERARCHY.md) · [TEAMS](docs/TEAMS.md) · [WORK_QUEUE](docs/WORK_QUEUE.md).
+Specialist roster: [TEAM_HIERARCHY](docs/agents/TEAM_HIERARCHY.md) · [TEAMS](docs/agents/TEAMS.md) · [WORK_QUEUE](docs/agents/WORK_QUEUE.md).

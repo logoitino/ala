@@ -1,6 +1,6 @@
 # Tapua'i architecture
 
-Current state and hand-off: [STATE.md](STATE.md) (read first). System overview for the pnpm monorepo. Schema detail: [SCHEMA.md](SCHEMA.md). Product numbers: [PRODUCT_FACTS.md](PRODUCT_FACTS.md). Engineer map: [../DOCUMENTATION.md](../DOCUMENTATION.md). Who owns each tab: [TEAMS.md](TEAMS.md).
+Current state and hand-off: [STATE.md](../STATE.md) (read first). System overview for the pnpm monorepo. Schema detail: [SCHEMA.md](SCHEMA.md). Product numbers: [PRODUCT_FACTS.md](../product/PRODUCT_FACTS.md). Engineer map: [../SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md). Who owns each tab: [TEAMS.md](../agents/TEAMS.md).
 
 ## Monorepo map
 
@@ -26,7 +26,7 @@ apps/admin-portal ─┘
 
 - **Mobile (Expo):** Highlights ⚡, Activity, Spotlight, Drip, Profile (same `AthleteProfileView` as `/user/[id]`; hamburger on own hub; Local is a pill on Highlights), Donate PaymentSheet (code name Mālo; discloses 90 / 10, optional tip for Tapua'i), Rally goals and preset Say thanks (`components/Rally/`, `components/Thanks/`), custodial money cards (`components/Custodial/`), athlete verification (`components/Verification/`), Soft-Wall auth (browse-first guests), operator console (Features-gated), and the live **Admin** desks under `app/(admin)/admin` (Coverage Soft-Wall + Profile surfaces, Features Soft-Wall board, Look Profile chrome, People Fans filter).
 - **Admin portal (Next):** Web app at `pnpm admin` → `http://localhost:3001`. **Reports** (`/reports`, `get_admin_reports`) and **Money** (`/money`, `get_company_revenue_summary` and `get_admin_malo_breakdown`) are the browser desks for behavior, the company ledger, and each donation by surface. Soft-Wall / Profile / Features / People stay on this plane; Features Publish copies onto `published`. Edit games, Drip SKUs, sports, and catalogs in Expo `/admin`.
-- **Departments and specialists:** Resolve the primary functional owner in [TEAM_HIERARCHY.md](TEAM_HIERARCHY.md) and [TEAMS.md](TEAMS.md); dispatch a bounded task from [WORK_QUEUE.md](WORK_QUEUE.md). The registry in `.claude/agents/registry.json` and `agents:check` keep files, reporting relationships and documentation aligned. Leads integrate shared changes; QA independently gates release.
+- **Departments and specialists:** Resolve the primary functional owner in [TEAM_HIERARCHY.md](../agents/TEAM_HIERARCHY.md) and [TEAMS.md](../agents/TEAMS.md); dispatch a bounded task from [WORK_QUEUE.md](../agents/WORK_QUEUE.md). The registry in `.claude/agents/registry.json` and `agents:check` keep files, reporting relationships and documentation aligned. Leads integrate shared changes; QA independently gates release.
 - **Shared types:** Import `@tapuai/shared-types` (or `@shared/*`) for cross-app domain types, including `SOFT_WALL_GATES` / `SoftWallOversight`. Mobile keeps the full generated `Database` helpers in `apps/mobile/src/frontend/types/database.ts`.
 - **Auth:** Supabase session + `alasports://auth/callback`. Soft wall on Donate / Crew / gear-goal donate only; fan profile via `handle_new_auth_user` + `ensureFanProfile`.
 

@@ -1,6 +1,6 @@
 # Tapua'i onboarding
 
-**Read [STATE.md](STATE.md) first** — §0 is the hand-off (branch, unapplied SQL, next steps) and §3 lists this Mac's environment traps (npm registry blocked, `--watchman=false`, no Simulator taps). Get a new engineer from clone to Metro (mobile) and the Next admin portal. Architecture: [ARCHITECTURE.md](ARCHITECTURE.md) · [DOCUMENTATION.md](../DOCUMENTATION.md). Schema: [SCHEMA.md](SCHEMA.md). Departments: [TEAMS.md](TEAMS.md).
+**Read [STATE.md](STATE.md) first** — §0 is the hand-off (branch, unapplied SQL, next steps) and §3 lists this Mac's environment traps (npm registry blocked, `--watchman=false`, no Simulator taps). Get a new engineer from clone to Metro (mobile) and the Next admin portal. Architecture: [ARCHITECTURE.md](engineering/ARCHITECTURE.md) · [SYSTEM_OVERVIEW.md](engineering/SYSTEM_OVERVIEW.md). Schema: [SCHEMA.md](engineering/SCHEMA.md). Departments: [TEAMS.md](agents/TEAMS.md).
 
 Expo **SDK 57**: [https://docs.expo.dev/versions/v57.0.0/](https://docs.expo.dev/versions/v57.0.0/).
 
@@ -63,7 +63,7 @@ Browse-first guests can open Highlights, cards, and Locker Room without an accou
 
 Client entry points: `apps/mobile/src/frontend/lib/auth.ts`, `AuthContext`, `SoftWallContext`, route `apps/mobile/app/auth/callback.tsx`.
 
-Admin oversight: Expo Coverage → Soft-Wall auth + Profile hamburger/roster, Features Soft-Wall board, Look Profile chrome, People Fans filter. Next portal (`pnpm admin`) Overview / Soft-Wall / Profile / Features / People mirrors live flags + fan/claim counts (`SOFT_WALL_GATES` + `PROFILE_CHROME_FLAGS` in `@tapuai/shared-types`). Grok Bot ALA roles: [`docs/ALA_TEAM_BRIEF.md`](ALA_TEAM_BRIEF.md).
+Admin oversight: Expo Coverage → Soft-Wall auth + Profile hamburger/roster, Features Soft-Wall board, Look Profile chrome, People Fans filter. Next portal (`pnpm admin`) Overview / Soft-Wall / Profile / Features / People mirrors live flags + fan/claim counts (`SOFT_WALL_GATES` + `PROFILE_CHROME_FLAGS` in `@tapuai/shared-types`). Grok Bot ALA roles: [`docs/company/ALA_TEAM_BRIEF.md`](company/ALA_TEAM_BRIEF.md).
 
 ### Operator console (paused by default)
 

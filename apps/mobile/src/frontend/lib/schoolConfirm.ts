@@ -1,7 +1,7 @@
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 /**
- * School-side athlete confirmation (docs/ATHLETE_VERIFICATION_DESIGN.md §4).
+ * School-side athlete confirmation (docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md §4).
  *
  * The athletic director or coach opens `alasports://school-confirm?t=TOKEN` — a link Tapua'i issues
  * per staff member (`admin_add_school_confirmer`). They do not need an account: the token is the

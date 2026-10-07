@@ -12,7 +12,7 @@
 
 Read the exact versioned docs at [https://docs.expo.dev/versions/v57.0.0/](https://docs.expo.dev/versions/v57.0.0/) before writing any code.
 
-Engineer onboarding: [docs/CONVENTIONS.md](docs/CONVENTIONS.md) (naming + placement) · [DOCUMENTATION.md](DOCUMENTATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/ONBOARDING.md](docs/ONBOARDING.md) · [docs/SCHEMA.md](docs/SCHEMA.md) · [docs/TEAMS.md](docs/TEAMS.md) (department call sheet) · [docs/VOICE.md](docs/VOICE.md) (donation language) · [docs/CONVENTIONS.md](docs/CONVENTIONS.md) §5 (**comment every file you touch** — header on every file, *why* not *what* inline; CI runs `pnpm comments:check`)
+Engineer onboarding: [docs/engineering/CONVENTIONS.md](docs/engineering/CONVENTIONS.md) (naming + placement) · [SYSTEM_OVERVIEW.md](docs/engineering/SYSTEM_OVERVIEW.md) · [docs/engineering/ARCHITECTURE.md](docs/engineering/ARCHITECTURE.md) · [docs/ONBOARDING.md](docs/ONBOARDING.md) · [docs/engineering/SCHEMA.md](docs/engineering/SCHEMA.md) · [docs/agents/TEAMS.md](docs/agents/TEAMS.md) (department call sheet) · [docs/product/VOICE.md](docs/product/VOICE.md) (donation language) · [docs/engineering/CONVENTIONS.md](docs/engineering/CONVENTIONS.md) §5 (**comment every file you touch** — header on every file, *why* not *what* inline; CI runs `pnpm comments:check`)
 
 ## Tapua'i Sports — Project Architecture & Conventions
 
@@ -29,7 +29,7 @@ Root keeps `supabase/`, `docs/`, `scripts/`, `archive/`, `AGENTS.md`, `CLAUDE.md
 ### Directory Hierarchy Rules (`apps/mobile/`)
 
 - `apps/mobile/app/` → **Expo Router only.** Layouts (`_layout.tsx`), tab routes `(tabs)` (`index` Home / Highlights ⚡ with Home · All · Seki pills carrying live counts, a search control, and a **Local** pill that navigates rather than filters; `activity` Activity — the fan-bar slot Local used to hold; `local` nested stack (`index` + `game/[id]`) still routable but **not** a bar item; `spotlight`, `drip`, `profile`, hidden `user/[id]` + `athlete/[id]` redirect + `receipts`; `/shop` redirects), role groups (`(admin)/admin` production control plane: Marketing / Owner / Engineer / All lens; pinned Home plus Operations (games / sports / polls / boosters / publish) / Content / Commerce / Audience / Growth (reports / feedback / coverage) / System (features / look / catalogs / studio; lab / qa are hidden deep links); Back / Home trail on every desk), the fan/role groups `(athlete)` / `(booster)` / `(fan)` / `(guest)` / `(parent)` / `(sponsor)`, the `operator/` console (`index`, `[gameId]`, `console/[gameId]`, `scorer`), `auth/callback`, `gift/[handle]`, `school-confirm` (school AD/coach confirmation form, `?t=` link token), `stripe-connect`, and `+api.ts` server routes.
-- `apps/mobile/src/frontend/components/` → Reusable UI, grouped **by consuming feature**; see [docs/CONVENTIONS.md](docs/CONVENTIONS.md) §2 for the placement rule. Subfolders: `Admin/`, `Auth/`, `Common/`, `Custodial/`, `Drip/`, `Effects/`, `Feedback/`, `Filmers/`, `Legal/`, `Local/`, `Onboarding/`, `Operator/`, `Profile/`, `Rally/`, `Reels/`, `Spotlight/`, `Thanks/`, `UI/`, `Verification/`. Flat is reserved for genuinely cross-cutting pieces (`ScreenShell`, `ScreenHeading`, `TabScreen`, `RuntimePaused`, `TipSheetModal`, `AuraToast`, `BackedCelebration`, `DashboardPanel`, `TipCheckout`, `PlayCard`, `TipButton`, `FeeCheckbox`) — anything with a single consumer belongs in that consumer's subfolder.
+- `apps/mobile/src/frontend/components/` → Reusable UI, grouped **by consuming feature**; see [docs/engineering/CONVENTIONS.md](docs/engineering/CONVENTIONS.md) §2 for the placement rule. Subfolders: `Admin/`, `Auth/`, `Common/`, `Custodial/`, `Drip/`, `Effects/`, `Feedback/`, `Filmers/`, `Legal/`, `Local/`, `Onboarding/`, `Operator/`, `Profile/`, `Rally/`, `Reels/`, `Spotlight/`, `Thanks/`, `UI/`, `Verification/`. Flat is reserved for genuinely cross-cutting pieces (`ScreenShell`, `ScreenHeading`, `TabScreen`, `RuntimePaused`, `TipSheetModal`, `AuraToast`, `BackedCelebration`, `DashboardPanel`, `TipCheckout`, `PlayCard`, `TipButton`, `FeeCheckbox`) — anything with a single consumer belongs in that consumer's subfolder.
 - `apps/mobile/src/frontend/context/` → React context (`AuthContext`, `SoftWallContext`, `CelebrationContext`, `RoleGate`, `UploadSheetContext`, `AppRuntimeContext`, `AdminLensContext`). There is **no** `GameContext`. Auth helpers live in `lib/auth.ts` (guest markers, Apple / Google / Magic Link). Soft wall UI: `components/Auth/SoftWallModal`, first-open `components/Onboarding/WelcomeOverlay`.
 - `apps/mobile/src/frontend/hooks/` → Data hooks (`useLiveScores`, `useLiveGame`, `useGameEventBroadcast`, `useTipCheckout`, `useStripeConnect`, `useLegalAck`, `useAthleteSubscription`, `useRoster`, `useReels`, `useSavedReel`, `useAuraBoosters`, `useCheerPoll`, `useFanTipHistory`, `useReceivedMalo`, `useSponsorships`, `useLocalSearch`, `useTeamSearch`, `useAthleteStats`, `useActiveSpotlight`, `useSpotlightBoard`, `usePendingPlayerTags`, `useCrew`, `useAdminDashboard`, `useDripCatalog`, `useSurfaceUsage`, `useSportConfigs`, `useSheetFrame` (also exports `SHEET_BLUR_INTENSITY`), `useActivityFeed`, `useCustodial`, `useLeaderboards`, `useReelViewTracker`, `useMyVerification`, `useSchoolBadge`, `useFilmerStats`, `useRally`, `useDonationThanks`). There is **no** `useLiveFeed` / `useStripePayment`.
 - `apps/mobile/src/frontend/lib/` → Client SDKs (`supabase.ts`, `stripe.native.ts` / `stripe.web.ts`, `aura.ts`, `reels.ts`, `reelVotes.ts`, `athleteStats.ts`, `teams.ts`, `roster.ts`, `guestGames.ts`, `vault.ts`, `spotlight.ts`, `tags.ts`, `crew.ts`, `finance.ts`, `legal.ts`, `verification.ts`, `share.ts`, `admin.ts`, `adminCoverage.ts`, `runtime.ts`, `feedback.ts`, `wishlist.ts`, `sports.ts`, `socialLinks.ts`, `custodial.ts`, `leaderboards.ts`, `walletPay.ts`, `schoolConfirm.ts`, `payoutGate.ts`, `schoolBadge.ts`, `filmers.ts`, `rallies.ts`, `donationThanks.ts`, `boosterPortal.ts`, `sponsorAds.ts`).
@@ -39,7 +39,7 @@ Root keeps `supabase/`, `docs/`, `scripts/`, `archive/`, `AGENTS.md`, `CLAUDE.md
 - `apps/mobile/src/backend/services/` → Server-side domain logic behind those handlers (`payouts.ts`).
 - `apps/mobile/src/backend/db/` → Canonical SQL (`schema.sql`). RLS lives **in that file**, not `rls_policies.sql`.
 - `supabase/migrations/` → New database changes, one timestamped file each, never edited once applied; copy each onto `schema.sql`. Read `supabase/migrations/README.md`.
-- `scripts/` (repo root) → Node generators (`sync-front-docs.mjs` writes `docs/PRODUCT_FACTS.md` and `product-facts` blocks in PUBLIC / INVESTOR / LEGAL). Run `pnpm docs:sync` after price / PIN / Aura / Connect / athlete-sport / class-year / team-catalog / Highlight-label changes; CI runs `pnpm docs:check` (also fails if `SCHEMA.md` omits a `schema.sql` table or RPC).
+- `scripts/` (repo root) → Node generators (`sync-front-docs.mjs` writes `docs/product/PRODUCT_FACTS.md` and `product-facts` blocks in PUBLIC / INVESTOR / LEGAL). Run `pnpm docs:sync` after price / PIN / Aura / Connect / athlete-sport / class-year / team-catalog / Highlight-label changes; CI runs `pnpm docs:check` (also fails if `SCHEMA.md` omits a `schema.sql` table or RPC).
 
 Path aliases (mobile): `@/*` → `apps/mobile/src/frontend/*`, `@backend/*` → `apps/mobile/src/backend/*`, `@shared/*` → `packages/shared-types/*`. Prefer `@tapuai/shared-types` for package imports.
 
@@ -50,17 +50,17 @@ Path aliases (mobile): `@/*` → `apps/mobile/src/frontend/*`, `@backend/*` → 
 3. **Backend & Realtime:** Supabase PostgreSQL, Auth, Realtime WebSockets, Storage buckets `game_highlights`, `reels`, `avatars`.
 4. **Payments:** Stripe PaymentSheet (`@stripe/stripe-react-native`) + Expo API routes. Connect Express Account Links are minted only by Edge Function `create-stripe-account` with the session JWT (`sk_` never in `apps/mobile/src/frontend/`). Native vs web PaymentSheet is split by Metro platform files.
 5. **Environment:** Mobile client keys must start with `EXPO_PUBLIC_` in `apps/mobile/.env.local`. Admin portal uses `NEXT_PUBLIC_*` in `apps/admin-portal/.env.local`. Never `aladb.env` or secrets under `src/frontend/`.
-6. **Product copy:** money is always **Donate / donation** (owner, 2026-09-29) — never Mālo-as-money, tip, backing, Chip In or fund (the one exception is the optional **tip for Tapua'i** at checkout, and that line must name Tapua'i); the donate sheet discloses the 90 / 10 split; athletes thank donors with presets only; "Mālo!" is only a thank-you. Rules: [docs/VOICE.md](docs/VOICE.md); CI runs `pnpm copy:check`; call the `VOICE` agent for copy reviews. Also **Seki** / **Highlights ⚡**. Persistence still uses `tips` / `reels` / `useTipCheckout` / `malo*`.
+6. **Product copy:** money is always **Donate / donation** (owner, 2026-09-29) — never Mālo-as-money, tip, backing, Chip In or fund (the one exception is the optional **tip for Tapua'i** at checkout, and that line must name Tapua'i); the donate sheet discloses the 90 / 10 split; athletes thank donors with presets only; "Mālo!" is only a thank-you. Rules: [docs/product/VOICE.md](docs/product/VOICE.md); CI runs `pnpm copy:check`; call the `VOICE` agent for copy reviews. Also **Seki** / **Highlights ⚡**. Persistence still uses `tips` / `reels` / `useTipCheckout` / `malo*`.
 7. **Package manager:** `pnpm` at the repo root (`pnpm-workspace.yaml`). Day-to-day: `pnpm install`, `pnpm mobile`, `pnpm admin`.
 
 
 ### Specialist dispatch and ownership
 
-Use [docs/TEAM_HIERARCHY.md](docs/TEAM_HIERARCHY.md) to find a specialist and
-[docs/WORK_QUEUE.md](docs/WORK_QUEUE.md) for ordered tasks and acceptance criteria.
+Use [docs/agents/TEAM_HIERARCHY.md](docs/agents/TEAM_HIERARCHY.md) to find a specialist and
+[docs/agents/WORK_QUEUE.md](docs/agents/WORK_QUEUE.md) for ordered tasks and acceptance criteria.
 `.claude/agents/registry.json` maps callable roles to definitions, reporting leads, paths and
 functional responsibilities; `pnpm agents:check` validates it against the files and team docs.
-Read the specialist operating contract in `docs/TEAMS.md` before dispatching. Assign one primary
+Read the specialist operating contract in `docs/agents/TEAMS.md` before dispatching. Assign one primary
 owner and the required reviewers, agree shared-file ownership, and integrate status updates.
 Specialists are instruction files, not evidence that a feature exists or a release is approved.
 Keep registry, definitions, TEAMS and hierarchy synchronized in the same turn as ownership changes.
@@ -71,7 +71,7 @@ checks and never lose draft state on Back.
 
 `DOCUMENTATION` reports to `ENGINEERING` and synchronizes same-turn docs across all departments.
 Every specialist supplies behavior/API changes and actual verification evidence. Shared menu/page
-coverage and exceptions are tracked in `docs/MENU_STYLE_MAP.md`; preserve approved legal and generated facts.
+coverage and exceptions are tracked in `docs/engineering/MENU_STYLE_MAP.md`; preserve approved legal and generated facts.
 
 Donate composition stays in `TipSheetModal` / `TipCheckout`: Amount → Options → Review inside
 one popup, fixed navigation, final reviewed action only starts payment. Preserve quote/recipient,

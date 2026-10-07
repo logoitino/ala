@@ -1,6 +1,6 @@
 ---
 description: Sync PUBLIC / INVESTOR / LEGAL product facts when prices, Aura, PIN, or Connect change
-globs: apps/mobile/src/frontend/data/{players,exclusive,sponsorships,teams,highlights,finance}.ts,apps/mobile/src/frontend/lib/{aura,operator,teams,finance}.ts,apps/mobile/src/frontend/theme/motion.ts,apps/mobile/src/backend/services/payouts.ts,apps/mobile/src/backend/api/createStripeAccount.ts,apps/mobile/src/backend/db/schema.sql,docs/SCHEMA.md,docs/{PUBLIC,INVESTOR,LEGAL_BRIEFING,PRODUCT_FACTS}.md
+globs: apps/mobile/src/frontend/data/{players,exclusive,sponsorships,teams,highlights,finance}.ts,apps/mobile/src/frontend/lib/{aura,operator,teams,finance}.ts,apps/mobile/src/frontend/theme/motion.ts,apps/mobile/src/backend/services/payouts.ts,apps/mobile/src/backend/api/createStripeAccount.ts,apps/mobile/src/backend/db/schema.sql,docs/engineering/SCHEMA.md,docs/{PUBLIC,INVESTOR,LEGAL_BRIEFING,PRODUCT_FACTS}.md
 alwaysApply: false
 ---
 
@@ -8,7 +8,7 @@ alwaysApply: false
 
 After changing Mālo amounts, exclusive price, booster tiers, Aura math, operator PIN, Connect identity, payout queue copy, demo RLS, athlete sports, class years, the team catalog, Highlight / Highlights ⚡ / profile-tab labels, Vault lock / Open Vault copy, or admin platform cuts:
 
-1. Run `pnpm docs:sync` in the same turn (`docs:check` also requires every `schema.sql` table/RPC to appear in `docs/SCHEMA.md`).
+1. Run `pnpm docs:sync` in the same turn (`docs:check` also requires every `schema.sql` table/RPC to appear in `docs/engineering/SCHEMA.md`).
 2. Never hand-edit inside `<!-- product-facts:start -->` … `<!-- product-facts:end -->`.
 3. Do not invent legal conclusions. `LEGAL_BRIEFING.md` analysis outside the markers stays human-written.
 4. If those prices or caveats changed, update the investor canvas when it is available.

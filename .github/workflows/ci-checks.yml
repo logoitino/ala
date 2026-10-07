@@ -59,13 +59,13 @@ jobs:
       - name: Check front-of-house docs match product constants
         run: pnpm docs:check
 
-      - name: Check donation language in on-screen copy (docs/VOICE.md)
+      - name: Check donation language in on-screen copy (docs/product/VOICE.md)
         run: pnpm copy:check
 
       - name: Keep data access out of Expo routes
         run: pnpm app:data-boundaries
 
-      - name: Every source file has a header comment (docs/CONVENTIONS.md §5)
+      - name: Every source file has a header comment (docs/engineering/CONVENTIONS.md §5)
         run: pnpm comments:check
 
       - name: Specialist roster agrees with agent files and hierarchy

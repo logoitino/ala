@@ -3,7 +3,7 @@
 **Status:** Internal operating plan. **This is not legal advice, a filing, or a promise that any step makes the company lawful.**  
 **Date:** 24 September 2026
 
-Counsel still owns the legal calls. Those issues are mapped in [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md). Engineering security and the test-to-beta sequence stay in [ROADMAP.md](ROADMAP.md). Prices and the Mālo disclaimer stay in the generated product-facts blocks. This file is the phase order for three plans that have to move together: **security**, **billing**, and **legal** (company formation, trademark, patent triage, and the paper around minors and money).
+Counsel still owns the legal calls. Those issues are mapped in [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md). Engineering security and the test-to-beta sequence stay in [ROADMAP.md](../product/ROADMAP.md). Prices and the Mālo disclaimer stay in the generated product-facts blocks. This file is the phase order for three plans that have to move together: **security**, **billing**, and **legal** (company formation, trademark, patent triage, and the paper around minors and money).
 
 Stripe stays in **test mode** until the live-keys gate at the bottom is actually met.
 
@@ -13,7 +13,7 @@ Stripe stays in **test mode** until the live-keys gate at the bottom is actually
 
 | Stage | Security | Billing | Legal |
 | --- | --- | --- | --- |
-| Now — prototype, internal testers | [ROADMAP.md](ROADMAP.md) Phase 0 is landed. Public-beta holes stay open on purpose. | Test-mode PaymentSheet. Client still writes `tips`. Payouts are a stub. | No formation, no filings, no association letter in this repo. |
+| Now — prototype, internal testers | [ROADMAP.md](../product/ROADMAP.md) Phase 0 is landed. Public-beta holes stay open on purpose. | Test-mode PaymentSheet. Client still writes `tips`. Payouts are a stub. | No formation, no filings, no association letter in this repo. |
 | Company exists | Staging Supabase. Secrets off laptops and out of git. | Still test mode. One ledger path designed, not doubled. | LLC formed. EIN. Bank. Counsel retained. |
 | Name is reserved | Same | Same | Trademark application filed on the name and mark you will actually use. Patent triage done; file only if counsel says a claim is worth it. |
 | One metro can be talked to | Studio Unlock and operator PIN are real sessions. Vault files are not on a public URL. | Webhook credits a tip once. Parent-payee design signed off. | Written association / district position. Terms, privacy, parental consent, athlete agreement, booster insertion order drafted by counsel. |
@@ -25,11 +25,11 @@ Internal dogfooding in test mode does **not** wait on the LLC or a trademark. Li
 
 ## Security plan
 
-Engineering detail and the 2026-09 sweep log live in [ROADMAP.md](ROADMAP.md). This is the company sequence.
+Engineering detail and the 2026-09 sweep log live in [ROADMAP.md](../product/ROADMAP.md). This is the company sequence.
 
 ### S0 — Landed for internal testing
 
-Treat [ROADMAP.md](ROADMAP.md) Phase 0 as done for a small trusted group: schema applied, admin sign-in works, the fabrication bugs from that sweep are closed. Testers may use Stripe **test** cards. They are not a public launch.
+Treat [ROADMAP.md](../product/ROADMAP.md) Phase 0 as done for a small trusted group: schema applied, admin sign-in works, the fabrication bugs from that sweep are closed. Testers may use Stripe **test** cards. They are not a public launch.
 
 ### S1 — Close before any public build
 
@@ -46,9 +46,9 @@ These are already written as public-beta blockers. Do not re-decide them here.
 1. A second Supabase project for staging. Production keys are not the ones in a developer `.env.local`.
 2. EAS preview and production env hold only `EXPO_PUBLIC_*` client keys. `STRIPE_SECRET_KEY` and the service role stay on the server.
 3. A named person owns an incident: who gets called, how a school or parent reports a clip, how fast Mālo can be frozen for one athlete or one school (the freeze flags already exist).
-4. Moderation is a queue with a human, not only `is_flagged`. [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) already says there is no CSAM pipeline in this codebase. That pipeline is a vendor plus a policy, bought before public video of minors.
+4. Moderation is a queue with a human, not only `is_flagged`. [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) already says there is no CSAM pipeline in this codebase. That pipeline is a vendor plus a policy, bought before public video of minors.
 5. Repeat the Roadmap security sweep when a new table, RPC, Storage bucket, or Realtime channel lands.
-6. **Repeat the data-privacy sweep** ([DATA_PRIVACY_MAP.md](DATA_PRIVACY_MAP.md)) on the same trigger — a new table/column/RPC that holds anything about a real person gets a row added to that doc's data inventory in the same pass, not a separate later cleanup. That doc is the working inventory counsel needs for the real Privacy Policy (L4 item 2 below); keeping it current as code ships is cheaper than reconstructing it from the schema once.
+6. **Repeat the data-privacy sweep** ([DATA_PRIVACY_MAP.md](../engineering/DATA_PRIVACY_MAP.md)) on the same trigger — a new table/column/RPC that holds anything about a real person gets a row added to that doc's data inventory in the same pass, not a separate later cleanup. That doc is the working inventory counsel needs for the real Privacy Policy (L4 item 2 below); keeping it current as code ships is cheaper than reconstructing it from the schema once.
 
 **Exit:** a stranger with the app binary cannot write money, grant admin, read a Vault file, or confirm a Varsity tag.
 
@@ -64,15 +64,15 @@ PaymentSheet uses test keys. Exclusive is a one-time PaymentIntent stored as a `
 
 ### B1 — One credit path
 
-[ROADMAP.md](ROADMAP.md) Phase 1a item 1. The Stripe webhook verifies `payment_intent.succeeded` and inserts the `tips` row. The client stops inserting that row. Shipping both at once double-credits. Same shape later for sponsorships and Vault unlocks. Idempotency is the `stripe_webhook_events` row, not a “did we already read it?” check.
+[ROADMAP.md](../product/ROADMAP.md) Phase 1a item 1. The Stripe webhook verifies `payment_intent.succeeded` and inserts the `tips` row. The client stops inserting that row. Shipping both at once double-credits. Same shape later for sponsorships and Vault unlocks. Idempotency is the `stripe_webhook_events` row, not a “did we already read it?” check.
 
 ### B2 — Parent is the payee
 
-[PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md) and [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) §8. The Connect account holder is the parent or guardian. The athlete is the beneficiary in metadata. A minor does not get a US individual Express account. Guardian link stays admin-set until the linking decision in that design doc is signed. The Parent HQ payout button stays a stub until B3.
+[PARENT_PAYEE_CONNECT_DESIGN.md](../engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md) and [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) §8. The Connect account holder is the parent or guardian. The athlete is the beneficiary in metadata. A minor does not get a US individual Express account. Guardian link stays admin-set until the linking decision in that design doc is signed. The Parent HQ payout button stays a stub until B3.
 
 ### B3 — Balance, then payout
 
-A payout is allowed only up to a balance the server computed: credited tips, minus the fee waterfall counsel actually approved, minus payouts already sent. Record every payout. `POST /api/create-payout` stays blocked until that ledger exists. Money does not sit in an admin wallet. Destination is the Connect account, or a licensed disbursement partner. [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) calls an in-house wallet the money-transmitter trap.
+A payout is allowed only up to a balance the server computed: credited tips, minus the fee waterfall counsel actually approved, minus payouts already sent. Record every payout. `POST /api/create-payout` stays blocked until that ledger exists. Money does not sit in an admin wallet. Destination is the Connect account, or a licensed disbursement partner. [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) calls an in-house wallet the money-transmitter trap.
 
 ### B4 — Say the fee you charge
 
@@ -96,13 +96,13 @@ Cloudflare Stream or Mux is an operating bill (storage minutes plus minutes watc
 
 ## Legal plan
 
-Work for the founder and a licensed attorney. [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) is the issue map (amateurism, minors as payees, money transmitter, school footage, COPPA, school marks). This section is the order in which that map gets done. Nothing here clears Tapua'i to take live money.
+Work for the founder and a licensed attorney. [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) is the issue map (amateurism, minors as payees, money transmitter, school footage, COPPA, school marks). This section is the order in which that map gets done. Nothing here clears Tapua'i to take live money.
 
 Launch conversations are **Utah** high schools, per [INVESTOR.md](INVESTOR.md). The state where the LLC is formed is a separate question for the business attorney. Do not treat “Delaware” or “Utah” as decided in this repo.
 
 ### L0 — Counsel, before filings
 
-1. Retain a business attorney plus someone who will actually opine on high-school amateurism and payments. [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) §8.
+1. Retain a business attorney plus someone who will actually opine on high-school amateurism and payments. [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) §8.
 2. Hand them that briefing, the investor memo, and this phase doc.
 3. Keep Stripe in test mode while they work.
 
@@ -129,7 +129,7 @@ File on the name and logo you will ship, in the classes counsel picks (downloada
 2. Decide use-based vs intent-to-use with counsel. Intent-to-use holds a slot; you still have to prove use.
 3. File the word mark for the company name. File the logo only if the logo is stable.
 4. Watch the application. Respond to office actions through counsel.
-5. After registration, use the mark the way the registration describes. School names, mascots, and district logos are **their** marks. [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) §4.4. Using “Westlake” in a demo roster is not a license. Get written permission before a commercial build shows a school’s mark or game film.
+5. After registration, use the mark the way the registration describes. School names, mascots, and district logos are **their** marks. [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) §4.4. Using “Westlake” in a demo roster is not a license. Get written permission before a commercial build shows a school’s mark or game film.
 6. Domain and social handles in the LLC’s name, after the search, not before.
 
 ### L3 — Patent triage
@@ -140,14 +140,14 @@ A patent is not part of forming the company, and filing one is not assumed.
 2. They say whether anything is worth a filing, and whether a provisional is useful or just a date you will have to follow with a real application.
 3. If they say no, record that and move on. If they say yes, file in the LLC’s name after L1, with inventors named correctly.
 4. Do not put source code, schema, or a pitch deck in a public “patent pending” post. Do not describe the app as patented anywhere in product copy.
-5. Third-party sample clips in the demo are not company IP. [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) §5.8. Real game film needs a license.
+5. Third-party sample clips in the demo are not company IP. [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) §5.8. Real game film needs a license.
 
 ### L4 — Paper the product
 
 Counsel drafts, the repo only stores the version the app asks users to accept (`LEGAL_TERMS_VERSION`, `LegalModal`).
 
 1. Terms of Use.
-2. Privacy policy (video of minors, school, location for operator check-in, Stripe). [DATA_PRIVACY_MAP.md](DATA_PRIVACY_MAP.md) is the current data inventory to start counsel's draft from — it is not the policy itself.
+2. Privacy policy (video of minors, school, location for operator check-in, Stripe). [DATA_PRIVACY_MAP.md](../engineering/DATA_PRIVACY_MAP.md) is the current data inventory to start counsel's draft from — it is not the policy itself.
 3. Parental consent, separate from a boolean on `players`.
 4. Athlete / creator agreement. Parent signs if the athlete is a minor.
 5. Booster insertion order (what a Silver / Gold / Platinum buy actually is).
@@ -155,7 +155,7 @@ Counsel drafts, the repo only stores the version the app asks users to accept (`
 
 ### L5 — Association and district
 
-[LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) §4 is the cover-letter outline. Do not send that memo raw.
+[LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) §4 is the cover-letter outline. Do not send that memo raw.
 
 1. One written position from the state association in the first launch state.
 2. One written position from a district you will actually stand up a sideline in.
@@ -169,7 +169,7 @@ Counsel drafts, the repo only stores the version the app asks users to accept (`
 
 ### L7 — Insurance
 
-Media, cyber, and E&O after the payee model is sketched. [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) §7. A broker quotes it. This file does not pick a carrier.
+Media, cyber, and E&O after the payee model is sketched. [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) §7. A broker quotes it. This file does not pick a carrier.
 
 **Exit:** counsel has a signed engagement, the LLC exists, the trademark is at least filed, patent triage is a written yes or no, and the L4 documents exist as drafts they will stand behind.
 

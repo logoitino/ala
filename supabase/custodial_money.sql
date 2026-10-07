@@ -2,7 +2,7 @@
 -- apps/mobile/src/backend/db/schema.sql; this standalone file is for applying the change by hand
 -- to an existing project. Safe to re-run.
 --
--- The rules, in plain words (docs/PARENT_PAYEE_CONNECT_DESIGN.md §7):
+-- The rules, in plain words (docs/engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md §7):
 --   1. A guardian holds one payout account per athlete, and it holds only that athlete's money
 --      (custodial_accounts is keyed by player_id; a Stripe account can serve only one athlete).
 --   2. The athlete sees every gift and every withdrawal request (get_custodial_summary).

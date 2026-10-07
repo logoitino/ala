@@ -2,7 +2,7 @@
 --
 -- Mission: make it easy for a family to put their young athlete where the community can watch their
 -- highlights and donate toward real sports costs (the GoFundMe replacement), and for the athlete to
--- say thank you. Docs: docs/STORY.md, docs/VOICE.md, ROADMAP M2.
+-- say thank you. Docs: docs/product/STORY.md, docs/product/VOICE.md, ROADMAP M2.
 --
 -- 1. tips.platform_tip_cents — an optional tip the donor adds for Tapua'i at checkout (GoFundMe
 --    model). It is charged on top of the donation, never counted as the athlete's donation, and

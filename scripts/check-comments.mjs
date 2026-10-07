@@ -1,7 +1,7 @@
 /**
  * `pnpm comments:check` — every source file in the mobile app must explain itself.
  *
- * Rule (docs/CONVENTIONS.md §5): a file needs a comment before its first exported function or class
+ * Rule (docs/engineering/CONVENTIONS.md §5): a file needs a comment before its first exported function or class
  * (or before its first export of any kind, for files that only export data), or within its first
  * 60 lines. That comment says what the file is for in product language, so an outside reviewer can
  * tell where they are without reading the code. A top-of-file header is preferred; a doc comment on
@@ -55,7 +55,7 @@ const missing = scanRoots
   .sort();
 
 if (missing.length > 0) {
-  console.error('Files with no header comment (add one — see docs/CONVENTIONS.md §5):');
+  console.error('Files with no header comment (add one — see docs/engineering/CONVENTIONS.md §5):');
   for (const file of missing) console.error(`  ${file}`);
   process.exit(1);
 }

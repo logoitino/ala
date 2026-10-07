@@ -1,6 +1,6 @@
 # Database migrations
 
-Started 2026-09-29 (docs/CODE_ORGANIZATION_PLAN.md step 1). Every database change from now on is a
+Started 2026-09-29 (docs/engineering/CODE_ORGANIZATION_PLAN.md step 1). Every database change from now on is a
 new timestamped file in this folder, applied in filename order.
 
 We are **not** moving hosts. This folder exists so the database history is plain, ordered SQL that
@@ -16,7 +16,7 @@ anyone can read — and, if Tapua'i ever has to move to another Postgres host, c
    re-run on staging is harmless.
 5. **Copy the file onto the end of `apps/mobile/src/backend/db/schema.sql`** under a header, until
    that file becomes generated (plan step 1.4). `pnpm docs:check` reads `schema.sql`, so new tables
-   and RPCs must also go into `docs/SCHEMA.md`.
+   and RPCs must also go into `docs/engineering/SCHEMA.md`.
 6. Secrets (team codes, confirmer tokens) never go in a migration. Create them at run time — see
    "Adding a school confirmer" below.
 
@@ -48,9 +48,9 @@ check: `docs/STATE.md` §0.
 
 | File | What | Applied? |
 | --- | --- | --- |
-| `20260929120000_athlete_verification_ladder.sql` | School-confirmed athlete verification: claims go to "pending", the athletic director or coach confirms in person with a 6-digit code; closes the self-verify and name-match holes. [Design](../../docs/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Staging first. No dependency on the other unapplied files |
-| `20260929130000_payout_gate_without_school.sql` | Payouts unlock with Stripe ID check + one undisputed claim, $250 cap until 3 teammate vouches or school confirmation; `athlete_vouches` + vouch RPCs. [Design §9](../../docs/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Needs `20260929120000` and `supabase/custodial_money.sql` (`custodial_accounts`, `athlete_controls_money`) first |
-| `20260929140000_school_badge.sql` | School logo / colours, `athlete_school_badge`, `admin_set_school_branding`, no ✓ in names. [Design §10](../../docs/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Needs `20260929120000` first |
+| `20260929120000_athlete_verification_ladder.sql` | School-confirmed athlete verification: claims go to "pending", the athletic director or coach confirms in person with a 6-digit code; closes the self-verify and name-match holes. [Design](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Staging first. No dependency on the other unapplied files |
+| `20260929130000_payout_gate_without_school.sql` | Payouts unlock with Stripe ID check + one undisputed claim, $250 cap until 3 teammate vouches or school confirmation; `athlete_vouches` + vouch RPCs. [Design §9](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Needs `20260929120000` and `supabase/custodial_money.sql` (`custodial_accounts`, `athlete_controls_money`) first |
+| `20260929140000_school_badge.sql` | School logo / colours, `athlete_school_badge`, `admin_set_school_branding`, no ✓ in names. [Design §10](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **No.** Needs `20260929120000` first |
 | `20260929160000_reel_views_and_filmer_credit.sql` | `reels_feed` gains `view_count` / `uploader_name` / `uploader_avatar_url`; `athlete_highlight_views`, `filmer_stats` | **No.** Needs `supabase/leaderboards.sql` (`reels.view_count`) first |
 | `20260929170000_filmer_rewards.sql` | Filmer Aura (tag confirmed, view milestones, Props), `filmer_rewards` ledger, `filmer_props`, `give_filmer_props`, `get_top_filmers`, `filmer_stats` v2 | **No.** Needs `20260929160000` first |
 | `20260929180000_rally_goals_thanks_platform_tip.sql` | Rally goals (`rallies`, create / approve / close / thank RPCs, `tips.rally_id` credits the total), preset donor thank-yous (`donation_thanks`, `thank_donation`), optional tip to Tapua'i at checkout (`tips.platform_tip_cents`, revenue source `tip`, 100% platform) | **No.** Needs `supabase/custodial_money.sql` (`athlete_controls_money`), `company_revenue.sql`, `tip_origin.sql` first |

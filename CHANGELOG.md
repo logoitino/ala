@@ -31,7 +31,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Specialist ownership and maintainability
 
-- Expanded the roster to 82 callable agents, updated all existing definitions and reporting hierarchy, and assigned work through `docs/WORK_QUEUE.md`.
+- Expanded the roster to 82 callable agents, updated all existing definitions and reporting hierarchy, and assigned work through `docs/agents/WORK_QUEUE.md`.
 - Added registry consistency checks to CI. Guest game/player routes now use data helpers, reducing route database exceptions from eight to six.
 - Corrected historical staging/branch status and the privacy inventory's custodial birthdate exception.
 
@@ -202,7 +202,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Seven unused components removed
 
-- `ScoreboardBanner`, `GameEventCard`, `ScoreHeader`, `ReactionButtons`, `HighlightClipCard` (an unused alias re-export of `Reels/ReelCard`), `ScorerHeaderButton`, and `Profile/AuraCard` had no importers anywhere. Deleted, and the component lists in `AGENTS.md` / `DOCUMENTATION.md` / `docs/SCHEMA.md` corrected — the live card is `Profile/AuraTradingCard`. `docs/AUDIT_REPORT.md` now marks sections 1-7 as the 2026-09-14 snapshot and records this pass.
+- `ScoreboardBanner`, `GameEventCard`, `ScoreHeader`, `ReactionButtons`, `HighlightClipCard` (an unused alias re-export of `Reels/ReelCard`), `ScorerHeaderButton`, and `Profile/AuraCard` had no importers anywhere. Deleted, and the component lists in `AGENTS.md` / `docs/engineering/SYSTEM_OVERVIEW.md` / `docs/engineering/SCHEMA.md` corrected — the live card is `Profile/AuraTradingCard`. `docs/engineering/AUDIT_REPORT.md` now marks sections 1-7 as the 2026-09-14 snapshot and records this pass.
 
 ## 2026-09-27
 
@@ -271,7 +271,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Company phases
 
-- `docs/COMPANY_PHASES.md` is the operating order for security, billing, and legal work (LLC, trademark, patent triage, counsel paper). It points at the roadmap and the legal briefing. It does not clear live Stripe.
+- `docs/company/COMPANY_PHASES.md` is the operating order for security, billing, and legal work (LLC, trademark, patent triage, counsel paper). It points at the roadmap and the legal briefing. It does not clear live Stripe.
 
 ## 2026-09-23
 
@@ -289,8 +289,8 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 - Profile hamburger gains **Edit Profile** (`Profile/EditProfileModal`): display name, username, a free-text bio (≤500 chars), up to four social handles (Instagram / X / TikTok / YouTube), and a Visible/Hidden toggle for Bio, School/team, Stats, and Social links. New `profiles.bio` / `profiles.social_links` / `profiles.profile_visibility` columns; `AuthContext.updateProfile` writes them (optimistic local update, then a remote `profiles` UPDATE).
 - The real bio and social chips render as a new "About" section on `AthleteProfileView`'s hero, separate from the existing auto-generated position/school summary line that only ever showed on the flip-card back face. Social chips resolve through `lib/socialLinks.ts` and open in `expo-web-browser`.
-- **Hiding is enforced server-side, not just client-side.** `profiles` keeps its existing public `using (true)` SELECT (narrowing it was already tried once for `stripe_connect_id` and found unsafe to land blind — see `docs/SCHEMA.md`), so a new `profiles_public` view mirrors the `reels_feed` pattern: it nulls `bio`/`social_links` for anyone but the owner or admin when hidden. The public `/user/[id]` screen and `Reels/ReelOwnerPeek`'s "Posted by @handle" line read this view instead of the base table. A new `athlete_stats_visible(target_player_id)` function gates `athlete_career_stats` / `athlete_game_logs` SELECT the same way for the Stats toggle. "School" hidden is presentation-only (no RLS — `players.school_name` stays public everywhere else in the app); it just tells the public screen not to render the school line.
-- **This does not close the existing Phase 0 item 4 concern** (`docs/ROADMAP.md`) about a `profiles_public` view/column-allowlist for full PII (`stripe_connect_id` and other status columns) — this view is scoped narrowly to the new `bio`/`social_links` fields for this feature, not a general fix for the broader public-`profiles`-grant exposure already flagged there.
+- **Hiding is enforced server-side, not just client-side.** `profiles` keeps its existing public `using (true)` SELECT (narrowing it was already tried once for `stripe_connect_id` and found unsafe to land blind — see `docs/engineering/SCHEMA.md`), so a new `profiles_public` view mirrors the `reels_feed` pattern: it nulls `bio`/`social_links` for anyone but the owner or admin when hidden. The public `/user/[id]` screen and `Reels/ReelOwnerPeek`'s "Posted by @handle" line read this view instead of the base table. A new `athlete_stats_visible(target_player_id)` function gates `athlete_career_stats` / `athlete_game_logs` SELECT the same way for the Stats toggle. "School" hidden is presentation-only (no RLS — `players.school_name` stays public everywhere else in the app); it just tells the public screen not to render the school line.
+- **This does not close the existing Phase 0 item 4 concern** (`docs/product/ROADMAP.md`) about a `profiles_public` view/column-allowlist for full PII (`stripe_connect_id` and other status columns) — this view is scoped narrowly to the new `bio`/`social_links` fields for this feature, not a general fix for the broader public-`profiles`-grant exposure already flagged there.
 
 ## 2026-09-16
 
@@ -309,7 +309,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Department call sheet
 
-- New [TEAMS.md](docs/TEAMS.md): command staff (Facilitator / Mobile / Backend / QA) plus product departments (`HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `COMMERCE` · `AURA` · `ADMIN` · `BACKEND` · `OPERATOR` · `ROLE_HQ` · `QA` · `LEGAL`). Each section lists fan route, Expo/Next desk, functions, and do-not-touch. Grok [ALA_TEAM_BRIEF.md](docs/ALA_TEAM_BRIEF.md) points at the call template.
+- New [TEAMS.md](docs/agents/TEAMS.md): command staff (Facilitator / Mobile / Backend / QA) plus product departments (`HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `COMMERCE` · `AURA` · `ADMIN` · `BACKEND` · `OPERATOR` · `ROLE_HQ` · `QA` · `LEGAL`). Each section lists fan route, Expo/Next desk, functions, and do-not-touch. Grok [ALA_TEAM_BRIEF.md](docs/company/ALA_TEAM_BRIEF.md) points at the call template.
 
 ### Admin portal wired to the fan app
 
@@ -362,7 +362,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 - Account Settings (Sign in/out, Capability, Receipts, Suggest, Admin, Flip, Payouts) move into a **menu-outline** `ProfileMenuSheet`.
 - Crew / Squad slim into one compact strip with a small Join CTA. Highlights collage stays the next big beat; **Active Team Roster** lists school teammates (tap to open). Athletes see Claimed / Unclaimed via `profiles.player_id`. Hub athlete pick prefers `profile.player_id`.
 - **Admin portal Profile desk:** Next `/profile` + Features · Profile chrome flags (`PROFILE_CHROME_FLAGS` in shared-types); Overview shows claimed-athlete count. Expo Look · Profile copy matches hamburger / collage-first hierarchy. Coverage maps hamburger + Flip card to Look (`profile.showCard`).
-- Grok Bot ALA team brief: [`docs/ALA_TEAM_BRIEF.md`](docs/ALA_TEAM_BRIEF.md) (Facilitator / Mobile / Backend / Ship QA).
+- Grok Bot ALA team brief: [`docs/company/ALA_TEAM_BRIEF.md`](docs/company/ALA_TEAM_BRIEF.md) (Facilitator / Mobile / Backend / Ship QA).
 
 ### Soft-Wall admin oversight (Expo + Next portal)
 
@@ -384,12 +384,12 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Monorepo audit + path retarget
 
-- Re-verified `pnpm typecheck`, `pnpm docs:check`, shared-types imports, and zero Stripe secrets under `apps/mobile/src/frontend/`. Updated [AUDIT_REPORT](docs/AUDIT_REPORT.md) §0, [TROUBLESHOOTING](TROUBLESHOOTING.md), SCHEMA body paths, INVESTOR / LEGAL `pnpm docs:sync` wording.
+- Re-verified `pnpm typecheck`, `pnpm docs:check`, shared-types imports, and zero Stripe secrets under `apps/mobile/src/frontend/`. Updated [AUDIT_REPORT](docs/engineering/AUDIT_REPORT.md) §0, [TROUBLESHOOTING](docs/engineering/TROUBLESHOOTING.md), SCHEMA body paths, INVESTOR / LEGAL `pnpm docs:sync` wording.
 
 ### A + Full monorepo (pnpm)
 
 - Repo root is workspace orchestration: `pnpm-workspace.yaml`, root scripts (`pnpm mobile`, `pnpm admin`, `pnpm docs:sync`). Expo app moved to `apps/mobile/` (`@tapuai/mobile`). Next.js App Router **stub** at `apps/admin-portal/` (`@tapuai/admin-portal`) with Tailwind + Supabase JS — Expo `/admin` desks stay in mobile. Shared contracts in `packages/shared-types` (`@tapuai/shared-types`).
-- Docs: new [ARCHITECTURE](docs/ARCHITECTURE.md), rewritten [ONBOARDING](docs/ONBOARDING.md) + root [README](README.md); `AGENTS.md` / `DOCUMENTATION.md` / `SCHEMA.md` / `docs:sync` paths retargeted to `apps/mobile/…`. Env: `apps/mobile/.env.local` (`EXPO_PUBLIC_*`) and `apps/admin-portal/.env.local` (`NEXT_PUBLIC_*`).
+- Docs: new [ARCHITECTURE](docs/engineering/ARCHITECTURE.md), rewritten [ONBOARDING](docs/ONBOARDING.md) + root [README](README.md); `AGENTS.md` / `docs/engineering/SYSTEM_OVERVIEW.md` / `SCHEMA.md` / `docs:sync` paths retargeted to `apps/mobile/…`. Env: `apps/mobile/.env.local` (`EXPO_PUBLIC_*`) and `apps/admin-portal/.env.local` (`NEXT_PUBLIC_*`).
 
 ### Island Daylight tab scheme (gold + ember)
 
@@ -543,11 +543,11 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Front-of-house docs sync
 
-- `npm run docs:sync` (`scripts/sync-front-docs.mjs`) reads Mālo / exclusive / booster / Aura / PIN / Connect constants and writes `docs/PRODUCT_FACTS.md` plus marked blocks in PUBLIC / INVESTOR / LEGAL. CI runs `npm run docs:check`. Legal analysis outside the markers stays human-written.
+- `npm run docs:sync` (`scripts/sync-front-docs.mjs`) reads Mālo / exclusive / booster / Aura / PIN / Connect constants and writes `docs/product/PRODUCT_FACTS.md` plus marked blocks in PUBLIC / INVESTOR / LEGAL. CI runs `npm run docs:check`. Legal analysis outside the markers stays human-written.
 
 ### Front-of-house briefing pack
 
-- Public one-pager, investor memo, and legal/liability briefing (not legal advice) in `docs/PUBLIC.md`, `docs/INVESTOR.md`, `docs/LEGAL_BRIEFING.md`. Prototype stills in `docs/press/`.
+- Public one-pager, investor memo, and legal/liability briefing (not legal advice) in `docs/product/PUBLIC.md`, `docs/company/INVESTOR.md`, `docs/legal/LEGAL_BRIEFING.md`. Prototype stills in `docs/company/press/`.
 
 ## 2026-09-12
 
@@ -641,10 +641,10 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Documentation
 
-- Cursor rule `.cursor/rules/documentation.mdc`: JSDoc on new/changed functions; keep `DOCUMENTATION.md`, `docs/SCHEMA.md`, and `docs/ONBOARDING.md` in sync with code.
+- Cursor rule `.cursor/rules/documentation.mdc`: JSDoc on new/changed functions; keep `docs/engineering/SYSTEM_OVERVIEW.md`, `docs/engineering/SCHEMA.md`, and `docs/ONBOARDING.md` in sync with code.
 - System overview, schema, and onboarding rewritten for Phase 1 complete / Phase 2 staged / Phase 3 active engine.
 - Product aliases: `video_tips` → `public.tips`; `add_user_aura(user_id, points)` → Postgres `target_user_id` / `points_to_add`.
-- `AGENTS.md` and `TROUBLESHOOTING.md` aligned with the live tree.
+- `AGENTS.md` and `docs/engineering/TROUBLESHOOTING.md` aligned with the live tree.
 
 ### Cheer polls
 
@@ -662,7 +662,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 - Profile 3D Aura trading card: `AuraTradingCard` replaces the static hub header. Front is identity + Aura progress; back is season stats, bio, and earned badges. Flip via **Flip Card 🔄** or double-tap; Medium haptic fires at 90°.
 - Drip marketplace: `app/(tabs)/drip.tsx` with All Drip / Team Apparel / Custom Aura Cards / Athlete Merch pills (sliding jade indicator), `GearCard` 0.96 press + Light haptic, Reanimated `ProductSheet` (sizes, qty, Aura banner), Stripe **Buy Now**. Success runs `add_user_aura` (`dollars × 10`), success haptics, and toast **Drip secured ⚡**. `/shop` redirects to `/drip`.
 - Local hub: **Live Matches / School Polls / Top Boosters** pills with the same sliding jade indicator. `CheerPollCard` (`src/frontend/components/Local/CheerPollCard.tsx`) springs the vote bar from 0% to the live share, fires Medium haptics, floats **+1 Vote ⚡**, and increments `cheer_polls` via `cast_cheer_vote` (not `games`). Top Aura Boosters cards scale 0.96 and open a 7-tier profile peek.
-- Interaction audit: every product button fires `Haptics.impactAsync(Light)` via `HapticPressable` / `AnimatedButton`; pending disables on upload, PaymentSheet, reactions, operator GPS, and role-dashboard writes. See [AUDIT_REPORT.md](docs/AUDIT_REPORT.md).
+- Interaction audit: every product button fires `Haptics.impactAsync(Light)` via `HapticPressable` / `AnimatedButton`; pending disables on upload, PaymentSheet, reactions, operator GPS, and role-dashboard writes. See [AUDIT_REPORT.md](docs/engineering/AUDIT_REPORT.md).
 
 ### Operator (Phase 2)
 

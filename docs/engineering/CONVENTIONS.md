@@ -1,7 +1,7 @@
 # Conventions — folders, file names, and where code goes
 
-Companion to [AGENTS.md](../AGENTS.md) (which owns the directory *law*) and
-[docs/STATE.md](STATE.md) (current state). This file writes down the naming and placement rules
+Companion to [AGENTS.md](../../AGENTS.md) (which owns the directory *law*) and
+[docs/STATE.md](../STATE.md) (current state). This file writes down the naming and placement rules
 the codebase already follows, so they stop being tribal knowledge.
 
 **These are descriptive, not aspirational.** Every rule below was verified against the tree on
@@ -75,7 +75,7 @@ packages/shared-types
 **Review size:** when a module grows beyond roughly 500 lines, split it by responsibility before
 adding another substantial concern. Keep the public component/helper stable and prove a
 behavior-preserving split with the existing tests. Known large-file work is tracked in
-`docs/CODE_ORGANIZATION_PLAN.md` Step 3.
+`docs/engineering/CODE_ORGANIZATION_PLAN.md` Step 3.
 
 **Path aliases:** `@/*` → `apps/mobile/src/frontend/*`, `@backend/*` → `apps/mobile/src/backend/*`,
 `@shared/*` → `packages/shared-types/*`. Use `@tapuai/shared-types` for the package import.
@@ -136,12 +136,12 @@ comment at all.
   there and what does not (see `components/`, `hooks/`, `lib/`, `supabase/`).
 - **Tests:** the test file names the behaviour under test; a test for a bug says which bug.
 - **Money, privacy, and safety code:** state the rule being enforced and where the owner or counsel decided
-  it (`docs/STATE.md` §6, `docs/LEGAL_BRIEFING.md` row). These are the places outside reviewers look first.
+  it (`docs/STATE.md` §6, `docs/legal/LEGAL_BRIEFING.md` row). These are the places outside reviewers look first.
 
 **When you change a file, keep its comments true.** A stale comment is worse than none. If a header still
 describes the old behaviour after your edit, fix it in the same commit.
 
-On-screen words follow `docs/VOICE.md`: money is **Donate / donation**; "Mālo!" is only a thank-you;
+On-screen words follow `docs/product/VOICE.md`: money is **Donate / donation**; "Mālo!" is only a thank-you;
 **Seki** / **Highlights ⚡** are the product names. Persistence keeps the old code names (`tips`, `reels`,
 `useTipCheckout`, `malo*`) — do not rename them to match the UI; say "code name `tip` = donation" in a
 comment where it would confuse a reader.
@@ -150,7 +150,7 @@ comment where it would confuse a reader.
 
 ## 6. Before you finish
 
-Update [docs/STATE.md](STATE.md) §4 and its `Last updated` header. CI fails a pull request that
+Update [docs/STATE.md](../STATE.md) §4 and its `Last updated` header. CI fails a pull request that
 changes `apps/`, `packages/` or `supabase/` without it.
 
 

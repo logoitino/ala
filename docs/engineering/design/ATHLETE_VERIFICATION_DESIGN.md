@@ -5,7 +5,7 @@
 §9 (payout gate without the school, teammate vouches) and §10 (school crest) are **built**
 (migrations `20260929130000_payout_gate_without_school.sql`, `20260929140000_school_badge.sql`, not applied).
 §3's refunds, §5 and §6 are still proposals. Companions: [PARENT_PAYEE_CONNECT_DESIGN.md](PARENT_PAYEE_CONNECT_DESIGN.md)
-(who gets paid), [STORY.md](STORY.md) guardrails, [ROADMAP.md](ROADMAP.md) Wave 1 checklist.
+(who gets paid), [STORY.md](../../product/STORY.md) guardrails, [ROADMAP.md](../../product/ROADMAP.md) Wave 1 checklist.
 
 ## 0. Owner direction (2026-09-29)
 

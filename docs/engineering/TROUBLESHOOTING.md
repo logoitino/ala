@@ -1,6 +1,6 @@
 # Tapua'i Diagnostic & Troubleshooting Playbook
 
-Pair with [docs/ONBOARDING.md](docs/ONBOARDING.md). Prefer running [`apps/mobile/src/backend/db/schema.sql`](apps/mobile/src/backend/db/schema.sql) over one-off policies when the project is empty. This is a **pnpm monorepo** — run Expo from the repo root with `pnpm mobile`.
+Pair with [docs/ONBOARDING.md](../ONBOARDING.md). Prefer running [`apps/mobile/src/backend/db/schema.sql`](../../apps/mobile/src/backend/db/schema.sql) over one-off policies when the project is empty. This is a **pnpm monorepo** — run Expo from the repo root with `pnpm mobile`.
 
 ---
 

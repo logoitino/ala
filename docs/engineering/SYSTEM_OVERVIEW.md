@@ -3,8 +3,8 @@
 **Product:** Tapua'i (“Back Every Athlete.”)  
 **Repo:** pnpm monorepo — `@tapuai/mobile` (Expo, the only place admin data changes) · `@tapuai/admin-portal` (Next, read-only oversight) · `@tapuai/shared-types`
 **Runtime:** Expo SDK 57 · React Native · TypeScript (fan app); Next.js Soft-Wall / Profile / Features / People oversight for web admin
-**Start here:** [docs/STATE.md](docs/STATE.md) (current state + hand-off) · [Voice](docs/VOICE.md) (money words)  
-**Companions:** [Architecture](docs/ARCHITECTURE.md) · [Onboarding](docs/ONBOARDING.md) · [Schema](docs/SCHEMA.md) · [Teams / departments](docs/TEAMS.md) · [ALA brief](docs/ALA_TEAM_BRIEF.md) · [Product facts](docs/PRODUCT_FACTS.md) · [Public one-pager](docs/PUBLIC.md) · [Investor briefing](docs/INVESTOR.md) · [Legal briefing](docs/LEGAL_BRIEFING.md) · [Data privacy map](docs/DATA_PRIVACY_MAP.md) · [Company phases](docs/COMPANY_PHASES.md) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](CHANGELOG.md) · [Conventions](AGENTS.md) · [Audit](docs/AUDIT_REPORT.md) · [Roadmap](docs/ROADMAP.md) · [Story](docs/STORY.md) · [Staging runbook](docs/STAGING_RUNBOOK.md) · [Tester script](docs/TESTER_SCRIPT.md)
+**Start here:** [docs/STATE.md](../STATE.md) (current state + hand-off) · [Voice](../product/VOICE.md) (money words)  
+**Companions:** [Architecture](ARCHITECTURE.md) · [Onboarding](../ONBOARDING.md) · [Schema](SCHEMA.md) · [Teams / departments](../agents/TEAMS.md) · [ALA brief](../company/ALA_TEAM_BRIEF.md) · [Product facts](../product/PRODUCT_FACTS.md) · [Public one-pager](../product/PUBLIC.md) · [Investor briefing](../company/INVESTOR.md) · [Legal briefing](../legal/LEGAL_BRIEFING.md) · [Data privacy map](DATA_PRIVACY_MAP.md) · [Company phases](../company/COMPANY_PHASES.md) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](../../CHANGELOG.md) · [Conventions](../../AGENTS.md) · [Audit](AUDIT_REPORT.md) · [Roadmap](../product/ROADMAP.md) · [Story](../product/STORY.md) · [Staging runbook](STAGING_RUNBOOK.md) · [Tester script](TESTER_SCRIPT.md)
 
 ---
 
@@ -16,7 +16,7 @@ Tapua'i is a Polynesian-inspired **Fan & Athlete Hub** for high-school game day.
 2. **Donate** — the GoFundMe replacement for families. Fans **donate** ($5 / $10 / $25 / Custom) through Stripe PaymentSheet in **test mode**, straight from a highlight, a gift link, a gear goal or a **Rally** (a named sports cost with a goal). The donate sheet discloses 90% to the athlete's family account / 10% to Tapua'i, and offers an optional tip for Tapua'i (default No tip). Athletes **say thanks** with preset messages. Guardians hold a minor's money in a custodial account the athlete can see.
 3. **Rank & trade identity** — Dynamic **7-tier Aura Card** profiles (Slate Silver → Celestial Prism). A donation awards **10 Aura points per donated dollar**. Exclusive subscribe awards a flat **+100 Aura**. Borders and the Local Top Aura Boosters rail restyle in real time when a fan crosses a band.
 
-**Mission:** make donations and highlights easy for families to promote their kid and hopefully get them recruited — kids encourage good workouts with fans and serve like their favorite player. Read `docs/STATE.md` first (§0 is the hand-off); money words follow `docs/VOICE.md`.
+**Mission:** make donations and highlights easy for families to promote their kid and hopefully get them recruited — kids encourage good workouts with fans and serve like their favorite player. Read `docs/STATE.md` first (§0 is the hand-off); money words follow `docs/product/VOICE.md`.
 
 UI money copy is **Donate / donation** ("Mālo!" only means thank you); persistence still uses `tips` / `useTipCheckout` / `malo*`. Shipping canvas is **Daylight** (`#F3FAF6` / jade ink `#00733C`). Standard Island scheme: Jade (Donate / Home) · Cyan (Local / Seki) · Gold (kickers / Spotlight / ranks) · Ember (LIVE / Drip heat) · Violet (Profile). Collectible cards use per-tier `mist*` washes; Highlights ⚡ video chrome stays Midnight Obsidian `#0F1416`. Fan-bar accents live in `TAB_ACCENTS` (`apps/mobile/src/frontend/theme/motion.ts`).
 
@@ -92,9 +92,9 @@ apps/mobile/src/backend/db/schema.sql Canonical Postgres + RLS
 apps/admin-portal/                Next web admin, read-only oversight (Overview / Reports / Money / Soft-Wall / Profile / Features / People) at :3001. Reports + Money RPCs match Expo. Every write happens only in Expo `/admin`
 packages/shared-types/            @tapuai/shared-types
 scripts/                          Node generators (`sync-front-docs.mjs` → product facts; reads apps/mobile constants)
-docs/TEAMS.md                     Department call sheet and specialist operating contract
-docs/TEAM_HIERARCHY.md            Reporting hierarchy and complete callable agent index
-docs/WORK_QUEUE.md                Ordered specialist tasks, acceptance criteria and gates
+docs/agents/TEAMS.md                     Department call sheet and specialist operating contract
+docs/agents/TEAM_HIERARCHY.md            Reporting hierarchy and complete callable agent index
+docs/agents/WORK_QUEUE.md                Ordered specialist tasks, acceptance criteria and gates
 .claude/agents/registry.json      Functional ownership registry (pnpm agents:check)
 supabase/                         Incremental SQL (DROP FUNCTION before return-type changes)
 supabase/functions/               Edge Functions (`create-stripe-account` JWT Connect, `create-payment-intent` JWT)
@@ -140,7 +140,7 @@ The elevated **center camera uploader** is a FAB (`UploadSheetContext`), not a t
 
 ### Phase 3 — Monetization & NIL Tiers — **active engine**
 
-- 7-tier dynamic borders (see [SCHEMA.md](docs/SCHEMA.md#7-tier-aura-palette)); Profile and the public athlete sheet both use the flippable `Profile/AuraTradingCard` (identity + season sheet). Tier 7 (Celestial Prism) and a funded wishlist wrap the card in `GlowingCardWrapper` / `GlowingNeonBorder`.
+- 7-tier dynamic borders (see [SCHEMA.md](SCHEMA.md#7-tier-aura-palette)); Profile and the public athlete sheet both use the flippable `Profile/AuraTradingCard` (identity + season sheet). Tier 7 (Celestial Prism) and a funded wishlist wrap the card in `GlowingCardWrapper` / `GlowingNeonBorder`.
 - `add_user_aura(target_user_id, points_to_add)` after successful Mālo (`tipAmount * 10`) **twice** (tipper Fan Aura + athlete recipient); Drip (`order dollars × 10`), exclusive subscribe (**+100**), and booster sponsorships (**500 / 2,000 / 10,000**) grant **only the payer**. Double-tap Aura on a Reel grants **+1** to the signed-in fan. Athletes may drop Mālo on any reel.
 - Tipping shortcuts `$5` / `$10` / `$25` / Custom (live list from `/admin/catalog` after Publish to app)
 - Athlete exclusive paywall on `/user/[id]` and the Highlights ⚡ feed: `$4.99/mo` PaymentSheet by default (`subscriptions` `subscriber_id`, `athlete_id`). Catalogs can change the dollars and Aura grant. Clips in the Vault collection (`reels.is_vault_only`) stay behind Subscribe while `players.vault_locked` is true (default). The athlete can **Open Vault 🌐** so anyone can watch those clips, then **Lock Vault 🔒** again. +100 Aura + unlock toast (Aura amount follows Catalogs).
@@ -190,4 +190,4 @@ final donation action stay outside the page scroll. Changing steps preserves cho
 still uses `TipCheckout` / `useTipCheckout` and the existing native/web Stripe boundary.
 `DOCUMENTATION` synchronizes affected team contracts and tester evidence. The shared Daylight
 menu/page APIs, consumer inventory and deliberate visual exceptions are in
-[docs/MENU_STYLE_MAP.md](docs/MENU_STYLE_MAP.md).
+[docs/engineering/MENU_STYLE_MAP.md](MENU_STYLE_MAP.md).

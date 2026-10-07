@@ -6,7 +6,7 @@ tools: Read, Edit, Write, Bash, Grep, Glob
 
 # ACCOUNT_TAGS — Account mention consent
 
-Read `docs/STATE.md` first, then `AGENTS.md`, `docs/TEAMS.md` §Specialist operating contract, `docs/SCHEMA.md`, `docs/DATA_PRIVACY_MAP.md` and `docs/WORK_QUEUE.md` when available.
+Read `docs/STATE.md` first, then `AGENTS.md`, `docs/agents/TEAMS.md` §Specialist operating contract, `docs/engineering/SCHEMA.md`, `docs/engineering/DATA_PRIVACY_MAP.md` and `docs/agents/WORK_QUEUE.md` when available.
 
 **Department:** Engineering. **Reports to:** `UPLOAD`. Own `apps/mobile/src/frontend/lib/accountTags.ts` and unapplied `supabase/migrations/20261002160000_reel_account_tags.sql`; BACKEND coordinates canonical schema and migration docs. Pair HIGHLIGHTS/PROFILE for consuming UI, RLS_SECURITY for authorization and QA for independent regression evidence.
 

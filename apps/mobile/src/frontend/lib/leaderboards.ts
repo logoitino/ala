@@ -7,7 +7,7 @@ import type { SpotlightPeriodKind } from '@/types/database';
  * ROADMAP Mission M1 — leaderboards and friendly competition.
  *
  * Boards rank hype and views only. Nothing here carries a Mālo amount or backer count, and nothing
- * should: docs/STORY.md "Never rank kids by how much money they received".
+ * should: docs/product/STORY.md "Never rank kids by how much money they received".
  */
 
 export type LeaderboardPlayerRow = {

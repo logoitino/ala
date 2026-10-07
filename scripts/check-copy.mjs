@@ -3,7 +3,7 @@
  * Donation-language check (owner, 2026-09-29). Tapua'i is a donation app: every screen that asks a fan
  * for money says "Donate" / "donation" so nobody is confused about what the money is for. This script
  * fails when on-screen copy in the apps uses the words we retired or words that are risky for
- * student-athletes. Rules and reasons: docs/VOICE.md. The VOICE agent (.claude/agents/voice.md)
+ * student-athletes. Rules and reasons: docs/product/VOICE.md. The VOICE agent (.claude/agents/voice.md)
  * reviews what a regex can't (tone, performance ties, missing "where does it go" lines).
  *
  * Only human copy is checked: string literals that contain a space or start with a capital letter,
@@ -22,7 +22,7 @@ const SCAN_DIRS = ['apps/mobile/app', 'apps/mobile/src/frontend', 'packages/shar
 const SKIP = /(__tests__|\.test\.|\.d\.ts$|node_modules)/;
 
 /**
- * [pattern, why, say instead, allow?] — keep in step with docs/VOICE.md "Retired words".
+ * [pattern, why, say instead, allow?] — keep in step with docs/product/VOICE.md "Retired words".
  * `allow` skips the rule when the snippet or its line matches it: "tip" is fine only for the optional tip
  * *to Tapua'i* at checkout (owner 2026-09-29) — never for money to an athlete.
  */
@@ -89,7 +89,7 @@ for (const rel of SCAN_DIRS.flatMap((d) => walk(d))) {
 
 const unique = [...new Set(problems)];
 if (unique.length) {
-  console.error(`copy:check found ${unique.length} line(s) off the donation voice (docs/VOICE.md):\n`);
+  console.error(`copy:check found ${unique.length} line(s) off the donation voice (docs/product/VOICE.md):\n`);
   console.error(unique.join('\n'));
   process.exit(1);
 }

@@ -194,7 +194,7 @@ export function QaTool() {
       />
 
       <AdminPanel title="Copy checklist">
-        <Text style={styles.body}>Home / Local / Profile say Donate, Seki, and Highlights ⚡ — never the retired money words or like / Reels in the UI (docs/VOICE.md, pnpm copy:check).</Text>
+        <Text style={styles.body}>Home / Local / Profile say Donate, Seki, and Highlights ⚡ — never the retired money words or like / Reels in the UI (docs/product/VOICE.md, pnpm copy:check).</Text>
         <Text style={styles.body}>Fan bar is Home · Local · + · Spotlight · Drip · Profile. No Dev role chips. No extra Admin tab.</Text>
         <Text style={styles.body}>Operator PIN and scorekeeper stay on `/operator`. Publish scores from Live games or the operator console.</Text>
       </AdminPanel>

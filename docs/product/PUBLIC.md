@@ -49,4 +49,4 @@ The bar at the bottom is Reel · Local · Upload · Drip · Profile.
 
 Tapua'i is an Expo app in **Stripe test mode**. Payments on a phone use test cards, not live banks, until we turn on production keys and finish legal work. The Parent consent screen and Operator PIN are early prototypes.
 
-Questions for the team: use the in-app Profile path, or the repo’s engineer docs in `DOCUMENTATION.md`.
+Questions for the team: use the in-app Profile path, or the repo’s engineer docs in `docs/engineering/SYSTEM_OVERVIEW.md`.

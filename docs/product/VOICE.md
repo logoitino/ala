@@ -84,7 +84,7 @@ No tip default remain. These messages do not promise settled credit or automatic
 - Received-donations panel: "Saying thanks keeps people cheering you on."
 
 - Home slang line default: "Donations go to the athlete's family • Seki = Awesome Play".
-- `docs/PUBLIC.md` opening line.
+- `docs/product/PUBLIC.md` opening line.
 
 **Live config note:** `app_runtime_config` copy published from `/admin/look` overrides the defaults
 (`slangLine`, `activityLede`, `receiptsKicker`, …). If an old "Mālo" line was published, re-publish from

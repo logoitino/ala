@@ -99,7 +99,7 @@ tests passing unchanged. They are the proof that nothing moved.
 
 - **`.github/pull_request_template.md`:** what changed and why; screens touched; SQL migration
   (yes/no, file name); tests added; STATE §4 line; what was *not* verified.
-- **`CODEOWNERS`** from `docs/TEAMS.md`, so the right department is asked to review each path:
+- **`CODEOWNERS`** from `docs/agents/TEAMS.md`, so the right department is asked to review each path:
   money files, `supabase/migrations/`, `components/Reels/`, and so on.
 - **A short README per top-level folder** (`src/frontend/lib`, `hooks`, `components`,
   `supabase`): what belongs there and the one rule people break.
@@ -121,7 +121,7 @@ Where Supabase is baked in today, measured 2026-09-29:
 | Edge Functions | 3 (`create-payment-intent`, `create-stripe-account`, `stripe-webhook`) | Plain Deno HTTP handlers; portable to any serverless host. Keep Stripe logic in them, not in SQL. |
 | Client calls | `lib/supabase.ts` imported in 65 files | **Rule:** screens and components call `lib/*` or `hooks/*`, never `supabase.from/rpc` directly. Then a move rewrites `lib/`, not the UI. **6 Expo route files still break this as of 2026-10-07:** `app/(tabs)/user/[id].tsx`, `app/(tabs)/profile.tsx`, `app/(athlete)/athlete/index.tsx`, `app/(parent)/parent/index.tsx`, `app/operator/scorer.tsx`, `app/operator/[gameId].tsx`; `components/Reels/UploadVideoModal.tsx` is the component exception. Sponsor, Booster and operator check-in moved into `lib/` on 2026-09-29. Guest match queries/Realtime moved to `lib/guestGames.ts` and guest player lookup to `lib/roster.ts` on 2026-10-07; the baseline fell from 17 to 12 direct calls. `pnpm app:data-boundaries` records exact route call counts and fails if debt grows. Move queries into `lib/` when those files are next touched and lower the baseline in the same change. |
 
-Habits that keep this true: every table and RPC documented in `docs/SCHEMA.md` (CI enforces);
+Habits that keep this true: every table and RPC documented in `docs/engineering/SCHEMA.md` (CI enforces);
 every SQL change a dated file with a header; secrets only in env / the SQL Editor; no vendor SDK
 imported outside `lib/` and `services/`.
 

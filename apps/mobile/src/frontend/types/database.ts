@@ -775,7 +775,7 @@ export type Database = {
        * 2026-09 audit (paywall bypass): read-only mirror of `reels` with `video_url` nulled to `''`
        * unless the caller is entitled (unlocked clip, Flash-Unlocked right now, uploader, admin, or
        * an active subscriber to the tagged athlete). `lib/reels.ts` / `lib/spotlight.ts` read this
-       * instead of the base table — see schema.sql / docs/SCHEMA.md for the view definition.
+       * instead of the base table — see schema.sql / docs/engineering/SCHEMA.md for the view definition.
        */
       reels_feed: {
         Row: Reel;

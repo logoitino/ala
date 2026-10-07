@@ -13,7 +13,7 @@ const registry = JSON.parse(fs.readFileSync(path.join(root, '.claude/agents/regi
 if (registry.version !== 1 || !Array.isArray(registry.agents)) {
   throw new Error('Agent registry must have version 1 and an agents array.');
 }
-const docs = ['docs/TEAMS.md', 'docs/TEAM_HIERARCHY.md'].map((file) => ({
+const docs = ['docs/agents/TEAMS.md', 'docs/agents/TEAM_HIERARCHY.md'].map((file) => ({
   file, source: fs.readFileSync(path.join(root, file), 'utf8'),
 }));
 const calls = new Map();

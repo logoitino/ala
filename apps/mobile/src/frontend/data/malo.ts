@@ -5,7 +5,7 @@ import type { HighlightClip } from '@/data/highlights';
 /**
  * Fan-facing money language (owner, 2026-09-29): Tapua'i is a donation app. Say **Donate** /
  * **donation** everywhere a fan gives money — never "Mālo", "tip", "backing", "Chip In" or "fund".
- * "Mālo" (thank you) is only ever used to thank someone. Rules and banned words: `docs/VOICE.md`,
+ * "Mālo" (thank you) is only ever used to thank someone. Rules and banned words: `docs/product/VOICE.md`,
  * enforced by `scripts/check-copy.mjs` (`pnpm copy:check`). Code and tables keep `malo` / `tips`.
  */
 
@@ -41,7 +41,7 @@ export function donationSplitLine(athleteName?: string | null): string {
 export const PLATFORM_TIP_PERCENTS = [0, 5, 10, 15] as const;
 export type PlatformTipPercent = (typeof PLATFORM_TIP_PERCENTS)[number];
 
-// copy-ok: the optional tip to Tapua'i is the one place "tip" is right (docs/VOICE.md)
+// copy-ok: the optional tip to Tapua'i is the one place "tip" is right (docs/product/VOICE.md)
 export const PLATFORM_TIP_TITLE = "Add a tip for Tapua'i (optional)";
 export const PLATFORM_TIP_HINT =
   // copy-ok: tip to Tapua'i, not to the athlete

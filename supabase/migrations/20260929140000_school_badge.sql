@@ -1,7 +1,7 @@
 -- =============================================================================================
 -- School badge — the school's crest on a school-confirmed athlete's profile
 -- =============================================================================================
--- Design: docs/ATHLETE_VERIFICATION_DESIGN.md §10 (owner request 2026-09-29).
+-- Design: docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md §10 (owner request 2026-09-29).
 --
 -- What changes:
 --   1. schools_and_teams gets logo_url and two brand colours, set only by a Tapua'i admin

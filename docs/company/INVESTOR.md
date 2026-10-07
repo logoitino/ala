@@ -3,7 +3,7 @@
 **Product:** Tapua'i (“Back Every Athlete.”)  
 **Stage:** Working Expo prototype (Fan hub complete, operator portal staged, payments in **Stripe test mode**).  
 **Date:** 13 September 2026  
-**Companions:** [Public one-pager](PUBLIC.md) · [Legal briefing (not legal advice)](LEGAL_BRIEFING.md) · Engineer architecture in [DOCUMENTATION.md](../DOCUMENTATION.md)
+**Companions:** [Public one-pager](../product/PUBLIC.md) · [Legal briefing (not legal advice)](../legal/LEGAL_BRIEFING.md) · Engineer architecture in [SYSTEM_OVERVIEW.md](../engineering/SYSTEM_OVERVIEW.md)
 
 This memo is for fundraising conversations. It describes what is built. It does not forecast revenue.
 
@@ -18,7 +18,7 @@ Friday-night high school sports already have the crowd. What they do not have is
 - Send a small, attributable gift to a named athlete
 - Let a local business show up next to that school
 
-And the money that does reach young athletes is badly concentrated: NIL deals, in college and now in high school, go to the one or two most famous players. Everyone else on the roster — often the families who need it most — gets nothing. The mission is that **money is never the reason a young athlete stops**, and that support reaches **every athlete, not just the star** ([STORY.md](STORY.md)).
+And the money that does reach young athletes is badly concentrated: NIL deals, in college and now in high school, go to the one or two most famous players. Everyone else on the roster — often the families who need it most — gets nothing. The mission is that **money is never the reason a young athlete stops**, and that support reaches **every athlete, not just the star** ([STORY.md](../product/STORY.md)).
 
 College NIL marketplaces do not fit. High-school athletes are usually minors, amateur rules are stricter, and the “platform” is still Instagram plus a booster’s Venmo.
 
@@ -40,7 +40,7 @@ College NIL marketplaces do not fit. High-school athletes are usually minors, am
 - **Operator** — PIN claim, live clock, score, play callouts to the fan feed
 - **Parent** — consent toggle + custodial payout stub
 
-Copy in the UI is Donate / donation (docs/VOICE.md) and Seki. Ledgers stay `tips`.
+Copy in the UI is Donate / donation (docs/product/VOICE.md) and Seki. Ledgers stay `tips`.
 
 ## 3. Why this can work (thesis, not proof)
 
@@ -101,4 +101,4 @@ Use this briefing to walk:
 2. The legal memo — especially **high-school amateurism** and **minors + money**.
 3. What “production” means: live Stripe, tightened RLS, real operator auth, custodial structure, association letters.
 
-Screenshots: Expo web stills from 13 September 2026 live in [`docs/press/`](press/) (Reel, Local, Profile). Recapture from **Expo Go on a phone** for a deck — the web preview shows a DEV ROLE bar and unused desktop canvas.
+Screenshots: Expo web stills from 13 September 2026 live in [`docs/company/press/`](../press/) (Reel, Local, Profile). Recapture from **Expo Go on a phone** for a deck — the web preview shows a DEV ROLE bar and unused desktop canvas.

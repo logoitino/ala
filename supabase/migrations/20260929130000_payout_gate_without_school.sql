@@ -1,7 +1,7 @@
 -- =============================================================================================
 -- Payout gate without the school — school confirmation becomes a badge, not the only road
 -- =============================================================================================
--- Design: docs/ATHLETE_VERIFICATION_DESIGN.md §9 (owner approved 2026-09-29: "don't hinder growth").
+-- Design: docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md §9 (owner approved 2026-09-29: "don't hinder growth").
 --
 -- What changes:
 --   1. School confirmation still gives the "verified" badge and unlocks payouts with no cap.

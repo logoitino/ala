@@ -5,8 +5,8 @@
 Use this when you **call a team** to fix or update one area. The Facilitator routes work through department leads and functional specialists. Every critical function has an accountable owner and a verification partner; activate agents only for assigned work.
 
 **Repo:** `/Users/seiuliian/Downloads/ala-sports` · GitHub `logoitino/ala` · pnpm monorepo.
-**Copy:** money on screen is **Donate / donation** ([VOICE.md](VOICE.md)). "Mālo!" is only a thank-you. **Seki** / **Highlights ⚡**. Persistence still `tips` / `reels` / `useTipCheckout`.
-**Facts:** [DOCUMENTATION.md](../DOCUMENTATION.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [SCHEMA.md](SCHEMA.md) · [ALA_TEAM_BRIEF.md](ALA_TEAM_BRIEF.md) · [CHANGELOG.md](../CHANGELOG.md). Do not invent prices, Aura math, or legal conclusions — run `pnpm docs:sync` or read [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md).
+**Copy:** money on screen is **Donate / donation** ([VOICE.md](../product/VOICE.md)). "Mālo!" is only a thank-you. **Seki** / **Highlights ⚡**. Persistence still `tips` / `reels` / `useTipCheckout`.
+**Facts:** [SYSTEM_OVERVIEW.md](../engineering/SYSTEM_OVERVIEW.md) · [ARCHITECTURE.md](../engineering/ARCHITECTURE.md) · [SCHEMA.md](../engineering/SCHEMA.md) · [ALA_TEAM_BRIEF.md](../company/ALA_TEAM_BRIEF.md) · [CHANGELOG.md](../../CHANGELOG.md). Do not invent prices, Aura math, or legal conclusions — run `pnpm docs:sync` or read [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md).
 
 ---
 
@@ -20,7 +20,7 @@ Symptom: <what is broken or what to add>
 Fan surface: <tab or route>
 Admin desk: <Expo /admin/... or Next /...>
 Do not: <other departments>
-Read first: docs/TEAMS.md#<anchor>
+Read first: docs/agents/TEAMS.md#<anchor>
 Gate: pnpm typecheck && pnpm docs:check
 ```
 
@@ -38,7 +38,7 @@ If the bug spans two departments, **Facilitator** names a lead and a pair. Schem
 
 Every department except `FACILITATOR` (that's whoever is driving the session — human or the top-level Claude Code assistant, reading this file to route) is a real subagent at `.claude/agents/<code>.md` (lowercase, `ROLE_HQ` → `role-hq.md`). Ask Claude Code to dispatch one directly — "CALL: BACKEND, fix the anon RLS grants" works, or explicitly say "use the backend subagent." Each subagent's file already embeds its fan surface, admin desk, key files, do-not-touch list, and pairing rules from this page, plus any currently-open backlog items relevant to that department, so a call does not need to re-explain context. Subagents run with `Read, Edit, Write, Bash, Grep, Glob` (LEGAL and QA are more restricted — see their files) and are expected to self-gate with `pnpm typecheck` / `pnpm docs:check` before reporting done. Keep this file and the `.claude/agents/*.md` files in sync when a department's surface changes — the agent files are the executable copy, this file is the readable one.
 
-Cursor works in this same tree alongside Claude Code. Claude owns the security sweeps and `docs/ROADMAP.md`; Cursor should extend that work, not replace it or revive a closed audit item. Claude should keep Cursor's later fixes: Account Settings waits for the hamburger modal to dismiss before Soft-Wall opens, and profile photos plus booster logos upload as image bytes to `avatars` (`sponsors/` for logos), not as a `text/plain` blob and not into the video-only `game_highlights` bucket. New Vault / Exclusive videos upload to the private `reel_vault` bucket as `reelvault:{path}` and play through `resolvePlaybackUrl`; free Highlights stay on the public `reels` bucket. That bucket is a bridge only. The video host is still Cloudflare Stream or Mux — pick the cheaper one that still plays well — and neither tool should build transcoding, a CDN, or analytics on Supabase Storage while that choice is open. When either tool lands a schema or copy change, the other treats `docs/SCHEMA.md` and `docs/ROADMAP.md` as the current story.
+Cursor works in this same tree alongside Claude Code. Claude owns the security sweeps and `docs/product/ROADMAP.md`; Cursor should extend that work, not replace it or revive a closed audit item. Claude should keep Cursor's later fixes: Account Settings waits for the hamburger modal to dismiss before Soft-Wall opens, and profile photos plus booster logos upload as image bytes to `avatars` (`sponsors/` for logos), not as a `text/plain` blob and not into the video-only `game_highlights` bucket. New Vault / Exclusive videos upload to the private `reel_vault` bucket as `reelvault:{path}` and play through `resolvePlaybackUrl`; free Highlights stay on the public `reels` bucket. That bucket is a bridge only. The video host is still Cloudflare Stream or Mux — pick the cheaper one that still plays well — and neither tool should build transcoding, a CDN, or analytics on Supabase Storage while that choice is open. When either tool lands a schema or copy change, the other treats `docs/engineering/SCHEMA.md` and `docs/product/ROADMAP.md` as the current story.
 
 ---
 
@@ -83,7 +83,7 @@ Design produces the screen. The call names the surface. The agent edits that sur
 
 **Do not:** start the Later list (share card, backer wall, badges) unless that item was asked for.
 
-**UX-02 coverage:** Shared menu/page primitives align rounded cards, accent washes and step indicators. `CHECKOUT` owns donation review/payment; `UPLOAD` owns drafts/rights; `DESIGN` owns appearance; `ACCESSIBILITY` / `DEVICE_QA` verify actual device behavior. `DOCUMENTATION` maintains [MENU_STYLE_MAP.md](MENU_STYLE_MAP.md) and synchronizes all team handoffs.
+**UX-02 coverage:** Shared menu/page primitives align rounded cards, accent washes and step indicators. `CHECKOUT` owns donation review/payment; `UPLOAD` owns drafts/rights; `DESIGN` owns appearance; `ACCESSIBILITY` / `DEVICE_QA` verify actual device behavior. `DOCUMENTATION` maintains [MENU_STYLE_MAP.md](../engineering/MENU_STYLE_MAP.md) and synchronizes all team handoffs.
 
 ### Engineering team
 
@@ -105,7 +105,7 @@ Engineering produces the code to an industry bar: typed boundaries, least-privil
 
 **Department:** Legal & Compliance. **Agents:** `LEGAL` (`.claude/agents/legal.md`) · `COMPLIANCE` (`.claude/agents/compliance.md`). **Calls:** `CALL: LEGAL` · `CALL: COMPLIANCE`.
 
-Legal does not decide the law. A licensed attorney does. This team puts approved words into the app, keeps the issue map honest, and **refuses false claims**. The map is [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md). Privacy inventory is [DATA_PRIVACY_MAP.md](DATA_PRIVACY_MAP.md). Company paper order is [COMPANY_PHASES.md](COMPANY_PHASES.md) (L0–L4). Do not write a new legal conclusion in those files.
+Legal does not decide the law. A licensed attorney does. This team puts approved words into the app, keeps the issue map honest, and **refuses false claims**. The map is [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md). Privacy inventory is [DATA_PRIVACY_MAP.md](../engineering/DATA_PRIVACY_MAP.md). Company paper order is [COMPANY_PHASES.md](../company/COMPANY_PHASES.md) (L0–L4). Do not write a new legal conclusion in those files.
 
 | Job | Now | Next | Later |
 | --- | --- | --- | --- |
@@ -151,8 +151,8 @@ These four historical command roles remain a compatibility view of integration r
 | --- | --- | --- | --- |
 | **Ala Facilitator** | `FACILITATOR` | One next ship move. Who is on the call. Product copy (Mālo / Seki / Highlights ⚡). Roadmap. Investor / public memos via `pnpm docs:sync`. | Implement UI. Invent prices, Aura math, or legal conclusions. |
 | **Mobile Eng** | Staff for any fan/admin UI department | `apps/mobile` Expo SDK 57. Next portal UI only when `ADMIN` is on the call. | Stripe `sk_` in frontend. `expo-av` for the reel player. NativeWind in mobile. |
-| **Backend Eng** | Staff whenever data moves | `schema.sql`, `supabase/*.sql`, RLS, RPCs, Edge Functions, Storage buckets. Keep [SCHEMA.md](SCHEMA.md) in the same turn. | Fan chrome, Look copy, Catalog dollar amounts (those are Catalogs + `pnpm docs:sync`). |
-| **Ship QA** | `QA` | `pnpm typecheck` · `pnpm docs:check`. Soft-Wall / Profile / Publish-to-app pitfalls. Pass/fail notes. Recapture `docs/press/*.png` or mark STALE. | Silent “looks fine”. Shipping a dirty Features draft. |
+| **Backend Eng** | Staff whenever data moves | `schema.sql`, `supabase/*.sql`, RLS, RPCs, Edge Functions, Storage buckets. Keep [SCHEMA.md](../engineering/SCHEMA.md) in the same turn. | Fan chrome, Look copy, Catalog dollar amounts (those are Catalogs + `pnpm docs:sync`). |
+| **Ship QA** | `QA` | `pnpm typecheck` · `pnpm docs:check`. Soft-Wall / Profile / Publish-to-app pitfalls. Pass/fail notes. Recapture `docs/company/press/*.png` or mark STALE. | Silent “looks fine”. Shipping a dirty Features draft. |
 
 ---
 
@@ -245,9 +245,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 | Legal | `Legal/LegalModal.tsx` · `lib/legal.ts` |
 | Chrome flags | `PROFILE_CHROME_FLAGS` · Look / Next Profile |
 
-**Note:** `profiles_public` is scoped to `bio`/`social_links`/`school_visible` only — it does not close the still-open `docs/ROADMAP.md` Phase 0 item 4 concern about the base `profiles` table's public grant exposing `stripe_connect_id` and other status columns.
+**Note:** `profiles_public` is scoped to `bio`/`social_links`/`school_visible` only — it does not close the still-open `docs/product/ROADMAP.md` Phase 0 item 4 concern about the base `profiles` table's public grant exposing `stripe_connect_id` and other status columns.
 
-**Do not:** Change tip amounts or Connect onboarding (`COMMERCE`). Do not auto-set Varsity on school claim. Do not split own Profile into a second layout. Do not build the fan digital signature on the Aura card — that is a later phase (`docs/ROADMAP.md` M8).
+**Do not:** Change tip amounts or Connect onboarding (`COMMERCE`). Do not auto-set Varsity on school claim. Do not split own Profile into a second layout. Do not build the fan digital signature on the Aura card — that is a later phase (`docs/product/ROADMAP.md` M8).
 
 **Pair:** `AUTH` for Soft-Wall on Crew / Donate / gear-goal donate. `AURA` for the flip card. `HIGHLIGHTS` for collage / own-clip manager.
 
@@ -353,9 +353,9 @@ These are not extra companies. They are the Dev team, split by the part of the a
 **Call:** `BACKEND` (`.claude/agents/backend.md`)
 **Fan:** all (invisible)
 **Admin:** n/a (SQL editor / MCP)
-**What it does:** Database engineer for Tapua'i. Canonical `apps/mobile/src/backend/db/schema.sql`. Migrations under `supabase/migrations/`, then copied onto schema. RLS in schema.sql — least privilege, no convenience `using (true)` on money or PII. Storage `reels` / `reel_vault` / `game_highlights` / `avatars`. Realtime publications. Edge JWT functions. Personal-data columns stay listed in [DATA_PRIVACY_MAP.md](DATA_PRIVACY_MAP.md).
+**What it does:** Database engineer for Tapua'i. Canonical `apps/mobile/src/backend/db/schema.sql`. Migrations under `supabase/migrations/`, then copied onto schema. RLS in schema.sql — least privilege, no convenience `using (true)` on money or PII. Storage `reels` / `reel_vault` / `game_highlights` / `avatars`. Realtime publications. Edge JWT functions. Personal-data columns stay listed in [DATA_PRIVACY_MAP.md](../engineering/DATA_PRIVACY_MAP.md).
 
-**Same-turn docs:** [SCHEMA.md](SCHEMA.md) · [DOCUMENTATION.md](../DOCUMENTATION.md) if tables/RPCs/architecture move. `pnpm docs:check` must name every public table and `create or replace function`.
+**Same-turn docs:** [SCHEMA.md](../engineering/SCHEMA.md) · [SYSTEM_OVERVIEW.md](../engineering/SYSTEM_OVERVIEW.md) if tables/RPCs/architecture move. `pnpm docs:check` must name every public table and `create or replace function`.
 
 **Do not:** Change UI copy. Skip SCHEMA.md. Apply SQL to development unless asked. Enable webhook ledger crediting while the client still inserts `tips`. Add `is_verified` writes the hosted DB cannot accept without a fallback.
 
@@ -405,7 +405,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 **Call:** `VOICE` (`.claude/agents/voice.md`)
 **Owns:** every word about money on screen and in public docs — Donate / donation, the "who gets it, what for, anything taken out" answers, no performance ties, warm thank-yous that keep people donating.
-**Source:** [VOICE.md](VOICE.md). CI gate: `pnpm copy:check` (`scripts/check-copy.mjs`).
+**Source:** [VOICE.md](../product/VOICE.md). CI gate: `pnpm copy:check` (`scripts/check-copy.mjs`).
 **Pair:** LEGAL for terms, tax and fee wording; COMMERCE for prices and splits. Run after any copy change and before every release.
 
 ---
@@ -416,7 +416,7 @@ The business write-up is [Legal team](#legal-team) above. This squad only places
 
 **Call:** `LEGAL` (`.claude/agents/legal.md`)
 **Fan:** `LegalModal` · `LegalAckToggle` on Varsity apply + Connect Bank
-**Source of conclusions:** [LEGAL_BRIEFING.md](LEGAL_BRIEFING.md) `<!-- product-facts -->` blocks. Do **not** rewrite legal conclusions outside those markers. Price/PIN/Aura changes: `pnpm docs:sync`.
+**Source of conclusions:** [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) `<!-- product-facts -->` blocks. Do **not** rewrite legal conclusions outside those markers. Price/PIN/Aura changes: `pnpm docs:sync`.
 **Same turn:** if terms, minors, the split, footage, or school marks moved, update the Legal team table above.
 
 ---
@@ -435,9 +435,9 @@ Checklist:
 6. Features: draft vs published; did anyone hit **Publish to app** on purpose?
 7. Press screenshots STALE if Reel / Local / Profile chrome moved
 8. Compliance flows (see the fix/testing roadmap): Mālo works from a Profile with no clip open; a frozen athlete/school rejects Mālo and exclusive checkout at the database level; new sign-up requires the 13+ confirmation and existing accounts are never retroactively blocked by it.
-9. Device smoke: run the relevant role slice (fan/athlete/parent/operator/booster) from `docs/AUDIT_REPORT.md`'s "Device smoke" checklist on a real device — the web preview can't test PaymentSheet, camera upload, or haptics.
+9. Device smoke: run the relevant role slice (fan/athlete/parent/operator/booster) from `docs/engineering/AUDIT_REPORT.md`'s "Device smoke" checklist on a real device — the web preview can't test PaymentSheet, camera upload, or haptics.
 
-Full detail and rationale: `.claude/agents/qa.md` (the executable copy of this checklist) and [ROADMAP.md](ROADMAP.md) (the phased roadmap this checklist tracks).
+Full detail and rationale: `.claude/agents/qa.md` (the executable copy of this checklist) and [ROADMAP.md](../product/ROADMAP.md) (the phased roadmap this checklist tracks).
 
 ---
 
@@ -502,7 +502,7 @@ Next desks: `/` Overview · `/reports` behavior (`ADMIN`) · `/money` ledger (`C
 
 1. Expo SDK **57** docs before new APIs.
 2. JSDoc on new hooks, network helpers, and complex components (`@purpose` / `@param` / `@returns` / `@sideEffects`).
-3. Schema or architecture in the same turn: `DOCUMENTATION.md` · `docs/SCHEMA.md` · `CHANGELOG.md` as required by `.cursor/rules/documentation.mdc`.
+3. Schema or architecture in the same turn: `docs/engineering/SYSTEM_OVERVIEW.md` · `docs/engineering/SCHEMA.md` · `CHANGELOG.md` as required by `.cursor/rules/documentation.mdc`.
 4. Folder law: routes only in `apps/mobile/app/`; UI in `src/frontend/components/`; no new `GameContext`.
 5. Never commit `.env.local`.
 6. One primary owner per task; name dependency specialists and an independent reviewer for cross-functional work.
@@ -532,89 +532,89 @@ Next desks: `/` Overview · `/reports` behavior (`ADMIN`) · `/money` ledger (`C
 
 | Call | Department | Reports to | Owns / primary function | Definition |
 | --- | --- | --- | --- | --- |
-| `ACCESSIBILITY` | Design | `DESIGN` | Audit screen-reader labels, focus order, touch targets, contrast, text scaling and reduced motion. | [accessibility.md](../.claude/agents/accessibility.md) |
-| `ACCOUNT_TAGS` | Engineering | `UPLOAD` | Account mention request/confirm/hide lifecycle, honest RPC errors and concurrent three-tag limit | [account-tags.md](../.claude/agents/account-tags.md) |
-| `ACTIVITY` | Engineering | `HIGHLIGHTS` | Own activity rows, pagination, actor navigation and empty/error states. | [activity.md](../.claude/agents/activity.md) |
-| `ADMIN` | Engineering | `ENGINEERING` | Expo write control plane and read-only Next oversight | [admin.md](../.claude/agents/admin.md) |
-| `API` | Engineering | `ENGINEERING` | Own request validation, JWT verification, authorization, typed responses and server error boundaries. | [api.md](../.claude/agents/api.md) |
-| `ATHLETE_STATS` | Engineering | `PROFILE` | Own athlete bio/stat/social visibility and sport-specific stat shapes. | [athlete-stats.md](../.claude/agents/athlete-stats.md) |
-| `ATHLETE_VERIFICATION` | Trust and Safety | `TRUST_SAFETY` | Own claim/vouch/school confirmation ladder, token validity and verified badge semantics. | [athlete-verification.md](../.claude/agents/athlete-verification.md) |
-| `AURA` | Engineering | `ENGINEERING` | Aura tiers and card reward math | [aura.md](../.claude/agents/aura.md) |
-| `AUTH` | Engineering | `ENGINEERING` | Guest browse, sign-in and role flow integration | [auth.md](../.claude/agents/auth.md) |
-| `BACKEND` | Engineering | `ENGINEERING` | Database architecture and migration/security integration | [backend.md](../.claude/agents/backend.md) |
-| `BILLING` | Finance | `COMMERCE` | Own current one-time Exclusive purchase semantics and future recurring billing design. | [billing.md](../.claude/agents/billing.md) |
-| `CATALOGS` | Engineering | `ADMIN` | Own sport/region/category/price catalog consistency and generated product facts. | [catalogs.md](../.claude/agents/catalogs.md) |
-| `CHECKOUT` | Finance | `COMMERCE` | Own staged Amount / Options / Review donation UI, PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling. | [checkout.md](../.claude/agents/checkout.md) |
-| `CI` | Operations | `OPERATIONS` | Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation. | [ci.md](../.claude/agents/ci.md) |
-| `COMMERCE` | Finance | `FACILITATOR` | Financial design and payment specialist integration | [commerce.md](../.claude/agents/commerce.md) |
-| `COMPLIANCE` | Legal and Compliance | `FACILITATOR` | Privacy, commercial disclosures and evidence-backed claims | [compliance.md](../.claude/agents/compliance.md) |
-| `CONNECT` | Finance | `COMMERCE` | Own JWT-gated Express links, bank onboarding state and verification/payout readiness. | [connect.md](../.claude/agents/connect.md) |
-| `CONTENT_RIGHTS` | Legal and Compliance | `LEGAL` | Own implementation of approved filming, audio, mark permissions and rights-report language. | [content-rights.md](../.claude/agents/content-rights.md) |
-| `COST_OPERATIONS` | Operations | `OPERATIONS` | Wave budgets, free quotas, media bandwidth and vendor cost evidence | [cost-operations.md](../.claude/agents/cost-operations.md) |
-| `CREW` | Engineering | `PROFILE` | Own Join Crew, follow counts, self-action restrictions and sign-in resume. | [crew.md](../.claude/agents/crew.md) |
-| `CUSTODIAL` | Finance | `COMMERCE` | Own guardian approval, payee relationship, age handover and server payout policy invariants. | [custodial.md](../.claude/agents/custodial.md) |
-| `DATABASE_MIGRATIONS` | Engineering | `BACKEND` | Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent. | [database-migrations.md](../.claude/agents/database-migrations.md) |
-| `DESIGN` | Design | `FACILITATOR` | Visual design and interaction integration | [design.md](../.claude/agents/design.md) |
-| `DEVICE_QA` | Quality | `QA` | Own real-device fan/athlete/guardian/operator/booster journey evidence. | [device-qa.md](../.claude/agents/device-qa.md) |
-| `DISCOVERY` | Engineering | `LOCAL` | Local, team and Highlight search, pagination and eligibility-filtered discovery | [discovery.md](../.claude/agents/discovery.md) |
-| `DOCUMENTATION` | Engineering | `ENGINEERING` | Synchronize code comments, system docs, team ownership and verified handoff evidence across departments. | [documentation.md](../.claude/agents/documentation.md) |
-| `DONATION_THANKS` | Finance | `COMMERCE` | Own preset-only thanks, donor/athlete linkage and optional thank-you clip references. | [donation-thanks.md](../.claude/agents/donation-thanks.md) |
-| `DRIP` | Finance | `COMMERCE` | Own marketplace catalog, order lifecycle and unavailable/retry presentation. | [drip.md](../.claude/agents/drip.md) |
-| `ENGINEERING` | Engineering | `FACILITATOR` | Technical architecture, typed contracts and specialist integration | [engineering.md](../.claude/agents/engineering.md) |
-| `FILMER_REWARDS` | Engineering | `HIGHLIGHTS` | Own Filmed by credit, Props/Aura noncash rewards and Top Filmers eligibility. | [filmer-rewards.md](../.claude/agents/filmer-rewards.md) |
-| `FULLSTACK` | Engineering | `ENGINEERING` | Cross-feature implementation and end-to-end integration | [fullstack.md](../.claude/agents/fullstack.md) |
-| `GROWTH_ANALYTICS` | Marketing | `MARKETING` | Own measurement definitions for browsing, claim, upload and donation conversion. | [growth-analytics.md](../.claude/agents/growth-analytics.md) |
-| `HIGHLIGHTS` | Engineering | `ENGINEERING` | Highlights feed and media specialist integration | [highlights.md](../.claude/agents/highlights.md) |
-| `INCIDENT_TRIAGE` | Support | `SUPPORT` | Own severity classification, reproduction evidence and financial/security escalation routing. | [incident-triage.md](../.claude/agents/incident-triage.md) |
-| `LEADERBOARDS` | Engineering | `AURA` | Own donor/filmer ranking aggregation, windows, ties and privacy-safe display. | [leaderboards.md](../.claude/agents/leaderboards.md) |
-| `LEDGER` | Finance | `COMMERCE` | Own immutable financial events, exactly-once credits, revenue/owed balances and lifecycle invariants. | [ledger.md](../.claude/agents/ledger.md) |
-| `LEGAL` | Legal and Compliance | `FACILITATOR` | Approved legal wording and counsel decision tracking | [legal.md](../.claude/agents/legal.md) |
-| `LOCAL` | Engineering | `ENGINEERING` | Game-day fan surfaces and live engagement integration | [local.md](../.claude/agents/local.md) |
-| `MARKETING` | Marketing | `FACILITATOR` | Own consented family-story positioning and accurate release communications. | [marketing.md](../.claude/agents/marketing.md) |
-| `MINOR_SAFETY` | Trust and Safety | `TRUST_SAFETY` | Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria. | [minor-safety.md](../.claude/agents/minor-safety.md) |
-| `MOBILE_PERFORMANCE` | Engineering | `ENGINEERING` | Feed rendering, media memory, startup and measured interaction performance | [mobile-performance.md](../.claude/agents/mobile-performance.md) |
-| `MODERATION` | Trust and Safety | `TRUST_SAFETY` | Own report reasons, immediate-hide versus review threshold, review evidence and appeals design. | [moderation.md](../.claude/agents/moderation.md) |
-| `MOTION` | Design | `DESIGN` | Maintain motion tokens, haptics, sheet geometry and reduced-motion behavior. | [motion.md](../.claude/agents/motion.md) |
-| `NOTIFICATIONS` | Engineering | `CREW` | crew_push_queue privacy, deduplication and authorized delivery design | [notifications.md](../.claude/agents/notifications.md) |
-| `OFFLINE` | Engineering | `ENGINEERING` | Own durable action queue, retry policy, duplicate prevention and logout boundary behavior. | [offline.md](../.claude/agents/offline.md) |
-| `ONBOARDING` | Engineering | `AUTH` | Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume. | [onboarding.md](../.claude/agents/onboarding.md) |
-| `OPERATIONS` | Operations | `FACILITATOR` | Coordinate staging readiness, releases, reliability, observability and game-day operations. | [operations.md](../.claude/agents/operations.md) |
-| `OPERATOR` | Operations | `OPERATIONS` | Sideline PIN/check-in/score/clock console | [operator.md](../.claude/agents/operator.md) |
-| `PARTNERSHIPS` | Partnerships | `FACILITATOR` | Coordinate guardian, school, booster and sponsor requirements without inventing permissions. | [partnerships.md](../.claude/agents/partnerships.md) |
-| `PLAYBACK` | Engineering | `HIGHLIGHTS` | Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting. | [playback.md](../.claude/agents/playback.md) |
-| `POLLS` | Engineering | `LOCAL` | Own cheer eligibility, vote math, poll lifecycle and offline vote semantics. | [polls.md](../.claude/agents/polls.md) |
-| `PRIVACY_ENGINEERING` | Legal and Compliance | `COMPLIANCE` | Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation. | [privacy-engineering.md](../.claude/agents/privacy-engineering.md) |
-| `PRODUCT` | Product | `FACILITATOR` | Translate the family donation and recruitment mission into acceptance criteria and dependencies. | [product.md](../.claude/agents/product.md) |
-| `PROFILE` | Engineering | `ENGINEERING` | Own/public athlete identity and feature integration | [profile.md](../.claude/agents/profile.md) |
-| `QA` | Quality | `FACILITATOR` | Independent final verification gate | [qa.md](../.claude/agents/qa.md) |
-| `RALLY` | Finance | `COMMERCE` | Own guardian-approved donation goals, progress aggregation and fill celebration. | [rally.md](../.claude/agents/rally.md) |
-| `REALTIME` | Engineering | `ENGINEERING` | Own subscription lifecycle, live score/event consistency and reconnect behavior. | [realtime.md](../.claude/agents/realtime.md) |
-| `RECEIPTS` | Finance | `COMMERCE` | Donor receipt/history access, payment status and fee/split disclosure | [receipts.md](../.claude/agents/receipts.md) |
-| `RECONCILIATION` | Finance | `COMMERCE` | Own Stripe-event versus ledger reconciliation, discrepancies, receipts and revenue reporting evidence. | [reconciliation.md](../.claude/agents/reconciliation.md) |
-| `RECOVERY` | Operations | `OPERATIONS` | Migration rollback, backup/restore evidence and data recovery runbooks | [recovery.md](../.claude/agents/recovery.md) |
-| `REFUNDS` | Finance | `COMMERCE` | Own refund/dispute lifecycle design and reversal effects on revenue, entitlements and owed funds. | [refunds.md](../.claude/agents/refunds.md) |
-| `RELEASE` | Operations | `OPERATIONS` | Own preview profiles, environment binding, signing/device eligibility and rollback artifact evidence. | [release.md](../.claude/agents/release.md) |
-| `RELIABILITY` | Operations | `OPERATIONS` | Own failure recovery, incident runbooks, dependency availability and measured service objectives. | [reliability.md](../.claude/agents/reliability.md) |
-| `RESEARCH` | Product | `PRODUCT` | Test family, athlete, guardian, filmer and operator journeys using consented feedback. | [research.md](../.claude/agents/research.md) |
-| `RLS_SECURITY` | Engineering | `BACKEND` | Audit grants, RLS, security-definer RPCs, storage policies and ownership boundaries. | [rls-security.md](../.claude/agents/rls-security.md) |
-| `ROLE_HQ` | Partnerships | `PARTNERSHIPS` | Parent, booster and sponsor role portal integration | [role-hq.md](../.claude/agents/role-hq.md) |
-| `ROSTERS` | Engineering | `LOCAL` | Own roster claim identity, team search, CSV import validation and athlete navigation. | [rosters.md](../.claude/agents/rosters.md) |
-| `RUNTIME_CONFIG` | Engineering | `ADMIN` | Own draft/published flag states, pause behavior, role lenses and fan control coverage. | [runtime-config.md](../.claude/agents/runtime-config.md) |
-| `SCHOOL_PARTNERS` | Partnerships | `PARTNERSHIPS` | Own school onboarding requirements, AD/coach confirmation workflow and marks permission records design. | [school-partners.md](../.claude/agents/school-partners.md) |
-| `SESSION_SECURITY` | Engineering | `AUTH` | Own JWT/session handling, role boundaries, OAuth redirect integrity and server identity checks. | [session-security.md](../.claude/agents/session-security.md) |
-| `SHARED_CONTRACTS` | Engineering | `ENGINEERING` | Shared RPC/domain types, generated database type provenance and mobile/admin contract parity | [shared-contracts.md](../.claude/agents/shared-contracts.md) |
-| `SHARING` | Engineering | `PROFILE` | Own public athlete QR, share links, deep links and safe preview content. | [sharing.md](../.claude/agents/sharing.md) |
-| `SPONSOR_ADS` | Partnerships | `PARTNERSHIPS` | Own approved sponsor placement, booster tier display and role portal consistency. | [sponsor-ads.md](../.claude/agents/sponsor-ads.md) |
-| `SPOTLIGHT` | Engineering | `ENGINEERING` | Awards board, real athlete IDs and tag queue | [spotlight.md](../.claude/agents/spotlight.md) |
-| `STORAGE` | Engineering | `BACKEND` | Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle | [storage.md](../.claude/agents/storage.md) |
-| `SUPPORT` | Support | `FACILITATOR` | Own help/runbook content, tester intake taxonomy and guardian-safe issue handling. | [support.md](../.claude/agents/support.md) |
-| `TELEMETRY` | Operations | `OPERATIONS` | Own bounded telemetry payloads, data minimization, dashboard interpretation and logging failure behavior. | [telemetry.md](../.claude/agents/telemetry.md) |
-| `TEST_AUTOMATION` | Quality | `QA` | Own meaningful regression, boundary/security and finance invariant checks. | [test-automation.md](../.claude/agents/test-automation.md) |
-| `TRUST_SAFETY` | Trust and Safety | `FACILITATOR` | Coordinate moderation, identity, minor safety and rights safeguards as independent release gates. | [trust-safety.md](../.claude/agents/trust-safety.md) |
-| `UPLOAD` | Engineering | `HIGHLIGHTS` | Own compact Clip → Details → Review composer, optional settings, draft navigation, compression, upload progress and athlete/account consent. | [upload.md](../.claude/agents/upload.md) |
-| `VAULT` | Engineering | `PROFILE` | Own private video entitlements, signed playback URLs and subscription-request access. | [vault.md](../.claude/agents/vault.md) |
-| `VOICE` | Brand | `FACILITATOR` | Donation language and honest product copy | [voice.md](../.claude/agents/voice.md) |
-| `WISHLIST` | Finance | `COMMERCE` | Gear-goal configuration, donation allocation and confirmed progress | [wishlist.md](../.claude/agents/wishlist.md) |
+| `ACCESSIBILITY` | Design | `DESIGN` | Audit screen-reader labels, focus order, touch targets, contrast, text scaling and reduced motion. | [accessibility.md](../../.claude/agents/accessibility.md) |
+| `ACCOUNT_TAGS` | Engineering | `UPLOAD` | Account mention request/confirm/hide lifecycle, honest RPC errors and concurrent three-tag limit | [account-tags.md](../../.claude/agents/account-tags.md) |
+| `ACTIVITY` | Engineering | `HIGHLIGHTS` | Own activity rows, pagination, actor navigation and empty/error states. | [activity.md](../../.claude/agents/activity.md) |
+| `ADMIN` | Engineering | `ENGINEERING` | Expo write control plane and read-only Next oversight | [admin.md](../../.claude/agents/admin.md) |
+| `API` | Engineering | `ENGINEERING` | Own request validation, JWT verification, authorization, typed responses and server error boundaries. | [api.md](../../.claude/agents/api.md) |
+| `ATHLETE_STATS` | Engineering | `PROFILE` | Own athlete bio/stat/social visibility and sport-specific stat shapes. | [athlete-stats.md](../../.claude/agents/athlete-stats.md) |
+| `ATHLETE_VERIFICATION` | Trust and Safety | `TRUST_SAFETY` | Own claim/vouch/school confirmation ladder, token validity and verified badge semantics. | [athlete-verification.md](../../.claude/agents/athlete-verification.md) |
+| `AURA` | Engineering | `ENGINEERING` | Aura tiers and card reward math | [aura.md](../../.claude/agents/aura.md) |
+| `AUTH` | Engineering | `ENGINEERING` | Guest browse, sign-in and role flow integration | [auth.md](../../.claude/agents/auth.md) |
+| `BACKEND` | Engineering | `ENGINEERING` | Database architecture and migration/security integration | [backend.md](../../.claude/agents/backend.md) |
+| `BILLING` | Finance | `COMMERCE` | Own current one-time Exclusive purchase semantics and future recurring billing design. | [billing.md](../../.claude/agents/billing.md) |
+| `CATALOGS` | Engineering | `ADMIN` | Own sport/region/category/price catalog consistency and generated product facts. | [catalogs.md](../../.claude/agents/catalogs.md) |
+| `CHECKOUT` | Finance | `COMMERCE` | Own staged Amount / Options / Review donation UI, PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling. | [checkout.md](../../.claude/agents/checkout.md) |
+| `CI` | Operations | `OPERATIONS` | Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation. | [ci.md](../../.claude/agents/ci.md) |
+| `COMMERCE` | Finance | `FACILITATOR` | Financial design and payment specialist integration | [commerce.md](../../.claude/agents/commerce.md) |
+| `COMPLIANCE` | Legal and Compliance | `FACILITATOR` | Privacy, commercial disclosures and evidence-backed claims | [compliance.md](../../.claude/agents/compliance.md) |
+| `CONNECT` | Finance | `COMMERCE` | Own JWT-gated Express links, bank onboarding state and verification/payout readiness. | [connect.md](../../.claude/agents/connect.md) |
+| `CONTENT_RIGHTS` | Legal and Compliance | `LEGAL` | Own implementation of approved filming, audio, mark permissions and rights-report language. | [content-rights.md](../../.claude/agents/content-rights.md) |
+| `COST_OPERATIONS` | Operations | `OPERATIONS` | Wave budgets, free quotas, media bandwidth and vendor cost evidence | [cost-operations.md](../../.claude/agents/cost-operations.md) |
+| `CREW` | Engineering | `PROFILE` | Own Join Crew, follow counts, self-action restrictions and sign-in resume. | [crew.md](../../.claude/agents/crew.md) |
+| `CUSTODIAL` | Finance | `COMMERCE` | Own guardian approval, payee relationship, age handover and server payout policy invariants. | [custodial.md](../../.claude/agents/custodial.md) |
+| `DATABASE_MIGRATIONS` | Engineering | `BACKEND` | Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent. | [database-migrations.md](../../.claude/agents/database-migrations.md) |
+| `DESIGN` | Design | `FACILITATOR` | Visual design and interaction integration | [design.md](../../.claude/agents/design.md) |
+| `DEVICE_QA` | Quality | `QA` | Own real-device fan/athlete/guardian/operator/booster journey evidence. | [device-qa.md](../../.claude/agents/device-qa.md) |
+| `DISCOVERY` | Engineering | `LOCAL` | Local, team and Highlight search, pagination and eligibility-filtered discovery | [discovery.md](../../.claude/agents/discovery.md) |
+| `DOCUMENTATION` | Engineering | `ENGINEERING` | Synchronize code comments, system docs, team ownership and verified handoff evidence across departments. | [documentation.md](../../.claude/agents/documentation.md) |
+| `DONATION_THANKS` | Finance | `COMMERCE` | Own preset-only thanks, donor/athlete linkage and optional thank-you clip references. | [donation-thanks.md](../../.claude/agents/donation-thanks.md) |
+| `DRIP` | Finance | `COMMERCE` | Own marketplace catalog, order lifecycle and unavailable/retry presentation. | [drip.md](../../.claude/agents/drip.md) |
+| `ENGINEERING` | Engineering | `FACILITATOR` | Technical architecture, typed contracts and specialist integration | [engineering.md](../../.claude/agents/engineering.md) |
+| `FILMER_REWARDS` | Engineering | `HIGHLIGHTS` | Own Filmed by credit, Props/Aura noncash rewards and Top Filmers eligibility. | [filmer-rewards.md](../../.claude/agents/filmer-rewards.md) |
+| `FULLSTACK` | Engineering | `ENGINEERING` | Cross-feature implementation and end-to-end integration | [fullstack.md](../../.claude/agents/fullstack.md) |
+| `GROWTH_ANALYTICS` | Marketing | `MARKETING` | Own measurement definitions for browsing, claim, upload and donation conversion. | [growth-analytics.md](../../.claude/agents/growth-analytics.md) |
+| `HIGHLIGHTS` | Engineering | `ENGINEERING` | Highlights feed and media specialist integration | [highlights.md](../../.claude/agents/highlights.md) |
+| `INCIDENT_TRIAGE` | Support | `SUPPORT` | Own severity classification, reproduction evidence and financial/security escalation routing. | [incident-triage.md](../../.claude/agents/incident-triage.md) |
+| `LEADERBOARDS` | Engineering | `AURA` | Own donor/filmer ranking aggregation, windows, ties and privacy-safe display. | [leaderboards.md](../../.claude/agents/leaderboards.md) |
+| `LEDGER` | Finance | `COMMERCE` | Own immutable financial events, exactly-once credits, revenue/owed balances and lifecycle invariants. | [ledger.md](../../.claude/agents/ledger.md) |
+| `LEGAL` | Legal and Compliance | `FACILITATOR` | Approved legal wording and counsel decision tracking | [legal.md](../../.claude/agents/legal.md) |
+| `LOCAL` | Engineering | `ENGINEERING` | Game-day fan surfaces and live engagement integration | [local.md](../../.claude/agents/local.md) |
+| `MARKETING` | Marketing | `FACILITATOR` | Own consented family-story positioning and accurate release communications. | [marketing.md](../../.claude/agents/marketing.md) |
+| `MINOR_SAFETY` | Trust and Safety | `TRUST_SAFETY` | Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria. | [minor-safety.md](../../.claude/agents/minor-safety.md) |
+| `MOBILE_PERFORMANCE` | Engineering | `ENGINEERING` | Feed rendering, media memory, startup and measured interaction performance | [mobile-performance.md](../../.claude/agents/mobile-performance.md) |
+| `MODERATION` | Trust and Safety | `TRUST_SAFETY` | Own report reasons, immediate-hide versus review threshold, review evidence and appeals design. | [moderation.md](../../.claude/agents/moderation.md) |
+| `MOTION` | Design | `DESIGN` | Maintain motion tokens, haptics, sheet geometry and reduced-motion behavior. | [motion.md](../../.claude/agents/motion.md) |
+| `NOTIFICATIONS` | Engineering | `CREW` | crew_push_queue privacy, deduplication and authorized delivery design | [notifications.md](../../.claude/agents/notifications.md) |
+| `OFFLINE` | Engineering | `ENGINEERING` | Own durable action queue, retry policy, duplicate prevention and logout boundary behavior. | [offline.md](../../.claude/agents/offline.md) |
+| `ONBOARDING` | Engineering | `AUTH` | Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume. | [onboarding.md](../../.claude/agents/onboarding.md) |
+| `OPERATIONS` | Operations | `FACILITATOR` | Coordinate staging readiness, releases, reliability, observability and game-day operations. | [operations.md](../../.claude/agents/operations.md) |
+| `OPERATOR` | Operations | `OPERATIONS` | Sideline PIN/check-in/score/clock console | [operator.md](../../.claude/agents/operator.md) |
+| `PARTNERSHIPS` | Partnerships | `FACILITATOR` | Coordinate guardian, school, booster and sponsor requirements without inventing permissions. | [partnerships.md](../../.claude/agents/partnerships.md) |
+| `PLAYBACK` | Engineering | `HIGHLIGHTS` | Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting. | [playback.md](../../.claude/agents/playback.md) |
+| `POLLS` | Engineering | `LOCAL` | Own cheer eligibility, vote math, poll lifecycle and offline vote semantics. | [polls.md](../../.claude/agents/polls.md) |
+| `PRIVACY_ENGINEERING` | Legal and Compliance | `COMPLIANCE` | Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation. | [privacy-engineering.md](../../.claude/agents/privacy-engineering.md) |
+| `PRODUCT` | Product | `FACILITATOR` | Translate the family donation and recruitment mission into acceptance criteria and dependencies. | [product.md](../../.claude/agents/product.md) |
+| `PROFILE` | Engineering | `ENGINEERING` | Own/public athlete identity and feature integration | [profile.md](../../.claude/agents/profile.md) |
+| `QA` | Quality | `FACILITATOR` | Independent final verification gate | [qa.md](../../.claude/agents/qa.md) |
+| `RALLY` | Finance | `COMMERCE` | Own guardian-approved donation goals, progress aggregation and fill celebration. | [rally.md](../../.claude/agents/rally.md) |
+| `REALTIME` | Engineering | `ENGINEERING` | Own subscription lifecycle, live score/event consistency and reconnect behavior. | [realtime.md](../../.claude/agents/realtime.md) |
+| `RECEIPTS` | Finance | `COMMERCE` | Donor receipt/history access, payment status and fee/split disclosure | [receipts.md](../../.claude/agents/receipts.md) |
+| `RECONCILIATION` | Finance | `COMMERCE` | Own Stripe-event versus ledger reconciliation, discrepancies, receipts and revenue reporting evidence. | [reconciliation.md](../../.claude/agents/reconciliation.md) |
+| `RECOVERY` | Operations | `OPERATIONS` | Migration rollback, backup/restore evidence and data recovery runbooks | [recovery.md](../../.claude/agents/recovery.md) |
+| `REFUNDS` | Finance | `COMMERCE` | Own refund/dispute lifecycle design and reversal effects on revenue, entitlements and owed funds. | [refunds.md](../../.claude/agents/refunds.md) |
+| `RELEASE` | Operations | `OPERATIONS` | Own preview profiles, environment binding, signing/device eligibility and rollback artifact evidence. | [release.md](../../.claude/agents/release.md) |
+| `RELIABILITY` | Operations | `OPERATIONS` | Own failure recovery, incident runbooks, dependency availability and measured service objectives. | [reliability.md](../../.claude/agents/reliability.md) |
+| `RESEARCH` | Product | `PRODUCT` | Test family, athlete, guardian, filmer and operator journeys using consented feedback. | [research.md](../../.claude/agents/research.md) |
+| `RLS_SECURITY` | Engineering | `BACKEND` | Audit grants, RLS, security-definer RPCs, storage policies and ownership boundaries. | [rls-security.md](../../.claude/agents/rls-security.md) |
+| `ROLE_HQ` | Partnerships | `PARTNERSHIPS` | Parent, booster and sponsor role portal integration | [role-hq.md](../../.claude/agents/role-hq.md) |
+| `ROSTERS` | Engineering | `LOCAL` | Own roster claim identity, team search, CSV import validation and athlete navigation. | [rosters.md](../../.claude/agents/rosters.md) |
+| `RUNTIME_CONFIG` | Engineering | `ADMIN` | Own draft/published flag states, pause behavior, role lenses and fan control coverage. | [runtime-config.md](../../.claude/agents/runtime-config.md) |
+| `SCHOOL_PARTNERS` | Partnerships | `PARTNERSHIPS` | Own school onboarding requirements, AD/coach confirmation workflow and marks permission records design. | [school-partners.md](../../.claude/agents/school-partners.md) |
+| `SESSION_SECURITY` | Engineering | `AUTH` | Own JWT/session handling, role boundaries, OAuth redirect integrity and server identity checks. | [session-security.md](../../.claude/agents/session-security.md) |
+| `SHARED_CONTRACTS` | Engineering | `ENGINEERING` | Shared RPC/domain types, generated database type provenance and mobile/admin contract parity | [shared-contracts.md](../../.claude/agents/shared-contracts.md) |
+| `SHARING` | Engineering | `PROFILE` | Own public athlete QR, share links, deep links and safe preview content. | [sharing.md](../../.claude/agents/sharing.md) |
+| `SPONSOR_ADS` | Partnerships | `PARTNERSHIPS` | Own approved sponsor placement, booster tier display and role portal consistency. | [sponsor-ads.md](../../.claude/agents/sponsor-ads.md) |
+| `SPOTLIGHT` | Engineering | `ENGINEERING` | Awards board, real athlete IDs and tag queue | [spotlight.md](../../.claude/agents/spotlight.md) |
+| `STORAGE` | Engineering | `BACKEND` | Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle | [storage.md](../../.claude/agents/storage.md) |
+| `SUPPORT` | Support | `FACILITATOR` | Own help/runbook content, tester intake taxonomy and guardian-safe issue handling. | [support.md](../../.claude/agents/support.md) |
+| `TELEMETRY` | Operations | `OPERATIONS` | Own bounded telemetry payloads, data minimization, dashboard interpretation and logging failure behavior. | [telemetry.md](../../.claude/agents/telemetry.md) |
+| `TEST_AUTOMATION` | Quality | `QA` | Own meaningful regression, boundary/security and finance invariant checks. | [test-automation.md](../../.claude/agents/test-automation.md) |
+| `TRUST_SAFETY` | Trust and Safety | `FACILITATOR` | Coordinate moderation, identity, minor safety and rights safeguards as independent release gates. | [trust-safety.md](../../.claude/agents/trust-safety.md) |
+| `UPLOAD` | Engineering | `HIGHLIGHTS` | Own compact Clip → Details → Review composer, optional settings, draft navigation, compression, upload progress and athlete/account consent. | [upload.md](../../.claude/agents/upload.md) |
+| `VAULT` | Engineering | `PROFILE` | Own private video entitlements, signed playback URLs and subscription-request access. | [vault.md](../../.claude/agents/vault.md) |
+| `VOICE` | Brand | `FACILITATOR` | Donation language and honest product copy | [voice.md](../../.claude/agents/voice.md) |
+| `WISHLIST` | Finance | `COMMERCE` | Gear-goal configuration, donation allocation and confirmed progress | [wishlist.md](../../.claude/agents/wishlist.md) |
 
 ### Critical task routing
 
@@ -639,4 +639,4 @@ Next desks: `/` Overview · `/reports` behavior (`ADMIN`) · `/money` ledger (`C
 
 ### Dispatch next work
 
-Use [WORK_QUEUE.md](WORK_QUEUE.md) for evidence, dependencies and assigned execution tasks when available. A roster assignment means ownership; queue status identifies what actually ran. The immediate sequence is baseline verification, current staging/device blockers, security and money architecture preparation, then public-launch prerequisites. Current code and hosted status remain in [STATE.md](STATE.md).
+Use [WORK_QUEUE.md](WORK_QUEUE.md) for evidence, dependencies and assigned execution tasks when available. A roster assignment means ownership; queue status identifies what actually ran. The immediate sequence is baseline verification, current staging/device blockers, security and money architecture preparation, then public-launch prerequisites. Current code and hosted status remain in [STATE.md](../STATE.md).

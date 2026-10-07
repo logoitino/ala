@@ -31,7 +31,7 @@ create table if not exists public.players (
 
 alter table public.players add column if not exists guardian_id uuid references public.profiles (id) on delete set null;
 alter table public.players add column if not exists parental_consent_approved boolean not null default false;
--- Phase 1 item 3 groundwork (docs/PARENT_PAYEE_CONNECT_DESIGN.md) — dated consent record alongside
+-- Phase 1 item 3 groundwork (docs/engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md) — dated consent record alongside
 -- the existing boolean, mirroring `profiles.legal_terms_accepted_at`. Not yet written by any code
 -- path; the consent-flow UI that sets it is a follow-up gated on that design doc's sign-offs.
 alter table public.players add column if not exists guardian_consent_at timestamptz;
@@ -193,7 +193,7 @@ on conflict (id) do update set
 -- approval, no identity check — that is the entire point of the feature (fast onboarding), but it
 -- means the code IS the only thing standing between "real athlete" and "anyone who read this file."
 -- These are real Utah high schools (Westlake, Lone Peak, American Fork, Timpview — the actual
--- Phase 5 GTM target per docs/INVESTOR.md), and this file's git history now permanently contains
+-- Phase 5 GTM target per docs/company/INVESTOR.md), and this file's git history now permanently contains
 -- every one of those codes regardless of what runs next. Do not put a real school's code in any
 -- committed file again: generate a high-entropy value out-of-band (a UUID segment or random token,
 -- not a guessable SCHOOL-SPORT-YEAR pattern — that format is small enough to brute-force via
@@ -2163,7 +2163,7 @@ begin
   -- players" RLS policy's role set.
   -- 2026-09 audit (Round 27/33 sweep): `profiles.player_id` is a self-service, unverified claim by
   -- design (`saveAthleteOnboardingRemote`'s fuzzy name match, no team-code requirement — see
-  -- `docs/ALA_TEAM_BRIEF.md`'s "claim freely, not a wall" onboarding philosophy) — anyone could
+  -- `docs/company/ALA_TEAM_BRIEF.md`'s "claim freely, not a wall" onboarding philosophy) — anyone could
   -- previously set their own `player_id` to any real athlete's id and lock/unlock that athlete's
   -- Vault paywall at will. Vault control is a real monetization gate, not a browse feature, so it's
   -- the right place to draw the line: require the caller's own profile to be `is_verified` (i.e.
@@ -3650,7 +3650,7 @@ create policy "Public read players" on public.players for select using (true);
 -- authenticated session with one of these roles — Studio-unlock-only preview (no Supabase auth)
 -- will no longer be able to write here; see summary for the "admin desk has no real auth gate yet"
 -- product decision this surfaces.
--- 2026-09 parent-payee security fix (docs/PARENT_PAYEE_CONNECT_DESIGN.md §0): `parent` dropped from
+-- 2026-09 parent-payee security fix (docs/engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md §0): `parent` dropped from
 -- this blanket policy. It previously let ANY `parent`-role account UPDATE `guardian_id` on ANY
 -- roster row with zero verification of an actual parent/guardian relationship — low-stakes while
 -- `guardian_id` was inert, but about to gate real Stripe Connect payout money per the parent-payee
@@ -3695,7 +3695,7 @@ create policy "Parents update own linked player"
 -- 2026-09 parent-payee security fix: the only way `guardian_id` can now be set (the previous hole
 -- let any `parent`-role account self-assign this on any row via direct UPDATE). Deliberately narrow
 -- and admin-only rather than a self-service "request guardian link" flow — the design doc
--- (docs/PARENT_PAYEE_CONNECT_DESIGN.md §1) has three live candidate linking mechanisms (invite
+-- (docs/engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md §1) has three live candidate linking mechanisms (invite
 -- code, roster-seed import, scoped self-declare) still pending product/legal sign-off, and building
 -- a request/approval RPC now would risk prescribing the wrong one. This is an interim stopgap, not
 -- the final parent-onboarding flow.
@@ -6381,7 +6381,7 @@ create policy "Read entitled vault reel"
 -- Custodial money rules (owner decision, 2026-09-29). Standalone copy: supabase/custodial_money.sql.
 -- to an existing project. Safe to re-run.
 --
--- The rules, in plain words (docs/PARENT_PAYEE_CONNECT_DESIGN.md §7):
+-- The rules, in plain words (docs/engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md §7):
 --   1. A guardian holds one payout account per athlete, and it holds only that athlete's money
 --      (custodial_accounts is keyed by player_id; a Stripe account can serve only one athlete).
 --   2. The athlete sees every gift and every withdrawal request (get_custodial_summary).
@@ -7097,7 +7097,7 @@ grant execute on function public.get_leaderboards(text) to anon, authenticated;
 -- =============================================================================================
 -- Athlete verification ladder — the school confirms each athlete in person
 -- =============================================================================================
--- Design: docs/ATHLETE_VERIFICATION_DESIGN.md (owner decisions 2026-09-29, §0 and §4).
+-- Design: docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md (owner decisions 2026-09-29, §0 and §4).
 --
 -- What changes:
 --   1. Anyone can still claim to be an athlete. The claim is visible as "verification pending".
@@ -8167,7 +8167,7 @@ grant execute on function public.confirm_reel_player_tag(uuid, text) to authenti
 -- =============================================================================================
 -- Payout gate without the school — school confirmation becomes a badge, not the only road
 -- =============================================================================================
--- Design: docs/ATHLETE_VERIFICATION_DESIGN.md §9 (owner approved 2026-09-29: "don't hinder growth").
+-- Design: docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md §9 (owner approved 2026-09-29: "don't hinder growth").
 --
 -- What changes:
 --   1. School confirmation still gives the "verified" badge and unlocks payouts with no cap.
@@ -8530,7 +8530,7 @@ grant execute on function public.vouch_for_teammate(uuid) to authenticated;
 -- =============================================================================================
 -- School badge — the school's crest on a school-confirmed athlete's profile
 -- =============================================================================================
--- Design: docs/ATHLETE_VERIFICATION_DESIGN.md §10 (owner request 2026-09-29).
+-- Design: docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md §10 (owner request 2026-09-29).
 --
 -- What changes:
 --   1. schools_and_teams gets logo_url and two brand colours, set only by a Tapua'i admin
@@ -9089,7 +9089,7 @@ grant execute on function public.get_top_filmers(text) to anon, authenticated;
 --
 -- Mission: make it easy for a family to put their young athlete where the community can watch their
 -- highlights and donate toward real sports costs (the GoFundMe replacement), and for the athlete to
--- say thank you. Docs: docs/STORY.md, docs/VOICE.md, ROADMAP M2.
+-- say thank you. Docs: docs/product/STORY.md, docs/product/VOICE.md, ROADMAP M2.
 --
 -- 1. tips.platform_tip_cents — an optional tip the donor adds for Tapua'i at checkout (GoFundMe
 --    model). It is charged on top of the donation, never counted as the athlete's donation, and

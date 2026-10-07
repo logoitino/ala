@@ -19,10 +19,10 @@ ahead of cached `origin/main`; no fetch was performed, so these are local tracki
 The earlier feature work is committed. This session expands specialist ownership and continues
 Wave 0 engineering in the working tree. Preserve existing org-doc edits; stage by path (§3).
 
-**Outside review.** Read this file, then `AGENTS.md`, `docs/CONVENTIONS.md`, `docs/ARCHITECTURE.md`,
-`docs/SCHEMA.md`, `docs/ROADMAP.md` (Wave 0 is test mode), `docs/LEGAL_BRIEFING.md`,
-`docs/DATA_PRIVACY_MAP.md`, and `docs/VOICE.md`. `docs/PUBLIC.md` and `docs/INVESTOR.md` are not
-the security packet. `docs/AUDIT_REPORT.md` older sections are history. Open on purpose, do not
+**Outside review.** Read this file, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`, `docs/engineering/ARCHITECTURE.md`,
+`docs/engineering/SCHEMA.md`, `docs/product/ROADMAP.md` (Wave 0 is test mode), `docs/legal/LEGAL_BRIEFING.md`,
+`docs/engineering/DATA_PRIVACY_MAP.md`, and `docs/product/VOICE.md`. `docs/product/PUBLIC.md` and `docs/company/INVESTOR.md` are not
+the security packet. `docs/engineering/AUDIT_REPORT.md` older sections are history. Open on purpose, do not
 treat as surprises: the app still writes `tips` after PaymentSheet (do not turn on `stripe-webhook`
 crediting), payouts stay blocked and do not check the amount owed, Stripe is test mode, and the
 development project does not have the staging SQL.
@@ -30,8 +30,8 @@ development project does not have the staging SQL.
 **The mission — judge every change against it.** Make donations and highlights easy for families,
 so they can promote their kid and hopefully get them recruited; kids encourage good workouts with
 fans and serve like their favorite player; Tapua'i is the avenue that makes the donating possible.
-It replaces GoFundMe for families. Full text: `docs/ROADMAP.md` North Star, `docs/STORY.md`
-"The mission, in one breath". Money words: `docs/VOICE.md`.
+It replaces GoFundMe for families. Full text: `docs/product/ROADMAP.md` North Star, `docs/product/STORY.md`
+"The mission, in one breath". Money words: `docs/product/VOICE.md`.
 
 **Applied to staging on 2026-09-30** (`ala-sports-staging`, `tucioqipfejqqqtuakdi`). Not applied
 to the development project (`ulfapgtabidorgwfjvwz`). Staging was also missing `tip_origin.sql`
@@ -53,16 +53,16 @@ to the development project (`ulfapgtabidorgwfjvwz`). Staging was also missing `t
 
 On staging, `company_revenue.sql` was already present and `tip_origin.sql` was not, so the channel
 tags were applied before the table above. The development project was not touched. After a build
-points at staging, run `docs/TESTER_SCRIPT.md`.
+points at staging, run `docs/engineering/TESTER_SCRIPT.md`.
 
 **Spend, every time.** Wave 0 (this test) costs Apple Developer **$99/yr** — already enrolled — and
 Supabase, Expo, and Stripe test mode are free. Nothing comes in. SQL on staging is done ($0). Still **$0**: a
 new preview build and a `4242` test donation, unless the free Expo build quota runs out or
 a free Supabase project pauses (then Pro, about **$25/mo**). Wave 1 is later and is the first real
 spend: LLC, counsel, an association letter, Google Play **$25**, Supabase Pro, video bandwidth, and
-Stripe’s fees. Do not start those for this test. Full table: `docs/ROADMAP.md` release waves.
+Stripe’s fees. Do not start those for this test. Full table: `docs/product/ROADMAP.md` release waves.
 
-**Specialist execution:** [WORK_QUEUE.md](WORK_QUEUE.md) assigns the Wave 0 sequence,
+**Specialist execution:** [WORK_QUEUE.md](agents/WORK_QUEUE.md) assigns the Wave 0 sequence,
 acceptance criteria and dependent decisions. Use the registry and hierarchy to dispatch its
 primary owner and required reviewer. Local code completion is separate from hosted/device evidence.
 
@@ -95,13 +95,13 @@ from the root: `pnpm copy:check`, `pnpm docs:check`, `pnpm app:data-boundaries`,
 
 **When you finish — the doc checklist.** Code under `apps/` / `packages/` / `supabase/` → a §4
 line here + bump **Last updated**. User-visible → `CHANGELOG.md`. New table / RPC / column →
-migration file + copy onto `schema.sql` + a row in `supabase/migrations/README.md` + `docs/SCHEMA.md`
+migration file + copy onto `schema.sql` + a row in `supabase/migrations/README.md` + `docs/engineering/SCHEMA.md`
 (`docs:check` fails otherwise). New folder / hook / lib file → `AGENTS.md` lists. Any on-screen
-money words → `docs/VOICE.md` rules, `copy:check`, and flag it in `docs/LEGAL_BRIEFING.md` (LEGAL
+money words → `docs/product/VOICE.md` rules, `copy:check`, and flag it in `docs/legal/LEGAL_BRIEFING.md` (LEGAL
 owns money copy). Price / split / Aura / Connect changes → `node scripts/sync-front-docs.mjs`
 (regenerates `PRODUCT_FACTS.md` and blocks in PUBLIC / INVESTOR / LEGAL). Roadmap status →
-`docs/ROADMAP.md`. Owner decisions → §6 here, plus ROADMAP / STORY if they change the plan or the story. New tester
-steps → `docs/TESTER_SCRIPT.md`. Commit by path (never `git add -A`); do not push.
+`docs/product/ROADMAP.md`. Owner decisions → §6 here, plus ROADMAP / STORY if they change the plan or the story. New tester
+steps → `docs/engineering/TESTER_SCRIPT.md`. Commit by path (never `git add -A`); do not push.
 
 ---
 
@@ -117,7 +117,7 @@ owner's call.
 | --- | --- |
 | Change anything under `apps/`, `packages/`, or `supabase/` | Add a line to §4 **Recent changes** and bump **Last updated** at the top |
 | Land a user-visible feature or schema shift | Add a `CHANGELOG.md` entry too |
-| Move a phase forward, or find a new blocker | Update `docs/ROADMAP.md` status and §5/§6 here |
+| Move a phase forward, or find a new blocker | Update `docs/product/ROADMAP.md` status and §5/§6 here |
 | Discover an environment gotcha that cost you time | Add it to §3 so the next agent does not rediscover it |
 | Change tables, RLS, RPCs, routing, env vars, payments, Realtime | Follow the full sync table in `.cursor/rules/documentation.mdc` §2 |
 
@@ -186,7 +186,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
   broke Jest (null hook dispatcher) until `node_modules/react` was repointed at the pnpm copy.
   Other stale duplicates remain and may bite the same way.
 - **Historical NAS mode flips:** older sessions saw ~500 `100644 → 100755` changes. The
-  2026-10-07 starting tree contains only `docs/STATE.md`, `docs/TEAMS.md`, and the new hierarchy
+  2026-10-07 starting tree contains only `docs/STATE.md`, `docs/agents/TEAMS.md`, and the new hierarchy
   document; that old count is not the current status. Preserve user edits and stage by path.
   **Never `git add -A`.**
 
@@ -210,14 +210,14 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
 - **2026-10-07** — Guest match queries and Realtime moved to `lib/guestGames.ts`; guest athlete lookup moved to `lib/roster.ts`. Route data debt fell **8 → 6 files, 17 → 12 direct calls**. Late subscription callbacks and asynchronous play joins are silenced after cleanup; request generations also prevent an older overview response from replacing the current match. Five data-layer regression checks cover match/feed failures, roster fallback, event filtering, cleanup and unconfigured access; two route scenarios prove older overview success/failure cannot replace the current match. Initial integration: both app typechecks and 44 suites / 204 tests pass. Final verification covers 47 suites / 222 tests: the full run passed 46 suites / 221 tests and the new upload fixture initially failed on missing safe-area context; after fixing only its fixture, its targeted suite / test passed. Both app typechecks, docs/copy/comments/boundaries/agents checks and diff whitespace pass. Live database, native device and Stripe checks not run.
 - **2026-10-07** — Account-tag hardening: serialize additions on the owned reel before enforcing max 3; only an owned pending confirmation reports success. Genuine attachment failures reach an accurate published-clip warning; failed inbox decisions remain visible. Updated still-unapplied `20261002160000` and canonical schema together; no SQL applied. Helper and component tests verify rejected confirmations and published-upload failure messaging. Database concurrency/RLS execution remains unverified without Postgres. Staging/build/branch claims reconciled to dated records and cached Git refs; no remote refresh. Privacy map now lists the existing custodial DOB exception, verification contacts, account mentions, reports and Rally/thanks records.
 
-- **2026-10-07** — Org chart for the whole roster: `docs/TEAM_HIERARCHY.md` (Facilitator → departments → agents, Engineering/Legal/QA zoom-ins, A–Z index). Call detail stays in `docs/TEAMS.md`.
-- **2026-10-07** — Agent roster: Engineering lead + **Database** (`BACKEND`) + **Full-stack** (`FULLSTACK`) with an explicit no-shortcuts / industry-practice bar; **COMPLIANCE** owns the privacy/ToS checklist (export/deletion, processors, no false SOC 2, no fake SLA, trackers before consent); **QA** is the testing ship gate. Call sheet: `docs/TEAMS.md`.
+- **2026-10-07** — Org chart for the whole roster: `docs/agents/TEAM_HIERARCHY.md` (Facilitator → departments → agents, Engineering/Legal/QA zoom-ins, A–Z index). Call detail stays in `docs/agents/TEAMS.md`.
+- **2026-10-07** — Agent roster: Engineering lead + **Database** (`BACKEND`) + **Full-stack** (`FULLSTACK`) with an explicit no-shortcuts / industry-practice bar; **COMPLIANCE** owns the privacy/ToS checklist (export/deletion, processors, no false SOC 2, no fake SLA, trackers before consent); **QA** is the testing ship gate. Call sheet: `docs/agents/TEAMS.md`.
 - **2026-10-02** — Review hand-off in §0 matches the branch on GitHub and the local work that is not pushed yet. Highlight account tags are in the app (`reel_account_tags`, up to three, confirm before the name shows). SQL `20261002160000` is written and not applied. A fan digital signature on the Aura card is later only.
 - **2026-10-02** — Support received shows **$0.00** and "No donations yet" when nobody has donated, and also when `get_received_malo` is missing or the call fails. That database message stays off the profile and Athlete HQ.
 - **2026-10-02** — Highlights: Rivalry week dismisses with a swipe left or right and stays gone for the visit. The donate sheet opens at the top of the form, stays inside the screen, and scrolls when the phone is short.
 - **2026-10-02** — Privacy work re-landed and telemetry conflict closed. A parallel session had deleted
   this session's uncommitted data-privacy docs and the `operator_checkins` RLS fix (no git history held them);
-  they were restored from the session transcript. `docs/DATA_PRIVACY_MAP.md` (data inventory, gaps, recommended
+  they were restored from the session transcript. `docs/engineering/DATA_PRIVACY_MAP.md` (data inventory, gaps, recommended
   structure, keep-current rule) is back, linked from COMPANY_PHASES S2 item 6 / L4, LEGAL_BRIEFING and
   DOCUMENTATION; ROADMAP Round 35 restated. The `operator_checkins` fix is now a proper migration,
   `20261002120000_operator_checkins_role_check.sql` (anon demo-PIN, operator, admin — parity with
@@ -228,7 +228,7 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
 - **2026-10-02** — Comment standard (owner: make the code easy to follow for outside reviewers). Every
   source file under `apps/mobile/app` and `apps/mobile/src` now opens with a short header saying what it
   is, where it fits and what it touches (about 120 files that had none: lib, hooks, contexts, services,
-  data, route layouts, large components, the Stripe API handlers). New rules in `docs/CONVENTIONS.md` §5
+  data, route layouts, large components, the Stripe API handlers). New rules in `docs/engineering/CONVENTIONS.md` §5
   (file header, doc block on hooks / RPC helpers / complex components, inline comments explain *why*, SQL and
   folder READMEs, keep comments true when you edit) mirrored in `.cursor/rules/documentation.mdc`,
   `AGENTS.md` and the PR template. New guard `scripts/check-comments.mjs` (`pnpm comments:check`, CI step)
@@ -238,7 +238,7 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   checks that a comment exists, not that it is accurate or good; Edge Functions, `supabase/*.sql` and
   `apps/admin-portal` are not scanned. Header text was checked against the code it describes, but a
   reviewer should still treat any header as a map, not a spec.
-- **2026-10-02** — Drip is off. `tabs.drip` defaults to false, and the published flag is false on staging and the development project. The screen and `/admin/drip` stay. Wave 1 is when the marketplace comes back (`docs/ROADMAP.md`). Finance (`COMMERCE`) still owns the code. A preview already installed picks this up on the next open; no new build.
+- **2026-10-02** — Drip is off. `tabs.drip` defaults to false, and the published flag is false on staging and the development project. The screen and `/admin/drip` stay. Wave 1 is when the marketplace comes back (`docs/product/ROADMAP.md`). Finance (`COMMERCE`) still owns the code. A preview already installed picks this up on the next open; no new build.
 - **2026-10-01** — Callable department agents. `CALL: DESIGN` (`.claude/agents/design.md`) produces the screen. `CALL: ENGINEERING` (`.claude/agents/engineering.md`) produces the code and routes to the squad that owns the files. Legal, Brand (`VOICE`), and Quality (`QA`) were already callable. Marketing and Support still have no agent.
 - **2026-10-01** — Upload and report safeguards. The upload sheet will not publish until the person
   confirms they filmed the clip or have permission, the sound is the original recording or music
@@ -328,7 +328,7 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   "Mālo!" only as a thank-you. Retired: Mālo-as-money, tip, backing, Chip In, fund. New
   `DONATE_LABEL` / `DONATION_MISSION` / `donationWhereItGoes` in `data/malo.ts` (donate sheet header,
   first-open `WelcomeOverlay` — which used to say "send a Mālo when a play hits home", a performance
-  tie). Rules `docs/VOICE.md`; `scripts/check-copy.mjs` (`pnpm copy:check`, new CI step); VOICE agent
+  tie). Rules `docs/product/VOICE.md`; `scripts/check-copy.mjs` (`pnpm copy:check`, new CI step); VOICE agent
   `.claude/agents/voice.md`; TEAMS/AGENTS updated; LEGAL row Q. Code names (`malo*`, `tips`,
   `buttons.malo`) unchanged. Published `app_runtime_config` copy overrides defaults — re-publish from
   `/admin/look` if an old Mālo line is live. (The 100%-vs-10% gap noted here was closed by the
@@ -457,7 +457,7 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   fallbacks and payouts, and a release build with no origin now throws a readable error instead
   of a JSON parse failure. Tests: `apiUrl.test.ts`, `stripeIntent.test.ts`. Admin-portal
   `.env.example` said `where id =` for the admin grant (the Round 21 bug); now `where user_id =`.
-  New `docs/STAGING_RUNBOOK.md`. **Not verified on a device**; the Edge Function is not yet
+  New `docs/engineering/STAGING_RUNBOOK.md`. **Not verified on a device**; the Edge Function is not yet
   deployed on any project. Preview builds only get keys from EAS env (`.env.local` is gitignored).
 - **2026-09-29** — Pre-merge review fixes. `ReelCard`'s memo comparator skipped function props,
   so a card could keep a stale `onTip` whose `requireAuth` still saw auth `loading` (Tip was a
@@ -516,7 +516,7 @@ Do not re-diagnose these. Fix them or leave them.
    before any 1-on-1 ships; paid sessions are NIL for the host.
 7. **Pathway savings structure** (Mission M7) — how "College-ready" / "Beyond the game" money is
    held for minors (UTMA, 529, licensed partner). Counsel's call; build no fund-holding until then.
-   Story and marketing guardrails: `docs/STORY.md`.
+   Story and marketing guardrails: `docs/product/STORY.md`.
 8. **How money reaches families (Wave 1 gate).** Recommended: Stripe Connect destination charges
    to the guardian's account, so gifts never sit in the platform balance and no payout ledger is
    needed. The alternative is today's platform-balance model plus the Phase 1a ledger (B3). Owner +
@@ -527,7 +527,7 @@ Do not re-diagnose these. Fix them or leave them.
    Still open: counsel on App Store 3.2.1(vii), which appears to require 100% for non-IAP gifts —
    fallback is `MALO_PLATFORM_CUT_BPS` = 0 with the tip kept (LEGAL row L).
 
-10. **Athlete verification and fake highlights** — `docs/ATHLETE_VERIFICATION_DESIGN.md`.
+10. **Athlete verification and fake highlights** — `docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md`.
     **Decided 2026-09-29:** gifts are held until verified and the athlete sees that in the app; the
     athletic director or coach confirms each student in person on a Tapua'i form. Built; verification SQL recorded applied to staging, not development. Still open: the pending-gift cap amount and refund window (need the ledger), and
     counsel on the "held" copy.
@@ -543,29 +543,29 @@ Do not re-diagnose these. Fix them or leave them.
 | Document | Purpose |
 | --- | --- |
 | **`docs/STATE.md`** | **This file.** Current state, recent work, known breakage. |
-| `docs/TEAM_HIERARCHY.md` | Org chart: departments → agents → `.claude/agents` files. Easy lookup. |
-| `docs/WORK_QUEUE.md` | Ordered specialist assignments, acceptance criteria, current evidence and owner gates. |
-| `docs/MENU_STYLE_MAP.md` | Shared menu/page APIs, modal consumer coverage, intentional visual exceptions and device verification gaps. |
-| `docs/TEAMS.md` | Call sheet: Now / Next / Later, surfaces, do-not-touch. |
+| `docs/agents/TEAM_HIERARCHY.md` | Org chart: departments → agents → `.claude/agents` files. Easy lookup. |
+| `docs/agents/WORK_QUEUE.md` | Ordered specialist assignments, acceptance criteria, current evidence and owner gates. |
+| `docs/engineering/MENU_STYLE_MAP.md` | Shared menu/page APIs, modal consumer coverage, intentional visual exceptions and device verification gaps. |
+| `docs/agents/TEAMS.md` | Call sheet: Now / Next / Later, surfaces, do-not-touch. |
 | `AGENTS.md` | Folder law, path aliases, tech-stack guardrails. `CLAUDE.md` imports it. |
-| `DOCUMENTATION.md` | Engineer onboarding and directory map. |
-| `docs/ROADMAP.md` | North Star (Watch & compete / Rally / Pass it on / Rise), Release waves 0-3 (cheapest first), Phases 0-5, Mission track M1-M10. |
-| `docs/STORY.md` | Mission narrative, marketing lines, and the guardrails that keep athletes eligible. |
-| `docs/ATHLETE_VERIFICATION_DESIGN.md` | Open sign-up, the athlete verification ladder, gifts while pending, safe growth, fake-highlight takedown. Ladder + in-person school confirmation built; §6 (fakes) still a proposal. |
-| `docs/CODE_ORGANIZATION_PLAN.md` | Keep the code easy to review and cheap to move hosts later (we are **not** moving now): commit hygiene, dated SQL files, generated types, big-file splits, a Supabase-coupling map, and the rule that screens call `lib/`, never Supabase directly (8 Expo route files still break it; CI blocks growth). Step 0 + reviewer notes/guard done. |
+| `docs/engineering/SYSTEM_OVERVIEW.md` | Engineer onboarding and directory map. |
+| `docs/product/ROADMAP.md` | North Star (Watch & compete / Rally / Pass it on / Rise), Release waves 0-3 (cheapest first), Phases 0-5, Mission track M1-M10. |
+| `docs/product/STORY.md` | Mission narrative, marketing lines, and the guardrails that keep athletes eligible. |
+| `docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md` | Open sign-up, the athlete verification ladder, gifts while pending, safe growth, fake-highlight takedown. Ladder + in-person school confirmation built; §6 (fakes) still a proposal. |
+| `docs/engineering/CODE_ORGANIZATION_PLAN.md` | Keep the code easy to review and cheap to move hosts later (we are **not** moving now): commit hygiene, dated SQL files, generated types, big-file splits, a Supabase-coupling map, and the rule that screens call `lib/`, never Supabase directly (8 Expo route files still break it; CI blocks growth). Step 0 + reviewer notes/guard done. |
 | `supabase/migrations/README.md` | How migrations work here, how to apply without the CLI, the baseline steps, adding a school confirmer. |
-| `docs/STAGING_RUNBOOK.md` | Step-by-step staging project + tester build. |
-| `docs/TESTER_SCRIPT.md` | Phase 3 tasks per role, organised by pillar, plus feel questions. |
+| `docs/engineering/STAGING_RUNBOOK.md` | Step-by-step staging project + tester build. |
+| `docs/engineering/TESTER_SCRIPT.md` | Phase 3 tasks per role, organised by pillar, plus feel questions. |
 | `CHANGELOG.md` | Permanent dated record of product and schema shifts. |
-| `docs/SCHEMA.md` | Tables, RPCs, RLS, Aura palette. `docs:check` fails if it omits a table. |
-| `docs/ARCHITECTURE.md` · `docs/ONBOARDING.md` | Monorepo map · clone-and-run. |
-| `docs/AUDIT_REPORT.md` | Interaction audits. §1-7 are the 2026-09-14 snapshot; newest pass is at the top. |
-| `docs/TEAMS.md` · `.claude/agents/*.md` | Department ownership and dispatch. |
+| `docs/engineering/SCHEMA.md` | Tables, RPCs, RLS, Aura palette. `docs:check` fails if it omits a table. |
+| `docs/engineering/ARCHITECTURE.md` · `docs/ONBOARDING.md` | Monorepo map · clone-and-run. |
+| `docs/engineering/AUDIT_REPORT.md` | Interaction audits. §1-7 are the 2026-09-14 snapshot; newest pass is at the top. |
+| `docs/agents/TEAMS.md` · `.claude/agents/*.md` | Department ownership and dispatch. |
 | `.cursor/rules/documentation.mdc` | The full doc-sync obligation table. |
-| `TROUBLESHOOTING.md` | Metro / Expo / env failures. |
-| `docs/VOICE.md` · `.claude/agents/voice.md` | Donation language rules (Donate / donation; "tip" only for the tip for Tapua'i). `copy:check` enforces the retired words. |
-| `docs/LEGAL_BRIEFING.md` | Every legal / money-copy risk as a lettered row (L = the 90 / 10 disclosure, P = filmer cash, R = optional tip, S = preset thank-yous, T = Rally). LEGAL owns money copy. |
-| `docs/PUBLIC.md` · `docs/INVESTOR.md` · `docs/PRODUCT_FACTS.md` | Public / investor story. `PRODUCT_FACTS.md` and the `product-facts` blocks are **generated** by `scripts/sync-front-docs.mjs` — do not hand-edit them. |
-| `docs/COMPANY_PHASES.md` | Company phases, billing plan B0–B7 (when money becomes real). |
-| `docs/PARENT_PAYEE_CONNECT_DESIGN.md` | Guardian-as-payee and custodial money rules (§7). |
-| `docs/CONVENTIONS.md` | Naming and where files go. |
+| `docs/engineering/TROUBLESHOOTING.md` | Metro / Expo / env failures. |
+| `docs/product/VOICE.md` · `.claude/agents/voice.md` | Donation language rules (Donate / donation; "tip" only for the tip for Tapua'i). `copy:check` enforces the retired words. |
+| `docs/legal/LEGAL_BRIEFING.md` | Every legal / money-copy risk as a lettered row (L = the 90 / 10 disclosure, P = filmer cash, R = optional tip, S = preset thank-yous, T = Rally). LEGAL owns money copy. |
+| `docs/product/PUBLIC.md` · `docs/company/INVESTOR.md` · `docs/product/PRODUCT_FACTS.md` | Public / investor story. `PRODUCT_FACTS.md` and the `product-facts` blocks are **generated** by `scripts/sync-front-docs.mjs` — do not hand-edit them. |
+| `docs/company/COMPANY_PHASES.md` | Company phases, billing plan B0–B7 (when money becomes real). |
+| `docs/engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md` | Guardian-as-payee and custodial money rules (§7). |
+| `docs/engineering/CONVENTIONS.md` | Naming and where files go. |

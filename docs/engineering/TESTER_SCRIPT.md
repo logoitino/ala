@@ -4,8 +4,8 @@ For the trusted first group (team, family, friendly coaches and boosters). Strip
 mode**: no real money moves. Use card `4242 4242 4242 4242`, any future expiry, any CVC, any ZIP.
 
 Setup for whoever runs the wave: [STAGING_RUNBOOK.md](STAGING_RUNBOOK.md). Why we are building
-this: [STORY.md](STORY.md). Game-day gigs (the operator console) are an upcoming feature and are not part of this wave. Every task below checks one of the four pillars in
-[ROADMAP.md](ROADMAP.md) — **Watch & compete** (TikTok), **Rally** (GoFundMe, but better), **Pass it
+this: [STORY.md](../product/STORY.md). Game-day gigs (the operator console) are an upcoming feature and are not part of this wave. Every task below checks one of the four pillars in
+[ROADMAP.md](../product/ROADMAP.md) — **Watch & compete** (TikTok), **Rally** (GoFundMe, but better), **Pass it
 on** (Train Like Me / Serve Like Me), **Rise** (a touch of Hudl).
 
 **Report everything through the app** (Profile → menu → Send a suggestion). Make sure `buttons.suggest` is on and published before the wave. A screenshot plus one sentence is

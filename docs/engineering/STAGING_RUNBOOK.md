@@ -1,6 +1,6 @@
 # Staging runbook — first tester build
 
-Closes [ROADMAP.md](ROADMAP.md) Phase 2 item 4. Goal: an installed preview build that talks to a
+Closes [ROADMAP.md](../product/ROADMAP.md) Phase 2 item 4. Goal: an installed preview build that talks to a
 **separate** Supabase project, can sign people in, and can take a Stripe **test** card.
 
 The current Supabase project stays the development database. Nothing here touches live money.

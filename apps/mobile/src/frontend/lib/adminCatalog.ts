@@ -641,7 +641,7 @@ export async function setMaloFreeze(
  * RLS now rejects every other write path. Routed through the narrow `admin_set_player_guardian`
  * SECURITY DEFINER RPC (admin-only, checked internally) so no raw `guardian_id` UPDATE grant is
  * needed. This is an interim manual admin tool to unblock the Parent screen, not the eventual
- * self-service linking mechanism — see docs/PARENT_PAYEE_CONNECT_DESIGN.md §1, still open.
+ * self-service linking mechanism — see docs/engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md §1, still open.
  * @sideEffects `admin_set_player_guardian` RPC → `players.guardian_id`; also resets
  * `parental_consent_approved` to false and clears `guardian_consent_at` on that row.
  */

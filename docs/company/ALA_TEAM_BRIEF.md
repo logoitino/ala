@@ -1,6 +1,6 @@
 # ALA Grok Bot team brief
 
-Canonical briefing for the Grok Bot **ALA** channel. **Who owns which tab:** [TEAMS.md](TEAMS.md) (call codes `HIGHLIGHTS` · `LOCAL` · `PROFILE` · …). Re-read both when starting a Tapua'i turn — do not invent product facts.
+Canonical briefing for the Grok Bot **ALA** channel. **Who owns which tab:** [TEAMS.md](../agents/TEAMS.md) (call codes `HIGHLIGHTS` · `LOCAL` · `PROFILE` · …). Re-read both when starting a Tapua'i turn — do not invent product facts.
 
 **Repo:** `~/Desktop/ala-sports` · GitHub `logoitino/ala` · pnpm monorepo.
 
@@ -35,15 +35,15 @@ Guests browse Highlights / cards / wishlist. **Donate · Join Crew · gear-goal 
 
 ## Docs of record
 
-Pull facts from: `AGENTS.md` · `DOCUMENTATION.md` · `CHANGELOG.md` · `docs/ARCHITECTURE.md` · `docs/ONBOARDING.md` · `docs/SCHEMA.md` · `docs/TEAMS.md` · `docs/AUDIT_REPORT.md` · `docs/ROADMAP.md` · `docs/COMPANY_PHASES.md`. Product copy: **Mālo** / **Seki** / **Highlights ⚡**. Canvas: Daylight.
+Pull facts from: `AGENTS.md` · `docs/engineering/SYSTEM_OVERVIEW.md` · `CHANGELOG.md` · `docs/engineering/ARCHITECTURE.md` · `docs/ONBOARDING.md` · `docs/engineering/SCHEMA.md` · `docs/agents/TEAMS.md` · `docs/engineering/AUDIT_REPORT.md` · `docs/product/ROADMAP.md` · `docs/company/COMPANY_PHASES.md`. Product copy: **Mālo** / **Seki** / **Highlights ⚡**. Canvas: Daylight.
 
 ## Role reminders (command staff)
 
-Staff a **department call** from [TEAMS.md](TEAMS.md). Do not hand a tab to “Mobile” without a code (`PROFILE`, `HIGHLIGHTS`, …).
+Staff a **department call** from [TEAMS.md](../agents/TEAMS.md). Do not hand a tab to “Mobile” without a code (`PROFILE`, `HIGHLIGHTS`, …).
 
 - **Ala Facilitator** (`FACILITATOR`) — one next ship move; coordinate teammates; never invent prices or legal conclusions.
 - **Mobile Eng** — `apps/mobile` only; Expo v57 docs; no Stripe secrets in frontend; implement the named department.
-- **Backend Eng** (`BACKEND`) — schema / RLS / RPCs / Edge Functions; keep `docs/SCHEMA.md` honest.
+- **Backend Eng** (`BACKEND`) — schema / RLS / RPCs / Edge Functions; keep `docs/engineering/SCHEMA.md` honest.
 - **Ship QA** (`QA`) — gate with `pnpm typecheck` + `pnpm docs:check`; Soft-Wall / Profile / Publish-to-app pitfalls; pass/fail notes.
 
 Paste:
@@ -54,6 +54,6 @@ Symptom: …
 Fan surface: …
 Admin desk: …
 Do not: …
-Read first: docs/TEAMS.md
+Read first: docs/agents/TEAMS.md
 Gate: pnpm typecheck && pnpm docs:check
 ```

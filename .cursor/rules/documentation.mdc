@@ -23,7 +23,7 @@ not. Keep §4 to ~15 entries, newest first; older history belongs in `CHANGELOG.
 
 Every source file under `apps/mobile/app` and `apps/mobile/src` starts with a short header comment (what it is,
 where it fits, what it touches). `pnpm comments:check` enforces it in CI. Inline comments explain *why*, not
-*what*. Full rules: `docs/CONVENTIONS.md` §5.
+*what*. Full rules: `docs/engineering/CONVENTIONS.md` §5.
 
 Add a TSDoc/JSDoc header on:
 
@@ -42,7 +42,7 @@ Add a TSDoc/JSDoc header on:
 
 - Omit `@sideEffects` only when there are none.
 - Skip one-liner formatters unless they encode business rules (e.g. Aura point math).
-- UI copy: **Donate / donation** (docs/VOICE.md), **Seki**. Persistence keeps the code names: `tips` / `useTipCheckout`.
+- UI copy: **Donate / donation** (docs/product/VOICE.md), **Seki**. Persistence keeps the code names: `tips` / `useTipCheckout`.
 
 ## 2. Schema or architecture changes MUST sync docs in the same turn
 
@@ -51,19 +51,19 @@ If you change tables, RLS, RPCs, Storage, Aura tiers, routing, env vars, payment
 | If you change… | You also update… |
 | --- | --- |
 | **Anything under `apps/` / `packages/` / `supabase/`** | **`docs/STATE.md` §4 + `Last updated`** |
-| Who owns a screen, or what a department does now / next / later | **`docs/TEAMS.md`** business row + squad section, and `.claude/agents/<file>.md`, `registry.json`, and `docs/TEAM_HIERARCHY.md`; run `pnpm agents:check` |
-| Terms, minors, the donation split, footage rights, or school marks | **`docs/TEAMS.md`** Legal team table. Do not write a new legal conclusion. |
-| Architecture, folders, roadmap | `DOCUMENTATION.md` · `docs/ARCHITECTURE.md` |
-| Tables, FKs, RLS, RPCs, palette, buckets | `docs/SCHEMA.md` |
+| Who owns a screen, or what a department does now / next / later | **`docs/agents/TEAMS.md`** business row + squad section, and `.claude/agents/<file>.md`, `registry.json`, and `docs/agents/TEAM_HIERARCHY.md`; run `pnpm agents:check` |
+| Terms, minors, the donation split, footage rights, or school marks | **`docs/agents/TEAMS.md`** Legal team table. Do not write a new legal conclusion. |
+| Architecture, folders, roadmap | `docs/engineering/SYSTEM_OVERVIEW.md` · `docs/engineering/ARCHITECTURE.md` |
+| Tables, FKs, RLS, RPCs, palette, buckets | `docs/engineering/SCHEMA.md` |
 | Clone / env / Metro / Expo Go | `docs/ONBOARDING.md` |
 | Folder law | `AGENTS.md` |
 | Landed feature or schema | `CHANGELOG.md` |
 | Mālo / exclusive / booster prices, Aura math, operator PIN, Connect identity, admin platform cuts | `pnpm docs:sync` (PUBLIC / INVESTOR / LEGAL fact blocks) |
-| Athlete sports, class years, team catalog badges | `pnpm docs:sync` + `docs/SCHEMA.md` (`schools_and_teams`) |
+| Athlete sports, class years, team catalog badges | `pnpm docs:sync` + `docs/engineering/SCHEMA.md` (`schools_and_teams`) |
 | Highlight / Highlights ⚡ copy, profile tabs (Highlights / Stats / Vault), Spotlight fan-bar label | `pnpm docs:sync` (`HIGHLIGHT_*` / `SPOTLIGHT_NAV_LABEL` in `highlights.ts`) |
 | Athlete Vault lock / Open Vault copy | `pnpm docs:sync` (`VAULT_LOCK_ACTION` / `VAULT_OPEN_ACTION`) |
 
-Prompt yourself: “Did schema or architecture move? Then `DOCUMENTATION.md` + `docs/SCHEMA.md` are part of this diff.”
+Prompt yourself: “Did schema or architecture move? Then `docs/engineering/SYSTEM_OVERVIEW.md` + `docs/engineering/SCHEMA.md` are part of this diff.”
 
 Aliases to keep honest:
 
@@ -74,18 +74,18 @@ Aliases to keep honest:
 ## 3. Required suite (never delete)
 
 0. `docs/STATE.md` — current state, recent changes, known breakage, open decisions.
-1. `DOCUMENTATION.md` — mission, Expo + Supabase + Stripe test mode, directory map, Phase 1/2/3.
-2. `docs/ARCHITECTURE.md` — monorepo map (mobile / admin-portal / shared-types).
-3. `docs/SCHEMA.md` — `profiles`, `reels`, `games`, video tips, RPCs, 7-tier palette, RLS, `game_highlights`.
+1. `docs/engineering/SYSTEM_OVERVIEW.md` — mission, Expo + Supabase + Stripe test mode, directory map, Phase 1/2/3.
+2. `docs/engineering/ARCHITECTURE.md` — monorepo map (mobile / admin-portal / shared-types).
+3. `docs/engineering/SCHEMA.md` — `profiles`, `reels`, `games`, video tips, RPCs, 7-tier palette, RLS, `game_highlights`.
 4. `docs/ONBOARDING.md` — clone, `pnpm install`, `apps/mobile/.env.local`, `pnpm mobile`.
 
 ## 4. Front-of-house memos (same turn)
 
 If you change Mālo amounts, exclusive price, booster dollars, Aura math/tiers, operator PIN, Connect identity, custodial payout copy, parent consent, demo RLS language, Vault lock / Open Vault copy, or admin platform cuts:
 
-1. Run `pnpm docs:sync` (writes `docs/PRODUCT_FACTS.md` and the `<!-- product-facts -->` blocks in `docs/PUBLIC.md`, `docs/INVESTOR.md`, `docs/LEGAL_BRIEFING.md`).
+1. Run `pnpm docs:sync` (writes `docs/product/PRODUCT_FACTS.md` and the `<!-- product-facts -->` blocks in `docs/product/PUBLIC.md`, `docs/company/INVESTOR.md`, `docs/legal/LEGAL_BRIEFING.md`).
 2. Do **not** rewrite legal conclusions outside those markers.
 3. If prices or prototype caveats change, update the investor canvas (`tapuai-investor-briefing`) when it is open.
-4. If Reel / Local / Profile chrome changes and Expo is running, recapture `docs/press/*.png`. Otherwise mark STALE in `docs/press/README.md`.
+4. If Reel / Local / Profile chrome changes and Expo is running, recapture `docs/company/press/*.png`. Otherwise mark STALE in `docs/company/press/README.md`.
 
-`pnpm docs:check` also fails when `docs/SCHEMA.md` does not name every `public` table or `create or replace function` from `apps/mobile/src/backend/db/schema.sql`. New SQL must land in SCHEMA in the same turn.
+`pnpm docs:check` also fails when `docs/engineering/SCHEMA.md` does not name every `public` table or `create or replace function` from `apps/mobile/src/backend/db/schema.sql`. New SQL must land in SCHEMA in the same turn.

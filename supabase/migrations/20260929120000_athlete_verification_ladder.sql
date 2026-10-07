@@ -1,7 +1,7 @@
 -- =============================================================================================
 -- Athlete verification ladder — the school confirms each athlete in person
 -- =============================================================================================
--- Design: docs/ATHLETE_VERIFICATION_DESIGN.md (owner decisions 2026-09-29, §0 and §4).
+-- Design: docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md (owner decisions 2026-09-29, §0 and §4).
 --
 -- What changes:
 --   1. Anyone can still claim to be an athlete. The claim is visible as "verification pending".

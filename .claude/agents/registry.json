@@ -216,8 +216,8 @@
       "department": "Legal and Compliance",
       "lead": "FACILITATOR",
       "owns": [
-        "docs/DATA_PRIVACY_MAP.md",
-        "docs/LEGAL_BRIEFING.md"
+        "docs/engineering/DATA_PRIVACY_MAP.md",
+        "docs/legal/LEGAL_BRIEFING.md"
       ],
       "tasks": [
         "Privacy, commercial disclosures and evidence-backed claims"
@@ -245,7 +245,7 @@
       "lead": "LEGAL",
       "owns": [
         "apps/mobile/src/frontend/components/Reels",
-        "docs/LEGAL_BRIEFING.md"
+        "docs/legal/LEGAL_BRIEFING.md"
       ],
       "tasks": [
         "Own implementation of approved filming, audio, mark permissions and rights-report language."
@@ -257,9 +257,9 @@
       "department": "Operations",
       "lead": "OPERATIONS",
       "owns": [
-        "docs/ROADMAP.md",
-        "docs/COMPANY_PHASES.md",
-        "docs/STAGING_RUNBOOK.md"
+        "docs/product/ROADMAP.md",
+        "docs/company/COMPANY_PHASES.md",
+        "docs/engineering/STAGING_RUNBOOK.md"
       ],
       "tasks": [
         "Wave budgets, free quotas, media bandwidth and vendor cost evidence"
@@ -301,7 +301,7 @@
       "owns": [
         "apps/mobile/src/backend/db/schema.sql",
         "supabase/migrations",
-        "docs/SCHEMA.md"
+        "docs/engineering/SCHEMA.md"
       ],
       "tasks": [
         "Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent."
@@ -328,8 +328,8 @@
       "department": "Quality",
       "lead": "QA",
       "owns": [
-        "docs/TESTER_SCRIPT.md",
-        "docs/AUDIT_REPORT.md"
+        "docs/engineering/TESTER_SCRIPT.md",
+        "docs/engineering/AUDIT_REPORT.md"
       ],
       "tasks": [
         "Own real-device fan/athlete/guardian/operator/booster journey evidence."
@@ -357,7 +357,7 @@
       "lead": "ENGINEERING",
       "owns": [
         "AGENTS.md",
-        "DOCUMENTATION.md",
+        "docs/engineering/SYSTEM_OVERVIEW.md",
         "CHANGELOG.md",
         "docs",
         ".claude/agents",
@@ -444,7 +444,7 @@
       "lead": "MARKETING",
       "owns": [
         "apps/mobile/src/frontend/hooks/useSurfaceUsage.ts",
-        "docs/PRODUCT_FACTS.md"
+        "docs/product/PRODUCT_FACTS.md"
       ],
       "tasks": [
         "Own measurement definitions for browsing, claim, upload and donation conversion."
@@ -469,8 +469,8 @@
       "department": "Support",
       "lead": "SUPPORT",
       "owns": [
-        "TROUBLESHOOTING.md",
-        "docs/STAGING_RUNBOOK.md",
+        "docs/engineering/TROUBLESHOOTING.md",
+        "docs/engineering/STAGING_RUNBOOK.md",
         "docs/STATE.md"
       ],
       "tasks": [
@@ -510,7 +510,7 @@
       "department": "Legal and Compliance",
       "lead": "FACILITATOR",
       "owns": [
-        "docs/LEGAL_BRIEFING.md",
+        "docs/legal/LEGAL_BRIEFING.md",
         "apps/mobile/src/frontend/components/Legal"
       ],
       "tasks": [
@@ -538,9 +538,9 @@
       "department": "Marketing",
       "lead": "FACILITATOR",
       "owns": [
-        "docs/PUBLIC.md",
-        "docs/STORY.md",
-        "docs/VOICE.md"
+        "docs/product/PUBLIC.md",
+        "docs/product/STORY.md",
+        "docs/product/VOICE.md"
       ],
       "tasks": [
         "Own consented family-story positioning and accurate release communications."
@@ -554,7 +554,7 @@
       "owns": [
         "apps/mobile/src/frontend/components/Custodial",
         "apps/mobile/src/frontend/components/Verification",
-        "docs/LEGAL_BRIEFING.md"
+        "docs/legal/LEGAL_BRIEFING.md"
       ],
       "tasks": [
         "Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria."
@@ -647,8 +647,8 @@
       "department": "Operations",
       "lead": "FACILITATOR",
       "owns": [
-        "docs/STAGING_RUNBOOK.md",
-        "docs/TESTER_SCRIPT.md",
+        "docs/engineering/STAGING_RUNBOOK.md",
+        "docs/engineering/TESTER_SCRIPT.md",
         "docs/STATE.md"
       ],
       "tasks": [
@@ -674,8 +674,8 @@
       "department": "Partnerships",
       "lead": "FACILITATOR",
       "owns": [
-        "docs/STORY.md",
-        "docs/COMPANY_PHASES.md",
+        "docs/product/STORY.md",
+        "docs/company/COMPANY_PHASES.md",
         "apps/mobile/src/frontend/lib/boosterPortal.ts"
       ],
       "tasks": [
@@ -715,7 +715,7 @@
       "department": "Legal and Compliance",
       "lead": "COMPLIANCE",
       "owns": [
-        "docs/DATA_PRIVACY_MAP.md",
+        "docs/engineering/DATA_PRIVACY_MAP.md",
         "apps/mobile/src/frontend/lib/socialLinks.ts",
         "apps/mobile/src/backend/db/schema.sql"
       ],
@@ -729,8 +729,8 @@
       "department": "Product",
       "lead": "FACILITATOR",
       "owns": [
-        "docs/ROADMAP.md",
-        "docs/STORY.md",
+        "docs/product/ROADMAP.md",
+        "docs/product/STORY.md",
         "docs/STATE.md"
       ],
       "tasks": [
@@ -756,8 +756,8 @@
       "department": "Quality",
       "lead": "FACILITATOR",
       "owns": [
-        "docs/AUDIT_REPORT.md",
-        "docs/TESTER_SCRIPT.md"
+        "docs/engineering/AUDIT_REPORT.md",
+        "docs/engineering/TESTER_SCRIPT.md"
       ],
       "tasks": [
         "Independent final verification gate"
@@ -824,8 +824,8 @@
       "department": "Operations",
       "lead": "OPERATIONS",
       "owns": [
-        "docs/STAGING_RUNBOOK.md",
-        "docs/SCHEMA.md",
+        "docs/engineering/STAGING_RUNBOOK.md",
+        "docs/engineering/SCHEMA.md",
         "supabase/migrations"
       ],
       "tasks": [
@@ -854,7 +854,7 @@
         "apps/mobile/eas.json",
         "apps/mobile/app.json",
         "apps/admin-portal/package.json",
-        "docs/STAGING_RUNBOOK.md"
+        "docs/engineering/STAGING_RUNBOOK.md"
       ],
       "tasks": [
         "Own preview profiles, environment binding, signing/device eligibility and rollback artifact evidence."
@@ -867,7 +867,7 @@
       "lead": "OPERATIONS",
       "owns": [
         "apps/mobile/src/frontend/services",
-        "TROUBLESHOOTING.md"
+        "docs/engineering/TROUBLESHOOTING.md"
       ],
       "tasks": [
         "Own failure recovery, incident runbooks, dependency availability and measured service objectives."
@@ -879,8 +879,8 @@
       "department": "Product",
       "lead": "PRODUCT",
       "owns": [
-        "docs/TESTER_SCRIPT.md",
-        "docs/STORY.md"
+        "docs/engineering/TESTER_SCRIPT.md",
+        "docs/product/STORY.md"
       ],
       "tasks": [
         "Test family, athlete, guardian, filmer and operator journeys using consented feedback."
@@ -950,7 +950,7 @@
       "owns": [
         "apps/mobile/src/frontend/lib/schoolConfirm.ts",
         "apps/mobile/src/frontend/lib/teams.ts",
-        "docs/LEGAL_BRIEFING.md"
+        "docs/legal/LEGAL_BRIEFING.md"
       ],
       "tasks": [
         "Own school onboarding requirements, AD/coach confirmation workflow and marks permission records design."
@@ -1045,8 +1045,8 @@
       "department": "Support",
       "lead": "FACILITATOR",
       "owns": [
-        "docs/TESTER_SCRIPT.md",
-        "TROUBLESHOOTING.md",
+        "docs/engineering/TESTER_SCRIPT.md",
+        "docs/engineering/TROUBLESHOOTING.md",
         "docs/STATE.md"
       ],
       "tasks": [
@@ -1088,7 +1088,7 @@
       "department": "Trust and Safety",
       "lead": "FACILITATOR",
       "owns": [
-        "docs/LEGAL_BRIEFING.md",
+        "docs/legal/LEGAL_BRIEFING.md",
         "apps/mobile/src/frontend/components/Verification"
       ],
       "tasks": [
@@ -1133,7 +1133,7 @@
       "department": "Brand",
       "lead": "FACILITATOR",
       "owns": [
-        "docs/VOICE.md",
+        "docs/product/VOICE.md",
         "scripts/check-copy.mjs"
       ],
       "tasks": [
