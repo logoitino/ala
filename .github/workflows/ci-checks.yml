@@ -44,7 +44,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install Dependencies
@@ -58,6 +58,9 @@ jobs:
 
       - name: Check front-of-house docs match product constants
         run: pnpm docs:check
+
+      - name: Local documentation links resolve after folder changes
+        run: pnpm docs:links
 
       - name: Check donation language in on-screen copy (docs/product/VOICE.md)
         run: pnpm copy:check
@@ -75,8 +78,4 @@ jobs:
         run: pnpm --filter @tapuai/mobile test -- --ci
 
       - name: Check for Leaked Backend Keys (Security Bot)
-        run: |
-          if grep -rnE "sk_test_|sk_live_|service_role" apps/mobile/src/frontend/ apps/admin-portal/app apps/admin-portal/components apps/admin-portal/lib; then
-            echo "ERROR: Stripe secret key or service_role key found in client-facing code!"
-            exit 1
-          fi
+        run: pnpm security:client-keys
