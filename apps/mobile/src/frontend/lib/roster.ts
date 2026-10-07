@@ -1,5 +1,29 @@
+/**
+ * Public roster lookup and claimed-player badges shared by athlete sheets and team rosters.
+ * Guest player lookup preserves database errors so the screen can offer a retry.
+ * @sideEffects Supabase SELECT on `players` and `profiles`.
+ */
+
+import type { Player } from '@/data/players';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Profile } from '@/types/database';
+
+/**
+ * @purpose Load one public athlete for the guest profile without needing a signed-in session.
+ * @param playerId Public roster id from the route.
+ * @returns Athlete or the existing configuration, database, or missing-player error.
+ * @sideEffects `players` SELECT.
+ */
+export async function fetchGuestPlayer(playerId: string): Promise<{ player: Player | null; error: string | null }> {
+  if (!isSupabaseConfigured) {
+    return { player: null, error: 'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart Expo.' };
+  }
+  const { data, error } = await supabase.from('players').select('*').eq('id', playerId).single();
+  return {
+    player: error ? null : (data as Player | null),
+    error: error?.message ?? (data ? null : 'Player not found.'),
+  };
+}
 
 /**
  * @purpose True when this sheet is the signed-in person's claimed / named roster row — hide Join Crew, Mālo, Subscribe.

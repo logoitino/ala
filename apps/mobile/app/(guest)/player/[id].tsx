@@ -1,6 +1,7 @@
 /**
  * Public athlete detail for guests (no sign-in): loads one player by id and shows the donor badge, hype counts
- * and basic details (position and so on). Shows a readable error when Supabase is not configured.
+ * and basic details through `lib/roster`. Shows a readable error when Supabase is not configured.
+ * @sideEffects Player lookup through roster and hype hydration through lib/hype.
  */
 
 import { useLocalSearchParams } from 'expo-router';
@@ -21,10 +22,7 @@ import { TipCheckout } from '@/components/TipCheckout';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { displayValue, type PlayReactionId, type Player } from '@/data/players';
 import { bumpPlayerHype, hydratePlayerHype, hypeFromPlayer } from '@/lib/hype';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-
-const CONFIG_ERROR =
-  'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart Expo.';
+import { fetchGuestPlayer } from '@/lib/roster';
 
 export default function PlayerProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -45,34 +43,15 @@ export default function PlayerProfileScreen() {
     setLoading(true);
     setError(null);
 
-    if (!isSupabaseConfigured) {
+    const { player: nextPlayer, error: queryError } = await fetchGuestPlayer(playerId);
+    if (queryError || !nextPlayer) {
       setPlayer(null);
-      setError(CONFIG_ERROR);
+      setError(queryError ?? 'Player not found.');
       setLoading(false);
       return;
     }
 
-    const { data, error: queryError } = await supabase
-      .from('players')
-      .select('*')
-      .eq('id', playerId)
-      .single();
-
-    if (queryError) {
-      setPlayer(null);
-      setError(queryError.message);
-      setLoading(false);
-      return;
-    }
-
-    if (!data) {
-      setPlayer(null);
-      setError('Player not found.');
-      setLoading(false);
-      return;
-    }
-
-    setPlayer(await hydratePlayerHype(data as Player));
+    setPlayer(await hydratePlayerHype(nextPlayer));
     setLoading(false);
   }, [playerId]);
 

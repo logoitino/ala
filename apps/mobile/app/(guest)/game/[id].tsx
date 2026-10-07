@@ -1,3 +1,9 @@
+/**
+ * Guest match route: composes the live play feed and rosters using `lib/guestGames`.
+ * Keep athlete navigation, alert filtering, and cached-roster fallback in this screen.
+ * @sideEffects Game reads and Realtime through guestGames; favorites in AsyncStorage.
+ */
+
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -26,12 +32,7 @@ import {
 import { loadFavoritePlayerIds, saveFavoritePlayerIds } from '@/lib/favorites';
 import { userProfileHref } from '@/lib/navigation';
 import type { Game, GameEvent, GameEventWithPlayer } from '@/types/database';
-import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
-
-const CONFIG_ERROR =
-  'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart Expo.';
-
-const GAME_EVENT_SELECT = '*, players(*)';
+import { fetchGuestGameEvent, fetchGuestGameOverview, subscribeToGuestGame } from '@/lib/guestGames';
 
 function mergeEvent(
   row: GameEvent,
@@ -52,6 +53,7 @@ export default function GameOverviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const gameId = Array.isArray(id) ? id[0] : id;
   const mountedRef = useRef(true);
+  const overviewRequestRef = useRef(0);
   const playersRef = useRef<Player[]>([]);
 
   const [game, setGame] = useState<Game | null>(null);
@@ -101,6 +103,7 @@ export default function GameOverviewScreen() {
   }, []);
 
   const fetchGame = useCallback(async () => {
+    const request = ++overviewRequestRef.current;
     if (!gameId) {
       setGame(null);
       setError('Missing game id.');
@@ -111,46 +114,29 @@ export default function GameOverviewScreen() {
     setLoading(true);
     setError(null);
 
-    if (!isSupabaseConfigured) {
+    const result = await fetchGuestGameOverview(gameId);
+
+    // A prior match or retry can finish after a newer request; it must not replace its state.
+    if (!mountedRef.current || request !== overviewRequestRef.current) return;
+
+    if (result.error || !result.game) {
       setGame(null);
-      setPlayers([]);
-      setEvents([]);
-      setError(CONFIG_ERROR);
+      setError(result.error ?? 'Game not found.');
       setLoading(false);
       return;
     }
 
-    const [gameResult, playersResult, eventsResult] = await Promise.all([
-      supabase.from('games').select('*').eq('id', gameId).single(),
-      supabase.from('players').select('*'),
-      supabase
-        .from('game_events')
-        .select(GAME_EVENT_SELECT)
-        .eq('game_id', gameId)
-        .order('created_at', { ascending: false })
-        .limit(40),
-    ]);
-
-    if (!mountedRef.current) return;
-
-    if (gameResult.error || !gameResult.data) {
-      setGame(null);
-      setError(gameResult.error?.message ?? 'Game not found.');
-      setLoading(false);
-      return;
-    }
-
-    const nextPlayers = (playersResult.data as Player[] | null) ?? [];
+    const nextPlayers = result.players;
     playersRef.current = nextPlayers;
-    setGame(gameResult.data as Game);
+    setGame(result.game);
     setPlayers(nextPlayers);
 
-    if (eventsResult.error) {
-      setFeedError(eventsResult.error.message);
+    if (result.feedError) {
+      setFeedError(result.feedError);
       setEvents([]);
     } else {
       setFeedError(null);
-      setEvents((eventsResult.data as GameEventWithPlayer[] | null) ?? []);
+      setEvents(result.events);
     }
 
     setLoading(false);
@@ -165,44 +151,28 @@ export default function GameOverviewScreen() {
 
     return () => {
       mountedRef.current = false;
+      overviewRequestRef.current += 1;
     };
   }, [fetchGame]);
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !gameId) return;
-
-    const channel = supabase
-      .channel(nextRealtimeTopic(`guest_game_${gameId}`))
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
-        (payload) => {
-          if (payload.new) setGame(payload.new as Game);
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'game_events' },
-        (payload) => {
-          const row = payload.new as GameEvent;
-          if (row.game_id !== gameId) return;
-
-          void (async () => {
-            const { data } = await supabase
-              .from('game_events')
-              .select(GAME_EVENT_SELECT)
-              .eq('id', row.id)
-              .single();
-
-            if (!mountedRef.current) return;
-            prependEvent(mergeEvent(row, playersRef.current, data));
-          })();
-        },
-      )
-      .subscribe();
+    if (!gameId) return;
+    let active = true;
+    const unsubscribe = subscribeToGuestGame(gameId, {
+      onGame: setGame,
+      onEvent: (row) => {
+        void (async () => {
+          const joined = await fetchGuestGameEvent(row.id);
+          // Route changes can finish an older join after the new match has mounted.
+          if (!active || !mountedRef.current) return;
+          prependEvent(mergeEvent(row, playersRef.current, joined));
+        })();
+      },
+    });
 
     return () => {
-      void supabase.removeChannel(channel);
+      active = false;
+      unsubscribe();
     };
   }, [gameId, prependEvent]);
 

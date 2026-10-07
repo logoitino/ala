@@ -1,7 +1,5 @@
 {
   "apps/mobile/app/(athlete)/athlete/index.tsx": 1,
-  "apps/mobile/app/(guest)/game/[id].tsx": 4,
-  "apps/mobile/app/(guest)/player/[id].tsx": 1,
   "apps/mobile/app/(parent)/parent/index.tsx": 1,
   "apps/mobile/app/(tabs)/profile.tsx": 1,
   "apps/mobile/app/(tabs)/user/[id].tsx": 2,
