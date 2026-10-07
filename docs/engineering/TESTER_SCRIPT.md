@@ -99,6 +99,56 @@ used; use existing recorded test data or controlled fixtures for missing/schedul
 Record phone/window size, keyboard state and screenshots. These are device checks; mocked
 component tests do not establish visual fit or native picker behavior.
 
+## Photo stories in Highlights (UX-05)
+
+Needs `20261007230000_photo_stories.sql` applied to the project the build points at (approved
+staging application only). Without it the Upload sheet hides **Photos** and the feed shows
+videos only — that is the expected fallback, not a bug. Use photos of yourself, of adults who agree,
+or of a teammate whose parent agreed; this is a real public bucket.
+
+1. **Post.** Upload → Media → **Photos**. Pick 5 photos (try 11: the picker should stop at 10).
+   Use **Move earlier / Move later** to reorder and **Remove** one. Screen readers should announce
+   each button with the photo number.
+2. **Describe.** On Details add a caption, tag the athlete, choose **Serve Like Me**, and give two
+   photos a description — e.g. *"Our team helped clean the neighborhood park this Saturday."* Try a
+   description over 200 characters: it should stop at the limit. Categories read **Game Day**,
+   Train Like Me, Serve Like Me (no "Game Play" anywhere — videos too).
+3. **Confirm and publish.** Review shows the photo wording *"I took these photos or have permission
+   from the people in them."* — unchecked until you tick it. There is no Vault option for photos.
+   Publish shows "Uploading photo 2 of 4…". Go Back mid-draft first: the photos and order stay.
+   Turn on airplane mode during upload once: nothing should publish half-done, and Retry keeps the draft.
+4. **View and swipe.** Find the story in Highlights. Swipe left/right through the photos inside the
+   card while up/down still moves between Highlights. The `2 / 4` chip and dots follow you; each
+   description shows above the caption. VoiceOver/TalkBack: each photo reads its description (or
+   "Photo 2 of 4") and swipe up/down moves between photos. On the athlete's profile grid the poster
+   shows the first photo and `📷 4`.
+5. **Donate from it.** Tap **Donate** on the photo story: the popup names the **tagged athlete** (not
+   you, the poster) and runs the same Amount → Options → Review steps with the 90 / 10 line. Hype,
+   save, report and "🎥 Filmed by" work like a clip. Report it once (any reason) and check it leaves
+   your feed.
+6. **Location check (device).** Post a photo taken with location on. Ask whoever runs the wave to
+   download the uploaded file and confirm it has no GPS/EXIF and is not rotated sideways. Record
+   phone model and OS — this is the device gate unit tests cannot close.
+
+Tell us: *Was it easy to pick, order and describe photos? Did swiping a story ever fight the feed?
+Would you post a Serve Like Me story?*
+
+## The message — Donate. Elevate. Celebrate. (BRAND-01)
+
+1. **Welcome.** Fresh install (or clear app data): the first-open card shows the mission, then
+   **Donate. Elevate. Celebrate.** and *Support their journey. Elevate their opportunities.
+   Celebrate their story.* The big title above it is still the screen's title.
+2. **Donate sheet.** Open Donate anywhere: a small **Donate. Elevate. Celebrate.** line sits at the top
+   of the Amount page, above "Choose your donation" and the 90 / 10 line. It is gone on Options and
+   Review, which stay plain.
+3. **Profile.** Open another athlete's profile: the small line sits under **Donate**. It must not show
+   on your own profile, on a community (fan) profile, or when Donate is switched off.
+4. With a screen reader the line reads as plain text, not a heading. At large text it wraps and
+   never covers Donate or Share.
+
+Tell us: *Did the line make it clearer what Tapua'i is for? Did "Elevate their opportunities" sound
+like a promise? (If yes, tell us — that matters.)*
+
 ## Donate popup — short steps and review
 
 1. Open Donate from a Highlight, profile, gear goal, Rally and QR link. Confirm the recipient
@@ -216,7 +266,7 @@ proud to share it?*
 For an older athlete (college or senior) the younger ones look up to.
 
 1. Upload (+) and pick the **Train Like Me** category: a drill, a workout, a routine.
-2. Upload one **Serve Like Me** clip (it earns double Aura): how you give back (family, church, school, community).
+2. Upload one **Serve Like Me** clip or photo story (it earns double Aura): how you give back (family, church, school, community).
 3. Have a younger tester find both clips in the feed.
 
 Tell us: *Would you keep posting these? What would you want fans to be able to ask you? Would you

@@ -28,14 +28,16 @@ Paths below are relative to `apps/mobile/src/frontend/` unless they start with `
 | **Held gifts** | `lib/payoutGate.ts`, held-notice copy in the donate sheet | Donations to an athlete who is not verified yet. Payouts wait. |
 | **Payout setup / Stripe Connect** | `profiles.stripe_connect_id`, `payouts_enabled`; Edge Function `create-stripe-account`; `useStripeConnect` | The Stripe Express account money is paid out to. |
 
-## Video and hype
+## Video, photos and hype
 
 | Product word | Code / database names | Meaning |
 | --- | --- | --- |
-| **Highlights ⚡** | table `reels`, `lib/reels.ts`, `useReels`, `components/Reels/`, `HIGHLIGHT_TAB_LABEL` | Short clips of athletes. "Reel" is the code word. |
+| **Highlights ⚡** | table `reels`, `lib/reels.ts`, `useReels`, `components/Reels/`, `HIGHLIGHT_TAB_LABEL` | Short clips and photo stories of athletes. "Reel" is the code word. |
 | **Seki 🤙 / Aura ⚡ / Flex 💪** | table `reel_hype_votes` (`kind`), `lib/reelVotes.ts`, `isSekiHighlight` (`data/highlights.ts`), RPC `increment_reel_hype` | The three hype reactions on a clip. |
 | **Aura (points)** | `profiles.aura_points`, `lib/aura.ts` (tiers), `AURA_PER_DOLLAR` (`data/players.ts`) | Reputation points and tiers. Not money. |
-| **Game Play / Train Like Me / Serve Like Me** | `reels.category` (`game_play`, `train_like_me`, `serve_like_me`), `SERVE_LIKE_ME_AURA_MULTIPLIER` | Clip categories. Serve Like Me earns extra Aura. |
+| **Game Day / Train Like Me / Serve Like Me** | `reels.category` (`game_play`, `train_like_me`, `serve_like_me`), `REEL_CATEGORY_*` and labels in `data/highlights.ts`, `SERVE_LIKE_ME_AURA_MULTIPLIER` | Highlight categories for clips and photo stories. Serve Like Me earns extra Aura. The label "Game Play" became **Game Day** on 2026-10-07; the stored value stays `game_play` (no data migration). |
+| **Photo story** | `reels.media_type = 'photo_story'` (default `'video'`), `reels.photo_count`, `reels_feed.cover_path`; table `reel_photos` (one row per photo, `position` 0–9, optional `description`); RPC `set_reel_photos` (the only writer); view `reel_photos_feed` (public read); `lib/photoStories.ts`, `hooks/useStoryPhotos.ts`, `Reels/PhotoStoryMedia` (feed pager); `isPhotoStory` (`data/highlights.ts`); `stripJpegMetadata` / `uploadStoryPhoto` (`services/MediaUploadService.ts`) | One photo or a swipeable set of up to 10 in Highlights, tagged to an athlete, with a caption and optional per-photo descriptions. Public only in v1; location data removed before upload. Migration `20261007230000_photo_stories.sql` is not applied anywhere yet. [Design](engineering/design/PHOTO_STORIES_DESIGN.md). |
+| **Donate. Elevate. Celebrate.** | `TAGLINE_HEADLINE`, `TAGLINE_LINE` (`data/malo.ts`) | The owner-approved brand message (2026-10-07). Plain text on the welcome overlay, the donate sheet's Amount page and under a profile's Donate button. Rules: [product/VOICE.md](product/VOICE.md). |
 | **Filmed by / filmer** | `reels.uploaded_by`, `uploader_name` in `reels_feed`, `lib/filmers.ts`, `Filmers/FilmerSheet` | The fan who filmed someone else's clip. |
 | **Props** | table `filmer_props`, RPC `give_filmer_props` | Aura a fan gives a filmer. Not cash. |
 | **Account tags (mentions)** | table `reel_account_tags`, `lib/accountTags.ts`, `Reels/AccountTagField`, `Profile/AccountTagInbox` | Up to three accounts named on a clip; they confirm before the name shows. |

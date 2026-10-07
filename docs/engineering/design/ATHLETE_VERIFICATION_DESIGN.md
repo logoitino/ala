@@ -118,13 +118,13 @@ Layers that help with any of the options:
 
 ## 6. Fake and AI-generated game highlights
 
-**Policy (Terms + upload screen):** a "Game play" Highlight must be real footage from a real game.
+**Policy (Terms + upload screen):** a Game Day (formerly "Game play") Highlight must be real footage from a real game.
 Train Like Me / Serve Like Me and other videos may be edited, but showing a real person doing
 something they did not do (AI-generated or face-swapped) is banned in every category.
 
 **Prevent:**
 
-- **Upload statement for game play:** *"This is real footage from a real game. I filmed it or
+- **Upload statement for Game Day:** *"This is real footage from a real game. I filmed it or
   have permission."* Record who confirmed it and when (`reels.attested_at`).
 - **"Filmed at the game" badge** for clips recorded in the app, or linked to a scheduled game
   (date and place match). Prefer these on the Most-viewed Highlight board.
@@ -162,7 +162,7 @@ something they did not do (AI-generated or face-swapped) is banned in every cate
 2. The shared team code moves an account to "pending", not "verified". Add per-athlete approval
    (§4 option 1 or 2) and the duplicate-claim freeze.
 3. Badges everywhere money appears, plus the "held until verified" checkout line.
-4. Report reasons, weighted hiding, the upload statement for game play, and strikes.
+4. Report reasons, weighted hiding, the upload statement for Game Day, and strikes.
 5. Held-gift cap and automatic refunds (needs destination charges and a manual payout schedule).
 6. "Filmed at the game" badge, C2PA read, and optional AI detection (Wave 2).
 

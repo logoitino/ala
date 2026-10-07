@@ -19,6 +19,22 @@ recruited. Give kids the chance to share good workouts with their fans (Train Li
 like their favourite player (Serve Like Me). Open an avenue for people to donate toward a young
 athlete's sports costs and career growth — and make sure every athlete says thank you.
 
+## The message
+
+> **Donate. Elevate. Celebrate.**
+> *Support their journey. Elevate their opportunities. Celebrate their story.*
+
+Owner-approved 2026-10-07. It leads the welcome screen, the donate sheet, the athlete profile's
+donate area, this page, [PUBLIC.md](PUBLIC.md) and the store listing ([STORE_LISTING.md](STORE_LISTING.md), draft).
+
+- **Donate** — the community gives toward a real sports cost. It is the only money word.
+- **Elevate** — that support opens doors the cost was closing: the club season, the camp, the trip.
+  It is never a promise of recruiting, a scholarship, exposure to coaches or an NIL deal.
+- **Celebrate** — the whole journey, not just the scoreboard: practice, service, family, team.
+  Photo stories in Highlights exist for exactly this.
+
+Word rules: [VOICE.md](VOICE.md) §The message. Counsel review: LEGAL_BRIEFING row W.
+
 ## Why we exist
 
 Every Friday night there is a kid on the field whose talent is not the question. Money is.
@@ -75,7 +91,9 @@ contest in the stands and on the feed. It is friendly competition that keeps ath
 play well and keeps fans coming back after the final whistle.
 
 *What exists today:* the Highlights feed, fan upload and tagging, Seki / Aura / Flex, weekly
-Spotlight standings, rivalry polls. *What's next:* ROADMAP Mission track M1 and M8.
+Spotlight standings, rivalry polls. **Photo stories** (owner-approved 2026-10-07, being built; live once
+the database change is applied) put one photo or a swipeable story of up to 10 in the same feed,
+tagged to an athlete, with the same Donate button. *What's next:* ROADMAP Mission track M1 and M8.
 
 ### 2. The Rally — the whole community, one tap
 
@@ -116,8 +134,11 @@ It keeps the young ones inspired and the stars grounded. It is the part of Tapua
 else has, and the part that makes the name mean something: support flows up to the athlete, and
 wisdom flows back down.
 
-*What exists today:* Train Like Me and Serve Like Me as Highlight categories (Serve Like Me earns
-2× Aura). *What's next:* ROADMAP Mission track M4 — Ask an athlete with video replies, then
+A Serve Like Me moment is often a few photos, not a clip — *"Our team helped clean the
+neighborhood park this Saturday."* Photo stories let an athlete post it the same way.
+
+*What exists today:* Game Day, Train Like Me and Serve Like Me as Highlight categories (Serve Like Me earns
+2× Aura); photo stories use the same categories once their database change is applied. *What's next:* ROADMAP Mission track M4 — Ask an athlete with video replies, then
 1-on-1 sessions under strict safety rules.
 
 ### 5. The Pathway — ready for college, ready for life
@@ -137,6 +158,8 @@ partner before it is built (see guardrails).
 
 Taglines:
 
+- **Donate. Elevate. Celebrate.** — *Support their journey. Elevate their opportunities. Celebrate
+  their story.* (lead message, owner-approved 2026-10-07)
 - **Back every athlete.**
 - **The whole town in your corner.**
 - **Money shouldn't be the reason they stop.**
@@ -184,6 +207,9 @@ NCAA. One wrong sentence can cost a kid their eligibility. Full reasoning in
   parent's money".
 - Stories of real athletes are published **only with the athlete's and a parent's written
   consent**, and can be taken down on request.
+- Photo stories show more than the athlete — teammates, siblings, other people's children. Post
+  them only with permission from the people in them; a report or a family's request takes them down
+  (LEGAL_BRIEFING row U). Never give away where a minor lives or will be.
 - Say what is real today. Until live keys and counsel sign-off, it is a test.
 - Any 1-on-1 between a fan and an athlete follows ROADMAP M4's safety rules: in the app, recorded,
   a parent involved whenever a minor is on either side, no private messages with minors.
@@ -195,6 +221,8 @@ NCAA. One wrong sentence can cost a kid their eligibility. Full reasoning in
   sounds like a security. The Pathway is setting aside gifts, not an investment product, and the
   savings side is not built until counsel and a licensed partner say how.
 - "Approved NIL." / "Guaranteed scholarship." / promises about recruiting outcomes.
+- "Elevate" as an outcome: "get recruited", "get seen by coaches", "boost their ranking". Elevate
+  means support for real costs, nothing more.
 - "Aura is worth money." Aura is reputation. It is never cash.
 - Naming or ranking kids by how much money they received, in public.
 - Leaderboards by dollars. Boards rank hype and views, never donations.

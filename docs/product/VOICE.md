@@ -42,6 +42,56 @@ Checked two ways:
 Code, tables and telemetry keep their names (`malo`, `tips`, `useTipCheckout`, `buttons.malo`) —
 renaming them would break the database and live config. Only what people read changes.
 
+## The message (owner-approved 2026-10-07)
+
+> **Donate. Elevate. Celebrate.**
+> *Support their journey. Elevate their opportunities. Celebrate their story.*
+
+Code: `TAGLINE_HEADLINE` and `TAGLINE_LINE` in `data/malo.ts` — use the constants, never retype the
+words. Where it appears:
+
+| Place | What shows | Component |
+| --- | --- | --- |
+| First open | Headline + line, under the mission | `Onboarding/WelcomeOverlay` |
+| Donate sheet | Headline only, one small line at the top of the **Amount** page; Options and Review stay plain | `TipCheckout` (inside `TipSheetModal`, and inline athlete cards) |
+| Athlete profile | Headline only, a small line under **Donate** — only when this athlete can be donated to (not your own profile, not a community profile) | `Profile/AthleteProfileView` |
+| Public docs and store copy | Headline + line | [PUBLIC.md](PUBLIC.md), [STORY.md](STORY.md), [STORE_LISTING.md](STORE_LISTING.md) (draft) |
+
+Rules:
+
+- **Donate stays the money verb.** The message sits beside the Donate button and the 90 / 10 line;
+  it never replaces them. "Elevate" and "Celebrate" are never button labels for paying.
+- **Elevate is about support, never an outcome.** It means the community helps with real sports
+  costs so an athlete can keep going. Never write or imply that a donation, a Highlight or Tapua'i
+  gets an athlete recruited, signed, a scholarship, "exposure" to coaches, a roster spot or an NIL deal.
+  Say "elevate their opportunities", never "elevate their recruiting", "get them seen by
+  coaches" or "boost their ranking" (LEGAL_BRIEFING row W; counsel open).
+- **Plain text, not a heading.** On screen it is ordinary text under the screen title, so screen
+  readers keep one title per screen.
+- **No money tied to performance** applies here too — "Celebrate their story", not "celebrate the
+  touchdown with a donation".
+- The older lines in [STORY.md](STORY.md) ("Back every athlete." and the rest) stay usable; this is the lead message.
+
+## Photo stories (Highlights)
+
+Photo stories are one photo or a swipeable story of up to 10, posted to Highlights next to clips
+([design](../engineering/design/PHOTO_STORIES_DESIGN.md)). They use the same words as clips:
+
+- **Categories:** **Game Day**, **Train Like Me**, **Serve Like Me** — for photos and videos alike.
+  ("Game Play" was renamed **Game Day** on 2026-10-07; the stored value stays `game_play`.)
+- **Caption** (required) says what is happening; each photo can have an optional **description**
+  (up to 200 characters). Write about the moment and the people, not money.
+  - Serve Like Me: *"Our team helped clean the neighborhood park this Saturday."*
+  - Train Like Me: *"5 a.m. footwork before school — week three."*
+  - Game Day: *"Senior night with the whole family in the stands."*
+- **Donate** on a photo story works exactly like a clip: the donation goes to the **tagged athlete's
+  family account**, never to the person who posted the photos.
+- **Never** in a caption or description: asking for money for a play, a stat or a win; naming or
+  rating other people's children who did not agree to be shown; a home address, a school schedule or
+  anything that says where a minor will be. Photo uploads remove location data, but captions can still
+  give it away.
+- Rights confirmation wording for photos: *"I took these photos or have permission from the people in them."*
+
 ## Every donate screen must answer three questions
 
 1. **Who gets it?** The athlete named on the screen — through their family account — never the
@@ -78,8 +128,10 @@ No tip default remain. These messages do not promise settled credit or automatic
 
 ## Where the mission is said
 
-- First open: `WelcomeOverlay` — `DONATION_MISSION`.
-- Donate sheet: `TipCheckout` header — `donationWhereItGoes(name)`, then `donationSplitLine(name)`.
+- First open: `WelcomeOverlay` — `DONATION_MISSION`, then `TAGLINE_HEADLINE` + `TAGLINE_LINE`.
+- Donate sheet: `TipCheckout` Amount page — `TAGLINE_HEADLINE` (small line), then `donationSplitLine(name)`;
+  Review carries `donationWhereItGoes(name)` and `MALO_DISCLAIMER`.
+- Athlete profile: `TAGLINE_HEADLINE` under the Donate button (donatable athletes only).
 - Rally card and `CreateRallySheet`: "Raise money for a real sports cost" — never for a play, a stat or a win.
 - Received-donations panel: "Saying thanks keeps people cheering you on."
 

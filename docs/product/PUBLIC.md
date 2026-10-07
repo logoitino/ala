@@ -1,5 +1,7 @@
 # Tapua'i — Public one-pager
 
+**Donate. Elevate. Celebrate.** *Support their journey. Elevate their opportunities. Celebrate their story.*
+
 **Donate to the athletes you cheer for.** Tapua'i helps families cover their young athlete's sports costs — fees, gear, travel — with donations from their community. Watch highlights, cheer your school, and donate to an athlete in a few taps. Donations go to the athlete's family account and are not tax-deductible.
 
 This page is for parents, athletes, boosters, and schools. It is product copy, not a contract.
@@ -10,7 +12,7 @@ This page is for parents, athletes, boosters, and schools. It is product copy, n
 
 ## What you can do
 
-1. **Watch.** Full-screen highlight Reels, tagged to a player and a school. Tap once to mute. Double-tap to drop Aura (hype). Live scores sit on top of the feed when a game is in progress.
+1. **Watch.** Full-screen highlight Reels, tagged to a player and a school, in three kinds: Game Day, Train Like Me and Serve Like Me. Tap once to mute. Double-tap to drop Aura (hype). Live scores sit on top of the feed when a game is in progress. **Photo stories** — one photo or a swipeable set of up to 10, each with an optional description — are coming to the same feed so families can share the whole journey (practice, service, team), with the same Donate button. Photos have location data removed before upload.
 2. **Cheer.** On Local, pick Live Matches, School Polls, or Top Boosters. School Polls are community votes (home vs away). They are **not bets** and have **no prize**.
 3. **Donate.** Donations run through Stripe (live amounts below). The donate sheet says it plainly before you pay: 90% of your donation goes to the athlete's family account, and Tapua'i keeps 10% to run the app, including card processing. You can add an optional tip for Tapua'i — it starts at "No tip" and never comes out of your donation.
 4. **Rally and say thanks.** A family can start a Rally for a real sports cost — season fees, gear, travel, camps, college prep — and share it. Athletes say thank you to every donor with a tap, and thank everyone with a clip of what the Rally paid for.
@@ -38,9 +40,9 @@ The bar at the bottom is Reel · Local · Upload · Drip · Profile.
 
 ## What we ask of you
 
-- Treat athletes as **students first**. Do not post clips that a school, parent, or the athlete would not want public.
+- Treat athletes as **students first**. Do not post clips or photos that a school, parent, or the athlete would not want public. Post photos of other people — teammates, siblings, other people's children — only with their (or their parent's) permission.
 - Use **Report / Hide** on a Reel if a clip should not be on your feed. That flags it for review and hides it for you.
-- A donation is a gift of support, not payment for a specific play, win, or ranking.
+- A donation is a gift of support, not payment for a specific play, win, or ranking. "Elevate their opportunities" means helping with real costs; Tapua'i does not promise recruiting, scholarships, or exposure to coaches.
 - High-school rules on name, image, and likeness (and on extra benefits) **vary by state and by athletic association**. A school or association can tell an athlete they may not accept money. We will follow lawful orders to pause payouts.
 
 ---

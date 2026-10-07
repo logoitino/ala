@@ -4,6 +4,14 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-10-07
 
+### Photo stories in Highlights, and "Donate. Elevate. Celebrate."
+
+- Highlights can now be one photo or a swipeable story of up to 10 photos: reorder before posting, add an optional description to each photo, tag the athlete, and pick Game Day, Train Like Me or Serve Like Me. Stories sit in the same feed as clips with a `1 / 5` counter, show a `📷 5` badge on profile grids, and donate to the featured athlete through the usual popup. Hype, save, report and "Filmed by" work as on clips. Photo stories are public only for now.
+- Location and camera details are removed from every photo before it uploads; a photo that cannot be cleaned is not uploaded. A story appears only if every photo uploads.
+- The first category is now called **Game Day** (it was Game Play) for photos and videos.
+- The message "Donate. Elevate. Celebrate." — *Support their journey. Elevate their opportunities. Celebrate their story.* — appears on the welcome screen, at the top of the donate popup and under an athlete's Donate button.
+- Database changes for photo stories are written (`20261007230000_photo_stories.sql`) but not applied, so the Photos option stays hidden until they are. Fixed a likely cause of the first Highlights clip not loading its video (to be confirmed on a device).
+
 ### Compact sport profiles and direct goals
 
 - Profiles and Aura cards share the selected sport and published stat labels: Volleyball uses Matches/Kills/Digs, other sports their playbooks. Missing real data stays unreported; old totals from another sport are excluded. Aura points have their own label.
