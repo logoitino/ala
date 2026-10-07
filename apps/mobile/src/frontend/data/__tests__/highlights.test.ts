@@ -1,4 +1,14 @@
-import { isSekiHighlight, pinFeedOrder, rankHomeFeed } from '@/data/highlights';
+import {
+  isPhotoStory,
+  isSekiHighlight,
+  labeledReelCategories,
+  parseReelCategory,
+  PHOTO_DESCRIPTION_MAX,
+  PHOTO_STORY_MAX_PHOTOS,
+  pinFeedOrder,
+  rankHomeFeed,
+  REEL_CATEGORY_PILLS,
+} from '@/data/highlights';
 
 type Row = { clip: { id: string; athleteName: string; sekiCount: number; auraCount: number; flexCount: number } };
 
@@ -25,5 +35,26 @@ describe('pinFeedOrder', () => {
 
   it('drops ids that are no longer in the list', () => {
     expect(pinFeedOrder(['x', 'a'], [row('a', 0)]).map((item) => item.clip.id)).toEqual(['a']);
+  });
+});
+
+describe('photo stories and the Game Day label (UX-05)', () => {
+  it('isPhotoStory is true only for photo_story; missing media type is a video', () => {
+    expect(isPhotoStory({ mediaType: 'photo_story' })).toBe(true);
+    expect(isPhotoStory({ mediaType: 'video' })).toBe(false);
+    expect(isPhotoStory({})).toBe(false);
+  });
+
+  it('caps a story at 10 photos and descriptions at 200 characters', () => {
+    expect(PHOTO_STORY_MAX_PHOTOS).toBe(10);
+    expect(PHOTO_DESCRIPTION_MAX).toBe(200);
+  });
+
+  it('labels the game_play category "Game Day" (owner rename 2026-10-07) while the stored id stays game_play', () => {
+    const game = REEL_CATEGORY_PILLS.find((pill) => pill.id === 'game_play');
+    expect(game?.label).toBe('⚡ Game Day');
+    expect(REEL_CATEGORY_PILLS.some((pill) => /Game Play/.test(pill.label))).toBe(false);
+    expect(parseReelCategory(undefined)).toBe('game_play');
+    expect(labeledReelCategories(null)[0]).toEqual({ id: 'game_play', label: '⚡ Game Day' });
   });
 });

@@ -2,6 +2,8 @@
  * Highlights data layer: fetch the feed (tiered ranking) and one athlete's clips, hype votes (`bumpReelHype` /
  * `clearReelHype`), donation totals on a clip, hiding a clip locally, reporting and Vault toggling, playback URL
  * resolution (including Vault signing), deep links, and the "Filmed by" credit. Also pure helpers for the owner-peek drag.
+ * Photo stories (PHOTO_STORIES_DESIGN.md) come through the same feed rows with `media_type = 'photo_story'`; their
+ * photos are fetched separately (`lib/photoStories.ts`, `hooks/useStoryPhotos.ts`).
  * Screens call this, not Supabase. Uploading a clip is `services/MediaUploadService` plus `UploadVideoModal`.
  * @sideEffects `reels`, `reel_hype_votes` and related RPCs; AsyncStorage for local hides and the peek hint.
  */
@@ -10,8 +12,9 @@ import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { ReportReasonId } from '@/data/contentRights';
-import { parseReelCategory, type HighlightClip, type ReelCategory } from '@/data/highlights';
+import { parseReelCategory, type HighlightClip, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
 import type { PlayReactionId } from '@/data/players';
+import { storyPhotoPublicUrl } from '@/lib/photoStories';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { REEL_VAULT_BUCKET, REEL_VAULT_PREFIX, uploadHighlight } from '@/services/MediaUploadService';
 import type { Player, Reel, ReelWithPlayer } from '@/types/database';
@@ -28,7 +31,7 @@ export type UploadSekiPlayInput = {
   gameId?: string | null;
   /** Persist `reels.is_vault_only` / `is_exclusive`. Default false = free public feed. */
   isExclusive?: boolean;
-  /** Persist `reels.category`. Default Game Play. */
+  /** Persist `reels.category`. Default Game Day (`game_play`). */
   category?: ReelCategory;
   /** True when `HighlightPickerModal` already ran `Video.compress`. */
   compressed?: boolean;
@@ -84,8 +87,47 @@ export function filmerCredit(reel: Reel, player: Player | null): string | null {
   return name;
 }
 
+/**
+ * Photo-story columns on `reels_feed` (migration 20261007230000). Declared here as optional so this file
+ * reads them safely whether or not `types/database.ts` has caught up; absent on every older tier.
+ * The database stores a Storage path (`cover_path`), never a URL; the client builds the URL.
+ */
+type ReelMediaColumns = {
+  media_type?: string | null;
+  photo_count?: number | null;
+  cover_path?: string | null;
+};
+
+/**
+ * @purpose Normalize the media columns of a feed row. Missing / unknown `media_type` is video, so
+ *   rows from before the photo-story SQL (and every fallback tier) behave exactly as they did.
+ */
+export function reelMedia(reel: Reel): { mediaType: HighlightMediaType; photoCount: number; coverUrl: string | null } {
+  const row = reel as Reel & ReelMediaColumns;
+  const mediaType: HighlightMediaType = row.media_type === 'photo_story' ? 'photo_story' : 'video';
+  const count = Number(row.photo_count);
+  return {
+    mediaType,
+    photoCount: Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0,
+    coverUrl: storyPhotoPublicUrl(row.cover_path),
+  };
+}
+
+/**
+ * @purpose True when a feed row belongs in Highlights lists and profile grids. Videos need a playable
+ *   URL; photo stories need at least one published photo (`photo_count` 0 = upload failed or the photo
+ *   list was never saved, so there is nothing to show). Removed clips never list.
+ */
+export function isListableReel(reel: Reel): boolean {
+  if (reel.is_removed === true) return false;
+  const media = reelMedia(reel);
+  if (media.mediaType === 'photo_story') return media.photoCount > 0;
+  return Boolean(reel.video_url);
+}
+
 export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
   const hype = hypeFromReel(reel);
+  const media = reelMedia(reel);
   const vaultOnly = Boolean(reel.is_vault_only ?? reel.is_exclusive);
   return {
     id: reel.id,
@@ -109,6 +151,9 @@ export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
     uploadedBy: reel.uploaded_by ?? null,
     viewCount: typeof reel.view_count === 'number' ? Math.max(0, reel.view_count) : undefined,
     filmedBy: filmerCredit(reel, player),
+    mediaType: media.mediaType,
+    photoCount: media.mediaType === 'photo_story' ? media.photoCount : undefined,
+    coverUrl: media.mediaType === 'photo_story' ? media.coverUrl : undefined,
   };
 }
 
@@ -226,6 +271,8 @@ const REEL_COLUMNS_REMOVED = `${REEL_COLUMNS_FLASH}, is_removed`;
 const REEL_COLUMNS_TAG = `${REEL_COLUMNS_REMOVED}, tag_status, uploaded_by`;
 /** Views + filmer credit (migration 20260929160000). Falls back to the tag tier until applied. */
 const REEL_COLUMNS_CREDIT = `${REEL_COLUMNS_TAG}, view_count, uploader_name, uploader_avatar_url`;
+/** Photo stories (migration 20261007230000). Falls back to the credit tier until applied; those rows are all video. */
+const REEL_COLUMNS_MEDIA = `${REEL_COLUMNS_CREDIT}, media_type, photo_count, cover_path`;
 const REEL_COLUMNS_BASIC = 'id, video_url, title, player_id, game_id, created_at';
 const HIDDEN_REELS_KEY = 'tapuai.hiddenReels';
 
@@ -296,10 +343,17 @@ function rowsFromQuery<T>(data: unknown): T[] {
 }
 
 async function playable(rows: ReelWithPlayer[]): Promise<ReelWithPlayer[]> {
-  return (await withPlaybackUrls(rows)).filter((row) => Boolean(row.video_url));
+  // Photo stories carry `video_url = ''` by design, so they skip the playback-URL check; a Vault
+  // signing failure still drops a video the caller cannot play.
+  return (await withPlaybackUrls(rows)).filter(isListableReel);
 }
 
 async function queryReels(playerId?: string): Promise<ReelWithPlayer[]> {
+  const media = await selectReels(`${REEL_COLUMNS_MEDIA}, players (${PLAYER_SELECT})`, playerId);
+  if (!media.error) {
+    return playable(rowsFromQuery<ReelWithPlayer>(media.data).filter(isListableReel));
+  }
+
   const credited = await selectReels(`${REEL_COLUMNS_CREDIT}, players (${PLAYER_SELECT})`, playerId);
   if (!credited.error) {
     return playable(
@@ -514,7 +568,7 @@ export async function addReelTips(reelId: string, addCents: number, current: Ree
 /**
  * @purpose Upload a Seki clip: compress, Storage `reels/{user_id}/{timestamp}.mp4` (fallback `game_highlights`), insert `public.reels`.
  * @param input Local video URI, caption, tagged player/game, optional `isExclusive` / `category` / `compressed`.
- * @returns The inserted reel, including vault flags and category. Default is public Game Play.
+ * @returns The inserted reel, including vault flags and category. Default is public Game Day.
  * @sideEffects `MediaUploadService.uploadHighlight`.
  */
 export async function uploadSekiPlay(input: UploadSekiPlayInput): Promise<Reel> {
@@ -620,6 +674,14 @@ export async function toggleReelVaultStatus(reelId: string, currentlyVault: bool
 
   if (updateError?.message.includes('is_vault_only')) {
     await supabase.from('reels').update({ is_exclusive: nextVault }).eq('id', reelId);
+  } else if (updateError) {
+    // e.g. reels_photo_story_public_check: a photo story can never be Vault. Surface it instead of
+    // reporting a flip that did not happen.
+    throw new Error(
+      /photo_story_public/i.test(updateError.message)
+        ? 'Photo stories stay on the free public feed.'
+        : updateError.message || 'Could not change Vault status.',
+    );
   }
 
   return nextVault;

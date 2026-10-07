@@ -7,13 +7,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors } from '@/constants/theme';
-import { DONATION_MISSION } from '@/data/malo';
+import { DONATION_MISSION, TAGLINE_HEADLINE, TAGLINE_LINE } from '@/data/malo';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { ONBOARDING_SEEN_KEY } from '@/lib/auth';
 import { FOCAL } from '@/theme/motion';
 
 /**
- * @purpose One-time first-open welcome for guests — brand + support story, then Watch highlights (no account wall).
+ * @purpose One-time first-open welcome for guests — brand + support story and the Donate. Elevate. Celebrate. message,
+ *   then Watch highlights (no account wall).
  * @sideEffects AsyncStorage `tapuai.onboardingSeen`.
  */
 export function WelcomeOverlay() {
@@ -60,6 +61,11 @@ export function WelcomeOverlay() {
             {DONATION_MISSION} Watch their highlights, cheer your school, and donate in a few taps — so our kids feel
             believed in.
           </Text>
+          {/* Owner-approved message (BRAND-01): plain text under the mission so it never competes with the title. */}
+          <View style={styles.tagline}>
+            <Text style={styles.taglineHeadline}>{TAGLINE_HEADLINE}</Text>
+            <Text style={styles.taglineLine}>{TAGLINE_LINE}</Text>
+          </View>
           <AnimatedButton
             accessibilityLabel="Watch highlights"
             haptic="medium"
@@ -103,6 +109,20 @@ const styles = StyleSheet.create({
   body: {
     fontSize: 16,
     lineHeight: 23,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  tagline: {
+    gap: 2,
+  },
+  taglineHeadline: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: FOCAL.jadeInk,
+  },
+  taglineLine: {
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: '600',
     color: colors.textMuted,
   },

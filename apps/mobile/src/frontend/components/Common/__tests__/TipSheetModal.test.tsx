@@ -2,6 +2,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { MaloTipModal } from '@/components/TipSheetModal';
 import type { Player } from '@/data/players';
+import { TAGLINE_HEADLINE } from '@/data/malo';
 const mockStart = jest.fn();
 const mockClose = jest.fn();
 let mockDeferClose = false;
@@ -37,6 +38,15 @@ describe('donation popup session', () => {
     expect(mockStart).not.toHaveBeenCalled();
     await act(async () => { mockFinishClose!(true); });
     expect(mockClose).toHaveBeenCalledTimes(1);
+  });
+  it('shows the brand line above the Amount step only, keeping Review plain (BRAND-01)', async () => {
+    await render(<MaloTipModal player={player} onClose={mockClose} />);
+    expect(screen.getByText(TAGLINE_HEADLINE)).toBeTruthy();
+    expect(screen.getByText("90% goes to Ana's family account. Tapua'i keeps 10% to run the app.")).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('$5, +50 Aura Points ⚡'));
+    await fireEvent.press(screen.getByLabelText('Next')); await fireEvent.press(screen.getByLabelText('Next'));
+    expect(screen.queryByText(TAGLINE_HEADLINE)).toBeNull();
+    expect(screen.getByLabelText('Donate $5.00')).toBeTruthy();
   });
   it('resets amount after close and reopening the same recipient', async () => {
     const view = await render(<MaloTipModal player={player} onClose={mockClose} />);

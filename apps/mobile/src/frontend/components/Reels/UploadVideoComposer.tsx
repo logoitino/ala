@@ -1,10 +1,12 @@
 /**
- * Short pages for the Highlight composer: clip → details → review, with optional settings
- * and searchable athlete/game pages. Draft and upload ownership stay in UploadVideoModal.
- * Header and footer stay visible while a short page scrolls on small phones or with a keyboard.
+ * Short pages for the Highlight composer: media → details → review, with optional settings
+ * and searchable athlete/game pages. The Media step offers Video | Photos (photo stories,
+ * PHOTO_STORIES_DESIGN.md) when the database supports them; photo pieces live in PhotoStoryPicker.
+ * Draft and upload ownership stay in UploadVideoModal. Header and footer stay visible while a short
+ * page scrolls on small phones or with a keyboard. Photo stories are public only: no Vault control.
  */
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Animated, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Animated, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -12,9 +14,10 @@ import { MenuBackdrop, MenuStepIndicator } from '@/components/UI/MenuChrome';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { AccountTagField } from '@/components/Reels/AccountTagField';
+import { MediaKindSwitch, PhotoDescriptionFields, PhotoStoryStrip, type DraftStoryPhoto } from '@/components/Reels/PhotoStoryPicker';
 import { CardShine } from '@/components/Effects/CardShine';
 import { colors, MENU_METRICS, radii } from '@/constants/theme';
-import { HIGHLIGHT_PUBLISH_LABEL, REEL_CATEGORY_SERVE, SERVE_LIKE_ME_BOOST_LABEL, type ReelCategory } from '@/data/highlights';
+import { HIGHLIGHT_PUBLISH_LABEL, PHOTO_STORY_MAX_PHOTOS, REEL_CATEGORY_SERVE, SERVE_LIKE_ME_BOOST_LABEL, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
 import { HIGHLIGHT_MAX_SECONDS } from '@/data/media';
 import { COMPLIANCE_UPLOAD } from '@/data/legal';
 import { rightsChecksFor, type RightsAckId } from '@/data/contentRights';
@@ -38,6 +41,9 @@ type Props = {
   uploading: boolean; canSubmit: boolean; detailsReady: boolean; uploadError: string | null; loadError: string | null;
   onClose: () => void; onSubmit: () => void; progress: number; barWidth: Animated.AnimatedInterpolation<string>;
   pulse: Animated.Value; statusLabel: string; showSuccess: boolean; successAnim: Animated.Value;
+  mediaKind: HighlightMediaType; onMediaKind: (kind: HighlightMediaType) => void; photosAvailable: boolean;
+  photos: DraftStoryPhoto[]; onPickPhotos: () => void; onMovePhoto: (from: number, to: number) => void;
+  onRemovePhoto: (index: number) => void; onPhotoDescription: (index: number, text: string) => void;
 };
 
 /** Paused, muted local clip preview. No caching: these files belong to the current draft. */
@@ -58,11 +64,26 @@ export function UploadVideoComposer(p: Props) {
     else go(p.step === 'review' ? 'details' : p.step === 'options' ? 'review' : 'clip');
   };
   const number = p.step === 'clip' ? 1 : p.step === 'details' ? 2 : 3;
+  const isPhotos = p.mediaKind === 'photo_story';
+  const mediaReady = isPhotos ? p.photos.length > 0 : Boolean(p.asset);
+  const photoCountLabel = `${p.photos.length} ${p.photos.length === 1 ? 'photo' : 'photos'}`;
   const title = p.openSelect === 'player' ? 'Choose athlete' : p.openSelect === 'game' ? 'Choose game'
-    : p.step === 'clip' ? 'Choose your clip' : p.step === 'details' ? 'Add the details'
+    : p.step === 'clip' ? isPhotos ? 'Choose your photos' : 'Choose your clip' : p.step === 'details' ? 'Add the details'
       : p.step === 'options' ? 'More options' : 'Ready to share?';
   const categoryLabel = p.categoryPills.find((pill) => pill.id === p.category)?.label ?? p.category;
-  const clipCard = p.asset ? (
+  const photoCard = isPhotos && p.photos[0] ? (
+    <View style={styles.clipCard}>
+      <Image source={{ uri: p.photos[0].uri }} style={styles.thumb} resizeMode="cover" accessible={false} />
+      <View style={styles.flex}>
+        <Text style={styles.label}>Your photo story ⚡</Text>
+        <Text style={styles.hint}>{photoCountLabel}</Text>
+      </View>
+      <Pressable accessibilityRole="button" accessibilityLabel="Change photos" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}>
+        <Text style={styles.link}>Change</Text>
+      </Pressable>
+    </View>
+  ) : null;
+  const clipCard = isPhotos ? photoCard : p.asset ? (
     <View style={styles.clipCard}>
       <ClipPreview key={p.asset.uri} uri={p.asset.uri} />
       <View style={styles.flex}>
@@ -103,7 +124,7 @@ export function UploadVideoComposer(p: Props) {
             <Ionicons name="close" size={22} color={colors.text} />
           </Pressable>
         </View>
-        {!p.openSelect && p.step !== 'options' ? <MenuStepIndicator labels={['Video', 'Details', 'Review']} current={number} /> : null}
+        {!p.openSelect && p.step !== 'options' ? <MenuStepIndicator labels={['Media', 'Details', 'Review']} current={number} /> : null}
         <ScrollView key={p.openSelect || p.step} style={styles.flex} contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator>
           {p.openSelect ? (
@@ -136,6 +157,21 @@ export function UploadVideoComposer(p: Props) {
             </>
           ) : p.step === 'clip' ? (
             <>
+              {p.photosAvailable ? <MediaKindSwitch value={p.mediaKind} onChange={p.onMediaKind} disabled={p.uploading} /> : null}
+              {isPhotos ? (
+                <>
+                  <View style={styles.hero}><View style={styles.heroBadge}><Ionicons name="images" size={30} color={colors.primary} /></View><Text style={styles.heroTitle}>Tell their story in photos.</Text><Text style={styles.heroHint}>Pick up to {PHOTO_STORY_MAX_PHOTOS} photos, then put them in order.</Text></View>
+                  {p.photos.length ? (
+                    <PhotoStoryStrip photos={p.photos} onMove={p.onMovePhoto} onRemove={p.onRemovePhoto} onAdd={p.onPickPhotos} disabled={p.uploading} />
+                  ) : (
+                    <AnimatedButton accessibilityLabel="Choose photos from library" disabled={p.uploading} onPress={p.onPickPhotos} contentStyle={styles.source}>
+                      <Ionicons name="images-outline" size={26} color={colors.primary} />
+                      <Text style={styles.label}>Library</Text><Text style={styles.hint}>Choose photos</Text>
+                    </AnimatedButton>
+                  )}
+                  <Text style={styles.heroHint}>Next, add a caption and choose the athlete.</Text>
+                </>
+              ) : (<>
               <View style={styles.hero}><View style={styles.heroBadge}><Ionicons name="play" size={30} color={colors.primary} /><View style={styles.spark}><Ionicons name="flash" size={13} color={colors.gold} /></View></View><Text style={styles.heroTitle}>Make their moment shine.</Text><Text style={styles.heroHint}>Start with a video up to {HIGHLIGHT_MAX_SECONDS} seconds.</Text></View>
               <View style={styles.sourceRow}>{(['library', 'camera'] as const).map((source) => (
                 <AnimatedButton key={source} accessibilityLabel={source === 'library' ? 'Choose a video from library' : 'Record a video'}
@@ -146,45 +182,52 @@ export function UploadVideoComposer(p: Props) {
               ))}</View>
               {clipCard}
               <Text style={styles.heroHint}>Next, add a caption and choose the athlete.</Text>
+              </>)}
             </>
           ) : p.step === 'details' ? (
             <>
               {clipCard}
               <View style={styles.field}><Text style={styles.label}>Caption</Text>
                 <TextInput accessibilityLabel="Highlight caption" value={p.caption} onChangeText={p.onCaption} editable={!p.uploading}
-                  placeholder="What made this moment special?" placeholderTextColor={colors.textMuted} style={[styles.input, styles.caption]} multiline maxLength={120} />
+                  placeholder={isPhotos ? 'What is the story behind these photos?' : 'What made this moment special?'} placeholderTextColor={colors.textMuted} style={[styles.input, styles.caption]} multiline maxLength={120} />
                 <Text style={styles.counter}>{p.caption.length}/120</Text>
               </View>
-              {selectRow('Who’s in this clip?', p.playerLabel, 'player')}
+              {selectRow(isPhotos ? 'Who’s in these photos?' : 'Who’s in this clip?', p.playerLabel, 'player')}
               <View style={styles.field}><Text style={styles.label}>Category</Text><View style={styles.categoryRow}>
                 {p.categoryPills.map((pill) => <Pressable key={pill.id} accessibilityRole="button" accessibilityLabel={pill.label} accessibilityState={{ selected: pill.id === p.category }}
                   disabled={p.uploading} onPress={() => p.onCategory(pill.id)} style={[styles.category, pill.id === p.category && styles.categoryActive]}>
                   <Text style={[styles.categoryText, pill.id === p.category && styles.categoryTextActive]}>{pill.label}</Text>
                 </Pressable>)}
               </View>{p.category === REEL_CATEGORY_SERVE ? <Text style={styles.link}>{SERVE_LIKE_ME_BOOST_LABEL}</Text> : null}</View>
+              {isPhotos ? <PhotoDescriptionFields photos={p.photos} onDescription={p.onPhotoDescription} disabled={p.uploading} /> : null}
             </>
           ) : p.step === 'options' ? (
             <>
-              <Text style={styles.hint}>Add only what your clip needs.</Text>
+              <Text style={styles.hint}>{isPhotos ? 'Add only what your story needs. Photo stories are always public.' : 'Add only what your clip needs.'}</Text>
               {selectRow('Tag a Game (optional)', p.gameLabel, 'game')}
               <AccountTagField value={p.accountTags} onChange={p.onAccountTags} disabled={p.uploading} />
-              <Pressable accessibilityRole="switch" accessibilityLabel="Subscriber Vault" accessibilityState={{ checked: p.isExclusive, disabled: p.uploading }} disabled={p.uploading} onPress={() => p.onExclusive(!p.isExclusive)} style={[styles.option, p.isExclusive && styles.selected]}>
+              {/* v1 photo stories are public only (design decision 1): Vault photos wait for the private bucket. */}
+              {isPhotos ? null : <Pressable accessibilityRole="switch" accessibilityLabel="Subscriber Vault" accessibilityState={{ checked: p.isExclusive, disabled: p.uploading }} disabled={p.uploading} onPress={() => p.onExclusive(!p.isExclusive)} style={[styles.option, p.isExclusive && styles.selected]}>
                 <View style={styles.sourceRow}><Text style={[styles.label, styles.flex]}>Subscriber Vault 🔒</Text><Text style={styles.link}>{p.isExclusive ? 'On' : 'Off'}</Text></View>
                 <Text style={styles.hint}>Off by default (free public feed). On: only ${p.exclusiveDollars.toFixed(2)}/mo subscribers can watch.</Text>
-              </Pressable>
+              </Pressable>}
             </>
           ) : (
             <>
-              <View style={styles.sourceRow}><Text style={[styles.hint, styles.flex]} numberOfLines={1}>{p.asset?.fileName || 'Selected video'}{p.asset?.durationMs ? ` · ${Math.round(p.asset.durationMs / 1000)}s` : ''}</Text><Pressable accessibilityRole="button" accessibilityLabel="Change video" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}><Text style={styles.link}>Change</Text></Pressable></View>
+              {isPhotos ? (
+                <View style={styles.sourceRow}><Text style={[styles.hint, styles.flex]} numberOfLines={1}>Photo story · {photoCountLabel}</Text><Pressable accessibilityRole="button" accessibilityLabel="Change photos" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}><Text style={styles.link}>Change</Text></Pressable></View>
+              ) : (
+                <View style={styles.sourceRow}><Text style={[styles.hint, styles.flex]} numberOfLines={1}>{p.asset?.fileName || 'Selected video'}{p.asset?.durationMs ? ` · ${Math.round(p.asset.durationMs / 1000)}s` : ''}</Text><Pressable accessibilityRole="button" accessibilityLabel="Change video" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}><Text style={styles.link}>Change</Text></Pressable></View>
+              )}
               <View style={styles.summary}><Text style={styles.label} numberOfLines={2}>{p.caption}</Text><Text style={styles.hint}>{p.playerLabel} · {categoryLabel}</Text>
                 <Text style={styles.hint}>{p.gameId ? p.gameLabel : 'No game linked'} · {p.accountTags.length ? `${p.accountTags.length} account mentions pending confirmation` : 'No account mentions'}</Text>
-                <Text style={styles.link}>{p.isExclusive ? 'Subscriber Vault only' : 'Public Highlight'}</Text>
+                <Text style={styles.link}>{isPhotos ? 'Public photo story' : p.isExclusive ? 'Subscriber Vault only' : 'Public Highlight'}</Text>
               </View>
               <Pressable accessibilityRole="button" accessibilityLabel="More options" disabled={p.uploading} onPress={() => go('options')} style={styles.select}>
-                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>Game, account mentions, Subscriber Vault</Text></View><Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>{isPhotos ? 'Game, account mentions' : 'Game, account mentions, Subscriber Vault'}</Text></View><Ionicons name="chevron-forward" size={18} color={colors.primary} />
               </Pressable>
               <View style={styles.field}><Text style={styles.label}>Before you publish</Text><Text style={styles.hint}>{COMPLIANCE_UPLOAD}</Text>
-                {rightsChecksFor(p.category).map((row) => {
+                {rightsChecksFor(p.category, p.mediaKind).map((row) => {
                   const checked = p.rights[row.id] === true;
                   return <Pressable key={row.id} accessibilityRole="checkbox" accessibilityLabel={row.label} accessibilityState={{ checked, disabled: p.uploading }} disabled={p.uploading}
                     onPress={() => p.onRights({ ...p.rights, [row.id]: !checked })} style={styles.rightsRow}>
@@ -199,7 +242,7 @@ export function UploadVideoComposer(p: Props) {
         </ScrollView>
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
           {p.uploading ? p.showSuccess ? (
-            <Animated.View style={{ opacity: p.successAnim, alignItems: 'center' }}><Text style={styles.link}>Seki play uploaded ⚡</Text></Animated.View>
+            <Animated.View style={{ opacity: p.successAnim, alignItems: 'center' }}><Text style={styles.link}>{isPhotos ? 'Photo story published ⚡' : 'Seki play uploaded ⚡'}</Text></Animated.View>
           ) : (
             <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: Math.round(p.progress * 100) }} accessibilityLiveRegion="polite" style={styles.field}>
               <View style={styles.progressTrack}><Animated.View style={[styles.progressFill, { width: p.barWidth, opacity: p.pulse }]}><CardShine loopMs={1700} width={12} /></Animated.View></View>
@@ -207,12 +250,12 @@ export function UploadVideoComposer(p: Props) {
             </View>
           ) : null}
           {!p.uploading && !p.openSelect && p.step !== 'options' ? <Text style={styles.footerHint}>
-            {p.step === 'clip' ? p.asset ? 'Your clip is ready.' : 'Choose or record a video to continue.' : p.step === 'details' ? 'Add a caption and choose an athlete.' : 'Confirm each statement to publish.'}
+            {p.step === 'clip' ? isPhotos ? mediaReady ? 'Your photos are ready.' : `Choose up to ${PHOTO_STORY_MAX_PHOTOS} photos to continue.` : mediaReady ? 'Your clip is ready.' : 'Choose or record a video to continue.' : p.step === 'details' ? 'Add a caption and choose an athlete.' : 'Confirm each statement to publish.'}
           </Text> : null}
           <AnimatedButton accessibilityLabel={p.openSelect || p.step === 'options' ? 'Done' : p.step === 'review' ? HIGHLIGHT_PUBLISH_LABEL : 'Next'}
-            disabled={p.uploading || (!p.openSelect && (p.step === 'clip' ? !p.asset : p.step === 'details' ? !p.detailsReady : p.step === 'review' ? !p.canSubmit : false))}
+            disabled={p.uploading || (!p.openSelect && (p.step === 'clip' ? !mediaReady : p.step === 'details' ? !p.detailsReady : p.step === 'review' ? !p.canSubmit : false))}
             onPress={() => { if (p.openSelect) { p.onSelect(null); Keyboard.dismiss(); } else if (p.step === 'review') p.onSubmit(); else go(p.step === 'clip' ? 'details' : 'review'); }}
-            contentStyle={[styles.submit, (p.uploading || (!p.openSelect && (p.step === 'clip' ? !p.asset : p.step === 'details' ? !p.detailsReady : p.step === 'review' ? !p.canSubmit : false))) && styles.disabled]}>
+            contentStyle={[styles.submit, (p.uploading || (!p.openSelect && (p.step === 'clip' ? !mediaReady : p.step === 'details' ? !p.detailsReady : p.step === 'review' ? !p.canSubmit : false))) && styles.disabled]}>
             <Text style={styles.submitText}>{p.uploading ? 'Publishing…' : p.openSelect || p.step === 'options' ? 'Done' : p.step === 'review' ? HIGHLIGHT_PUBLISH_LABEL : 'Next'}</Text>
           </AnimatedButton>
         </View>

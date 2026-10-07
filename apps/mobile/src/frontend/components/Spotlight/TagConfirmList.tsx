@@ -80,7 +80,7 @@ export function TagConfirmList({
   return (
     <DashboardPanel
       title="Is this you?"
-      body="Fans can tag a jersey. Only you, a parent, your school operator, or admin can confirm it. Confirmed Game Play hype elects Player of the Week."
+      body="Fans can tag a jersey. Only you, a parent, your school operator, or admin can confirm it. Confirmed Game Day hype elects Player of the Week."
     >
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {tags.length === 0 ? <Text style={styles.empty}>{emptyText}</Text> : rows}

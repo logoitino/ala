@@ -1,3 +1,9 @@
+/**
+ * Highlights ⚡ shared vocabulary: nav/tab labels, the three categories (Game Day / Train Like Me /
+ * Serve Like Me), the `HighlightClip` shape every feed and grid renders (videos and photo stories —
+ * PHOTO_STORIES_DESIGN.md), and pure ranking helpers for the Home feed. No network or React here.
+ */
+
 /** Fan-bar label (space is tight; ⚡ lives on profile pills and publish). */
 export const HIGHLIGHT_NAV_LABEL = 'Home';
 
@@ -24,6 +30,7 @@ export const HIGHLIGHT_FEED_SEKI = 'Seki';
 
 export type HighlightFeedFilter = 'home' | 'all' | 'seki';
 
+/** Stored `reels.category`. The Game Day label (owner rename 2026-10-07) keeps id `game_play`. */
 export type ReelCategory = 'game_play' | 'train_like_me' | 'serve_like_me';
 
 export const REEL_CATEGORY_GAME = 'game_play' as const;
@@ -35,13 +42,13 @@ export const DOUBLE_TAP_AURA_POINTS = 1;
 export const SERVE_LIKE_ME_AURA_MULTIPLIER = 2;
 
 export const REEL_CATEGORY_PILLS: { id: ReelCategory; label: string }[] = [
-  { id: REEL_CATEGORY_GAME, label: '⚡ Game Play' },
+  { id: REEL_CATEGORY_GAME, label: '⚡ Game Day' },
   { id: REEL_CATEGORY_TRAIN, label: '💪 Train Like Me' },
   { id: REEL_CATEGORY_SERVE, label: '🤝 Serve Like Me (2x Aura Boost)' },
 ];
 
 /**
- * @purpose Overlay Catalogs-desk labels onto the three shipping category ids. Unknown ids stay Game Play / Train / Serve.
+ * @purpose Overlay Catalogs-desk labels onto the three shipping category ids. Unknown ids stay Game Day / Train / Serve.
  */
 export function labeledReelCategories(
   rows?: { id: string; label: string }[] | null,
@@ -57,7 +64,7 @@ export const SERVE_LIKE_ME_FEED_BADGE = '🤝 SERVE LIKE ME • 2x AURA';
 export const TRAIN_LIKE_ME_FEED_BADGE = '💪 TRAIN LIKE ME';
 
 /**
- * @purpose Normalize `reels.category`. Missing / unknown values are Game Play.
+ * @purpose Normalize `reels.category`. Missing / unknown values are Game Day (`game_play`).
  */
 export function parseReelCategory(value: unknown): ReelCategory {
   if (value === REEL_CATEGORY_TRAIN || value === REEL_CATEGORY_SERVE) return value;
@@ -73,7 +80,7 @@ export function doubleTapAuraForCategory(category?: ReelCategory | null): number
 }
 
 /**
- * @purpose Feed badge copy. Game Play has no extra chip (Seki plays live in the All / Seki switch).
+ * @purpose Feed badge copy. Game Day has no extra chip (Seki plays live in the All / Seki switch).
  */
 export function reelCategoryBadge(category?: ReelCategory | null): string | null {
   if (category === REEL_CATEGORY_SERVE) return SERVE_LIKE_ME_FEED_BADGE;
@@ -87,6 +94,25 @@ export function reelCategoryBadge(category?: ReelCategory | null): string | null
 export function isSekiHighlight(clip: Pick<HighlightClip, 'sekiPlay' | 'sekiCount'>): boolean {
   return Boolean(clip.sekiPlay) || (clip.sekiCount ?? 0) >= 3;
 }
+
+/** `reels.media_type` — pre-migration rows and missing columns are `video`. */
+export type HighlightMediaType = 'video' | 'photo_story';
+
+/** Most photos one story can hold (the `set_reel_photos` RPC enforces the same cap). */
+export const PHOTO_STORY_MAX_PHOTOS = 10;
+
+/** Longest optional per-photo description, in characters (`reel_photos.description` CHECK). */
+export const PHOTO_DESCRIPTION_MAX = 200;
+
+/** One photo in a story, from `reel_photos_feed`, ordered by `position` (0-based). */
+export type StoryPhoto = {
+  id: string;
+  position: number;
+  imageUrl: string;
+  description: string | null;
+  width?: number | null;
+  height?: number | null;
+};
 
 export type HighlightClip = {
   id: string;
@@ -106,7 +132,7 @@ export type HighlightClip = {
   totalTipsCents?: number;
   /** `reels.created_at` — newest first in profile / athlete grids. */
   createdAt?: string;
-  /** `reels.category` — Game Play / Train Like Me / Serve Like Me. */
+  /** `reels.category` — Game Day / Train Like Me / Serve Like Me. */
   category?: ReelCategory;
   /** `reels.flash_unlock_until` — Vault clip is playable until this instant. */
   flashUnlockUntil?: string | null;
@@ -118,7 +144,20 @@ export type HighlightClip = {
   viewCount?: number;
   /** Fan who filmed and posted the clip, when that is not the athlete (`reels_feed.uploader_name`). */
   filmedBy?: string | null;
+  /** `reels_feed.media_type` — undefined means video (column missing before the photo-story SQL). */
+  mediaType?: HighlightMediaType;
+  /** `reels_feed.photo_count` — photos in a story; 0 means the story never finished publishing. */
+  photoCount?: number;
+  /** `reels_feed.cover_path` — position-0 photo, used for grid posters and as the feed fallback. */
+  coverUrl?: string | null;
 };
+
+/**
+ * @purpose True when the clip is a photo story rather than a video (render photos, never a player).
+ */
+export function isPhotoStory(clip: Pick<HighlightClip, 'mediaType'>): boolean {
+  return clip.mediaType === 'photo_story';
+}
 
 export type HomeFeedContext = {
   crewIds: Set<string>;

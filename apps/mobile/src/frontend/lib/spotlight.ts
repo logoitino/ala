@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { HIGHLIGHT_CLIPS } from '@/data/highlights';
 import { isAuraUuid } from '@/lib/aura';
-import { resolvePlaybackUrl } from '@/lib/reels';
+import { isReelUuid, resolvePlaybackUrl } from '@/lib/reels';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Player, SpotlightAward, SpotlightPeriodKind } from '@/types/database';
 
@@ -269,9 +269,17 @@ async function attachReelVideos(awards: SpotlightAward[]): Promise<SpotlightAwar
   );
 }
 
-function withDemoVideo(award: SpotlightAward): SpotlightAward {
+/**
+ * @purpose Fill the stock demo clip only for a genuine demo / seeded award (no real reel behind it).
+ *   An award that points at a real `reels` row keeps its own video: if that reel has no playable video
+ *   (a photo story, a removed or Vault-gated clip) `video_url` stays null and the Watch button hides,
+ *   rather than playing someone else's footage under this athlete's name.
+ * @param award Award after `attachReelVideos`.
+ */
+export function withDemoVideo(award: SpotlightAward): SpotlightAward {
   if (award.video_url) return award;
-  return { ...award, video_url: demoClip().videoUrl };
+  if (award.reel_id && isReelUuid(award.reel_id)) return award;
+  return { ...award, video_url: demoClip().videoUrl || null };
 }
 
 /**

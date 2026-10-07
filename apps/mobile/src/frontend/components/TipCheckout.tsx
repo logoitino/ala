@@ -1,6 +1,7 @@
 /**
  * Short donation pages shared by the fan popup and inline athlete cards.
  * Amount selection never pays: donors review all disclosures before the deliberate final action.
+ * The Amount page opens with the small owner-approved brand line (TAGLINE_HEADLINE); later pages stay plain.
  * @sideEffects Stripe checkout through useTipCheckout; both optional Tapua'i extras default off (LEGAL R).
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -11,7 +12,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { MenuStepIndicator } from '@/components/UI/MenuChrome';
 import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { COMPLIANCE_PAYMENT, GIFT_RECORD_NOTICE } from '@/data/legal';
-import { PLATFORM_TIP_HINT, PLATFORM_TIP_PERCENTS, PLATFORM_TIP_TITLE, donationBreakdownLine, donationSplitLine, donationWhereItGoes, platformTipCentsFor, platformTipChipLabel } from '@/data/malo';
+import { PLATFORM_TIP_HINT, PLATFORM_TIP_PERCENTS, PLATFORM_TIP_TITLE, TAGLINE_HEADLINE, donationBreakdownLine, donationSplitLine, donationWhereItGoes, platformTipCentsFor, platformTipChipLabel } from '@/data/malo';
 import { AURA_PER_DOLLAR, MALO_DISCLAIMER, auraPointsForTip, displayValue, type Player } from '@/data/players';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
@@ -113,6 +114,8 @@ export function TipCheckout({ player, compact = false, hideHeader = false, embed
         {complete ? <View style={styles.hero}><Text style={styles.kicker}>MĀLO! ✨</Text><Text style={styles.title}>Thanks for showing up</Text><Text style={styles.copy}>Your donation to {playerName} is on its way.</Text></View> : null}
         {paid && !complete ? <View style={styles.hero}><Text style={styles.title}>Payment received</Text><Text style={styles.copy}>{locked ? 'Finishing your donation…' : 'Your payment went through. Contact support to check your donation before paying again.'}</Text></View> : null}
         {!complete && !paid && step === 1 ? <>
+          {/* Brand line (BRAND-01) sits above the Amount page only; Options and Review stay plain financial copy. */}
+          <Text style={styles.tagline}>{TAGLINE_HEADLINE}</Text>
           <View style={styles.hero}><Text style={styles.kicker}>COMMUNITY LOVE 💚</Text><Text style={styles.pageTitle}>Choose your donation</Text><Text style={styles.split}>{donationSplitLine(playerName)}</Text><Text style={styles.copy}>For {playerName}'s sports costs — fees, gear and travel.</Text></View>
           <View style={styles.tipRow}>{tipAmounts.map((value) => <TipButton key={value} amount={value} label={`$${value}`} disabled={locked} selected={!customOpen && selectedAmount === value} onPress={() => { setCustomOpen(false); setSelectedAmount(value); }} />)}<TipButton label="Custom" sublabel="Your amount" disabled={locked} selected={customOpen} onPress={() => setCustomOpen(true)} /></View>
           {customOpen ? <View style={styles.customBlock}><TextInput accessibilityLabel="Custom donation amount" editable={!locked} keyboardType="decimal-pad" onChangeText={setCustomValue} placeholder="Minimum $1.00" placeholderTextColor={colors.textMuted} returnKeyType="done" style={styles.input} value={customValue} /><Text style={styles.copy}>{customAmount == null ? 'Enter $1 or more, with up to two decimal places.' : `+${auraPointsForTip(customAmount)} Aura Points ⚡`}</Text></View> : null}
@@ -146,6 +149,7 @@ const styles = StyleSheet.create({
   body: { flexShrink: 1 }, embeddedBody: { flex: 1, minHeight: 0 }, bodyContent: { gap: 14, paddingBottom: 8 },
   title: { fontSize: 22, fontWeight: '800', color: colors.text, letterSpacing: -0.4 },
   hero: { gap: 7, backgroundColor: colors.accentSoft, borderRadius: MENU_METRICS.cardRadius, padding: 16, borderWidth: 1, borderColor: colors.border },
+  tagline: { fontSize: 12, lineHeight: 17, fontWeight: '700', color: colors.textMuted, textAlign: 'center' },
   kicker: { fontSize: 11, letterSpacing: 1.1, fontWeight: '800', color: colors.deepGreen },
   pageTitle: { fontSize: 20, fontWeight: '800', color: colors.text, letterSpacing: -0.4 },
   split: { fontSize: 13, lineHeight: 19, fontWeight: '800', color: colors.text },

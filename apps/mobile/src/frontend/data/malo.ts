@@ -16,6 +16,15 @@ export const DONATE_LABEL = 'Donate';
 export const DONATION_MISSION =
   "Tapua'i helps families cover their young athlete's sports costs — fees, gear, travel — with donations from their community.";
 
+/**
+ * Brand message (owner-approved 2026-10-07, BRAND-01). Shown on the welcome overlay, at the top of the
+ * donate sheet's Amount step and under an athlete's profile Donate button; also in public docs and store
+ * copy. Plain text, never a heading. "Elevate" must never promise recruiting, scholarships or exposure,
+ * and Donate stays the money verb (docs/product/VOICE.md; LEGAL_BRIEFING row W, counsel open).
+ */
+export const TAGLINE_HEADLINE = 'Donate. Elevate. Celebrate.';
+export const TAGLINE_LINE = 'Support their journey. Elevate their opportunities. Celebrate their story.';
+
 /** Plain answer to "where does my donation go?" (LEGAL row Q — counsel to confirm wording). */
 export function donationWhereItGoes(athleteName?: string | null): string {
   const name = displayValue(athleteName, 'this athlete');

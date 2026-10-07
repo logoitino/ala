@@ -6,6 +6,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
 import type { AthleteStatsBundle } from '@/data/athleteStats';
+import { TAGLINE_HEADLINE } from '@/data/malo';
 import type { Player, Profile } from '@/types/database';
 
 let mockProfile: Profile;
@@ -147,4 +148,33 @@ it('respects hidden school on public hero and teammate navigation', async () => 
     auraPoints={0} schoolVisible={false} rosterPlayers={[player]} />);
   expect(screen.queryByText(player.school_name)).toBeNull();
   expect(screen.queryByRole('tab', { name: 'Team' })).toBeNull();
+});
+
+/** Brand line (BRAND-01) sits under Donate only for an athlete who can receive donations, never on owner views. */
+describe('AthleteProfileView donate tagline', () => {
+  it('shows the tagline under Donate for a public athlete', async () => {
+    mockProfile = { id: 'fan', user_id: 'fan-user', full_name: 'Fan', role: 'fan', is_verified: false };
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]} stats={stats}
+      auraPoints={0} onDropMalo={jest.fn()} />);
+    expect(screen.getByRole('button', { name: `Donate 5 dollars to ${player.name}` })).toBeTruthy();
+    expect(screen.getByText(TAGLINE_HEADLINE)).toBeTruthy();
+    expect(screen.queryByRole('header', { name: TAGLINE_HEADLINE })).toBeNull();
+  });
+  it('hides the tagline when there is no Donate button or the viewer owns the profile', async () => {
+    mockProfile = { id: 'fan', user_id: 'fan-user', full_name: 'Fan', role: 'fan', is_verified: false };
+    const view = await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]}
+      stats={stats} auraPoints={0} />);
+    expect(screen.queryByText(TAGLINE_HEADLINE)).toBeNull();
+    await view.unmount();
+    mockProfile = { id: 'owner', user_id: 'owner-user', full_name: player.name, role: 'athlete', is_verified: false, player_id: player.id };
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]} stats={stats}
+      auraPoints={0} onDropMalo={jest.fn()} />);
+    expect(screen.queryByText(TAGLINE_HEADLINE)).toBeNull();
+  });
+  it('hides the tagline on a community (non-athlete) profile', async () => {
+    mockProfile = { id: 'fan', user_id: 'fan-user', full_name: 'Fan', role: 'fan', is_verified: false };
+    await render(<AthleteProfileView player={player} name="Community Fan" role="fan" clips={[]} stats={stats}
+      auraPoints={0} onDropMalo={jest.fn()} />);
+    expect(screen.queryByText(TAGLINE_HEADLINE)).toBeNull();
+  });
 });

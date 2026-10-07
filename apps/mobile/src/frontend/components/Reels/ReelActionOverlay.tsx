@@ -1,6 +1,7 @@
 /**
  * Highlights overlay on top of each clip: athlete name and school, "Filmed by" credit, caption, and the right-hand
- * rail (Seki / Aura / Flex / donate / more). Only Aura plays a burst; Seki swaps its emoji briefly; Flex lights up;
+ * rail (Seki / Aura / Flex / donate / more). Photo stories add the current photo's description above the name.
+ * Only Aura plays a burst; Seki swaps its emoji briefly; Flex lights up;
  * removing a vote never animates.
  */
 
@@ -43,6 +44,8 @@ type ReelActionOverlayProps = {
   jerseyNumber?: number | null;
   position?: string | null;
   caption?: string;
+  /** Photo stories: the current photo's optional description, shown above the name and caption. */
+  storyNote?: string | null;
   /** Confirmed account mentions, already joined for one line. */
   withAccounts?: string;
   /** Fan who filmed the clip ("🎥 Filmed by …"). Null when the athlete posted it. */
@@ -80,6 +83,7 @@ export function ReelActionOverlay({
   jerseyNumber,
   position,
   caption,
+  storyNote,
   withAccounts,
   filmedBy,
   onOpenFilmer,
@@ -190,6 +194,11 @@ export function ReelActionOverlay({
   const copy = (
     <View style={styles.copy}>
       <ScrollView style={styles.copyScroll} contentContainerStyle={styles.copyContent} nestedScrollEnabled>
+        {storyNote ? (
+          <Text style={styles.storyNote} numberOfLines={4}>
+            {storyNote}
+          </Text>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Open ${athleteName} profile, ${auraLabel}${rosterDetails ? `, ${rosterDetails}` : ''}`}
@@ -469,6 +478,19 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
+  },
+  storyNote: {
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    color: colors.onVideo,
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: '600',
+    backgroundColor: colors.videoScrimSoft,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 2,
   },
   caption: {
     color: colors.onVideo,

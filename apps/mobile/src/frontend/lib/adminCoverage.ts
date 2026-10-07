@@ -81,7 +81,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'slang_dismiss', label: 'Dismiss slang guide', hint: 'Hides the donations / Seki line', surface: 'home', fanHref: '/', adminHref: '/admin/look', flag: 'layouts.slangGuide' },
   { id: 'spotlight_modal_actions', label: 'Spotlight modal Donate / Watch', hint: 'Player of the Week popup buttons', surface: 'home', fanHref: '/', adminHref: '/admin/spotlight', flag: 'layouts.spotlightModal' },
   { id: 'reel_unsave', label: 'Remove bookmark', hint: 'More sheet · saved_reels delete', surface: 'home', fanHref: '/', adminHref: '/admin/features', flag: 'buttons.more' },
-  { id: 'reel_category', label: 'Clip category badge', hint: 'Game Play / Train / Serve labels — Catalogs', surface: 'home', fanHref: '/', adminHref: '/admin/catalog' },
+  { id: 'reel_category', label: 'Clip category badge', hint: 'Game Day / Train / Serve labels — Catalogs', surface: 'home', fanHref: '/', adminHref: '/admin/catalog' },
 
   { id: 'tab.local', label: 'Local', hint: 'Home pill → /local', surface: 'local', fanHref: '/local', adminHref: '/admin/features', flag: 'tabs.local', telemetry: 'tab.local' },
   { id: 'local_search', label: 'Local Explore', hint: 'Players, schools, sponsors', surface: 'local', fanHref: '/local', adminHref: '/admin/features', flag: 'layouts.localSearch' },
@@ -169,7 +169,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'upload', label: 'Publish Reel', hint: 'reels Storage (fallback game_highlights)', surface: 'upload', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'upload' },
   { id: 'upload_library', label: 'Camera Roll picker', hint: 'HighlightPickerModal 45s + compress overlay', surface: 'upload', fanHref: '/', adminHref: '/admin/highlights', flag: 'tabs.upload', telemetry: 'upload' },
   { id: 'upload_source', label: 'Library vs Record', hint: 'Clip source picker', surface: 'upload', fanHref: '/', adminHref: '/admin/features', flag: 'tabs.upload' },
-  { id: 'upload_category', label: 'Upload category pills', hint: 'Game Play / Train / Serve labels — Catalogs', surface: 'upload', fanHref: '/', adminHref: '/admin/catalog', flag: 'tabs.upload' },
+  { id: 'upload_category', label: 'Upload category pills', hint: 'Game Day / Train / Serve labels — Catalogs', surface: 'upload', fanHref: '/', adminHref: '/admin/catalog', flag: 'tabs.upload' },
   { id: 'upload_vault', label: 'Vault-only toggle', hint: 'Publish straight to the Vault', surface: 'upload', fanHref: '/', adminHref: '/admin/highlights', flag: 'buttons.vault' },
   { id: 'upload_tag', label: 'Tag the athlete', hint: 'Pending tag until confirmed', surface: 'upload', fanHref: '/', adminHref: '/admin/spotlight', flag: 'tabs.upload' },
 

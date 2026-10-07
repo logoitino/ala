@@ -59,6 +59,11 @@ describe('ReelActionOverlay hype chips', () => {
     expect(onReact.mock.calls.map(([kind]) => kind)).toEqual(['aura', 'seki']);
   });
 
+  it('shows the current photo description above the name for a photo story (UX-05)', async () => {
+    await render(<ReelActionOverlay athleteName="Sione" caption="Service day" storyNote="Packing food boxes" auraColor="#00E676" auraLabel="Rising" hype={hype} />);
+    expect(screen.getByText('Packing food boxes')).toBeTruthy();
+  });
+
   it('shows who filmed the clip when a fan posted it', async () => {
     await render(<ReelActionOverlay athleteName="Sione" filmedBy="hawksmom" auraColor="#00E676" auraLabel="Rising" hype={hype} />);
     expect(screen.getByText('🎥 Filmed by hawksmom')).toBeTruthy();

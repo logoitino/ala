@@ -251,7 +251,7 @@ function CategoryPane({
   const [rows, setRows] = useState(catalog.reelCategories.map((row) => ({ ...row })));
   return (
     <AdminPanel title="Upload category pills">
-      <Text style={styles.hint}>Game Play / Train Like Me / Serve Like Me labels on the + sheet and Highlights desk.</Text>
+      <Text style={styles.hint}>Game Day / Train Like Me / Serve Like Me labels on the + sheet and Highlights desk.</Text>
       {rows.map((row, index) => (
         <AdminField
           key={row.id}

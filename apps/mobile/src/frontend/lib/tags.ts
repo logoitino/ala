@@ -95,7 +95,7 @@ export async function confirmReelPlayerTag(reelId: string, action: 'confirm' | '
 }
 
 /**
- * @purpose Live Player of the Week / Month / Year race from confirmed Game Play hype.
+ * @purpose Live Player of the Week / Month / Year race from confirmed Game Day hype.
  * @param periodKind Window to score.
  * @sideEffects `get_spotlight_standings`.
  */

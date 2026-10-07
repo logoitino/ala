@@ -1,0 +1,153 @@
+/**
+ * `ReelCard` media branch (UX-05): a photo story renders `PhotoStoryMedia` and never creates an expo-video
+ * player; its view counts after 3 s visible (VIEW_PLAY_MS) while the card is current and only once a photo
+ * (or the cover) actually loaded. A video clip still gets
+ * the player, and loads its source on activation (regression: the lazy-load ref was seeded with the URL, so
+ * a card's first clip was never loaded).
+ */
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
+
+import { ReelCard } from '@/components/Reels/ReelCard';
+import type { HighlightClip, StoryPhoto } from '@/data/highlights';
+
+const mockCreatePlayer = jest.fn();
+const mockReplace = jest.fn(async () => undefined);
+const mockTracker = jest.fn();
+const mockOverlay = jest.fn();
+
+jest.mock('expo-video', () => {
+  const { View } = jest.requireActual('react-native');
+  return {
+    useVideoPlayer: (source: unknown) => {
+      mockCreatePlayer(source);
+      return { replaceAsync: mockReplace, play: jest.fn(), pause: jest.fn(), loop: false, muted: true, duration: 0 };
+    },
+    VideoView: () => <View testID="video-view" />,
+  };
+});
+jest.mock('expo', () => ({ useEventListener: jest.fn() }));
+jest.mock('expo-router', () => ({ useIsFocused: () => true }));
+jest.mock('expo-blur', () => {
+  const { View } = jest.requireActual('react-native');
+  return { BlurTargetView: View, BlurView: View };
+});
+jest.mock('expo-haptics', () => ({ impactAsync: jest.fn(), ImpactFeedbackStyle: { Light: 'light', Medium: 'medium' } }));
+jest.mock('react-native-gesture-handler', () => {
+  const chain: Record<string, unknown> = new Proxy({}, { get: () => () => chain });
+  return {
+    Gesture: { Tap: () => chain, Exclusive: () => chain },
+    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
+jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
+jest.mock('@/context/AppRuntimeContext', () => ({
+  useAppRuntime: () => ({ live: { catalog: { exclusiveDollars: 5, exclusiveAura: 10 }, buttons: { suggest: false } } }),
+}));
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'u1' }, profile: null, isAthlete: false }) }));
+jest.mock('@/context/CelebrationContext', () => ({ useOptionalCelebration: () => null }));
+jest.mock('@/hooks/useAthleteSubscription', () => ({ useAthleteSubscription: () => ({ subscribed: null, grant: jest.fn() }) }));
+jest.mock('@/hooks/useTipCheckout', () => ({ useTipCheckout: () => ({ startCheckout: jest.fn(), busy: false }) }));
+jest.mock('@/hooks/useSavedReel', () => ({ useSavedReel: () => ({ saved: false, toggling: false, toggle: jest.fn() }) }));
+jest.mock('@/hooks/useGameEventBroadcast', () => ({ useGameEventBroadcast: () => ({ lastEvent: null, clear: jest.fn() }) }));
+jest.mock('@/hooks/useReelViewTracker', () => ({ useReelViewTracker: (...args: unknown[]) => mockTracker(...args) }));
+jest.mock('@/lib/accountTags', () => ({ fetchReelAccountTags: async () => [] }));
+jest.mock('@/lib/reelVotes', () => ({
+  loadReelVotes: async () => ({ seki: false, aura: false, flex: false }),
+  markReelVote: jest.fn(),
+  clearReelVote: jest.fn(),
+}));
+jest.mock('@/services/TelemetryManager', () => ({
+  telemetry: { track: jest.fn(), trackFeature: jest.fn(), trackIssue: jest.fn(), trackVideoStall: jest.fn() },
+}));
+jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: {} }));
+jest.mock('@/components/Reels/ReelActionOverlay', () => ({
+  ReelActionOverlay: (props: { storyNote?: string | null }) => {
+    mockOverlay(props);
+    return null;
+  },
+}));
+jest.mock('@/components/Reels/PhotoStoryMedia', () => {
+  const { Pressable, Text } = jest.requireActual('react-native');
+  const { useEffect } = jest.requireActual('react');
+  return {
+    PhotoStoryMedia: ({
+      clip,
+      onPhotoChange,
+      onContentReady,
+    }: {
+      clip: HighlightClip;
+      onPhotoChange?: (photo: StoryPhoto | null, i: number, n: number) => void;
+      onContentReady?: () => void;
+    }) => {
+      useEffect(() => {
+        onPhotoChange?.({ id: 'p0', position: 0, imageUrl: 'https://x/0.jpg', description: 'Food bank morning' }, 0, 3);
+      }, [onPhotoChange]);
+      return (
+        <Pressable accessibilityLabel="simulate photo loaded" onPress={onContentReady}>
+          <Text>{`photos:${clip.id}`}</Text>
+        </Pressable>
+      );
+    },
+  };
+});
+jest.mock('@/components/Filmers/FilmerSheet', () => ({ FilmerSheet: () => null }));
+jest.mock('@/components/Reels/ReelMoreSheet', () => ({ ReelMoreSheet: () => null }));
+jest.mock('@/components/Reels/ReportContentModal', () => ({ ReportContentModal: () => null }));
+jest.mock('@/components/Feedback/SuggestionSheet', () => ({ SuggestionSheet: () => null }));
+jest.mock('@/components/Effects/HypeBurst', () => ({ HypeBurst: () => null }));
+jest.mock('@/components/Common/SwipeableBannerWrapper', () => ({ SwipeableBannerWrapper: () => null }));
+
+const base: HighlightClip = {
+  id: 'c1',
+  athleteName: 'Sione',
+  school: 'ALA',
+  tag: 'Service day',
+  videoUrl: '',
+  playerId: 'p1',
+  tagStatus: 'confirmed',
+};
+
+function renderCard(clip: HighlightClip, active = true) {
+  return render(<ReelCard clip={clip} player={null} active={active} height={800} tipping={false} onTip={jest.fn()} />);
+}
+
+beforeEach(() => {
+  mockCreatePlayer.mockReset();
+  mockReplace.mockClear();
+  mockTracker.mockReset();
+  mockOverlay.mockReset();
+});
+
+describe('ReelCard photo-story branch', () => {
+  it('renders photos instead of a video player and counts a view after 3 s once a photo loaded', async () => {
+    await renderCard({ ...base, mediaType: 'photo_story', photoCount: 3, coverUrl: 'https://x/0.jpg' });
+    await act(async () => {});
+    expect(screen.getByText('photos:c1')).toBeTruthy();
+    expect(screen.queryByTestId('video-view')).toBeNull();
+    expect(mockCreatePlayer).not.toHaveBeenCalled();
+    // Nothing on screen yet (photos still loading or failed): no view time accrues.
+    expect(mockTracker).toHaveBeenLastCalledWith('c1', true, false, 3000);
+    await fireEvent.press(screen.getByLabelText('simulate photo loaded'));
+    // reelId, signedIn, "playing" = loaded, visible and current, 3000 ms threshold.
+    expect(mockTracker).toHaveBeenLastCalledWith('c1', true, true, 3000);
+    expect(mockOverlay).toHaveBeenLastCalledWith(expect.objectContaining({ storyNote: 'Food bank morning', caption: 'Service day' }));
+  });
+
+  it('does not count a photo story that is not the current card', async () => {
+    await renderCard({ ...base, mediaType: 'photo_story', photoCount: 3 }, false);
+    await fireEvent.press(screen.getByLabelText('simulate photo loaded'));
+    expect(mockTracker).toHaveBeenLastCalledWith('c1', true, false, 3000);
+  });
+
+  it('keeps the video player for a clip and loads its source when the card becomes current', async () => {
+    const clip = { ...base, id: 'v1', videoUrl: 'https://x/v.mp4' };
+    const view = await renderCard(clip, false);
+    expect(screen.getByTestId('video-view')).toBeTruthy();
+    expect(mockCreatePlayer).toHaveBeenCalledWith(null);
+    expect(mockReplace).not.toHaveBeenCalled();
+    await view.rerender(<ReelCard clip={clip} player={null} active height={800} tipping={false} onTip={jest.fn()} />);
+    expect(mockReplace).toHaveBeenCalledWith('https://x/v.mp4');
+    expect(screen.queryByText(/photos:/)).toBeNull();
+    expect(mockOverlay).toHaveBeenLastCalledWith(expect.objectContaining({ storyNote: null }));
+  });
+});

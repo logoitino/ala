@@ -56,6 +56,7 @@ import {
   VAULT_TAB_LABEL,
   type HighlightClip,
 } from '@/data/highlights';
+import { TAGLINE_HEADLINE } from '@/data/malo';
 import { SHARE_FUND_CTA } from '@/data/share';
 import { applyAthleteStatsPlaybook, emptyAthleteStats, type AthleteStatsBundle } from '@/data/athleteStats';
 import { isWishlistFunded } from '@/data/wishlist';
@@ -230,6 +231,7 @@ export function AthleteProfileView({
   );
   const maloAmount = live.catalog.maloAmounts[0] ?? 5;
   const showFanSupport = !ownCredentials && !headerRight && (Boolean(onDropMalo && live.buttons.malo) || Boolean(onSubscribe && live.buttons.subscribe));
+  const showDonateTagline = showFanSupport && athleteIdentity && Boolean(onDropMalo && live.buttons.malo);
   const [tab, setTab] = useState<AthleteProfileTab>('highlights');
   const [openClipId, setOpenClipId] = useState<string | null>(null);
   const [wishlistFulfilled, setWishlistFulfilled] = useState(false);
@@ -441,6 +443,8 @@ export function AthleteProfileView({
           <Text style={styles.shareLabel}>Share</Text>
         </AnimatedButton>
       </View>
+      {/* Brand line (BRAND-01) only where this athlete can actually be donated to; plain text, not a heading. */}
+      {showDonateTagline ? <Text style={styles.donateTagline}>{TAGLINE_HEADLINE}</Text> : null}
       <View accessibilityRole="tablist" accessibilityLabel="Athlete profile sections" style={styles.sectionNav}>
         {tabs.map(item => <AnimatedButton key={item.id} accessibilityRole="tab"
           accessibilityLabel={item.label} accessibilityState={{ selected: tab === item.id }}
@@ -767,6 +771,7 @@ const styles = StyleSheet.create({
   sectionButtonOn: { backgroundColor: FOCAL.jadeInk },
   sectionLabel: { color: FOCAL.jadeInk, fontSize: 12, fontWeight: '800' },
   sectionLabelOn: { color: colors.onAccent },
+  donateTagline: { fontSize: 12, lineHeight: 17, fontWeight: '700', color: colors.textMuted },
   quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'stretch' },
   actionRow: { flex: 1, flexDirection: 'row', gap: 8, minWidth: 180 },
   sectionHeading: { flexDirection: 'row', gap: 10, alignItems: 'center' },

@@ -4,6 +4,9 @@
  * `ReelCard` is a thin wrapper that passes identity-stable callbacks to the memoised `ReelCardImpl`; keep that
  * split or a stale handler can run (see STATE.md, 2026-09-29 pre-merge fixes). View counting needs 3 s of real
  * playback (`useReelViewTracker`). The Rally meter is not here; Home (app/(tabs)/index.tsx) places it.
+ * Photo stories (`isPhotoStory(clip)`) render `PhotoStoryMedia` instead of `ReelVideoLayer`, so no video player
+ * is created for them; their view counts after 3 s on screen with a photo loaded (VIEW_PLAY_MS). Everything else
+ * is shared.
  * @sideEffects Votes, saves, reports and view counts via hooks / lib; haptics.
  */
 
@@ -28,6 +31,7 @@ import Reanimated, {
 } from 'react-native-reanimated';
 
 import { ReelActionOverlay } from '@/components/Reels/ReelActionOverlay';
+import { PhotoStoryMedia } from '@/components/Reels/PhotoStoryMedia';
 import { FilmerSheet } from '@/components/Filmers/FilmerSheet';
 import { ReelMoreSheet } from '@/components/Reels/ReelMoreSheet';
 import { ReportContentModal } from '@/components/Reels/ReportContentModal';
@@ -36,7 +40,7 @@ import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
 import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
 import { HypeBurst } from '@/components/Effects/HypeBurst';
 import { useReelViewTracker } from '@/hooks/useReelViewTracker';
-import { viewThresholdMs } from '@/lib/leaderboards';
+import { VIEW_PLAY_MS, viewThresholdMs } from '@/lib/leaderboards';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, palette, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -56,9 +60,11 @@ import {
 } from '@/data/players';
 import {
   doubleTapAuraForCategory,
+  isPhotoStory,
   reelCategoryBadge,
   REEL_CATEGORY_SERVE,
   type HighlightClip,
+  type StoryPhoto,
 } from '@/data/highlights';
 import {
   canDropMaloOnHighlight,
@@ -186,6 +192,14 @@ function ReelCardImpl({
   const [votes, setVotes] = useState<ReelVoteMap>({ seki: false, aura: false, flex: false });
   // True only while the video is really playing on screen; the view counter adds up this time.
   const [playing, setPlaying] = useState(false);
+  const [durationSec, setDurationSec] = useState<number | null>(null);
+  const photoStory = isPhotoStory(clip);
+  // Keyed by clip so a recycled card never shows the previous story's description.
+  const [storyNoteFor, setStoryNoteFor] = useState<{ clipId: string; note: string | null }>({ clipId: '', note: null });
+  const storyNote = photoStory && storyNoteFor.clipId === clip.id ? storyNoteFor.note : null;
+  // Id of the story whose photo (or cover) actually rendered; a story that never loads is not a view.
+  const [storyLoadedId, setStoryLoadedId] = useState('');
+  const storyLoaded = photoStory && storyLoadedId === clip.id;
   // Kinds the fan tapped since this clip's saved votes started loading. The load is async, so a
   // tap right after swiping onto a clip used to be overwritten when the stored votes landed —
   // the chip flipped back and the next tap did the opposite of what the fan meant.
@@ -208,16 +222,9 @@ function ReelCardImpl({
     hypeInFlightRef.current = Math.max(0, hypeInFlightRef.current - 1);
     if (hypeInFlightRef.current === 0) setHypeSettled((current) => current + 1);
   }, []);
-  const loadedUriRef = useRef(clip.videoUrl);
-  const isFocusedRef = useRef(isFocused);
   const lockedRef = useRef(locked);
-  const mutedRef = useRef(muted);
   const reelHypeRef = useRef(reelHype);
   const votesRef = useRef(votes);
-  const loadStartedAtRef = useRef<number | null>(null);
-  const firstFrameLoggedRef = useRef(false);
-  const stallStartedAtRef = useRef<number | null>(null);
-  const appPausedRef = useRef(false);
   const blurTarget = useRef<View>(null);
   const muteOpacity = useSharedValue(0);
   const playerName = displayValue(player?.name, clip.athleteName);
@@ -233,32 +240,10 @@ function ReelCardImpl({
   });
   const categoryBadge = reelCategoryBadge(clip.category);
   const serveCategory = clip.category === REEL_CATEGORY_SERVE;
-  const videoSource = clip.videoUrl || null;
 
-  isFocusedRef.current = isFocused;
   lockedRef.current = locked;
-  mutedRef.current = muted;
   reelHypeRef.current = reelHype;
   votesRef.current = votes;
-
-  const clipIdRef = useRef(clip.id);
-  clipIdRef.current = clip.id;
-
-  // 2026-09 fix: this used to pass `videoSource` here directly, which makes `expo-video` start
-  // loading/probing that URL the instant the component mounts — regardless of `active`. The Home
-  // feed's FlatList mounts up to 10 cards on first render (RN's `initialNumToRender` default, not
-  // overridden below), so every one of those 10 clips' videos — several pointing at now-dead
-  // `commondatastorage.googleapis.com` sample URLs mixed into the seeded demo feed — started loading
-  // concurrently on a single Home mount. On a real device this pegged the main thread hard enough to
-  // make the whole app unresponsive with no error surfaced (confirmed via a wall of AVFoundation
-  // "Failed to load available audio/subtitle tracks" warnings for every one of those 10 clips, right
-  // where a real freeze reproduced). Starting from `null` and only loading the real source once this
-  // card is `active` (below) means an off-screen mounted card never touches the network or the native
-  // video decoder at all.
-  const videoPlayer = useVideoPlayer(null, (instance) => {
-    instance.loop = true;
-    instance.muted = true;
-  });
 
   const muteBadgeStyle = useAnimatedStyle(() => ({
     opacity: muteOpacity.value,
@@ -306,21 +291,6 @@ function ReelCardImpl({
   }, [clip.id, clip.sekiCount, clip.auraCount, clip.flexCount, clip.totalTipsCents, hypeSettled]);
 
   useEffect(() => {
-    loadStartedAtRef.current = Date.now();
-    firstFrameLoggedRef.current = false;
-    stallStartedAtRef.current = null;
-  }, [clip.id, clip.videoUrl]);
-
-  useEffect(() => {
-    if (!active || !clip.videoUrl || loadedUriRef.current === clip.videoUrl) return;
-    loadedUriRef.current = clip.videoUrl;
-    loadStartedAtRef.current = Date.now();
-    firstFrameLoggedRef.current = false;
-    stallStartedAtRef.current = null;
-    void videoPlayer.replaceAsync(clip.videoUrl);
-  }, [active, clip.videoUrl, videoPlayer]);
-
-  useEffect(() => {
     if (!active || !clip.id) {
       setWithAccounts('');
       return;
@@ -335,19 +305,6 @@ function ReelCardImpl({
       live = false;
     };
   }, [active, clip.id]);
-
-  useEffect(() => {
-    videoPlayer.loop = true;
-    videoPlayer.muted = muted;
-    if (isFocused && !locked) {
-      appPausedRef.current = false;
-      videoPlayer.play();
-      return;
-    }
-    appPausedRef.current = true;
-    stallStartedAtRef.current = null;
-    videoPlayer.pause();
-  }, [isFocused, locked, muted, videoPlayer]);
 
   useEffect(() => {
     if (!active) setMuted(true);
@@ -590,96 +547,73 @@ function ReelCardImpl({
         runOnJS(toggleMute)();
       });
 
-    return Gesture.Exclusive(doubleTap, singleTap);
-  }, [onDoubleAura, toggleMute]);
+    // Photo stories have no sound to mute; a single tap must not flash the mute badge.
+    return photoStory ? doubleTap : Gesture.Exclusive(doubleTap, singleTap);
+  }, [onDoubleAura, photoStory, toggleMute]);
 
-  useEventListener(videoPlayer, 'statusChange', ({ status, oldStatus }) => {
-    if (status === 'loading') {
-      if (loadStartedAtRef.current == null) loadStartedAtRef.current = Date.now();
-      if (
-        firstFrameLoggedRef.current &&
-        oldStatus === 'readyToPlay' &&
-        isFocusedRef.current &&
-        !lockedRef.current &&
-        !appPausedRef.current &&
-        stallStartedAtRef.current == null
-      ) {
-        stallStartedAtRef.current = Date.now();
-      }
-    }
-
-    if (status === 'readyToPlay') {
-      if (loadStartedAtRef.current != null && !firstFrameLoggedRef.current) {
-        telemetry.track({
-          event_type: 'video_first_frame',
-          video_id: clipIdRef.current,
-          duration_ms: Date.now() - loadStartedAtRef.current,
-        });
-        firstFrameLoggedRef.current = true;
-      }
-      if (stallStartedAtRef.current != null) {
-        telemetry.trackVideoStall(clipIdRef.current, Date.now() - stallStartedAtRef.current);
-        stallStartedAtRef.current = null;
-      }
-      if (isFocusedRef.current && !lockedRef.current) {
-        videoPlayer.loop = true;
-        videoPlayer.muted = mutedRef.current;
-        videoPlayer.play();
-      }
-    }
-  });
-
-  useEventListener(videoPlayer, 'playingChange', ({ isPlaying, oldIsPlaying }) => {
+  const onPlaybackChange = useCallback((isPlaying: boolean, duration: number | null) => {
     setPlaying(isPlaying);
-    if (
-      oldIsPlaying &&
-      !isPlaying &&
-      firstFrameLoggedRef.current &&
-      isFocusedRef.current &&
-      !lockedRef.current &&
-      !appPausedRef.current &&
-      stallStartedAtRef.current == null
-    ) {
-      stallStartedAtRef.current = Date.now();
-      return;
-    }
-    if (isPlaying && stallStartedAtRef.current != null) {
-      telemetry.trackVideoStall(clipIdRef.current, Date.now() - stallStartedAtRef.current);
-      stallStartedAtRef.current = null;
-    }
-  });
+    setDurationSec(duration);
+  }, []);
 
+  const onLoopEnd = useCallback(() => {
+    setLoopFlash(true);
+    setTimeout(() => setLoopFlash(false), 1400);
+  }, []);
+
+  const onStoryReady = useCallback(() => setStoryLoadedId(clip.id), [clip.id]);
+
+  const onStoryPhoto = useCallback(
+    (photo: StoryPhoto | null) => setStoryNoteFor({ clipId: clip.id, note: photo?.description?.trim() || null }),
+    [clip.id],
+  );
+
+  // A photo story "plays" while it is the visible, unlocked card with a photo actually on screen:
+  // 3 s is a view (design decision 4). A failed or still-loading story never counts.
   useReelViewTracker(
     clip.id,
     Boolean(user?.id),
-    playing && isFocused && !locked,
-    viewThresholdMs(playing ? videoPlayer.duration : null),
+    photoStory ? storyLoaded && isFocused && !locked : playing && isFocused && !locked,
+    photoStory ? VIEW_PLAY_MS : viewThresholdMs(playing ? durationSec : null),
   );
-
-  useEventListener(videoPlayer, 'playToEnd', () => {
-    if (!isFocusedRef.current) return;
-    setLoopFlash(true);
-    setTimeout(() => setLoopFlash(false), 1400);
-  });
 
   return (
     <View style={[styles.page, { height }]}>
       <BlurTargetView ref={blurTarget} style={styles.video}>
-        <VideoView
-          player={videoPlayer}
-          style={styles.videoFill}
-          contentFit="cover"
-          nativeControls={false}
-          surfaceType="textureView"
-          allowsVideoFrameAnalysis={false}
-          allowsPictureInPicture={false}
-          playsInline
-        />
+        {photoStory ? (
+          // The pager itself takes the touches (horizontal swipes), so the double-tap wraps it
+          // instead of sitting on a hit layer above it.
+          <GestureDetector gesture={videoTaps}>
+            <View style={styles.videoFill}>
+              <PhotoStoryMedia
+                clip={clip}
+                active={isFocused}
+                // Home passes its header height; the profile pager passes 0, so clear the notch there.
+                topInset={Math.max(overlayInsetTop, insets.top + 8)}
+                onPhotoChange={onStoryPhoto}
+                onContentReady={onStoryReady}
+              />
+            </View>
+          </GestureDetector>
+        ) : (
+          <ReelVideoLayer
+            clipId={clip.id}
+            videoUrl={clip.videoUrl}
+            active={active}
+            focused={isFocused}
+            locked={locked}
+            muted={muted}
+            onPlaybackChange={onPlaybackChange}
+            onLoopEnd={onLoopEnd}
+          />
+        )}
       </BlurTargetView>
 
-      <GestureDetector gesture={videoTaps}>
-        <View style={styles.hitLayer} />
-      </GestureDetector>
+      {photoStory ? null : (
+        <GestureDetector gesture={videoTaps}>
+          <View style={styles.hitLayer} />
+        </GestureDetector>
+      )}
 
       <View pointerEvents="none" style={styles.scrim} />
       {locked ? (
@@ -778,6 +712,7 @@ function ReelCardImpl({
           jerseyNumber={player?.jersey_number}
           position={player?.position}
           caption={clip.tag}
+          storyNote={storyNote}
           withAccounts={withAccounts}
           filmedBy={clip.filmedBy}
           onOpenFilmer={clip.filmedBy && clip.uploadedBy ? () => setFilmerOpen(true) : undefined}
@@ -873,6 +808,166 @@ function ReelCardImpl({
         }}
       />
     </View>
+  );
+}
+
+type ReelVideoLayerProps = {
+  clipId: string;
+  videoUrl: string;
+  /** Current page: load the source. Off-screen mounted cards never touch the decoder. */
+  active: boolean;
+  /** Current page on a focused route (or `playbackActive`): play. */
+  focused: boolean;
+  locked: boolean;
+  muted: boolean;
+  /** Real playback state for the view counter, with the clip length once known. */
+  onPlaybackChange: (playing: boolean, durationSec: number | null) => void;
+  /** Clip reached its end while focused ("Full replay" flash). */
+  onLoopEnd: () => void;
+};
+
+/**
+ * @purpose The expo-video player for a video Highlight: lazy source load, play / pause with focus and
+ *   lock, TTFF and stall telemetry. Split out of `ReelCardImpl` so a photo story never creates a player.
+ * @sideEffects expo-video player; `TelemetryManager` first-frame and stall events.
+ */
+function ReelVideoLayer({ clipId, videoUrl, active, focused, locked, muted, onPlaybackChange, onLoopEnd }: ReelVideoLayerProps) {
+  // Starts empty, not at `videoUrl`: the player is created with no source (below), so the first
+  // activation must load it. Seeding this with the URL made the load effect skip a card's first clip.
+  const loadedUriRef = useRef('');
+  const isFocusedRef = useRef(focused);
+  const lockedRef = useRef(locked);
+  const mutedRef = useRef(muted);
+  const clipIdRef = useRef(clipId);
+  const loadStartedAtRef = useRef<number | null>(null);
+  const firstFrameLoggedRef = useRef(false);
+  const stallStartedAtRef = useRef<number | null>(null);
+  const appPausedRef = useRef(false);
+  isFocusedRef.current = focused;
+  lockedRef.current = locked;
+  mutedRef.current = muted;
+  clipIdRef.current = clipId;
+
+  // 2026-09 fix: this used to pass the clip URL here directly, which makes `expo-video` start
+  // loading/probing that URL the instant the component mounts — regardless of `active`. The Home
+  // feed's FlatList mounts up to 10 cards on first render (RN's `initialNumToRender` default, not
+  // overridden below), so every one of those 10 clips' videos — several pointing at now-dead
+  // `commondatastorage.googleapis.com` sample URLs mixed into the seeded demo feed — started loading
+  // concurrently on a single Home mount. On a real device this pegged the main thread hard enough to
+  // make the whole app unresponsive with no error surfaced (confirmed via a wall of AVFoundation
+  // "Failed to load available audio/subtitle tracks" warnings for every one of those 10 clips, right
+  // where a real freeze reproduced). Starting from `null` and only loading the real source once this
+  // card is `active` (below) means an off-screen mounted card never touches the network or the native
+  // video decoder at all.
+  const videoPlayer = useVideoPlayer(null, (instance) => {
+    instance.loop = true;
+    instance.muted = true;
+  });
+
+  useEffect(() => {
+    loadStartedAtRef.current = Date.now();
+    firstFrameLoggedRef.current = false;
+    stallStartedAtRef.current = null;
+  }, [clipId, videoUrl]);
+
+  useEffect(() => {
+    if (!active || !videoUrl || loadedUriRef.current === videoUrl) return;
+    loadedUriRef.current = videoUrl;
+    loadStartedAtRef.current = Date.now();
+    firstFrameLoggedRef.current = false;
+    stallStartedAtRef.current = null;
+    void videoPlayer.replaceAsync(videoUrl);
+  }, [active, videoUrl, videoPlayer]);
+
+  useEffect(() => {
+    videoPlayer.loop = true;
+    videoPlayer.muted = muted;
+    if (focused && !locked) {
+      appPausedRef.current = false;
+      videoPlayer.play();
+      return;
+    }
+    appPausedRef.current = true;
+    stallStartedAtRef.current = null;
+    videoPlayer.pause();
+  }, [focused, locked, muted, videoPlayer]);
+
+  useEventListener(videoPlayer, 'statusChange', ({ status, oldStatus }) => {
+    if (status === 'loading') {
+      if (loadStartedAtRef.current == null) loadStartedAtRef.current = Date.now();
+      if (
+        firstFrameLoggedRef.current &&
+        oldStatus === 'readyToPlay' &&
+        isFocusedRef.current &&
+        !lockedRef.current &&
+        !appPausedRef.current &&
+        stallStartedAtRef.current == null
+      ) {
+        stallStartedAtRef.current = Date.now();
+      }
+    }
+
+    if (status === 'readyToPlay') {
+      if (loadStartedAtRef.current != null && !firstFrameLoggedRef.current) {
+        telemetry.track({
+          event_type: 'video_first_frame',
+          video_id: clipIdRef.current,
+          duration_ms: Date.now() - loadStartedAtRef.current,
+        });
+        firstFrameLoggedRef.current = true;
+      }
+      if (stallStartedAtRef.current != null) {
+        telemetry.trackVideoStall(clipIdRef.current, Date.now() - stallStartedAtRef.current);
+        stallStartedAtRef.current = null;
+      }
+      if (isFocusedRef.current && !lockedRef.current) {
+        videoPlayer.loop = true;
+        videoPlayer.muted = mutedRef.current;
+        videoPlayer.play();
+      }
+    }
+  });
+
+  useEventListener(videoPlayer, 'playingChange', ({ isPlaying, oldIsPlaying }) => {
+    onPlaybackChange(isPlaying, isPlaying ? videoPlayer.duration : null);
+    if (
+      oldIsPlaying &&
+      !isPlaying &&
+      firstFrameLoggedRef.current &&
+      isFocusedRef.current &&
+      !lockedRef.current &&
+      !appPausedRef.current &&
+      stallStartedAtRef.current == null
+    ) {
+      stallStartedAtRef.current = Date.now();
+      return;
+    }
+    if (isPlaying && stallStartedAtRef.current != null) {
+      telemetry.trackVideoStall(clipIdRef.current, Date.now() - stallStartedAtRef.current);
+      stallStartedAtRef.current = null;
+    }
+  });
+
+  useEventListener(videoPlayer, 'playToEnd', () => {
+    if (!isFocusedRef.current) return;
+    onLoopEnd();
+  });
+
+  // Unmount (clip became a photo story, or the card left the window): the card must not keep
+  // counting view time from this player's last "playing" event.
+  useEffect(() => () => onPlaybackChange(false, null), [onPlaybackChange]);
+
+  return (
+    <VideoView
+      player={videoPlayer}
+      style={styles.videoFill}
+      contentFit="cover"
+      nativeControls={false}
+      surfaceType="textureView"
+      allowsVideoFrameAnalysis={false}
+      allowsPictureInPicture={false}
+      playsInline
+    />
   );
 }
 
@@ -1168,7 +1263,10 @@ function sameReelCardProps(prev: ReelCardProps, next: ReelCardProps): boolean {
     a.gameId !== b.gameId ||
     a.sekiPlay !== b.sekiPlay ||
     a.filmedBy !== b.filmedBy ||
-    a.uploadedBy !== b.uploadedBy
+    a.uploadedBy !== b.uploadedBy ||
+    a.mediaType !== b.mediaType ||
+    a.photoCount !== b.photoCount ||
+    a.coverUrl !== b.coverUrl
   ) {
     return false;
   }

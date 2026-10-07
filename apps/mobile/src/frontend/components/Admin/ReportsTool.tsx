@@ -92,7 +92,7 @@ const LABELS: Record<string, string> = {
   flash_live: 'Flash Unlock live',
   spotlight_live: 'Live Spotlight awards',
   qna: 'Subscriber Q&A',
-  game_play: 'Game Play',
+  game_play: 'Game Day',
   train_like_me: 'Train Like Me',
   serve_like_me: 'Serve Like Me',
   profiles: 'Profiles',
@@ -317,7 +317,7 @@ export function ReportsTool() {
         <AdminMixChart
           title="Clip mix"
           slices={[
-            { label: 'Game Play', value: reports.content.game_play ?? 0, color: FOCAL.jadeInk },
+            { label: 'Game Day', value: reports.content.game_play ?? 0, color: FOCAL.jadeInk },
             { label: 'Train Like Me', value: reports.content.train_like_me ?? 0, color: '#00E5FF' },
             { label: 'Serve Like Me', value: reports.content.serve_like_me ?? 0, color: FOCAL.electricGold },
           ]}

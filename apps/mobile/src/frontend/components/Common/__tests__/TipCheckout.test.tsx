@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { TipCheckout } from '@/components/TipCheckout';
 import { COMPLIANCE_PAYMENT, GIFT_RECORD_NOTICE } from '@/data/legal';
 import { MALO_DISCLAIMER, type Player } from '@/data/players';
+import { TAGLINE_HEADLINE } from '@/data/malo';
 
 const mockStart = jest.fn();
 let mockDonatePress: (() => void) | undefined;
@@ -29,6 +30,7 @@ describe('short donation checkout', () => {
   beforeEach(() => { jest.clearAllMocks(); mockBusy = false; mockStart.mockResolvedValue(undefined); });
   it('discloses recipient and split before selection; preset taps never pay and Back keeps choices', async () => {
     await render(<TipCheckout player={player} />);
+    expect(screen.getByText(TAGLINE_HEADLINE)).toBeTruthy();
     expect(screen.getByText("90% goes to Ana's family account. Tapua'i keeps 10% to run the app.")).toBeTruthy();
     expect(screen.getByLabelText('Next').props.accessibilityState.disabled).toBe(true);
     await fireEvent.press(screen.getByLabelText('$25'));

@@ -1,13 +1,20 @@
 /**
- * The staged Highlight uploader: pick a clip from the camera roll (45 s max) or record one, say which athlete is in it,
- * add a caption and category, optionally mention up to three accounts, confirm rights (filmed it or has permission,
- * sound is original or licensed, no logos or broadcast footage), then upload. Publish stays disabled until a clip,
- * athlete, caption and every rights confirmation are set. Compression and Storage upload go through
- * `MediaUploadService`; the reel row is written by `lib/reels.ts`. Account mentions are pending until confirmed.
- * @sideEffects Reads `games`; uploads to Storage bucket `reels`; inserts a `reels` row; `tag_reel_accounts`.
+ * The staged Highlight uploader: pick a clip from the camera roll (45 s max) or record one — or, when the database
+ * supports photo stories, pick up to 10 photos and order them (PHOTO_STORIES_DESIGN.md) — say which athlete is in it,
+ * add a caption and category, optionally mention up to three accounts, confirm rights (video: filmed it or has
+ * permission, sound, no logos or broadcast footage; photos: took them or has permission from the people in them,
+ * no marks), then upload. Publish stays disabled until media, athlete, caption and every rights confirmation are set.
+ * Video and photo drafts are kept separately, so switching Video ↔ Photos never discards either; switching clears the
+ * rights confirmations because they belong to the media. Videos publish through `lib/reels.ts`; photo stories through
+ * `lib/photoStories.ts` (nothing is published unless every photo uploads); after a failed story attempt the hidden reel id
+ * is kept so the retry reuses that row (the RPC is publish-once). Account mentions are pending until confirmed.
+ * @sideEffects Reads `games`; device photo library; uploads to Storage bucket `reels`; inserts a `reels` row;
+ *   `set_reel_photos`; `tag_reel_accounts`.
  */
 
 import { UploadVideoComposer, type UploadStep } from '@/components/Reels/UploadVideoComposer';
+import type { DraftStoryPhoto } from '@/components/Reels/PhotoStoryPicker';
+import { createPhotoStory, movePhoto, photoStoriesAvailable, PhotoStoryPublishError } from '@/lib/photoStories';
 import { attachAccountTags, type AccountTagHit } from '@/lib/accountTags';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -21,7 +28,9 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import {
   labeledReelCategories,
+  PHOTO_STORY_MAX_PHOTOS,
   REEL_CATEGORY_GAME,
+  type HighlightMediaType,
   type ReelCategory,
 } from '@/data/highlights';
 import {
@@ -29,7 +38,7 @@ import {
   HIGHLIGHT_OPTIMIZING,
   HIGHLIGHT_TOO_LONG,
 } from '@/data/media';
-import { rightsReady, type RightsAckId } from '@/data/contentRights';
+import { PHOTO_RIGHTS_VERSION, rightsReady, type RightsAckId } from '@/data/contentRights';
 import { gameMatchupLabel, playerTagLabel, uploadSekiPlay } from '@/lib/reels';
 import { assetDurationMs, isHighlightTooLong } from '@/services/MediaUploadService';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -67,6 +76,21 @@ function isIosSimulator(): boolean {
 }
 
 const IOS_SIMULATOR = isIosSimulator();
+
+/**
+ * Photo picking (design "Screens: Upload"): `exif: false` so the picker does not hand back metadata, and
+ * `quality: 0.85` so the picker re-encodes to JPEG; `MediaUploadService` still strips JPEG metadata itself.
+ */
+function libraryPhotoOptions(remaining: number): ImagePicker.ImagePickerOptions {
+  return {
+    mediaTypes: ['images'],
+    allowsMultipleSelection: true,
+    selectionLimit: remaining,
+    orderedSelection: true,
+    exif: false,
+    quality: 0.85,
+  };
+}
 
 const CAMERA_VIDEO_OPTIONS: ImagePicker.ImagePickerOptions = {
   mediaTypes: ImagePicker.MediaTypeOptions.Videos,
@@ -120,6 +144,14 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const [category, setCategory] = useState<ReelCategory>(REEL_CATEGORY_GAME);
   const [rights, setRights] = useState<Partial<Record<RightsAckId, boolean>>>({});
   const [showSuccess, setShowSuccess] = useState(false);
+  const [mediaKind, setMediaKind] = useState<HighlightMediaType>('video');
+  const [photos, setPhotos] = useState<DraftStoryPhoto[]>([]);
+  const [photosAvailable, setPhotosAvailable] = useState(false);
+  const photoKey = useRef(0);
+  // Hidden reel left by a failed story attempt. Reused on retry only while the athlete and game match, because
+  // those columns cannot change after insert; cleared when the draft is published or discarded.
+  const pendingStory = useRef<{ reelId: string; playerId: string; gameId: string } | null>(null);
+  const isPhotos = mediaKind === 'photo_story';
 
   const selectedGame = games.find((game) => game.id === gameId) ?? null;
   const selectedPlayer = players.find((player) => player.id === playerId) ?? null;
@@ -127,9 +159,10 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const gameLabel = selectedGame
     ? gameMatchupLabel(selectedGame.home_team, selectedGame.away_team)
     : 'No specific game (optional)';
-  const playerLabel = selectedPlayer ? playerTagLabel(selectedPlayer) : 'Tag the athlete in this video';
+  const playerLabel = selectedPlayer ? playerTagLabel(selectedPlayer) : isPhotos ? 'Tag the athlete in these photos' : 'Tag the athlete in this video';
 
-  const canSubmit = Boolean(asset && selectedPlayer && caption.trim()) && rightsReady(rights, category) && !uploading;
+  const mediaReady = isPhotos ? photosAvailable && photos.length > 0 : Boolean(asset);
+  const canSubmit = Boolean(mediaReady && selectedPlayer && caption.trim()) && rightsReady(rights, category, mediaKind) && !uploading;
 
   const sortedPlayers = useMemo(
     () =>
@@ -192,10 +225,20 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       setRights({});
       setShowSuccess(false);
       successAnim.setValue(0);
+      setMediaKind('video');
+      setPhotos([]);
+      pendingStory.current = null;
       return;
     }
 
     let active = true;
+    // Photos appear only once the photo-story SQL exists (cached per session in lib/photoStories).
+    void photoStoriesAvailable().then((available) => {
+      if (!active) return;
+      setPhotosAvailable(available);
+      if (!available) setMediaKind('video');
+    });
+
     const loadGames = async () => {
       if (!isSupabaseConfigured) {
         if (active) setLoadError('Games are unavailable. You can share without linking a game.');
@@ -284,27 +327,78 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     }
   };
 
+  const chooseMediaKind = (kind: HighlightMediaType) => {
+    if (uploading || kind === mediaKind) return;
+    if (kind === 'photo_story' && !photosAvailable) return;
+    // Both drafts stay; only the confirmations reset, because they were given for the other media.
+    setMediaKind(kind);
+    setRights({});
+    setUploadError(null);
+  };
+
+  const pickPhotos = async () => {
+    if (uploading) return;
+    const remaining = PHOTO_STORY_MAX_PHOTOS - photos.length;
+    if (remaining <= 0) {
+      Alert.alert('Story is full', `A photo story holds up to ${PHOTO_STORY_MAX_PHOTOS} photos. Remove one to add another.`);
+      return;
+    }
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync(libraryPhotoOptions(remaining));
+      if (result.canceled || !result.assets?.length) return;
+      const picked = result.assets
+        .filter((item) => item.type !== 'video' && item.type !== 'livePhoto' && item.uri)
+        .map((item) => {
+          photoKey.current += 1;
+          return { key: `photo-${photoKey.current}`, uri: item.uri, width: item.width || undefined, height: item.height || undefined };
+        });
+      if (!picked.length) return;
+      setPhotos((current) => [...current, ...picked].slice(0, PHOTO_STORY_MAX_PHOTOS));
+      // New photos have not been confirmed yet; reorder and remove keep the confirmations.
+      setRights({});
+      setUploadError(null);
+    } catch (caught) {
+      Alert.alert('Could not open library', caught instanceof Error ? caught.message : 'Try again on a phone.');
+    }
+  };
+
   const submit = async () => {
-    if (!asset || !canSubmit || submitLock.current) return;
+    if (!canSubmit || submitLock.current) return;
+    if (isPhotos ? photos.length === 0 : !asset) return;
     submitLock.current = true;
     setUploading(true);
     setUploadError(null);
-    setStatusLabel(asset.compressed ? 'Uploading to Tapua\'i…' : HIGHLIGHT_OPTIMIZING);
+    setStatusLabel(isPhotos ? 'Preparing your story…' : asset?.compressed ? 'Uploading to Tapua\'i…' : HIGHLIGHT_OPTIMIZING);
     setProgress(0.04);
     try {
-      const reel = await uploadSekiPlay({
-        uri: asset.uri,
-        mimeType: asset.mimeType,
-        fileName: asset.fileName,
+      const pending = pendingStory.current;
+      const reuse = pending && pending.playerId === playerId && pending.gameId === gameId ? pending.reelId : null;
+      const reel = isPhotos ? await createPhotoStory({
+        existingReelId: reuse,
+        photos: photos.map(({ uri, width, height, description }) => ({ uri, width, height, description })),
+        title: caption,
+        playerId,
+        gameId: gameId || null,
+        category,
+        rightsVersion: PHOTO_RIGHTS_VERSION,
+        onProgress: (done, total) => {
+          setProgress(0.08 + 0.84 * (done / total));
+          setStatusLabel(done < total ? `Uploading photo ${done + 1} of ${total}` : 'Saving your story…');
+        },
+      }) : await uploadSekiPlay({
+        uri: asset!.uri,
+        mimeType: asset!.mimeType,
+        fileName: asset!.fileName,
         title: caption,
         playerId,
         gameId,
         isExclusive,
         category,
-        compressed: asset.compressed,
+        compressed: asset!.compressed,
         onProgress: setProgress,
         onStatus: setStatusLabel,
       });
+      if (isPhotos) pendingStory.current = null;
       let mentionsFailed = false;
       if (reel.id && accountTags.length > 0) {
         try {
@@ -315,7 +409,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         }
       }
       setProgress(1);
-      setStatusLabel('Seki play uploaded.');
+      setStatusLabel(isPhotos ? 'Photo story published.' : 'Seki play uploaded.');
       fireSuccess();
       telemetry.trackFeature('upload', 'home');
       onUploaded(reel);
@@ -330,12 +424,16 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       await new Promise((resolve) => setTimeout(resolve, 650));
       onClose();
       if (mentionsFailed) {
-        Alert.alert('Highlight published', 'Your clip is published, but we could not save the account mentions.');
+        Alert.alert('Highlight published', isPhotos
+          ? 'Your photo story is published, but we could not save the account mentions.'
+          : 'Your clip is published, but we could not save the account mentions.');
       }
     } catch (caught) {
       setProgress(0);
+      // The draft (clip or photos, caption, tags, confirmations) stays so a retry is one tap.
+      if (caught instanceof PhotoStoryPublishError) pendingStory.current = { reelId: caught.reelId, playerId, gameId };
       const message =
-        caught instanceof Error ? caught.message : 'Could not upload that clip. Try picking it again.';
+        caught instanceof Error ? caught.message : isPhotos ? 'Could not share those photos. Try again.' : 'Could not upload that clip. Try picking it again.';
       setUploadError(message);
       setStatusLabel('Upload failed');
       telemetry.trackIssue('upload', 'home');
@@ -372,6 +470,11 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         isExclusive={isExclusive} onExclusive={setIsExclusive} exclusiveDollars={exclusiveDollars}
         rights={rights} onRights={setRights} uploading={uploading} canSubmit={canSubmit}
         detailsReady={Boolean(selectedPlayer && caption.trim())}
+        mediaKind={mediaKind} onMediaKind={chooseMediaKind} photosAvailable={photosAvailable}
+        photos={photos} onPickPhotos={() => void pickPhotos()}
+        onMovePhoto={(from, to) => setPhotos((current) => movePhoto(current, from, to))}
+        onRemovePhoto={(index) => setPhotos((current) => current.filter((_, at) => at !== index))}
+        onPhotoDescription={(index, text) => setPhotos((current) => current.map((photo, at) => (at === index ? { ...photo, description: text } : photo)))}
         uploadError={uploadError} loadError={loadError} onClose={onClose} onSubmit={() => void submit()}
         progress={progress} barWidth={barWidth} pulse={pulse} statusLabel={statusLabel}
         showSuccess={showSuccess} successAnim={successAnim}

@@ -269,7 +269,7 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     activityLede: 'Donations received, donations made, and highlights that tagged you.',
     localEmpty: 'No live games here',
     spotlightKicker: 'Player of the Week',
-    spotlightLede: 'Featured athletes from confirmed Game Play hype — week, month, and year.',
+    spotlightLede: 'Featured athletes from confirmed Game Day hype — week, month, and year.',
     spotlightEmpty: 'No Spotlight awards yet. Check back after Friday night.',
     dripKicker: 'Marketplace',
     dripLede: 'Booster gear, Aura cards, and sideline merch.',

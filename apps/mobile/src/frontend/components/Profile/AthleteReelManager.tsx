@@ -1,4 +1,8 @@
-/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+/**
+ * Athlete's own clip manager: long-press a tile to move a video between the free feed and Subscriber Vault, or
+ * Flash Unlock it. Fan menu uses shared Daylight chrome. Photo stories are public only (database constraint,
+ * PHOTO_STORIES_DESIGN.md decision 1), so they never open the Vault sheet.
+ */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
@@ -21,12 +25,14 @@ import {
   VAULT_MOVE_TO_PUBLIC,
   VAULT_MOVE_TO_VAULT,
 } from '@/data/exclusive';
-import type { HighlightClip } from '@/data/highlights';
+import { isPhotoStory, type HighlightClip } from '@/data/highlights';
 import type { Player } from '@/data/players';
 import { setReelFlashUnlock } from '@/lib/crew';
 import { toggleReelVaultStatus, type ReelHype } from '@/lib/reels';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
+
+export const PHOTO_STORY_PUBLIC_TOAST = 'Photo stories stay on the free public feed.';
 
 type AthleteReelManagerProps = {
   clips: HighlightClip[];
@@ -73,12 +79,21 @@ export function AthleteReelManager({
   const flashRemaining = formatFlashUnlockRemaining(menuClip?.flashUnlockUntil);
   const sheetBusy = toggling || flashing;
 
+  const openMenu = (clip: HighlightClip) => {
+    // Vault / Flash Unlock would be rejected by the database for a photo story; say so instead of offering it.
+    if (isPhotoStory(clip)) {
+      celebration?.showToast(PHOTO_STORY_PUBLIC_TOAST);
+      return;
+    }
+    setMenuClip(clip);
+  };
+
   const closeMenu = () => {
     if (!sheetBusy) setMenuClip(null);
   };
 
   const applyToggle = async () => {
-    if (!menuClip || sheetBusy) return;
+    if (!menuClip || sheetBusy || isPhotoStory(menuClip)) return;
     const nextVault = !vaultOnly;
     setToggling(true);
     onVaultChange?.(menuClip.id, nextVault);
@@ -92,6 +107,9 @@ export function AthleteReelManager({
       if (saved !== nextVault) onVaultChange?.(menuClip.id, saved);
       celebration?.showToast(saved ? VAULT_MOVE_TO_VAULT : VAULT_MOVE_TO_PUBLIC);
       setMenuClip(null);
+    } catch (caught) {
+      // toggleReelVaultStatus now throws instead of reporting a flip that did not save.
+      celebration?.showToast(caught instanceof Error && caught.message ? caught.message : 'Could not change Vault status.');
     } finally {
       setToggling(false);
     }
@@ -130,14 +148,14 @@ export function AthleteReelManager({
     <View>
       <Text style={styles.hint}>
         Long-press a clip to move it between the free feed and Subscriber Vault, or Flash Unlock a Vault clip for 2
-        hours.
+        hours. Photo stories always stay on the free feed.
       </Text>
       <TaggedReelGrid
         clips={clips}
         player={player}
         tipping={tipping}
         showVaultBadge
-        onLongPressClip={setMenuClip}
+        onLongPressClip={openMenu}
         onOpenAthlete={onOpenAthlete}
         onHypeChange={onHypeChange}
         onBacked={onBacked}

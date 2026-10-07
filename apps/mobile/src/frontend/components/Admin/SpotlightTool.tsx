@@ -64,7 +64,7 @@ export function SpotlightTool() {
   return (
     <AdminPage
       title="Spotlight"
-      lede="Confirmed Game Play hype elects the tagged player. The hottest clip is the tape. Fan uploaders get a credit, not the award."
+      lede="Confirmed Game Day hype elects the tagged player. The hottest clip is the tape. Fan uploaders get a credit, not the award."
       refreshing={dashboard.loading || pending.loading}
       onRefresh={() => {
         void dashboard.refresh();
@@ -80,7 +80,7 @@ export function SpotlightTool() {
         <AdminPills items={PERIODS} value={raceKind} onChange={(id) => { setRaceKind(id); void loadRace(id); }} />
         {raceError ? <AdminNotice text={raceError} tone="danger" /> : null}
         {standings.leaders.length === 0 ? (
-          <AdminEmpty text="No confirmed Game Play hype in this window yet. Tags stay pending until the athlete, parent, operator, or admin taps That's them." />
+          <AdminEmpty text="No confirmed Game Day hype in this window yet. Tags stay pending until the athlete, parent, operator, or admin taps That's them." />
         ) : (
           standings.leaders.slice(0, 8).map((row) => (
             <AdminRow

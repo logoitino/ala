@@ -1,5 +1,11 @@
+/**
+ * Profile "Highlights ⚡" poster grid (3 across, newest first) for an athlete's tagged clips and photo stories,
+ * opening the paging `ReelViewModal`. Vault tiles blur until the fan subscribes. Photo stories use their cover
+ * photo as the poster and show a `📷 5` badge (PHOTO_STORIES_DESIGN.md, "Grids").
+ */
+
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { formatCompactCount } from '@/lib/hype';
@@ -8,7 +14,7 @@ import { BlurTargetView, BlurView } from 'expo-blur';
 import { ReelViewModal } from '@/components/Reels/ReelViewModal';
 import { colors } from '@/constants/theme';
 import { isClipVaultOnly, isFlashUnlockActive, VAULT_BADGE_LABEL } from '@/data/exclusive';
-import type { HighlightClip } from '@/data/highlights';
+import { isPhotoStory, type HighlightClip } from '@/data/highlights';
 import type { Player } from '@/data/players';
 import { hypeFromReel, sortClipsNewestFirst, type ReelHype } from '@/lib/reels';
 import { FOCAL } from '@/theme/motion';
@@ -194,14 +200,21 @@ function TaggedReelTile({
   onLongPress,
 }: TaggedReelTileProps) {
   const blurTarget = useRef<View>(null);
+  const story = isPhotoStory(clip);
+  const photoCount = story ? Math.max(0, clip.photoCount ?? 0) : 0;
+  const storyLabel = story ? `Photo story, ${photoCount} ${photoCount === 1 ? 'photo' : 'photos'}` : '';
+  // Locked tiles never load the cover, so the blur cannot be bypassed by a fast render.
+  const cover = story && !locked ? clip.coverUrl?.trim() || null : null;
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={
         locked
-          ? `${clip.tag} clip, ${VAULT_BADGE_LABEL}`
-          : `${clip.tag} clip, ${clip.athleteName}`
+          ? `${clip.tag} ${story ? storyLabel : 'clip'}, ${VAULT_BADGE_LABEL}`
+          : story
+            ? `${clip.tag}, ${storyLabel}, ${clip.athleteName}`
+            : `${clip.tag} clip, ${clip.athleteName}`
       }
       delayLongPress={280}
       onPress={onPress}
@@ -213,7 +226,11 @@ function TaggedReelTile({
       ]}
     >
       <BlurTargetView ref={blurTarget} style={styles.poster}>
-        <Ionicons name="play" size={28} color={locked ? colors.onVideoMuted : colors.primary} />
+        {cover ? (
+          <Image source={{ uri: cover }} resizeMode="cover" style={styles.cover} accessibilityIgnoresInvertColors testID="tile-cover" />
+        ) : (
+          <Ionicons name={story ? 'images' : 'play'} size={28} color={locked ? colors.onVideoMuted : colors.primary} />
+        )}
       </BlurTargetView>
       {locked ? (
         <BlurView
@@ -239,12 +256,19 @@ function TaggedReelTile({
       <Text style={styles.tag} numberOfLines={1}>
         {clip.tag}
       </Text>
-      {!locked && typeof clip.viewCount === 'number' ? (
-        <View style={styles.views} accessibilityLabel={`${clip.viewCount} views`}>
-          <Ionicons name="play" size={10} color={colors.onVideo} />
-          <Text style={styles.viewsLabel}>{formatCompactCount(clip.viewCount)}</Text>
-        </View>
-      ) : null}
+      <View style={styles.topRight} pointerEvents="none">
+        {!locked && typeof clip.viewCount === 'number' ? (
+          <View style={styles.views} accessibilityLabel={`${clip.viewCount} views`}>
+            <Ionicons name="play" size={10} color={colors.onVideo} />
+            <Text style={styles.viewsLabel}>{formatCompactCount(clip.viewCount)}</Text>
+          </View>
+        ) : null}
+        {story && photoCount > 0 ? (
+          <View style={styles.views} accessible accessibilityLabel={storyLabel}>
+            <Text style={styles.viewsLabel}>{`📷 ${photoCount}`}</Text>
+          </View>
+        ) : null}
+      </View>
     </Pressable>
   );
 }
@@ -286,10 +310,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     textAlign: 'center',
   },
-  views: {
+  cover: {
+    ...StyleSheet.absoluteFill,
+  },
+  topRight: {
     position: 'absolute',
     top: 6,
     right: 6,
+    alignItems: 'flex-end',
+    gap: 3,
+  },
+  views: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
