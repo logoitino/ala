@@ -17,6 +17,8 @@
     "app:data-boundaries": "node scripts/check-app-data-boundaries.mjs",
     "comments:check": "node scripts/check-comments.mjs",
     "agents:check": "node scripts/check-agents.mjs",
-    "typecheck": "pnpm --filter @tapuai/mobile typecheck && pnpm --filter @tapuai/admin-portal typecheck"
+    "typecheck": "pnpm --filter @tapuai/mobile typecheck && pnpm --filter @tapuai/admin-portal typecheck",
+    "test": "pnpm --filter @tapuai/mobile test -- --watchman=false",
+    "check": "pnpm typecheck && pnpm test && pnpm docs:check && pnpm copy:check && pnpm app:data-boundaries && pnpm comments:check && pnpm agents:check"
   }
 }

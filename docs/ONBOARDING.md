@@ -1,6 +1,40 @@
 # Tapua'i onboarding
 
-**Read [STATE.md](STATE.md) first** — §0 is the hand-off (branch, unapplied SQL, next steps) and §3 lists this Mac's environment traps (npm registry blocked, `--watchman=false`, no Simulator taps). Get a new engineer from clone to Metro (mobile) and the Next admin portal. Architecture: [ARCHITECTURE.md](engineering/ARCHITECTURE.md) · [SYSTEM_OVERVIEW.md](engineering/SYSTEM_OVERVIEW.md). Schema: [SCHEMA.md](engineering/SCHEMA.md). Departments: [TEAMS.md](agents/TEAMS.md).
+This is the starting point for a new engineer. It gets you from clone to a running app, then
+points you at the few documents that matter in your first week.
+
+## Start here
+
+**Read in this order** (about an hour):
+
+1. [../README.md](../README.md) — what the product is, the repo map, how we work.
+2. This file — setup (sections 1–6 below).
+3. [GLOSSARY.md](GLOSSARY.md) — the code says `tips`, `malo` and `reels`; the product says
+   donation, Mālo (thanks only) and Highlights. Read this before you read code.
+4. [engineering/ARCHITECTURE.md](engineering/ARCHITECTURE.md) — how the apps, Supabase, Stripe and
+   Edge Functions connect.
+5. [engineering/CONVENTIONS.md](engineering/CONVENTIONS.md) — where code goes and the comment
+   standard every file follows.
+6. [STATE.md](STATE.md) — what is happening right now. §0 is the hand-off, §5 is the list of
+   things that are knowingly broken (do not re-diagnose them), §6 is decisions only the owner
+   makes.
+
+Everything else is listed in the [docs index](README.md).
+
+**Your first day:**
+
+- [ ] App running in Expo Go against the development Supabase project (sections 1–4).
+- [ ] `pnpm check` passes on your machine.
+- [ ] You can find, for one screen, its route in `apps/mobile/app/`, its components in
+      `src/frontend/components/<Feature>/`, its hook, and the `lib/` call that reaches Supabase.
+- [ ] You know the three environments: **development** (your `.env.local`), **staging** (tester
+      builds) and **production** (not created yet — see
+      [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md), readiness phase R3).
+- [ ] Small first PR: branch from `main`, keep the header comment true, add a line to
+      `STATE.md` §4 if you touched `apps/`, `packages/` or `supabase/`.
+
+Machine-specific traps on the owner's Mac (blocked npm registry, Watchman, no Simulator taps) are
+in [STATE.md](STATE.md) §3; they do not apply to a normal laptop.
 
 Expo **SDK 57**: [https://docs.expo.dev/versions/v57.0.0/](https://docs.expo.dev/versions/v57.0.0/).
 
@@ -108,7 +142,13 @@ After changing media buckets, run `supabase/media_upload.sql` so Storage `reels`
 
 ---
 
-## 5. Docs sync
+## 5. Checks and docs sync
+
+Before every PR:
+
+```bash
+pnpm check      # typechecks, mobile tests, and every repo guard CI runs
+```
 
 After changing donation amounts, the 90 / 10 split, Aura tiers, PIN, Connect identity, or Highlight labels:
 

@@ -1,53 +1,88 @@
 # Tapua'i Sports
 
-Polynesian-inspired fan & athlete hub — the GoFundMe replacement for families: highlights plus easy donations so a family can promote their kid and hopefully get them recruited. **pnpm monorepo.**
+A fan and athlete app for high-school sports: families post highlights of their kid, fans hype
+and share them, and anyone can donate toward real sports costs (cleats, travel, camps). Tapua'i
+replaces the GoFundMe link families pass around today. Built as a **pnpm monorepo**: an Expo
+(React Native) app, a read-only Next.js admin portal, and a Supabase (Postgres) backend.
 
-| Package | What it is |
+> **Status:** Wave 0, an internal test. Stripe is in test mode and no real money moves.
+> What is done, what is broken and what is next: [docs/STATE.md](docs/STATE.md).
+
+## Repository map
+
+| Path | What lives there |
 | --- | --- |
-| [`apps/mobile`](apps/mobile) | Expo Router SDK 57 app (Highlights ⚡, Activity, Spotlight, Drip, Profile) + production Expo Admin |
-| [`apps/admin-portal`](apps/admin-portal) | Next.js **read-only** oversight (Overview / Reports / Money / Soft-Wall / Profile / Features / People). Every write happens in Expo `/admin` |
-| [`packages/shared-types`](packages/shared-types) | `@tapuai/shared-types` — Profile, ActionStats, Spotlight, RPC shapes |
+| [`apps/mobile/`](apps/mobile) | Expo Router app (SDK 57): fan tabs, role HQs, operator console, and the Expo `/admin` control plane where every admin write happens. |
+| [`apps/admin-portal/`](apps/admin-portal) | Next.js oversight desk on port 3001. **Read-only by design.** |
+| [`packages/shared-types/`](packages/shared-types) | `@tapuai/shared-types`, TypeScript shapes shared by both apps. |
+| [`supabase/`](supabase) | Database SQL, timestamped [`migrations/`](supabase/migrations), and Edge Functions (Stripe checkout, Connect, webhook). |
+| [`scripts/`](scripts) | Repo checks (`pnpm check`) and the generator for product-facts docs. |
+| [`docs/`](docs) | All documentation. Start at the [docs index](docs/README.md). |
+| [`archive/`](archive) | Old code kept for reference only. Not built or deployed. |
+| `.claude/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md` | Instructions for AI coding assistants. Humans can skip these. |
 
-**Start with [docs/STATE.md](docs/STATE.md)** — current state, what changed last, environment
-gotchas, and what is knowingly broken; §0 is the hand-off for the next person or AI. Update it whenever you change code.
+Inside `apps/mobile/`: `app/` holds routes only; reusable UI is in `src/frontend/components/<Feature>/`,
+data hooks in `src/frontend/hooks/`, Supabase and Stripe clients in `src/frontend/lib/`. Full
+folder rules: [docs/engineering/CONVENTIONS.md](docs/engineering/CONVENTIONS.md).
 
-Docs: [STATE](docs/STATE.md) · [ARCHITECTURE](docs/engineering/ARCHITECTURE.md) · [ONBOARDING](docs/ONBOARDING.md) · [SCHEMA](docs/engineering/SCHEMA.md) · [DOCUMENTATION](docs/engineering/SYSTEM_OVERVIEW.md)
+## Get running
 
-## Quick start
+You need Node 24, pnpm (via Corepack) and a Supabase project URL plus anon key from the team.
+For a phone, install **Expo Go**.
 
 ```bash
+git clone <this-repo> ala-sports && cd ala-sports
 corepack enable
 pnpm install
 
 cp apps/mobile/.env.example apps/mobile/.env.local
-# or: cp -n .env.local apps/mobile/.env.local  if you still have a pre-monorepo root env
-# fill EXPO_PUBLIC_SUPABASE_* and Stripe test keys
+# fill in EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
-pnpm mobile          # Expo — NOT `npx expo start` from repo root
-pnpm admin           # Next stub on :3001
-pnpm docs:check      # front-of-house facts vs code
+pnpm mobile          # Expo dev server; open exp://<your-LAN-IP>:8081 in Expo Go
+pnpm admin           # admin portal on http://localhost:3001 (needs apps/admin-portal/.env.local)
 ```
 
-## Environment
+Never put a secret key (Stripe `sk_…`, Supabase service role) in any `.env.local`: the Stripe
+secret belongs in Supabase secrets. Details, auth provider setup and simulator notes:
+[docs/ONBOARDING.md](docs/ONBOARDING.md). If something fails:
+[docs/engineering/TROUBLESHOOTING.md](docs/engineering/TROUBLESHOOTING.md).
 
-Never commit `.env`, `.env.local`, or `.env.production`.
+## Check your work
 
-- **Mobile:** `apps/mobile/.env.local` — `EXPO_PUBLIC_*` only; `STRIPE_SECRET_KEY` lives in Supabase secrets (and, for local Metro API routes, a private file outside the repo — see `docs/ONBOARDING.md`)
-- **Admin portal:** `apps/admin-portal/.env.local` — `NEXT_PUBLIC_SUPABASE_*`
+```bash
+pnpm check
+```
 
-## Workspace scripts
+It runs everything CI runs: both typechecks, the mobile tests, and the repo guards (product facts
+in sync, donation wording, no database calls from routes, a header comment on every file, the
+agent registry). Single pieces: `pnpm typecheck`, `pnpm test`, `pnpm docs:check`,
+`pnpm copy:check`, `pnpm app:data-boundaries`, `pnpm comments:check`, `pnpm agents:check`.
 
-| Command | Action |
+## How we work
+
+1. Branch from `main`; open a pull request; CI must pass. Do not push straight to `main`.
+2. Every file starts with a header comment saying what it is and why it exists; comments explain
+   *why*, not *what* ([CONVENTIONS §5](docs/engineering/CONVENTIONS.md)).
+3. A change under `apps/`, `packages/` or `supabase/` adds a line to
+   [docs/STATE.md](docs/STATE.md) §4 in the same PR (CI checks this).
+4. Database changes are new files in `supabase/migrations/`, never edits to applied ones
+   ([migrations README](supabase/migrations/README.md)).
+5. On-screen money words follow [docs/product/VOICE.md](docs/product/VOICE.md): **Donate /
+   donation**. The code still says `tips` and `malo`; the [glossary](docs/GLOSSARY.md) maps them.
+6. Stage files by path. Never `git add -A`.
+
+## Where to read next
+
+| If you want to… | Read |
 | --- | --- |
-| `pnpm mobile` | Expo start |
-| `pnpm mobile:ios` / `mobile:web` | Platform targets |
-| `pnpm admin` | Next.js admin stub |
-| `pnpm docs:sync` / `docs:check` | Product facts |
-| `pnpm typecheck` | Mobile + admin `tsc` |
-| `pnpm agents:check` | Specialist files, ownership and hierarchy consistency |
+| Get set up and understand how we work | [docs/ONBOARDING.md](docs/ONBOARDING.md) |
+| Translate code names to product words | [docs/GLOSSARY.md](docs/GLOSSARY.md) |
+| See how the pieces fit | [docs/engineering/ARCHITECTURE.md](docs/engineering/ARCHITECTURE.md) |
+| Find a table, RPC or policy | [docs/engineering/SCHEMA.md](docs/engineering/SCHEMA.md) |
+| Know what is happening right now | [docs/STATE.md](docs/STATE.md) |
+| Understand the product direction | [docs/product/ROADMAP.md](docs/product/ROADMAP.md) |
+| See every document | [docs/README.md](docs/README.md) |
 
-## Architecture note
+## License
 
-Backend SQL stays at repo-root [`supabase/`](supabase/). Canonical app schema copy: `apps/mobile/src/backend/db/schema.sql`. Stripe stays in test mode until production keys + legal sign-off.
-
-Specialist roster: [TEAM_HIERARCHY](docs/agents/TEAM_HIERARCHY.md) · [TEAMS](docs/agents/TEAMS.md) · [WORK_QUEUE](docs/agents/WORK_QUEUE.md).
+See [LICENSE](LICENSE).
