@@ -57,7 +57,7 @@ check: `docs/STATE.md` §0.
 | `20260929190000_telemetry_logs_bounds.sql` | Bounds `telemetry_logs` event type, duration (scroll 0–100, tab dwell 12h, everything else 10 min), attempts, text length and payload. Guest INSERT stays. Re-run replaces an earlier draft. [docs/STATE.md](../../docs/STATE.md) §5 / §6 item 1 | **Staging 2026-09-30.** Not the development project. No dependency. |
 | `20261001180000_content_rights_reports.sql` | Uploader confirmation columns on `reels`, `reel_reports`, and `report_reel` reasons. Fake footage, impersonation, and music/logo/broadcast leave the public feed; other reasons wait for the athlete, the guardian, or three accounts. | **Staging 2026-10-01.** Not the development project. Needs `custodial_accounts`. |
 | `20261002120000_operator_checkins_role_check.sql` | Puts a role check (demo-PIN `anon`, operator, admin) on `operator_checkins`, which stored GPS check-ins behind `using (true)`. Matches `operator_gigs`. Needs `current_user_role()` (already in schema). | **No.** Not applied to any project. |
-| `20261002160000_reel_account_tags.sql` | Highlight account mentions (`reel_account_tags`). Uploader adds up to three; the account confirms before the name is public. Donations stay on the athlete tag. | **No.** Not applied to any project. |
+| `20261002160000_reel_account_tags.sql` | Highlight account mentions (`reel_account_tags`). Uploader adds up to three active mentions under a reel row lock; confirmation returns a status only for an owned pending row actually changed. Donations stay on the athlete tag. Revised 2026-10-07 before first application; no local Postgres verification. | **No.** Not applied to any project. |
 
 ## Adding a school confirmer (after the verification migration)
 

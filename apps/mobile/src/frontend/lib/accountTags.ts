@@ -2,7 +2,8 @@
  * Account mentions on a Highlight. The athlete tag still decides who receives a donation.
  * A mentioned account stays hidden until that person confirms.
  * @sideEffects `search_taggable_accounts`, `tag_reel_accounts`, `get_reel_account_tags`,
- *   `get_my_account_tags`, `confirm_account_tag`. A missing function is an empty result.
+ *   `get_my_account_tags`, `confirm_account_tag`. Reads stay optional before SQL deployment;
+ *   attachment errors propagate, and confirmation succeeds only after an actual state change.
  */
 
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -13,9 +14,8 @@ export type MyAccountTag = { id: string; reelId: string; reelTitle: string; labe
 
 function missingRpc(error: { code?: string; message?: string } | null): boolean {
   if (!error) return false;
-  return /could not find the function|schema cache|42883|PGRST202|reel_account_tags/i.test(
-    `${error.code ?? ''} ${error.message ?? ''}`,
-  );
+  return error.code === 'PGRST202' || error.code === '42883'
+    || /could not find the function/i.test(error.message ?? '');
 }
 
 function labelOf(row: Record<string, unknown> | null): string {
@@ -49,6 +49,7 @@ export async function searchTaggableAccounts(query: string): Promise<AccountTagH
  * @param reelId `reels.id` the signed-in uploader just created.
  * @param profileIds Profile ids, at most three.
  * @returns How many new mentions were stored. Zero when the SQL is not applied yet.
+ * @throws When a deployed RPC fails, so publishing can disclose incomplete mentions.
  * @sideEffects `tag_reel_accounts`.
  */
 export async function attachAccountTags(reelId: string, profileIds: string[]): Promise<number> {
@@ -58,8 +59,14 @@ export async function attachAccountTags(reelId: string, profileIds: string[]): P
     target_reel_id: reelId,
     profile_ids: ids,
   });
-  if (error) return missingRpc(error) ? 0 : 0;
-  return typeof data === 'number' ? data : 0;
+  if (error) {
+    if (missingRpc(error)) return 0;
+    throw new Error('Could not save the account mentions.');
+  }
+  if (typeof data !== 'number' || !Number.isInteger(data) || data < 0 || data > ids.length) {
+    throw new Error('Could not verify the account mentions were saved.');
+  }
+  return data;
 }
 
 /**
@@ -118,9 +125,10 @@ export async function fetchMyAccountTags(): Promise<MyAccountTag[]> {
  */
 export async function confirmAccountTag(tagId: string, action: 'confirm' | 'reject'): Promise<boolean> {
   if (!tagId || !isSupabaseConfigured) return false;
-  const { error } = await supabase.rpc('confirm_account_tag', {
+  const { data, error } = await supabase.rpc('confirm_account_tag', {
     target_tag_id: tagId,
     tag_action: action,
   });
-  return !error;
+  // A valid RPC response can still mean no owned pending mention was changed.
+  return !error && data === (action === 'confirm' ? 'confirmed' : 'rejected');
 }

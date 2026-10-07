@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -32,8 +32,16 @@ export function AccountTagInbox() {
   if (rows.length === 0) return null;
 
   const answer = async (row: MyAccountTag, action: 'confirm' | 'reject') => {
-    const ok = await confirmAccountTag(row.id, action);
-    if (ok) setRows((current) => current.filter((item) => item.id !== row.id));
+    try {
+      const ok = await confirmAccountTag(row.id, action);
+      if (ok) {
+        setRows((current) => current.filter((item) => item.id !== row.id));
+      } else {
+        Alert.alert('Mention not updated', 'We could not save your answer. Refresh your profile and try again.');
+      }
+    } catch {
+      Alert.alert('Mention not updated', 'We could not save your answer. Refresh your profile and try again.');
+    }
   };
 
   return (

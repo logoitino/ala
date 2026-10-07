@@ -9886,6 +9886,8 @@ grant execute on function public.report_reel(uuid) to authenticated;
 -- Purpose: the uploader can mention up to 3 Tapua'i accounts. The name stays private until that
 -- account confirms. Donations still follow the athlete tag (`reels.player_id`), not these mentions.
 -- Depends on: public.reels, public.profiles.
+-- Revised 2026-10-07 before its first application (STATE and README record not applied anywhere):
+-- serialize the three-active-mention cap and return no success for an unchanged confirmation.
 -- Rollback:
 --   drop function if exists public.confirm_account_tag(uuid, text);
 --   drop function if exists public.get_my_account_tags();
@@ -9974,16 +9976,18 @@ declare
   next_id uuid;
 begin
   if auth.uid() is null or target_reel_id is null then
-    return 0;
+    raise exception 'Sign in before tagging accounts' using errcode = '42501';
   end if;
   select p.id into actor from public.profiles p where p.user_id = auth.uid() limit 1;
   if actor is null then
-    return 0;
+    raise exception 'An account is required to tag accounts' using errcode = '42501';
   end if;
-  if not exists (
-    select 1 from public.reels r where r.id = target_reel_id and r.uploaded_by = actor
-  ) then
-    return 0;
+  -- Lock the owned reel before counting: concurrent calls cannot each consume the last slot.
+  perform 1 from public.reels r
+  where r.id = target_reel_id and r.uploaded_by = actor
+  for update;
+  if not found then
+    raise exception 'Only the uploader may tag accounts on this Highlight' using errcode = '42501';
   end if;
 
   foreach next_id in array coalesce(profile_ids, '{}'::uuid[])
@@ -10058,7 +10062,7 @@ declare
   next_status text;
 begin
   if auth.uid() is null then
-    return 'rejected';
+    return null;
   end if;
   if action not in ('confirm', 'reject') then
     raise exception 'tag_action must be confirm or reject';
@@ -10071,6 +10075,10 @@ begin
     and t.profile_id = p.id
     and p.user_id = auth.uid()
     and t.status = 'pending';
+  -- Missing, foreign, and already answered tags must never report a fresh decision.
+  if not found then
+    return null;
+  end if;
   return next_status;
 end;
 $$;
