@@ -161,15 +161,21 @@ Highlight / Seki clips. Files in Storage **`reels`** (fallback **`game_highlight
 | `category` | text default `game_play` | `game_play` \| `train_like_me` \| `serve_like_me`. Upload pills + feed badge. Serve Like Me doubles double-tap Aura (`SERVE_LIKE_ME_AURA_MULTIPLIER`). Incremental: `supabase/reel_category.sql`. |
 | `flash_unlock_until` | timestamptz | Vault clip is playable until this instant. Athlete long-press **🔓 Flash Unlock (2 Hours)** calls `set_reel_flash_unlock` (**2026-09:** now checks the caller is the clip's `uploaded_by` or an admin — previously any signed-in user could flash-unlock any Vault clip for free). Incremental: `supabase/crew_and_flash_unlock.sql`. |
 | `uploaded_by` | uuid FK → `profiles` ON DELETE SET NULL | Fan who uploaded. Trigger fills from the session profile. Incremental: `supabase/spotlight_auto.sql`. |
-| `tag_status` | text default `pending` | `pending` \| `confirmed` \| `rejected`. Existing rows were backfilled `confirmed`. New fan tags stay pending until the tagged athlete, parent, school operator, or admin confirms. Only confirmed Game Play hype elects Spotlight. |
+| `tag_status` | text default `pending` | `pending` \| `confirmed` \| `rejected`. Existing rows were backfilled `confirmed`. New fan tags stay pending until the tagged athlete, parent, school operator, or admin confirms. Only confirmed Game Day hype elects Spotlight. |
 | `tag_confirmed_at` / `tag_confirmed_by` | timestamptz / uuid FK → `profiles` | Who verified the jersey. |
 | `attested_at` | timestamptz | When the uploader confirmed permission, sound, and marks. Null on older clips. |
 | `rights_version` | text | Which confirmation text they agreed to (`2026-10-01`). Incremental: `supabase/migrations/20261001180000_content_rights_reports.sql`. |
+| `media_type` | text not null default `video` | `video` \| `photo_story` (constraint `reels_media_type_check`). A photo story stores `video_url = ''`; its photos live in `reel_photos`. Not in the column UPDATE grant, so a published clip cannot change type. Constraint `reels_photo_story_public_check`: a story can never be `is_vault_only` or `is_exclusive` (v1 stories are public only), so `toggle_reel_vault_status` and the client column UPDATE both fail for a story. A story with `photo_count = 0` is **unpublished**: hidden from the pending-tag queue and filmer rewards (and by the client's `isListableReel`). Incremental: `supabase/migrations/20261007230000_photo_stories.sql` (not applied). |
+| `photo_count` | smallint not null default 0 | Photos in a story, 0–10 (`reels_photo_count_check`). Server-owned: trigger `reels_reset_photo_count()` zeroes it on every INSERT and only `set_reel_photos` sets it; not in the column UPDATE grant. Same migration. |
 | `created_at` | timestamptz | |
 
 **RLS (2026-09 audit — reels RLS tightening):** base-table SELECT is **not** public (**2026-09 paywall-bypass fix**, see below) — only the uploader's own row, or an admin. INSERT requires `authenticated` and `uploaded_by` to equal the caller's own `profiles.id` (the `reels_apply_tag_defaults` BEFORE INSERT trigger fills `uploaded_by` from the session before this check runs, so a real upload always satisfies it; a client cannot attribute a row to someone else's profile). UPDATE is two policies — the uploader may update their own row, or an admin (`current_user_role() = 'admin'`) may update any row — **and** a column-level `GRANT` on top of that narrows a raw client UPDATE to `title` / `category` / `is_exclusive` / `is_vault_only` / `flash_unlock_until` only. Counters (`seki_count` / `aura_count` / `flex_count` / `total_tips_cents`), `is_flagged` / `is_removed` / `reported_by`, and the tag fields are **not** in that grant — they only move through the SECURITY DEFINER RPCs (`increment_reel_hype`, `increment_reel_tips`, `moderate_flagged_reel`, `confirm_reel_player_tag`, `report_reel`), which bypass the column grant because they run as the function owner. Previously `with check (true)` on both INSERT and UPDATE — any anon/authenticated client could insert a Highlight attributed to any player, or vandalize any reel row (caption, video, hype counts, tip totals, vault flags, moderation flags) via a raw REST call.
 
 **`public.reels_feed` (2026-09 paywall-bypass fix):** the base table's SELECT policy used to be `using (true)` — combined with a public `GRANT`, that meant anyone holding the app's public anon key could read `video_url` for every reel via a raw REST call, including Vault-only / Exclusive / Flash-Unlock clips, with no subscription and no login. The `.eq('is_vault_only', false)` filters scattered through `lib/reels.ts` were only ever a feed convenience, never an access boundary. Fixed by narrowing the base table's own SELECT policy to the uploader's own row or an admin, and adding this view as the one real fan-facing read path: it mirrors every `reels` column, but `video_url` comes back as `''` unless the row is unlocked, Flash-Unlocked right now, or the caller is the uploader / an admin / holds an active `subscriptions` row for the tagged athlete. `lib/reels.ts` and `lib/spotlight.ts` (the only two call sites that ever needed `video_url` for someone else's clip) now read from `reels_feed`; `lib/admin.ts` / `lib/adminCatalog.ts` (metadata-only, no `video_url`) and `services/MediaUploadService.ts` (insert-then-read-own-row) still read the base table directly. The view is not marked `security_invoker`, so it reads the full base table as its owner regardless of the narrower base-table policy — Postgres's normal (pre-15) view behavior, used deliberately here.
+
+**`reels_feed` photo-story columns (2026-10-07, `20261007230000_photo_stories.sql`, not applied):** `create or replace` re-states the `20260929160000` definition unchanged and in order, then appends `media_type`, `photo_count` and `cover_path`. `cover_path` is the position-0 `reel_photos.image_path` (a Storage object path in bucket `reels`, not a URL — the client calls `supabase.storage.from('reels').getPublicUrl(path)`) behind the same entitlement `CASE` as `video_url` (`''` when locked); null for videos and for a story whose photos are not saved yet. Rollback must drop and re-create the view (columns cannot be removed with `create or replace`).
+
+**Photo stories and other reel readers (same migration):** `get_pending_player_tags()` skips unpublished stories; `reels_filmer_rewards()` awards nothing for an unpublished story (it catches up on the next tag/view update after publishing); `get_spotlight_standings`, `get_active_spotlight_award` and `publish_spotlight_award` count and pick videos only (`coalesce(media_type, 'video') = 'video'`), so Spotlight features no photo stories for now. Each is re-stated from its previous definition in `schema.sql` with only that filter added; signatures, return types and grants are unchanged.
 
 ### `reel_reports`
 
@@ -198,6 +204,28 @@ Mentions of Tapua'i accounts on a Highlight. The uploader may add up to three ac
 **RLS:** anyone can read `confirmed`. The tagged account and the uploader can also read their pending rows. No client INSERT/UPDATE.
 
 RPCs: `search_taggable_accounts(search_query)` (username or first name only), `tag_reel_accounts(target_reel_id, profile_ids)`, `get_reel_account_tags(target_reel_id)`, `get_my_account_tags()`, `confirm_account_tag(target_tag_id, tag_action)`. `account_tag_label` builds the public name and is not granted to the app. `tag_reel_accounts` rejects missing identity and non-uploader writes. `confirm_account_tag` returns the new status only when it updates an owned pending mention; missing, foreign, or already answered rows return SQL `NULL`. Revised before first application on 2026-10-07; not parsed or exercised against Postgres locally.
+
+### `reel_photos`
+
+The photos of a photo story (Highlights ⚡ photo stories, WORK_QUEUE UX-05), in order; `position` 0 is the cover. [Design](design/PHOTO_STORIES_DESIGN.md). Incremental: `supabase/migrations/20261007230000_photo_stories.sql` (**written 2026-10-07, not applied anywhere, never parsed by Postgres**). Files: bucket `reels`, object path `{auth.users.id}/stories/{reel_id}/{position}-{epoch ms}.jpg` (the same migration adds `image/jpeg` to the bucket allow-list). The table stores that **path**, never a URL, so the database never trusts a host; clients build the URL with `supabase.storage.from('reels').getPublicUrl(path)`. Client: `lib/photoStories.ts`, `services/MediaUploadService.ts` (`uploadStoryPhoto`).
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | uuid PK | |
+| `reel_id` | uuid FK → `reels` ON DELETE CASCADE | Unique with `position` |
+| `position` | smallint | 0–9, array order from `set_reel_photos` |
+| `image_path` | text | 1–300 characters; Storage object path in bucket `reels`, `{uploader uid}/stories/{reel_id}/{n}-{ms}.jpg` |
+| `description` | text | Optional, ≤ 200 characters, trimmed (empty → null) |
+| `width`, `height` | integer | Optional picker dimensions (layout hints) |
+| `created_at` | timestamptz | |
+
+**RLS:** enabled. Base-table SELECT (`authenticated`) only for the story's uploader or an admin — mirrors "Read own or admin reels". All privileges revoked from `public` / `anon` / `authenticated`, then `select` granted to `authenticated`; no client INSERT / UPDATE / DELETE. Fans and guests read `reel_photos_feed`.
+
+**`set_reel_photos(p_reel_id, p_photos)`** → integer (photos saved). `security definer`, `search_path = public`; EXECUTE revoked from `public` / `anon`, granted to `authenticated` only. **Publish once:** v1 has no edit screen, so the call is refused (55000) when the reel's `photo_count` is already set; a failed call rolls back and leaves the count at 0, so the client may retry until one succeeds. Checks: signed in with a profile; locks the reel `for update` and requires `uploaded_by` = the caller's profile (42501 otherwise); `media_type = 'photo_story'`; not `is_removed`; `photo_count = 0`; `p_photos` is a JSON array of 1–10 objects `{ image_path, description?, width?, height? }`; `image_path` is a string of 1–300 characters matching the anchored pattern `^<auth.uid()>/stories/<p_reel_id>/[0-9]{1,2}-[0-9]{10,16}[.]jpg$` (no host, `..`, `%`, query string or other folder can match); `description` is text or null, trimmed, empty → null, ≤ 200; `width` / `height` are null or numbers 1–100000 (rounded to whole pixels). Inserts the list in array order (`position` 0..n-1), then sets `reels.photo_count`. The client must therefore insert the reel first and upload under its id.
+
+**`reel_photos_feed` (view)** — `select` granted to `anon, authenticated` (default view privileges revoked first). Columns `id`, `reel_id`, `position`, `description`, `width`, `height`, `image_path`; inner join `reels`, rows of removed reels excluded. `image_path` uses the exact `reels_feed` `video_url` rule (free clip, Flash-Unlocked now, admin, uploader, or active subscriber to the tagged athlete; otherwise `''`), so a future Vault story is already gated. Not `security_invoker`, same as `reels_feed`.
+
+**`reels_reset_photo_count()`** — BEFORE INSERT trigger function on `reels` (trigger `reels_reset_photo_count`): sets `photo_count = 0` so the table-wide INSERT grant cannot plant a fake count. Not callable as an RPC.
 
 ### `saved_reels`
 
@@ -299,7 +327,7 @@ Player of the Week / Month / Year featured on Highlights launch and the Spotligh
 | `school_id` | uuid FK → `schools_and_teams` | Optional catalog school |
 | `district_region` | text | Badge fallback, e.g. Westlake High |
 | `headline` | text | Performance line or clip title; may append `Clip by` when a fan shot the tape |
-| `highlight_reel_id` | uuid FK → `reels` | Hottest confirmed Game Play clip for the winner |
+| `highlight_reel_id` | uuid FK → `reels` | Hottest confirmed Game Day clip for the winner |
 | `start_date` / `end_date` | date | Inclusive window. Week is Monday–Sunday UTC; month/year are calendar UTC |
 | `source` | text default `auto` | `auto` from hype; `manual` from admin override |
 | `locked` | boolean default false | When true, hype will not recrown this window |
@@ -313,7 +341,7 @@ Player of the Week / Month / Year featured on Highlights launch and the Spotligh
 get_active_spotlight_award(viewer_user_id uuid default null) returns jsonb
 ```
 
-Highlights launch passes the signed-in `auth.users.id` (guests omit). **Volatile:** refreshes live week/month/year crowns from confirmed Game Play hype (`sync_live_spotlight_awards`) unless the window is `locked`. Returns a **normalized** jsonb (`player_id`, `reel_id`, `period_kind`, `period_start`, `school_name`, `headline`, `title`, `video_url`, `shot_by`, nested `player`) for the award whose `start_date`–`end_date` contains today. Prefers week over month over year. Viewed state is **not** stored in Postgres — `Dismiss (seen)` writes AsyncStorage so the **launch popup** is once per award id. The Spotlight tab still lists the award. Grant: `EXECUTE` to `anon`, `authenticated`. Client: `fetchActiveSpotlightAward` / `fetchSpotlightBoard`.
+Highlights launch passes the signed-in `auth.users.id` (guests omit). **Volatile:** refreshes live week/month/year crowns from confirmed Game Day hype (`sync_live_spotlight_awards`) unless the window is `locked`. Returns a **normalized** jsonb (`player_id`, `reel_id`, `period_kind`, `period_start`, `school_name`, `headline`, `title`, `video_url`, `shot_by`, nested `player`) for the award whose `start_date`–`end_date` contains today. Prefers week over month over year. Viewed state is **not** stored in Postgres — `Dismiss (seen)` writes AsyncStorage so the **launch popup** is once per award id. The Spotlight tab still lists the award. Grant: `EXECUTE` to `anon`, `authenticated`. Client: `fetchActiveSpotlightAward` / `fetchSpotlightBoard`.
 
 ### `can_confirm_player_tag` / `confirm_reel_player_tag` / `get_pending_player_tags`
 
@@ -323,7 +351,7 @@ A fan tag is a claim, not proof. `reels.tag_status` stays `pending` until the ta
 
 ### `get_spotlight_standings` / `sync_spotlight_period` / `sync_live_spotlight_awards` / `unlock_spotlight_period` / `spotlight_normalize_kind` / `spotlight_window`
 
-Clip energy = Seki + Aura + Flex on **confirmed**, public, unflagged **Game Play** clips in the UTC week / month / year. Player of the Week/Month/Year is the tagged `players.id` with the most energy **and** a Varsity-verified claimed profile (`athlete_is_varsity_verified`). Unverified athletes keep public Highlights. `highlight_reel_id` is that player's hottest clip (`Clip by` when `uploaded_by` is not the athlete). `increment_reel_hype` and Highlights launch call `sync_live_spotlight_awards`. Admin **Let hype decide** calls `unlock_spotlight_period`. Manual publish sets `source=manual` and `locked=true`.
+Clip energy = Seki + Aura + Flex on **confirmed**, public, unflagged **Game Day** clips in the UTC week / month / year. Player of the Week/Month/Year is the tagged `players.id` with the most energy **and** a Varsity-verified claimed profile (`athlete_is_varsity_verified`). Unverified athletes keep public Highlights. `highlight_reel_id` is that player's hottest clip (`Clip by` when `uploaded_by` is not the athlete). `increment_reel_hype` and Highlights launch call `sync_live_spotlight_awards`. Admin **Let hype decide** calls `unlock_spotlight_period`. Manual publish sets `source=manual` and `locked=true`.
 
 ### `games`
 
@@ -1188,7 +1216,7 @@ Created in `supabase/reels.sql`; consolidated into the canonical `schema.sql` (2
 | RLS INSERT | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass — was bucket-only, so any anon-key holder with no session could write; `MediaUploadService.uploadHighlight` already requires the caller be signed in, so this closes the gap without breaking the app) |
 | `allowed_mime_types` | `video/mp4`, `video/quicktime` (same Round 18 rule as `reels`) |
 
-Upload requires a tagged player, a caption, and a video category (Game Play / Train Like Me / Serve Like Me). **Tagging a game is optional** (2026-09 — previously required, now `UploadVideoModal` defaults to "No specific game" and still lets a fan pick one). `MediaUploadService` writes `reels/{user_id}/{timestamp}.mp4` into bucket **`reels`** first, then falls back to `game_highlights` if that bucket is missing.
+Upload requires a tagged player, a caption, and a video category (Game Day / Train Like Me / Serve Like Me). **Tagging a game is optional** (2026-09 — previously required, now `UploadVideoModal` defaults to "No specific game" and still lets a fan pick one). `MediaUploadService` writes `reels/{user_id}/{timestamp}.mp4` into bucket **`reels`** first, then falls back to `game_highlights` if that bucket is missing.
 
 ### Storage — `reels`
 
@@ -1198,10 +1226,10 @@ Created in `supabase/media_upload.sql`; consolidated into `schema.sql` (2026-09)
 | --- | --- |
 | Bucket id / name | `reels` |
 | Public | `true` |
-| Object path | `reels/{auth.users.id}/{timestamp}.mp4` |
+| Object path | Videos `reels/{auth.users.id}/{timestamp}.mp4` (`uploadHighlight` puts a literal `reels/` folder inside the bucket); photo stories `{auth.users.id}/stories/{reel_id}/{position}-{epoch ms}.jpg` (`uploadStoryPhoto`) |
 | RLS SELECT | `storage.objects` where `bucket_id = 'reels'` (public read, unchanged) |
-| RLS INSERT / UPDATE | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass — was bucket-only/anon-writable; tightened to match `MediaUploadService.uploadHighlight`'s existing signed-in requirement) |
-| `allowed_mime_types` | `video/mp4`, `video/quicktime` (2026-09 Round 18 sweep — the client declares `video/mp4`; nothing server-side previously stopped a raw REST call from declaring an arbitrary Content-Type instead) |
+| RLS INSERT / UPDATE | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass — was bucket-only/anon-writable; tightened to match `MediaUploadService.uploadHighlight`'s existing signed-in requirement). **Pending (`supabase/migrations/20261007231000_reels_storage_owner_folder.sql`, written 2026-10-07, not applied):** both policies also require the caller's own folder — `(storage.foldername(name))[1] = auth.uid()::text` (photo stories) or `[1] = 'reels' and [2] = auth.uid()::text` (videos) — so `upsert` can no longer overwrite another account's object. Until applied, any signed-in user can overwrite any object by path. |
+| `allowed_mime_types` | `video/mp4`, `video/quicktime`, plus `image/jpeg` once `20261007230000_photo_stories.sql` is applied (photo stories; not applied anywhere yet) (2026-09 Round 18 sweep — the client declares `video/mp4`; nothing server-side previously stopped a raw REST call from declaring an arbitrary Content-Type instead) |
 
 ### Storage — `reel_vault`
 

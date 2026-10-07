@@ -1,3 +1,8 @@
+/**
+ * Hand-maintained Supabase row / view / RPC types for the typed client in `lib/supabase.ts`.
+ * Mirrors `apps/mobile/src/backend/db/schema.sql` (documented in docs/engineering/SCHEMA.md); when a
+ * migration adds a column, view or RPC, update the matching type here in the same change.
+ */
 import type { SchoolTeam } from '@/data/teams';
 import type {
   SpotlightAward as SharedSpotlightAward,
@@ -511,7 +516,7 @@ export type Reel = {
   reported_by?: string[] | null;
   /** Admin takedown (`moderate_flagged_reel` remove). Hidden from Highlights ⚡. */
   is_removed?: boolean;
-  /** Game Play / Train Like Me / Serve Like Me. Default `game_play`. */
+  /** Game Day / Train Like Me / Serve Like Me. Default `game_play`. */
   category?: 'game_play' | 'train_like_me' | 'serve_like_me';
   /** Vault clip is playable until this instant (`set_reel_flash_unlock`). */
   flash_unlock_until?: string | null;
@@ -530,7 +535,26 @@ export type Reel = {
   attested_at?: string | null;
   /** Which confirmation text they agreed to. */
   rights_version?: string | null;
+  /**
+   * Photo stories (20261007230000_photo_stories.sql). Optional + nullable because the feed must
+   * treat a database without that migration (column missing) as video.
+   */
+  media_type?: 'video' | 'photo_story' | null;
+  /** Photos in a story (0 for videos); set only by `set_reel_photos`. */
+  photo_count?: number | null;
+  /**
+   * `reels_feed` only: Storage path (bucket `reels`) of the position-0 photo, gated like `video_url`
+   * (`''` when locked, null for videos). Build the URL with `supabase.storage.from('reels').getPublicUrl`.
+   */
+  cover_path?: string | null;
 };
+
+/**
+ * One photo of a photo story, as read from `reel_photos_feed` (or the base table by its uploader).
+ * `image_path` is a Storage object path in bucket `reels` (`''` when gated), never a URL.
+ */
+export type ReelPhotoRow = { id: string; reel_id: string; position: number; image_path: string;
+  description: string | null; width: number | null; height: number | null };
 
 /** Fan → athlete Crew follow (`public.crew_follows`). */
 export type CrewFollow = {
@@ -666,7 +690,7 @@ export type Database = {
       reels: {
         Row: Reel;
         Insert: Pick<Reel, 'video_url'> &
-          Partial<Pick<Reel, 'title' | 'player_id' | 'game_id' | 'seki_count' | 'aura_count' | 'flex_count' | 'total_tips_cents' | 'is_exclusive' | 'is_vault_only' | 'category' | 'flash_unlock_until' | 'attested_at' | 'rights_version'>>;
+          Partial<Pick<Reel, 'title' | 'player_id' | 'game_id' | 'seki_count' | 'aura_count' | 'flex_count' | 'total_tips_cents' | 'is_exclusive' | 'is_vault_only' | 'category' | 'flash_unlock_until' | 'attested_at' | 'rights_version' | 'media_type'>>;
         Update: Partial<Reel>;
         Relationships: [
           {
@@ -797,6 +821,14 @@ export type Database = {
             referencedColumns: ['id'];
           },
         ];
+      };
+      /**
+       * Photo-story photos with `image_path` gated by the same rule as `reels_feed.video_url`;
+       * removed Highlights excluded. Granted to anon + authenticated (20261007230000_photo_stories.sql).
+       */
+      reel_photos_feed: {
+        Row: ReelPhotoRow;
+        Relationships: [];
       };
       /**
        * 2026-09 profile customization: read-only mirror of `profiles` with `bio` / `social_links`
@@ -1343,6 +1375,17 @@ export type Database = {
       };
       tag_reel_accounts: {
         Args: { target_reel_id: string; profile_ids: string[] };
+        Returns: number;
+      };
+      /**
+       * Uploader publishes a photo story's photos once (1–10, array order); refused once
+       * `photo_count` is set. Paths must be `{uid}/stories/{reel_id}/{n}-{ms}.jpg`. Returns the count.
+       */
+      set_reel_photos: {
+        Args: {
+          p_reel_id: string;
+          p_photos: { image_path: string; description?: string | null; width?: number | null; height?: number | null }[];
+        };
         Returns: number;
       };
       get_reel_account_tags: {
