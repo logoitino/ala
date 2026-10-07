@@ -1,6 +1,10 @@
+/** Filmer appreciation menu uses fan-sheet geometry; props stay nonfinancial and server-owned. */
 import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetHandle } from '@/components/UI/SheetHandle';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { FilmerCard } from '@/components/Filmers/FilmerCard';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
@@ -26,6 +30,7 @@ type FilmerSheetProps = {
  * @sideEffects `filmer_stats` on open; `give_filmer_props` on tap; guests get the sign-in soft wall.
  */
 export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, reelId }: FilmerSheetProps) {
+  const frame = useSheetFrame();
   const { user } = useAuth();
   const { requireAuth } = useSoftWall();
   const { stats, refresh } = useFilmerStats(visible ? filmerProfileId : null);
@@ -60,7 +65,10 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
       <View style={styles.root}>
         <Pressable haptic="none" style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
-        <View style={styles.sheet}>
+        <View style={frame.dock}>
+        <View style={[styles.sheet, frame.card]}>
+          <MenuBackdrop accent="jade" />
+          <SheetHandle />
           <Text style={styles.title}>🎥 Filmed by {filmerName}</Text>
           <Text style={styles.lede}>
             Fans who film help athletes get seen. Donations always go to the athlete in the clip.
@@ -87,6 +95,7 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
             ))}
           </View>
         </View>
+        </View>
       </View>
     </Modal>
   );
@@ -95,15 +104,12 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 24,
+    justifyContent: 'flex-end',
     backgroundColor: 'rgba(15,20,22,0.45)',
   },
   sheet: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    borderTopWidth: 6,
-    borderTopColor: FOCAL.jadeInk,
     padding: 20,
     gap: 10,
   },

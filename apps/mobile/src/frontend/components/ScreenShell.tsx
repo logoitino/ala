@@ -6,7 +6,8 @@ import { type ReactNode } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { SCREEN_BOTTOM_GAP, colors } from '@/constants/theme';
+import { SCREEN_BOTTOM_GAP, colors, isLightCanvas } from '@/constants/theme';
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 
 type ScreenShellProps = {
@@ -23,6 +24,7 @@ export function ScreenShell({
   const { live } = useAppRuntime();
   return (
     <SafeAreaView edges={edges} style={[styles.root, { backgroundColor: live.theme.background }, style]}>
+      {isLightCanvas(live.theme.background) ? <MenuBackdrop /> : null}
       {children}
     </SafeAreaView>
   );

@@ -1,3 +1,5 @@
+/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useEffect, useState } from 'react';
 import { Alert, Modal, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -5,7 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import {
   FEEDBACK_KINDS,
@@ -97,6 +99,7 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+          <MenuBackdrop accent="gold" />
           <View style={styles.handle} />
           <Text style={styles.kicker}>Improve Tapua'i</Text>
           <Text style={styles.title}>Send a suggestion</Text>
@@ -225,7 +228,7 @@ const styles = StyleSheet.create({
   },
   field: {
     minHeight: 96,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
@@ -238,7 +241,7 @@ const styles = StyleSheet.create({
   },
   send: {
     minHeight: 48,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: FOCAL.neonJade,
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,9 +1,11 @@
+/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import {
   RALLY_COST_KINDS,
@@ -67,7 +69,8 @@ export function CreateRallySheet({ visible, playerId, athleteName, onClose, onCr
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.backdrop}>
         <View style={frame.dock}>
           <View style={[styles.sheet, frame.card]}>
-            <SheetHandle />
+            <MenuBackdrop accent="gold" />
+          <SheetHandle />
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
               <Text style={styles.title}>Start a Rally for {athleteName}</Text>
               <Text style={styles.lede}>
@@ -222,7 +225,7 @@ const styles = StyleSheet.create({
   },
   input: {
     minHeight: 46,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1.5,
     borderColor: colors.border,
     backgroundColor: colors.background,
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
   },
   primary: {
     alignItems: 'center',
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.deepGreen,
     paddingVertical: 14,
     marginTop: 4,

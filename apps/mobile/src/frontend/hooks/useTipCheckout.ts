@@ -128,6 +128,7 @@ export function useTipCheckout() {
       const amountCents = donationChargeCents + platformTipCents;
 
       setBusy(true);
+      let paymentSucceeded = false;
       const checkoutStartedAt = Date.now();
       try {
         const intentStartedAt = Date.now();
@@ -156,6 +157,7 @@ export function useTipCheckout() {
           return;
         }
 
+        paymentSucceeded = true;
         await onPaid?.();
 
         const pointsToAdd = auraPoints ?? auraPointsForTip(tipAmount);
@@ -249,7 +251,9 @@ export function useTipCheckout() {
         telemetry.trackCheckoutLatency('total', Date.now() - checkoutStartedAt);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Something went wrong.';
-        Alert.alert('Payment failed', message);
+        // Recording and Aura can fail after Stripe has charged; another payment is not a retry.
+        Alert.alert(paymentSucceeded ? 'Payment received — follow-up needed' : 'Payment failed',
+          paymentSucceeded ? 'Your payment went through, but we could not finish updating your donation. Contact support before paying again.' : message);
         telemetry.trackIssue('checkout');
       } finally {
         setBusy(false);

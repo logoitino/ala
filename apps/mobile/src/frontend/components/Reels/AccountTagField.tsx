@@ -1,5 +1,5 @@
 /**
- * Optional account mentions on the Highlight upload sheet. The athlete picker above this still
+ * Optional account mentions on the Highlight upload sheet. The selected athlete still
  * decides who receives a donation. At most three accounts.
  * @sideEffects `search_taggable_accounts`.
  */
@@ -47,7 +47,7 @@ export function AccountTagField({
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>Tag accounts</Text>
-      <Text style={styles.hint}>Optional. They confirm before their name shows. Donations still go to the athlete above.</Text>
+      <Text style={styles.hint}>Optional. They confirm before their name shows. Donations still go to the selected athlete.</Text>
       <View style={styles.chips}>
         {value.map((row) => (
           <Pressable
@@ -99,6 +99,8 @@ const styles = StyleSheet.create({
   hint: { fontSize: 12, lineHeight: 17, color: colors.textMuted },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: radii.pill,
     borderWidth: 1.5,
     borderColor: colors.deepGreen,
@@ -115,6 +117,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 15,
   },
-  hit: { paddingVertical: 8 },
+  hit: { minHeight: 44, justifyContent: 'center', paddingVertical: 8 },
   hitLabel: { fontSize: 15, fontWeight: '700', color: colors.text },
 });

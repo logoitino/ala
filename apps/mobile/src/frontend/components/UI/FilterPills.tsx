@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingRight: 4,
-    minHeight: 36,
+    minHeight: 44,
   },
   row: {
     position: 'relative',
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 6,
-    minHeight: 36,
+    minHeight: 44,
   },
   pillWrap: {
     alignSelf: 'flex-start',
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   pill: {
-    minHeight: 40,
+    minHeight: 44,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,

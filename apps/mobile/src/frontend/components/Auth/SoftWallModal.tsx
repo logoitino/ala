@@ -1,3 +1,4 @@
+/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -14,11 +15,12 @@ import { BlurView } from 'expo-blur';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { LegalAckToggle } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { COMPLIANCE_ACCOUNT } from '@/data/legal';
@@ -172,7 +174,8 @@ export function SoftWallModal() {
           </Pressable>
           <View pointerEvents="box-none" style={frame.dock}>
           <Animated.View style={[styles.sheet, frame.card, { maxHeight: '92%' }, sheetStyle]}>
-            <SheetHandle />
+            <MenuBackdrop accent="jade" />
+          <SheetHandle />
             <ScrollView
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}

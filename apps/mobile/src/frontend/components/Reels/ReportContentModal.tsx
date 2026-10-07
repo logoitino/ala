@@ -1,12 +1,14 @@
+/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { BlurView } from 'expo-blur';
 import { useEffect, useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import { REPORT_REASONS, type ReportReasonId } from '@/data/contentRights';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { SPRING_CARD } from '@/theme/motion';
@@ -76,6 +78,7 @@ export function ReportContentModal({
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+          <MenuBackdrop accent="jade" />
           <SheetHandle />
           <Text style={styles.kicker}>Safety</Text>
           <Text style={styles.title}>Report / Hide Highlight 🚩</Text>
@@ -171,7 +174,7 @@ const styles = StyleSheet.create({
   },
   reason: {
     minHeight: 44,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
@@ -196,7 +199,7 @@ const styles = StyleSheet.create({
   },
   reportBtn: {
     minHeight: 52,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.danger,
     alignItems: 'center',
     justifyContent: 'center',
@@ -208,7 +211,7 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     minHeight: 44,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,

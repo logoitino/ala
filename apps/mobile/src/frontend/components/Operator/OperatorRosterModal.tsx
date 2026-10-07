@@ -7,7 +7,8 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, radii } from '@/constants/theme';
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import { displayValue, type Player } from '@/data/players';
 
 type OperatorRosterModalProps = {
@@ -41,6 +42,7 @@ export function OperatorRosterModal({
       }}
     >
       <View style={[styles.sheet, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 12 }]}>
+        <MenuBackdrop accent="jade" />
         <View style={styles.header}>
           <View style={styles.headerCopy}>
             <Text style={styles.title}>{title}</Text>
@@ -119,7 +121,7 @@ const styles = StyleSheet.create({
   close: {
     minHeight: 44,
     paddingHorizontal: 12,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -145,7 +147,7 @@ const styles = StyleSheet.create({
     gap: 12,
     minHeight: 64,
     padding: 12,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -153,7 +155,7 @@ const styles = StyleSheet.create({
   jersey: {
     minWidth: 56,
     height: 48,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',

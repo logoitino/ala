@@ -9,10 +9,11 @@ import { BlurView } from 'expo-blur';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
@@ -101,6 +102,7 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+          <MenuBackdrop accent="violet" />
           <SheetHandle />
           <Text style={styles.kicker}>Account</Text>
           <Text style={styles.title}>Settings</Text>
@@ -169,7 +171,7 @@ const styles = StyleSheet.create({
   },
   row: {
     minHeight: 54,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,

@@ -13,22 +13,26 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 type FeeCheckboxProps = {
   playerName: string;
   checked: boolean;
+  disabled?: boolean;
   onChange: (checked: boolean) => void;
 };
 
-export function FeeCheckbox({ playerName, checked, onChange }: FeeCheckboxProps) {
+export function FeeCheckbox({ playerName, checked, disabled = false, onChange }: FeeCheckboxProps) {
   const { live } = useAppRuntime();
   const fee = live.catalog.maloFeeDollars;
   return (
     <Pressable
       accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
+      accessibilityLabel={`Cover card fees (optional): add $${fee.toFixed(2)}. ${playerName}'s share stays the same; this helps Tapua'i pay the card company.`}
+      accessibilityState={{ checked, disabled }}
+      disabled={disabled}
       onPress={() => onChange(!checked)}
-      style={styles.row}
+      style={[styles.row, disabled && { opacity: 0.45 }]}
     >
       <Checkbox
         pointerEvents="none"
         value={checked}
+        disabled={disabled}
         color={checked ? colors.deepGreen : undefined}
         style={styles.checkbox}
       />

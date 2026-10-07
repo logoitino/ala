@@ -1,3 +1,5 @@
+/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -7,7 +9,7 @@ import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { TaggedReelGrid } from '@/components/Profile/TaggedReelGrid';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
 import {
@@ -156,6 +158,7 @@ export function AthleteReelManager({
           </Pressable>
           <View pointerEvents="box-none" style={frame.dock}>
           <View style={[styles.sheet, frame.card]}>
+          <MenuBackdrop accent="violet" />
             <View style={styles.handle} />
             <Text style={styles.kicker}>Content placement</Text>
             <Text style={styles.title} numberOfLines={2}>
@@ -267,7 +270,7 @@ const styles = StyleSheet.create({
   },
   toggleBtn: {
     minHeight: 52,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: FOCAL.neonJade,
     alignItems: 'center',
     justifyContent: 'center',
@@ -284,7 +287,7 @@ const styles = StyleSheet.create({
   },
   flashBtn: {
     minHeight: 52,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: 'rgba(0,230,118,0.16)',
     borderWidth: 1,
     borderColor: FOCAL.jadeInk,
@@ -300,7 +303,7 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     minHeight: 48,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border,

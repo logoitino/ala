@@ -1,3 +1,5 @@
+/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -19,7 +21,7 @@ import { LegalAckToggle, LegalModal } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { cardShadow, colors, radii } from '@/constants/theme';
+import { cardShadow, colors, MENU_METRICS, radii } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { useCelebration } from '@/context/CelebrationContext';
@@ -201,6 +203,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
       </Pressable>
       <View pointerEvents="box-none" style={frame.dock}>
       <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+          <MenuBackdrop accent="violet" />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>Account Capability</Text>
@@ -525,7 +528,7 @@ const styles = StyleSheet.create({
   },
   input: {
     minHeight: 48,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
@@ -578,7 +581,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     flexDirection: 'row',
     backgroundColor: colors.background,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 4,
@@ -619,7 +622,7 @@ const styles = StyleSheet.create({
   },
   applyBtn: {
     minHeight: 52,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,3 +1,4 @@
+/** Shared page heading with compact accent punctuation; Look-desk text and per-tab colors stay authoritative. */
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/constants/theme';
@@ -27,7 +28,10 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact]}>
       {kicker ? (
-        <Text style={[styles.kicker, compact && styles.kickerCompact, { color: mark }]}>{kicker}</Text>
+        <View style={styles.kickerRow}>
+          <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.accentDot, { backgroundColor: mark }]} />
+          <Text style={[styles.kicker, compact && styles.kickerCompact, { color: mark }]}>{kicker}</Text>
+        </View>
       ) : null}
       <Text style={[styles.title, compact && styles.titleCompact, { color: live.theme.text }]}>{title}</Text>
       {compact ? null : <View style={[styles.underline, { backgroundColor: mark }]} />}
@@ -37,6 +41,8 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
 }
 
 const styles = StyleSheet.create({
+  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  accentDot: { width: 6, height: 6, borderRadius: 3 },
   wrap: {
     gap: 6,
   },
@@ -66,7 +72,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   underline: {
-    width: 48,
+    width: 56,
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.electricGold,

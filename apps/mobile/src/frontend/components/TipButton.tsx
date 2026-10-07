@@ -53,16 +53,16 @@ export function TipButton({
 
   const boxStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pop.value }],
-    backgroundColor: interpolateColor(selectProgress.value, [0, 1], [colors.deepGreen, colors.accentSoft]),
-    borderColor: interpolateColor(selectProgress.value, [0, 1], [colors.deepGreen, colors.primary]),
+    backgroundColor: interpolateColor(selectProgress.value, [0, 1], [colors.surface, colors.accentSoft]),
+    borderColor: interpolateColor(selectProgress.value, [0, 1], [colors.border, colors.primary]),
   }));
 
   const labelStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(selectProgress.value, [0, 1], [colors.onAccent, colors.primary]),
+    color: interpolateColor(selectProgress.value, [0, 1], [colors.text, colors.primary]),
   }));
 
   const sublabelStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(selectProgress.value, [0, 1], [colors.onAccent, colors.textMuted]),
+    color: interpolateColor(selectProgress.value, [0, 1], [colors.textMuted, colors.primary]),
   }));
 
   return (

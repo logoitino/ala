@@ -1,10 +1,12 @@
+/** School-issued crest and confirmation proof; presentation never confers verification beyond the badge RPC. */
 import { useState } from 'react';
 import { Image, Modal, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { CardShine } from '@/components/Effects/CardShine';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { schoolBadgeColors, schoolMonogram, type SchoolBadge } from '@/lib/schoolBadge';
 import { FOCAL } from '@/theme/motion';
 
@@ -109,6 +111,7 @@ export function SchoolBadgeProofSheet({
       <View style={styles.sheetRoot}>
         <Pressable haptic="none" style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         <View style={[styles.sheet, { borderTopColor: primary }]}>
+          <MenuBackdrop accent="jade" />
           <SchoolCrestMark badge={badge} size={72} />
           <Text style={styles.sheetTitle}>
             {athleteName} is a confirmed {badge.schoolName} athlete
@@ -179,7 +182,11 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+    maxWidth: 440,
+    width: '100%',
+    alignSelf: 'center',
+    overflow: 'hidden',
+    borderRadius: MENU_METRICS.sheetRadius,
     borderTopWidth: 6,
     padding: 20,
     gap: 10,

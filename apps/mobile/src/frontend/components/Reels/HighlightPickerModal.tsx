@@ -1,3 +1,4 @@
+/** Highlight library page shares Daylight menu style; picker permissions, duration cap and optimization stay unchanged. */
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -14,7 +15,8 @@ import ReanimatedView, { FadeIn } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { CardShine } from '@/components/Effects/CardShine';
-import { colors, radii } from '@/constants/theme';
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import {
   HIGHLIGHT_LIBRARY_CTA,
   HIGHLIGHT_MAX_SECONDS,
@@ -137,6 +139,7 @@ export function HighlightPickerModal({ visible, onClose, onPicked }: HighlightPi
       }}
     >
       <View style={[styles.sheet, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
+        <MenuBackdrop accent="jade" />
         <Text style={styles.title}>{HIGHLIGHT_PICKER_TITLE}</Text>
         <Text style={styles.lede}>{HIGHLIGHT_PICKER_LEDE}</Text>
 
@@ -188,25 +191,25 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 560,
     alignSelf: 'center',
-    backgroundColor: FOCAL.videoBase,
+    backgroundColor: colors.background,
     paddingHorizontal: 20,
     gap: 12,
   },
   title: {
-    color: colors.onAccent,
+    color: colors.text,
     fontSize: 22,
     fontWeight: '800',
   },
   lede: {
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
   },
   primary: {
     minHeight: 54,
-    borderRadius: radii.md,
-    backgroundColor: FOCAL.neonJade,
+    borderRadius: MENU_METRICS.controlRadius,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -217,14 +220,14 @@ const styles = StyleSheet.create({
   },
   ghost: {
     minHeight: 48,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ghostLabel: {
-    color: colors.onAccent,
+    color: colors.textMuted,
     fontWeight: '700',
   },
   overlay: {

@@ -1,4 +1,6 @@
+/** Filmer appreciation keeps server refusals visible and prompts guests before sending Props. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { FilmerCard } from '@/components/Filmers/FilmerCard';
 import { FilmerSheet } from '@/components/Filmers/FilmerSheet';
@@ -23,7 +25,9 @@ jest.mock('@/lib/filmers', () => ({
 }));
 
 const sheet = () => (
-  <FilmerSheet visible filmerName="hawksmom" filmerProfileId="p-9" reelId="r-1" onClose={jest.fn()} />
+  <SafeAreaInsetsContext.Provider value={{ top: 24, bottom: 16, left: 0, right: 0 }}>
+    <FilmerSheet visible filmerName="hawksmom" filmerProfileId="p-9" reelId="r-1" onClose={jest.fn()} />
+  </SafeAreaInsetsContext.Provider>
 );
 
 describe('FilmerSheet', () => {

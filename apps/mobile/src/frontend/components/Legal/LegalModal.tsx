@@ -1,13 +1,15 @@
+/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Checkbox } from 'expo-checkbox';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { LEGAL_ACK_LABEL, LEGAL_MENU_LABEL, LEGAL_SECTIONS, LEGAL_TERMS_VERSION } from '@/data/legal';
 import { useLegalAck } from '@/hooks/useLegalAck';
@@ -130,6 +132,7 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+          <MenuBackdrop accent="jade" />
           <SheetHandle />
           <Text style={styles.kicker}>Legal</Text>
           <Text style={styles.title}>{LEGAL_MENU_LABEL}</Text>
@@ -221,7 +224,7 @@ const styles = StyleSheet.create({
   section: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.background,
     padding: 14,
     gap: 8,
@@ -239,7 +242,7 @@ const styles = StyleSheet.create({
   },
   doneBtn: {
     minHeight: 48,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -255,7 +258,7 @@ const styles = StyleSheet.create({
   ackCard: {
     borderWidth: 1.5,
     borderColor: colors.primary,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.accentSoft,
     padding: 12,
     gap: 8,

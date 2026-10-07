@@ -1,11 +1,13 @@
+/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { BlurView } from 'expo-blur';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { FOCAL } from '@/theme/motion';
 
@@ -58,6 +60,7 @@ export function ReelMoreSheet({
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
         <View style={[styles.sheet, frame.card]}>
+          <MenuBackdrop accent="jade" />
           <SheetHandle />
           <Text style={styles.kicker}>More</Text>
           <Text style={styles.title} numberOfLines={1}>
@@ -157,7 +160,7 @@ const styles = StyleSheet.create({
   },
   row: {
     minHeight: 48,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,

@@ -1,3 +1,5 @@
+/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -19,7 +21,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { CardShine } from '@/components/Effects/CardShine';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import {
@@ -172,6 +174,7 @@ export function SponsorshipModal({
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={styles.blur} />
           <View pointerEvents="box-none" style={frame.dock}>
           <Pressable haptic="none" style={[styles.sheet, frame.card]} onPress={() => undefined}>
+          <MenuBackdrop accent="cyan" />
             <Animated.View style={[styles.sheetInner, sheetEntrance]}>
             <View style={styles.handle} />
             <Text style={styles.kicker}>Local boosters</Text>
@@ -457,7 +460,7 @@ const styles = StyleSheet.create({
   },
   input: {
     minHeight: 48,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
@@ -497,7 +500,7 @@ const styles = StyleSheet.create({
   },
   uploadBtn: {
     minHeight: 40,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.primary,
     alignItems: 'center',
@@ -538,7 +541,7 @@ const styles = StyleSheet.create({
   },
   pay: {
     minHeight: 52,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,3 +1,5 @@
+/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -86,6 +88,7 @@ export function AgeConfirmModal() {
       >
         <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
         <Animated.View style={[styles.card, frame.card, cardStyle]}>
+          <MenuBackdrop accent="jade" />
           <Text style={styles.kicker}>Tapua&apos;i</Text>
           <Text style={styles.title}>Quick confirmation</Text>
           <Text style={styles.body}>

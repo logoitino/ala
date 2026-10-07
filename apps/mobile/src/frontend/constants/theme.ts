@@ -194,6 +194,14 @@ export const space = {
   xl: 24,
 };
 
+/** One geometry rhythm for fan menus; avoid changing video overlays or business rules. */
+export const MENU_METRICS = {
+  sheetRadius: 28,
+  cardRadius: 20,
+  controlRadius: 16,
+  touchTarget: 44,
+} as const;
+
 export const SCREEN_BOTTOM_GAP = 52;
 
 export const cardShadow: ViewStyle = Platform.select({

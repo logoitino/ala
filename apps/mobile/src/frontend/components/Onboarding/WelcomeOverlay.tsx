@@ -1,3 +1,5 @@
+/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
@@ -51,6 +53,7 @@ export function WelcomeOverlay() {
         ]}
       >
         <View style={[styles.card, frame.card]}>
+          <MenuBackdrop accent="gold" />
           <Text style={styles.brand}>Tapua&apos;i</Text>
           <Text style={styles.title}>Donate to the athletes you cheer for.</Text>
           <Text style={styles.body}>

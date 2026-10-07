@@ -1,3 +1,4 @@
+/** Decorative grab bar shared by fan sheets; it is not an interactive drag target. */
 import { StyleSheet, View } from 'react-native';
 
 import { colors } from '@/constants/theme';
@@ -15,11 +16,11 @@ export function SheetHandle() {
 const styles = StyleSheet.create({
   handle: {
     alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+    width: 42,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: colors.border,
-    marginBottom: 6,
+    marginBottom: 8,
     opacity: 0.9,
   },
 });

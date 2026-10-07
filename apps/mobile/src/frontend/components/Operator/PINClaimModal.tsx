@@ -1,3 +1,5 @@
+/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useEffect, useRef, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -5,7 +7,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, w
 
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { displayValue } from '@/data/players';
 import { isOperatorPin, OPERATOR_TEST_PIN } from '@/lib/operator';
@@ -123,6 +125,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
         <Pressable haptic="none" accessibilityLabel="Dismiss PIN sheet" onPress={onClose} style={styles.backdrop} />
         <View pointerEvents="box-none" style={frame.dock}>
         <View style={[styles.sheet, frame.card]} accessibilityRole="summary" accessibilityLabel="Operator PIN keypad">
+          <MenuBackdrop accent="cyan" />
           <Text style={styles.kicker}>Operator PIN</Text>
           <Text style={styles.title}>Unlock control center</Text>
           <Text style={styles.matchup}>
@@ -237,7 +240,7 @@ const styles = StyleSheet.create({
   },
   dotsWrap: {
     overflow: 'hidden',
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     marginTop: 4,
   },
   dotsFlash: {
@@ -287,7 +290,7 @@ const styles = StyleSheet.create({
   keyFace: {
     flex: 1,
     minHeight: 58,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,

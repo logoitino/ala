@@ -1,7 +1,8 @@
+/** Shared fan-sheet geometry; safe-area clearance stays independent from decorative menu chrome. */
 import { useWindowDimensions, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { radii, space } from '@/constants/theme';
+import { cardShadow, colors, MENU_METRICS, space } from '@/constants/theme';
 
 /** Widest a fan popup grows. Wider browsers center this card instead of stretching it. */
 const SHEET_MAX = 440;
@@ -43,7 +44,10 @@ export function useSheetFrame(): SheetFrame {
       paddingHorizontal: compact ? space.md : space.lg,
       paddingTop: space.sm,
       paddingBottom: space.md,
-      borderRadius: radii.xl,
+      borderRadius: MENU_METRICS.sheetRadius,
+      borderWidth: 1,
+      borderColor: colors.border,
+      ...cardShadow,
       overflow: 'hidden',
     },
   };

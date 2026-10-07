@@ -1,3 +1,4 @@
+/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -12,10 +13,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import {
   DRIP_SIZES,
@@ -211,6 +213,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
       <View pointerEvents="box-none" style={frame.dock}>
       <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
         <Pressable haptic="none" onPress={() => undefined}>
+          <MenuBackdrop accent="ember" />
           <SheetHandle />
           {display ? (
             <Animated.View style={[styles.content, contentStyle]}>
@@ -410,7 +413,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     zIndex: 0,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.primary,
   },
   sizeHit: {
@@ -419,7 +422,7 @@ const styles = StyleSheet.create({
   },
   sizePill: {
     minHeight: 40,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -494,7 +497,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
     borderWidth: 1,
     borderColor: colors.primary,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 8,
@@ -528,7 +531,7 @@ const styles = StyleSheet.create({
   },
   buy: {
     minHeight: 52,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',

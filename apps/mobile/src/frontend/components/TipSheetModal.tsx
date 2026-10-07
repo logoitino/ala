@@ -1,5 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+/**
+ * The donation popup keeps its header, Close and checkout navigation visible around short pages.
+ * Pending family payouts show the existing held notice; Stripe presentation locks every exit.
+ * @sideEffects Reads athlete_payout_allowed; child checkout records test donations through Stripe.
+ */
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { SheetHandle } from '@/components/UI/SheetHandle';
@@ -42,7 +47,7 @@ const SHEET_OFF = 640;
 
 /**
  * @purpose Bottom-sheet donation checkout over a blurred feed backdrop. Copy names the athlete who receives the gift (not the uploader).
- * The card stays inside the screen, opens at the top of the form, and scrolls when the phone is short.
+ * The constrained card keeps navigation outside its changing page; only the short page body scrolls.
  * Shows a "held" line while payouts to this athlete are not unlocked (no school confirmation and no family Stripe ID check yet)
  * (owner decision 2026-09-29; copy flagged for LEGAL).
  * @sideEffects Unmounts `TipCheckout` on dismiss so custom amount / fee state reset; `athlete_payout_allowed` per athlete.
@@ -62,23 +67,26 @@ export function MaloTipModal({
   const frame = useSheetFrame();
   const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const scrollRef = useRef<ScrollView>(null);
   // Leave a strip of the feed above the card so the title is never off the top of the phone.
   const sheetMax = Math.max(280, windowHeight - insets.top - 16 - (space.xs + insets.bottom));
   const [open, setOpen] = useState(false);
   const [delivered, setDelivered] = useState(false);
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  const [session, setSession] = useState(0);
   const [verified, setVerified] = useState<boolean | null>(null);
   const lastPlayer = useRef<Player | null>(null);
-  if (player) lastPlayer.current = player;
-  const display = player ?? lastPlayer.current;
+  if (player && !busyRef.current) lastPlayer.current = player;
+  const display = busyRef.current ? lastPlayer.current : player ?? lastPlayer.current;
   const closingRef = useRef(false);
+  const sessionPlayerRef = useRef<string | null>(null);
   const playerName = displayValue(display?.name, 'this athlete');
   const headerPop = useSharedValue(1);
   const translateY = useSharedValue(SHEET_OFF);
   const dim = useSharedValue(0);
 
-  const playerId = player?.id ?? null;
+  const updateBusy = useCallback((value: boolean) => { busyRef.current = value; setBusy(value); }, []);
+  const playerId = display?.id ?? null;
   useEffect(() => {
     if (!playerId) return;
     let live = true;
@@ -92,24 +100,29 @@ export function MaloTipModal({
   }, [playerId]);
 
   useEffect(() => {
+    if (busyRef.current) return;
     if (player) {
+      if (sessionPlayerRef.current === player.id && open) return;
+      sessionPlayerRef.current = player.id;
       closingRef.current = false;
       setOpen(true);
       setDelivered(false);
-      setBusy(false);
+      if (!busyRef.current) setBusy(false);
+      setSession((value) => value + 1);
       headerPop.value = 1;
       translateY.value = SHEET_OFF;
       dim.value = 0;
       const frame = requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: false });
         translateY.value = withSpring(0, SPRING_CARD);
         dim.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
       });
       return () => cancelAnimationFrame(frame);
     }
+    sessionPlayerRef.current = null;
     // Parent cleared `player` without going through our own dismiss() (e.g. swiping to
     // another reel) — still slide the sheet away instead of snapping it out of existence.
     if (open && !closingRef.current) {
+      closingRef.current = true;
       dim.value = withTiming(0, { duration: 160 });
       translateY.value = withTiming(
         SHEET_OFF,
@@ -120,9 +133,9 @@ export function MaloTipModal({
       );
     }
     return undefined;
-    // Only the identity of the target player should retrigger this effect.
+    // Payment settlement replays a deferred external recipient change without replacing an active checkout.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player?.id]);
+  }, [player?.id, busy]);
 
   useEffect(() => {
     if (delivered) {
@@ -139,7 +152,7 @@ export function MaloTipModal({
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
 
   const dismiss = () => {
-    if (busy || !open) return;
+    if (busyRef.current || busy || closingRef.current || !open) return;
     closingRef.current = true;
     dim.value = withTiming(0, { duration: 180 });
     translateY.value = withTiming(
@@ -164,16 +177,9 @@ export function MaloTipModal({
             <BlurView intensity={SHEET_BLUR_INTENSITY} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           </Animated.View>
         </Pressable>
+        <KeyboardAvoidingView pointerEvents="box-none" behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardDock}>
         <View pointerEvents="box-none" style={frame.dock}>
-          <Animated.View style={[sheetStyle, styles.sheetClip, { maxHeight: sheetMax }]}>
-            <ScrollView
-              ref={scrollRef}
-              style={[styles.sheet, frame.card, { maxHeight: sheetMax }]}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              bounces={false}
-              contentContainerStyle={styles.sheetBody}
-            >
+          <Animated.View style={[sheetStyle, styles.sheet, frame.card, { height: Math.min(720, sheetMax), maxHeight: sheetMax }]}>
               <SheetHandle />
               <Animated.View style={[styles.header, delivered && styles.headerDelivered, headerStyle]}>
                 {delivered ? (
@@ -187,7 +193,9 @@ export function MaloTipModal({
               </Animated.View>
               {display ? (
                 <TipCheckout
+                  key={`${display.id}:${session}`}
                   player={display}
+                  embedded
                   hideHeader
                   reelId={reelId}
                   origin={origin}
@@ -195,7 +203,8 @@ export function MaloTipModal({
                   wishlistItemId={wishlistItemId}
                   rallyId={rallyId}
                   sourceLabel={sourceLabel}
-                  onBusyChange={setBusy}
+                  onBusyChange={updateBusy}
+                  canInteract={() => !closingRef.current}
                   onBacked={(nextCount) => {
                     setDelivered(true);
                     onBacked?.(nextCount);
@@ -212,9 +221,9 @@ export function MaloTipModal({
               >
                 <Text style={styles.closeLabel}>{busy ? 'Payment in progress…' : delivered ? 'Done' : 'Close'}</Text>
               </Pressable>
-            </ScrollView>
           </Animated.View>
         </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
@@ -235,14 +244,9 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     backgroundColor: colors.border,
   },
-  sheetClip: {
-    width: '100%',
-  },
+  keyboardDock: { maxHeight: '100%' },
   sheet: {
-    backgroundColor: colors.surface,
-  },
-  sheetBody: {
-    gap: 16,
+    backgroundColor: colors.surface, gap: 10,
   },
   header: {
     gap: 6,
@@ -258,7 +262,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   title: {
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.3,
@@ -269,8 +273,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: '600',
     color: colors.textMuted,
   },
@@ -286,6 +290,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   close: {
+    minHeight: 44,
     alignItems: 'center',
     paddingVertical: 12,
   },

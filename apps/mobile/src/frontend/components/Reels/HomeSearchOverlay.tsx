@@ -1,3 +1,4 @@
+/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -9,11 +10,12 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { useLocalSearch, useRecentLocalSearches } from '@/hooks/useLocalSearch';
 import type { HighlightClip } from '@/data/highlights';
 import type { LocalSearchHit } from '@/types/database';
@@ -170,7 +172,8 @@ export function HomeSearchOverlay({
       style={[styles.wrap, { paddingTop: offsetTop }, sheetStyle]}
     >
       <View pointerEvents="auto" style={styles.sheet}>
-        <SheetHandle />
+        <MenuBackdrop accent="jade" />
+          <SheetHandle />
         <Text style={styles.kicker}>Search Home</Text>
         <FilterPills
           items={KIND_PILLS}
@@ -277,7 +280,7 @@ const styles = StyleSheet.create({
   },
   row: {
     minHeight: 52,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,

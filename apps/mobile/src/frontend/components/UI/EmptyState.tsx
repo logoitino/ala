@@ -1,8 +1,10 @@
+/** Shared empty card keeps a warm Daylight welcome and actionable recovery without inventing feature content. */
 import { type Href, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { cardShadow, colors, radii, space } from '@/constants/theme';
+import { cardShadow, colors, MENU_METRICS, space } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import type { AdminNavHref } from '@/lib/admin';
 import { FOCAL } from '@/theme/motion';
@@ -49,6 +51,7 @@ export function EmptyState({
 
   return (
     <View style={styles.card} accessibilityRole="summary" accessibilityLabel={title}>
+      <MenuBackdrop accent="gold" />
       {kicker ? <Text style={[styles.kicker, { color: mark }]}>{kicker}</Text> : null}
       <Text style={styles.title}>{title}</Text>
       {lede ? <Text style={styles.lede}>{lede}</Text> : null}
@@ -80,10 +83,11 @@ const styles = StyleSheet.create({
   card: {
     alignSelf: 'stretch',
     backgroundColor: FOCAL.mistGold,
-    borderRadius: radii.lg,
-    borderWidth: 1.5,
+    borderRadius: MENU_METRICS.cardRadius,
+    overflow: 'hidden',
+    borderWidth: 1,
     borderColor: FOCAL.electricGold,
-    padding: space.md,
+    padding: space.lg,
     gap: space.sm,
     alignItems: 'center',
     ...cardShadow,
@@ -113,7 +117,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     minHeight: 44,
     paddingHorizontal: space.lg,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: FOCAL.jadeInk,
     alignItems: 'center',
     justifyContent: 'center',
@@ -126,9 +130,9 @@ const styles = StyleSheet.create({
   admin: {
     minHeight: 40,
     paddingHorizontal: space.md,
-    borderRadius: radii.md,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: FOCAL.electricGold,
     alignItems: 'center',
     justifyContent: 'center',
