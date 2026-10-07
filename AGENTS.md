@@ -24,7 +24,7 @@ This repo is a **pnpm monorepo**.
 | `@tapuai/admin-portal` | `apps/admin-portal/` — Next web admin, **read-only oversight** (Overview / Reports / Money / Soft-Wall / Profile / Features / People); every write — Features/Look flags, Games, Drip, Catalogs, everything — happens only in Expo `/admin`, which this portal reads from (including `app_runtime_config`) |
 | `@tapuai/shared-types` | `packages/shared-types/` — Profile / ActionStats / Spotlight / Soft-Wall + Profile chrome / RPC shapes |
 
-Root keeps `supabase/`, `docs/`, `scripts/`, `AGENTS.md`, `DOCUMENTATION.md`. Playground `my-app/` is outside the workspace.
+Root keeps `supabase/`, `docs/`, `scripts/`, `archive/`, `AGENTS.md`, `CLAUDE.md`. The old Expo playground is in `archive/my-app/` (reference only, outside the workspace; see `archive/README.md`). The root `app.json` (`{"expo": {}}`) is intentional; the real app config is `apps/mobile/app.json`.
 
 ### Directory Hierarchy Rules (`apps/mobile/`)
 
