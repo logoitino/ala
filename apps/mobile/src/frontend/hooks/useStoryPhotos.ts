@@ -2,6 +2,7 @@
  * Photos for one Highlights photo story (PHOTO_STORIES_DESIGN.md, "Screens: Feed"). `ReelCard` calls this
  * only for photo stories and only while the card is on screen, so a mounted off-screen card never fetches.
  * Results are cached per story for the session so swiping back does not refetch; failures are not cached.
+ * The pager prefetches the stories immediately above and below so the next swipe does not wait on the network.
  * @sideEffects `fetchStoryPhotos` (`reel_photos_feed` read in `lib/photoStories.ts`).
  */
 
@@ -26,6 +27,30 @@ function remember(reelId: string, photos: StoryPhoto[]) {
 /** Test hook: forget cached stories between cases. */
 export function resetStoryPhotoCache() {
   cache.clear();
+}
+
+/** The photo story on the page immediately before and after the focused one. */
+export function adjacentStoryClips(clips: HighlightClip[], index: number): HighlightClip[] {
+  const neighbors = [clips[index - 1], clips[index + 1]];
+  return neighbors.filter((clip): clip is HighlightClip => Boolean(clip && isPhotoStory(clip)));
+}
+
+/**
+ * @purpose Warm the session cache for stories the fan is about to swipe to.
+ * @param clips Neighbor stories only. Already-cached ids are not requested again.
+ * @sideEffects `fetchStoryPhotos`. A failure is ignored so the focused card still loads on its own.
+ */
+export function prefetchStoryPhotos(clips: HighlightClip[]): void {
+  const ids = [...new Set(clips.filter((clip) => isPhotoStory(clip) && !cache.has(clip.id)).map((clip) => clip.id))];
+  if (ids.length === 0) return;
+  void fetchStoryPhotos(ids)
+    .then((byReel) => {
+      for (const id of ids) {
+        const photos = [...(byReel[id] ?? [])].sort((left, right) => left.position - right.position);
+        if (photos.length > 0) remember(id, photos);
+      }
+    })
+    .catch(() => undefined);
 }
 
 export type StoryPhotosState = { photos: StoryPhoto[]; loading: boolean; error: boolean };

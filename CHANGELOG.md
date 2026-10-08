@@ -6,7 +6,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Photo stories in Highlights, and "Donate. Elevate. Celebrate."
 
-- Highlights can now be one photo or a swipeable story of up to 10 photos: reorder before posting, add an optional description to each photo, tag the athlete, and pick Game Day, Train Like Me or Serve Like Me. Stories sit in the same feed as clips with a `1 / 5` counter, show a `📷 5` badge on profile grids, and donate to the featured athlete through the usual popup. Hype, save, report and "Filmed by" work as on clips. Photo stories are public only for now.
+- Highlights can now be one photo or a swipeable story of up to 10 photos: reorder before posting, add an optional description to each photo, tag the athlete, and pick Game Day, Train Like Me or Serve Like Me. Stories sit in the same feed as clips with a `1 / 5` counter, show a `📷 5` badge on profile grids, and donate to the featured athlete through the usual popup. The story just above or below the one on screen loads ahead of the swipe. Hype, save, report and "Filmed by" work as on clips. Photo stories are public only for now.
 - Location and camera details are removed from every photo before it uploads; a photo that cannot be cleaned is not uploaded. A story appears only if every photo uploads.
 - The first category is now called **Game Day** (it was Game Play) for photos and videos.
 - The message "Donate. Elevate. Celebrate." — *Support their journey. Elevate their opportunities. Celebrate their story.* — appears on the welcome screen, at the top of the donate popup and under an athlete's Donate button.

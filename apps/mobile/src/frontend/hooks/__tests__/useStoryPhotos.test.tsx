@@ -5,7 +5,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 
 import type { HighlightClip, StoryPhoto } from '@/data/highlights';
-import { resetStoryPhotoCache, useStoryPhotos } from '@/hooks/useStoryPhotos';
+import { adjacentStoryClips, prefetchStoryPhotos, resetStoryPhotoCache, useStoryPhotos } from '@/hooks/useStoryPhotos';
 
 const mockFetch = jest.fn();
 jest.mock('@/lib/photoStories', () => ({
@@ -84,6 +84,24 @@ describe('useStoryPhotos', () => {
       second.resolve({ s2: [photo('new', 0)] });
     });
     expect(result.current.photos.map((item) => item.id)).toEqual(['new']);
+  });
+
+  it('prefetches the photo stories beside the focused page and skips videos and cached ids', async () => {
+    const stories = [clip('s1'), clip('v1', 'video'), clip('s2')];
+    expect(adjacentStoryClips(stories, 0).map((item) => item.id)).toEqual([]);
+    expect(adjacentStoryClips(stories, 1).map((item) => item.id)).toEqual(['s1', 's2']);
+    mockFetch.mockResolvedValue({ s1: [photo('a', 0)], s2: [photo('n', 0)] });
+    prefetchStoryPhotos(adjacentStoryClips(stories, 1));
+    await act(async () => {});
+    expect(mockFetch).toHaveBeenCalledWith(['s1', 's2']);
+    mockFetch.mockClear();
+    prefetchStoryPhotos(adjacentStoryClips(stories, 1));
+    await act(async () => {});
+    expect(mockFetch).not.toHaveBeenCalled();
+    const { result } = await renderHook(() => useStoryPhotos(clip('s2'), true));
+    await act(async () => {});
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(result.current.photos.map((item) => item.id)).toEqual(['n']);
   });
 
   it('drops a result that lands after unmount', async () => {

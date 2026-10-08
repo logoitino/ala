@@ -35,6 +35,7 @@ import {
   type HighlightFeedFilter,
 } from '@/data/highlights';
 import { useActiveSpotlight } from '@/hooks/useActiveSpotlight';
+import { adjacentStoryClips, prefetchStoryPhotos } from '@/hooks/useStoryPhotos';
 import { useFanTipHistory } from '@/hooks/useFanTipHistory';
 import { useLiveGame } from '@/hooks/useLiveGame';
 import { useReels } from '@/hooks/useReels';
@@ -193,6 +194,12 @@ export default function HighlightsTab() {
   useEffect(() => {
     if (activeIndex >= feed.length) setActiveIndex(Math.max(0, feed.length - 1));
   }, [activeIndex, feed.length]);
+
+  // The next card is mounted but does not fetch until it is focused. Warming the photo cache
+  // here avoids starting another video player just to have the next story ready.
+  useEffect(() => {
+    prefetchStoryPhotos(adjacentStoryClips(feed.map((item) => item.clip), activeIndex));
+  }, [activeIndex, feed]);
 
   useEffect(() => {
     if (!pendingClipId) return;

@@ -12,6 +12,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { useSoftWall } from '@/context/SoftWallContext';
 import type { HighlightClip } from '@/data/highlights';
+import { adjacentStoryClips, prefetchStoryPhotos } from '@/hooks/useStoryPhotos';
 import type { Player } from '@/data/players';
 import { type ReelHype, readHiddenReelIds } from '@/lib/reels';
 
@@ -135,6 +136,10 @@ function ReelViewPager({
       setActiveIndex(Math.max(0, visibleClips.length - 1));
     }
   }, [activeIndex, visibleClips.length]);
+
+  useEffect(() => {
+    prefetchStoryPhotos(adjacentStoryClips(visibleClips, activeIndex));
+  }, [activeIndex, visibleClips]);
 
   useEffect(() => {
     if (clips.length > 0 && visibleClips.length === 0) close();

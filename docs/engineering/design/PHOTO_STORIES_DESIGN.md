@@ -147,7 +147,7 @@ caller's own folder by the separate migration `20261007231000_reels_storage_owne
   dots; the current photo's description above the caption; the rest of `ReelCard` (rail, donate,
   report, credit) unchanged. Each photo: `accessibilityLabel` = description or "Photo 2 of 5";
   adjustable actions to move between photos. Loads photos when the card is current (cover shows meanwhile);
-  prefetching the next card needs a prop from `app/(tabs)/index.tsx` and is a follow-up.
+  the Highlights pager and profile viewer prefetch the photo story immediately above and below into the session cache.
 - **Grids (PROFILE):** `TaggedReelGrid` poster uses `coverUrl` and shows `📷 5`.
 
 ## Privacy and safety
