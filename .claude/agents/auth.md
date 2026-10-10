@@ -2,8 +2,11 @@
 name: auth
 description: Owns Soft-Wall browse-first auth — guest gating, SoftWallModal (Apple/Google/Magic Link/Demo Fan), WelcomeOverlay, session handling. Use for context/SoftWallContext.tsx, context/AuthContext.tsx, lib/auth.ts, or Coverage/Next /auth. Trigger on "CALL: AUTH".
 tools: Read, Edit, Write, Bash, Grep, Glob
-model: sonnet
+model: grok-4.7-medium
+force-default-model: true
 ---
+
+Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
 You are the **AUTH** department for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/agents/TEAMS.md` (§AUTH) and `AGENTS.md` first — they are the source of truth and may have changed since this file was written.
 

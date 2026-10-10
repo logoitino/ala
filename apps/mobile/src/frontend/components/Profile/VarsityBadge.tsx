@@ -25,6 +25,8 @@ type VarsityBadgeProps = {
   /** True when the athlete already picked a school (claim ≠ Varsity). */
   schoolClaimed?: boolean;
   compact?: boolean;
+  /** Verified only: show just the check (the full label is still spoken) for very narrow rows such as the peek card at 320 pt. */
+  iconOnly?: boolean;
   onPress?: () => void;
 };
 
@@ -34,7 +36,7 @@ type VarsityBadgeProps = {
  * @param schoolClaimed Shows SCHOOL CLAIMED + Not verified yet so fans can tell the difference.
  * @returns Glowing jade check for verified; pending / claimed chips stay obvious without blocking the profile.
  */
-export function VarsityBadge({ status, schoolClaimed = false, compact = false, onPress }: VarsityBadgeProps) {
+export function VarsityBadge({ status, schoolClaimed = false, compact = false, iconOnly = false, onPress }: VarsityBadgeProps) {
   const pulse = useSharedValue(0.55);
 
   useEffect(() => {
@@ -57,10 +59,19 @@ export function VarsityBadge({ status, schoolClaimed = false, compact = false, o
 
   if (status === 'verified') {
     const inner = (
-      <View style={[styles.verifiedWrap, compact && styles.compact]}>
+      <View
+        style={[styles.verifiedWrap, compact && styles.compact, iconOnly && styles.verifiedIconOnly]}
+        // Icon-only has no readable text, so the whole chip carries the spoken label.
+        accessible={iconOnly || undefined}
+        accessibilityLabel={iconOnly ? VARSITY_VERIFIED_LABEL : undefined}
+      >
         <Animated.View pointerEvents="none" style={[styles.verifiedGlow, glowStyle]} />
         <Text style={styles.check}>✓</Text>
-        <Text style={styles.verifiedLabel}>{VARSITY_VERIFIED_LABEL}</Text>
+        {iconOnly ? null : (
+          <Text style={styles.verifiedLabel} numberOfLines={1}>
+            {VARSITY_VERIFIED_LABEL}
+          </Text>
+        )}
       </View>
     );
     if (!onPress) return inner;
@@ -108,6 +119,9 @@ const styles = StyleSheet.create({
   },
   verifiedWrap: {
     alignSelf: 'flex-start',
+    // Never wider than the row it sits in: the label ellipsizes instead of running off the card.
+    flexShrink: 1,
+    maxWidth: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -128,6 +142,9 @@ const styles = StyleSheet.create({
       android: { elevation: 6 },
       default: {},
     }),
+  },
+  verifiedIconOnly: {
+    paddingHorizontal: 8,
   },
   verifiedGlow: {
     ...StyleSheet.absoluteFill,

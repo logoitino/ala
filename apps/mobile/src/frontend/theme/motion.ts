@@ -80,7 +80,7 @@ export const FOCAL = {
   jadeInk: '#00733C',
   mistJade: '#E8FBF0',
   islandCyan: '#00E5FF',
-  cyanInk: '#007A8A',
+  cyanInk: '#00707E',
   mistCyan: '#CFF7FF',
   electricGold: '#FFD700',
   goldInk: '#8A6400',

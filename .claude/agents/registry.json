@@ -13,7 +13,8 @@
       ],
       "tasks": [
         "Audit screen-reader labels, focus order, touch targets, contrast, text scaling and reduced motion."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "ACCOUNT_TAGS",
@@ -26,7 +27,8 @@
       ],
       "tasks": [
         "Account mention request/confirm/hide lifecycle, honest RPC errors and concurrent three-tag limit"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "ACTIVITY",
@@ -39,7 +41,8 @@
       ],
       "tasks": [
         "Own activity rows, pagination, actor navigation and empty/error states."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "ADMIN",
@@ -52,7 +55,8 @@
       ],
       "tasks": [
         "Expo write control plane and read-only Next oversight"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "API",
@@ -68,7 +72,8 @@
       ],
       "tasks": [
         "Own request validation, JWT verification, authorization, typed responses and server error boundaries."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "ATHLETE_STATS",
@@ -82,7 +87,8 @@
       ],
       "tasks": [
         "Own athlete bio/stat/social visibility and sport-specific stat shapes."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "ATHLETE_VERIFICATION",
@@ -98,7 +104,8 @@
       ],
       "tasks": [
         "Own claim/vouch/school confirmation ladder, token validity and verified badge semantics."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "AURA",
@@ -110,7 +117,8 @@
       ],
       "tasks": [
         "Aura tiers and card reward math"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "AUTH",
@@ -122,20 +130,22 @@
       ],
       "tasks": [
         "Guest browse, sign-in and role flow integration"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "BACKEND",
       "file": ".claude/agents/backend.md",
-      "department": "Engineering",
-      "lead": "ENGINEERING",
+      "department": "Database",
+      "lead": "CTO",
       "owns": [
         "apps/mobile/src/backend/db",
         "supabase"
       ],
       "tasks": [
-        "Database architecture and migration/security integration"
-      ]
+        "Database architecture, migrations, RPCs, Storage layout and pairing with Security"
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "BILLING",
@@ -149,7 +159,8 @@
       ],
       "tasks": [
         "Own current one-time Exclusive purchase semantics and future recurring billing design."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "BRAND",
@@ -164,7 +175,8 @@
       ],
       "tasks": [
         "Own the approved message \"Donate. Elevate. Celebrate.\" and its consistent use in the approved placements; VOICE reviews money words, LEGAL reviews claims."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "CATALOGS",
@@ -179,7 +191,8 @@
       ],
       "tasks": [
         "Own sport/region/category/price catalog consistency and generated product facts."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "CHECKOUT",
@@ -196,12 +209,13 @@
       ],
       "tasks": [
         "Own PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "CI",
       "file": ".claude/agents/ci.md",
-      "department": "Operations",
+      "department": "IT infrastructure",
       "lead": "OPERATIONS",
       "owns": [
         ".github/workflows",
@@ -210,33 +224,36 @@
       ],
       "tasks": [
         "Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "COMMERCE",
       "file": ".claude/agents/commerce.md",
       "department": "Finance",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "apps/mobile/src/frontend/lib/finance.ts",
         "apps/mobile/src/backend/api"
       ],
       "tasks": [
         "Financial design and payment specialist integration"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "COMPLIANCE",
       "file": ".claude/agents/compliance.md",
       "department": "Legal and Compliance",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "docs/engineering/DATA_PRIVACY_MAP.md",
         "docs/legal/LEGAL_BRIEFING.md"
       ],
       "tasks": [
         "Privacy, commercial disclosures and evidence-backed claims"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "CONNECT",
@@ -251,7 +268,8 @@
       ],
       "tasks": [
         "Own JWT-gated Express links, bank onboarding state and verification/payout readiness."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "CONTENT_RIGHTS",
@@ -264,12 +282,13 @@
       ],
       "tasks": [
         "Own implementation of approved filming, audio, mark permissions and rights-report language."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "COST_OPERATIONS",
       "file": ".claude/agents/cost-operations.md",
-      "department": "Operations",
+      "department": "IT infrastructure",
       "lead": "OPERATIONS",
       "owns": [
         "docs/product/ROADMAP.md",
@@ -278,7 +297,8 @@
       ],
       "tasks": [
         "Wave budgets, free quotas, media bandwidth and vendor cost evidence"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "CREW",
@@ -291,7 +311,22 @@
       ],
       "tasks": [
         "Own Join Crew, follow counts, self-action restrictions and sign-in resume."
-      ]
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "CTO",
+      "file": ".claude/agents/cto.md",
+      "department": "Office of the CTO",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/agents/WORK_QUEUE.md",
+        "docs/agents/TEAM_HIERARCHY.md"
+      ],
+      "tasks": [
+        "Assign every app fix to one department lead, review the evidence, and reject shortcuts"
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "CUSTODIAL",
@@ -306,12 +341,13 @@
       ],
       "tasks": [
         "Own guardian approval, payee relationship, age handover and server payout policy invariants."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "DATABASE_MIGRATIONS",
       "file": ".claude/agents/database-migrations.md",
-      "department": "Engineering",
+      "department": "Database",
       "lead": "BACKEND",
       "owns": [
         "apps/mobile/src/backend/db/schema.sql",
@@ -320,13 +356,14 @@
       ],
       "tasks": [
         "Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "DESIGN",
       "file": ".claude/agents/design.md",
       "department": "Design",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "apps/mobile/src/frontend/theme",
         "apps/mobile/src/frontend/components",
@@ -335,7 +372,8 @@
       ],
       "tasks": [
         "Visual design and interaction integration"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "DESIGN_TOOLING",
@@ -349,7 +387,8 @@
       "tasks": [
         "Own MCP/design-tool workflows: Figma/Canva handoff, Playwright screenshot evidence setup and Expo MCP build tooling.",
         "Never connect to production or grant write access without owner approval."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "DEVICE_QA",
@@ -362,7 +401,8 @@
       ],
       "tasks": [
         "Own real-device fan/athlete/guardian/operator/booster journey evidence."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "DISCOVERY",
@@ -377,7 +417,8 @@
       ],
       "tasks": [
         "Local, team and Highlight search, pagination and eligibility-filtered discovery"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "DOCUMENTATION",
@@ -394,7 +435,8 @@
       ],
       "tasks": [
         "Synchronize code comments, current state, team ownership, architecture, tester journeys and product evidence across departments in the same change; preserve generated facts and approved legal conclusions."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "DONATION_THANKS",
@@ -408,7 +450,8 @@
       ],
       "tasks": [
         "Own preset-only thanks, donor/athlete linkage and optional thank-you clip references."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "DRIP",
@@ -422,13 +465,14 @@
       ],
       "tasks": [
         "Own marketplace catalog, order lifecycle and unavailable/retry presentation."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "ENGINEERING",
       "file": ".claude/agents/engineering.md",
       "department": "Engineering",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "apps/mobile",
         "apps/admin-portal",
@@ -437,7 +481,8 @@
       ],
       "tasks": [
         "Technical architecture, typed contracts and specialist integration"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "FILMER_REWARDS",
@@ -451,7 +496,8 @@
       ],
       "tasks": [
         "Own Filmed by credit, Props/Aura noncash rewards and Top Filmers eligibility."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "FULLSTACK",
@@ -464,7 +510,8 @@
       ],
       "tasks": [
         "Cross-feature implementation and end-to-end integration"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "GROWTH_ANALYTICS",
@@ -477,7 +524,8 @@
       ],
       "tasks": [
         "Own measurement definitions for browsing, claim, upload and donation conversion."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "HIGHLIGHTS",
@@ -490,7 +538,8 @@
       ],
       "tasks": [
         "Highlights feed and media specialist integration"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "INCIDENT_TRIAGE",
@@ -504,7 +553,8 @@
       ],
       "tasks": [
         "Own severity classification, reproduction evidence and financial/security escalation routing."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "LEADERBOARDS",
@@ -517,7 +567,8 @@
       ],
       "tasks": [
         "Own donor/filmer ranking aggregation, windows, ties and privacy-safe display."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "LEDGER",
@@ -531,20 +582,22 @@
       ],
       "tasks": [
         "Own immutable financial events, exactly-once credits, revenue/owed balances and lifecycle invariants."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "LEGAL",
       "file": ".claude/agents/legal.md",
       "department": "Legal and Compliance",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "docs/legal/LEGAL_BRIEFING.md",
         "apps/mobile/src/frontend/components/Legal"
       ],
       "tasks": [
         "Approved legal wording and counsel decision tracking"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "LOCAL",
@@ -559,13 +612,14 @@
       "tasks": [
         "Game-day fan surfaces and live engagement integration",
         "Typed guest game claims, check-ins and roster access through guestGames.ts; route-layer data boundaries"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "MARKETING",
       "file": ".claude/agents/marketing.md",
       "department": "Marketing",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "docs/product/PUBLIC.md",
         "docs/product/STORY.md",
@@ -573,7 +627,8 @@
       ],
       "tasks": [
         "Own consented family-story positioning and accurate release communications."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "MINOR_SAFETY",
@@ -587,7 +642,8 @@
       ],
       "tasks": [
         "Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "MOBILE_PERFORMANCE",
@@ -601,7 +657,8 @@
       ],
       "tasks": [
         "Feed rendering, media memory, startup and measured interaction performance"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "MODERATION",
@@ -614,7 +671,8 @@
       ],
       "tasks": [
         "Own report reasons, immediate-hide versus review threshold, review evidence and appeals design."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "MOTION",
@@ -629,7 +687,8 @@
       ],
       "tasks": [
         "Maintain motion tokens, haptics, sheet geometry and reduced-motion behavior."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "NOTIFICATIONS",
@@ -642,7 +701,8 @@
       ],
       "tasks": [
         "crew_push_queue privacy, deduplication and authorized delivery design"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "OFFLINE",
@@ -654,7 +714,8 @@
       ],
       "tasks": [
         "Own durable action queue, retry policy, duplicate prevention and logout boundary behavior."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "ONBOARDING",
@@ -668,26 +729,28 @@
       ],
       "tasks": [
         "Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "OPERATIONS",
       "file": ".claude/agents/operations.md",
-      "department": "Operations",
-      "lead": "FACILITATOR",
+      "department": "IT infrastructure",
+      "lead": "CTO",
       "owns": [
         "docs/engineering/STAGING_RUNBOOK.md",
         "docs/engineering/TESTER_SCRIPT.md",
         "docs/STATE.md"
       ],
       "tasks": [
-        "Coordinate staging readiness, releases, reliability, observability and game-day operations."
-      ]
+        "IT infrastructure: staging, releases, CI, reliability, recovery, cost and game-day operations"
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "OPERATOR",
       "file": ".claude/agents/operator.md",
-      "department": "Operations",
+      "department": "IT infrastructure",
       "lead": "OPERATIONS",
       "owns": [
         "apps/mobile/app/operator",
@@ -695,13 +758,14 @@
       ],
       "tasks": [
         "Sideline PIN/check-in/score/clock console"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "PARTNERSHIPS",
       "file": ".claude/agents/partnerships.md",
       "department": "Partnerships",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "docs/product/STORY.md",
         "docs/company/COMPANY_PHASES.md",
@@ -709,7 +773,8 @@
       ],
       "tasks": [
         "Coordinate guardian, school, booster and sponsor requirements without inventing permissions."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "PHOTO_STORIES",
@@ -725,7 +790,8 @@
       "tasks": [
         "Own photo story upload and data flow: 1–10 photos, reorder, per-photo descriptions, set_reel_photos client and story photo reads.",
         "Keep photo stories graceful before the SQL exists and never publish a partially uploaded story."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "PLAYBACK",
@@ -739,7 +805,8 @@
       ],
       "tasks": [
         "Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "POLLS",
@@ -752,7 +819,8 @@
       ],
       "tasks": [
         "Own cheer eligibility, vote math, poll lifecycle and offline vote semantics."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "PRIVACY_ENGINEERING",
@@ -766,13 +834,14 @@
       ],
       "tasks": [
         "Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "PRODUCT",
       "file": ".claude/agents/product.md",
       "department": "Product",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "docs/product/ROADMAP.md",
         "docs/product/STORY.md",
@@ -780,7 +849,8 @@
       ],
       "tasks": [
         "Translate the family donation and recruitment mission into acceptance criteria and dependencies."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "PROFILE",
@@ -793,20 +863,22 @@
       ],
       "tasks": [
         "Own/public athlete identity and feature integration"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "QA",
       "file": ".claude/agents/qa.md",
       "department": "Quality",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "docs/engineering/AUDIT_REPORT.md",
         "docs/engineering/TESTER_SCRIPT.md"
       ],
       "tasks": [
         "Independent final verification gate"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "RALLY",
@@ -820,7 +892,8 @@
       ],
       "tasks": [
         "Own guardian-approved donation goals, progress aggregation and fill celebration."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "REALTIME",
@@ -834,7 +907,8 @@
       ],
       "tasks": [
         "Own subscription lifecycle, live score/event consistency and reconnect behavior."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "RECEIPTS",
@@ -847,7 +921,8 @@
       ],
       "tasks": [
         "Donor receipt/history access, payment status and fee/split disclosure"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "RECONCILIATION",
@@ -861,12 +936,13 @@
       ],
       "tasks": [
         "Own Stripe-event versus ledger reconciliation, discrepancies, receipts and revenue reporting evidence."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "RECOVERY",
       "file": ".claude/agents/recovery.md",
-      "department": "Operations",
+      "department": "IT infrastructure",
       "lead": "OPERATIONS",
       "owns": [
         "docs/engineering/STAGING_RUNBOOK.md",
@@ -875,7 +951,8 @@
       ],
       "tasks": [
         "Migration rollback, backup/restore evidence and data recovery runbooks"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "REFUNDS",
@@ -888,12 +965,13 @@
       ],
       "tasks": [
         "Own refund/dispute lifecycle design and reversal effects on revenue, entitlements and owed funds."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "RELEASE",
       "file": ".claude/agents/release.md",
-      "department": "Operations",
+      "department": "IT infrastructure",
       "lead": "OPERATIONS",
       "owns": [
         "apps/mobile/eas.json",
@@ -903,12 +981,13 @@
       ],
       "tasks": [
         "Own preview profiles, environment binding, signing/device eligibility and rollback artifact evidence."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "RELIABILITY",
       "file": ".claude/agents/reliability.md",
-      "department": "Operations",
+      "department": "IT infrastructure",
       "lead": "OPERATIONS",
       "owns": [
         "apps/mobile/src/frontend/services",
@@ -916,7 +995,8 @@
       ],
       "tasks": [
         "Own failure recovery, incident runbooks, dependency availability and measured service objectives."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "RESEARCH",
@@ -929,20 +1009,22 @@
       ],
       "tasks": [
         "Test family, athlete, guardian, filmer and operator journeys using consented feedback."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "RLS_SECURITY",
       "file": ".claude/agents/rls-security.md",
-      "department": "Engineering",
-      "lead": "BACKEND",
+      "department": "Security",
+      "lead": "SECURITY",
       "owns": [
         "apps/mobile/src/backend/db/schema.sql",
         "supabase/migrations"
       ],
       "tasks": [
         "Audit grants, RLS, security-definer RPCs, storage policies and ownership boundaries."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "ROLE_HQ",
@@ -956,7 +1038,8 @@
       ],
       "tasks": [
         "Parent, booster and sponsor role portal integration"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "ROSTERS",
@@ -971,7 +1054,8 @@
       ],
       "tasks": [
         "Own roster claim identity, team search, CSV import validation and athlete navigation."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "RUNTIME_CONFIG",
@@ -985,7 +1069,8 @@
       ],
       "tasks": [
         "Own draft/published flag states, pause behavior, role lenses and fan control coverage."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "SCHOOL_PARTNERS",
@@ -999,13 +1084,28 @@
       ],
       "tasks": [
         "Own school onboarding requirements, AD/coach confirmation workflow and marks permission records design."
-      ]
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "SECURITY",
+      "file": ".claude/agents/security.md",
+      "department": "Security",
+      "lead": "CTO",
+      "owns": [
+        "docs/engineering/DATA_PRIVACY_MAP.md",
+        "apps/mobile/src/backend/db/schema.sql"
+      ],
+      "tasks": [
+        "Critical review of RLS, sessions, secrets and storage authorization"
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "SESSION_SECURITY",
       "file": ".claude/agents/session-security.md",
-      "department": "Engineering",
-      "lead": "AUTH",
+      "department": "Security",
+      "lead": "SECURITY",
       "owns": [
         "apps/mobile/src/frontend/lib/sessionToken.ts",
         "apps/mobile/src/frontend/lib/roles.ts",
@@ -1014,7 +1114,8 @@
       ],
       "tasks": [
         "Own JWT/session handling, role boundaries, OAuth redirect integrity and server identity checks."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "SHARED_CONTRACTS",
@@ -1027,7 +1128,8 @@
       ],
       "tasks": [
         "Shared RPC/domain types, generated database type provenance and mobile/admin contract parity"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "SHARING",
@@ -1042,7 +1144,8 @@
       ],
       "tasks": [
         "Own public athlete QR, share links, deep links and safe preview content."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "SPONSOR_ADS",
@@ -1056,7 +1159,8 @@
       ],
       "tasks": [
         "Own approved sponsor placement, booster tier display and role portal consistency."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "SPOTLIGHT",
@@ -1069,12 +1173,13 @@
       ],
       "tasks": [
         "Awards board, real athlete IDs and tag queue"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "STORAGE",
       "file": ".claude/agents/storage.md",
-      "department": "Engineering",
+      "department": "Database",
       "lead": "BACKEND",
       "owns": [
         "apps/mobile/src/backend/db/schema.sql",
@@ -1082,13 +1187,14 @@
       ],
       "tasks": [
         "Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "SUPPORT",
       "file": ".claude/agents/support.md",
       "department": "Support",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "docs/engineering/TESTER_SCRIPT.md",
         "docs/engineering/TROUBLESHOOTING.md",
@@ -1096,12 +1202,13 @@
       ],
       "tasks": [
         "Own help/runbook content, tester intake taxonomy and guardian-safe issue handling."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "TELEMETRY",
       "file": ".claude/agents/telemetry.md",
-      "department": "Operations",
+      "department": "IT infrastructure",
       "lead": "OPERATIONS",
       "owns": [
         "apps/mobile/src/frontend/services/TelemetryManager.ts",
@@ -1110,7 +1217,8 @@
       ],
       "tasks": [
         "Own bounded telemetry payloads, data minimization, dashboard interpretation and logging failure behavior."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "TEST_AUTOMATION",
@@ -1125,20 +1233,22 @@
       ],
       "tasks": [
         "Own meaningful regression, boundary/security and finance invariant checks."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "TRUST_SAFETY",
       "file": ".claude/agents/trust-safety.md",
       "department": "Trust and Safety",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "docs/legal/LEGAL_BRIEFING.md",
         "apps/mobile/src/frontend/components/Verification"
       ],
       "tasks": [
         "Coordinate moderation, identity, minor safety and rights safeguards as independent release gates."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "UPLOAD",
@@ -1156,7 +1266,8 @@
       "tasks": [
         "Own staged video selection, details, review and optional settings; preserve required rights, draft navigation and safe publishing.",
         "Own compression, MIME/bucket routing, upload progress/cancellation and athlete/account tag consent."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "VAULT",
@@ -1170,7 +1281,8 @@
       ],
       "tasks": [
         "Own private video entitlements, signed playback URLs and subscription-request access."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "VISUAL_QA",
@@ -1182,20 +1294,39 @@
       ],
       "tasks": [
         "Record browser/visual regression evidence with the Playwright MCP on Expo web: narrow widths, large text and screenshots in AUDIT_REPORT; native sign-off stays with DEVICE_QA."
-      ]
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "VOICE",
       "file": ".claude/agents/voice.md",
       "department": "Brand",
-      "lead": "FACILITATOR",
+      "lead": "CTO",
       "owns": [
         "docs/product/VOICE.md",
         "scripts/check-copy.mjs"
       ],
       "tasks": [
         "Donation language and honest product copy"
-      ]
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "VP_OPERATIONS",
+      "file": ".claude/agents/vp-operations.md",
+      "department": "Office of the CTO",
+      "lead": "CTO",
+      "owns": [
+        "docs/agents/TEAMS.md",
+        "docs/agents/WORK_QUEUE.md",
+        "docs/agents/DEPARTMENT_PLANS.md",
+        "docs/agents/EXPERT_STANDARDS.md",
+        ".claude/agents/registry.json"
+      ],
+      "tasks": [
+        "Keep every agent role, protocol, and priority current in the same turn, and report team drift to the CTO"
+      ],
+      "model": "grok-4.7-medium"
     },
     {
       "call": "WISHLIST",
@@ -1208,7 +1339,8 @@
       ],
       "tasks": [
         "Gear-goal configuration, donation allocation and confirmed progress"
-      ]
+      ],
+      "model": "grok-4.7-medium"
     }
   ]
 }

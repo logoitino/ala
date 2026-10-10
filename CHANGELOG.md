@@ -2,6 +2,12 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-10-08
+
+### Highlights owner card
+
+- The card that slides in when you swipe a Highlight now matches the rest of the app: a light rounded card with a header colored by the athlete's Aura tier, a clear "On this clip" row (the tag, or just whether it is a video or a photo story), a visible "Posted by" line, four stats in a tidy 2 x 2 grid, and Join Crew and Donate as two equal buttons. The @handle shows only when the athlete has an account with a real username. Join Crew, Donate and Open full profile stay pinned at the bottom (and Close at the top) so they never scroll off small phones; on narrow phones the verified mark sits on the avatar and the header is slimmer. Screen readers hear the athlete's name first, plain labels without bullet characters, and reduced motion skips the entry animations. The cyan used for text on cyan washes (Island Cyan tier, Local accent) is a little darker to meet the contrast minimum.
+
 ## 2026-10-07
 
 ### Photo stories in Highlights, and "Donate. Elevate. Celebrate."

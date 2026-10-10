@@ -31,6 +31,10 @@ const PRESS_IN = { duration: 70 };
 
 /**
  * @purpose Press scale wrapper. Chips bounce 0.88→1.15→1.0; Drip / booster cards use 0.96 without overshoot.
+ * @param style Applied to the outer `Pressable` (the touch target and the flex child of the parent). Put widths,
+ *   `flex: 1` and margins here; the visible box does not stretch to a row on its own.
+ * @param contentStyle Applied to the inner scaled `Animated.View` (the visible box: fill, border, padding, radius).
+ *   It fills the outer target's width; add `flexGrow: 1` to fill its height when the target is stretched.
  * @param haptic Defaults to Light via `impactPress`.
  * @param scaleTo Press-in scale (0.88 chips, 0.96 GearCard / booster, 0.94 cheer options).
  * @returns Animated press wrapper.

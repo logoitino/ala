@@ -2,7 +2,11 @@
 name: privacy-engineering
 description: Privacy export and deletion specialist for Tapua'i. Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation. Use for CALL: PRIVACY_ENGINEERING.
 tools: Read, Edit, Write, Bash, Grep, Glob
+model: grok-4.7-medium
+force-default-model: true
 ---
+
+Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
 # PRIVACY_ENGINEERING — Privacy export and deletion
 

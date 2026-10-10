@@ -6,7 +6,105 @@
 
 **Method (2026-09-14):** Static pass over `apps/mobile/app/` + `apps/mobile/src/frontend/`; `pnpm typecheck` (mobile + admin); `pnpm docs:check`; shared-types import smoke; `sk_test_` / `sk_live_` grep under `apps/mobile/src/frontend/` (clean); stale path sweep of docs / troubleshooting / CI. Not re-run on a physical device here.
 
-> **Sections 1-7 below are the 2026-09-14 snapshot and have not been re-run in full.** They predate Vault playback, ShareQR, Varsity, the avatar picker, the current auth sheet, the 2026-09-25 compliance copy, the motion pass, and the Mālo ledger. Treat them as history. The section immediately below is current.
+> **Sections 1-7 below are the 2026-09-14 snapshot and have not been re-run in full.** They predate Vault playback, ShareQR, Varsity, the avatar picker, the current auth sheet, the 2026-09-25 compliance copy, the motion pass, and the Mālo ledger. Treat them as history. The sections immediately below are current.
+
+---
+
+## Photo-story pager, browser fixture (VISUAL_QA) — 2026-10-09
+
+**Scope:** the feed counter and dots in `PhotoStoryMedia`, not the upload steps and not a live development feed. The photo SQL is still unapplied, so this pass bundled the real component with five fixture photos and did not call Supabase.
+
+**Method.** `.smoke/photo-story/` (git-ignored) bundled `PhotoStoryMedia` with the app Metro config. `fetchStoryPhotos` was replaced with five local photos. Chrome via `playwright-core` opened `http://127.0.0.1:8766` at 320×568 and 375×568, DPR 2, then again at 320 with CSS font size and line height doubled. The run clicked the real Next control and waited for the counter to change.
+
+| Check | Result |
+| --- | --- |
+| Counter | **Pass.** `1 / 5` on load. After Next, `2 / 5`. Previous is absent on the first photo. |
+| Dots | **Pass.** Five dots. The chip's right edge was 308 at a 320-wide viewport and 363 at 375, inside the screen. At 200% text the chip grew to 74×58 and stayed inside 320. |
+| Photo bitmap | **Not shown.** The field behind the chip stayed black, and each page logged one `NetworkError`. The counter and paging still ran. This is not evidence that a real JPEG paints. |
+
+**Still open.** Upload steps, reorder, progress, tagline placements, a live feed, and device paging. A live feed needs the photo SQL, which needs the owner.
+
+---
+
+## Owner peek card redesign, browser evidence (VISUAL_QA) — 2026-10-08
+
+**Scope:** the uncommitted redesign of the swipe-sideways owner card: `ReelOwnerPeek.tsx` (tier-washed header, "On this
+clip" row, optional "Posted by", fixed 2 x 2 stats, Join Crew / Donate halves, Open full profile) and the light panel
+shell in `ReelPage.tsx` (`styles.panel`, near-opaque Island Daylight card), plus the `AnimatedPressable` `style` /
+`contentStyle` split the buttons depend on. **No app code was changed by this pass.**
+
+**Method.** The real `ReelPage` + `ReelOwnerPeek` were bundled for web with the project's own Metro config into a
+throwaway page and driven in Google Chrome with `playwright-core` (the MCP browser tools were not exposed to this
+agent, so the same Playwright engine was scripted directly). The card was opened by a real mouse swipe left across the
+clip (the actual pan gesture), then measured from the DOM and screenshotted at DPR 2. Inputs are synthetic: a bright
+sky/white SVG stands in for a photo behind the card (plus a plain dark background for comparison), and the five
+Supabase reads (`profiles` verification, `profiles_public` by player and by poster, `get_crew_graph`) are answered by
+Playwright from a fake host, with every other non-local request aborted (`blocked: []`; nothing reached a real
+backend, no real keys in the bundle, no payments). Fixture stand-ins (not production code paths): `expo-haptics`,
+`AuthContext` (signed-out guest) and `SoftWallContext` (no-op `requireAuth`) are stubbed because their native
+imports do not bundle in this ad hoc web build. Page height = viewport minus a ~64 pt tab bar and the home-indicator
+inset; peek insets are the feed's own (top 108 / bottom 24, and 120 / 58 at 430). A real feed with a taller header
+(live banner, polls, Rivalry week) would have a shorter panel than measured here.
+
+**Cases (all open state):** a video with a tag; b video with no tag; c photo story (`mediaType` photo, 5 photos);
+d video with a fan "Posted by" (avatar + `@username`); e unconfirmed athlete (`tagStatus: pending`, "Tag" button);
+f stress (long name / handle / position / school / tag / poster, 10-photo story, seven-digit stats, 987,654,321 cents).
+**Widths/heights:** 320 x 568, 375 x 667, 430 x 932; at 320 also a CSS 200% text stress (font size and line height of
+every text node doubled; not native Dynamic Type). Backgrounds: bright for all, dark additionally for a and c.
+Each state that scrolls also has a `-scrolled` capture.
+
+| Check | Result |
+| --- | --- |
+| 2 x 2 stat grid holds | **Pass.** Two columns and two rows of equal-width tiles in every one of the 30 open-state captures, including 320 / 200% and the long-value case f. Tile widths 116 / 134 / 158 at 320 / 375 / 430. |
+| Donate (or Tag) and Join Crew are equal halves | **Pass.** Outer and visible box coincide (the `AnimatedPressable` style/contentStyle fix works): 116 + 116, 134 + 134, 158 + 158, 8 gap, equal heights (48; 68 at 200%). Same for the pending "Tag" state. |
+| Content fits the panel without scrolling | **Fails at 320 and 375, passes at 430 (a, b, c, e; d and f only fit at 430).** Panel client height is 370 at 320 and 469 at 375, 654 at 430. Content height / overflow: a 575 / 205 and 573 / 104 at 320 / 375; b 172 and 71; c 185 and 84; d 259 and 160; e 173 and 74; f 263 and 180. At 430 overflow is 0 for every case. At 320 / 200% overflow is 405 to 567. Every state remains reachable by scrolling; nothing is unreachable. |
+| Primary action visible without scrolling | **Fails at 320 for every case and at 375 for a, c, d, f.** At 320 the Donate row ends 101 to 195 pt below the panel edge. At 375 a and c are cut mid-button (30 and 10 pt past the edge) and d, f are wholly below; only b and e fit. "Open full profile" is below the fold at 375 in every case and visible only at 430. |
+| Text clipped | **Fails at 320 (any text size) and at 200%:** the VERIFIED VARSITY badge runs past the panel's right edge (see issue 1). At 200% (320): "Donate" ellipsises to "Don…", the Donations tile reads "$12…" and "DONATI…", the tier pill wraps to two lines and the badge is cut to "VERIFIE". Intentional ellipses (two-line meta, one-line handle, two-line tag, poster name wraps) behave as designed in f. A seven-digit Donations total ("$9876543.21") ellipsises in its tile at 375 on web; on native `adjustsFontSizeToFit` would shrink it (not run here). |
+| Photo story reads the same as video | **Pass.** c shows the images icon and "Photo story · 5 photos" under the quoted tag; with no tag (not rendered separately) the kind line is the title. |
+| No-tag clip | **Pass.** b shows just "Video highlight" in the clip row; no empty quotes, row shortens, no layout break. |
+| "Posted by" | **Pass.** d at 375: avatar + "Posted by @coach_sina" row in the slate wash; no-handle fallback to the name wraps to two lines at 320 (f) without overflow. Costs ~56 pt of height, which is what pushes d past the fold at 375. |
+| Pending athlete ("Tag") | **Pass.** e: Tag button is gold-washed with a gold border, same size as Donate; "Open full profile" takes the filled primary style. Header lacks the badge as designed (mock sets pending). |
+| Light card over a bright photo | **Pass.** The 0.58 dim layer turns a pure white/sky photo to mid-grey, and the 98% card with its 1 pt border reads clearly at all three widths (a, c dark and bright compared). Cosmetic: because the card is 98% rather than 100% opaque, the clip's edge shows through as a faint vertical seam (x about 455 at 320 / bright) in the lower body area. |
+| Header | **Pass at 375 / 430**, with the avatar ring, tier pill, handle and meta all fitting. 44 pt close target confirmed (44 x 44 around a 34 pt disc). At 320 the close button scrolls out of view with the header; dismissing then relies on tapping outside the card. |
+| Console | One page error per load: `findNodeHandle is not supported on web` (all 30 loads). Source not isolated; it did not block rendering or the gesture. It may be a web-only reanimated/gesture artifact; native is unaffected by this message. |
+
+**Issues (report only, nothing fixed here).**
+1. **Verified badge overflows the card at 320 (Medium).** `VarsityBadge.tsx:60-63` renders the label with no
+   `numberOfLines` / shrink, and `ReelOwnerPeek.tsx:251-256` (`nameRow`, `flexWrap: 'wrap'`) cannot narrow it below its
+   intrinsic ~190 pt while the identity column is 141 pt wide. Suggest `flexShrink: 1` + `numberOfLines={1}` on the
+   compact label, or an icon-only compact badge below 360 pt wide, or put the badge on its own row.
+2. **Primary actions sit below the fold on 320 and 375 phones (Medium).** `ReelOwnerPeek.tsx:271` (`body`) and
+   `ReelPage.tsx:290` insets (108 top / 24 bottom, panel 370 pt tall at 320). The design wants Donate readable at a
+   glance. Options: at `compact` pin the Join Crew / Donate row (and Open full profile) outside the `ScrollView` so
+   they never scroll away; or shrink the compact header (avatar ring 84 pt, orb, 12/18 padding) so the first screen
+   reaches the buttons; or drop `peekInsetTop` on short heights. Scrolling is also the only way to reach the lower stat
+   row in d and f at 375.
+3. **Large text truncates the primary action and stats (Medium, CSS stress).** `ReelOwnerPeek.tsx:373` (`Donate`
+   `numberOfLines={1}`), `:316-321` (stat value / label). At 200% on 320 these show "Don…", "$12…", "DONATI…". Let the
+   Donate / Join Crew labels use `numberOfLines={2}` with a larger `minHeight` (the row already stretches both halves),
+   and add `adjustsFontSizeToFit` to the stat label or lower `letterSpacing` / allow two lines for the label.
+4. **Close button scrolls off with the header (Low).** `ReelOwnerPeek.tsx:226-237`. Consider a sticky close or rely on
+   the dim-area tap documented in `ReelPage.tsx:279`.
+5. **Dead space at tall heights (Cosmetic).** At 430 x 932 the `justifyContent: 'center'` body (`:429`) leaves about 65 pt
+   above and 100 pt below the content. Top-align or give the clip row more weight if that reads as empty.
+6. **Seam from the 98% panel (Cosmetic).** `ReelPage.tsx:358` uses `rgba(243,251,247,0.98)`; use `1` or accept it.
+
+**What this does not prove.** Web rendering at CSS pixels, not native iOS / Android layout. The 200% run is a CSS
+stress, not Dynamic Type or Android font scale (RN `fontScale`, `adjustsFontSizeToFit` and `numberOfLines` behave
+differently on native). Not exercised: real swipe on a device (nested vertical paging, spring settle, haptics), the
+panel enter / `FadeInUp` animations (only the settled frame is captured), VoiceOver / TalkBack order and the modal
+trap (`accessibilityViewIsModal`, `aria-hidden` while closed), real photos / video behind the card, a configured
+backend (verification, handle, poster, crew counts are canned), the live feed header height, Stripe / donate sheet
+opened from the card, and the Follow / Join Crew state ("In Crew"). `DEVICE_QA` still owns native sign-off; `ACCESSIBILITY`
+owns the screen-reader criteria.
+
+**Evidence.** Screenshots: `.playwright-mcp/peek/peek-<case>-<width>-<bright|dark>[-text200][-scrolled].png` (case a to f;
+widths 320, 375, 430; 53 files including `metrics.json` with panel, scroll, tile and button rects, clipping and
+console output). The folder is git-ignored; nothing committed. Throwaway harness and rebuild/run scripts:
+`.smoke/peek-ui/` (git-ignored; build with `EXPO_NO_DOTENV=1 EXPO_PUBLIC_SUPABASE_URL=https://fixture-supabase.invalid
+EXPO_PUBLIC_SUPABASE_ANON_KEY=fixture-anon-key node .smoke/peek-ui/build.cjs`, serve with `python3 .smoke/peek-ui/server.py`
+from the repo root, then `node .smoke/peek-ui/run.mjs`, which expects `playwright-core` from the local npx cache).
+The static server (port 8767) and browsers were stopped; no Metro / Expo dev server was started.
 
 ---
 

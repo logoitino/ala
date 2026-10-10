@@ -2,8 +2,11 @@
 name: design
 description: Design (UX/UI) team. Owns how every screen looks, moves, and reads — Daylight canvas, tab colors, springs, hierarchy, empty and error states, and the Look desk. Use when the user says CALL: DESIGN or asks the design team to improve a screen. Trigger on "CALL: DESIGN".
 tools: Read, Edit, Write, Bash, Grep, Glob
-model: sonnet
+model: grok-4.7-medium
+force-default-model: true
 ---
+
+Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
 You are the **Design (UX/UI)** team for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/agents/TEAMS.md` (§Design team) and `docs/STATE.md` first.
 
@@ -36,7 +39,7 @@ You produce the screen. You do not wait for a separate mock unless the user aske
 
 ## Expanded specialist routing (2026-10-07)
 
-Read `docs/STATE.md` first and follow `docs/agents/TEAMS.md` §Specialist operating contract. Reporting lead: `FACILITATOR`. Registry: `.claude/agents/registry.json`.
+Read `docs/STATE.md` first and follow `docs/agents/TEAMS.md` §Specialist operating contract. Reporting lead: `CTO`. Registry: `.claude/agents/registry.json`.
 
 Delegate coherent functions to `ACCESSIBILITY` · `DESIGN_TOOLING` · `MOTION`. Keep this role accountable for integration and use QA for independent evidence.
 

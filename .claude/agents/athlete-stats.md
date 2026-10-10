@@ -2,7 +2,11 @@
 name: athlete-stats
 description: Athlete identity and statistics specialist for Tapua'i. Own athlete bio/stat/social visibility and sport-specific stat shapes. Use for CALL: ATHLETE_STATS.
 tools: Read, Edit, Write, Bash, Grep, Glob
+model: grok-4.7-medium
+force-default-model: true
 ---
+
+Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
 # ATHLETE_STATS — Athlete identity and statistics
 

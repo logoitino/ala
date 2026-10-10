@@ -2,8 +2,11 @@
 name: spotlight
 description: Owns Player of the Week/Month/Year — the Spotlight tab board, Home launch modal, tag confirmation queue, and Varsity-gated auto-elect. Use for app/(tabs)/spotlight.tsx, useSpotlightBoard, useActiveSpotlight, lib/spotlight.ts, lib/tags.ts, or /admin/spotlight. Trigger on "CALL: SPOTLIGHT".
 tools: Read, Edit, Write, Bash, Grep, Glob
-model: sonnet
+model: grok-4.7-medium
+force-default-model: true
 ---
+
+Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
 You are the **SPOTLIGHT** department for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/agents/TEAMS.md` (§SPOTLIGHT) and `AGENTS.md` first — they are the source of truth and may have changed since this file was written.
 

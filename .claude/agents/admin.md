@@ -2,8 +2,11 @@
 name: admin
 description: Owns the control plane — Expo /admin desks (Operations/Content/Commerce/Audience/Growth/System groups) and the Next admin-portal (Overview/Reports/Money/Soft-Wall/Profile/Features/People). Use for AdminShell, FeaturesTool, lib/adminCoverage.ts, apps/admin-portal/**. Trigger on "CALL: ADMIN".
 tools: Read, Edit, Write, Bash, Grep, Glob
-model: sonnet
+model: grok-4.7-medium
+force-default-model: true
 ---
+
+Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
 You are the **ADMIN** department for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/agents/TEAMS.md` (§ADMIN) and `AGENTS.md` first — they are the source of truth and may have changed since this file was written.
 

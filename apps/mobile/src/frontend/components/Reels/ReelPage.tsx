@@ -19,7 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { ReelOwnerPeek } from '@/components/Reels/ReelOwnerPeek';
-import { colors } from '@/constants/theme';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import type { HighlightClip } from '@/data/highlights';
 import type { Player } from '@/data/players';
 import { canDropMaloOnHighlight } from '@/data/malo';
@@ -87,7 +87,8 @@ export type ReelPageProps = {
 };
 
 /**
- * @purpose One page of the Highlights pager. Adds two motion layers around `ReelCard`: (1) card-deck depth —
+ * @purpose One page of the Highlights pager. Adds two motion layers around `ReelCard` (a video or a photo story; the
+ * peek is the same for both): (1) card-deck depth —
  * the outgoing page shrinks, sinks, rounds its corners and dims while the incoming page scales up with a slight
  * tilt; (2) swipe left or right on the clip to slide in `ReelOwnerPeek` from that edge while the video parallaxes
  * and dims behind it. Vertical paging, single-tap mute and double-tap Aura keep working (the pan only activates on
@@ -266,16 +267,26 @@ export function ReelPage({
     <Animated.View style={[styles.page, { height }, depthStyle]} onLayout={onLayout}>
       <GestureDetector gesture={pan}>
         <View style={styles.fill}>
-          <Animated.View style={[styles.fill, videoStyle]}>{children}</Animated.View>
+          {/* While the card is open the clip and its rail are inert (the dim layer blocks touches), so hide them from
+              screen readers too; otherwise VoiceOver / TalkBack can swipe into controls the card is covering. */}
+          <Animated.View
+            accessibilityElementsHidden={open !== 0}
+            importantForAccessibility={open !== 0 ? 'no-hide-descendants' : 'auto'}
+            style={[styles.fill, videoStyle]}
+          >
+            {children}
+          </Animated.View>
 
+          {/* The scrim is a touch-only dismiss: the card has its own labelled Close button, so a screen reader would
+              otherwise hear "Close profile peek" twice. Always hidden from assistive tech. */}
           <Animated.View
             pointerEvents={open ? 'auto' : 'none'}
-            accessibilityElementsHidden={!open}
-            importantForAccessibility={open ? 'auto' : 'no-hide-descendants'}
-            aria-hidden={!open}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            aria-hidden
             style={[styles.dim, dimStyle]}
           >
-            <Pressable accessibilityRole="button" accessibilityLabel="Close profile peek" style={styles.fill} onPress={close} />
+            <Pressable style={styles.fill} onPress={close} />
           </Animated.View>
 
           {width > 0 ? (
@@ -284,6 +295,9 @@ export function ReelPage({
               accessibilityElementsHidden={!open}
               importantForAccessibility={open ? 'auto' : 'no-hide-descendants'}
               aria-hidden={!open}
+              // iOS: treat the card as modal so VoiceOver ignores its siblings (this is the card's parent, so the flag
+              // must sit here; on the inner ScrollView it had no siblings to hide).
+              accessibilityViewIsModal={open !== 0}
               style={[
                 styles.panel,
                 { width: panelWidth, left: -panelWidth, marginTop: peekInsetTop, marginBottom: peekInsetBottom },
@@ -352,10 +366,12 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     zIndex: 21,
-    backgroundColor: 'rgba(15,20,22,0.97)',
-    borderColor: 'rgba(243,251,247,0.14)',
+    // Island Daylight card (fully opaque, so no clip edge shows through as a seam); the dim layer behind it
+    // carries the contrast. Radius is the shared sheet geometry. `ReelOwnerPeek` draws the tier-colored header.
+    backgroundColor: FOCAL.backgroundBase,
+    borderColor: 'rgba(15,20,22,0.08)',
     borderWidth: 1,
-    borderRadius: 24,
+    borderRadius: MENU_METRICS.sheetRadius,
     overflow: 'hidden',
   },
   hint: {

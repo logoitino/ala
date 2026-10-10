@@ -1145,7 +1145,7 @@ Tier = highest band whose minimum the balance meets. Source of truth: `AURA_TIER
 | Tier | Title | Min pts | Hex | Face | Ink | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | **Slate Silver** | 0 | `#94A3B8` | `#F1F5F9` | `#334155` | Entry border |
-| 2 | **Island Cyan** | 8 | `#00E5FF` | `#CFF7FF` | `#007A8A` | Seki / away |
+| 2 | **Island Cyan** | 8 | `#00E5FF` | `#CFF7FF` | `#00707E` | Seki / away |
 | 3 | **Neon Jade** | 20 | `#00E676` | `#E8FBF0` | `#00733C` | Brand jade |
 | 4 | **Electric Violet** | 40 | `#B388FF` | `#F3EDFF` | `#4C1D95` | Flex-adjacent |
 | 5 | **Crimson Ember** | 70 | `#FF1744` | `#FFE8EC` | `#C4002B` | Heat |

@@ -72,6 +72,7 @@ Upload composition stays under `components/Reels/`: `UploadVideoModal.tsx` owns 
 checks and never lose draft state on Back.
 
 `DOCUMENTATION` reports to `ENGINEERING` and synchronizes same-turn docs across all departments.
+App fixes are assigned by `CTO` (`.claude/agents/cto.md`). The CTO gives the fix to one lead. The lead assigns a specialist. Specialists report to their lead, and leads report the fix to the CTO. `VP_OPERATIONS` reports to the CTO and updates roles, protocols, and priorities in the same turn they change. Each agent reads `docs/agents/EXPERT_STANDARDS.md` and runs on the model pinned in its file. The owner (`FACILITATOR`) still decides prices, counsel, applying SQL, merging, and live money.
 Every specialist supplies behavior/API changes and actual verification evidence. Shared menu/page
 coverage and exceptions are tracked in `docs/engineering/MENU_STYLE_MAP.md`; preserve approved legal and generated facts.
 

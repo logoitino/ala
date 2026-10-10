@@ -16,6 +16,17 @@ if (registry.version !== 1 || !Array.isArray(registry.agents)) {
 const docs = ['docs/agents/TEAMS.md', 'docs/agents/TEAM_HIERARCHY.md'].map((file) => ({
   file, source: fs.readFileSync(path.join(root, file), 'utf8'),
 }));
+const allowedModels = new Set([
+  'claude-fable-5-1-thinking-high',
+  'claude-opus-5-5-medium',
+  'claude-sonnet-5-5-high',
+  'claude-sonnet-5-thinking-high',
+  'composer-2.5-fast',
+  'cursor-grok-4.6-high-fast',
+  'gemini-3.8-flash-high',
+  'gpt-5.6-sol-medium',
+  'grok-4.7-medium',
+]);
 const calls = new Map();
 const files = new Set();
 for (const agent of registry.agents) {
@@ -40,6 +51,11 @@ for (const agent of registry.agents) {
     if (name !== path.basename(agent.file, '.md')) fail(`${agent.call}: frontmatter name must match file`);
     if (!metadata?.[1].match(/^description:\s*\S/m)) fail(`${agent.call}: missing description`);
     if (!metadata?.[1].match(/^tools:\s*\S/m)) fail(`${agent.call}: missing tools`);
+    const model = metadata?.[1].match(/^model:\s*(\S+)\s*$/m)?.[1];
+    if (!allowedModels.has(model)) fail(`${agent.call}: model must be a connected Cursor model id`);
+    if (agent.model !== model) fail(`${agent.call}: registry model does not match the agent file`);
+    if (!metadata?.[1].match(/^force-default-model:\s*true\s*$/m)) fail(`${agent.call}: missing force-default-model`);
+    if (!source.includes('docs/agents/EXPERT_STANDARDS.md')) fail(`${agent.call}: missing expert standard`);
     if (!source.includes('docs/STATE.md')) fail(`${agent.call}: missing current-state instruction`);
   }
   if (typeof agent.department !== 'string' || !agent.department.trim()) fail(`${agent.call}: missing department`);

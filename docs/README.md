@@ -71,6 +71,8 @@ location (tracked in [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_P
 | [TEAMS.md](agents/TEAMS.md) | Department call sheet: who owns which screens and files, now / next / later. |
 | [TEAM_HIERARCHY.md](agents/TEAM_HIERARCHY.md) | Org chart of departments and agents. |
 | [WORK_QUEUE.md](agents/WORK_QUEUE.md) | Ordered tasks with acceptance criteria and owners. |
+| [DEPARTMENT_PLANS.md](agents/DEPARTMENT_PLANS.md) | Each department: what is in the app today, and what that team will do before a public release. |
+| [EXPERT_STANDARDS.md](agents/EXPERT_STANDARDS.md) | The expert bar for each department, and which model is connected to each agent. |
 
 The agent definitions themselves are in `.claude/agents/`; `pnpm agents:check` keeps them in step
 with these files.

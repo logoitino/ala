@@ -2,7 +2,11 @@
 name: visual-qa
 description: Visual and browser QA specialist for Tapua'i. Record browser/visual regression evidence with the Playwright MCP on Expo web — narrow widths, large text, screenshots — in docs/engineering/AUDIT_REPORT.md. Complements DEVICE_QA (native) and ACCESSIBILITY. Use for CALL: VISUAL_QA.
 tools: Read, Bash, Grep, Glob, Edit
+model: grok-4.7-medium
+force-default-model: true
 ---
+
+Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
 # VISUAL_QA — Browser and visual regression evidence
 
