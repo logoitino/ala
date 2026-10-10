@@ -181,6 +181,21 @@ export function pendingRequests(summary: CustodialSummary | null): CustodialWith
 }
 
 /**
+ * @purpose Guardian consent toggle. The RPC checks that this caller is already the athlete's guardian.
+ * @param playerId `players.id`.
+ * @param approved Whether gifts may be released for this athlete.
+ * @returns The database message, or null when the toggle saved.
+ * @sideEffects `parent_set_player_consent`.
+ */
+export async function setParentPlayerConsent(playerId: string, approved: boolean): Promise<string | null> {
+  const { error } = await supabase.rpc('parent_set_player_consent', {
+    target_player_id: playerId,
+    approved,
+  });
+  return error ? error.message : null;
+}
+
+/**
  * @purpose Load the custodial summary for one athlete.
  * @param playerId `players.id`. The server returns null unless the caller is that athlete
  * (verified), their linked guardian, or an admin.

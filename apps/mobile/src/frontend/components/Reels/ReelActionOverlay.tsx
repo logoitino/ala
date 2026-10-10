@@ -1,8 +1,8 @@
 /**
  * Highlights overlay on top of each clip: athlete name and school, "Filmed by" credit, caption, and the right-hand
  * rail (Seki / Aura / Flex / donate / more). Photo stories add the current photo's description above the name.
- * Only Aura plays a burst; Seki swaps its emoji briefly; Flex lights up;
- * removing a vote never animates.
+ * Only Aura plays a burst; Seki swaps its emoji briefly; Flex lights up.
+ * Selecting springs the chip up a little. Clearing dips it, then the fill drains.
  */
 
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -28,7 +28,7 @@ import { formatTipDollars, type ReelHype } from '@/lib/reels';
 import type { PlayReactionId } from '@/data/players';
 import { maloAthleteCta } from '@/data/malo';
 import { HYPE_FX } from '@/theme/hypeFx';
-import { FOCAL, SPRING_BOUNCE } from '@/theme/motion';
+import { FOCAL, SPRING_BOUNCE, SPRING_SHEET } from '@/theme/motion';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 
 export const REEL_REACTIONS = [
@@ -292,6 +292,35 @@ export function ReelActionOverlay({
 // then turns back. Aura is the only chip with the full burst; Flex just lights up.
 const SEKI_BALL = '🏈';
 
+const HALO_RINGS = [
+  { size: 74, opacity: 0.16 },
+  { size: 66, opacity: 0.28 },
+  { size: 58, opacity: 0.4 },
+] as const;
+
+/** Soft selected glow, painted in rings so the rail cannot clip a shadow against the circle. */
+function HypeHalo({ kind, color }: { kind: PlayReactionId; color: string }) {
+  return (
+    <View pointerEvents="none" testID={`hype-halo-${kind}`} style={styles.haloSlot}>
+      {HALO_RINGS.map((ring) => (
+        <View
+          key={ring.size}
+          style={{
+            position: 'absolute',
+            width: ring.size,
+            height: ring.size,
+            borderRadius: ring.size / 2,
+            backgroundColor: color,
+            opacity: ring.opacity,
+            top: (76 - ring.size) / 2,
+            left: (76 - ring.size) / 2,
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
 function ReactionChip({
   kind,
   emoji,
@@ -322,6 +351,7 @@ function ReactionChip({
   const ball = useSharedValue(0);
   const ballPop = useSharedValue(1);
   const ballSpin = useSharedValue(0);
+  const settle = useSharedValue(1);
   const shoutStyle = useAnimatedStyle(() => ({
     opacity: fade.value,
     transform: [{ translateY: rise.value }],
@@ -335,47 +365,56 @@ function ReactionChip({
     transform: [{ scale: ballPop.value }, { rotate: `${ballSpin.value}deg` }],
   }));
 
+  const settleStyle = useAnimatedStyle(() => ({ transform: [{ scale: settle.value }] }));
+
   const fire = () => {
     if (disabled) return;
-    // Only an adding tap animates. Removing is instant, so a quick un-tap never fights an effect.
-    if (!selected && !reduceMotion) {
-      if (kind === 'aura') {
-        rise.value = 0;
-        fade.value = 1;
-        rise.value = withTiming(-36, { duration: 520 });
-        fade.value = withTiming(0, { duration: 520 });
-        onAuraBurst(chipY.current);
-      } else if (kind === 'seki') {
-        cancelAnimation(ball);
-        ball.value = withSequence(withTiming(1, { duration: 110 }), withDelay(520, withTiming(0, { duration: 180 })));
-        ballPop.value = withSequence(withTiming(1.35, { duration: 140 }), withSpring(1, SPRING_BOUNCE));
-        ballSpin.value = withSequence(withTiming(-35, { duration: 0 }), withSpring(0, SPRING_BOUNCE));
+    if (!reduceMotion) {
+      if (!selected) {
+        settle.value = withSequence(withTiming(1.08, { duration: 90 }), withSpring(1, SPRING_BOUNCE));
+        if (kind === 'aura') {
+          rise.value = 0;
+          fade.value = 1;
+          rise.value = withTiming(-36, { duration: 520 });
+          fade.value = withTiming(0, { duration: 520 });
+          onAuraBurst(chipY.current);
+        } else if (kind === 'seki') {
+          cancelAnimation(ball);
+          ball.value = withSequence(withTiming(1, { duration: 110 }), withDelay(520, withTiming(0, { duration: 180 })));
+          ballPop.value = withSequence(withTiming(1.35, { duration: 140 }), withSpring(1, SPRING_BOUNCE));
+          ballSpin.value = withSequence(withTiming(-35, { duration: 0 }), withSpring(0, SPRING_BOUNCE));
+        }
+      } else {
+        settle.value = withSequence(withTiming(0.86, { duration: 90 }), withSpring(1, SPRING_SHEET));
       }
     }
     onPress();
   };
 
   return (
-    <View style={styles.chipWrap} onLayout={({ nativeEvent }) => { chipY.current = nativeEvent.layout.y; }}>
+    <Animated.View style={[styles.chipWrap, settleStyle]} onLayout={({ nativeEvent }) => { chipY.current = nativeEvent.layout.y; }}>
       {kind === 'aura' ? (
         <Animated.Text pointerEvents="none" style={[styles.plusOne, { color: fx.color }, shoutStyle]}>
           {fx.shout}
         </Animated.Text>
       ) : null}
-      <AnimatedPressable
-        accessibilityLabel={selected ? `Remove ${label}` : `${label} ${count}`}
-        accessibilityState={{ disabled, selected }}
-        disabled={disabled}
-        haptic={kind === 'aura' ? 'medium' : 'light'}
-        scaleTo={0.88}
-        onPress={fire}
-        contentStyle={[
-          styles.react,
-          { borderColor: selected ? fx.color : `${fx.color}55` },
-          selected && { backgroundColor: fx.color, shadowColor: fx.color },
-          disabled && !selected && styles.disabled,
-        ]}
-      >
+      <View style={styles.face}>
+        {selected ? <HypeHalo kind={kind} color={fx.color} /> : null}
+        <AnimatedPressable
+          accessibilityLabel={selected ? `Remove ${label}` : `${label} ${count}`}
+          accessibilityState={{ disabled, selected }}
+          disabled={disabled}
+          haptic={kind === 'aura' ? 'medium' : 'light'}
+          scaleTo={0.88}
+          onPress={fire}
+          contentStyle={[
+            styles.react,
+            selected
+              ? { backgroundColor: fx.color, borderWidth: 0 }
+              : { borderColor: `${fx.color}99` },
+            disabled && !selected && styles.disabled,
+          ]}
+        >
         <View style={styles.emojiSlot}>
           <Animated.Text style={[styles.reactEmoji, kind === 'seki' && handStyle]}>{emoji}</Animated.Text>
           {kind === 'seki' ? (
@@ -391,8 +430,9 @@ function ReactionChip({
         </View>
         <Text style={[styles.reactCount, selected && { color: ink }]}>{formatCompactCount(count)}</Text>
       </AnimatedPressable>
+      </View>
       <Text style={[styles.reactLabel, selected && { color: fx.color }]}>{label}</Text>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -504,11 +544,12 @@ const styles = StyleSheet.create({
   rail: {
     gap: 6,
     alignItems: 'center',
-    minWidth: 56,
+    minWidth: 84,
+    paddingVertical: 6,
   },
-  railScroll: { maxHeight: '100%', flexGrow: 0, flexShrink: 0, minWidth: 56, maxWidth: '40%' },
+  railScroll: { maxHeight: '100%', flexGrow: 0, flexShrink: 0, minWidth: 84, maxWidth: '42%' },
   chipWrap: {
-    minWidth: 56,
+    width: 84,
     alignItems: 'center',
     overflow: 'visible',
     zIndex: 2,
@@ -534,25 +575,28 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
+  face: {
+    width: 76,
+    height: 76,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  haloSlot: {
+    position: 'absolute',
+    width: 76,
+    height: 76,
+    top: 0,
+    left: 0,
+  },
   react: {
-    minWidth: 48,
-    minHeight: 48,
-    paddingVertical: 4,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: colors.videoScrim,
     borderWidth: 1.5,
     borderColor: 'rgba(243,251,247,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.85,
-        shadowRadius: 10,
-      },
-      android: { elevation: 4 },
-      default: {},
-    }),
   },
   reactOn: {
     backgroundColor: FOCAL.neonJade,

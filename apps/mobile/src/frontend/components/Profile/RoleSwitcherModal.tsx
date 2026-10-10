@@ -245,8 +245,8 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
             )}
           </View>
           <Text style={styles.cardBody}>
-            Claim a High School or NCAA roster, receive donations, and host a $
-            {live.catalog.exclusiveDollars.toFixed(2)}/mo Subscriber Vault 🔒. School claim is not Varsity — fans will
+            Claim a High School or NCAA roster, receive donations, and host one-time Exclusive access for $
+            {live.catalog.exclusiveDollars.toFixed(2)}. School claim is not Varsity — fans will
             see Not verified yet until a team code or coach/parent approval.
           </Text>
           {savedTeam ? (

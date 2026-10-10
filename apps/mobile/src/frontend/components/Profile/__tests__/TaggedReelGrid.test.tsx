@@ -48,6 +48,6 @@ describe('TaggedReelGrid photo stories', () => {
   it('does not load the cover on a locked Vault tile', async () => {
     await render(<TaggedReelGrid clips={[{ ...story, isVaultOnly: true }]} subscribed={false} />);
     expect(screen.queryAllByTestId('tile-cover')).toHaveLength(0);
-    expect(screen.getByLabelText('Service day Photo story, 5 photos, Subscriber Vault 🔒')).toBeTruthy();
+    expect(screen.getByLabelText('Service day Photo story, 5 photos, One-time Exclusive 🔒')).toBeTruthy();
   });
 });

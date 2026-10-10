@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 
+import { SheetRise } from '@/components/UI/SheetRise';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
@@ -66,7 +67,7 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
       <View style={styles.root}>
         <Pressable haptic="none" style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         <View style={frame.dock}>
-        <View style={[styles.sheet, frame.card]}>
+        <SheetRise style={[styles.sheet, frame.card]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle />
           <Text style={styles.title}>🎥 Filmed by {filmerName}</Text>
@@ -94,7 +95,7 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
               </Text>
             ))}
           </View>
-        </View>
+        </SheetRise>
         </View>
       </View>
     </Modal>

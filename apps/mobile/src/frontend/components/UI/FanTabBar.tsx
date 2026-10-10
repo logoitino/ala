@@ -6,11 +6,10 @@ import type { BottomTabBarProps } from 'expo-router/build/react-navigation/botto
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
-import { SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 import { HIGHLIGHT_NAV_LABEL, SPOTLIGHT_NAV_LABEL } from '@/data/highlights';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
-import { FOCAL, TAB_ACCENTS, type FanTabAccentId } from '@/theme/motion';
+import { FOCAL, SPRING_BOUNCE, SPRING_SHEET, TAB_ACCENTS, type FanTabAccentId } from '@/theme/motion';
 
 const TAB_META: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap }> =
   {
@@ -126,9 +125,9 @@ export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
       placed.current = true;
       return;
     }
-    indicatorX.value = withSpring(x, SPRING_CARD);
-    indicatorW.value = withSequence(withSpring(width * 1.5, SPRING_BOUNCE), withSpring(width, SPRING_CARD));
-    indicatorOp.value = withTiming(1, { duration: 120 });
+    indicatorX.value = withSpring(x, SPRING_SHEET);
+    indicatorW.value = withSpring(width, SPRING_SHEET);
+    indicatorOp.value = withTiming(1, { duration: 180 });
   };
 
   useEffect(() => {

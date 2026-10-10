@@ -1,6 +1,8 @@
 /**
  * Sign-in helpers behind the soft wall: what the email form may enable for a given field state, password length
- * checks for sign-up, and the Apple / Google / Magic Link flows. Session handling lives in `context/AuthContext`.
+ * checks for sign-up, and the Apple / Google / Magic Link flows. `updateOwnDisplayName` writes the signed-in
+ * person's own `profiles.full_name`. Session handling lives in `context/AuthContext`.
+ * @sideEffects Supabase Auth, and a `profiles` UPDATE from `updateOwnDisplayName`.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -437,4 +439,18 @@ export function subscribeAuthDeepLinks(onUrl: (url: string) => void): () => void
     if (url) onUrl(url);
   });
   return () => sub.remove();
+}
+
+/**
+ * @purpose Save the signed-in person's display name on their own profile row.
+ * @param userId `auth.uid()`.
+ * @param fullName Trimmed name. Blank is refused before the write.
+ * @returns Null on success, or the database message.
+ * @sideEffects `profiles` UPDATE on `full_name` for this user only.
+ */
+export async function updateOwnDisplayName(userId: string, fullName: string): Promise<string | null> {
+  const next = fullName.trim();
+  if (!next || !userId || !isSupabaseConfigured) return 'Sign in to save your name to Profile.';
+  const { error } = await supabase.from('profiles').update({ full_name: next }).eq('user_id', userId);
+  return error ? error.message : null;
 }

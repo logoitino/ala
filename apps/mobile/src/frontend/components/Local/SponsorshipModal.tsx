@@ -32,7 +32,7 @@ import {
 } from '@/data/sponsorships';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { uploadSponsorLogo, type RecordSponsorshipInput } from '@/hooks/useSponsorships';
-import { SPRING_CARD, TAB_ACCENTS } from '@/theme/motion';
+import { SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
 import type { SponsorshipTierId } from '@/types/database';
 
 type SponsorshipModalProps = {
@@ -62,7 +62,7 @@ function fireLight() {
  * @param visible Opens the modal over Local.
  * @param schoolOptions Live match school chips for Targeted School Team.
  * @param onClose Dismiss (locked while PaymentSheet is open).
- * @param onSponsored Persist `sponsorships` after a successful first-month charge.
+ * @param onSponsored Persist `sponsorships` after a successful one-time charge.
  * @returns Bottom sheet with Silver / Gold / Platinum cards, logo, and Complete Sponsorship checkout.
  * @sideEffects ImagePicker, Storage logo upload, `useTipCheckout` PaymentSheet, `add_user_aura` (payer), Light `impactAsync` on tier change, Success notification from checkout.
  */
@@ -80,7 +80,7 @@ export function SponsorshipModal({
   const [businessName, setBusinessName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [schoolTeam, setSchoolTeam] = useState('');
-  const sheetY = useSharedValue(36);
+  const sheetY = useSharedValue(28);
   const sheetOpacity = useSharedValue(0);
 
   useEffect(() => {
@@ -89,9 +89,9 @@ export function SponsorshipModal({
     setBusinessName('');
     setLogoUrl('');
     setSchoolTeam('');
-    sheetY.value = 36;
+    sheetY.value = 28;
     sheetOpacity.value = 0;
-    sheetY.value = withSpring(0, SPRING_CARD);
+    sheetY.value = withSpring(0, SPRING_SHEET);
     sheetOpacity.value = withTiming(1, { duration: 220 });
   }, [visible, sheetOpacity, sheetY]);
 
@@ -180,7 +180,7 @@ export function SponsorshipModal({
             <Text style={styles.kicker}>Local boosters</Text>
             <Text style={styles.title}>Become a Team Sponsor</Text>
             <Text style={styles.blurb}>
-              Back a high school program. First month bills through Stripe PaymentSheet; the rail lists you as {formatSponsorDollars(tier.dollars)}.
+              Back a high school program. This charge is one time through Stripe PaymentSheet; the rail lists you as {formatSponsorDollars(tier.dollars)}.
             </Text>
 
             <ScrollView

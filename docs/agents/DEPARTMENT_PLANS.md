@@ -46,9 +46,11 @@ Going public means Wave 1 in the roadmap: one metro, live donations, a productio
 6. Account export and deletion designed with counsel before it is built ([DATA_PRIVACY_MAP.md](../engineering/DATA_PRIVACY_MAP.md) §3.4).
 7. A production environment (readiness R3), which waits on a database that can be rebuilt from migrations (R2).
 
-## Status — 2026-10-09
+## Status — 2026-10-10
 
 Each team worked its current plan item. Nobody applied SQL, started a public release, or drafted counsel's documents.
+
+On 2026-10-10, Legal routed the open compliance gaps. The other rows below stay as last written. The app is not public-ready.
 
 Later the same day, every agent was connected to a model, and each department lead ran on that model. Their research is now the department sections of [EXPERT_STANDARDS.md](EXPERT_STANDARDS.md). The app status in the table did not change except the photo-story test count, which is 6 suites and 60 tests.
 
@@ -59,14 +61,14 @@ Later the same day, every agent was connected to a model, and each department le
 | Dev | Continued | Photo-story pager fixture: counter and five dots at 320 and 375, and Next moves `1 / 5` to `2 / 5`. The photo bitmap did not paint. |
 | Database | Stopped for you | October SQL stays written until you ask to apply it. |
 | Security | Stopped for you | The gaps stay named. Closing them on a database, or rewriting function search paths, waits on you. |
-| IT infrastructure | Stopped for you | No new iOS preview until a second device is registered. No production project. |
+| IT infrastructure | In progress | Android `6febe2bb` and iOS `af6a7e72` are on EAS. iOS installs on the one registered iPad. |
 | Design | Continued | The pager check above is the open visual pass. Upload steps and tagline placements are still open. Native Dynamic Type is not this check. |
 | Finance | Stopped for you | The donate sheet stays as it is. Destination charges and webhook crediting need you and counsel. |
-| Legal and Compliance | Stopped for you | Inventory is current. Terms, a Privacy Policy, and parental consent stay with counsel. |
+| Legal and Compliance | Stopped for you | 2026-10-10: inventory routed in LEGAL_BRIEFING "Compliance routing — 2026-10-10". Counsel documents still stopped. The app is not public-ready. |
 | Brand | Stopped for you | The four placements stand. The store listing stays a draft until you and counsel say to submit it. |
-| Trust and Safety | Continued | The review queue is defined below and not built. No one was contacted. |
+| Trust and Safety | Continued | Local Open flags columns show the report reason and whether an athlete or guardian reported the clip. Strikes and appeals are still unbuilt. No one was contacted. |
 | Partnerships | Stopped for you | No school, family, booster, or sponsor is contacted unless you ask. |
-| Quality | Continued | Fixture evidence is in `docs/engineering/AUDIT_REPORT.md`. Device paging is not run. |
+| Quality | Continued | 2026-10-10: `pnpm check` passed, 72 suites / 414 tests. Device sign-in, upload, and a test donation are still the Phase 2 exit. |
 | Marketing | Stopped for you | No campaign. |
 | Support | Stopped for you | Tester-script intake only. No one outside the test was contacted. |
 
@@ -122,7 +124,7 @@ Later the same day, every agent was connected to a model, and each department le
 
 **Lead:** `ENGINEERING`. **With:** `FULLSTACK`, `DOCUMENTATION`, and the screen squads.
 
-**Where we are.** The fan app and Expo admin are in the branch and have passed local typecheck and Jest on the landed slices (owner peek: 72 suites / 414 tests; photo stories: 71 suites / 396 tests). Device passes for those slices are still open. Guest screens still call the database directly in 6 route files / 12 calls.
+**Where we are.** The fan app and Expo admin are in the branch and have passed local typecheck and Jest on the landed slices (owner peek: 72 suites / 414 tests; photo stories: 71 suites / 396 tests). Device passes for those slices are still open. Guest and role screens call shared clients. Two operator screens still call the database directly (7 calls).
 
 **What we have.** Highlights (including photo stories and the owner card), Activity, Local, Spotlight, Profile, sign-in, upload, donate sheet, and Expo admin. Magic-link and Apple/Google sign-in exist in code. Drip's fan tab is off in code and in the published flags.
 
@@ -302,6 +304,19 @@ These are the gaps already listed for counsel in LEGAL_BRIEFING §8 and the priv
 
 **What we will not do.** Write the Privacy Policy ourselves. File an LLC. Turn on live keys to "see if counsel is fine with it."
 
+### Routed 2026-10-10
+
+Same gaps as [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) "Compliance routing — 2026-10-10". Counsel still writes the documents. The app is not public-ready.
+
+- `PRIVACY_ENGINEERING`, `BACKEND`, `PRODUCT`: export and deletion stay unbuilt until the owner and counsel agree what is kept.
+- `MINOR_SAFETY`: keep the 13+ confirmation. No under-13 product and no parental-consent document from this team.
+- `COMMERCE`, `VOICE`, `BILLING`: keep the donation review lines. Exclusive stays a PaymentIntent. Fan labels now match the one-time charge. Do not turn Exclusive or boosters into a subscription.
+- `CONTENT_RIGHTS`: keep upload confirmations. No school contact.
+- `TRUST_SAFETY`, `MODERATION`: keep report reasons. Human review, strikes, and appeals stay unbuilt.
+- `CONNECT`, `CUSTODIAL`: payouts stay blocked. No live transfer and no new payee design.
+- `MARKETING`: the store listing stays a draft.
+- `QA`, `OPERATIONS`: no public release and no Wave 1 spend.
+
 ## Brand
 
 **Lead:** `VOICE`. **Message:** `BRAND` under Marketing.
@@ -323,8 +338,8 @@ These are the gaps already listed for counsel in LEGAL_BRIEFING §8 and the priv
 **What we will do.**
 
 1. Keep minor contact restricted: no free-text DMs, preset thanks only, Rally for a minor waits for the guardian.
-2. The human review queue, defined and not built: a reviewer sees the report reason, the clip, the reporter count, and whether an athlete or guardian reported it. The same reasons that hide a clip today are the ones that enter the queue. Strikes and appeals wait until a person is actually reviewing. No vendor is chosen.
-3. Leave strikes, appeals, and a filmed-at-the-game badge until that queue exists.
+2. The local review queue columns exist on Open flags: a reviewer sees the report reason, the clip (Target), the reporter count, and whether an athlete or guardian reported it. The same reasons that hide a clip today are the ones that enter the queue. Strikes and appeals are still unbuilt. No vendor is chosen.
+3. Leave strikes, appeals, and a filmed-at-the-game badge unbuilt. The local queue columns do not authorize them.
 
 **What we will not do.** Ship Train Like Me or paid sessions. Treat a team code as proof of identity on a public database.
 
@@ -376,10 +391,10 @@ These are the gaps already listed for counsel in LEGAL_BRIEFING §8 and the priv
 
 ## Order of work
 
-The CTO's order until the owner says otherwise. Status as of 2026-10-09 is in the board above.
+The CTO's order until the owner says otherwise. Status as of 2026-10-10 is in the board above.
 
 1. **Quality** checked the photo-story counter and five dots in a browser fixture (320, 375, and 320 at 200% CSS text). Next moves `1 / 5` to `2 / 5`. The photo bitmap did not paint. Upload steps, tagline placements, a live feed, and device paging stay open.
 2. **Database and Security** hold the written SQL until the owner asks to apply it on staging.
 3. **Product** wrote the STATE §6 decision list into this file. Public acceptance criteria wait on the open rows and on counsel.
-4. **Legal** confirmed the privacy inventory already names photo stories. Counsel's documents stay with counsel.
+4. **Legal** routed the 2026-10-10 compliance gaps in LEGAL_BRIEFING. Counsel's documents stay with counsel. The app is not public-ready.
 5. **Every other team** stays inside its "will do" list. Later items stay later.

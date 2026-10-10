@@ -1,8 +1,4 @@
 {
-  "apps/mobile/app/(athlete)/athlete/index.tsx": 1,
-  "apps/mobile/app/(parent)/parent/index.tsx": 1,
-  "apps/mobile/app/(tabs)/profile.tsx": 1,
-  "apps/mobile/app/(tabs)/user/[id].tsx": 2,
   "apps/mobile/app/operator/[gameId].tsx": 3,
   "apps/mobile/app/operator/scorer.tsx": 4
 }

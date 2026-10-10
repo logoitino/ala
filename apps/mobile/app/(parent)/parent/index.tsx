@@ -1,5 +1,5 @@
 /**
- * Parent HQ: for a guardian, the linked athletes, consent for each (`parent_set_player_consent`), the custodial
+ * Parent HQ: for a guardian, the linked athletes, consent for each (`setParentPlayerConsent`), the custodial
  * money card and the Rally card. Failures show Retry rather than an empty list.
  */
 
@@ -24,7 +24,7 @@ import { COMPLIANCE_PARENT } from '@/data/legal';
 import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useRoster } from '@/hooks/useRoster';
-import { supabase } from '@/lib/supabase';
+import { setParentPlayerConsent } from '@/lib/custodial';
 
 export default function ParentHomeScreen() {
   const { live } = useAppRuntime();
@@ -59,12 +59,9 @@ export default function ParentHomeScreen() {
       // directly UPDATE-able (column grant narrowed to close the booster/operator guardian-write
       // hole) — this now goes through `parent_set_player_consent`, which re-checks server-side
       // that this row's `guardian_id` already equals the caller's own linked profile.
-      const { error } = await supabase.rpc('parent_set_player_consent', {
-        target_player_id: playerId,
-        approved,
-      });
+      const error = await setParentPlayerConsent(playerId, approved);
       if (error) {
-        Alert.alert('Couldn’t update consent', error.message);
+        Alert.alert('Couldn’t update consent', error);
         return;
       }
       setPlayers((current) =>

@@ -1,3 +1,7 @@
+/**
+ * Open flags table on the Expo /admin moderation desk.
+ * Target stays the clip. Reason and Athlete or guardian sit on the same row.
+ */
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -12,6 +16,13 @@ type ModerationTableProps = {
   onRemove: (row: AdminFlagRow) => void;
 };
 
+function athleteOrGuardianLabel(value: AdminFlagRow['athleteOrGuardian']): string {
+  if (value === 'yes') return 'Yes';
+  if (value === 'no') return 'No';
+  if (value === 'unchecked') return 'Not checked';
+  return '—';
+}
+
 function formatOpened(iso: string): string {
   if (!iso) return '—';
   const stamp = Date.parse(iso);
@@ -20,7 +31,7 @@ function formatOpened(iso: string): string {
 }
 
 /**
- * @purpose Admin table of open Highlight flags and telemetry bug reports.
+ * @purpose Admin table of open Highlight flags, with the report reason and whether an athlete or guardian reported the clip.
  * @sideEffects Parent fires `moderate_flagged_reel` or deletes a telemetry row.
  */
 export function ModerationTable({ flags, busyId, onDismiss, onRemove }: ModerationTableProps) {
@@ -28,13 +39,15 @@ export function ModerationTable({ flags, busyId, onDismiss, onRemove }: Moderati
     <View style={styles.panel}>
       <Text style={styles.title}>Open flags</Text>
       <Text style={styles.lede}>
-        User flags from Highlights ⚡ plus stall and reconnect bug reports. Dismiss keeps the clip live. Remove Content takes it off the feed.
+        User flags from Highlights ⚡ plus stall and reconnect bug reports. Reason is the stored report. Athlete or guardian is Yes when that athlete or their guardian reported the clip. Dismiss keeps the clip live. Remove Content takes it off the feed.
       </Text>
 
       <View style={styles.head} accessibilityRole="header">
         <Text style={[styles.headCell, styles.colKind]}>Kind</Text>
         <Text style={[styles.headCell, styles.colTarget]}>Target</Text>
+        <Text style={[styles.headCell, styles.colReason]}>Reason</Text>
         <Text style={[styles.headCell, styles.colCount]}>Reports</Text>
+        <Text style={[styles.headCell, styles.colWho]}>Athlete or guardian</Text>
         <Text style={[styles.headCell, styles.colWhen]}>Opened</Text>
         <Text style={[styles.headCell, styles.colActions]}>Actions</Text>
       </View>
@@ -58,7 +71,17 @@ export function ModerationTable({ flags, busyId, onDismiss, onRemove }: Moderati
                   {row.subtitle}
                 </Text>
               </View>
+              <Text style={[styles.cell, styles.colReason]} numberOfLines={2} accessibilityLabel={`Reason: ${row.reasonLabel}`}>
+                {row.reasonLabel}
+              </Text>
               <Text style={[styles.cell, styles.colCount]}>{row.reportCount}</Text>
+              <Text
+                style={[styles.cell, styles.colWho]}
+                numberOfLines={2}
+                accessibilityLabel={`Athlete or guardian: ${athleteOrGuardianLabel(row.athleteOrGuardian)}`}
+              >
+                {athleteOrGuardianLabel(row.athleteOrGuardian)}
+              </Text>
               <Text style={[styles.cell, styles.colWhen]}>{formatOpened(row.openedAt)}</Text>
               <View style={styles.colActions}>
                 {busy ? (
@@ -149,8 +172,15 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 120,
   },
+  colReason: {
+    flex: 1,
+    minWidth: 140,
+  },
   colCount: {
     width: 64,
+  },
+  colWho: {
+    width: 128,
   },
   colWhen: {
     width: 96,

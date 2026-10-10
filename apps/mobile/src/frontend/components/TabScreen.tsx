@@ -6,7 +6,7 @@
 import { type ReactNode } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeOut, useReducedMotion } from 'react-native-reanimated';
 
 import { colors, isLightCanvas } from '@/constants/theme';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
@@ -20,6 +20,7 @@ type TabScreenProps = {
 
 export function TabScreen({ children, style, dark = false }: TabScreenProps) {
   const { live } = useAppRuntime();
+  const reduce = useReducedMotion();
   return (
     <SafeAreaView
       edges={dark ? ['left', 'right'] : ['top', 'left', 'right']}
@@ -27,7 +28,7 @@ export function TabScreen({ children, style, dark = false }: TabScreenProps) {
     >
       {!dark && isLightCanvas(live.theme.background) ? <MenuBackdrop /> : null}
       <Animated.View
-        entering={FadeIn.duration(180)}
+        entering={reduce ? FadeIn.duration(80) : FadeInDown.duration(240)}
         exiting={FadeOut.duration(140)}
         style={styles.scene}
       >

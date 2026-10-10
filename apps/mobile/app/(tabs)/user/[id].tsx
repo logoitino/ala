@@ -22,9 +22,10 @@ import { useRoster } from '@/hooks/useRoster';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst, type ReelHype } from '@/lib/reels';
 import { hydratePlayerHype } from '@/lib/hype';
+import { fetchGuestPlayer, fetchPublicProfileForPlayer } from '@/lib/roster';
 import { handleFromName, isAuraUuid, resolveAuraPoints, subscribePlayerAura } from '@/lib/aura';
 import { userProfileHref } from '@/lib/navigation';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { fetchPlayerVerification } from '@/lib/verification';
 import type { Reel, ReelWithPlayer, ProfilePublic } from '@/types/database';
 
@@ -109,18 +110,18 @@ export default function UserAthleteProfileScreen() {
       return;
     }
     try {
-      const { data, error: queryError } = await supabase.from('players').select('*').eq('id', playerId).single();
+      const loaded = await fetchGuestPlayer(playerId);
       if (!current()) return;
-      if (queryError || !data) {
+      if (loaded.error || !loaded.player) {
         setPlayer(null); setReels([]);
-        setError(queryError?.message ?? 'Athlete not found.');
+        setError(loaded.error === 'Player not found.' ? 'Athlete not found.' : (loaded.error ?? 'Athlete not found.'));
         setLoadedId(playerId); setLoading(false);
         return;
       }
-      const nextPlayer = await hydratePlayerHype(data as Player);
-      const [tagged, verification, publicResult] = await Promise.all([
+      const nextPlayer = await hydratePlayerHype(loaded.player);
+      const [tagged, verification, publicProfileRow] = await Promise.all([
         fetchReelsForPlayer(playerId), fetchPlayerVerification(playerId, nextPlayer.name),
-        supabase.from('profiles_public').select('*').eq('player_id', playerId).maybeSingle(),
+        fetchPublicProfileForPlayer(playerId),
       ]);
       // Commit the whole sheet together: no old profile or late result can replace the active athlete.
       if (!current()) return;
@@ -128,7 +129,7 @@ export default function UserAthleteProfileScreen() {
       setReels(mergeUploadedReel(tagged, uploadSheet?.lastUploaded, playerId, nextPlayer));
       setVerificationStatus(verification.status); setSchoolClaimed(verification.schoolClaimed);
       setAvatarUrl(verification.avatarUrl);
-      setPublicProfile((publicResult.data as ProfilePublic | null) ?? null);
+      setPublicProfile(publicProfileRow);
       setLoadedId(playerId); setLoading(false);
     } catch {
       if (!current()) return;

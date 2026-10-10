@@ -1,30 +1,44 @@
 /**
  * A live game play in the Local feed: who made it and what happened, with a hype tap for that athlete.
  * `resolveEventPlayer` picks the athlete a play event belongs to; `onBacked` reports the new count after a tap.
- * @sideEffects Hype taps go through `bumpPlayerHype` (lib/hype.ts).
+ * @sideEffects The first select of each kind calls `bumpPlayerHype`. A second tap clears it and does not add another point.
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import Animated, { FadeInDown, FadeOutUp, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { TipCheckout } from '@/components/TipCheckout';
+import { SheetRise } from '@/components/UI/SheetRise';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import {
   PLAY_REACTIONS,
   displayValue,
-  emptyReactionCounts,
   formatActionTag,
   type Player,
   type PlayReactionId,
 } from '@/data/players';
 import { bumpPlayerHype } from '@/lib/hype';
+import {
+  emptyPlayVotes,
+  loadPlayVotes,
+  savePlayVotes,
+  togglePlayVote,
+  type PlayReactionVotes,
+} from '@/lib/playVotes';
 import type { GameEventWithPlayer } from '@/types/database';
 import { HYPE_FX } from '@/theme/hypeFx';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_BOUNCE, SPRING_SHEET } from '@/theme/motion';
 
 type PlayCardProps = {
   event: GameEventWithPlayer;
@@ -37,11 +51,7 @@ export function resolveEventPlayer(event: GameEventWithPlayer): Player | null {
   return Array.isArray(event.players) ? (event.players[0] ?? null) : event.players;
 }
 
-const reactionStore = new Map<string, Record<PlayReactionId, number>>();
-
-function getCounts(eventId: string): Record<PlayReactionId, number> {
-  return reactionStore.get(eventId) ?? emptyReactionCounts();
-}
+const playVoteStore = new Map<string, PlayReactionVotes>();
 
 function formatPlayTime(iso: string | undefined): string {
   if (!iso) return '';
@@ -66,22 +76,79 @@ function compactStat(player: Player | null, time: string): string {
   return bits.join('  ·  ');
 }
 
+function LiveReaction({
+  id,
+  emoji,
+  label,
+  color,
+  selected,
+  onPress,
+}: {
+  id: PlayReactionId;
+  emoji: string;
+  label: string;
+  color: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const reduce = useReducedMotion();
+  const scale = useSharedValue(1);
+  const wasSelected = useRef(selected);
+
+  useEffect(() => {
+    if (wasSelected.current === selected) return;
+    const clearing = wasSelected.current && !selected;
+    wasSelected.current = selected;
+    if (reduce) return;
+    scale.value = withSequence(
+      withTiming(clearing ? 0.86 : 1.08, { duration: 90 }),
+      withSpring(1, clearing ? SPRING_SHEET : SPRING_BOUNCE),
+    );
+  }, [reduce, scale, selected]);
+
+  const scaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  return (
+    <Animated.View style={[styles.reactionHit, scaleStyle]}>
+      <AnimatedPressable
+        accessibilityLabel={selected ? `Remove ${label}` : label}
+        accessibilityState={{ selected }}
+        haptic="medium"
+        scaleTo={0.92}
+        onPress={onPress}
+        style={styles.reactionHit}
+        contentStyle={[
+          styles.reaction,
+          { borderColor: color },
+          selected && { backgroundColor: color },
+        ]}
+      >
+        {id === 'seki' && selected ? (
+          <View style={styles.tooltip} pointerEvents="none">
+            <Text style={styles.tooltipLabel}>Awesome</Text>
+          </View>
+        ) : null}
+        <Text style={styles.reactionEmoji}>{emoji}</Text>
+        <Text style={[styles.reactionLabel, { color: selected ? FOCAL.ink : color }]}>{label}</Text>
+        <Text style={[styles.reactionCount, { color: selected ? FOCAL.ink : color }]}>{selected ? 1 : 0}</Text>
+      </AnimatedPressable>
+    </Animated.View>
+  );
+}
+
 /**
  * @purpose Local play-by-play card. The athlete and the play stay in front; a chevron enlarges the same card to Seki / Aura / Flex and Mālo.
  * @param event `game_events` row with optional joined player.
  * @param onBacked Fires after a compact Mālo on this athlete.
  * @param onOpenAthlete Opens `/user/[id]` when the athlete name is tapped.
  * @returns Collapsed play row, or the same card opened downward.
- * @sideEffects Optimistic local counts plus `bumpPlayerHype` RPC when a player is tagged. Mālo uses `TipCheckout`.
+ * @sideEffects One `bumpPlayerHype` per kind the first time it is selected. Later taps only select and clear. Mālo uses `TipCheckout`.
  */
 export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
   const player = resolveEventPlayer(event);
-  const [counts, setCounts] = useState(() => getCounts(event.id));
-  const [sekiHint, setSekiHint] = useState(false);
-  const [reacting, setReacting] = useState(false);
+  const [votes, setVotes] = useState<PlayReactionVotes>(() => playVoteStore.get(event.id) ?? emptyPlayVotes());
   const [open, setOpen] = useState(false);
   const chevron = useSharedValue(0);
-  const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tone = actionTone(event.event_type);
   const playTitle = event.event_type.trim() || 'Play';
   const time = formatPlayTime(event.created_at);
@@ -96,33 +163,28 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
   const toggle = () => {
     const next = !open;
     setOpen(next);
-    chevron.value = withSpring(next ? 1 : 0, SPRING_CARD);
+    chevron.value = withSpring(next ? 1 : 0, SPRING_SHEET);
   };
 
   useEffect(() => {
+    let live = true;
+    void loadPlayVotes(event.id).then((stored) => {
+      if (!live) return;
+      playVoteStore.set(event.id, stored);
+      setVotes(stored);
+    });
     return () => {
-      if (hintTimer.current) clearTimeout(hintTimer.current);
+      live = false;
     };
-  }, []);
-
-  const revealSekiHint = (persist = false) => {
-    setSekiHint(true);
-    if (hintTimer.current) clearTimeout(hintTimer.current);
-    if (persist) return;
-    hintTimer.current = setTimeout(() => setSekiHint(false), 1800);
-  };
+  }, [event.id]);
 
   const bump = (id: PlayReactionId) => {
-    if (reacting) return;
-    const current = getCounts(event.id);
-    const next = { ...current, [id]: current[id] + 1 };
-    reactionStore.set(event.id, next);
-    setCounts(next);
-    if (id === 'seki') revealSekiHint();
-    if (player) {
-      setReacting(true);
-      void bumpPlayerHype(player, id).finally(() => setReacting(false));
-    }
+    const current = playVoteStore.get(event.id) ?? votes;
+    const result = togglePlayVote(current, id);
+    playVoteStore.set(event.id, result.next);
+    setVotes(result.next);
+    void savePlayVotes(event.id, result.next);
+    if (result.credit && player) void bumpPlayerHype(player, id);
   };
 
   return (
@@ -173,62 +235,34 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
       </View>
 
       {open ? (
-        <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOutUp.duration(160)} style={styles.drawer}>
+        <SheetRise style={styles.drawer}>
           {showDetail ? <Text style={styles.headline}>{detail}</Text> : null}
           <View style={[styles.tag, tagStyles[tone], styles.tagInline]}>
             <Text style={styles.tagLabel}>{formatActionTag(event.event_type)}</Text>
           </View>
-      <View style={styles.reactions}>
-        {PLAY_REACTIONS.map((reaction) => {
-          const fx = HYPE_FX[reaction.id];
-          const tapped = counts[reaction.id] > 0;
-          return (
-            <AnimatedPressable
-              key={reaction.id}
-              accessibilityLabel={`${reaction.label} ${reaction.emoji}, ${counts[reaction.id]} taps`}
-              accessibilityState={{ disabled: reacting }}
-              disabled={reacting}
-              haptic="medium"
-              scaleTo={0.92}
-              overshoot
-              onPress={() => bump(reaction.id)}
-              style={styles.reactionHit}
-              contentStyle={[
-                styles.reaction,
-                { borderColor: fx.color },
-                tapped && { backgroundColor: `${fx.color}22` },
-              ]}
-            >
-              {reaction.id === 'seki' && sekiHint ? (
-                <View style={styles.tooltip} pointerEvents="none">
-                  <Text style={styles.tooltipLabel}>Awesome</Text>
-                </View>
-              ) : null}
-              <Text style={styles.reactionEmoji}>{reaction.emoji}</Text>
-              <Text style={[styles.reactionLabel, { color: fx.color }]}>{reaction.label}</Text>
-              <Text
-                style={[
-                  styles.reactionCount,
-                  { color: fx.color },
-                  reaction.id === 'seki' && sekiHint && styles.reactionHint,
-                ]}
-              >
-                {reaction.id === 'seki' && sekiHint ? 'Awesome' : counts[reaction.id]}
-              </Text>
-            </AnimatedPressable>
-          );
-        })}
-      </View>
+          <View style={styles.reactions}>
+            {PLAY_REACTIONS.map((reaction) => (
+              <LiveReaction
+                key={reaction.id}
+                id={reaction.id}
+                emoji={reaction.emoji}
+                label={reaction.label}
+                color={HYPE_FX[reaction.id].color}
+                selected={votes.selected[reaction.id]}
+                onPress={() => bump(reaction.id)}
+              />
+            ))}
+          </View>
 
-      {player ? (
-        <TipCheckout
-          player={player}
-          compact
-          origin="live"
-          onBacked={(nextCount) => onBacked?.(player.id, nextCount)}
-        />
-      ) : null}
-        </Animated.View>
+          {player ? (
+            <TipCheckout
+              player={player}
+              compact
+              origin="live"
+              onBacked={(nextCount) => onBacked?.(player.id, nextCount)}
+            />
+          ) : null}
+        </SheetRise>
       ) : null}
     </View>
   );
@@ -387,9 +421,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: colors.accent,
-  },
-  reactionHint: {
-    color: colors.deepGreen,
-    fontSize: 11,
   },
 });

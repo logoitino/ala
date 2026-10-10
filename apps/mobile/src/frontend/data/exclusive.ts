@@ -1,6 +1,6 @@
 /**
- * Exclusive (Vault) subscription defaults: monthly price and the Aura granted. The owner can change the price from
- * Expo /admin → Catalogs and "Publish to app".
+ * Exclusive (Vault) one-time access price and the Aura granted. The owner can change the price from
+ * Expo /admin → Catalogs and "Publish to app". Checkout is a one-time PaymentIntent.
  */
 
 import type { HighlightClip } from '@/data/highlights';
@@ -49,24 +49,24 @@ export const EXCLUSIVE_MONTHLY_DOLLARS = 4.99;
 export const EXCLUSIVE_AURA_GRANT = 100;
 
 /**
- * @purpose Subscribe CTA. Catalogs desk can change the dollars after Publish to app.
+ * @purpose One-time Exclusive button. Catalogs desk can change the dollars after Publish to app.
  */
 export function exclusiveSubscribeLabel(dollars = EXCLUSIVE_MONTHLY_DOLLARS): string {
-  return `Subscribe for $${dollars.toFixed(2)}/mo — Unlock Exclusive Clips ⚡`;
+  return `One-time Exclusive · $${dollars.toFixed(2)}`;
 }
 
 /**
  * @purpose Vault-tab callout. Catalogs desk can change the dollars after Publish to app.
  */
 export function exclusiveVaultCallout(dollars = EXCLUSIVE_MONTHLY_DOLLARS): string {
-  return `Unlock the Vault for $${dollars.toFixed(2)}/mo to see full game breakdowns and raw practice film.`;
+  return `Unlock one-time Exclusive access for $${dollars.toFixed(2)} to see full game breakdowns and raw practice film.`;
 }
 
 /**
  * @purpose Highlights ⚡ unlock chip. Catalogs desk can change the dollars after Publish to app.
  */
 export function vaultUnlockLabel(dollars = EXCLUSIVE_MONTHLY_DOLLARS): string {
-  return `Unlock Vault ($${dollars.toFixed(2)}/mo)`;
+  return `One-time Exclusive · $${dollars.toFixed(2)}`;
 }
 
 /**
@@ -80,18 +80,18 @@ export const EXCLUSIVE_SUBSCRIBE_LABEL = exclusiveSubscribeLabel();
 export const EXCLUSIVE_UNLOCK_TOAST = exclusiveUnlockToast();
 export const EXCLUSIVE_REQUEST_TOAST = 'Request sent to athlete! ⚡';
 export const EXCLUSIVE_VAULT_CALLOUT = exclusiveVaultCallout();
-export const VAULT_BADGE_LABEL = 'Subscriber Vault 🔒';
+export const VAULT_BADGE_LABEL = 'One-time Exclusive 🔒';
 export const VAULT_UNLOCK_LABEL = vaultUnlockLabel();
-export const VAULT_MOVE_TO_VAULT = 'Move to Subscriber Vault 🔒';
+export const VAULT_MOVE_TO_VAULT = 'Move to one-time Exclusive access 🔒';
 export const VAULT_MOVE_TO_PUBLIC = 'Move to Free Public Feed 🌐';
-/** Athlete master switch: seal the Vault so fans must subscribe. */
+/** Athlete master switch: seal the Vault so fans need one-time Exclusive access. */
 export const VAULT_LOCK_ACTION = 'Lock Vault 🔒';
 /** Athlete master switch: open the Vault so anyone can watch those clips. */
 export const VAULT_OPEN_ACTION = 'Open Vault 🌐';
 export const VAULT_LOCKED_HINT =
-  'Vault is locked. Fans must subscribe to watch these Highlights ⚡.';
+  'Vault is locked. Fans need one-time Exclusive access to watch these Highlights ⚡.';
 export const VAULT_OPEN_HINT =
-  'Vault is open. Anyone can watch Vault clips. Lock it when you want subscribers only.';
+  'Vault is open. Anyone can watch Vault clips. Lock it when you want one-time Exclusive access only.';
 
 /** Hours a Flash Unlock keeps a Vault clip playable for the Crew. */
 export const FLASH_UNLOCK_HOURS = 2;
@@ -137,7 +137,7 @@ export function flashUnlockChipLabel(until?: string | null, now = Date.now()): s
 }
 
 /**
- * @purpose True when a clip is Subscriber Vault only (`reels.is_vault_only`). Defaults to public.
+ * @purpose True when a clip needs one-time Exclusive access (`reels.is_vault_only`). Defaults to public.
  * @param clip Tagged highlight. Missing flags mean free public access.
  */
 export function isClipVaultOnly(clip: Pick<HighlightClip, 'isVaultOnly' | 'exclusive'> | null | undefined): boolean {

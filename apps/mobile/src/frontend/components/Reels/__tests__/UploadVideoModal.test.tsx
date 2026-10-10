@@ -152,12 +152,12 @@ describe('staged Highlight upload', () => {
     expect(screen.queryByText('Choose Sina')).toBeNull();
     await fireEvent.press(screen.getByLabelText('More options'));
     await fireEvent.press(screen.getByText('Choose Sina'));
-    await fireEvent.press(screen.getByLabelText('Subscriber Vault'));
+    await fireEvent.press(screen.getByLabelText('One-time Exclusive 🔒'));
     await fireEvent.press(screen.getByLabelText('Done'));
-    expect(screen.getByText('Subscriber Vault only')).toBeTruthy();
+    expect(screen.getByText('One-time Exclusive only')).toBeTruthy();
     expect(screen.getByText('No game linked · 1 account mentions pending confirmation')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('More options'));
-    expect(screen.getByLabelText('Subscriber Vault').props.accessibilityState.checked).toBe(true);
+    expect(screen.getByLabelText('One-time Exclusive 🔒').props.accessibilityState.checked).toBe(true);
   });
 
   it('requires every rights confirmation and blocks duplicate publish and exit during upload', async () => {
@@ -290,7 +290,7 @@ describe('photo story upload', () => {
 
     expect(screen.getByText('Public photo story')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('More options'));
-    expect(screen.queryByLabelText('Subscriber Vault')).toBeNull();
+    expect(screen.queryByLabelText('One-time Exclusive 🔒')).toBeNull();
     await fireEvent.press(screen.getByLabelText('Done'));
     expect(screen.queryByLabelText(rightsChecksFor(REEL_CATEGORY_GAME)[1].label)).toBeNull(); // no sound line
     await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));

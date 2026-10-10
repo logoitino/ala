@@ -14,11 +14,12 @@ import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useReceivedMalo } from '@/hooks/useReceivedMalo';
 import { tipChannelLabel } from '@/lib/finance';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { updateOwnDisplayName } from '@/lib/auth';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 /**
  * @purpose Athlete HQ: confirm pending tags, private Mālo ledger, and display name that writes `profiles.full_name`.
- * @sideEffects `get_received_malo`; `profiles` UPDATE on Save name; tag confirm RPCs via `usePendingPlayerTags`.
+ * @sideEffects `get_received_malo`; `updateOwnDisplayName` on Save name; tag confirm RPCs via `usePendingPlayerTags`.
  */
 export default function AthleteHomeScreen() {
   const router = useRouter();
@@ -45,9 +46,9 @@ export default function AthleteHomeScreen() {
     }
     setSaving(true);
     setSaveMsg(null);
-    const { error } = await supabase.from('profiles').update({ full_name: next }).eq('user_id', user.id);
+    const error = await updateOwnDisplayName(user.id, next);
     if (error) {
-      setSaveMsg(error.message);
+      setSaveMsg(error);
     } else {
       await refreshProfile();
       setSaveMsg('Saved to Profile.');

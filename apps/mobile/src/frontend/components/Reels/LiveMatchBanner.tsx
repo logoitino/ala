@@ -37,7 +37,7 @@ const dismissedLiveGames = new Set<string>();
 const TOAST_MS = 2200;
 
 /**
- * @purpose Top-floating Obsidian live-match badge for the Reel feed: score, quarter, pulse, and operator play toasts.
+ * @purpose Top live-match scoreboard for Highlights. The card uses the chrome width so each school stays on one line beside its score.
  * @param gameId Optional `games.id`. When omitted, `useLiveGame` follows the featured live match.
  * @param overlay Absolutely positions over highlight video.
  * @param playToasts When false, skip the postgres play toast (Reel uses `ReelCard` Broadcast banners).
@@ -147,6 +147,7 @@ export function LiveMatchBanner({
     >
       {isDismissed ? null : (
         <SwipeableBannerWrapper
+          fill
           accessibilityLabel="Dismiss scoreboard"
           pressAccessibilityLabel={scoreboardLabel}
           onPress={() => {
@@ -169,11 +170,11 @@ export function LiveMatchBanner({
             </View>
             <Animated.View style={[styles.scoreboard, scoreStyle]}>
               <View style={styles.teamRow}>
-                <Text style={styles.matchup} numberOfLines={2}>{homeTeam}</Text>
+                <Text style={styles.matchup} numberOfLines={1} ellipsizeMode="tail">{homeTeam}</Text>
                 <Text style={styles.scoreline}>{homeDisplay}</Text>
               </View>
               <View style={styles.teamRow}>
-                <Text style={styles.matchup} numberOfLines={2}>{awayTeam}</Text>
+                <Text style={styles.matchup} numberOfLines={1} ellipsizeMode="tail">{awayTeam}</Text>
                 <Text style={styles.scoreline}>{awayDisplay}</Text>
               </View>
             </Animated.View>
@@ -220,8 +221,9 @@ function PlayToast({ title, detail }: { title: string; detail: string }) {
 
 const styles = StyleSheet.create({
   wrap: {
-    alignItems: 'center',
+    alignItems: 'stretch',
     gap: 8,
+    width: '100%',
   },
   overlay: {
     position: 'absolute',
@@ -232,7 +234,7 @@ const styles = StyleSheet.create({
   },
   badge: {
     alignSelf: 'stretch',
-    maxWidth: '100%',
+    width: '100%',
     backgroundColor: colors.videoScrim,
     borderRadius: radii.lg,
     borderWidth: 1,
@@ -247,7 +249,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
-    flexWrap: 'wrap',
   },
   liveChip: {
     flexDirection: 'row',
@@ -270,12 +271,12 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   idleLabel: { color: colors.onVideoMuted },
-  scoreboard: { gap: 2 },
-  teamRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  scoreboard: { gap: 4, width: '100%' },
+  teamRow: { flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%' },
   quarter: {
     flexShrink: 1,
     color: colors.onVideoMuted,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
   },
@@ -283,17 +284,19 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     color: colors.onVideo,
-    fontSize: 14,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: '800',
   },
   scoreline: {
-    flexShrink: 1,
-    maxWidth: '45%',
+    flexShrink: 0,
+    minWidth: 36,
+    textAlign: 'right',
     color: colors.onVideo,
-    fontSize: 24,
+    fontSize: 22,
+    lineHeight: 26,
     fontVariant: ['tabular-nums'],
     fontWeight: '800',
-    letterSpacing: -0.2,
   },
   toast: {
     alignSelf: 'stretch',

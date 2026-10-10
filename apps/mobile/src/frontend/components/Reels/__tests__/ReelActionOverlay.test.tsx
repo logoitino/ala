@@ -57,6 +57,9 @@ describe('ReelActionOverlay hype chips', () => {
     await fireEvent.press(screen.getByLabelText('Remove Seki'));
     expect(screen.queryByText(/burst:/)).toBeNull();
     expect(onReact.mock.calls.map(([kind]) => kind)).toEqual(['aura', 'seki']);
+    expect(screen.getByTestId('hype-halo-aura')).toBeTruthy();
+    expect(screen.getByTestId('hype-halo-seki')).toBeTruthy();
+    expect(screen.queryByTestId('hype-halo-flex')).toBeNull();
   });
 
   it('shows the current photo description above the name for a photo story (UX-05)', async () => {

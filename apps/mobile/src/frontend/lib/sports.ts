@@ -44,14 +44,25 @@ function slug(label: string, index: number): string {
   return base || `item-${index + 1}`;
 }
 
+/** Scoring and callouts share label and id setup. A blank label still drops the row. */
+function labeledEntry(
+  entry: unknown,
+  index: number,
+): { row: Record<string, unknown>; label: string; id: string } | null {
+  const row = (entry ?? {}) as Record<string, unknown>;
+  const label = asText(row.label, '');
+  if (!label) return null;
+  return { row, label, id: asText(row.id, slug(label, index)) };
+}
+
 function parseScoring(raw: unknown): SportScoreAction[] {
   return asArray(raw)
     .map((entry, index) => {
-      const row = (entry ?? {}) as Record<string, unknown>;
-      const label = asText(row.label, '');
-      if (!label) return null;
+      const labeled = labeledEntry(entry, index);
+      if (!labeled) return null;
+      const { row, label, id } = labeled;
       return {
-        id: asText(row.id, slug(label, index)),
+        id,
         label,
         points: asInt(row.points, 0),
         eventType: asText(row.eventType ?? row.event_type, label),
@@ -63,11 +74,11 @@ function parseScoring(raw: unknown): SportScoreAction[] {
 function parseCallouts(raw: unknown): SportCallout[] {
   return asArray(raw)
     .map((entry, index) => {
-      const row = (entry ?? {}) as Record<string, unknown>;
-      const label = asText(row.label, '');
-      if (!label) return null;
+      const labeled = labeledEntry(entry, index);
+      if (!labeled) return null;
+      const { row, label, id } = labeled;
       return {
-        id: asText(row.id, slug(label, index)),
+        id,
         label,
         emoji: asText(row.emoji, '⚡'),
         eventType: asText(row.eventType ?? row.event_type, label),

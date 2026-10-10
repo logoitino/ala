@@ -1,6 +1,13 @@
 /** Upload confirmations per category and media (video vs photo story) and report-hide rules. */
 import { REEL_CATEGORY_GAME, REEL_CATEGORY_SERVE, REEL_CATEGORY_TRAIN } from '@/data/highlights';
-import { reportHidesNow, rightsChecksFor, rightsReady, UPLOAD_RIGHTS_CHECKS } from '@/data/contentRights';
+import {
+  athleteOrGuardianReported,
+  queueReasonLabel,
+  reportHidesNow,
+  rightsChecksFor,
+  rightsReady,
+  UPLOAD_RIGHTS_CHECKS,
+} from '@/data/contentRights';
 
 describe('content rights', () => {
   it('requires the real-footage line only for Game Day (game_play)', () => {
@@ -39,5 +46,90 @@ describe('content rights', () => {
     expect(reportHidesNow('impersonation', false)).toBe(true);
     expect(reportHidesNow('other', false)).toBe(false);
     expect(reportHidesNow('other', true)).toBe(true);
+  });
+});
+
+describe('queueReasonLabel', () => {
+  it('says the report table could not be read', () => {
+    expect(queueReasonLabel(null)).toBe('Not on this database');
+  });
+
+  it('says nothing was stored for an empty list or only unknown strings', () => {
+    expect(queueReasonLabel([])).toBe('No reason stored');
+    expect(queueReasonLabel(['not-a-reason'])).toBe('No reason stored');
+  });
+
+  it('lets a hide reason beat other, in the hide-reason order', () => {
+    expect(queueReasonLabel(['other', 'fake_footage'])).toBe('Fake or AI-made game footage');
+    expect(queueReasonLabel(['rights', 'fake_footage'])).toBe('Fake or AI-made game footage');
+    expect(queueReasonLabel(['other', 'rights'])).toBe('Music, logo, or broadcast without permission');
+  });
+
+  it('uses the first known reason, and Unspecified for that id', () => {
+    expect(queueReasonLabel(['wrong_athlete', 'other'])).toBe("That's not this athlete");
+    expect(queueReasonLabel(['nope', 'inappropriate'])).toBe('Inappropriate');
+    expect(queueReasonLabel(['unspecified'])).toBe('Unspecified');
+  });
+});
+
+describe('athleteOrGuardianReported', () => {
+  it('is unchecked when the identity read failed, even if the ids would match', () => {
+    expect(
+      athleteOrGuardianReported({
+        readable: false,
+        reelPlayerId: 'player-1',
+        reporterPlayerIds: ['player-1'],
+        reporterProfileIds: ['guardian-1'],
+        guardianProfileIds: ['guardian-1'],
+      }),
+    ).toBe('unchecked');
+  });
+
+  it('is yes when a reporter is the tagged athlete', () => {
+    expect(
+      athleteOrGuardianReported({
+        readable: true,
+        reelPlayerId: 'player-1',
+        reporterPlayerIds: ['player-9', 'player-1'],
+        reporterProfileIds: ['fan'],
+        guardianProfileIds: ['guardian-2'],
+      }),
+    ).toBe('yes');
+  });
+
+  it('does not treat an empty athlete id as a match', () => {
+    expect(
+      athleteOrGuardianReported({
+        readable: true,
+        reelPlayerId: '',
+        reporterPlayerIds: [''],
+        reporterProfileIds: [],
+        guardianProfileIds: [],
+      }),
+    ).toBe('no');
+  });
+
+  it('is yes when a reporter profile is the guardian', () => {
+    expect(
+      athleteOrGuardianReported({
+        readable: true,
+        reelPlayerId: 'player-1',
+        reporterPlayerIds: ['someone-else'],
+        reporterProfileIds: ['fan', 'guardian-1'],
+        guardianProfileIds: [null, 'guardian-1'],
+      }),
+    ).toBe('yes');
+  });
+
+  it('is no when reporters are neither the athlete nor the guardian', () => {
+    expect(
+      athleteOrGuardianReported({
+        readable: true,
+        reelPlayerId: 'player-1',
+        reporterPlayerIds: ['player-2'],
+        reporterProfileIds: ['fan'],
+        guardianProfileIds: ['guardian-1'],
+      }),
+    ).toBe('no');
   });
 });

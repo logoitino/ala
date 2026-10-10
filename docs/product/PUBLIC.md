@@ -30,8 +30,8 @@ The bar at the bottom is Reel · Local · Upload · Drip · Profile.
 
 | Role | What it means in the app |
 | --- | --- |
-| Fan | Watch, cheer, donate, subscribe to an athlete’s exclusive clips. |
-| Athlete | Same hub, plus payout setup and exclusive Reels for subscribers. |
+| Fan | Watch, cheer, donate, or buy one-time Exclusive access. |
+| Athlete | Same hub, plus payout setup and Exclusive Reels. |
 | Parent / guardian | Consent toggle and a custodial payout path (prototype). |
 | Operator | Sideline scorekeeper (live clock, score, play callouts). |
 | Booster / sponsor | Local business tiers (Silver / Gold / Platinum) on school match cards. |

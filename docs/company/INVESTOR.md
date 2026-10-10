@@ -46,7 +46,7 @@ Copy in the UI is Donate / donation (docs/product/VOICE.md) and Seki. Ledgers st
 
 1. **Capture is already happening** — parents and students film. The missing piece is identity (tagged athlete), liveness (score + callouts), and a legal money path.
 2. **A donation is a gift, not a wager** — no odds, no prize pool, no “pay this player if they score.” That distinction has to stay true in product and in counsel’s paper.
-3. **Local money already exists** — booster clubs and Friday-night sponsors. The app gives them a tiered, receipted first month instead of a handshake ad.
+3. **Local money already exists** — booster clubs and Friday-night sponsors. The app gives them a tiered, receipted one-time sponsorship instead of a handshake ad.
 4. **Distribution is the school night, not the algorithm** — operator console + live banner is a sideline wedge Instagram cannot copy without being in the gym.
 
 ## 4. Business model (designed, not live)
@@ -61,7 +61,7 @@ Prices below are generated from source (`pnpm docs:sync`). Do not edit inside th
 | Donations | $5 / $10 / $25 + custom | 90% of your donation goes to the athlete's family account. Tapua'i keeps 10% to run the app, including card processing. Nothing goes to the person who uploaded the clip. |
 | Admin splits | Donations 10%/90% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. The 90 / 10 donation split is disclosed on the donate sheet (owner, 2026-09-29). Optional tips to Tapua'i at checkout are 100% platform. |
 | Exclusive | $4.99 one-time PaymentIntent stored as a `subscriptions` row | +100 Aura to the payer. Not Stripe Billing yet. |
-| Boosters | Silver $50 / Gold $150 / Platinum $500 first month | Silver / Gold / Platinum |
+| Boosters | Silver $50 / Gold $150 / Platinum $500 | Silver / Gold / Platinum. One-time price, no billing period. |
 | Aura | 10 points per donated dollar | 7-tier card (Slate Silver → Celestial Prism). Double-tap 1; Serve Like Me ×2. Not cash. |
 | Operator PIN | `1234` | Prototype. Demo RLS: tighten before production. |
 | Athlete roster | Same flow for HS + NCAA | Sports Football / Basketball / Rugby / Volleyball / Soccer / Baseball / Softball / Wrestling / Track & Field / Lacrosse / Ice Hockey / Tennis. Class '26 / '27 / '28. `profiles.school_id` + `athlete_division`. |

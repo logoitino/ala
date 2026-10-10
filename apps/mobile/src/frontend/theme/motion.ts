@@ -33,6 +33,13 @@ export const SPRING_PEEK: WithSpringConfig = {
   mass: 0.9,
 };
 
+/** Fan sheets and tab indicators. Settles in place, without the bounce of `SPRING_CARD`. */
+export const SPRING_SHEET: WithSpringConfig = {
+  stiffness: 260,
+  damping: 28,
+  mass: 0.85,
+};
+
 /**
  * Highlights pager depth: the outgoing page shrinks / sinks / rounds while the incoming page
  * scales up from `scaleIn`. `sink` is a fraction of page height.

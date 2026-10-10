@@ -19,6 +19,7 @@ import { CardShine } from '@/components/Effects/CardShine';
 import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { HIGHLIGHT_PUBLISH_LABEL, PHOTO_STORY_MAX_PHOTOS, REEL_CATEGORY_SERVE, SERVE_LIKE_ME_BOOST_LABEL, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
 import { HIGHLIGHT_MAX_SECONDS } from '@/data/media';
+import { VAULT_BADGE_LABEL } from '@/data/exclusive';
 import { COMPLIANCE_UPLOAD } from '@/data/legal';
 import { rightsChecksFor, type RightsAckId } from '@/data/contentRights';
 import { displayValue } from '@/data/players';
@@ -207,9 +208,9 @@ export function UploadVideoComposer(p: Props) {
               {selectRow('Tag a Game (optional)', p.gameLabel, 'game')}
               <AccountTagField value={p.accountTags} onChange={p.onAccountTags} disabled={p.uploading} />
               {/* v1 photo stories are public only (design decision 1): Vault photos wait for the private bucket. */}
-              {isPhotos ? null : <Pressable accessibilityRole="switch" accessibilityLabel="Subscriber Vault" accessibilityState={{ checked: p.isExclusive, disabled: p.uploading }} disabled={p.uploading} onPress={() => p.onExclusive(!p.isExclusive)} style={[styles.option, p.isExclusive && styles.selected]}>
-                <View style={styles.sourceRow}><Text style={[styles.label, styles.flex]}>Subscriber Vault 🔒</Text><Text style={styles.link}>{p.isExclusive ? 'On' : 'Off'}</Text></View>
-                <Text style={styles.hint}>Off by default (free public feed). On: only ${p.exclusiveDollars.toFixed(2)}/mo subscribers can watch.</Text>
+              {isPhotos ? null : <Pressable accessibilityRole="switch" accessibilityLabel={VAULT_BADGE_LABEL} accessibilityState={{ checked: p.isExclusive, disabled: p.uploading }} disabled={p.uploading} onPress={() => p.onExclusive(!p.isExclusive)} style={[styles.option, p.isExclusive && styles.selected]}>
+                <View style={styles.sourceRow}><Text style={[styles.label, styles.flex]}>{VAULT_BADGE_LABEL}</Text><Text style={styles.link}>{p.isExclusive ? 'On' : 'Off'}</Text></View>
+                <Text style={styles.hint}>Off by default (free public feed). On: only fans with one-time Exclusive access (${p.exclusiveDollars.toFixed(2)}) can watch.</Text>
               </Pressable>}
             </>
           ) : (
@@ -221,10 +222,10 @@ export function UploadVideoComposer(p: Props) {
               )}
               <View style={styles.summary}><Text style={styles.label} numberOfLines={2}>{p.caption}</Text><Text style={styles.hint}>{p.playerLabel} · {categoryLabel}</Text>
                 <Text style={styles.hint}>{p.gameId ? p.gameLabel : 'No game linked'} · {p.accountTags.length ? `${p.accountTags.length} account mentions pending confirmation` : 'No account mentions'}</Text>
-                <Text style={styles.link}>{isPhotos ? 'Public photo story' : p.isExclusive ? 'Subscriber Vault only' : 'Public Highlight'}</Text>
+                <Text style={styles.link}>{isPhotos ? 'Public photo story' : p.isExclusive ? 'One-time Exclusive only' : 'Public Highlight'}</Text>
               </View>
               <Pressable accessibilityRole="button" accessibilityLabel="More options" disabled={p.uploading} onPress={() => go('options')} style={styles.select}>
-                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>{isPhotos ? 'Game, account mentions' : 'Game, account mentions, Subscriber Vault'}</Text></View><Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>{isPhotos ? 'Game, account mentions' : 'Game, account mentions, one-time Exclusive access'}</Text></View><Ionicons name="chevron-forward" size={18} color={colors.primary} />
               </Pressable>
               <View style={styles.field}><Text style={styles.label}>Before you publish</Text><Text style={styles.hint}>{COMPLIANCE_UPLOAD}</Text>
                 {rightsChecksFor(p.category, p.mediaKind).map((row) => {

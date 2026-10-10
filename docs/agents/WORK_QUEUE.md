@@ -52,7 +52,7 @@ An agent definition is an instruction file, not a continuously running worker.
 | W0-08 | `ACCOUNT_TAGS`, `DATABASE_MIGRATIONS`, `RLS_SECURITY`, `TEST_AUTOMATION` | Validate and stage account-tag migration after W0-03 | Two-user pending/privacy/confirm/reject tests, wrong actor denied, parallel writes max 3, athlete remains donation recipient | Local fix first; database execution pending |
 | W0-09 | `DEVICE_QA`, `QA`, feature owners | Run enabled-role device smoke | Android + registered iPad evidence for upload, rights/reports, donation, receipts, Rally/thanks, profile, retry; every P0/P1 assigned | Pending real devices; [TESTER_SCRIPT.md](../engineering/TESTER_SCRIPT.md) |
 
-Do W0-05 through W0-09 on staging with the applicable account/device access. Applying SQL,
+Phase 2 local gate passed 2026-10-10 (`pnpm check`, 72 suites / 414 tests). Do W0-05 through W0-09 on the 2026-10-01 installs. Those binaries do not contain later JavaScript. Applying SQL,
 changing hosted configuration, publishing a build, and live money have distinct gates; a local
 passing Jest run does not certify any of them. Current build links are in STATE §0.
 
@@ -75,7 +75,7 @@ phases in ROADMAP. R3 (production) waits on R2 and on the Wave 1 owner decisions
 | R3-03 | `CI`, `RELEASE`, `RELIABILITY` | Deploy pipeline: `main` → staging, release tag → production; error monitoring | A tagged release reaches production with no manual SQL; errors visible per environment | Not started |
 | R4-01 | `API`, `BACKEND`; `QA` review | Retire Expo API routes in `apps/mobile/src/backend/api/` in favour of the Edge Functions | Checkout, Connect and payouts work on every project with the routes removed; tests updated | Not started; confirm Edge Function secrets on each project first |
 | R4-02 | `CI`, `ENGINEERING` | ESLint + Prettier enforced in CI | Config committed; CI lint step green; formatting PR is behaviour-free | Not started; needs a machine with npm registry access |
-| R4-03 | `ENGINEERING`, feature owners; `TEST_AUTOMATION` | Split 900+ line files; route data debt to zero; screen tests for donate/upload/sign-in; admin-portal tests | One behaviour-free PR per split; `app:data-boundaries` baseline at 0; new suites green | Not started (debt 6 files / 12 calls) |
+| R4-03 | `ENGINEERING`, feature owners; `TEST_AUTOMATION` | Split 900+ line files; route data debt to zero; screen tests for donate/upload/sign-in; admin-portal tests | One behaviour-free PR per split; `app:data-boundaries` baseline at 0; new suites green | Started 2026-10-10. Route debt is the two operator screens (7 calls). Athlete, parent, Profile, and the public athlete sheet moved into `lib/`. File splits and screen tests are still open |
 
 ### Organization review evidence — 2026-10-07
 
@@ -101,9 +101,9 @@ phases in ROADMAP. R3 (production) waits on R2 and on the Wave 1 owner decisions
 | Video/feed performance | `MOBILE_PERFORMANCE`, `PLAYBACK` | Capture real-device load, player teardown, dropped frames and memory for enabled feed |
 | Backup and restore | `RECOVERY` | Prepare staging restore drill using synthetic data and explicit RPO/RTO targets; no uptime promise |
 | Costs | `COST_OPERATIONS` | Estimate current storage/bandwidth/build use from verifiable inputs; no service purchase |
-| Vault disclosure | `BILLING`, `VOICE`, `LEGAL` | Existing upload Vault copy says monthly access while current product docs describe one-time Exclusive; reconcile separately before pricing copy changes |
+| Vault disclosure | `BILLING`, `VOICE`, `LEGAL` | Fan labels now match the one-time Exclusive charge. Upload and Vault copy name one-time Exclusive access and the price without `/mo`. Auto-renewal disclosure stays off |
 | Gear goals and receipts | `WISHLIST`, `RECEIPTS` | Verify donation-linked totals and receipt state against test payments; ledger limitations explicit |
-| Moderation and minor safety | `MODERATION`, `MINOR_SAFETY`, `CONTENT_RIGHTS` | Review report thresholds, authorized review and escalation evidence before public video |
+| Moderation and minor safety | `MODERATION`, `MINOR_SAFETY`, `CONTENT_RIGHTS` | Local Open flags columns show the report reason and whether an athlete or guardian reported the clip. Strikes and appeals are still unbuilt. Authorized review and escalation evidence before public video remain open. |
 | Support and research | `SUPPORT`, `RESEARCH`, `MARKETING` | Prepare internal tester triage and consent-aware feedback plan; contact requires authorization |
 
 ## Scope next, before public release
@@ -117,6 +117,10 @@ phases in ROADMAP. R3 (production) waits on R2 and on the Wave 1 owner decisions
 | P1-05 | `LEDGER`, `CHECKOUT`, `RECONCILIATION`, `BACKEND`, `QA` | One authoritative payment credit path | Verified payment/replay/retry produces exactly one donation credit; client write retired in same rollout; reconciliation and rollback specified; do not deploy crediting independently |
 | P1-06 | `SESSION_SECURITY`, `ADMIN`, `OPERATOR`, `RLS_SECURITY` | Real operator/Studio sessions | Every affected anon policy mapped and removed together with role-based clients; unauthorized RPC/table callers denied |
 | P1-07 | `TELEMETRY`, `PRIVACY_ENGINEERING`, `BACKEND` | Telemetry identity implementation plan | Privacy disclosure and admin-only reads agreed before user/session identifiers are collected; bounded events and consent posture preserved |
+
+## Compliance routing note — 2026-10-10
+
+What the app already does, and which team may do the next product work, is in [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) under "Compliance routing — 2026-10-10". That note does not finish counsel's documents. P1-01 and the owner decisions below stay open. No new task id.
 
 ## Decisions held with the owner
 

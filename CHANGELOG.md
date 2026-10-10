@@ -2,6 +2,20 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-10-10
+
+### Live play hype
+
+- On a live play, each person can give one Seki, one Aura, and one Flex. Tapping again clears that one. The button fills when it is on and dips when it comes off. It never counts past 1.
+
+### Menus and tabs
+
+- Popup sheets, the fan bar, and the Home / All / Seki switch move with a short settled slide.
+
+### Exclusive and booster prices
+
+- Exclusive buttons say **One-time Exclusive · $4.99**. Vault sentences say one-time Exclusive access and show the price with no monthly period. Booster prices show as **$50**, **$150**, and **$500** with no period. The charge is still a one-time payment. Donation words are unchanged.
+
 ## 2026-10-08
 
 ### Highlights owner card

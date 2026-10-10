@@ -9,7 +9,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors } from '@/constants/theme';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 
 export type FilterPill<T extends string> = {
   id: T;
@@ -66,8 +66,8 @@ export function FilterPills<T extends string>({
       placed.current = true;
       return;
     }
-    indicatorX.value = withSpring(box.x, SPRING_CARD);
-    indicatorW.value = withSpring(box.width, SPRING_CARD);
+    indicatorX.value = withSpring(box.x, SPRING_SHEET);
+    indicatorW.value = withSpring(box.width, SPRING_SHEET);
     indicatorOp.value = withTiming(1, { duration: 120 });
   };
 

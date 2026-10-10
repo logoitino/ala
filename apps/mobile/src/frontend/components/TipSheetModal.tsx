@@ -27,7 +27,7 @@ import { GIFT_HELD_NOTICE } from '@/data/verification';
 import { displayValue, type Player } from '@/data/players';
 import type { TipEntry, TipOrigin } from '@/lib/finance';
 import { fetchPayoutAllowed } from '@/lib/payoutGate';
-import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_BOUNCE, SPRING_SHEET } from '@/theme/motion';
 
 type TipSheetModalProps = {
   player: Player | null;
@@ -113,7 +113,7 @@ export function MaloTipModal({
       translateY.value = SHEET_OFF;
       dim.value = 0;
       const frame = requestAnimationFrame(() => {
-        translateY.value = withSpring(0, SPRING_CARD);
+        translateY.value = withSpring(0, SPRING_SHEET);
         dim.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
       });
       return () => cancelAnimationFrame(frame);

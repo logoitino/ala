@@ -5,6 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
+import { SheetRise } from '@/components/UI/SheetRise';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
@@ -59,7 +60,7 @@ export function ReelMoreSheet({
           <View style={styles.dim} />
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-        <View style={[styles.sheet, frame.card]}>
+        <SheetRise style={[styles.sheet, frame.card]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle />
           <Text style={styles.kicker}>More</Text>
@@ -123,7 +124,7 @@ export function ReelMoreSheet({
           >
             <Text style={styles.cancelLabel}>Cancel</Text>
           </AnimatedButton>
-        </View>
+        </SheetRise>
         </View>
       </View>
     </Modal>

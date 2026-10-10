@@ -49,7 +49,7 @@ import {
   SQUAD_COUNTER_LABEL,
   TEAMMATES_BADGE,
 } from '@/data/crew';
-import { isClipVaultOnly } from '@/data/exclusive';
+import { exclusiveSubscribeLabel, isClipVaultOnly } from '@/data/exclusive';
 import {
   HIGHLIGHT_TAB_LABEL,
   STATS_TAB_LABEL,
@@ -377,7 +377,7 @@ export function AthleteProfileView({
           accessibilityLabel={
             subscribed
               ? 'Subscribed to exclusive feed'
-              : `Subscribe for ${live.catalog.exclusiveDollars.toFixed(2)} dollars, one-time exclusive access`
+              : exclusiveSubscribeLabel(live.catalog.exclusiveDollars)
           }
           disabled={subscribed || vaultBusy}
           onPress={onSubscribe}
@@ -385,7 +385,7 @@ export function AthleteProfileView({
           contentStyle={[styles.secondaryAction, subscribed && styles.secondaryActionOn]}
         >
           <Text style={[styles.secondaryActionLabel, subscribed && styles.secondaryActionLabelOn]}>
-            {subscribed ? 'Subscribed' : `Subscribe $${live.catalog.exclusiveDollars.toFixed(2)}`}
+            {subscribed ? 'Subscribed' : exclusiveSubscribeLabel(live.catalog.exclusiveDollars)}
           </Text>
         </AnimatedButton>
       ) : null}

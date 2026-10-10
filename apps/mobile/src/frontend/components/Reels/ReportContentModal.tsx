@@ -11,7 +11,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { REPORT_REASONS, type ReportReasonId } from '@/data/contentRights';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
-import { SPRING_CARD } from '@/theme/motion';
+import { SPRING_SHEET } from '@/theme/motion';
 
 type ReportContentModalProps = {
   visible: boolean;
@@ -49,7 +49,7 @@ export function ReportContentModal({
 
   useEffect(() => {
     if (visible) {
-      translateY.value = withSpring(0, SPRING_CARD);
+      translateY.value = withSpring(0, SPRING_SHEET);
       sheetOpacity.value = withTiming(1, { duration: 180 });
       return;
     }

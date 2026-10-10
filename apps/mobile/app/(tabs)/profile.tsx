@@ -39,7 +39,7 @@ import { resolveVerificationStatus } from '@/data/verification';
 import { readAthleteOnboarding } from '@/lib/teams';
 import { userProfileHref } from '@/lib/navigation';
 import { setPlayerVaultLocked } from '@/lib/vault';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { fetchRecentTips } from '@/lib/finance';
 import { FOCAL } from '@/theme/motion';
 import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
 
@@ -78,13 +78,7 @@ export default function MyHubTab() {
   }, []);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
-    void supabase
-      .from('tips')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(40)
-      .then(({ data }) => setTips((data as TipLedgerEntry[] | null) ?? []));
+    void fetchRecentTips().then(setTips);
   }, []);
 
   useEffect(() => {

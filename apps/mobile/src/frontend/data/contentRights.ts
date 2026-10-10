@@ -112,3 +112,41 @@ export function parseReportReason(value: string | null | undefined): ReportReaso
   const match = REPORT_REASONS.find((row) => row.id === value);
   return match?.id ?? 'unspecified';
 }
+
+/**
+ * @purpose The reason a reviewer reads for one flagged clip.
+ * @param reasons Stored `reel_reports.reason` values for that clip. Null means the report table could not be read.
+ * @returns The label of the first hide reason present, otherwise the first known reason. Unknown strings are dropped.
+ */
+export function queueReasonLabel(reasons: readonly string[] | null): string {
+  if (reasons == null) return 'Not on this database';
+  const known = reasons.filter(
+    (reason) => reason === 'unspecified' || REPORT_REASONS.some((row) => row.id === reason),
+  );
+  if (known.length === 0) return 'No reason stored';
+  const hide = IMMEDIATE_HIDE_REASONS.find((id) => known.includes(id));
+  const chosen = hide ?? known[0];
+  if (chosen === 'unspecified') return 'Unspecified';
+  const match = REPORT_REASONS.find((row) => row.id === chosen);
+  return match?.label ?? 'No reason stored';
+}
+
+/**
+ * @purpose Whether the tagged athlete or their guardian is among the reporters.
+ * @param input `readable` is false when the profile or player read failed. Player ids match only when both are non-empty. A reporter profile id matches a guardian profile id on the tagged athlete.
+ * @returns `unchecked` when the identity read failed, `yes` on an athlete or guardian match, otherwise `no`.
+ */
+export function athleteOrGuardianReported(input: {
+  readable: boolean;
+  reelPlayerId: string | null;
+  reporterPlayerIds: readonly (string | null | undefined)[];
+  reporterProfileIds: readonly (string | null | undefined)[];
+  guardianProfileIds: readonly (string | null | undefined)[];
+}): 'yes' | 'no' | 'unchecked' {
+  if (!input.readable) return 'unchecked';
+  const reelPlayerId = input.reelPlayerId;
+  if (reelPlayerId && input.reporterPlayerIds.some((id) => id === reelPlayerId)) return 'yes';
+  const guardians = new Set(input.guardianProfileIds.filter((id): id is string => typeof id === 'string' && id.length > 0));
+  if (input.reporterProfileIds.some((id) => typeof id === 'string' && id.length > 0 && guardians.has(id))) return 'yes';
+  return 'no';
+}

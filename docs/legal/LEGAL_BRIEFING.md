@@ -33,7 +33,7 @@ Prices, PIN, Connect identity, RLS, and the Mālo disclaimer are generated from 
 | Operator PIN | `1234` |
 | Athlete catalog | HS + NCAA `schools_and_teams`; `profiles.school_id` / `athlete_division` |
 | Athlete profile tabs | Highlights ⚡ / Stats 📊 / Vault 🔒 |
-| Athlete Vault | Lock Vault 🔒 default on; fans subscribe to watch (`players.vault_locked`) |
+| Athlete Vault | Lock Vault 🔒 default on; fans need one-time Exclusive access to watch (`players.vault_locked`) |
 | Crew / Squad | The Crew ⚡ / Your Squad 🛡️ (`Join Crew ⚡`) |
 | Vault Flash Unlock | 2 hours (`FLASH_UNLOCK_HOURS`) |
 | Serve Like Me Aura | Double-tap 1 ×2 (`SERVE_LIKE_ME_AURA_MULTIPLIER`) |
@@ -239,3 +239,40 @@ exclusive access, matching the existing non-renewing checkout. Share remains Sha
 accessibility wording. Aura points are labeled separately from career stats; donations are not tied
 to a play/stat. This records UI wording/navigation only; no fee, legal conclusion or payment-flow
 change, and native PaymentSheet verification remains pending.
+
+## Compliance routing — 2026-10-10
+
+This section records product controls checked in the repo on 2026-10-10 and names who may do the next product work. It does not decide what the law requires. It does not draft a Privacy Policy, Terms of Use, DPA, SLA, parental consent, liability cap, or athlete agreement. Company paper stays in the existing order in [COMPANY_PHASES.md](../company/COMPANY_PHASES.md) (L0 counsel, then L1 LLC, L2 trademark, L3 patent triage, L4 product paper). Counsel is still the owner's step. This pass does not hire counsel, form an LLC, or send an association letter.
+
+### Already in the product (checked this pass)
+
+- **Terms acknowledgement.** `LEGAL_TERMS_VERSION` is `2026-09-27` in `apps/mobile/src/frontend/data/legal.ts`. `LegalAckToggle` is on Apply for Athlete Verification (`VerifyAthleteModal`) and Connect Bank Account (`PayoutSetupCard`). The modal text calls itself a prototype summary, not a finished Terms of Service or Privacy Policy. `RoleSwitcherModal` also renders `LegalAckToggle` when `needsRoster`; that branch was not fully traced this pass.
+- **13+ gate.** Create account and magic link stay off until "I confirm I am 13 years of age or older." (`SoftWallModal`, `softWallEmailGates`). Sign in for an existing email account is not blocked by that box. `AgeConfirmModal` can record `profiles.age_confirmed_13_plus` for a signed-in user who does not yet have it. This is a confirmation checkbox, not a checked date of birth.
+- **Donation disclosure.** The donate sheet is Amount → Options → Review. The 90 / 10 line is on Amount (`donationSplitLine`). Options start at "No tip" (`tipPercent` 0) and the card-fee box starts unchecked. Review shows where the donation goes, `MALO_DISCLAIMER`, the test-payment line (`COMPLIANCE_PAYMENT`), and the gift-record notice. When the athlete is not verified, `TipSheetModal` shows `GIFT_HELD_NOTICE` ("Payouts aren't set up for this athlete yet — your donation is held until their family finishes payout setup.").
+- **Footage confirmations.** Video checks are permission, sound, and marks, plus a real-footage line for Game Day (`RIGHTS_VERSION` `2026-10-01`). Photo stories use a photo-permission line, marks, and a real-photos line for Game Day (`PHOTO_RIGHTS_VERSION` `2026-10-07`).
+- **Reports.** `REPORT_REASONS` requires a named reason (fake or AI-made footage, wrong athlete, impersonation, music/logo/broadcast, inappropriate, other). `reportHidesNow` hides immediately for an athlete or guardian report or for fake footage, impersonation, or rights. A human review queue, strikes, and appeals are still described as not built in [STATE.md](../STATE.md) §5 and [DEPARTMENT_PLANS.md](../agents/DEPARTMENT_PLANS.md).
+- **No published Privacy Policy.** The only privacy inventory in `docs/` is [DATA_PRIVACY_MAP.md](../engineering/DATA_PRIVACY_MAP.md). In-app copy says the summary is not a Privacy Policy.
+- **Export and deletion.** Still not built. Re-checked the same day: no account-export or account-deletion screen or RPC (`DATA_PRIVACY_MAP` §3.4, WORK_QUEUE P1-01).
+- **Exclusive.** Checkout mints a Stripe PaymentIntent (`createPaymentIntent.ts`), not a renewing Stripe subscription. Fan labels in `exclusive.ts`, upload, and Vault sentences say one-time Exclusive access and name the price without `/mo`. Booster prices in `formatSponsorDollars` have no period. The athlete profile button's accessibility label says "one-time exclusive access." Auto-renewal disclosure stays off while the charge is a PaymentIntent.
+- **Stripe test mode.** The donate review line says "Test payment only. This does not send live money." The PaymentIntent handler comment says test mode. The key file was not opened this pass.
+- **Payouts blocked.** When `STRIPE_SECRET_KEY` is set and the profile has a linked account with payouts enabled, `createPayout.ts` returns 503 and does not transfer. If that key is missing, the same route still calls `queueCustodialPayout`. That call is not the 503 path.
+- **Client still inserts `tips`.** After PaymentSheet success, `useTipCheckout` inserts into `tips`. STATE §6 item 3 still says not to turn on webhook crediting beside that insert.
+
+Tracker inventory, hosted SQL, and a device pass were not re-checked this pass.
+
+### Who does the next product work
+
+No row below assigns anyone to draft legal text. "Stopped" means the owner and counsel have not authorized that step. Wave 0 does not include hiring counsel, an LLC, or an association letter.
+
+| Gap | Already documented where | Team to do the next product work | What they may do now | What stays stopped until the owner and counsel |
+| --- | --- | --- | --- | --- |
+| No published Privacy Policy, Terms of Use, parental consent, or athlete agreement | LEGAL_BRIEFING §8; COMPANY_PHASES L0 and L4; DEPARTMENT_PLANS Legal "What we need" | None. Do not assign a drafting team | Keep the in-app summary labeled as a prototype at `LEGAL_TERMS_VERSION` `2026-09-27` | Counsel writing those documents; retaining counsel; LLC; association or district letter |
+| Account export and deletion not built | DATA_PRIVACY_MAP §3.4; WORK_QUEUE P1-01; DEPARTMENT_PLANS Legal item 4 | `PRIVACY_ENGINEERING`, `BACKEND`, `PRODUCT` | Leave the gap named. Do not build a delete or export path in this wave | Agree what must be kept (donation records, other people's clips) before any build |
+| 13+ confirmation is a checkbox | `SoftWallModal`, `AgeConfirmModal`, `lib/auth.ts`; DEPARTMENT_PLANS Age row | `MINOR_SAFETY` | Keep Create account and magic link behind the checkbox. Keep Sign in available for an existing account. Keep under-13 out of the product | A counsel parental-consent document; any under-13 experience |
+| Donation review lines and the held-gift sentence | TipCheckout; `GIFT_HELD_NOTICE`; product-facts block; UX-02 evidence above; STATE §6 items 9 and 10 | `COMMERCE`, `VOICE` | Keep 90 / 10, No tip as the default, the fee box unchecked, the test-payment line, and the current held sentence | Live Stripe keys; changing the fee split; treating the held sentence as a finished legal notice |
+| Footage and school-mark confirmations | `data/contentRights.ts`; DEPARTMENT_PLANS Footage row; LEGAL rows U and V (photo stories) | `CONTENT_RIGHTS` | Keep the video and photo confirmation checkboxes required | A counsel decision on school marks or photos of minors; contacting a school |
+| Reports without a human queue | `REPORT_REASONS`; STATE §5; DEPARTMENT_PLANS Trust and Safety | `TRUST_SAFETY`, `MODERATION` | Keep a reason required and the current hide rules | Building the review queue, strikes, or appeals; contacting a family |
+| Exclusive PaymentIntent; fan labels match the one-time charge | `createPaymentIntent.ts`; `AthleteProfileView` accessibility label; `exclusive.ts`; `data/sponsorships.ts`; WORK_QUEUE Vault disclosure | `VOICE`, `COMMERCE`, `BILLING` | Leave auto-renewal disclosure off. Fan labels name one-time Exclusive access and the price without `/mo` | Turning Exclusive into a renewing subscription |
+| Test mode, blocked payouts, and the client `tips` insert | `COMPLIANCE_PAYMENT`; `createPayout.ts`; `useTipCheckout`; STATE §6 item 3; WORK_QUEUE P1-05 | `COMMERCE`, `CONNECT`, `CUSTODIAL` | Leave the test-payment line, the 503 payout response, and the single client insert | Webhook crediting, live keys, destination charges, and a guardian payee design |
+| Store listing and any public campaign | DEPARTMENT_PLANS Marketing; WORK_QUEUE BRAND-01 | `MARKETING` | Keep the store listing a draft | Submitting the listing or contacting a family |
+| Calling the app public-ready | DEPARTMENT_PLANS public gate; STATE §5 and §6 | `QA`, `OPERATIONS` | Re-run local checks when asked. Say the app is not public-ready | A public release, applying SQL, and any Wave 1 spend |

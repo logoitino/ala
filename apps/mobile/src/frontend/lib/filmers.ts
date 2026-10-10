@@ -77,12 +77,13 @@ function asCount(value: unknown): number {
 export function parseFilmerStats(raw: unknown): FilmerStats | null {
   if (!raw || typeof raw !== 'object') return null;
   const row = raw as Record<string, unknown>;
+  const count = (key: string) => asCount(row[key]);
   return {
-    clips: asCount(row.clips),
-    views: asCount(row.views),
-    hype: asCount(row.hype),
-    props: asCount(row.props),
-    auraEarned: asCount(row.aura_earned),
+    clips: count('clips'),
+    views: count('views'),
+    hype: count('hype'),
+    props: count('props'),
+    auraEarned: count('aura_earned'),
   };
 }
 

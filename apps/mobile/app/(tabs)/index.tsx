@@ -3,7 +3,7 @@ import { clearVideoCacheAsync } from 'expo-video';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HomeSearchOverlay } from '@/components/Reels/HomeSearchOverlay';
@@ -22,7 +22,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
-import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { FOCAL, SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
 import {
   HIGHLIGHT_CLIPS,
   HIGHLIGHT_FEED_ALL,
@@ -92,6 +92,11 @@ export default function HighlightsTab() {
   const [localTipped, setLocalTipped] = useState<string[]>([]);
   const [peekOpen, setPeekOpen] = useState(false);
   const pagerY = useSharedValue(0);
+  const feedLayouts = useRef<Partial<Record<HighlightFeedFilter, { x: number; width: number }>>>({});
+  const feedReady = useRef(false);
+  const feedX = useSharedValue(0);
+  const feedW = useSharedValue(0);
+  const reduceMotion = useReducedMotion();
   const onPagerScroll = useAnimatedScrollHandler({
     onScroll: (event) => {
       pagerY.value = event.contentOffset.y;
@@ -283,6 +288,28 @@ export default function HighlightsTab() {
       },
     });
   }, [requireAuth, trackFeature]);
+
+  const placeFeedPill = useCallback((id: HighlightFeedFilter, animate: boolean) => {
+    const box = feedLayouts.current[id];
+    if (!box) return;
+    if (!animate || !feedReady.current || reduceMotion) {
+      feedX.value = box.x;
+      feedW.value = box.width;
+      feedReady.current = true;
+      return;
+    }
+    feedX.value = withSpring(box.x, SPRING_SHEET);
+    feedW.value = withSpring(box.width, SPRING_SHEET);
+  }, [feedW, feedX, reduceMotion]);
+
+  useEffect(() => {
+    placeFeedPill(feedFilter, true);
+  }, [feedFilter, placeFeedPill]);
+
+  const feedIndicatorStyle = useAnimatedStyle(() => ({
+    width: feedW.value,
+    transform: [{ translateX: feedX.value }],
+  }));
 
   const switchFeed = useCallback((id: HighlightFeedFilter) => {
     closeSearch();
@@ -559,17 +586,27 @@ export default function HighlightsTab() {
               />
             ) : (
               <View style={styles.feedSwitch} accessibilityRole="tablist" accessibilityLabel="Home feed">
+                <Animated.View pointerEvents="none" style={[styles.feedIndicator, feedIndicatorStyle]} />
                 {FEED_PILLS.map((item) => {
                   const on = feedFilter === item.id;
                   const count = feedCounts[item.id];
                   return (
-                    <AnimatedButton
+                    <View
                       key={item.id}
+                      style={styles.feedPillSlot}
+                      onLayout={(event) => {
+                        const { x, width } = event.nativeEvent.layout;
+                        feedLayouts.current[item.id] = { x, width };
+                        if (item.id === feedFilter) placeFeedPill(item.id, feedReady.current);
+                      }}
+                    >
+                    <AnimatedButton
                       haptic="selection"
                       accessibilityRole="tab"
                       accessibilityLabel={`${item.label}, ${count} ${count === 1 ? 'clip' : 'clips'}`}
                       accessibilityState={{ selected: on }}
-                      contentStyle={[styles.feedPill, on && styles.feedPillOn]}
+                      style={styles.feedPillSlot}
+                      contentStyle={styles.feedPill}
                       onPress={() => switchFeed(item.id)}
                     >
                       <Text style={[styles.feedPillLabel, on && styles.feedPillLabelOn]}>{item.label}</Text>
@@ -577,6 +614,7 @@ export default function HighlightsTab() {
                         <Text style={[styles.feedPillCount, on && styles.feedPillCountOn]}>{count}</Text>
                       ) : null}
                     </AnimatedButton>
+                    </View>
                   );
                 })}
                 {/* Local is a destination, not a feed filter — the divider and chevron say so. */}
@@ -762,6 +800,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  feedPillSlot: {
+    flex: 1,
+    zIndex: 1,
+  },
+  feedIndicator: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    left: 0,
+    borderRadius: 999,
+    backgroundColor: FOCAL.goldInk,
+  },
   feedPillCount: {
     color: colors.onVideoMuted,
     fontSize: 11,
@@ -788,9 +838,6 @@ const styles = StyleSheet.create({
   },
   localPillLabel: {
     color: TAB_ACCENTS.local.mist,
-  },
-  feedPillOn: {
-    backgroundColor: FOCAL.goldInk,
   },
   feedPillLabel: {
     color: colors.onVideoMuted,

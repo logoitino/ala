@@ -1,12 +1,12 @@
 /**
  * Public roster lookup and claimed-player badges shared by athlete sheets and team rosters.
  * Guest player lookup preserves database errors so the screen can offer a retry.
- * @sideEffects Supabase SELECT on `players` and `profiles`.
+ * @sideEffects Supabase SELECT on `players`, `profiles`, and `profiles_public`.
  */
 
 import type { Player } from '@/data/players';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import type { Profile } from '@/types/database';
+import type { Profile, ProfilePublic } from '@/types/database';
 
 /**
  * @purpose Load one public athlete for the guest profile without needing a signed-in session.
@@ -56,4 +56,17 @@ export async function fetchClaimedPlayerIds(playerIds: string[]): Promise<Set<st
     if (typeof row.player_id === 'string' && row.player_id) claimed.add(row.player_id);
   }
   return claimed;
+}
+
+/**
+ * @purpose Public account row for an athlete sheet. Missing SQL or a missing row is an empty profile, not a failed athlete.
+ * @param playerId `players.id`.
+ * @returns The `profiles_public` row, or null when the read fails.
+ * @sideEffects `profiles_public` SELECT.
+ */
+export async function fetchPublicProfileForPlayer(playerId: string): Promise<ProfilePublic | null> {
+  if (!playerId || !isSupabaseConfigured) return null;
+  const { data, error } = await supabase.from('profiles_public').select('*').eq('player_id', playerId).maybeSingle();
+  if (error || !data) return null;
+  return data as ProfilePublic;
 }

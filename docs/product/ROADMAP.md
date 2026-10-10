@@ -185,8 +185,7 @@ September SQL applied to `ala-sports-staging` on 2026-09-30 and new staging prev
 2026-10-01. The 2026-10-07 local review did not query Supabase or EAS, so it does not certify
 current hosted configuration or a device run. [WORK_QUEUE.md](../agents/WORK_QUEUE.md) assigns the remaining checks.
 
-*Status (2026-10-07): local docs, copy, comments and data-boundary guards pass. Verification covers 47 suites / 222 tests (full run plus repaired upload fixture rerun)
-and both app typechecks; exact evidence and limitations are in STATE §4. UX-01 subsequently rebuilt the upload form into short steps; the latest full suite passes **47 suites / 228 tests** and mobile typecheck. Native upload/keyboard smoke remains pending.
+*Status (2026-10-10): `pnpm check` passed. Both typechecks, **72 suites / 414 tests**, and the docs, copy, data-boundary, comments, agent, and client-key guards. Native upload, sign-in, and a test-card donation on an installed build are still the exit. The 2026-10-01 preview builds do not contain the October 7–9 app changes.*
 CI includes the specialist roster consistency gate. Recorded current builds:
 [iOS](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/a93f562d-d122-48a4-a20f-3e466368aa4a)
 (registered iPad only) and
@@ -217,8 +216,10 @@ provisioning is recorded complete; device verification is still pending.
 
 **Dry run can start now** on the current Supabase project with the preview installs from Phase 2. That is a trusted-group pass, not the exit below. A staging branch was not opened: Supabase treats it as a separate billed database, and this project has no branch yet. Stripe stays in test mode. There is no Demo Fan button on these installs (`__DEV__` is off in a preview release), so each person uses their own email sign-in. Test card `4242 4242 4242 4242`.
 
-- iPad: [iOS preview](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/b4b8c235-cbc6-4ae7-ada8-4dadb4a25835)
-- Any Android phone: [Android preview](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/1c8b92f0-36b6-48ca-b7d8-c35a1ca02a19)
+- iPad already registered: [iOS preview, 2026-10-01](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/a93f562d-d122-48a4-a20f-3e466368aa4a). A second device has to be registered before a new iOS preview.
+- Any Android phone: [Android preview, 2026-10-01](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/061946c8-a25d-4a32-b5be-bab316819c1d).
+
+Those installs can start the dry run. They do not include photo stories, the owner peek card, or the other October 7–9 changes. A new preview is **$0** until Expo's free build quota runs out. It waits on you, because it uploads this working tree.
 
 Human testers follow [TESTER_SCRIPT.md](../engineering/TESTER_SCRIPT.md) — the role slices below, organised by the pillars, plus a feel check. Game-day gigs are not in the test wave (Release waves above); the operator console stays off.
 

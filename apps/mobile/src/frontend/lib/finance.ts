@@ -1,6 +1,7 @@
 /**
  * Money labelling helpers: pick the channel stored on a donation (`tips.origin`) and the short channel line shown
  * on receipts and the admin Money desk. Wording follows docs/product/VOICE.md.
+ * @sideEffects `fetchRecentTips` reads `tips`. `recordDripOrder` inserts `shop_orders`.
  */
 
 import {
@@ -9,6 +10,7 @@ import {
   type RevenueSource,
 } from '@/data/finance';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import type { TipLedgerEntry } from '@/types/database';
 
 export type TipOrigin = 'highlight' | 'qr' | 'wishlist' | 'profile' | 'live' | 'rally';
 export type TipEntry = 'in_app' | 'qr_link';
@@ -295,6 +297,17 @@ export async function recordDripOrder(input: {
     amount_cents: amount,
     qty: Math.max(1, Math.round(input.qty) || 1),
   });
+}
+
+/**
+ * @purpose Newest donation rows for the signed-in Profile ledger. An empty list covers a missing table or a guest.
+ * @returns Up to 40 `tips` rows, newest first.
+ * @sideEffects `tips` SELECT.
+ */
+export async function fetchRecentTips(): Promise<TipLedgerEntry[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data } = await supabase.from('tips').select('*').order('created_at', { ascending: false }).limit(40);
+  return (data as TipLedgerEntry[] | null) ?? [];
 }
 
 export function revenueSourceTitle(source: string): string {

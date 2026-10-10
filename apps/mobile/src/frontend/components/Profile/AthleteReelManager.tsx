@@ -1,5 +1,5 @@
 /**
- * Athlete's own clip manager: long-press a tile to move a video between the free feed and Subscriber Vault, or
+ * Athlete's own clip manager: long-press a tile to move a video between the free feed and one-time Exclusive access, or
  * Flash Unlock it. Fan menu uses shared Daylight chrome. Photo stories are public only (database constraint,
  * PHOTO_STORIES_DESIGN.md decision 1), so they never open the Vault sheet.
  */
@@ -50,7 +50,7 @@ type AthleteReelManagerProps = {
 };
 
 /**
- * @purpose Athlete-management 3×3 grid: long-press a thumbnail to move it into Subscriber Vault, Flash Unlock it for 2 hours, or send it to the free public feed.
+ * @purpose Athlete-management 3×3 grid: long-press a thumbnail to move it into one-time Exclusive access, Flash Unlock it for 2 hours, or send it to the free public feed.
  * @param clips Tagged highlights on the athlete’s own Profile.
  * @param onVaultChange Parent updates `reels.is_vault_only` locally so the chip flips immediately.
  * @param onFlashUnlock Parent stores `reels.flash_unlock_until` so the feed countdown starts immediately.
@@ -147,7 +147,7 @@ export function AthleteReelManager({
   return (
     <View>
       <Text style={styles.hint}>
-        Long-press a clip to move it between the free feed and Subscriber Vault, or Flash Unlock a Vault clip for 2
+        Long-press a clip to move it between the free feed and one-time Exclusive access, or Flash Unlock a Vault clip for 2
         hours. Photo stories always stay on the free feed.
       </Text>
       <TaggedReelGrid
@@ -184,8 +184,8 @@ export function AthleteReelManager({
             </Text>
             <Text style={styles.body}>
               {vaultOnly
-                ? 'This clip is in Subscriber Vault. Move it to the free public Highlights ⚡ feed anytime.'
-                : `This clip is on the free public feed. Vault it so only $${live.catalog.exclusiveDollars.toFixed(2)}/mo subscribers can watch.`}
+                ? 'This clip needs one-time Exclusive access. Move it to the free public Highlights ⚡ feed anytime.'
+                : `This clip is on the free public feed. Vault it so only fans with one-time Exclusive access ($${live.catalog.exclusiveDollars.toFixed(2)}) can watch.`}
             </Text>
             {live.buttons.vault ? (
             <AnimatedButton

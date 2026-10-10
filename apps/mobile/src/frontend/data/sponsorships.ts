@@ -112,7 +112,7 @@ export function catalogSponsorTiers(
 }
 
 export function formatSponsorDollars(dollars: number): string {
-  return `$${dollars}/mo`;
+  return `$${dollars}`;
 }
 
 export function initialsForBusiness(name: string): string {

@@ -60,25 +60,27 @@ type PhotoStoryClient = {
 };
 const db = supabase as unknown as PhotoStoryClient;
 
+/** Null errors stay false. The same code-plus-message string is what every probe matches. */
+function errorMatches(error: PostgrestErrorLike, pattern: RegExp): boolean {
+  if (!error) return false;
+  return pattern.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
 /** The view or table is not deployed yet (Postgres 42P01, PostgREST PGRST205 / schema cache). */
 function missingRelation(error: PostgrestErrorLike): boolean {
-  if (!error) return false;
-  return /42P01|PGRST205|PGRST200|does not exist|could not find the table|schema cache/i.test(
-    `${error.code ?? ''} ${error.message ?? ''}`,
-  );
+  return errorMatches(error, /42P01|PGRST205|PGRST200|does not exist|could not find the table|schema cache/i);
 }
 
 /** The RPC is not deployed yet (PGRST202 / 42883). */
 function missingRpc(error: PostgrestErrorLike): boolean {
-  if (!error) return false;
-  return /PGRST202|42883|could not find the function|schema cache/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+  return errorMatches(error, /PGRST202|42883|could not find the function|schema cache/i);
 }
 
 /** The request never reached PostgREST (offline, DNS, timeout): worth re-checking on the next open. */
 function transportFailure(error: PostgrestErrorLike): boolean {
-  if (!error) return false;
-  return /network request failed|failed to fetch|fetch failed|load failed|timed? ?out|aborted|ECONN|ENOTFOUND|EAI_AGAIN/i.test(
-    `${error.code ?? ''} ${error.message ?? ''}`,
+  return errorMatches(
+    error,
+    /network request failed|failed to fetch|fetch failed|load failed|timed? ?out|aborted|ECONN|ENOTFOUND|EAI_AGAIN/i,
   );
 }
 

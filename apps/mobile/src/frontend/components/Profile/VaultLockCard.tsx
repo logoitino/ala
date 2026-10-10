@@ -18,7 +18,7 @@ type VaultLockCardProps = {
 };
 
 /**
- * @purpose Athlete Management master switch: Lock Vault 🔒 (subscribe to watch) or Open Vault 🌐.
+ * @purpose Athlete Management master switch: Lock Vault 🔒 (one-time Exclusive access) or Open Vault 🌐.
  * @param locked Current `players.vault_locked`.
  * @param busy Disables the action while the RPC is in flight.
  * @param onToggle Persists the next lock flag.
@@ -32,7 +32,7 @@ export function VaultLockCard({ locked, busy = false, onToggle }: VaultLockCardP
       <Text style={styles.body}>{locked ? VAULT_LOCKED_HINT : VAULT_OPEN_HINT}</Text>
       <Text style={styles.meta}>
         {locked
-          ? `Subscribers pay $${dollars.toFixed(2)}/mo to watch Vault Highlights ⚡.`
+          ? `Fans pay $${dollars.toFixed(2)} for one-time Exclusive access to watch Vault Highlights ⚡.`
           : 'Long-press a clip to move it into the Vault collection, then lock when you are ready.'}
       </Text>
       <AnimatedButton

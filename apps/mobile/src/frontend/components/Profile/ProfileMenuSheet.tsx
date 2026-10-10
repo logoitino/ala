@@ -15,7 +15,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 
 export type ProfileMenuItem = {
   id: string;
@@ -56,7 +56,7 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
     closingToken.current = null;
     afterRef.current = undefined;
     setMounted(true);
-    translateY.value = withSpring(0, SPRING_CARD);
+    translateY.value = withSpring(0, SPRING_SHEET);
     backdropOpacity.value = withTiming(1, { duration: 200 });
   }, [backdropOpacity, translateY, visible]);
 

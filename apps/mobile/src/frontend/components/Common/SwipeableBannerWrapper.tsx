@@ -32,6 +32,8 @@ type SwipeableBannerWrapperProps = {
   accessibilityLabel?: string;
   /** Compact bars (Rivalry week) dismiss by swipe only, so the chevron stays clear. */
   showClose?: boolean;
+  /** Use the parent width so a scoreboard does not shrink-wrap its school names. */
+  fill?: boolean;
 };
 
 function fireLightHaptic() {
@@ -59,6 +61,7 @@ export function SwipeableBannerWrapper({
   pressAccessibilityLabel = 'Open live match',
   accessibilityLabel = 'Dismiss banner',
   showClose = true,
+  fill = false,
 }: SwipeableBannerWrapperProps) {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -113,13 +116,14 @@ export function SwipeableBannerWrapper({
 
   return (
     <GestureDetector gesture={pan}>
-      <Animated.View collapsable={false} style={[styles.frame, style]}>
+      <Animated.View collapsable={false} style={[styles.frame, fill && styles.fill, style]}>
         {onPress ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={pressAccessibilityLabel}
             haptic="selection"
             onPress={onPress}
+            style={fill ? styles.fill : undefined}
           >
             {children}
           </Pressable>
@@ -148,6 +152,10 @@ const styles = StyleSheet.create({
     position: 'relative',
     maxWidth: '100%',
     flexShrink: 1,
+  },
+  fill: {
+    alignSelf: 'stretch',
+    width: '100%',
   },
   close: {
     position: 'absolute',

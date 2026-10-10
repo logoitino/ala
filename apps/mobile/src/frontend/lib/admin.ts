@@ -5,6 +5,7 @@
  * @sideEffects Reads and writes through the shared Supabase client; admin role enforced by RLS.
  */
 
+import { athleteOrGuardianReported, queueReasonLabel } from '@/data/contentRights';
 import { parseSpotlightAward, utcWeekStart } from '@/lib/spotlight';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Player, ReelWithPlayer, SpotlightAward } from '@/types/database';
@@ -272,6 +273,10 @@ export type AdminFlagRow = {
   subtitle: string;
   reportCount: number;
   openedAt: string;
+  /** Stored report label. Telemetry rows use "Bug report". */
+  reasonLabel: string;
+  /** Telemetry is `na` because a stall is not an athlete or guardian report. */
+  athleteOrGuardian: 'yes' | 'no' | 'unchecked' | 'na';
 };
 
 export type PublishSpotlightInput = {
@@ -384,10 +389,165 @@ export async function publishSpotlightAward(input: PublishSpotlightInput): Promi
   return parsed;
 }
 
+type HighlightFlagDraft = {
+  id: string;
+  title: string;
+  subtitle: string;
+  reportCount: number;
+  openedAt: string;
+  playerId: string;
+};
+
+/**
+ * `reel_reports` is in schema.sql and not in the generated `Database` type, so only this read
+ * uses a narrow view of the same client.
+ */
+type ReelReportClient = {
+  from: (relation: 'reel_reports') => {
+    select: (columns: 'reel_id, reason, reporter_id') => {
+      in: (column: 'reel_id', values: string[]) => PromiseLike<{
+        data: unknown;
+        error: { message?: string } | null;
+      }>;
+    };
+  };
+};
+
+const reelReports = supabase as unknown as ReelReportClient;
+
+/** Same guardian link `report_reel` uses. Not in the generated Database type. */
+type CustodialReportClient = {
+  from: (relation: 'custodial_accounts') => {
+    select: (columns: 'player_id, guardian_id') => {
+      in: (column: 'player_id', values: string[]) => PromiseLike<{
+        data: unknown;
+        error: { message?: string } | null;
+      }>;
+    };
+  };
+};
+
+const custodialReports = supabase as unknown as CustodialReportClient;
+
+function uniqueIds(values: readonly string[]): string[] {
+  return [...new Set(values.filter((value) => value.length > 0))];
+}
+
+function highlightFlagRow(
+  draft: HighlightFlagDraft,
+  reasonLabel: string,
+  athleteOrGuardian: AdminFlagRow['athleteOrGuardian'],
+): AdminFlagRow {
+  return {
+    id: draft.id,
+    kind: 'highlight',
+    title: draft.title,
+    subtitle: draft.subtitle,
+    reportCount: draft.reportCount,
+    openedAt: draft.openedAt,
+    reasonLabel,
+    athleteOrGuardian,
+  };
+}
+
+function groupReportsByReel(data: unknown): Map<string, { reasons: string[]; reporterIds: string[] }> {
+  const grouped = new Map<string, { reasons: string[]; reporterIds: string[] }>();
+  if (!Array.isArray(data)) return grouped;
+  for (const row of data) {
+    if (!row || typeof row !== 'object') continue;
+    const record = row as Record<string, unknown>;
+    const reelId = asText(record.reel_id);
+    if (!reelId) continue;
+    const bucket = grouped.get(reelId) ?? { reasons: [], reporterIds: [] };
+    const reason = asText(record.reason);
+    if (reason) bucket.reasons.push(reason);
+    const reporterId = asText(record.reporter_id);
+    if (reporterId) bucket.reporterIds.push(reporterId);
+    grouped.set(reelId, bucket);
+  }
+  return grouped;
+}
+
+/**
+ * @purpose Attach the stored reason and the athlete-or-guardian flag without dropping the queue.
+ * @param drafts Flagged clips already loaded from `reels`.
+ * @sideEffects `reel_reports` SELECT; `profiles`, `players`, and `custodial_accounts` SELECT when those ids exist.
+ */
+async function withReportQueue(drafts: HighlightFlagDraft[]): Promise<AdminFlagRow[]> {
+  const reelIds = uniqueIds(drafts.map((draft) => draft.id));
+  if (reelIds.length === 0) {
+    return drafts.map((draft) => highlightFlagRow(draft, queueReasonLabel([]), 'unchecked'));
+  }
+
+  const reports = await reelReports
+    .from('reel_reports')
+    .select('reel_id, reason, reporter_id')
+    .in('reel_id', reelIds);
+  if (reports.error) {
+    return drafts.map((draft) => highlightFlagRow(draft, queueReasonLabel(null), 'unchecked'));
+  }
+
+  const grouped = groupReportsByReel(reports.data);
+  const reporterIds = uniqueIds([...grouped.values()].flatMap((bucket) => bucket.reporterIds));
+  const playerIds = uniqueIds(drafts.map((draft) => draft.playerId));
+  const [profileRead, playerRead, custodialRead] = await Promise.all([
+    reporterIds.length > 0
+      ? supabase.from('profiles').select('id, user_id, player_id').in('user_id', reporterIds)
+      : Promise.resolve({ data: [] as { id: string; user_id: string | null; player_id?: string | null }[], error: null }),
+    playerIds.length > 0
+      ? supabase.from('players').select('id, guardian_id').in('id', playerIds)
+      : Promise.resolve({ data: [] as { id: string; guardian_id?: string | null }[], error: null }),
+    playerIds.length > 0
+      ? custodialReports.from('custodial_accounts').select('player_id, guardian_id').in('player_id', playerIds)
+      : Promise.resolve({ data: [] as unknown[], error: null }),
+  ]);
+
+  const identityReadable = !profileRead.error && !playerRead.error && !custodialRead.error;
+  const profiles = Array.isArray(profileRead.data)
+    ? profileRead.data.map((row) => ({
+        id: asText(row.id),
+        userId: asText(row.user_id),
+        playerId: asText(row.player_id),
+      }))
+    : [];
+  const guardians = [
+    ...(Array.isArray(playerRead.data)
+      ? playerRead.data.map((row) => ({
+          playerId: asText(row.id),
+          guardianId: asText(row.guardian_id),
+        }))
+      : []),
+    ...(Array.isArray(custodialRead.data)
+      ? custodialRead.data.map((row) => {
+          const record = row as Record<string, unknown>;
+          return { playerId: asText(record.player_id), guardianId: asText(record.guardian_id) };
+        })
+      : []),
+  ];
+
+  return drafts.map((draft) => {
+    const bucket = grouped.get(draft.id) ?? { reasons: [], reporterIds: [] };
+    const reporters = profiles.filter((profile) => bucket.reporterIds.includes(profile.userId));
+    return highlightFlagRow(
+      draft,
+      queueReasonLabel(bucket.reasons),
+      athleteOrGuardianReported({
+        readable: identityReadable,
+        reelPlayerId: draft.playerId || null,
+        reporterPlayerIds: reporters.map((profile) => profile.playerId),
+        reporterProfileIds: reporters.map((profile) => profile.id),
+        guardianProfileIds: guardians
+          .filter((link) => link.playerId === draft.playerId)
+          .map((link) => link.guardianId),
+      }),
+    );
+  });
+}
+
 /**
  * @purpose Open Highlight flags for the moderation table, optionally with recent telemetry incidents.
  * @param withTelemetry Include stalls / reconnects. Moderation leaves these to QA, which owns the 24h table.
- * @sideEffects `reels` SELECT (`is_flagged`); `telemetry_logs` SELECT when `withTelemetry`.
+ * @sideEffects `reels` SELECT (`is_flagged`, `player_id`); `reel_reports`, `profiles`, `players`, and `custodial_accounts` SELECT for the queue columns; `telemetry_logs` SELECT when `withTelemetry`.
  */
 export async function fetchAdminFlags(withTelemetry = false): Promise<AdminFlagRow[]> {
   if (!isSupabaseConfigured) return [];
@@ -395,7 +555,7 @@ export async function fetchAdminFlags(withTelemetry = false): Promise<AdminFlagR
 
   const flaggedLive = await supabase
     .from('reels')
-    .select('id, title, created_at, reported_by, is_removed, players (name, school_name)')
+    .select('id, title, created_at, reported_by, player_id, is_removed, players (name, school_name)')
     .eq('is_flagged', true)
     .eq('is_removed', false)
     .order('created_at', { ascending: false })
@@ -404,28 +564,30 @@ export async function fetchAdminFlags(withTelemetry = false): Promise<AdminFlagR
   const flagged = flaggedLive.error
     ? await supabase
         .from('reels')
-        .select('id, title, created_at, reported_by, players (name, school_name)')
+        .select('id, title, created_at, reported_by, player_id, players (name, school_name)')
         .eq('is_flagged', true)
         .order('created_at', { ascending: false })
         .limit(40)
     : flaggedLive;
 
+  const drafts: HighlightFlagDraft[] = [];
   if (!flagged.error && Array.isArray(flagged.data)) {
     for (const row of flagged.data) {
       const record = row as Record<string, unknown>;
       if (record.is_removed === true) continue;
       const athlete = playerLabel(record.players);
       const reported = Array.isArray(record.reported_by) ? record.reported_by.length : 0;
-      rows.push({
+      drafts.push({
         id: asText(record.id),
-        kind: 'highlight',
         title: asText(record.title, athlete.name),
         subtitle: [athlete.name, athlete.school].filter(Boolean).join(' · ') || 'User flag',
         reportCount: Math.max(1, reported),
         openedAt: asText(record.created_at),
+        playerId: asText(record.player_id),
       });
     }
   }
+  if (drafts.length > 0) rows.push(...(await withReportQueue(drafts)));
 
   if (!withTelemetry) return rows;
 
@@ -447,6 +609,8 @@ export async function fetchAdminFlags(withTelemetry = false): Promise<AdminFlagR
         subtitle: asText(row.video_id) || asText(row.channel) || 'Bug report',
         reportCount: 1,
         openedAt: asText(row.created_at),
+        reasonLabel: 'Bug report',
+        athleteOrGuardian: 'na',
       });
     }
   }

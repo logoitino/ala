@@ -31,11 +31,29 @@ function snapshot(row: Game): ReturnType<typeof useLiveGame> {
 describe('LiveMatchBanner recorded scoreboard', () => {
   it('pairs real scores with teams, ticks a recorded clock and opens the match', async () => {
     await render(<LiveMatchBanner live={snapshot(game)} />);
-    expect(screen.getByText('Q2 · 4:59')).toBeTruthy();
+    expect(screen.getByText('North Valley').props.numberOfLines).toBe(1);
+    expect(screen.getByText('South Ridge').props.numberOfLines).toBe(1);
     expect(screen.getByText('7')).toBeTruthy();
     expect(screen.getByText('0')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: /Live, Q2 · 4:59.*North Valley 7 against South Ridge 0/ }));
     expect(mockPush).toHaveBeenCalledWith(`/local/game/${game.id}`);
+  });
+  it('keeps a long school name on one line beside the score', async () => {
+    await render(
+      <LiveMatchBanner
+        live={snapshot({
+          ...game,
+          home_team: 'Westlake Thunder',
+          away_team: 'Lone Peak Knights',
+          home_score: 38,
+          away_score: 10,
+        })}
+      />,
+    );
+    expect(screen.getByText('Westlake Thunder').props.numberOfLines).toBe(1);
+    expect(screen.getByText('Lone Peak Knights').props.numberOfLines).toBe(1);
+    expect(screen.getByText('38')).toBeTruthy();
+    expect(screen.getByText('10')).toBeTruthy();
   });
   it('preserves a recorded three-digit clock instead of displaying the hook fallback', async () => {
     await render(<LiveMatchBanner live={snapshot({ ...game, clock: '120:00' })} />);
