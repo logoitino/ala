@@ -2,8 +2,10 @@
  * Profile identity hero shared by own and public sheets, with a compact sideline-style identity row.
  * Athlete details are optional; community profiles must never inherit a favorite player's credentials.
  * School crests remain server-confirmed and avatar editing stays controlled by the parent sheet.
+ * The card edge, the Aura card control, and the next-tier line wear the earned tier color.
  * @sideEffects `ProfileAvatarPicker` can upload the owner's chosen photo to Storage `avatars`.
  */
+import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -36,6 +38,8 @@ type ProfileHeroAvatarProps = {
   verificationStatus?: VerificationStatus;
   schoolClaimed?: boolean;
   onClaimVerification?: () => void;
+  /** Counts and the Crew join control, drawn inside the card under Aura. */
+  footer?: ReactNode;
   avatarUrl?: string | null;
   canEditAvatar?: boolean;
   onAvatarUploaded?: (url: string) => void;
@@ -82,6 +86,7 @@ export function ProfileHeroAvatar({
   schoolClaimed = false,
   onClaimVerification,
   avatarUrl,
+  footer,
   canEditAvatar = false,
   onAvatarUploaded,
   schoolBadge: suppliedSchoolBadge = null,
@@ -98,10 +103,12 @@ export function ProfileHeroAvatar({
     { label: 'Class', value: classYear?.trim() && classYear.trim() !== '—' ? classYearLabel(classYear.trim()) : null },
   ].filter((detail) => detail.value && detail.value !== '—') : [];
 
+  const progressPct = Math.round(progress.ratio * 100);
+  const progressLine = progress.next ? `${progressPct}% to ${progress.next.title}` : 'Max Aura band';
+
   if (compact) {
-    const progressPct = Math.round(progress.ratio * 100);
     return (
-      <View style={[styles.wrap, styles.compactWrap]}>
+      <View style={[styles.wrap, styles.compactWrap, { borderTopColor: tier.color }]}>
         <View style={styles.compactIdentityRow}>
           <View style={styles.compactAvatarStage}>
             {schoolBadge ? <View style={styles.compactSchoolBand}><SchoolHeroBand badge={schoolBadge} /></View> : null}
@@ -121,7 +128,7 @@ export function ProfileHeroAvatar({
             </View>
           </View>
           <View style={styles.compactIdentity}>
-            <Text style={[styles.kicker, styles.compactLeft]}>{athlete ? 'Athlete profile' : 'Community profile'}</Text>
+            <Text style={[styles.kicker, styles.compactLeft, { color: tier.ink }]}>{athlete ? 'Athlete profile' : 'Community profile'}</Text>
             <Text accessibilityRole="header" style={[styles.name, styles.compactName]}>{name}</Text>
             <VarsityBadge compact status={verificationStatus} schoolClaimed={schoolClaimed} onPress={onClaimVerification} />
             {schoolBadge ? (
@@ -145,15 +152,16 @@ export function ProfileHeroAvatar({
             accessibilityValue={{ min: 0, max: 100, now: progressPct,
               text: `${Math.round(auraPoints)} Aura, ${auraBadgeLabel(tier)}. ${progress.next ? `${progressPct}% to ${progress.next.title}` : 'Max Aura band'}` }}>
             <Text style={[styles.tier, styles.compactAuraLabel, { color: tier.ink }]}>{Math.round(auraPoints)} Aura · {tier.title}</Text>
-            <View style={[styles.progressTrack, styles.compactProgressTrack]}>
+            <View style={[styles.progressTrack, styles.compactProgressTrack, { backgroundColor: tier.face }]}>
               <View style={[styles.progressFill, { width: `${progressPct}%`, backgroundColor: tier.color }]} />
             </View>
+            <Text style={[styles.progressHint, styles.compactLeft, { color: tier.ink }]}>{progressLine}</Text>
           </View>
           {showFlipControl && onFlipAura ? (
             <AnimatedButton accessibilityLabel="Flip Aura card" haptic="selection" onPress={onFlipAura}
-              contentStyle={[styles.flipHit, styles.compactFlip, { borderColor: tier.color, backgroundColor: tier.face }]}>
-              <Ionicons name="sync" size={15} color={tier.ink} />
-              <Text style={[styles.flipLabel, { color: tier.ink }]}>Aura card</Text>
+              contentStyle={[styles.flipHit, styles.compactFlip, { backgroundColor: tier.color, borderColor: tier.color }]}>
+              <Ionicons name="sync" size={15} color={FOCAL.ink} />
+              <Text style={[styles.flipLabel, { color: FOCAL.ink }]}>Aura card</Text>
             </AnimatedButton>
           ) : null}
         </View>
@@ -163,14 +171,15 @@ export function ProfileHeroAvatar({
             <Text style={styles.verifyLabel}>{CLAIM_VERIFY_CTA}</Text>
           </AnimatedButton>
         ) : null}
+        {footer}
       </View>
     );
   }
 
   return (
     <View style={[styles.wrap, schoolBadge ? styles.wrapBanded : null]}>
-      <View style={styles.identityRail} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-      <Text style={styles.kicker}>{athlete ? 'Athlete profile' : 'Community profile'}</Text>
+      <View style={[styles.identityRail, { backgroundColor: tier.color }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      <Text style={[styles.kicker, { color: tier.ink }]}>{athlete ? 'Athlete profile' : 'Community profile'}</Text>
       <View style={[styles.avatarStage, schoolBadge ? styles.avatarStageBanded : null]}>
         {schoolBadge ? <View style={styles.schoolBand}><SchoolHeroBand badge={schoolBadge} /></View> : null}
         <View style={[styles.avatarRing, { borderColor: tier.color, backgroundColor: tier.face }]}>
@@ -226,7 +235,7 @@ export function ProfileHeroAvatar({
       <Text style={[styles.tier, { color: tier.ink }]}>
         {auraBadgeLabel(tier)} · {Math.round(auraPoints)} Aura
       </Text>
-      <View style={styles.progressTrack}>
+      <View style={[styles.progressTrack, { backgroundColor: tier.face }]}>
         <View
           style={[
             styles.progressFill,
@@ -234,22 +243,16 @@ export function ProfileHeroAvatar({
           ]}
         />
       </View>
-      {progress.next ? (
-        <Text style={styles.progressHint}>
-          {Math.round(progress.ratio * 100)}% to {progress.next.title}
-        </Text>
-      ) : (
-        <Text style={styles.progressHint}>Max Aura band</Text>
-      )}
+      <Text style={[styles.progressHint, { color: tier.ink }]}>{progressLine}</Text>
       {showFlipControl && onFlipAura ? (
         <AnimatedButton
           accessibilityLabel="Flip Aura card"
           haptic="selection"
           onPress={onFlipAura}
-          contentStyle={[styles.flipHit, { borderColor: tier.color, backgroundColor: tier.face }]}
+          contentStyle={[styles.flipHit, { backgroundColor: tier.color, borderColor: tier.color }]}
         >
-          <Ionicons name="sync" size={15} color={tier.ink} />
-          <Text style={[styles.flipLabel, { color: tier.ink }]}>Flip Aura card</Text>
+          <Ionicons name="sync" size={15} color={FOCAL.ink} />
+          <Text style={[styles.flipLabel, { color: FOCAL.ink }]}>Flip Aura card</Text>
         </AnimatedButton>
       ) : null}
       {onClaimVerification && verificationStatus !== 'verified' ? (
@@ -262,6 +265,7 @@ export function ProfileHeroAvatar({
           <Text style={styles.verifyLabel}>{CLAIM_VERIFY_CTA}</Text>
         </AnimatedButton>
       ) : null}
+      {footer}
     </View>
   );
 }
@@ -293,7 +297,7 @@ const styles = StyleSheet.create({
   compactAuraRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   compactAura: { flexGrow: 1, flexShrink: 1, flexBasis: 120, gap: 5 },
   compactAuraLabel: { textAlign: 'left', fontWeight: '900' },
-  compactProgressTrack: { width: '100%', maxWidth: undefined, marginTop: 0, height: 4 },
+  compactProgressTrack: { width: '100%', maxWidth: undefined, marginTop: 0, height: 6 },
   compactFlip: { marginTop: 0, paddingHorizontal: 12, paddingVertical: 6, flexShrink: 1 },
   compactVerify: { alignSelf: 'flex-start', marginTop: 0 },
   wrap: {
@@ -458,8 +462,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     minHeight: 44,
-    borderWidth: 1.5,
-    borderRadius: 999,
+    borderWidth: 0,
+    borderRadius: 14,
     paddingHorizontal: 16,
   },
   flipLabel: {

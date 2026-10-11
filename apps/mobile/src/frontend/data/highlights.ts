@@ -88,11 +88,14 @@ export function reelCategoryBadge(category?: ReelCategory | null): string | null
   return null;
 }
 
+/** Seki taps that move a clip onto the Seki pill. The story line uses the same bar. */
+export const SEKI_PILL_COUNT = 3;
+
 /**
  * @purpose True when a clip belongs on the Seki Highlights ⚡ switch (`sekiPlay` or 3+ Seki 🤙).
  */
 export function isSekiHighlight(clip: Pick<HighlightClip, 'sekiPlay' | 'sekiCount'>): boolean {
-  return Boolean(clip.sekiPlay) || (clip.sekiCount ?? 0) >= 3;
+  return Boolean(clip.sekiPlay) || (clip.sekiCount ?? 0) >= SEKI_PILL_COUNT;
 }
 
 /** `reels.media_type` — pre-migration rows and missing columns are `video`. */

@@ -297,7 +297,6 @@ export default function UserAthleteProfileScreen() {
           avatarUrl={avatarUrl}
           onBack={() => router.back()}
           onDropMalo={dropMalo}
-          onSubscribe={unlockExclusive}
           onOpenAthlete={(nextId) => router.push(userProfileHref(nextId))}
           onHypeChange={applyHype}
           onBacked={(nextCount) => {

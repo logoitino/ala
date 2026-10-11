@@ -58,8 +58,8 @@ baseline, dependency review and successful local reset before this becomes the p
 
 ## 3. Auth (you)
 
-1. Authentication → URL Configuration → add redirect `alasports://auth/callback`.
-2. Providers → Email on (password + magic link). Apple / Google only if you will test them.
+1. Authentication → URL Configuration → redirect `alasports://auth/callback` (owner added this 2026-10-10).
+2. Providers → Email on (password + magic link). Google is still off on development and staging, checked 2026-10-10: the authorize URL returns `provider is not enabled`. Turn Google on here, with the Google Cloud client id and secret, before Continue with Google can create an account. Apple only if you will test it.
 3. Preview builds have **no Demo Fan button** (`__DEV__` is off), so every tester signs up by email.
    Supabase's built-in mailer only sends a few emails per hour. For more than a handful of
    testers either turn off "Confirm email" on staging or add custom SMTP (Authentication → SMTP).

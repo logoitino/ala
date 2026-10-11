@@ -84,6 +84,29 @@ export function authFailureMessage(message: string, action: 'google' | 'apple' |
 }
 
 /**
+ * @purpose Turn a Supabase `/authorize` error into a sheet sentence.
+ * @param status HTTP status from the authorize URL.
+ * @param body Response body. A disabled Google provider returns JSON `msg`, which the browser would otherwise show as a dead page.
+ * @param action Which button failed.
+ * @returns A sentence for the sign-in sheet, or null when the provider can continue to the browser.
+ */
+export function oauthAuthorizeFailure(
+  status: number,
+  body: string,
+  action: 'google' | 'apple',
+): string | null {
+  if (status < 400) return null;
+  let message = body.trim();
+  try {
+    const parsed = JSON.parse(body) as { msg?: string; error_description?: string; message?: string };
+    message = parsed.msg || parsed.error_description || parsed.message || message;
+  } catch {
+    // A non-JSON error page still belongs in the sheet.
+  }
+  return authFailureMessage(message, action);
+}
+
+/**
  * @purpose Redirect URI for Magic Link / OAuth (`alasports://auth/callback`).
  */
 export function authRedirectUri(): string {
@@ -165,6 +188,16 @@ export async function confirmAge13Plus(userId: string): Promise<void> {
     .update({ age_confirmed_13_plus: true })
     .eq('user_id', userId);
   if (error) throw new Error(error.message || 'Could not save your confirmation.');
+}
+
+async function oauthAuthorizeBlock(url: string, action: 'google' | 'apple'): Promise<string | null> {
+  try {
+    const probe = await fetch(url);
+    if (probe.ok) return null;
+    return oauthAuthorizeFailure(probe.status, await probe.text(), action);
+  } catch {
+    return null;
+  }
 }
 
 function parseParams(url: string): Record<string, string> {
@@ -251,6 +284,11 @@ export async function signInWithGoogle(): Promise<Session> {
   });
   if (error) throw new Error(authFailureMessage(error.message, 'google'));
   if (!data.url) throw new Error('Google sign-in did not return a URL.');
+
+  // The client builds the authorize URL without asking the server first. A disabled
+  // provider answers 400 JSON, and opening that URL is the dead page instead of an account.
+  const blocked = await oauthAuthorizeBlock(data.url, 'google');
+  if (blocked) throw new Error(blocked);
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
   if (result.type !== 'success' || !('url' in result) || !result.url) {

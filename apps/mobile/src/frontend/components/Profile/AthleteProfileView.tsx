@@ -49,7 +49,7 @@ import {
   SQUAD_COUNTER_LABEL,
   TEAMMATES_BADGE,
 } from '@/data/crew';
-import { exclusiveSubscribeLabel, isClipVaultOnly } from '@/data/exclusive';
+import { isClipVaultOnly } from '@/data/exclusive';
 import {
   HIGHLIGHT_TAB_LABEL,
   STATS_TAB_LABEL,
@@ -137,7 +137,6 @@ type AthleteProfileViewProps = {
   onDropMalo?: () => void;
   /** `qr_link` when this sheet was opened from a gift QR, so locker chip-ins keep that arrival. */
   tipEntry?: 'in_app' | 'qr_link';
-  onSubscribe?: () => void;
   leading?: ReactNode;
   actions?: ReactNode;
   trailing?: ReactNode;
@@ -151,10 +150,10 @@ type AthleteProfileViewProps = {
 };
 
 /**
- * @purpose One athlete sheet for the Profile tab and `/user/[id]`: hero, Crew, compact Donate/Subscribe/Share and direct Highlights / Stats / Goals / Vault / Manage sections.
+ * @purpose One athlete sheet for the Profile tab and `/user/[id]`: hero, Crew, compact Donate/Share and direct Highlights / Stats / Goals / Vault / Manage sections.
  * @param onBack Public sheet back control (stack header is hidden so chrome matches the hub).
  * @param headerRight Own-hub account menu.
- * @param onDropMalo / onSubscribe Fan support — hidden on your own claimed row.
+ * @param onDropMalo Donate — hidden on your own claimed row. One-time Exclusive stays on the Vault tab and a locked Highlight.
  * @sideEffects Child grids / vault / Q&A / `useCrew`; wishlist lights Flip-card glow when opened; `ShareQrModal`; own-hub `ProfileAvatarPicker`.
  */
 export function AthleteProfileView({
@@ -200,7 +199,6 @@ export function AthleteProfileView({
   headerRight,
   onDropMalo,
   tipEntry,
-  onSubscribe,
   leading,
   actions,
   trailing,
@@ -230,7 +228,7 @@ export function AthleteProfileView({
     configFor(selectedSport),
   );
   const maloAmount = live.catalog.maloAmounts[0] ?? 5;
-  const showFanSupport = !ownCredentials && !headerRight && (Boolean(onDropMalo && live.buttons.malo) || Boolean(onSubscribe && live.buttons.subscribe));
+  const showFanSupport = !ownCredentials && !headerRight && Boolean(onDropMalo && live.buttons.malo);
   const showDonateTagline = showFanSupport && athleteIdentity && Boolean(onDropMalo && live.buttons.malo);
   const [tab, setTab] = useState<AthleteProfileTab>('highlights');
   const [openClipId, setOpenClipId] = useState<string | null>(null);
@@ -253,6 +251,8 @@ export function AthleteProfileView({
   const setFlipOpen = onAuraCardOpenChange ?? setInternalFlip;
 
   const publicClips = useMemo(() => clips.filter((clip) => !isClipVaultOnly(clip)), [clips]);
+  const sekiPeak = Math.max(player.seki_count ?? 0, sekiCount, ...publicClips.map((clip) => clip.sekiCount ?? 0));
+  const flexPeak = Math.max(player.flex_count ?? 0, ...publicClips.map((clip) => clip.flexCount ?? 0));
   // Rally thank-you can point at one of the athlete's own confirmed clips ("what it paid for").
   const rallyClips = useMemo(
     () =>
@@ -316,7 +316,7 @@ export function AthleteProfileView({
         tipping={tipping}
         subscribed={opts?.lock ? vaultUnlocked : true}
         showVaultBadge={opts?.vaultBadge}
-        onLockedPress={onUnlockVault}
+        onLockedPress={live.buttons.subscribe ? onUnlockVault : undefined}
         onOpenAthlete={onOpenAthlete}
         onHypeChange={onHypeChange}
         onBacked={onBacked}
@@ -367,27 +367,10 @@ export function AthleteProfileView({
           style={styles.actionFlex}
           contentStyle={[styles.primaryAction, tipping && styles.disabled]}
         >
-          <Text style={styles.primaryActionLabel}>
+          <Text style={styles.primaryActionLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             Donate ${maloAmount}
           </Text>
-        </AnimatedButton>
-      ) : null}
-      {live.buttons.subscribe && onSubscribe ? (
-        <AnimatedButton
-          accessibilityLabel={
-            subscribed
-              ? 'Subscribed to exclusive feed'
-              : exclusiveSubscribeLabel(live.catalog.exclusiveDollars)
-          }
-          disabled={subscribed || vaultBusy}
-          onPress={onSubscribe}
-          style={styles.actionFlex}
-          contentStyle={[styles.secondaryAction, subscribed && styles.secondaryActionOn]}
-        >
-          <Text style={[styles.secondaryActionLabel, subscribed && styles.secondaryActionLabelOn]}>
-            {subscribed ? 'Subscribed' : exclusiveSubscribeLabel(live.catalog.exclusiveDollars)}
-          </Text>
-        </AnimatedButton>
+          </AnimatedButton>
       ) : null}
     </View>
   ) : null;
@@ -433,8 +416,15 @@ export function AthleteProfileView({
         canEditAvatar={editAvatar}
         onAvatarUploaded={onAvatarUploaded}
         schoolBadge={schoolVisible ? schoolBadge : null}
+        footer={
+          <ProfileStatRow
+            player={player}
+            sekiCount={sekiPeak}
+            flexCount={flexPeak}
+            showCrew={live.profile.showCrew}
+          />
+        }
       />
-      {live.profile.showCrew ? <CrewStatsBar player={player} /> : null}
       <View style={styles.quickActions}>
         {fanSupport}
         <AnimatedButton accessibilityLabel={SHARE_FUND_CTA} haptic="selection"
@@ -544,7 +534,7 @@ export function AthleteProfileView({
               Long-press a clip on Highlights ⚡ or here to move it into the Vault. Lock the Vault so fans
               subscribe to watch.
             </Text>
-          ) : sealed && !subscribed ? (
+          ) : sealed && !subscribed && live.buttons.subscribe ? (
             <VaultLockedCard busy={vaultBusy} onUnlock={() => onUnlockVault?.()} />
           ) : subscribed ? (
             <SubscriberQnA athleteId={player.id} athleteName={player.name} />
@@ -604,11 +594,24 @@ export function AthleteProfileView({
 }
 
 /**
- * @purpose Slim Crew · Squad strip + compact Join CTA (Soft-Wall when guest).
+ * @purpose Seki, Riding, Crew, and Squad as separate counts. Join sits under Crew only.
  * @param player Athlete whose Crew graph we load.
+ * @param sekiCount Peak Seki on this athlete.
+ * @param flexCount Peak Flex on this athlete.
+ * @param showCrew When false, the Crew column is omitted.
  * @sideEffects `useCrew` RPC; SoftWall on Join.
  */
-function CrewStatsBar({ player }: { player: Player }) {
+function ProfileStatRow({
+  player,
+  sekiCount,
+  flexCount,
+  showCrew,
+}: {
+  player: Player;
+  sekiCount: number;
+  flexCount: number;
+  showCrew: boolean;
+}) {
   const { profile } = useAuth();
   const { live } = useAppRuntime();
   const { requireAuth } = useSoftWall();
@@ -626,40 +629,79 @@ function CrewStatsBar({ player }: { player: Player }) {
     });
   };
 
+  const showJoin = showCrew && live.buttons.crew && !isOwn;
+
+  const join = showJoin ? (
+    crew.mutual ? (
+      <TeammatesBadge onPress={onJoin} disabled={crew.busy} compact />
+    ) : (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={crew.following ? IN_CREW_LABEL : JOIN_CREW_LABEL}
+        accessibilityState={{ disabled: crew.busy, selected: crew.following }}
+        disabled={crew.busy}
+        haptic="medium"
+        hitSlop={6}
+        onPress={onJoin}
+        style={[styles.joinIcon, crew.following && styles.joinIconOn]}
+      >
+        <Ionicons
+          name={crew.following ? 'checkmark' : 'flash'}
+          size={18}
+          color={crew.following ? FOCAL.jadeInk : '#FFFFFF'}
+        />
+      </Pressable>
+    )
+  ) : null;
+
   return (
-    <View style={styles.crewBlock}>
-      <View style={styles.crewCounts}>
-        <View style={styles.crewStat} accessibilityRole="text" accessibilityLabel={`${CREW_COUNTER_LABEL} ${crew.crew_count}`}>
-          <Text style={styles.crewValue}>{formatCompactCount(crew.crew_count)}</Text>
-          <Text style={styles.crewLabel}>{CREW_COUNTER_LABEL}</Text>
-        </View>
-        <View style={styles.crewDivider} />
-        <View style={styles.crewStat} accessibilityRole="text" accessibilityLabel={`${SQUAD_COUNTER_LABEL} ${crew.squad_count}`}>
-          <Text style={styles.crewValue}>{formatCompactCount(crew.squad_count)}</Text>
-          <Text style={styles.crewLabel}>{SQUAD_COUNTER_LABEL}</Text>
-        </View>
-        {!live.buttons.crew || isOwn ? null : (
-          <View style={styles.crewCta}>
-            {crew.mutual ? (
-              <TeammatesBadge onPress={onJoin} disabled={crew.busy} compact />
-            ) : (
-              <AnimatedButton
-                accessibilityRole="button"
-                accessibilityLabel={crew.following ? IN_CREW_LABEL : JOIN_CREW_LABEL}
-                accessibilityState={{ disabled: crew.busy, selected: crew.following }}
-                disabled={crew.busy}
-                haptic="medium"
-                onPress={onJoin}
-                contentStyle={[styles.joinCrew, crew.following && styles.inCrew]}
-              >
-                <Text style={[styles.joinCrewLabel, crew.following && styles.inCrewLabel]} numberOfLines={1}>
-                  {crew.following ? IN_CREW_LABEL : JOIN_CREW_LABEL}
-                </Text>
-              </AnimatedButton>
-            )}
-          </View>
-        )}
-      </View>
+    <View style={styles.statRow}>
+      <ProfileCount value={sekiCount} label="Seki" color={FOCAL.cyanInk} accessibilityLabel={`${formatCompactCount(sekiCount)} Seki`} reserveAction={showJoin} />
+      <ProfileCount value={flexCount} label="Riding" color={FOCAL.goldInk} accessibilityLabel={`${formatCompactCount(flexCount)} riding with ${player.name}`} reserveAction={showJoin} />
+      {showCrew ? (
+        <>
+          <ProfileCount
+            value={crew.crew_count}
+            label="Crew"
+            color={FOCAL.jadeInk}
+            accessibilityLabel={`${CREW_COUNTER_LABEL} ${crew.crew_count}`}
+            action={join}
+          />
+          <ProfileCount
+            value={crew.squad_count}
+            label="Squad"
+            color={FOCAL.violetInk}
+            accessibilityLabel={`${SQUAD_COUNTER_LABEL} ${crew.squad_count}`}
+            reserveAction={showJoin}
+          />
+        </>
+      ) : null}
+    </View>
+  );
+}
+
+function ProfileCount({
+  value,
+  label,
+  color,
+  accessibilityLabel,
+  action,
+  reserveAction = false,
+}: {
+  value: number;
+  label: string;
+  color: string;
+  accessibilityLabel: string;
+  action?: ReactNode;
+  reserveAction?: boolean;
+}) {
+  return (
+    <View style={styles.stat} accessibilityRole={action ? undefined : 'text'} accessibilityLabel={action ? undefined : accessibilityLabel}>
+      <Text style={[styles.statValue, { color }]} accessibilityLabel={action ? accessibilityLabel : undefined}>
+        {formatCompactCount(value)}
+      </Text>
+      {action ?? (reserveAction ? <View style={styles.joinSlot} /> : null)}
+      <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
 }
@@ -694,12 +736,20 @@ function TeammatesBadge({
       style={styles.teammatesWrap}
       contentStyle={[styles.teammatesHit, compact && styles.teammatesHitCompact]}
     >
-      <Reanimated.View pointerEvents="none" style={[styles.teammatesGlow, glowStyle]} />
-      <View style={[styles.teammatesBadge, compact && styles.teammatesBadgeCompact]}>
-        <Text style={[styles.teammatesLabel, compact && styles.teammatesLabelCompact]} numberOfLines={1}>
-          {compact ? 'Teammates' : TEAMMATES_BADGE}
-        </Text>
-      </View>
+      {compact ? (
+        <View style={styles.joinIcon}>
+          <Ionicons name="people" size={18} color="#FFFFFF" />
+        </View>
+      ) : (
+        <>
+          <Reanimated.View pointerEvents="none" style={[styles.teammatesGlow, glowStyle]} />
+          <View style={styles.teammatesBadge}>
+            <Text style={styles.teammatesLabel} numberOfLines={1}>
+              {TEAMMATES_BADGE}
+            </Text>
+          </View>
+        </>
+      )}
     </AnimatedButton>
   );
 }
@@ -796,29 +846,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textAlign: 'center',
   },
-  secondaryAction: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: radii.md,
-    backgroundColor: FOCAL.mistEmber,
-    borderWidth: 1.5,
-    borderColor: FOCAL.ember,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-  },
-  secondaryActionOn: {
-    backgroundColor: FOCAL.mistGold,
-  },
-  secondaryActionLabel: {
-    color: FOCAL.emberInk,
-    fontSize: 13,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  secondaryActionLabelOn: {
-    color: FOCAL.goldInk,
-  },
   disabled: {
     opacity: 0.55,
   },
@@ -845,6 +872,56 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     paddingVertical: 18,
+  },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-around',
+    gap: 8,
+    marginTop: 2,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(15,20,22,0.08)',
+  },
+  stat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+    minWidth: 0,
+  },
+  statValue: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '900',
+  },
+  statLabel: {
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  joinSlot: {
+    width: 36,
+    height: 36,
+  },
+  joinIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: FOCAL.jadeInk,
+  },
+  joinIconOn: {
+    backgroundColor: FOCAL.mistJade,
+    borderWidth: 1.5,
+    borderColor: FOCAL.jadeInk,
+  },
+  squadHint: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   crewBlock: {
     gap: 0,

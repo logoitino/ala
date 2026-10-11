@@ -1,6 +1,9 @@
 /** Profile identity must omit missing credentials and keep favorite-athlete details off community heroes. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+
 import { ProfileHeroAvatar } from '@/components/Profile/ProfileHeroAvatar';
+import { FOCAL } from '@/theme/motion';
 
 jest.mock('@/components/Profile/ProfileAvatarPicker', () => ({
   ProfileAvatarPicker: ({ children }: { children: React.ReactNode }) => children,
@@ -11,9 +14,14 @@ jest.mock('@/components/Verification/SchoolCrest', () => {
   const { Text } = jest.requireActual('react-native');
   return { SchoolCrest: () => <Text>Confirmed crest</Text>, SchoolHeroBand: () => <Text>Confirmed band</Text> };
 });
-jest.mock('@/components/UI/AnimatedButton', () => ({
-  AnimatedButton: jest.requireActual('react-native').Pressable,
-}));
+jest.mock('@/components/UI/AnimatedButton', () => {
+  const { Pressable } = jest.requireActual('react-native');
+  return {
+    AnimatedButton: ({ contentStyle, style, ...props }: { contentStyle?: object; style?: object }) => (
+      <Pressable {...props} style={[style, contentStyle]} />
+    ),
+  };
+});
 
 describe.each([false, true])('ProfileHeroAvatar identity (compact=%s)', (compact) => {
   it('shows supplied athlete details, preserves jersey zero and keeps the Aura action available', async () => {
@@ -65,6 +73,14 @@ describe.each([false, true])('ProfileHeroAvatar identity (compact=%s)', (compact
     expect(screen.getByText('Confirmed crest')).toBeTruthy();
     expect(screen.getByText(/North Valley athlete/)).toBeTruthy();
   });
+});
+
+it('fills the Aura card control with the earned tier color', async () => {
+  await render(<ProfileHeroAvatar compact name="rain" auraPoints={71} showFlipControl onFlipAura={jest.fn()} />);
+  const button = screen.getByLabelText('Flip Aura card');
+  expect(StyleSheet.flatten(button.props.style).backgroundColor).toBe(FOCAL.ember);
+  expect(StyleSheet.flatten(screen.getByText('Aura card').props.style).color).toBe(FOCAL.ink);
+  expect(screen.getByText('3% to Polished Gold')).toBeTruthy();
 });
 
 it('exposes the compact Aura meter without losing its value to visual compression', async () => {

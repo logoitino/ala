@@ -118,7 +118,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'drip_size_qty', label: 'Size + quantity', hint: 'ProductSheet picker, clamped to stock', surface: 'drip', fanHref: '/drip', adminHref: '/admin/drip' },
 
   { id: 'tab.profile', label: 'Profile tab', hint: 'Fan bar', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features', flag: 'tabs.profile', telemetry: 'tab.profile' },
-  { id: 'subscribe', label: 'Subscribe', hint: 'Exclusive pass on/off', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.subscribe' },
+  { id: 'subscribe', label: 'Subscribe', hint: 'One-time Exclusive on the Vault', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.subscribe' },
   { id: 'exclusive_price', label: 'Exclusive pass price', hint: 'Dollars + Aura grant', surface: 'profile', fanHref: '/profile', adminHref: '/admin/catalog' },
   { id: 'crew', label: 'Join Crew', hint: 'The Crew ⚡', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.crew' },
   { id: 'vault', label: 'Vault lock', hint: 'Open / Lock Vault', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.vault' },

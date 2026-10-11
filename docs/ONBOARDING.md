@@ -94,8 +94,8 @@ Do not put `STRIPE_SECRET_KEY` in `.env.local`: Expo writes loaded env values to
 
 Browse-first guests can open Highlights, cards, and Locker Room without an account. **Donate**, **Join Crew**, and gear-goal donate open `SoftWallModal` (Apple / Google / Magic Link), then resume the intercepted action.
 
-1. Authentication → Providers: enable **Email** (magic link and email sign-up), **Apple**, and **Google**. A Google tap that shows `400` / `validation_failed` means the Google provider toggle is still off — the app never receives an account. Paste the Google Cloud OAuth client id and secret, and allow redirect `alasports://auth/callback`.
-2. Authentication → URL Configuration: add redirect `alasports://auth/callback` (and the Expo Go / web redirect AuthSession prints if you test those hosts).
+1. Authentication → Providers: enable **Email** (magic link and email sign-up), **Apple**, and **Google**. Checked 2026-10-10: Google is still off on development and staging, so Continue with Google cannot create an account. The app keeps that `provider is not enabled` answer in the sign-in sheet. Paste the Google Cloud OAuth client id and secret, and allow redirect `alasports://auth/callback`.
+2. Authentication → URL Configuration: redirect `alasports://auth/callback` (owner added this 2026-10-10). Also allow the Expo Go / web redirect AuthSession prints if you test those hosts.
 3. Run fan profile bootstrap SQL once: `supabase/auth_fan_profile.sql` (also inlined at the end of `apps/mobile/src/backend/db/schema.sql`).
 4. Native Apple Sign In needs a build with the `expo-apple-authentication` plugin (`apps/mobile/app.json`). **Share & Fund ⚡** QR save uses `expo-media-library` (Camera Roll / save-photos permission in `app.json`).
 5. **Demo Fan (QA):** SoftWall / Profile → email + password **Sign in**, or **Continue as Demo Fan**. Credentials: `demo@tapuai.app` / `TapuaiDemoFan1!` (overridable via `EXPO_PUBLIC_DEMO_FAN_EMAIL` / `EXPO_PUBLIC_DEMO_FAN_PASSWORD`). Enable Email provider (password). Disable **Confirm email** for first-tap create, or run `supabase/demo_fan_account.sql`.

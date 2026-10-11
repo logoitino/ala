@@ -4,6 +4,26 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ## 2026-10-10
 
+### Google sign-in
+
+- Redirect `alasports://auth/callback` is saved. Continue with Google stays in the sign-in sheet while the Google provider is off, instead of opening a page that does not create an account. Email still creates the account.
+
+### Aura card color
+
+- The profile card edge and the Aura card control use the color of the tier already earned. The bar names the next tier. The words on the filled control stay dark so they stay readable.
+
+### Exclusive on the Vault
+
+- The athlete profile row is Donate and Share. One-time Exclusive is bought from the Vault tab and from a locked Highlight. The price and the one-time charge are unchanged.
+
+### Profile counts
+
+- An athlete profile shows Seki, Riding, Crew, and Squad as separate counts inside the profile card. Join Crew is the icon under the Crew number. Squad is the mutual-follow count and has no join button.
+
+### Seki and Flex stories
+
+- A Highlight and an athlete profile now say when a play made the Seki pill, including “You called it” if you gave that Seki. Flex says you are riding with that athlete, and names the crew once three people have. Aura stays a count and a tier.
+
 ### Live play hype
 
 - On a live play, each person can give one Seki, one Aura, and one Flex. Tapping again clears that one. The button fills when it is on and dips when it comes off. It never counts past 1.

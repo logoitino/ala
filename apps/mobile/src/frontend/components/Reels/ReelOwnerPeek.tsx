@@ -17,6 +17,8 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { isPhotoStory, type HighlightClip } from '@/data/highlights';
+import { hypeStories } from '@/data/hypeStory';
+import { HypeStoryPills } from '@/components/Reels/HypeStoryPills';
 import { maloAthleteCta } from '@/data/malo';
 import { displayValue, type Player } from '@/data/players';
 import type { VerificationStatus } from '@/data/verification';
@@ -208,6 +210,12 @@ export function ReelOwnerPeek({
     void crew.toggle();
   };
 
+  const stories = hypeStories({
+    athleteName: name,
+    sekiCount: Math.max(player?.seki_count ?? 0, clip.sekiCount ?? 0),
+    flexCount: Math.max(player?.flex_count ?? 0, clip.flexCount ?? 0),
+    sekiPlay: clip.sekiPlay,
+  });
   const stats: { label: string; value: string }[] = [
     { label: 'Crew', value: formatCompactCount(crew.crew_count) },
     { label: 'Donations', value: formatTipDollars(totalTipsCents) },
@@ -409,6 +417,7 @@ export function ReelOwnerPeek({
             </Animated.View>
           ) : null}
 
+          <HypeStoryPills stories={stories} tone="daylight" />
           <View style={styles.stats}>
             {statRows.map((row, rowIndex) => (
               <View key={row[0]!.label} style={styles.statRow}>

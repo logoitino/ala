@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 
-import { authFailureMessage, isNewAuthUser, passwordMeetsPolicy, softWallEmailGates } from '@/lib/auth';
+import { authFailureMessage, isNewAuthUser, oauthAuthorizeFailure, passwordMeetsPolicy, softWallEmailGates } from '@/lib/auth';
 
 function fakeUser(overrides: Partial<Pick<User, 'created_at' | 'last_sign_in_at'>>): User {
   return {
@@ -57,6 +57,12 @@ describe('isNewAuthUser', () => {
   it('names a disabled Google provider instead of the raw validation code', () => {
     expect(authFailureMessage('provider is not enabled', 'google')).toMatch(/Google sign-in is turned off/);
     expect(authFailureMessage('User already registered', 'signup')).toMatch(/Sign in instead/);
+  });
+
+  it('keeps a disabled Google authorize response in the sheet', () => {
+    const body = '{"code":400,"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}';
+    expect(oauthAuthorizeFailure(400, body, 'google')).toMatch(/Google sign-in is turned off/);
+    expect(oauthAuthorizeFailure(302, '', 'google')).toBeNull();
   });
 
   it('is false on malformed date strings rather than throwing', () => {

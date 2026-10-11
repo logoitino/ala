@@ -401,7 +401,6 @@ export default function MyHubTab() {
             </Pressable>
           }
           onDropMalo={dropMalo}
-          onSubscribe={subscribe}
           onOpenAthlete={(playerId) => router.push(userProfileHref(playerId))}
           onBacked={(nextCount) => applyBackerCount(athlete.id, nextCount)}
           onUnlockVault={subscribe}

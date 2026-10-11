@@ -720,6 +720,7 @@ function ReelCardImpl({
           auraGlow={auraTier.glow}
           auraLabel={auraBadgeLabel(auraTier)}
           hype={reelHype}
+          sekiPlay={clip.sekiPlay}
           voted={votes}
           userTipped={userTipped}
           tipping={tipping}

@@ -157,6 +157,7 @@ describe('AthleteProfileView donate tagline', () => {
     await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]} stats={stats}
       auraPoints={0} onDropMalo={jest.fn()} />);
     expect(screen.getByRole('button', { name: `Donate 5 dollars to ${player.name}` })).toBeTruthy();
+    expect(screen.queryByText(/One-time Exclusive/)).toBeNull();
     expect(screen.getByText(TAGLINE_HEADLINE)).toBeTruthy();
     expect(screen.queryByRole('header', { name: TAGLINE_HEADLINE })).toBeNull();
   });

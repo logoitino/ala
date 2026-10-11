@@ -324,7 +324,7 @@ export const APP_RUNTIME_FLAG_GROUPS: AppRuntimeFlagGroup[] = [
       { path: 'buttons.flex', label: 'Flex', hint: '💪 on Highlights ⚡' },
       { path: 'buttons.malo', label: 'Donate', hint: 'Donate rail and Profile Donate' },
       { path: 'buttons.more', label: 'More sheet', hint: 'Share / Save / Report' },
-      { path: 'buttons.subscribe', label: 'Subscribe', hint: 'Exclusive pass (price on Catalogs)' },
+      { path: 'buttons.subscribe', label: 'Subscribe', hint: 'One-time Exclusive on the Vault (price on Catalogs)' },
       { path: 'buttons.crew', label: 'Join Crew', hint: 'The Crew ⚡' },
       { path: 'buttons.vault', label: 'Vault', hint: 'Lock / Open Vault' },
       { path: 'buttons.flashUnlock', label: 'Flash Unlock', hint: '2-hour Vault unlock' },

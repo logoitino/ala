@@ -46,6 +46,7 @@ describe('ReelActionOverlay hype chips', () => {
     expect(screen.queryByText('FLEX!')).toBeNull();
 
     await fireEvent.press(screen.getByLabelText('Aura 7'));
+    expect(screen.getByText('Seki play')).toBeTruthy();
     expect(screen.getByText('burst:aura')).toBeTruthy();
     expect(onReact.mock.calls.map(([kind]) => kind)).toEqual(['flex', 'seki', 'aura']);
   });
@@ -60,6 +61,18 @@ describe('ReelActionOverlay hype chips', () => {
     expect(screen.getByTestId('hype-halo-aura')).toBeTruthy();
     expect(screen.getByTestId('hype-halo-seki')).toBeTruthy();
     expect(screen.queryByTestId('hype-halo-flex')).toBeNull();
+    expect(screen.getByText('You called it')).toBeTruthy();
+  });
+
+  it('tucks the story into icons, and the arrow brings it back', async () => {
+    await renderRail({ seki: true, aura: false, flex: true });
+    expect(screen.getByText('You called it')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Hide the story'));
+    expect(screen.queryByText('You called it')).toBeNull();
+    expect(screen.getByLabelText('Show the Seki and Flex story')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Show the Seki and Flex story'));
+    expect(screen.getByText('You called it')).toBeTruthy();
+    expect(screen.getByText('Riding with Sione')).toBeTruthy();
   });
 
   it('shows the current photo description above the name for a photo story (UX-05)', async () => {

@@ -25,6 +25,7 @@ jest.mock('react-native-reanimated', () => {
     useReducedMotion: () => mockReduceMotion,
     // VarsityBadge pulses its glow with these.
     withTiming: (value: unknown) => value,
+    withSpring: (value: unknown) => value,
     withRepeat: (value: unknown) => value,
     cancelAnimation: () => undefined,
     Easing: new Proxy({}, { get: () => (value: unknown) => value }),

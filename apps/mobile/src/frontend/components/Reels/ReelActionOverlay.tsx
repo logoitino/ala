@@ -2,6 +2,7 @@
  * Highlights overlay on top of each clip: athlete name and school, "Filmed by" credit, caption, and the right-hand
  * rail (Seki / Aura / Flex / donate / more). Photo stories add the current photo's description above the name.
  * Only Aura plays a burst; Seki swaps its emoji briefly; Flex lights up.
+ * A Seki play and a Flex ride pop in above the caption, then tuck into icons. An arrow opens them again.
  * Selecting springs the chip up a little. Clearing dips it, then the fill drains.
  */
 
@@ -20,6 +21,8 @@ import Animated, {
 import { useRef, useState } from 'react';
 
 import { HypeBurst } from '@/components/Effects/HypeBurst';
+import { HypeStoryPills } from '@/components/Reels/HypeStoryPills';
+import { hypeStories } from '@/data/hypeStory';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors } from '@/constants/theme';
@@ -56,6 +59,8 @@ type ReelActionOverlayProps = {
   auraGlow?: string;
   auraLabel: string;
   hype: ReelHype;
+  /** Clip is already on the Seki pill even before three Seki taps. */
+  sekiPlay?: boolean;
   voted?: { seki: boolean; aura: boolean; flex: boolean };
   userTipped?: boolean;
   tipping?: boolean;
@@ -75,7 +80,7 @@ type ReelActionOverlayProps = {
  * @param hype Live clip counters (optimistic local state).
  * @param onReact Toggles the tapped hype kind immediately; `reels` updates in the background. A second tap clears it.
  * @returns Overlay copy + action rail. Pointer-events box-none so video taps pass through.
- * @sideEffects Chip press spring. Aura adds `HypeBurst` + shout; Seki's 🤙 briefly turns into a 🏈; Flex just lights up. ⋯ opens `ReelMoreSheet`.
+ * @sideEffects Chip press spring. Aura adds `HypeBurst` + shout; Seki's 🤙 briefly turns into a 🏈; Flex just lights up. A Seki or Flex story pill rises above the name. ⋯ opens `ReelMoreSheet`.
  */
 export function ReelActionOverlay({
   athleteName,
@@ -91,6 +96,7 @@ export function ReelActionOverlay({
   auraGlow,
   auraLabel,
   hype,
+  sekiPlay = false,
   voted,
   userTipped = false,
   tipping = false,
@@ -191,6 +197,14 @@ export function ReelActionOverlay({
     typeof jerseyNumber === 'number' && Number.isFinite(jerseyNumber) && jerseyNumber >= 0 ? `#${jerseyNumber}` : '',
     position?.trim() || '',
   ].filter(Boolean).join(' · ');
+  const stories = hypeStories({
+    athleteName,
+    sekiCount: hype.seki_count,
+    flexCount: hype.flex_count,
+    sekiPlay,
+    calledIt: Boolean(voted?.seki),
+    riding: Boolean(voted?.flex),
+  });
   const copy = (
     <View style={styles.copy}>
       <ScrollView style={styles.copyScroll} contentContainerStyle={styles.copyContent} nestedScrollEnabled>
@@ -248,6 +262,7 @@ export function ReelActionOverlay({
             With {withAccounts}
           </Text>
         ) : null}
+        <HypeStoryPills stories={stories} tone="video" />
         {rail.showCaption && caption ? (
           <Text style={styles.caption} numberOfLines={2}>
             {caption}
