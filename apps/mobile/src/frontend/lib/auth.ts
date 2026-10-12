@@ -28,6 +28,30 @@ export const DEMO_FAN_EMAIL =
 export const DEMO_FAN_PASSWORD =
   process.env.EXPO_PUBLIC_DEMO_FAN_PASSWORD?.trim() || 'TapuaiDemoFan1!';
 export const DEMO_FAN_NAME = 'Demo Fan';
+
+/**
+ * @purpose Test-wave demo sign-in. A store build sets `EXPO_PUBLIC_APP_ENV=production` and hides it.
+ * @returns True for local and preview. False when the public env says production.
+ */
+export function demoFanSignInAvailable(): boolean {
+  return process.env.EXPO_PUBLIC_APP_ENV !== 'production';
+}
+
+/** Shown when the test account cannot be signed in or created on this server. */
+export const DEMO_FAN_UNAVAILABLE =
+  'The test account is not ready on this server. Create an account with your email.';
+
+/**
+ * @purpose A failed test-account sign-in should try to create that account when the server
+ * does not recognize the credentials yet.
+ * @param message Auth error message.
+ * @param code Auth error code, when the client provides one.
+ * @returns True for a missing, unconfirmed, or unrecognized test account.
+ */
+export function demoSignInShouldCreate(message: string, code?: string): boolean {
+  const raw = `${code ?? ''} ${message}`.trim();
+  return /invalid|not found|not confirmed/i.test(raw);
+}
 export const MIN_PASSWORD_LENGTH = 8;
 
 /**
@@ -414,10 +438,9 @@ export async function signInWithDemoAccount(): Promise<Session> {
   }
 
   const signInMessage = existing.error?.message ?? '';
-  const unknownUser =
-    /invalid login credentials|invalid_credentials|user not found|email not confirmed/i.test(signInMessage);
-
-  if (!unknownUser && existing.error) {
+  const signInCode =
+    existing.error && 'code' in existing.error ? String(existing.error.code ?? '') : '';
+  if (existing.error && !demoSignInShouldCreate(signInMessage, signInCode)) {
     throw new Error(signInMessage || 'Could not sign in to the demo account.');
   }
 
@@ -436,10 +459,7 @@ export async function signInWithDemoAccount(): Promise<Session> {
       await ensureFanProfile(retry.data.session.user);
       return retry.data.session;
     }
-    throw new Error(
-      created.error.message ||
-        'Could not create the demo fan. In Supabase Auth → Providers enable Email, turn off “Confirm email” for local demos, or create demo@tapuai.app manually.',
-    );
+    throw new Error(DEMO_FAN_UNAVAILABLE);
   }
 
   if (created.data.session?.user) {

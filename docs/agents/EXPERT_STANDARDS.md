@@ -113,6 +113,7 @@ Lead: `SUPPORT` on `claude-sonnet-5-thinking-high`. Intake is `docs/engineering/
 | `ACCOUNT_TAGS` | `grok-4.7-medium` | Engineering |
 | `ACTIVITY` | `grok-4.7-medium` | Engineering |
 | `ADMIN` | `grok-4.7-medium` | Engineering |
+| `ANALYST` | `grok-4.7-medium` | Engineering |
 | `API` | `grok-4.7-medium` | Engineering |
 | `ATHLETE_STATS` | `grok-4.7-medium` | Engineering |
 | `ATHLETE_VERIFICATION` | `grok-4.7-medium` | Trust and Safety |
@@ -164,6 +165,7 @@ Lead: `SUPPORT` on `claude-sonnet-5-thinking-high`. Intake is `docs/engineering/
 | `PHOTO_STORIES` | `grok-4.7-medium` | Engineering |
 | `PLAYBACK` | `grok-4.7-medium` | Engineering |
 | `POLLS` | `grok-4.7-medium` | Engineering |
+| `PORTAL` | `grok-4.7-medium` | Engineering |
 | `PRIVACY_ENGINEERING` | `grok-4.7-medium` | Legal and Compliance |
 | `PRODUCT` | `grok-4.7-medium` | Product |
 | `PROFILE` | `grok-4.7-medium` | Engineering |

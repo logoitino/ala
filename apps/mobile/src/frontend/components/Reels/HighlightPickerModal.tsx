@@ -16,6 +16,7 @@ import ReanimatedView, { FadeIn } from 'react-native-reanimated';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { CardShine } from '@/components/Effects/CardShine';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import {
   HIGHLIGHT_LIBRARY_CTA,
@@ -140,6 +141,7 @@ export function HighlightPickerModal({ visible, onClose, onPicked }: HighlightPi
     >
       <View style={[styles.sheet, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
         <MenuBackdrop accent="jade" />
+        <SheetHandle onDismiss={optimizing ? undefined : onClose} />
         <Text style={styles.title}>{HIGHLIGHT_PICKER_TITLE}</Text>
         <Text style={styles.lede}>{HIGHLIGHT_PICKER_LEDE}</Text>
 

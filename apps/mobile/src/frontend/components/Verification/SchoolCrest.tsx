@@ -6,6 +6,7 @@ import Svg, { Path } from 'react-native-svg';
 import { CardShine } from '@/components/Effects/CardShine';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { schoolBadgeColors, schoolMonogram, type SchoolBadge } from '@/lib/schoolBadge';
 import { FOCAL } from '@/theme/motion';
@@ -112,6 +113,7 @@ export function SchoolBadgeProofSheet({
         <Pressable haptic="none" style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         <View style={[styles.sheet, { borderTopColor: primary }]}>
           <MenuBackdrop accent="jade" />
+          <SheetHandle onDismiss={onClose} />
           <SchoolCrestMark badge={badge} size={72} />
           <Text style={styles.sheetTitle}>
             {athleteName} is a confirmed {badge.schoolName} athlete

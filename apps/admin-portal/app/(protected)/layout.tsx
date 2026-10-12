@@ -5,7 +5,7 @@ import { getPortalSession } from '@/lib/authz';
 import { isAdminPortalConfigured } from '@/lib/supabase';
 
 /**
- * @purpose Gate every Overview / Reports / Money / Soft-Wall (`/auth`) / Profile / Features / People page
+ * @purpose Gate every Home / Trends / Audience / Revenue / Health / Product / Analytics / Departments page
  *   behind Supabase Auth + `profiles.is_admin`. `middleware.ts` already redirects a request with no session at
  *   all to `/login`; this layer catches the case middleware cannot render — a real, signed-in session that is
  *   not an admin — and shows "Access Restricted" instead of the pages underneath, matching Expo `/admin`.

@@ -24,7 +24,7 @@ import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { COMPLIANCE_ACCOUNT } from '@/data/legal';
-import { DEMO_FAN_EMAIL, softWallEmailGates } from '@/lib/auth';
+import { DEMO_FAN_EMAIL, DEMO_FAN_PASSWORD, demoFanSignInAvailable, softWallEmailGates } from '@/lib/auth';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
@@ -34,7 +34,7 @@ const SHEET_TRAVEL = 480;
 type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | 'signup' | null;
 
 /**
- * @purpose High-impact auth sheet when a guest hits Donate / Crew / a gear goal. Resumes the stashed action after sign-in.
+ * @purpose Account sheet when a guest uploads, keeps swiping Highlights, donates, joins Crew, or starts a gear goal. Sign-in stays Apple, Google, email, and password. Creating an account is a second step and is where the 13+ confirmation lives. Resumes the stashed action after sign-in.
  * @sideEffects Email/password, Apple / Google / Magic Link / Demo Fan via AuthContext; telemetry `auth.*`.
  */
 export function SoftWallModal() {
@@ -50,6 +50,7 @@ export function SoftWallModal() {
   } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<'signin' | 'create'>('signin');
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [busy, setBusy] = useState<AuthBusy>(null);
   // `disabled={busy}` only lands on the next render; this blocks a second tap in the same frame.
@@ -65,6 +66,7 @@ export function SoftWallModal() {
     if (!visible) {
       setEmail('');
       setPassword('');
+      setMode('signin');
       setAgeConfirmed(false);
       setBusy(null);
       setMessage(null);
@@ -101,21 +103,21 @@ export function SoftWallModal() {
     close();
   };
 
-  const athlete = intent?.athleteName?.trim();
   const body =
-    intent?.kind === 'crew'
-      ? 'Sign in with one tap to join The Crew ⚡ and stay close to the season.'
-      : intent?.kind === 'wishlist'
-        ? 'Sign in with one tap to donate toward the gear they need.'
-        : intent?.kind === 'signin'
-          ? 'Use email + password, Demo Fan, Apple, Google, or a Magic Link — then donate, join Crew, and give toward gear goals.'
-          : 'Sign in with one tap to donate toward their season.';
-  const title =
-    intent?.kind === 'signin'
-      ? "Sign in to Tapua'i"
-      : athlete
-        ? `Support ${athlete}'s Journey!`
-        : 'Support their Journey!';
+    mode === 'create'
+      ? 'Use your email. Confirm you are 13 or older.'
+      : intent?.kind === 'upload'
+        ? 'An account is required to post a Highlight.'
+        : intent?.kind === 'browse'
+          ? 'Finish this Highlight, then create an account to keep swiping.'
+          : intent?.kind === 'crew'
+            ? 'Sign in to join The Crew.'
+            : intent?.kind === 'wishlist'
+              ? 'Sign in to donate toward the gear they need.'
+              : intent?.kind === 'signin'
+                ? 'Apple, Google, or email.'
+                : 'Sign in to donate toward their season.';
+  const title = mode === 'create' ? 'Create an account' : 'Sign in';
 
   // Sign in is deliberately not age-gated; Create account and magic link are. See
   // `softWallEmailGates` for why.
@@ -175,62 +177,61 @@ export function SoftWallModal() {
           <View pointerEvents="box-none" style={frame.dock}>
           <Animated.View style={[styles.sheet, frame.card, { maxHeight: '92%' }, sheetStyle]}>
             <MenuBackdrop accent="jade" />
-          <SheetHandle />
+          <SheetHandle onDismiss={busy ? undefined : dismiss} />
             <ScrollView
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.sheetInner}
             >
-              <Text style={styles.kicker}>Tapua&apos;i</Text>
               <Text style={styles.title}>{title}</Text>
               <Text style={styles.subtitle}>{body}</Text>
 
-              {/* Growth rule (owner, 2026-09-29): one-tap sign-in first. Apple / Google skip typing a
-                  password; the COPPA age question follows as one tap (AgeConfirmModal). */}
+              {mode === 'signin' ? (
+                <View style={styles.group}>
+                  <AnimatedButton
+                    accessibilityLabel="Continue with Apple"
+                    disabled={Boolean(busy)}
+                    haptic="medium"
+                    onPress={() => void run('apple', signInWithApple)}
+                    contentStyle={[styles.providerBtn, styles.appleBtn, busy && styles.disabled]}
+                  >
+                    {busy === 'apple' ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.appleLabel}>Continue with Apple</Text>
+                    )}
+                  </AnimatedButton>
+                  <AnimatedButton
+                    accessibilityLabel="Continue with Google"
+                    disabled={Boolean(busy)}
+                    haptic="medium"
+                    onPress={() => void run('google', signInWithGoogle)}
+                    contentStyle={[styles.providerBtn, styles.googleBtn, busy && styles.disabled]}
+                  >
+                    {busy === 'google' ? (
+                      <ActivityIndicator color={FOCAL.ink} />
+                    ) : (
+                      <Text style={styles.googleLabel}>Continue with Google</Text>
+                    )}
+                  </AnimatedButton>
+                </View>
+              ) : null}
+
+              {mode === 'signin' ? (
+                <View style={styles.orRow}>
+                  <View style={styles.orLine} />
+                  <Text style={styles.orLabel}>or email</Text>
+                  <View style={styles.orLine} />
+                </View>
+              ) : null}
+
               <View style={styles.group}>
-                <AnimatedButton
-                  accessibilityLabel="Continue with Apple"
-                  disabled={Boolean(busy)}
-                  haptic="medium"
-                  onPress={() => void run('apple', signInWithApple)}
-                  contentStyle={[styles.providerBtn, styles.appleBtn, busy && styles.disabled]}
-                >
-                  {busy === 'apple' ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.appleLabel}>Continue with Apple</Text>
-                  )}
-                </AnimatedButton>
-
-                <AnimatedButton
-                  accessibilityLabel="Continue with Google"
-                  disabled={Boolean(busy)}
-                  haptic="medium"
-                  onPress={() => void run('google', signInWithGoogle)}
-                  contentStyle={[styles.providerBtn, styles.googleBtn, busy && styles.disabled]}
-                >
-                  {busy === 'google' ? (
-                    <ActivityIndicator color={FOCAL.ink} />
-                  ) : (
-                    <Text style={styles.googleLabel}>Continue with Google</Text>
-                  )}
-                </AnimatedButton>
-              </View>
-
-              <View style={styles.orRow}>
-                <View style={styles.orLine} />
-                <Text style={styles.orLabel}>or use email</Text>
-                <View style={styles.orLine} />
-              </View>
-
-              <View style={styles.group}>
-                <Text style={styles.sectionLabel}>Email & password</Text>
                 <TextInput
                   autoCapitalize="none"
                   autoCorrect={false}
                   autoComplete="email"
                   keyboardType="email-address"
-                  placeholder="you@family.com"
+                  placeholder="Email"
                   placeholderTextColor={colors.textMuted}
                   style={styles.input}
                   value={email}
@@ -249,105 +250,117 @@ export function SoftWallModal() {
                   onChangeText={setPassword}
                   editable={!busy}
                   onSubmitEditing={() => {
-                    if (canSignIn) {
-                      void run('password', () => signInWithEmailPassword(email, password, ageConfirmed));
+                    if (mode === 'signin' && canSignIn) {
+                      void run('password', () => signInWithEmailPassword(email, password));
                     }
                   }}
                 />
-                <LegalAckToggle
-                  checked={ageConfirmed}
-                  onCheckedChange={setAgeConfirmed}
-                  disabled={Boolean(busy)}
-                  label={AGE_GATE_LABEL}
-                />
-                <Text style={styles.demoHint}>{COMPLIANCE_ACCOUNT}</Text>
-                <AnimatedButton
-                  accessibilityLabel="Sign in with email and password"
-                  disabled={Boolean(busy) || !canSignIn}
-                  haptic="medium"
-                  onPress={() => void run('password', () => signInWithEmailPassword(email, password, ageConfirmed))}
-                  contentStyle={[styles.providerBtn, styles.magicBtn, (busy || !canSignIn) && styles.disabled]}
-                >
-                  {busy === 'password' ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.magicLabel}>Sign in</Text>
-                  )}
-                </AnimatedButton>
-                <AnimatedButton
-                  accessibilityLabel="Create an account with email and password"
-                  disabled={Boolean(busy) || !canCreate}
-                  haptic="medium"
-                  onPress={() =>
-                    void run('signup', async () => {
-                      const signedIn = await signUpWithEmailPassword(email, password, ageConfirmed);
-                      if (!signedIn) {
-                        setMessage('Account created. Confirm the email, then sign in.');
+                {mode === 'create' ? (
+                  <>
+                    <LegalAckToggle
+                      checked={ageConfirmed}
+                      onCheckedChange={setAgeConfirmed}
+                      disabled={Boolean(busy)}
+                      label={AGE_GATE_LABEL}
+                    />
+                    <Text style={styles.demoHint}>{COMPLIANCE_ACCOUNT}</Text>
+                    <AnimatedButton
+                      accessibilityLabel="Create an account with email and password"
+                      disabled={Boolean(busy) || !canCreate}
+                      haptic="medium"
+                      onPress={() =>
+                        void run('signup', async () => {
+                          const signedIn = await signUpWithEmailPassword(email, password, ageConfirmed);
+                          if (!signedIn) {
+                            setMessage('Account created. Confirm the email, then sign in.');
+                          }
+                        })
                       }
-                    })
-                  }
-                  contentStyle={[
-                    styles.providerBtn,
-                    styles.secondaryBtn,
-                    (busy || !canCreate) && styles.disabled,
-                  ]}
-                >
-                  {busy === 'signup' ? (
-                    <ActivityIndicator color={FOCAL.jadeInk} />
-                  ) : (
-                    <Text style={styles.secondaryLabel}>Create account</Text>
-                  )}
-                </AnimatedButton>
-              </View>
-
-              <AnimatedButton
-                accessibilityLabel="Send magic link email"
-                disabled={Boolean(busy) || !canMagic}
-                haptic="selection"
-                onPress={() => void run('magic', () => signInWithMagicLink(email, ageConfirmed))}
-                contentStyle={[styles.providerBtn, styles.secondaryBtn, (busy || !canMagic) && styles.disabled]}
-              >
-                {busy === 'magic' ? (
-                  <ActivityIndicator color={FOCAL.jadeInk} />
+                      contentStyle={[
+                        styles.providerBtn,
+                        styles.magicBtn,
+                        (busy || !canCreate) && styles.disabled,
+                      ]}
+                    >
+                      {busy === 'signup' ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.magicLabel}>Create account</Text>
+                      )}
+                    </AnimatedButton>
+                    <AnimatedButton
+                      accessibilityLabel="Send magic link email"
+                      disabled={Boolean(busy) || !canMagic}
+                      haptic="selection"
+                      onPress={() => void run('magic', () => signInWithMagicLink(email, ageConfirmed))}
+                      contentStyle={[styles.providerBtn, styles.secondaryBtn, (busy || !canMagic) && styles.disabled]}
+                    >
+                      {busy === 'magic' ? (
+                        <ActivityIndicator color={FOCAL.jadeInk} />
+                      ) : (
+                        <Text style={styles.secondaryLabel}>Email me a link instead</Text>
+                      )}
+                    </AnimatedButton>
+                  </>
                 ) : (
-                  <Text style={styles.secondaryLabel}>Send Magic Link instead</Text>
-                )}
-              </AnimatedButton>
-
-              {/* 2026-09 audit (Round 11 sweep): this signs into (or, on first use, auto-creates)
-                  a single shared account with a hardcoded password checked into the repo and
-                  .env.example — fine for internal QA on a throwaway project, but with no gate at
-                  all this button shipped to every real user in a production build too, meaning
-                  anyone who reads this open codebase could sign into a real, shared fan session in
-                  the live app. `__DEV__` is true in Expo Go and a development-client build, and false
-                  in preview and production release builds, so the EAS preview install has no Demo Fan
-                  button. That matches the intent — QA convenience, never a real end-user sign-in. */}
-              {__DEV__ ? (
-                <View style={styles.demoGroup}>
-                  <Text style={styles.demoHint}>
-                    Just exploring? Continue as Demo Fan — {DEMO_FAN_EMAIL}
-                  </Text>
                   <AnimatedButton
-                    accessibilityLabel="Continue as Demo Fan"
-                    disabled={Boolean(busy)}
+                    accessibilityLabel="Sign in with email and password"
+                    disabled={Boolean(busy) || !canSignIn}
                     haptic="medium"
-                    onPress={() => void run('demo', signInWithDemoAccount)}
-                    contentStyle={[styles.providerBtn, styles.demoBtn, busy && styles.disabled]}
+                    onPress={() => void run('password', () => signInWithEmailPassword(email, password))}
+                    contentStyle={[styles.providerBtn, styles.magicBtn, (busy || !canSignIn) && styles.disabled]}
                   >
-                    {busy === 'demo' ? (
+                    {busy === 'password' ? (
                       <ActivityIndicator color="#FFFFFF" />
                     ) : (
-                      <Text style={styles.demoLabel}>Continue as Demo Fan</Text>
+                      <Text style={styles.magicLabel}>Sign in</Text>
                     )}
                   </AnimatedButton>
-                </View>
+                )}
+              </View>
+
+              {mode === 'signin' && demoFanSignInAvailable() ? (
+                <AnimatedButton
+                  accessibilityLabel="Continue as Demo Fan"
+                  disabled={Boolean(busy)}
+                  haptic="medium"
+                  onPress={() => void run('demo', signInWithDemoAccount)}
+                  contentStyle={[styles.providerBtn, styles.demoBtn, busy && styles.disabled]}
+                >
+                  {busy === 'demo' ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.demoLabel}>Use test account</Text>
+                  )}
+                </AnimatedButton>
               ) : null}
+              {mode === 'signin' && demoFanSignInAvailable() ? (
+                <Text style={styles.demoHint}>
+                  {DEMO_FAN_EMAIL} · {DEMO_FAN_PASSWORD}
+                </Text>
+              ) : null}
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={mode === 'create' ? 'Already have an account? Sign in' : 'Create an account'}
+                disabled={Boolean(busy)}
+                onPress={() => {
+                  setError(null);
+                  setMessage(null);
+                  setMode(mode === 'create' ? 'signin' : 'create');
+                }}
+                style={styles.close}
+              >
+                <Text style={styles.linkLabel}>
+                  {mode === 'create' ? 'Already have an account? Sign in' : 'Create an account'}
+                </Text>
+              </Pressable>
 
               {message ? <Text style={styles.message}>{message}</Text> : null}
               {error ? <Text style={styles.error}>{error}</Text> : null}
 
               <Pressable accessibilityRole="button" disabled={Boolean(busy)} onPress={dismiss} style={styles.close}>
-                <Text style={styles.closeLabel}>Keep browsing</Text>
+                <Text style={styles.closeLabel}>{intent?.kind === 'browse' ? 'Finish this Highlight' : 'Not now'}</Text>
               </Pressable>
             </ScrollView>
           </Animated.View>
@@ -372,57 +385,35 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   sheetInner: {
-    gap: 12,
-    paddingBottom: 8,
+    gap: 8,
+    paddingBottom: 4,
   },
   group: {
-    gap: 10,
-  },
-  kicker: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: FOCAL.goldInk,
+    gap: 6,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.4,
   },
   subtitle: {
-    fontSize: 15,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: '600',
     color: colors.textMuted,
-    marginBottom: 4,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    color: FOCAL.jadeInk,
   },
   providerBtn: {
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 50,
+    minHeight: 44,
   },
   appleBtn: { backgroundColor: '#0F1416' },
-  appleLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  appleLabel: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
   demoBtn: { backgroundColor: FOCAL.goldInk },
-  demoLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
-  demoGroup: {
-    gap: 8,
-    marginTop: 2,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
+  demoLabel: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
   demoHint: {
     fontSize: 12,
     fontWeight: '600',
@@ -434,15 +425,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  googleLabel: { color: colors.text, fontSize: 16, fontWeight: '800' },
+  googleLabel: { color: colors.text, fontSize: 14, fontWeight: '800' },
   magicBtn: { backgroundColor: FOCAL.jadeInk },
-  magicLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  magicLabel: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
   secondaryBtn: {
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: FOCAL.jadeInk,
   },
-  secondaryLabel: { color: FOCAL.jadeInk, fontSize: 15, fontWeight: '800' },
+  secondaryLabel: { color: FOCAL.jadeInk, fontSize: 14, fontWeight: '800' },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 2 },
   orLine: { flex: 1, height: 1, backgroundColor: colors.border },
   orLabel: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },
@@ -451,15 +442,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
+    paddingVertical: 8,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.text,
     backgroundColor: colors.background,
   },
   message: { color: FOCAL.jadeInk, fontWeight: '700', fontSize: 13, lineHeight: 18 },
   error: { color: FOCAL.ember, fontWeight: '700', fontSize: 13, lineHeight: 18 },
-  close: { alignItems: 'center', paddingVertical: 10 },
-  closeLabel: { fontSize: 15, fontWeight: '700', color: colors.textMuted },
+  close: { alignItems: 'center', paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
+  closeLabel: { fontSize: 14, fontWeight: '700', color: colors.textMuted },
+  linkLabel: { fontSize: 14, fontWeight: '800', color: FOCAL.jadeInk },
   disabled: { opacity: 0.55 },
 });

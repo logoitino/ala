@@ -100,7 +100,7 @@ export default async function ReportsPage() {
       <p className="mb-8 text-sm text-[var(--text-muted)]">
         Same numbers Expo <code className="rounded bg-[var(--jade-soft)] px-1.5">/admin/reports</code> reads.{' '}
         {reports.generatedAt ? <>Generated {new Date(reports.generatedAt).toLocaleString()}.</> : null} Ledger detail
-        is on <Link href="/money" className="font-extrabold text-[var(--jade)]">Money →</Link>
+        is on <Link href="/money" className="font-extrabold text-[var(--jade)]">Revenue →</Link>
       </p>
 
       <div className="space-y-10">

@@ -133,7 +133,7 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <MenuBackdrop accent="jade" />
-          <SheetHandle />
+          <SheetHandle onDismiss={dismiss} />
           <Text style={styles.kicker}>Legal</Text>
           <Text style={styles.title}>{LEGAL_MENU_LABEL}</Text>
           <Text style={styles.lede}>

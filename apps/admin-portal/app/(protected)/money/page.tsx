@@ -68,7 +68,7 @@ export default async function MoneyPage() {
 
       <p className="mb-6 text-sm text-[var(--text-muted)]">
         Same ledgers Expo <code className="rounded bg-[var(--jade-soft)] px-1.5">/admin/money</code> reads. Behavior
-        windows live on <Link href="/reports" className="font-extrabold text-[var(--jade)]">Reports →</Link>
+        windows live on <Link href="/reports" className="font-extrabold text-[var(--jade)]">Trends →</Link>
       </p>
 
       {malo.error ? (

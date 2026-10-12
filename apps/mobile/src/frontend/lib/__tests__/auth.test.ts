@@ -1,6 +1,13 @@
 import type { User } from '@supabase/supabase-js';
 
-import { authFailureMessage, isNewAuthUser, oauthAuthorizeFailure, passwordMeetsPolicy, softWallEmailGates } from '@/lib/auth';
+import {
+  authFailureMessage,
+  demoSignInShouldCreate,
+  isNewAuthUser,
+  oauthAuthorizeFailure,
+  passwordMeetsPolicy,
+  softWallEmailGates,
+} from '@/lib/auth';
 
 function fakeUser(overrides: Partial<Pick<User, 'created_at' | 'last_sign_in_at'>>): User {
   return {
@@ -69,6 +76,18 @@ describe('isNewAuthUser', () => {
     expect(isNewAuthUser(fakeUser({ created_at: 'not-a-date', last_sign_in_at: 'also-not-a-date' }))).toBe(
       false,
     );
+  });
+});
+
+describe('demoSignInShouldCreate', () => {
+  it('tries to create the test account when the server does not recognize it', () => {
+    expect(demoSignInShouldCreate('Invalid login credentials', 'invalid_credentials')).toBe(true);
+    expect(demoSignInShouldCreate('Invalid credentials')).toBe(true);
+    expect(demoSignInShouldCreate('Email not confirmed')).toBe(true);
+  });
+
+  it('does not treat a rate limit as a missing account', () => {
+    expect(demoSignInShouldCreate('Email rate limit exceeded', 'over_request_rate_limit')).toBe(false);
   });
 });
 

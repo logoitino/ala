@@ -79,7 +79,7 @@ export function ReportContentModal({
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <MenuBackdrop accent="jade" />
-          <SheetHandle />
+          <SheetHandle onDismiss={submitting ? undefined : onClose} />
           <Text style={styles.kicker}>Safety</Text>
           <Text style={styles.title}>Report / Hide Highlight 🚩</Text>
           <Text style={styles.body}>

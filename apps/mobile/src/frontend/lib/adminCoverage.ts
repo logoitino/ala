@@ -59,7 +59,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'home_search', label: 'Clip search', hint: 'Highlights ⚡ search', surface: 'home', fanHref: '/', adminHref: '/admin/features', flag: 'layouts.homeSearch', telemetry: 'home_search' },
   { id: 'feed.home', label: 'Home mix pill', hint: 'For You ranking', surface: 'home', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'feed.home' },
   { id: 'feed.all', label: 'All pill', hint: 'Full clip list', surface: 'home', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'feed.all' },
-  { id: 'feed.seki', label: 'Seki pill', hint: 'Seki-only mix', surface: 'home', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'feed.seki' },
+  { id: 'feed.seki', label: 'Seki mix', hint: 'Not on the Highlight bar. Home, search, and Local are the controls.', surface: 'home', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'feed.seki' },
   { id: 'live_banner', label: 'Live scoreboard', hint: 'Tap through to Local game', surface: 'home', fanHref: '/', adminHref: '/admin/games', flag: 'layouts.liveMatches', telemetry: 'live_banner' },
   { id: 'rivalry_week', label: 'Rivalry week', hint: 'Active rivalry → Local School Polls', surface: 'home', fanHref: '/', adminHref: '/admin/polls', flag: 'layouts.cheerPolls', telemetry: 'rivalry_week' },
   { id: 'slang', label: 'Slang guide', hint: 'Donations / Seki explainer', surface: 'home', fanHref: '/', adminHref: '/admin/look', flag: 'layouts.slangGuide', telemetry: 'slang' },

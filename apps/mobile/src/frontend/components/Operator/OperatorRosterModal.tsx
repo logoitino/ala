@@ -8,6 +8,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { displayValue, type Player } from '@/data/players';
 
@@ -43,6 +44,7 @@ export function OperatorRosterModal({
     >
       <View style={[styles.sheet, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 12 }]}>
         <MenuBackdrop accent="jade" />
+        <SheetHandle onDismiss={busy ? undefined : onClose} />
         <View style={styles.header}>
           <View style={styles.headerCopy}>
             <Text style={styles.title}>{title}</Text>

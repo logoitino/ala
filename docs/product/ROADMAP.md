@@ -185,12 +185,12 @@ September SQL applied to `ala-sports-staging` on 2026-09-30 and new staging prev
 2026-10-01. The 2026-10-07 local review did not query Supabase or EAS, so it does not certify
 current hosted configuration or a device run. [WORK_QUEUE.md](../agents/WORK_QUEUE.md) assigns the remaining checks.
 
-*Status (2026-10-10): `pnpm check` passed. Both typechecks, **72 suites / 414 tests**, and the docs, copy, data-boundary, comments, agent, and client-key guards. Native upload, sign-in, and a test-card donation on an installed build are still the exit. A newer preview was uploaded the same afternoon so the install includes the scoreboard and hype-glow fixes.*
-CI includes the specialist roster consistency gate. Recorded current builds, queued 2026-10-10:
-[iOS](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/9dad0fa8-1902-448f-82e7-03a9b4a869b5)
+*Status (2026-10-11): Native upload, sign-in, and a test-card donation on an installed build are still the exit. A newer preview was queued so the install includes the popup swipe and the upload black-screen fix.*
+CI includes the specialist roster consistency gate. Recorded current builds, queued 2026-10-11 night:
+[iOS](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/c5255651-06e3-4f46-9861-5a47ad1b434a)
 (registered iPad only) and
-[Android](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/196a7acf-b18f-4af0-a4c8-85d7e9ab6afc)
-(APK). The morning builds `af6a7e72` and `6febe2bb` finished earlier and do not contain those two fixes. The 2026-10-01 links are historical.*
+[Android](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/5cca4a55-cfc3-4c58-9346-34b9e0433b27)
+(APK). The evening builds `12d017d4` and `04244951` do not include that fix. The 2026-10-01 links are historical.*
 
 1. Automated tests cover money/eligibility, feed behavior, auth and other implemented flows;
    preserve these while improving route/data boundaries.
@@ -214,12 +214,12 @@ provisioning is recorded complete; device verification is still pending.
 
 ## Phase 3 — Team testing, before real (external) people
 
-**Dry run can start now** on the current Supabase project with the preview installs from Phase 2. That is a trusted-group pass, not the exit below. A staging branch was not opened: Supabase treats it as a separate billed database, and this project has no branch yet. Stripe stays in test mode. There is no Demo Fan button on these installs (`__DEV__` is off in a preview release), so each person uses their own email sign-in. Test card `4242 4242 4242 4242`.
+**Dry run can start** on the current Supabase project once the night 2026-10-11 preview installs finish. That is a trusted-group pass, not the exit below. A staging branch was not opened: Supabase treats it as a separate billed database, and this project has no branch yet. Stripe stays in test mode. The account sheet on these installs includes the test account `demo@tapuai.app`. Each person can also create their own email account. Test card `4242 4242 4242 4242`.
 
-- iPad already registered: [iOS preview, 2026-10-10](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/9dad0fa8-1902-448f-82e7-03a9b4a869b5). A second device has to be registered before a new iOS preview.
-- Any Android phone: [Android preview, 2026-10-10](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/196a7acf-b18f-4af0-a4c8-85d7e9ab6afc).
+- iPad already registered: [iOS preview, 2026-10-11 night](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/c5255651-06e3-4f46-9861-5a47ad1b434a). A second device has to be registered before a new iOS preview.
+- Any Android phone: [Android preview, 2026-10-11 night](https://expo.dev/accounts/logoitino/projects/ala-sports/builds/5cca4a55-cfc3-4c58-9346-34b9e0433b27).
 
-Those installs can start the dry run. They do not include photo stories, the owner peek card, or the other October 7–9 changes. A new preview is **$0** until Expo's free build quota runs out. It waits on you, because it uploads this working tree.
+Those installs include the popup swipe and the upload black-screen fix. The evening builds do not. A new preview is **$0** until Expo's free build quota runs out.
 
 Human testers follow [TESTER_SCRIPT.md](../engineering/TESTER_SCRIPT.md) — the role slices below, organised by the pillars, plus a feel check. Game-day gigs are not in the test wave (Release waves above); the operator console stays off.
 

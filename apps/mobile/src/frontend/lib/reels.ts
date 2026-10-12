@@ -26,7 +26,8 @@ export type UploadSekiPlayInput = {
   mimeType?: string | null;
   fileName?: string | null;
   title: string;
-  playerId: string;
+  /** Null when the clip is posted before an athlete is tagged. Donate stays off until then. */
+  playerId?: string | null;
   /** Optional — a Highlight does not need to be linked to a specific live matchup. */
   gameId?: string | null;
   /** Persist `reels.is_vault_only` / `is_exclusive`. Default false = free public feed. */
@@ -131,9 +132,9 @@ export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
   const vaultOnly = Boolean(reel.is_vault_only ?? reel.is_exclusive);
   return {
     id: reel.id,
-    athleteName: player?.name ?? 'Untagged athlete',
+    athleteName: player?.name ?? 'Not tagged yet',
     school: player?.school_name ?? player?.team_name ?? player?.team ?? '',
-    tag: reel.title.trim() || 'Seki Play',
+    tag: (reel.title ?? '').trim() || 'Seki Play',
     videoUrl: reel.video_url,
     sekiPlay: true,
     exclusive: vaultOnly,

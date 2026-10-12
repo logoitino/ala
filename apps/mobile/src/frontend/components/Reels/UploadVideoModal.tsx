@@ -1,9 +1,9 @@
 /**
  * The staged Highlight uploader: pick a clip from the camera roll (45 s max) or record one — or, when the database
- * supports photo stories, pick up to 10 photos and order them (PHOTO_STORIES_DESIGN.md) — say which athlete is in it,
- * add a caption and category, optionally mention up to three accounts, confirm rights (video: filmed it or has
- * permission, sound, no logos or broadcast footage; photos: took them or has permission from the people in them,
- * no marks), then upload. Publish stays disabled until media, athlete, caption and every rights confirmation are set.
+ * supports photo stories, pick up to 10 photos and order them (PHOTO_STORIES_DESIGN.md) — add a caption and category,
+ * optionally tag an athlete (or tap This is me), optionally mention up to three accounts, confirm the one permission
+ * line, then upload. A video can publish with Tag later; Donate stays off until an athlete is tagged. Photo stories
+ * still need an athlete. The sheet does not play the clip, so choosing an athlete cannot cover the phone.
  * Video and photo drafts are kept separately, so switching Video ↔ Photos never discards either; switching clears the
  * rights confirmations because they belong to the media. Videos publish through `lib/reels.ts`; photo stories through
  * `lib/photoStories.ts` (nothing is published unless every photo uploads); after a failed story attempt the hidden reel id
@@ -117,7 +117,7 @@ function fireSuccess() {
  */
 export function UploadVideoModal({ visible, players, onClose, onUploaded }: UploadVideoModalProps) {
   const { live } = useAppRuntime();
-  const { profile } = useAuth();
+  const { profile, isGuest } = useAuth();
   const categoryPills = labeledReelCategories(live.catalog.reelCategories);
   const exclusiveDollars = live.catalog.exclusiveDollars;
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -159,10 +159,15 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const gameLabel = selectedGame
     ? gameMatchupLabel(selectedGame.home_team, selectedGame.away_team)
     : 'No specific game (optional)';
-  const playerLabel = selectedPlayer ? playerTagLabel(selectedPlayer) : isPhotos ? 'Tag the athlete in these photos' : 'Tag the athlete in this video';
+  const playerLabel = selectedPlayer ? playerTagLabel(selectedPlayer) : isPhotos ? 'Tag the athlete in these photos' : 'Tag later';
 
   const mediaReady = isPhotos ? photosAvailable && photos.length > 0 : Boolean(asset);
-  const canSubmit = Boolean(mediaReady && selectedPlayer && caption.trim()) && rightsReady(rights, category, mediaKind) && !uploading;
+  const athleteReady = isPhotos ? Boolean(selectedPlayer) : true;
+  const canSubmit = Boolean(mediaReady && caption.trim() && athleteReady) && rightsReady(rights, category, mediaKind) && !uploading;
+  const choosePlayer = (id: string) => {
+    setPlayerId(id);
+    if (!id) setIsExclusive(false);
+  };
 
   const sortedPlayers = useMemo(
     () =>
@@ -364,6 +369,10 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
 
   const submit = async () => {
     if (!canSubmit || submitLock.current) return;
+    if (isGuest) {
+      setUploadError('Create an account to post a Highlight.');
+      return;
+    }
     if (isPhotos ? photos.length === 0 : !asset) return;
     submitLock.current = true;
     setUploading(true);
@@ -412,7 +421,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       setStatusLabel(isPhotos ? 'Photo story published.' : 'Seki play uploaded.');
       fireSuccess();
       telemetry.trackFeature('upload', 'home');
-      onUploaded(reel);
+      // The sheet does not play the clip. This pause lets the success line show, then the feed updates after close.
       setShowSuccess(true);
       successAnim.setValue(0);
       Animated.spring(successAnim, {
@@ -421,8 +430,9 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         tension: 140,
         useNativeDriver: true,
       }).start();
-      await new Promise((resolve) => setTimeout(resolve, 650));
+      await new Promise((resolve) => setTimeout(resolve, 700));
       onClose();
+      onUploaded(reel);
       if (mentionsFailed) {
         Alert.alert('Highlight published', isPhotos
           ? 'Your photo story is published, but we could not save the account mentions.'
@@ -462,14 +472,14 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       <UploadVideoComposer
         step={step} onStep={setStep} asset={asset} pickSource={pickSource}
         onPick={(source) => void pickVideo(source)} simulator={IOS_SIMULATOR}
-        games={games} players={sortedPlayers} gameId={gameId} playerId={playerId}
-        gameLabel={gameLabel} playerLabel={playerLabel} onGame={setGameId} onPlayer={setPlayerId}
+        games={games} players={sortedPlayers} gameId={gameId} playerId={playerId} ownPlayerId={profile?.player_id ?? null}
+        gameLabel={gameLabel} playerLabel={playerLabel} onGame={setGameId} onPlayer={choosePlayer}
         openSelect={openSelect} onSelect={setOpenSelect}
         caption={caption} onCaption={setCaption} category={category} onCategory={setCategory}
         categoryPills={categoryPills} accountTags={accountTags} onAccountTags={setAccountTags}
         isExclusive={isExclusive} onExclusive={setIsExclusive} exclusiveDollars={exclusiveDollars}
         rights={rights} onRights={setRights} uploading={uploading} canSubmit={canSubmit}
-        detailsReady={Boolean(selectedPlayer && caption.trim())}
+        detailsReady={Boolean(caption.trim()) && athleteReady}
         mediaKind={mediaKind} onMediaKind={chooseMediaKind} photosAvailable={photosAvailable}
         photos={photos} onPickPhotos={() => void pickPhotos()}
         onMovePhoto={(from, to) => setPhotos((current) => movePhoto(current, from, to))}

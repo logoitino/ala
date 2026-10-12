@@ -1,5 +1,6 @@
 /** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import {
@@ -141,6 +142,7 @@ export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
           <View pointerEvents="box-none" style={frame.dock}>
           <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <MenuBackdrop accent="violet" />
+          <SheetHandle onDismiss={dismiss} />
             <View style={styles.handle} />
             <Text style={styles.kicker}>Account</Text>
             <Text style={styles.title}>Edit Profile</Text>

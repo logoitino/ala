@@ -8,7 +8,7 @@
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, findNodeHandle, Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { AccessibilityInfo, findNodeHandle, Image, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp, useReducedMotion } from 'react-native-reanimated';
 
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
@@ -121,13 +121,14 @@ export function ReelOwnerPeek({
   const kind = clipKindLabel(clip);
   const photo = isPhotoStory(clip);
 
-  // Screen readers: when the card opens, move focus onto the athlete's name so the swipe does not leave the reader on
-  // the (now hidden) video. Delayed past the slide-in so the target is on screen; a no-op without a screen reader.
+  // Screen readers on a phone: when the card opens, move focus onto the athlete's name so the swipe does not leave
+  // the reader on the video. Delayed past the slide-in so the target is on screen. The browser build throws from
+  // findNodeHandle, and the card is already in the page, so that move stays on iOS and Android.
   useEffect(() => {
-    if (!open) return;
+    if (!open || Platform.OS === 'web') return;
     const timer = setTimeout(() => {
-      const tag = nameRef.current ? findNodeHandle(nameRef.current) : null;
-      if (tag != null) AccessibilityInfo.setAccessibilityFocus(tag);
+      const node = nameRef.current ? findNodeHandle(nameRef.current) : null;
+      if (node != null) AccessibilityInfo.setAccessibilityFocus(node);
     }, 350);
     return () => clearTimeout(timer);
   }, [open]);

@@ -59,6 +59,21 @@
       "model": "grok-4.7-medium"
     },
     {
+      "call": "ANALYST",
+      "file": ".claude/agents/analyst.md",
+      "department": "Engineering",
+      "lead": "ADMIN",
+      "owns": [
+        "apps/admin-portal/lib/analytics.ts",
+        "apps/admin-portal/app/(protected)/analytics/page.tsx",
+        "apps/admin-portal/components/AnalyticsBoard.tsx"
+      ],
+      "tasks": [
+        "Read-only measure catalog and eight analytics dashboards"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
       "call": "API",
       "file": ".claude/agents/api.md",
       "department": "Engineering",
@@ -819,6 +834,28 @@
       ],
       "tasks": [
         "Own cheer eligibility, vote math, poll lifecycle and offline vote semantics."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "PORTAL",
+      "file": ".claude/agents/portal.md",
+      "department": "Engineering",
+      "lead": "ADMIN",
+      "owns": [
+        "apps/admin-portal/app/(protected)/page.tsx",
+        "apps/admin-portal/app/(protected)/audience/page.tsx",
+        "apps/admin-portal/app/(protected)/product/page.tsx",
+        "apps/admin-portal/app/(protected)/manage/page.tsx",
+        "apps/admin-portal/app/(protected)/operations/page.tsx",
+        "apps/admin-portal/components/PortalShell.tsx",
+        "apps/admin-portal/components/ColumnChart.tsx",
+        "apps/admin-portal/lib/dashboard.ts",
+        "apps/admin-portal/lib/departments.ts",
+        "apps/admin-portal/lib/operations.ts"
+      ],
+      "tasks": [
+        "Read-only home dashboard and six equal portal tabs"
       ],
       "model": "grok-4.7-medium"
     },

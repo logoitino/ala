@@ -7,10 +7,10 @@
 import type { HighlightMediaType, ReelCategory } from '@/data/highlights';
 import { REEL_CATEGORY_GAME } from '@/data/highlights';
 
-export const RIGHTS_VERSION = '2026-10-01';
+export const RIGHTS_VERSION = '2026-10-11';
 
-/** Photo-story confirmations, added 2026-10-07 (PHOTO_STORIES_DESIGN.md). Video wording is unchanged. */
-export const PHOTO_RIGHTS_VERSION = '2026-10-07';
+/** Photo-story confirmations (PHOTO_STORIES_DESIGN.md). The upload sheet shows each set as one confirmation. */
+export const PHOTO_RIGHTS_VERSION = '2026-10-11';
 
 /** How many separate accounts must report a clip before it leaves the public feed. */
 export const REPORTS_BEFORE_HIDE = 3;
@@ -75,6 +75,16 @@ export const IMMEDIATE_HIDE_REASONS: readonly ReportReasonId[] = ['fake_footage'
  * @param category Highlight category. Game Day (`game_play`) adds the real-footage / real-photos line.
  * @param mediaType `video` (default) or `photo_story`; photo stories use the photo wording.
  */
+/**
+ * @purpose One confirmation the upload sheet shows. It is the same sentences as the separate boxes, read together.
+ * @param category Highlight category. Game Day adds the real-footage or real-photos sentence.
+ * @param mediaType `video` (default) or `photo_story`.
+ * @returns The full confirmation label.
+ */
+export function shareConfirmationLabel(category: ReelCategory, mediaType: HighlightMediaType = 'video'): string {
+  return rightsChecksFor(category, mediaType).map((row) => row.label).join(' ');
+}
+
 export function rightsChecksFor(category: ReelCategory, mediaType: HighlightMediaType = 'video'): typeof UPLOAD_RIGHTS_CHECKS {
   const rows = mediaType === 'photo_story' ? PHOTO_RIGHTS_CHECKS : UPLOAD_RIGHTS_CHECKS;
   return rows.filter((row) => !row.gameOnly || category === REEL_CATEGORY_GAME);

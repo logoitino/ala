@@ -1,5 +1,6 @@
 /** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -175,6 +176,7 @@ export function SponsorshipModal({
           <View pointerEvents="box-none" style={frame.dock}>
           <Pressable haptic="none" style={[styles.sheet, frame.card]} onPress={() => undefined}>
           <MenuBackdrop accent="cyan" />
+          <SheetHandle onDismiss={dismiss} />
             <Animated.View style={[styles.sheetInner, sheetEntrance]}>
             <View style={styles.handle} />
             <Text style={styles.kicker}>Local boosters</Text>

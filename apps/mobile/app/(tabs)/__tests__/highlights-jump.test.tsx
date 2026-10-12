@@ -181,7 +181,9 @@ async function mountTab() {
   for (const host of layoutHosts) {
     await fireEvent(host, 'layout', { nativeEvent: { layout: { width: 390, height: 800 } } });
   }
-  await waitFor(() => expect(pill('All')).toBeTruthy());
+  await waitFor(() => expect(pill('Home')).toBeTruthy());
+  expect(screen.queryByRole('tab', { name: /^All,/ })).toBeNull();
+  expect(screen.queryByRole('tab', { name: /^Seki,/ })).toBeNull();
 }
 
 beforeEach(() => {
@@ -194,24 +196,9 @@ beforeEach(() => {
 describe('Highlights search jump', () => {
   // The feed sets initialNumToRender={2}, and Jest has no real scrolling to advance the
   // window, so assertions target a clip inside the initial window (hl-2 is index 1 on All).
-  it('lands on the tapped clip even when the All pill is already active', async () => {
+  it('lands on the tapped clip from Home', async () => {
     await mountTab();
 
-    // Select All first, so jumpToClip's own setFeedFilter('all') is a no-op change.
-    // This is the exact condition the ref-based implementation got wrong.
-    await fireEvent.press(pill('All'));
-    expect(screen.getByText('active:hl-1')).toBeTruthy();
-
-    await fireEvent.press(searchToggle());
-    await fireEvent.press(screen.getByLabelText('search-result-hl-2'));
-
-    await waitFor(() => expect(screen.getByText('active:hl-2')).toBeTruthy());
-  });
-
-  it('also lands when the tap does change the filter', async () => {
-    await mountTab();
-
-    // Starts on Home, so jumpToClip's setFeedFilter('all') is a real change.
     await fireEvent.press(searchToggle());
     await fireEvent.press(screen.getByLabelText('search-result-hl-2'));
 
@@ -220,15 +207,11 @@ describe('Highlights search jump', () => {
 });
 
 describe('Spotlight Watch Full Highlight from the Highlights tab', () => {
-  it('widens the feed to All when the award clip is filtered out', async () => {
-    // hl-2 is not a Seki play, so the Seki feed excludes it.
+  it('lands on the award clip from Home', async () => {
     mockSpotlight.award = { reel_id: 'hl-2', player: { id: 'not-a-uuid', name: 'Jordan Blake' } };
     mockSpotlight.visible = true;
 
     await mountTab();
-    await fireEvent.press(pill('Seki'));
-    expect(screen.queryByText('active:hl-2')).toBeNull();
-
     await fireEvent.press(screen.getByLabelText('watch-full-highlight'));
 
     await waitFor(() => expect(screen.getByText('active:hl-2')).toBeTruthy());

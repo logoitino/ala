@@ -25,9 +25,7 @@ import { useUploadSheet } from '@/context/UploadSheetContext';
 import { FOCAL, SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
 import {
   HIGHLIGHT_CLIPS,
-  HIGHLIGHT_FEED_ALL,
   HIGHLIGHT_FEED_HOME,
-  HIGHLIGHT_FEED_SEKI,
   isSekiHighlight,
   pinFeedOrder,
   rankHomeFeed,
@@ -44,6 +42,7 @@ import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { isAuraUuid } from '@/lib/aura';
 import { fetchSquadAthleteIds } from '@/lib/crew';
 import { playerFromReel, readHiddenReelIds, reelHiddenForUser, reelToClip } from '@/lib/reels';
+import { guestBrowseNeedsAccount } from '@/data/guestBrowse';
 import { userProfileHref } from '@/lib/navigation';
 import type { Player, Reel } from '@/types/database';
 
@@ -54,21 +53,21 @@ type FeedItem = {
 
 const FEED_PILLS: { id: HighlightFeedFilter; label: string }[] = [
   { id: 'home', label: HIGHLIGHT_FEED_HOME },
-  { id: 'all', label: HIGHLIGHT_FEED_ALL },
-  { id: 'seki', label: HIGHLIGHT_FEED_SEKI },
 ];
 
 /**
- * @purpose Full-screen Home feed: For You mix, All / Seki switch, clip + athlete search, Exclusive mute/Aura gestures, live score banner, Mālo ⚡ sheet, Player of the Week spotlight. Pages ride `ReelPage` for card-deck depth on vertical paging and swipe left / right to peek the athlete who owns the clip.
+ * @purpose Full-screen Home feed: Home mix, clip + athlete search, and a Local jump. All and Seki stay off the bar until a later pass. Exclusive mute/Aura gestures, live score banner, donation sheet, Player of the Week spotlight. A guest can watch the opened Highlight and two more swipes, then the account sheet. Pages ride `ReelPage` for card-deck depth on vertical paging and swipe left / right to peek the athlete who owns the clip.
  * @sideEffects `useReels` fetch; `crew_follows` for Home ranking; `clearVideoCacheAsync` on mount; `get_active_spotlight_award` launch popup; `MaloTipModal` PaymentSheet; hide list after Report; Reanimated scroll handler feeds the pager depth math.
  */
 export default function HighlightsTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<FeedItem>>(null);
-  const { user, profile, loading: authLoading } = useAuth();
+  const guestSeen = useRef(new Set<string>());
+  const guestAllowedIndex = useRef(0);
+  const { user, profile, loading: authLoading, isGuest } = useAuth();
   const { live: runtime } = useAppRuntime();
-  const { requireAuth } = useSoftWall();
+  const { requireAuth, visible: accountSheetOpen } = useSoftWall();
   const { subscribeUploaded } = useUploadSheet();
   const { players, applyBackerCount } = useRoster();
   const { reels, refresh, setReels, applyReelHype, applyReelTips } = useReels();
@@ -222,6 +221,36 @@ export default function HighlightsTab() {
     });
   }, [feed, pageHeight, pendingClipId]);
 
+  useEffect(() => {
+    if (!isGuest) {
+      guestSeen.current.clear();
+      return;
+    }
+    const clipId = feed[activeIndex]?.clip.id;
+    if (!clipId) return;
+    guestSeen.current.add(clipId);
+    if (!guestBrowseNeedsAccount(guestSeen.current.size)) {
+      guestAllowedIndex.current = activeIndex;
+      return;
+    }
+    if (activeIndex === guestAllowedIndex.current) return;
+    if (!accountSheetOpen) {
+      requireAuth({
+        kind: 'browse',
+        resume: () => undefined,
+      });
+    }
+    const back = guestAllowedIndex.current;
+    setActiveIndex(back);
+    requestAnimationFrame(() => {
+      try {
+        listRef.current?.scrollToIndex({ index: back, animated: true });
+      } catch {
+        listRef.current?.scrollToOffset({ offset: pageHeight * back, animated: true });
+      }
+    });
+  }, [accountSheetOpen, activeIndex, feed, isGuest, pageHeight, requireAuth]);
+
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
       const next = viewableItems[0]?.index;
@@ -326,7 +355,7 @@ export default function HighlightsTab() {
     setPendingClipId(clipId);
     closeSearch();
     trackFeature('home_search_clip');
-    setFeedFilter('all');
+    setFeedFilter('home');
   }, [closeSearch, trackFeature]);
 
   const jumpToSpotlightClip = useCallback(
@@ -351,12 +380,11 @@ export default function HighlightsTab() {
         });
         return;
       }
-      // The award's clip exists but the active pill filters it out — widen to All and let
-      // the pending-jump effect land it once the feed rebuilds.
+      // Home already includes every clip. Land it there if this page was on another mix.
       const unfiltered = clips.find(matches);
       if (unfiltered) {
         setPendingClipId(unfiltered.clip.id);
-        setFeedFilter('all');
+        setFeedFilter('home');
         return;
       }
       // No clip in the feed at all: fall back to the athlete's profile, same as the
@@ -403,7 +431,7 @@ export default function HighlightsTab() {
     feedFilter === 'seki'
       ? 'No Seki plays in the feed yet.'
       : feedFilter === 'home'
-        ? 'Your Home mix is quiet. Follow athletes in Crew, or switch to All.'
+        ? 'Your Home mix is quiet. Follow athletes in Crew.'
         : runtime.copy.homeEmpty;
 
   return (
@@ -648,6 +676,7 @@ export default function HighlightsTab() {
           offsetTop={chromeHeight + 8}
           clips={clips}
           onApplyQuery={setSearchQuery}
+          onClose={closeSearch}
           onSelectAthlete={(playerId) => {
             closeSearch();
             trackFeature('athlete_profile');
@@ -781,8 +810,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   feedSwitch: {
-    flex: 1,
+    flexGrow: 0,
+    flexShrink: 1,
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
     backgroundColor: colors.videoScrim,
     borderRadius: 999,
@@ -791,7 +822,7 @@ const styles = StyleSheet.create({
     padding: 3,
   },
   feedPill: {
-    flex: 1,
+    flexGrow: 0,
     minHeight: 32,
     paddingHorizontal: 10,
     borderRadius: 999,
@@ -801,7 +832,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   feedPillSlot: {
-    flex: 1,
+    flexGrow: 0,
     zIndex: 1,
   },
   feedIndicator: {

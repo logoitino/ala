@@ -61,10 +61,7 @@ function FanTabs() {
         visible={visible && live.tabs.upload}
         players={players}
         onClose={closeUpload}
-        onUploaded={(reel) => {
-          notifyUploaded(reel);
-          closeUpload();
-        }}
+        onUploaded={notifyUploaded}
       />
     </SafeAreaView>
   );

@@ -69,7 +69,7 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
         <View style={frame.dock}>
         <SheetRise style={[styles.sheet, frame.card]}>
           <MenuBackdrop accent="jade" />
-          <SheetHandle />
+          <SheetHandle onDismiss={onClose} />
           <Text style={styles.title}>🎥 Filmed by {filmerName}</Text>
           <Text style={styles.lede}>
             Fans who film help athletes get seen. Donations always go to the athlete in the clip.

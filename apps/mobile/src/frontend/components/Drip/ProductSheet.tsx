@@ -214,7 +214,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
       <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
         <Pressable haptic="none" onPress={() => undefined}>
           <MenuBackdrop accent="ember" />
-          <SheetHandle />
+          <SheetHandle onDismiss={() => dismiss()} />
           {display ? (
             <Animated.View style={[styles.content, contentStyle]}>
               <View style={styles.iconWrap}>

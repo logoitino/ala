@@ -1,5 +1,6 @@
 /** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -155,6 +156,7 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
             <View pointerEvents="box-none" style={frame.dock}>
             <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <MenuBackdrop accent="violet" />
+          <SheetHandle onDismiss={dismiss} />
               <View style={styles.handle} />
               <Text style={styles.kicker}>{VERIFY_SHEET_KICKER}</Text>
               <Text style={styles.title}>{VERIFY_SHEET_TITLE}</Text>

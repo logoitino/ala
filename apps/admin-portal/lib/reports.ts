@@ -28,6 +28,16 @@ export type PortalReports = {
   issues: ReportLeader[];
   scroll: ReportLeader[];
   leaders: { malo: ReportLeader[]; hype: ReportLeader[]; schools: ReportLeader[] };
+  series: ReportSeries;
+};
+
+export type ReportPoint = { label: string; value: number };
+
+export type ReportSeries = {
+  clips: ReportPoint[];
+  malo: ReportPoint[];
+  stalls: ReportPoint[];
+  dwell: ReportPoint[];
 };
 
 export type RevenueStream = {
@@ -77,6 +87,7 @@ const EMPTY_REPORTS: PortalReports = {
   issues: [],
   scroll: [],
   leaders: { malo: [], hype: [], schools: [] },
+  series: { clips: [], malo: [], stalls: [], dwell: [] },
 };
 
 const EMPTY_REVENUE: PortalRevenue = {
@@ -106,6 +117,16 @@ function asSection(value: unknown): ReportSection {
     if (typeof raw === 'number' && Number.isFinite(raw)) out[key] = raw;
   }
   return out;
+}
+
+function asSeries(value: unknown): ReportSeries {
+  const bag = value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  return {
+    clips: asLeaders(bag.clips),
+    malo: asLeaders(bag.malo),
+    stalls: asLeaders(bag.stalls),
+    dwell: asLeaders(bag.dwell),
+  };
 }
 
 function asLeaders(value: unknown): ReportLeader[] {
@@ -246,6 +267,7 @@ export async function fetchPortalReports(): Promise<PortalReports> {
       hype: asLeaders(leadersRaw.hype),
       schools: asLeaders(leadersRaw.schools),
     },
+    series: asSeries(row.series),
   };
 }
 

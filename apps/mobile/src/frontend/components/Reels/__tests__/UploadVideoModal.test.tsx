@@ -9,7 +9,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import { Alert, Animated } from 'react-native';
 import { UploadVideoModal } from '@/components/Reels/UploadVideoModal';
 import { HIGHLIGHT_PUBLISH_LABEL, REEL_CATEGORY_GAME } from '@/data/highlights';
-import { PHOTO_RIGHTS_VERSION, rightsChecksFor } from '@/data/contentRights';
+import { PHOTO_RIGHTS_VERSION, rightsChecksFor, shareConfirmationLabel } from '@/data/contentRights';
 import type { Player } from '@/types/database';
 
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
@@ -85,7 +85,7 @@ const details = async () => {
   await fireEvent.press(screen.getByLabelText('Next'));
 };
 const confirmRights = async () => {
-  for (const row of rightsChecksFor(REEL_CATEGORY_GAME)) await fireEvent.press(screen.getByLabelText(row.label));
+  await fireEvent.press(screen.getByLabelText(shareConfirmationLabel(REEL_CATEGORY_GAME)));
 };
 
 describe('staged Highlight upload', () => {
@@ -99,7 +99,7 @@ describe('staged Highlight upload', () => {
   });
   afterEach(() => jest.restoreAllMocks());
 
-  it('shows only the active short page and requires caption and a real athlete before review', async () => {
+  it('shows only the active short page and reaches review with a caption, athlete optional', async () => {
     mockOwnPlayerId = null;
     await render(<UploadVideoModal {...props} />);
     expect(screen.getByText('Step 1 of 3')).toBeTruthy();
@@ -108,20 +108,30 @@ describe('staged Highlight upload', () => {
     await chooseClip();
     expect(screen.getByText('Step 2 of 3')).toBeTruthy();
     expect(screen.queryByLabelText('Choose a video from library')).toBeNull();
+    expect(screen.queryByLabelText('This is me')).toBeNull();
     await fireEvent.press(screen.getByLabelText('Next'));
     expect(screen.getByText('Step 2 of 3')).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText('Highlight caption'), 'Friday game');
     await fireEvent.press(screen.getByLabelText('Next'));
-    expect(screen.getByText('Step 2 of 3')).toBeTruthy();
+    expect(screen.getByText('Step 3 of 3')).toBeTruthy();
+    expect(screen.getByText('Tag later · ⚡ Game Day')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Back'));
     await fireEvent.press(screen.getByLabelText('Who’s in this clip?'));
+    expect(screen.getByLabelText('Tag later')).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText('Search athletes'), 'nobody');
     expect(screen.getByText('No matching athletes.')).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText('Search athletes'), 'Ana');
-    await fireEvent.press(screen.getByText('Ana'));
+    await fireEvent.press(screen.getByLabelText('Choose Ana'));
     await fireEvent.press(screen.getByLabelText('Next'));
     expect(screen.getByText('Step 3 of 3')).toBeTruthy();
     expect(screen.queryByLabelText('Highlight caption')).toBeNull();
     expect(screen.getByText('No game linked · No account mentions')).toBeTruthy();
+  });
+
+  it('offers This is me when the signed-in account is that athlete', async () => {
+    await render(<UploadVideoModal {...props} />);
+    await chooseClip();
+    expect(screen.getByLabelText('This is me').props.accessibilityState.selected).toBe(true);
   });
 
   it('keeps draft on Back and picker cancellation, resets when closed, and clears rights for a replacement clip', async () => {
@@ -135,11 +145,11 @@ describe('staged Highlight upload', () => {
     expect(screen.getByText('Your Highlight ⚡')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Next'));
     await fireEvent.press(screen.getByLabelText('Next'));
-    expect(screen.getByLabelText(rightsChecksFor(REEL_CATEGORY_GAME)[0].label).props.accessibilityState.checked).toBe(true);
+    expect(screen.getByLabelText(shareConfirmationLabel(REEL_CATEGORY_GAME)).props.accessibilityState.checked).toBe(true);
     await fireEvent.press(screen.getByLabelText('Change video'));
     await chooseClip();
     await fireEvent.press(screen.getByLabelText('Next'));
-    expect(screen.getByLabelText(rightsChecksFor(REEL_CATEGORY_GAME)[0].label).props.accessibilityState.checked).toBe(false);
+    expect(screen.getByLabelText(shareConfirmationLabel(REEL_CATEGORY_GAME)).props.accessibilityState.checked).toBe(false);
     await view.rerender(<UploadVideoModal {...props} visible={false} />);
     await view.rerender(<UploadVideoModal {...props} />);
     expect(screen.getByText('Step 1 of 3')).toBeTruthy();
@@ -233,7 +243,7 @@ const pickThree = async () => {
   await waitFor(() => expect(screen.getByText('3 of 10 photos')).toBeTruthy());
 };
 const confirmPhotoRights = async () => {
-  for (const row of rightsChecksFor(REEL_CATEGORY_GAME, 'photo_story')) await fireEvent.press(screen.getByLabelText(row.label));
+  await fireEvent.press(screen.getByLabelText(shareConfirmationLabel(REEL_CATEGORY_GAME, 'photo_story')));
 };
 
 describe('photo story upload', () => {

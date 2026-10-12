@@ -1,6 +1,6 @@
 ---
 name: admin
-description: Owns the control plane — Expo /admin desks (Operations/Content/Commerce/Audience/Growth/System groups) and the Next admin-portal (Overview/Reports/Money/Soft-Wall/Profile/Features/People). Use for AdminShell, FeaturesTool, lib/adminCoverage.ts, apps/admin-portal/**. Trigger on "CALL: ADMIN".
+description: Owns the control plane — Expo /admin desks (Operations/Content/Commerce/Audience/Growth/System groups) and the Next admin-portal (Home/Trends/Audience/Revenue/Health/Product). Use for AdminShell, FeaturesTool, lib/adminCoverage.ts, apps/admin-portal/**. Trigger on "CALL: ADMIN".
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: grok-4.7-medium
 force-default-model: true
@@ -11,7 +11,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 You are the **ADMIN** department for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/agents/TEAMS.md` (§ADMIN) and `AGENTS.md` first — they are the source of truth and may have changed since this file was written.
 
 **Expo `/admin`:** `app/(admin)/admin/*`, `AdminShell`, `AdminLensContext` — Operations (games/sports/polls/boosters/publish) · Content (highlights/spotlight/moderation) · Commerce (drip/wishlist/money) · Audience (athletes/schools/people) · Growth (reports/feedback/coverage) · System (features/look/catalogs/studio; lab/qa hidden deep links). Features/Look/catalogs wait on **Publish to app**; everything else saves instantly.
-**Next portal (`apps/admin-portal/`, `pnpm admin` → :3001):** Overview · Reports (`get_admin_reports`) · Money (`get_company_revenue_summary`) · Soft-Wall · Profile · Features · People. Features/Profile write the same `app_runtime_config` as Expo. Games/Drip/sports/catalogs stay Expo-only — do not port them to Next without the user's explicit sign-off.
+**Next portal (`apps/admin-portal/`, `pnpm admin` → :3001):** Home · Trends · Audience · Revenue · Health · Product. Departments (`/manage`) and Analytics (`/analytics`) are header links. `ANALYST` owns the measure catalog and the eight dashboards. `PORTAL` owns the shell and Home. The portal reads `get_admin_reports` and `get_company_revenue_summary`. It does not write. Games/Drip/sports/catalogs stay Expo-only — do not port them to Next without the user's explicit sign-off.
 
 **CRITICAL open finding (2026-09 audit — top priority for this department, pair BACKEND):** the Next admin portal (`apps/admin-portal/`) has **no auth gate at all** — no middleware, no session check, no `profiles.is_admin` check anywhere in `app/layout.tsx` or any page. This is compounded by the underlying Supabase grants: `get_admin_reports()` and `get_company_revenue_summary()` are `grant execute ... to anon`; `profiles` is publicly SELECT-able (`using (true)`) including `stripe_connect_id`; `company_revenue_logs` and `shop_orders` grant `anon` full select/insert/update/delete; `patch_app_runtime_draft`/`publish_app_runtime` are anon-executable; `app_runtime_config`'s RLS policy literally has `auth.role() = 'anon' or ...`. Anyone with the public anon key (shipped inside the mobile bundle) can read/write all of this directly via PostgREST, bypassing the Next app entirely. Fixing this needs BOTH: a real session + `profiles.is_admin` gate in `apps/admin-portal/app/layout.tsx`, AND revoking `anon` grants in schema.sql (BACKEND's file) in favor of `authenticated` + role checks. Do not ship one half without the other.
 
@@ -25,13 +25,13 @@ You are the **ADMIN** department for Tapua'i (ala-sports, pnpm monorepo at repo 
 
 Read `docs/STATE.md` first and follow `docs/agents/TEAMS.md` §Specialist operating contract. Reporting lead: `ENGINEERING`. Registry: `.claude/agents/registry.json`.
 
-Delegate coherent functions to `CATALOGS` · `RUNTIME_CONFIG`. Keep this role accountable for integration and use QA for independent evidence.
+Delegate coherent functions to `CATALOGS` · `RUNTIME_CONFIG` · `PORTAL` · `ANALYST`. Keep this role accountable for integration and use QA for independent evidence.
 
 Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
 
 ## Current direct specialists
 
-`CATALOGS` · `RUNTIME_CONFIG`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+`CATALOGS` · `RUNTIME_CONFIG` · `PORTAL` · `ANALYST`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
 
 ## Documentation handoff
 

@@ -4,118 +4,114 @@ import type { ReactNode } from 'react';
 import { SignOutButton } from '@/components/SignOutButton';
 import { APP_RUNTIME_FLAG_GROUPS, type AppRuntimeFlagGroup } from '@tapuai/shared-types';
 
-type NavHref = '/' | '/reports' | '/money' | '/auth' | '/profile' | '/features' | '/people';
+export type PortalHref =
+  | '/'
+  | '/reports'
+  | '/audience'
+  | '/money'
+  | '/operations'
+  | '/manage'
+  | '/analytics'
+  | '/product'
+  | '/features'
+  | '/profile'
+  | '/auth'
+  | '/people';
 
-type NavItem = { href: NavHref; label: string; hint: string };
-
-const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
-  { title: '', items: [{ href: '/', label: 'Overview', hint: 'At a glance' }] },
-  {
-    title: 'Insights',
-    items: [
-      { href: '/reports', label: 'Reports', hint: 'Behavior & usage' },
-      { href: '/money', label: 'Money', hint: 'Gifts and revenue' },
-    ],
-  },
-  {
-    title: 'Product',
-    items: [
-      { href: '/features', label: 'Features', hint: 'Runtime chrome' },
-      { href: '/profile', label: 'Profile', hint: 'Profile hierarchy' },
-    ],
-  },
-  {
-    title: 'Audience',
-    items: [
-      { href: '/auth', label: 'Soft-Wall', hint: 'Auth gates' },
-      { href: '/people', label: 'People', hint: 'Fan roster' },
-    ],
-  },
+const TABS: { href: PortalHref; label: string; match: PortalHref[] }[] = [
+  { href: '/', label: 'Home', match: ['/'] },
+  { href: '/reports', label: 'Trends', match: ['/reports'] },
+  { href: '/audience', label: 'Audience', match: ['/audience'] },
+  { href: '/money', label: 'Revenue', match: ['/money'] },
+  { href: '/operations', label: 'Health', match: ['/operations'] },
+  { href: '/product', label: 'Product', match: ['/product', '/features', '/profile', '/auth', '/people'] },
 ];
 
-const ALL_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
+const PRODUCT_LINKS: { href: PortalHref; label: string }[] = [
+  { href: '/features', label: 'Features' },
+  { href: '/profile', label: 'Profile' },
+  { href: '/auth', label: 'Sign-in' },
+  { href: '/people', label: 'People' },
+];
+
+const TITLES: Record<PortalHref, string> = {
+  '/': 'Home',
+  '/reports': 'Trends',
+  '/audience': 'Audience',
+  '/money': 'Revenue',
+  '/operations': 'Health',
+  '/manage': 'Departments',
+  '/analytics': 'Analytics',
+  '/product': 'Product',
+  '/features': 'Features',
+  '/profile': 'Profile',
+  '/auth': 'Sign-in',
+  '/people': 'People',
+};
+
+function tabClass(on: boolean) {
+  return on
+    ? 'flex h-11 items-center justify-center rounded-lg bg-[var(--jade)] text-sm font-extrabold text-white'
+    : 'flex h-11 items-center justify-center rounded-lg text-sm font-extrabold text-[var(--ink-soft)] hover:bg-[var(--surface-muted)]';
+}
 
 /**
- * @purpose Sidebar shell for the Next web admin portal. Grouped nav (Insights / Product / Audience) so new
- *   desks (Billing, Marketing — planned) have an obvious home instead of one flat row of tabs.
+ * @purpose Top bar for the Next admin portal. Six equal tabs. Product opens a second equal row.
+ *   Departments is a utility link, not a seventh uneven category.
  */
-export function PortalShell({ children, active }: { children: ReactNode; active: NavHref }) {
-  const current = ALL_ITEMS.find((item) => item.href === active);
+export function PortalShell({ children, active }: { children: ReactNode; active: PortalHref }) {
+  const productOpen = TABS[5].match.includes(active);
 
   return (
-    <div className="flex min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
-      <aside className="hidden w-64 shrink-0 flex-col bg-[var(--sidebar-bg)] px-4 py-6 text-[var(--sidebar-ink)] lg:flex">
-        <div className="px-2 pb-6">
-          <p className="text-[10px] font-extrabold tracking-[0.24em] text-emerald-400/80 uppercase">Tapua&apos;i</p>
-          <p className="mt-0.5 text-lg font-extrabold tracking-tight text-white">Admin Portal</p>
-        </div>
-        <nav className="flex-1 space-y-6">
-          {NAV_GROUPS.map((group, i) => (
-            <div key={group.title || `group-${i}`}>
-              {group.title ? (
-                <p className="mb-1.5 px-2 text-[10px] font-extrabold tracking-[0.16em] text-emerald-400/60 uppercase">
-                  {group.title}
-                </p>
-              ) : null}
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const on = item.href === active;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={
-                        on
-                          ? 'flex flex-col rounded-xl bg-[var(--sidebar-active)] px-3 py-2 text-white'
-                          : 'flex flex-col rounded-xl px-3 py-2 text-[var(--sidebar-ink)] hover:bg-white/5'
-                      }
-                    >
-                      <span className="text-sm font-bold">{item.label}</span>
-                      <span className="text-xs opacity-60">{item.hint}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
-        <div className="mt-6 rounded-xl border border-white/10 px-3 py-3">
-          <p className="text-xs leading-5 text-emerald-100/70">
-            This portal is read-only oversight. Every change — Games, Catalogs, Features, Look, all of it —
-            happens in Expo <code className="text-emerald-300">/admin</code>.
-          </p>
-        </div>
-      </aside>
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-4 border-b border-[var(--border)] bg-[var(--surface)] px-6 py-4 lg:px-10">
+    <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
+      <header className="border-b border-[var(--border)] bg-[var(--surface)]">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div className="min-w-0">
-            <p className="truncate text-[11px] font-extrabold tracking-[0.14em] text-[var(--text-muted)] uppercase lg:hidden">
-              Tapua&apos;i admin portal
-            </p>
-            <h1 className="truncate text-xl font-extrabold tracking-tight">{current?.label ?? 'Admin Portal'}</h1>
+            <p className="text-[10px] font-extrabold tracking-[0.2em] text-[var(--jade)] uppercase">Tapua&apos;i</p>
+            <h1 className="truncate text-lg font-extrabold tracking-tight">{TITLES[active]}</h1>
           </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <nav className="flex items-center gap-1 lg:hidden">
-              {ALL_ITEMS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={
-                    item.href === active
-                      ? 'rounded-full bg-[var(--jade)] px-3 py-1.5 text-xs font-bold text-white'
-                      : 'rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-bold text-[var(--ink-soft)]'
-                  }
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/analytics"
+              className={
+                active === '/analytics'
+                  ? 'inline-flex h-11 items-center rounded-lg bg-[var(--jade-soft)] px-3 text-sm font-extrabold text-[var(--jade)]'
+                  : 'inline-flex h-11 items-center rounded-lg px-3 text-sm font-extrabold text-[var(--ink-soft)] hover:bg-[var(--surface-muted)]'
+              }
+            >
+              Analytics
+            </Link>
+            <Link
+              href="/manage"
+              className={
+                active === '/manage'
+                  ? 'inline-flex h-11 items-center rounded-lg bg-[var(--jade-soft)] px-3 text-sm font-extrabold text-[var(--jade)]'
+                  : 'inline-flex h-11 items-center rounded-lg px-3 text-sm font-extrabold text-[var(--ink-soft)] hover:bg-[var(--surface-muted)]'
+              }
+            >
+              Departments
+            </Link>
             <SignOutButton />
           </div>
-        </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8 lg:px-10 lg:py-10">{children}</main>
-      </div>
+        </div>
+        <nav aria-label="Portal" className="mx-auto grid w-full max-w-7xl grid-cols-3 gap-1 px-4 pb-3 sm:grid-cols-6 sm:px-6">
+          {TABS.map((tab) => (
+            <Link key={tab.href} href={tab.href} className={tabClass(tab.match.includes(active))} aria-current={tab.match.includes(active) ? 'page' : undefined}>
+              {tab.label}
+            </Link>
+          ))}
+        </nav>
+        {productOpen ? (
+          <nav aria-label="Product" className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-1 px-4 pb-3 sm:grid-cols-4 sm:px-6">
+            {PRODUCT_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className={tabClass(link.href === active)}>
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
+      </header>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">{children}</main>
     </div>
   );
 }
@@ -192,13 +188,15 @@ export function SectionHeading({ title, hint }: { title: string; hint?: string }
 }
 
 /** @purpose Small status chip — replaces the on/off/live/paused className duplicated across every page. */
-export function Badge({ tone, children }: { tone: 'ok' | 'warn' | 'neutral'; children: ReactNode }) {
+export function Badge({ tone, children }: { tone: 'ok' | 'warn' | 'neutral' | 'danger'; children: ReactNode }) {
   const cls =
     tone === 'ok'
       ? 'bg-[var(--jade-soft)] text-[var(--jade)]'
       : tone === 'warn'
         ? 'bg-[var(--gold-soft)] text-[var(--gold)]'
-        : 'bg-[var(--surface-muted)] text-[var(--ink-soft)]';
+        : tone === 'danger'
+          ? 'bg-[var(--ember-soft)] text-[var(--ember)]'
+          : 'bg-[var(--surface-muted)] text-[var(--ink-soft)]';
   return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${cls}`}>{children}</span>;
 }
 

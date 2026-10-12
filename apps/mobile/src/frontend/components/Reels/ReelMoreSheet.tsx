@@ -62,7 +62,7 @@ export function ReelMoreSheet({
         <View pointerEvents="box-none" style={frame.dock}>
         <SheetRise style={[styles.sheet, frame.card]}>
           <MenuBackdrop accent="jade" />
-          <SheetHandle />
+          <SheetHandle onDismiss={onClose} />
           <Text style={styles.kicker}>More</Text>
           <Text style={styles.title} numberOfLines={1}>
             {who}

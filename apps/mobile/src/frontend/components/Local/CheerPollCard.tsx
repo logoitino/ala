@@ -29,7 +29,7 @@ const FLOAT_MS = 720;
 const FLOAT_RISE = -60;
 
 /**
- * @purpose Live community cheer poll (Westlake Thunder vs Lone Peak Knights). Home is jade, away is Island Cyan. A tap springs the bar from 0% to the new share, fires Medium haptics, floats +1 Vote ⚡ from the press point (+60px), and persists via `cast_cheer_vote`.
+ * @purpose Live community cheer poll (Westlake Thunder vs Lone Peak Knights). The share bar stays jade and cyan. A chosen side is a white button with that color as a border, so it does not blend into the bar. A tap springs the bar from 0% to the new share, fires Medium haptics, floats +1 Vote ⚡ from the press point (+60px), and persists via `cast_cheer_vote`.
  * @param slug `cheer_polls.slug` (featured rivalry is `westlake-lone-peak`).
  * @param homeLabel Home school display name.
  * @param awayLabel Away school display name.
@@ -174,13 +174,13 @@ function TeamVoteButton({
         contentStyle={[
           styles.teamBtn,
           side === 'home' ? styles.homeBtn : styles.awayBtn,
-          selected && (side === 'home' ? styles.teamBtnOn : styles.awayBtnOn),
+          selected && (side === 'home' ? styles.homeChosen : styles.awayChosen),
         ]}
       >
-        <View style={[styles.teamDot, side === 'home' ? styles.teamDotHome : styles.teamDotAway]}>
+        <View style={[styles.teamDot, side === 'home' ? styles.teamDotHome : styles.teamDotAway, selected && styles.teamDotChosen]}>
           <View pointerEvents="none" style={styles.teamDotGloss} />
         </View>
-        <Text style={[styles.teamBtnLabel, selected && styles.teamBtnLabelOn]} numberOfLines={2}>
+        <Text style={[styles.teamBtnLabel, selected && (side === 'home' ? styles.homeLabelOn : styles.awayLabelOn)]} numberOfLines={2}>
           {label}
         </Text>
       </AnimatedPressable>
@@ -357,22 +357,32 @@ const styles = StyleSheet.create({
     borderColor: FOCAL.islandCyan,
     backgroundColor: FOCAL.mistCyan,
   },
-  teamBtnOn: {
-    backgroundColor: FOCAL.jadeInk,
+  homeChosen: {
+    backgroundColor: colors.surface,
     borderColor: FOCAL.jadeInk,
+    borderWidth: 2.5,
   },
-  awayBtnOn: {
-    backgroundColor: FOCAL.cyanInk,
+  awayChosen: {
+    backgroundColor: colors.surface,
     borderColor: FOCAL.cyanInk,
+    borderWidth: 2.5,
+  },
+  teamDotChosen: {
+    borderWidth: 2,
+    borderColor: colors.surface,
   },
   teamBtnLabel: {
     color: colors.text,
     fontSize: 12,
     fontWeight: '800',
     textAlign: 'center',
+    flexShrink: 1,
   },
-  teamBtnLabelOn: {
-    color: colors.onAccent,
+  homeLabelOn: {
+    color: FOCAL.jadeInk,
+  },
+  awayLabelOn: {
+    color: FOCAL.cyanInk,
   },
   floatBadge: {
     position: 'absolute',

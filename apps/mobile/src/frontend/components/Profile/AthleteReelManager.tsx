@@ -4,6 +4,7 @@
  * PHOTO_STORIES_DESIGN.md decision 1), so they never open the Vault sheet.
  */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -177,7 +178,7 @@ export function AthleteReelManager({
           <View pointerEvents="box-none" style={frame.dock}>
           <View style={[styles.sheet, frame.card]}>
           <MenuBackdrop accent="violet" />
-            <View style={styles.handle} />
+            <SheetHandle onDismiss={sheetBusy ? undefined : closeMenu} />
             <Text style={styles.kicker}>Content placement</Text>
             <Text style={styles.title} numberOfLines={2}>
               {menuClip?.tag ?? 'Highlight'}

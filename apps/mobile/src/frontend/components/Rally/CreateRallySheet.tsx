@@ -70,7 +70,7 @@ export function CreateRallySheet({ visible, playerId, athleteName, onClose, onCr
         <View style={frame.dock}>
           <View style={[styles.sheet, frame.card]}>
             <MenuBackdrop accent="gold" />
-          <SheetHandle />
+          <SheetHandle onDismiss={busy ? undefined : onClose} />
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
               <Text style={styles.title}>Start a Rally for {athleteName}</Text>
               <Text style={styles.lede}>

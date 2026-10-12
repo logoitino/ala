@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 /**
  * Routes reachable without a signed-in Supabase Auth session. Everything else in the portal —
- * Overview / Reports / Money / Soft-Wall (`/auth`) / Profile / Features / People — requires one.
+ * Home, Trends, Audience, Revenue, Health, Product, Analytics, and Departments — requires one.
  * The `profiles.is_admin` check (who may actually SEE those desks once signed in) happens one layer
  * in, at `app/(protected)/layout.tsx`, because middleware can only redirect, not render an
  * "Access Restricted" state.

@@ -42,7 +42,11 @@ async function openSheet() {
 }
 
 async function typeEmail(email = EMAIL) {
-  await fireEvent.changeText(screen.getByPlaceholderText('you@family.com'), email);
+  await fireEvent.changeText(screen.getByPlaceholderText('Email'), email);
+}
+
+async function openCreate() {
+  await fireEvent.press(screen.getByLabelText('Create an account'));
 }
 
 async function typePassword(password = PASSWORD) {
@@ -62,22 +66,23 @@ beforeEach(() => {
 });
 
 describe('SoftWallModal email form', () => {
-  it('enables Sign in with the 13+ box unchecked, and actually signs in', async () => {
+  it('enables Sign in without an age checkbox, and actually signs in', async () => {
     await openSheet();
     await typeEmail();
     await typePassword();
 
-    expect(ageCheckbox()).not.toBeChecked();
+    expect(screen.queryByRole('checkbox', { name: 'I confirm I am 13 years of age or older.' })).toBeNull();
     expect(signInButton()).toBeEnabled();
 
     await fireEvent.press(signInButton());
-    expect(mockSignInWithEmailPassword).toHaveBeenCalledWith(EMAIL, PASSWORD, false);
+    expect(mockSignInWithEmailPassword).toHaveBeenCalledWith(EMAIL, PASSWORD);
   });
 
   it('keeps Create account disabled until the 13+ box is checked', async () => {
     await openSheet();
     await typeEmail();
     await typePassword();
+    await openCreate();
 
     expect(createButton()).toBeDisabled();
 
@@ -91,6 +96,8 @@ describe('SoftWallModal email form', () => {
   it('keeps the magic link gated too, since signInWithOtp can create the account', async () => {
     await openSheet();
     await typeEmail();
+    expect(screen.queryByLabelText('Send magic link email')).toBeNull();
+    await openCreate();
 
     expect(magicButton()).toBeDisabled();
 
@@ -111,10 +118,12 @@ describe('SoftWallModal email form', () => {
     await openSheet();
     await typeEmail();
     await typePassword('short');
+
+    expect(signInButton()).toBeEnabled();
+    await openCreate();
     await fireEvent.press(ageCheckbox());
 
     expect(createButton()).toBeDisabled();
-    expect(signInButton()).toBeEnabled();
   });
 
   it('ignores a second tap that lands before the button re-renders as busy', async () => {

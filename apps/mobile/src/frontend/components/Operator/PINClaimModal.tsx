@@ -1,5 +1,6 @@
 /** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useRef, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -126,6 +127,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
         <View pointerEvents="box-none" style={frame.dock}>
         <View style={[styles.sheet, frame.card]} accessibilityRole="summary" accessibilityLabel="Operator PIN keypad">
           <MenuBackdrop accent="cyan" />
+          <SheetHandle onDismiss={claiming ? undefined : onClose} />
           <Text style={styles.kicker}>Operator PIN</Text>
           <Text style={styles.title}>Unlock control center</Text>
           <Text style={styles.matchup}>

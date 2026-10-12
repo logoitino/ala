@@ -259,7 +259,7 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
   },
   copy: {
     homeKicker: 'Highlights ⚡',
-    homeLede: 'Home mix, All, and Seki — tagged to the athlete on the clip.',
+    homeLede: 'Highlights tagged to the athlete on the clip.',
     homeEmpty: 'No Highlights ⚡ yet.',
     homeBannerTitle: '',
     homeBannerBody: '',

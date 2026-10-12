@@ -180,7 +180,7 @@ export function MaloTipModal({
         <KeyboardAvoidingView pointerEvents="box-none" behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardDock}>
         <View pointerEvents="box-none" style={frame.dock}>
           <Animated.View style={[sheetStyle, styles.sheet, frame.card, { height: Math.min(720, sheetMax), maxHeight: sheetMax }]}>
-              <SheetHandle />
+              <SheetHandle onDismiss={dismiss} />
               <Animated.View style={[styles.header, delivered && styles.headerDelivered, headerStyle]}>
                 {delivered ? (
                   <CardShine tint="rgba(0,230,118,0.4)" color="rgba(255,255,255,0.95)" loopMs={2600} />

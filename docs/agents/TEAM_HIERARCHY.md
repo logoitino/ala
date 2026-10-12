@@ -19,6 +19,8 @@ FACILITATOR — owner decisions (prices, counsel, SQL apply, merge, live money)
     ├── ENGINEERING — dev
     │   ├── ADMIN (Engineering)
     │   │   ├── CATALOGS (Engineering)
+    │   │   ├── ANALYST (Engineering)
+    │   │   ├── PORTAL (Engineering)
     │   │   └── RUNTIME_CONFIG (Engineering)
     │   ├── API (Engineering)
     │   ├── AURA (Engineering)
@@ -197,7 +199,9 @@ Every agent is listed in the team it reports to. Specialists sit under their lea
 | --- | --- | --- | --- |
 | `ENGINEERING` | Engineering | `CTO` | [engineering.md](../../.claude/agents/engineering.md) |
 | `ADMIN` | Engineering | `ENGINEERING` | [admin.md](../../.claude/agents/admin.md) |
+| `ANALYST` | Engineering | `ADMIN` | [analyst.md](../../.claude/agents/analyst.md) |
 | `CATALOGS` | Engineering | `ADMIN` | [catalogs.md](../../.claude/agents/catalogs.md) |
+| `PORTAL` | Engineering | `ADMIN` | [portal.md](../../.claude/agents/portal.md) |
 | `RUNTIME_CONFIG` | Engineering | `ADMIN` | [runtime-config.md](../../.claude/agents/runtime-config.md) |
 | `API` | Engineering | `ENGINEERING` | [api.md](../../.claude/agents/api.md) |
 | `AURA` | Engineering | `ENGINEERING` | [aura.md](../../.claude/agents/aura.md) |
@@ -347,7 +351,7 @@ Every agent is listed in the team it reports to. Specialists sit under their lea
 | --- | --- | --- | --- |
 | `VOICE` | Brand | `CTO` | [voice.md](../../.claude/agents/voice.md) |
 
-**90 callable agents** + Facilitator. Grouped by the lead each agent reports to (2026-10-08). Responsibility is assigned to every critical function; execution and launch status are tracked separately in the work queue and STATE.
+**91 callable agents** + Facilitator. Grouped by the lead each agent reports to (2026-10-08). Responsibility is assigned to every critical function; execution and launch status are tracked separately in the work queue and STATE.
 
 ## Paste to call someone
 

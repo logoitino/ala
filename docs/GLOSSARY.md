@@ -73,7 +73,7 @@ Paths below are relative to `apps/mobile/src/frontend/` unless they start with `
 
 | Product word | Code / database names | Meaning |
 | --- | --- | --- |
-| **Home** | `app/(tabs)/index.tsx` | The Highlights feed with Home / All / Seki pills. |
+| **Home** | `app/(tabs)/index.tsx` | The Highlights feed with Home, search, and Local. |
 | **Activity / Spotlight / Drip / Profile / Receipts** | `app/(tabs)/activity.tsx`, `spotlight.tsx`, `drip.tsx`, `profile.tsx`, `receipts.tsx` | Fan tabs. Drip (merch) is switched off for Wave 0. |
 | **Spotlight / Boards** | table `spotlight_awards`, `useActiveSpotlight`, `Spotlight/LeaderboardsBoard`, `lib/leaderboards.ts` | Player of the week/month and leaderboards. Never shows money. |
 | **Soft-Wall** | `Auth/SoftWallModal`, `SoftWallContext`, `lib/auth.ts` | Sign-in prompt shown only when a guest tries something that needs an account. |

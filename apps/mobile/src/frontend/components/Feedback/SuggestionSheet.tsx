@@ -1,5 +1,6 @@
 /** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useState } from 'react';
 import { Alert, Modal, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -100,6 +101,7 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <MenuBackdrop accent="gold" />
+          <SheetHandle onDismiss={dismiss} />
           <View style={styles.handle} />
           <Text style={styles.kicker}>Improve Tapua'i</Text>
           <Text style={styles.title}>Send a suggestion</Text>

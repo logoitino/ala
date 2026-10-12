@@ -36,6 +36,7 @@ type HomeSearchOverlayProps = {
   offsetTop?: number;
   clips: { clip: HighlightClip; player: Player | null }[];
   onApplyQuery: (query: string) => void;
+  onClose: () => void;
   onSelectAthlete: (playerId: string) => void;
   onSelectClip: (clipId: string) => void;
 };
@@ -67,6 +68,7 @@ export function HomeSearchOverlay({
   offsetTop = 8,
   clips,
   onApplyQuery,
+  onClose,
   onSelectAthlete,
   onSelectClip,
 }: HomeSearchOverlayProps) {
@@ -173,7 +175,7 @@ export function HomeSearchOverlay({
     >
       <View pointerEvents="auto" style={styles.sheet}>
         <MenuBackdrop accent="jade" />
-          <SheetHandle />
+          <SheetHandle onDismiss={onClose} />
         <Text style={styles.kicker}>Search Home</Text>
         <FilterPills
           items={KIND_PILLS}

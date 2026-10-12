@@ -172,7 +172,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 ### HIGHLIGHTS — Highlights ⚡ / Home
 
 **Call:** `HIGHLIGHTS`
-**Fan:** `/` (Home · All · Seki, clip search, live banner, slang line, Player of the Week popup)
+**Fan:** `/` (Home, clip search, Local jump, live banner, slang line, Player of the Week popup)
 **Admin:** Expo `/admin/highlights` · `/admin/moderation` · `/admin/features` (hype + Home search) · `/admin/look` (Home copy / banner) · `/admin/catalog` (clip category labels)
 **Upload UX (owner 2026-10-07):** `UPLOAD` + `DESIGN` own the compact Clip → Details → Review composer; game/account/Vault settings open separately, searchable athlete/game selection replaces expanded lists, and Back keeps the draft. Rights still require explicit confirmation before publishing.
 **Photo stories (owner 2026-10-07, UX-05):** `PHOTO_STORIES` (`.claude/agents/photo-stories.md`) owns the photo upload/data flow (`lib/photoStories.ts`) with `UPLOAD`; `PLAYBACK` owns the swipeable feed (`PhotoStoryMedia.tsx`, `useStoryPhotos.ts`); the category label is **Game Day** (stored `game_play`). Contract: [PHOTO_STORIES_DESIGN.md](../engineering/design/PHOTO_STORIES_DESIGN.md).
@@ -181,7 +181,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 | Function | Where |
 | --- | --- |
-| Feed mix pills Home / All / Seki | `app/(tabs)/index.tsx` · `useReels` |
+| Feed bar Home, search, and Local | `app/(tabs)/index.tsx` · `useReels` |
 | Reel player + hype | `components/Reels/ReelCard.tsx` · `lib/reelVotes.ts` · `theme/hypeFx.ts` |
 | Search overlay | `components/Reels/HomeSearchOverlay.tsx` |
 | Live scoreboard banner | `components/Reels/LiveMatchBanner.tsx` (pair `LOCAL`) |
@@ -343,7 +343,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 | System | features, look, **catalogs**, studio | Features / Look / catalogs wait on **Publish** |
 | Hidden | lab (JSON), qa | Deep links |
 
-**Next `pnpm admin` (`http://localhost:3001`):** **Read-only oversight, no edit affordance anywhere.** Overview · **Reports** (`get_admin_reports`) · **Money** (`get_company_revenue_summary`) · Soft-Wall · Profile · Features · People. All seven desks display live Supabase state; Features/Profile show `app_runtime_config` via `FlagStatusList` (plain badges, no toggle). Every write — flags, Games, Drip, Catalogs, People verify/grant-admin, everything — happens only in Expo `/admin`.
+**Next `pnpm admin` (`http://localhost:3001`):** **Read-only oversight, no edit affordance anywhere.** Home · Trends · Audience · Revenue · Health · Product (`PORTAL`). Departments (`/manage`) and Analytics (`/analytics`, `ANALYST`) are header links, not extra tabs. Analytics is eight dashboards built from a measure catalog on `get_admin_reports` and `get_company_revenue_summary`. Home charts the 7-day series from `get_admin_reports`. Revenue uses `get_company_revenue_summary`. Features and Profile show `app_runtime_config` via `FlagStatusList` (plain badges, no toggle). Every write — flags, Games, Drip, Catalogs, People verify/grant-admin, everything — happens only in Expo `/admin`.
 
 | Function | Where |
 | --- | --- |
@@ -504,7 +504,7 @@ Full detail and rationale: `.claude/agents/qa.md` (the executable copy of this c
 | Studio | `/admin/studio` | `ADMIN` |
 | Lab / QA | `/admin/lab` · `/admin/qa` | `ADMIN` + `QA` (hidden) |
 
-Next desks: `/` Overview · `/reports` behavior (`ADMIN`) · `/money` ledger (`COMMERCE`) · `/auth` Soft-Wall (`AUTH`) · `/profile` Profile chrome (`PROFILE`) · `/features` full flag board (`ADMIN`) · `/people` roster oversight (`AUTH` / `PROFILE`).
+Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/reports` Trends (`ADMIN`) · `/audience` Audience (`PORTAL`) · `/money` Revenue (`COMMERCE`) · `/operations` Health (`PORTAL`) · `/product` Product (`PORTAL`) · `/manage` Departments (`PORTAL`) · `/auth` Sign-in (`AUTH`) · `/profile` Profile chrome (`PROFILE`) · `/features` flag board (`ADMIN`) · `/people` roster oversight (`AUTH` / `PROFILE`).
 
 ---
 
@@ -538,7 +538,7 @@ Next desks: `/` Overview · `/reports` behavior (`ADMIN`) · `/money` ledger (`C
 
 ## Functional specialist roster
 
-**90 callable agents**, coordinated by the CTO, who reports to the Facilitator. `VP_OPERATIONS` (VP of Operations) reports to the CTO and keeps roles, protocols, and priorities current. All rows map to actionable definitions; exact Now/Next/Later tasks live in each definition. Existing product surface sections above remain the route inventory.
+**91 callable agents**, coordinated by the CTO, who reports to the Facilitator. `VP_OPERATIONS` (VP of Operations) reports to the CTO and keeps roles, protocols, and priorities current. All rows map to actionable definitions; exact Now/Next/Later tasks live in each definition. Existing product surface sections above remain the route inventory.
 
 | Call | Department | Reports to | Owns / primary function | Definition |
 | --- | --- | --- | --- | --- |
@@ -546,6 +546,7 @@ Next desks: `/` Overview · `/reports` behavior (`ADMIN`) · `/money` ledger (`C
 | `ACCOUNT_TAGS` | Engineering | `UPLOAD` | Account mention request/confirm/hide lifecycle, honest RPC errors and concurrent three-tag limit | [account-tags.md](../../.claude/agents/account-tags.md) |
 | `ACTIVITY` | Engineering | `HIGHLIGHTS` | Own activity rows, pagination, actor navigation and empty/error states. | [activity.md](../../.claude/agents/activity.md) |
 | `ADMIN` | Engineering | `ENGINEERING` | Expo write control plane and read-only Next oversight | [admin.md](../../.claude/agents/admin.md) |
+| `ANALYST` | Engineering | `ADMIN` | Read-only measure catalog and eight analytics dashboards. | [analyst.md](../../.claude/agents/analyst.md) |
 | `API` | Engineering | `ENGINEERING` | Own request validation, JWT verification, authorization, typed responses and server error boundaries. | [api.md](../../.claude/agents/api.md) |
 | `ATHLETE_STATS` | Engineering | `PROFILE` | Own athlete bio/stat/social visibility and sport-specific stat shapes. | [athlete-stats.md](../../.claude/agents/athlete-stats.md) |
 | `ATHLETE_VERIFICATION` | Trust and Safety | `TRUST_SAFETY` | Own claim/vouch/school confirmation ladder, token validity and verified badge semantics. | [athlete-verification.md](../../.claude/agents/athlete-verification.md) |
@@ -597,6 +598,7 @@ Next desks: `/` Overview · `/reports` behavior (`ADMIN`) · `/money` ledger (`C
 | `PHOTO_STORIES` | Engineering | `HIGHLIGHTS` | Own photo story upload and data flow: 1–10 photos, reorder, per-photo descriptions, `set_reel_photos` client and story photo reads. | [photo-stories.md](../../.claude/agents/photo-stories.md) |
 | `PLAYBACK` | Engineering | `HIGHLIGHTS` | Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting. | [playback.md](../../.claude/agents/playback.md) |
 | `POLLS` | Engineering | `LOCAL` | Own cheer eligibility, vote math, poll lifecycle and offline vote semantics. | [polls.md](../../.claude/agents/polls.md) |
+| `PORTAL` | Engineering | `ADMIN` | Read-only home dashboard and the six portal tabs. | [portal.md](../../.claude/agents/portal.md) |
 | `PRIVACY_ENGINEERING` | Legal and Compliance | `COMPLIANCE` | Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation. | [privacy-engineering.md](../../.claude/agents/privacy-engineering.md) |
 | `PRODUCT` | Product | `CTO` | Translate the family donation and recruitment mission into acceptance criteria and dependencies. | [product.md](../../.claude/agents/product.md) |
 | `PROFILE` | Engineering | `ENGINEERING` | Own/public athlete identity and feature integration | [profile.md](../../.claude/agents/profile.md) |

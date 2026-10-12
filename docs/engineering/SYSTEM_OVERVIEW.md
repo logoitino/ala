@@ -66,7 +66,7 @@ Expo Router lives **only** in `apps/mobile/app/`. UI, hooks, and context live un
 ```
 apps/mobile/app/                  Expo Router
   (tabs)/                         Fan hub
-    index.tsx                     Home feed (Home / All / Seki + clip/athlete search; DB / hooks still `reels`); Player of the Week `SpotlightModal`
+    index.tsx                     Home feed (Home + search + Local jump; All and Seki are off the bar; DB / hooks still `reels`); Player of the Week `SpotlightModal`
     spotlight.tsx                 Spotlight board (reopen dismissed Player of the Week/Month/Year)
     local/                        Nested stack so match detail keeps FanTabBar
       index.tsx                   Explore search + Live Matches / School Polls / Top Boosters

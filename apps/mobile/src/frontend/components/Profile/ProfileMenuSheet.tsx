@@ -103,7 +103,7 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <MenuBackdrop accent="violet" />
-          <SheetHandle />
+          <SheetHandle onDismiss={() => dismiss()} />
           <Text style={styles.kicker}>Account</Text>
           <Text style={styles.title}>Settings</Text>
           <View style={styles.list}>

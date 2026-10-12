@@ -2,6 +2,59 @@
 
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
+## 2026-10-11
+
+### Highlight bar, upload, and cheer poll
+
+- The Highlight bar is Home, search, and Local. All and Seki are off that bar.
+- The upload menu is centered, and Next sits with the choices.
+- A chosen side on a live cheer poll stays a separate button from the share bar.
+
+### Analytics
+
+- The admin portal has an Analytics page: eight dashboards and a catalog of every measure the app already reports. A missing measure stays blank.
+
+### Upload
+
+- A video Highlight can post with Tag later. One permission line covers footage, sound, and marks. This is me is the first choice when the signed-in account is that athlete. Donate stays off until an athlete is tagged. Choosing an athlete no longer plays the clip inside the sheet. Photo stories still need an athlete.
+
+### Preview
+
+- Android and iOS preview builds were queued again so a phone can install the popup swipe and the upload black-screen fix. iOS still installs only on the registered iPad.
+
+### Phone menus and upload
+
+- A downward swipe on the top of a popup closes it on a phone.
+- After a Highlight publishes, the clip preview leaves before the sheet closes, so the app does not stay on a black screen.
+
+### Preview
+
+- Android and iOS preview builds were queued again so a phone can install guest looking, the sign-in sheet, swipe-to-close, and the owner-card fix. iOS still installs only on the registered iPad.
+
+### Admin portal
+
+- After sign-in, Home is a dashboard of measured numbers and 7-day charts. The tabs are Home, Trends, Audience, Revenue, Health, and Product, in one equal row. Daily people, retention, and acquisition cost are named as not measured.
+
+### Owner card
+
+- Swiping a Highlight sideways to open the owner card no longer crashes the browser.
+
+### Operations and popup menus
+
+- Popup menus close when you swipe down on the grab bar.
+- The admin portal Operations page breaks the same reports into Where, Buttons, Errors, and Menus. The open tab says the busiest place, the most used button, or the most reported error, then lists every smaller row.
+
+### Management desk
+
+- The admin portal has a Departments page for Billing, Marketing, Support, API, and IT. Failed reads and empty windows are marked on that page. A partner reads it after an admin signs them in. There is no public data key.
+
+### Guest looking
+
+- A guest can watch the Highlight in front of them and two more swipes. The next swipe asks for an account. Upload asks before the composer opens. The test account stays on the sign-in sheet, with its email and password, until a production build.
+- The preview server was missing that test account, so the button reported invalid credentials. The confirmed account is on staging now.
+- Sign-in is Continue with Apple, Continue with Google, email, and password. Create an account is a separate step, and that is the only place the 13+ confirmation appears.
+- Preview queued 2026-10-11. Android `fe188b8e-2a66-486f-a24e-9085dd6f7676`. iOS `b16cc2cb-fb2c-4acf-9de1-430f82f53d9e` (registered iPad only).
+
 ## 2026-10-10
 
 ### Google sign-in
