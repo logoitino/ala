@@ -288,7 +288,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 **Call:** `COMMERCE`
 **Fan:** Donate sheet (90 / 10 split line, optional tip for Tapua'i, card-fee box) · Rally card · Say thanks · `/drip` · gear goals · `/receipts` · `/gift/[handle]` · `PayoutSetupCard`
-**Admin:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers)
+**Admin:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers) · Next `/money` Revenue (read-only)
 **What it does:** Stripe **test** PaymentSheet. Mālo $5 / $10 / $25 / Custom → one `tips` row (where it started: Highlight, QR link, wishlist item, profile, or live play) + 10 Aura per tip dollar. Exclusive subscribe +100 Aura. Drip Buy Now. Wishlist Chip In writes that same `tips` row, then `chip_in_wishlist_item` only moves the item total. Connect Express (JWT Edge `create-stripe-account` only). Custodial payout from `profiles.stripe_connect_id`. Legal ack required before Connect and Varsity apply. The prototype terms (`LEGAL_TERMS_VERSION`) and the Mālo sheet say we keep that gift record and use it for receipts, athlete accounting, and to see which parts of the app bring in support.
 
 | Function | Where |
@@ -343,7 +343,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 | System | features, look, **catalogs**, studio | Features / Look / catalogs wait on **Publish** |
 | Hidden | lab (JSON), qa | Deep links |
 
-**Next `pnpm admin` (`http://localhost:3001`):** **Read-only oversight, no edit affordance anywhere.** Home · Trends · Audience · Revenue · Health · Product (`PORTAL`). Departments (`/manage`) and Analytics (`/analytics`, `ANALYST`) are header links, not extra tabs. Analytics is eight dashboards built from a measure catalog on `get_admin_reports` and `get_company_revenue_summary`. Home charts the 7-day series from `get_admin_reports`. Revenue uses `get_company_revenue_summary`. Features and Profile show `app_runtime_config` via `FlagStatusList` (plain badges, no toggle). Every write — flags, Games, Drip, Catalogs, People verify/grant-admin, everything — happens only in Expo `/admin`.
+**Next `pnpm admin` (`http://localhost:3001`):** **Read-only oversight, no edit affordance anywhere.** Tabs: Home · Trends · Audience · Revenue · Health · Product. Departments (`/manage`) and Analytics (`/analytics`) are header links, not extra tabs. Owners: `PORTAL` owns the shell, Home, Audience, Health (`/operations`), Departments and Product; `ADMIN` owns Trends (`/reports`) and `lib/reports.ts`; `COMMERCE` owns Revenue (`/money`); `ANALYST` owns Analytics. The full list is the "Next desks" line under **Expo admin desks → department** below. Analytics is eight dashboards built from a measure catalog on `get_admin_reports` and `get_company_revenue_summary`. Home charts the 7-day series from `get_admin_reports`. Revenue uses `get_company_revenue_summary`. Features and Profile show `app_runtime_config` via `FlagStatusList` (plain badges, no toggle). Every write — flags, Games, Drip, Catalogs, People verify/grant-admin, everything — happens only in Expo `/admin`.
 
 | Function | Where |
 | --- | --- |
@@ -545,7 +545,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `ACCESSIBILITY` | Design | `DESIGN` | Audit screen-reader labels, focus order, touch targets, contrast, text scaling and reduced motion. | [accessibility.md](../../.claude/agents/accessibility.md) |
 | `ACCOUNT_TAGS` | Engineering | `UPLOAD` | Account mention request/confirm/hide lifecycle, honest RPC errors and concurrent three-tag limit | [account-tags.md](../../.claude/agents/account-tags.md) |
 | `ACTIVITY` | Engineering | `HIGHLIGHTS` | Own activity rows, pagination, actor navigation and empty/error states. | [activity.md](../../.claude/agents/activity.md) |
-| `ADMIN` | Engineering | `ENGINEERING` | Expo write control plane and read-only Next oversight | [admin.md](../../.claude/agents/admin.md) |
+| `ADMIN` | Engineering | `ENGINEERING` | Expo write control plane and read-only Next oversight; owns Next Trends (`/reports`) and `lib/reports.ts` | [admin.md](../../.claude/agents/admin.md) |
 | `ANALYST` | Engineering | `ADMIN` | Read-only measure catalog and eight analytics dashboards. | [analyst.md](../../.claude/agents/analyst.md) |
 | `API` | Engineering | `ENGINEERING` | Own request validation, JWT verification, authorization, typed responses and server error boundaries. | [api.md](../../.claude/agents/api.md) |
 | `ATHLETE_STATS` | Engineering | `PROFILE` | Own athlete bio/stat/social visibility and sport-specific stat shapes. | [athlete-stats.md](../../.claude/agents/athlete-stats.md) |
@@ -558,7 +558,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `CATALOGS` | Engineering | `ADMIN` | Own sport/region/category/price catalog consistency and generated product facts. | [catalogs.md](../../.claude/agents/catalogs.md) |
 | `CHECKOUT` | Finance | `COMMERCE` | Own staged Amount / Options / Review donation UI, PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling. | [checkout.md](../../.claude/agents/checkout.md) |
 | `CI` | IT infrastructure | `OPERATIONS` | Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation. | [ci.md](../../.claude/agents/ci.md) |
-| `COMMERCE` | Finance | `CTO` | Financial design and payment specialist integration | [commerce.md](../../.claude/agents/commerce.md) |
+| `COMMERCE` | Finance | `CTO` | Financial design and payment specialist integration; owns Next Revenue (`/money`) | [commerce.md](../../.claude/agents/commerce.md) |
 | `COMPLIANCE` | Legal and Compliance | `CTO` | Privacy, commercial disclosures and evidence-backed claims | [compliance.md](../../.claude/agents/compliance.md) |
 | `CONNECT` | Finance | `COMMERCE` | Own JWT-gated Express links, bank onboarding state and verification/payout readiness. | [connect.md](../../.claude/agents/connect.md) |
 | `CONTENT_RIGHTS` | Legal and Compliance | `LEGAL` | Own implementation of approved filming, audio, mark permissions and rights-report language. | [content-rights.md](../../.claude/agents/content-rights.md) |
@@ -598,7 +598,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `PHOTO_STORIES` | Engineering | `HIGHLIGHTS` | Own photo story upload and data flow: 1–10 photos, reorder, per-photo descriptions, `set_reel_photos` client and story photo reads. | [photo-stories.md](../../.claude/agents/photo-stories.md) |
 | `PLAYBACK` | Engineering | `HIGHLIGHTS` | Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting. | [playback.md](../../.claude/agents/playback.md) |
 | `POLLS` | Engineering | `LOCAL` | Own cheer eligibility, vote math, poll lifecycle and offline vote semantics. | [polls.md](../../.claude/agents/polls.md) |
-| `PORTAL` | Engineering | `ADMIN` | Read-only home dashboard and the six portal tabs. | [portal.md](../../.claude/agents/portal.md) |
+| `PORTAL` | Engineering | `ADMIN` | Read-only portal shell, Home, Audience, Health, Departments and Product. Trends is `ADMIN`'s; Revenue is `COMMERCE`'s. | [portal.md](../../.claude/agents/portal.md) |
 | `PRIVACY_ENGINEERING` | Legal and Compliance | `COMPLIANCE` | Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation. | [privacy-engineering.md](../../.claude/agents/privacy-engineering.md) |
 | `PRODUCT` | Product | `CTO` | Translate the family donation and recruitment mission into acceptance criteria and dependencies. | [product.md](../../.claude/agents/product.md) |
 | `PROFILE` | Engineering | `ENGINEERING` | Own/public athlete identity and feature integration | [profile.md](../../.claude/agents/profile.md) |

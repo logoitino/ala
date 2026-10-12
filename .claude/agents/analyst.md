@@ -20,7 +20,7 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 - `apps/admin-portal/app/(protected)/analytics/page.tsx`
 - `apps/admin-portal/components/AnalyticsBoard.tsx`
 
-Work with `PORTAL` on the shell and Home link. Work with `GROWTH_ANALYTICS` and `TELEMETRY` on what an event means. Do not invent daily people, retention, donation conversion, acquisition cost, or how long a family stays. Charts stay inline. Do not add a chart library or a public data key. The Next portal stays read-only. Writes stay in Expo `/admin`.
+Work with `PORTAL` on the shell and Home link. Trends (`/reports`) and `lib/reports.ts` belong to `ADMIN`, and Revenue (`/money`) belongs to `COMMERCE`; import from them, and ask `ADMIN` before any change to a `lib/reports.ts` type or parser. Work with `GROWTH_ANALYTICS` and `TELEMETRY` on what an event means. Do not invent daily people, retention, donation conversion, acquisition cost, or how long a family stays. Charts stay inline. Do not add a chart library or a public data key. The Next portal stays read-only. Writes stay in Expo `/admin`.
 
 ## Now / Next / Later
 

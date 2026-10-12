@@ -3,7 +3,11 @@
  * Same RPCs Expo `/admin/reports` and `/admin/money` call.
  */
 
-import { getSupabaseServerClient } from '@/lib/supabase.server';
+// `supabase.server` (server-only) is loaded inside each fetcher, so `node --test` can import the pure parsers here.
+async function serverClient() {
+  const { getSupabaseServerClient } = await import('@/lib/supabase.server');
+  return getSupabaseServerClient();
+}
 
 export type ReportSection = Record<string, number>;
 
@@ -23,21 +27,23 @@ export type PortalReports = {
   live: ReportSection;
   reliability: ReportSection;
   usage: ReportSection;
-  tabs: ReportLeader[];
-  features: ReportLeader[];
-  issues: ReportLeader[];
-  scroll: ReportLeader[];
-  leaders: { malo: ReportLeader[]; hype: ReportLeader[]; schools: ReportLeader[] };
+  /** Each list: `null` = the key was not in this read (kit "missing"); `[]` = read, nothing in it (kit empty state). */
+  tabs: ReportLeader[] | null;
+  features: ReportLeader[] | null;
+  issues: ReportLeader[] | null;
+  scroll: ReportLeader[] | null;
+  leaders: { malo: ReportLeader[] | null; hype: ReportLeader[] | null; schools: ReportLeader[] | null };
   series: ReportSeries;
 };
 
 export type ReportPoint = { label: string; value: number };
 
+/** `null` = the series key was not in this read; `[]` = present but empty. */
 export type ReportSeries = {
-  clips: ReportPoint[];
-  malo: ReportPoint[];
-  stalls: ReportPoint[];
-  dwell: ReportPoint[];
+  clips: ReportPoint[] | null;
+  malo: ReportPoint[] | null;
+  stalls: ReportPoint[] | null;
+  dwell: ReportPoint[] | null;
 };
 
 export type RevenueStream = {
@@ -48,6 +54,9 @@ export type RevenueStream = {
   platform_cents: number;
   payout_cents: number;
   payee: string;
+  /** Stated split in basis points (1000 = 10%) when the RPC returns it. `null` / absent = not in this read. */
+  platform_bps?: number | null;
+  payout_bps?: number | null;
 };
 
 export type RevenueLog = {
@@ -63,10 +72,11 @@ export type RevenueLog = {
 export type PortalRevenue = {
   configured: boolean;
   error: string | null;
-  gross_volume_cents: number;
-  company_net_cents: number;
-  payouts_cents: number;
-  stripe_paid_cents: number;
+  /** `null` = the key was not in this read: show "—", never $0.00. */
+  gross_volume_cents: number | null;
+  company_net_cents: number | null;
+  payouts_cents: number | null;
+  stripe_paid_cents: number | null;
   streams: RevenueStream[];
   recent: RevenueLog[];
 };
@@ -82,21 +92,21 @@ const EMPTY_REPORTS: PortalReports = {
   live: {},
   reliability: {},
   usage: {},
-  tabs: [],
-  features: [],
-  issues: [],
-  scroll: [],
-  leaders: { malo: [], hype: [], schools: [] },
-  series: { clips: [], malo: [], stalls: [], dwell: [] },
+  tabs: null,
+  features: null,
+  issues: null,
+  scroll: null,
+  leaders: { malo: null, hype: null, schools: null },
+  series: { clips: null, malo: null, stalls: null, dwell: null },
 };
 
 const EMPTY_REVENUE: PortalRevenue = {
   configured: false,
   error: null,
-  gross_volume_cents: 0,
-  company_net_cents: 0,
-  payouts_cents: 0,
-  stripe_paid_cents: 0,
+  gross_volume_cents: null,
+  company_net_cents: null,
+  payouts_cents: null,
+  stripe_paid_cents: null,
   streams: [],
   recent: [],
 };
@@ -104,6 +114,13 @@ const EMPTY_REVENUE: PortalRevenue = {
 function asInt(value: unknown): number {
   const n = Number(value);
   return Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0;
+}
+
+/** Like `asInt`, but an absent or non-numeric value is `null` (not in this read), never 0. */
+function asIntOrNull(value: unknown): number | null {
+  if (value == null || typeof value === 'boolean' || (typeof value === 'string' && !value.trim())) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : null;
 }
 
 function asText(value: unknown, fallback = ''): string {
@@ -119,7 +136,7 @@ function asSection(value: unknown): ReportSection {
   return out;
 }
 
-function asSeries(value: unknown): ReportSeries {
+export function asSeries(value: unknown): ReportSeries {
   const bag = value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
   return {
     clips: asLeaders(bag.clips),
@@ -129,8 +146,11 @@ function asSeries(value: unknown): ReportSeries {
   };
 }
 
-function asLeaders(value: unknown): ReportLeader[] {
-  if (!Array.isArray(value)) return [];
+/**
+ * @purpose Parse a `{label,value}` list. `null` when the key is absent (or not a list); a present `[]` stays `[]`.
+ */
+export function asLeaders(value: unknown): ReportLeader[] | null {
+  if (!Array.isArray(value)) return null;
   return value
     .map((row) => {
       if (!row || typeof row !== 'object') return null;
@@ -163,31 +183,37 @@ export const REPORT_LABELS: Record<string, string> = {
   clips_live: 'Live clips',
   clips_24h: 'Clips uploaded (24h)',
   clips_7d: 'Clips uploaded (7d)',
+  clips_prev_7d: 'Clips uploaded (prior 7d)',
   seki: 'Seki',
   aura: 'Aura',
   flex: 'Flex',
   hype_votes: 'Hype votes',
   saves: 'Saves',
   crew_follows: 'Crew follows',
-  malo_cents_all: 'Mālo all-time',
-  malo_count_all: 'Mālo count',
-  malo_cents_24h: 'Mālo (24h)',
-  malo_count_24h: 'Mālo count (24h)',
-  malo_cents_7d: 'Mālo (7d)',
-  malo_count_7d: 'Mālo count (7d)',
-  avg_tip_cents_7d: 'Avg Mālo (7d)',
+  malo_cents_all: 'Donations, all time',
+  malo_count_all: 'Donation count, all time',
+  malo_cents_24h: 'Donations (24h)',
+  malo_count_24h: 'Donation count (24h)',
+  malo_cents_7d: 'Donations (7d)',
+  malo_count_7d: 'Donation count (7d)',
+  malo_cents_prev_7d: 'Donations (prior 7d)',
+  avg_tip_cents_7d: 'Average donation (7d)',
   queued_payouts: 'Queued payouts',
   paid_payouts_cents: 'Paid out',
-  active_subs: 'Active subscribe',
+  active_subs: 'Active subscriptions',
   flagged: 'Open flags',
   removed: 'Removed clips',
   vault: 'Vault clips',
   exclusive_clips: 'Exclusive clips',
   flash_live: 'Flash Unlock live',
   spotlight_live: 'Live Spotlight awards',
+  qna: 'Subscriber Q&A requests',
+  game_play: 'Game Day clips',
+  train_like_me: 'Train Like Me clips',
+  serve_like_me: 'Serve Like Me clips',
   profiles: 'Profiles',
   athletes: 'Athletes',
-  verified: 'Verified athletes',
+  verified: 'Verified profiles',
   admins: 'Admins',
   schools: 'Schools',
   pending_verify: 'Verify queue',
@@ -199,8 +225,8 @@ export const REPORT_LABELS: Record<string, string> = {
   drip_skus: 'Drip SKUs on rack',
   stalls_24h: 'Stalls (24h)',
   reconnects_24h: 'Reconnects (24h)',
-  checkouts_24h: 'Checkout events (24h)',
-  avg_checkout_ms_24h: 'Avg Mālo checkout ms',
+  checkouts_24h: 'Checkout step timings (24h)',
+  avg_checkout_ms_24h: 'Average checkout step time (24h)',
   events_24h: 'Telemetry events (24h)',
   sessions_24h: 'Tab sessions (24h)',
   dwell_ms_24h: 'Time on tabs (24h)',
@@ -213,6 +239,52 @@ export const REPORT_LABELS: Record<string, string> = {
   avg_scroll_pct_7d: 'Avg scroll depth (7d)',
 };
 
+/**
+ * @purpose Format ledger cents as whole dollars ("$1,200") for chart gridlines, where cents are noise.
+ */
+export function formatUsdWhole(cents: number): string {
+  return (Math.max(0, cents) / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+}
+
+/**
+ * @purpose Format a count. Whole numbers print plainly; averages (e.g. a 7-day daily average) keep one decimal.
+ */
+export function formatCount(value: number): string {
+  return value.toLocaleString('en-US', { maximumFractionDigits: 1 });
+}
+
+/**
+ * @purpose Format milliseconds of time on tabs as minutes ("42 min", "3.5 min"). `tabs` and `dwell` values are ms.
+ */
+export function formatMinutes(ms: number): string {
+  const minutes = Math.max(0, ms) / 60000;
+  const digits = minutes > 0 && minutes < 10 ? 1 : 0;
+  return `${minutes.toLocaleString('en-US', { maximumFractionDigits: digits })} min`;
+}
+
+/**
+ * @purpose Format a short duration in ms ("850 ms", "1.2 s"), e.g. `avg_checkout_ms_24h`.
+ */
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms).toLocaleString('en-US')} ms`;
+  return `${(ms / 1000).toLocaleString('en-US', { maximumFractionDigits: 1 })} s`;
+}
+
+/**
+ * @purpose Format an average percent (`scroll` values, `avg_scroll_pct_7d`) as "n%". It is already a percent, not a share to compute.
+ */
+export function formatPercent(value: number): string {
+  return `${Math.round(value).toLocaleString('en-US')}%`;
+}
+
+/**
+ * @purpose Read one number from a `get_admin_reports` section. `null` = the key was not in this read (not 0).
+ */
+export function reportNumber(section: ReportSection, key: string): number | null {
+  const value = section[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
 function isMoneyKey(key: string): boolean {
   return key.includes('cents') || key.startsWith('malo_cents') || key === 'paid_payouts_cents' || key === 'avg_tip_cents_7d';
 }
@@ -222,12 +294,9 @@ function isMoneyKey(key: string): boolean {
  */
 export function formatReportValue(key: string, value: number): string {
   if (isMoneyKey(key)) return formatUsd(value);
-  if (key.includes('dwell_ms')) {
-    const minutes = Math.round(value / 60000);
-    return `${minutes.toLocaleString()} min`;
-  }
-  if (key.includes('_ms')) return `${value.toLocaleString()} ms`;
-  if (key.includes('pct')) return `${value}%`;
+  if (key.includes('dwell_ms')) return formatMinutes(value);
+  if (key.includes('_ms')) return formatDuration(value);
+  if (key.includes('pct')) return formatPercent(value);
   return value.toLocaleString();
 }
 
@@ -240,10 +309,17 @@ export function labelForReportKey(key: string): string {
  * @sideEffects `get_admin_reports` RPC (same as Expo `/admin/reports`).
  */
 export async function fetchPortalReports(): Promise<PortalReports> {
-  const supabase = await getSupabaseServerClient();
+  const supabase = await serverClient();
   if (!supabase) return { ...EMPTY_REPORTS, error: 'Supabase env missing' };
   const { data, error } = await supabase.rpc('get_admin_reports');
   if (error) return { ...EMPTY_REPORTS, configured: true, error: error.message };
+  return parseReportsPayload(data);
+}
+
+/**
+ * @purpose Parse a `get_admin_reports` payload. Pure. A missing list or series key is `null`, a present `[]` stays `[]`.
+ */
+export function parseReportsPayload(data: unknown): PortalReports {
   if (!data || typeof data !== 'object') return { ...EMPTY_REPORTS, configured: true };
   const row = data as Record<string, unknown>;
   const leadersRaw = row.leaders && typeof row.leaders === 'object' ? (row.leaders as Record<string, unknown>) : {};
@@ -276,17 +352,32 @@ export async function fetchPortalReports(): Promise<PortalReports> {
  * @sideEffects `get_company_revenue_summary` (syncs `company_revenue_logs`).
  */
 export async function fetchPortalRevenue(): Promise<PortalRevenue> {
-  const supabase = await getSupabaseServerClient();
+  const supabase = await serverClient();
   if (!supabase) return { ...EMPTY_REVENUE, error: 'Supabase env missing' };
   const { data, error } = await supabase.rpc('get_company_revenue_summary');
   if (error) return { ...EMPTY_REVENUE, configured: true, error: error.message };
+  return parseRevenueSummary(data);
+}
+
+/** Cents field, else the older dollars field, else `null` (absent = not in this read, never $0). */
+function centsOrNull(cents: unknown, dollars: unknown): number | null {
+  if (cents != null) return asIntOrNull(cents);
+  if (dollars != null) return dollarsToCents(dollars);
+  return null;
+}
+
+/**
+ * @purpose Parse a `get_company_revenue_summary` payload. Pure. Absent totals are `null`; streams keep
+ *   `platform_bps` / `payout_bps` when the RPC returns them.
+ */
+export function parseRevenueSummary(data: unknown): PortalRevenue {
   try {
     const payload = typeof data === 'string' ? JSON.parse(data) : Array.isArray(data) ? data[0] : data;
     if (!payload || typeof payload !== 'object') return { ...EMPTY_REVENUE, configured: true };
     const row = payload as Record<string, unknown>;
     const streams = Array.isArray(row.streams)
       ? row.streams
-          .map((item) => {
+          .map((item): RevenueStream | null => {
             if (!item || typeof item !== 'object') return null;
             const bag = item as Record<string, unknown>;
             const label = asText(bag.label);
@@ -299,6 +390,8 @@ export async function fetchPortalRevenue(): Promise<PortalRevenue> {
               platform_cents: asInt(bag.platform_cents),
               payout_cents: asInt(bag.payout_cents),
               payee: asText(bag.payee, '—'),
+              platform_bps: asIntOrNull(bag.platform_bps),
+              payout_bps: asIntOrNull(bag.payout_bps),
             };
           })
           .filter((item): item is RevenueStream => Boolean(item))
@@ -328,12 +421,10 @@ export async function fetchPortalRevenue(): Promise<PortalRevenue> {
     return {
       configured: true,
       error: null,
-      gross_volume_cents:
-        row.gross_volume_cents != null ? asInt(row.gross_volume_cents) : dollarsToCents(row.total_gross),
-      company_net_cents:
-        row.company_net_cents != null ? asInt(row.company_net_cents) : dollarsToCents(row.total_platform_revenue),
-      payouts_cents: row.payouts_cents != null ? asInt(row.payouts_cents) : dollarsToCents(row.total_payouts),
-      stripe_paid_cents: asInt(row.stripe_paid_cents),
+      gross_volume_cents: centsOrNull(row.gross_volume_cents, row.total_gross),
+      company_net_cents: centsOrNull(row.company_net_cents, row.total_platform_revenue),
+      payouts_cents: centsOrNull(row.payouts_cents, row.total_payouts),
+      stripe_paid_cents: asIntOrNull(row.stripe_paid_cents),
       streams,
       recent,
     };
@@ -368,11 +459,17 @@ export type PortalMaloBreakdown = {
   byEntry: MaloSlice[];
   byDay: MaloDay[];
   recent: MaloTxn[];
+  /** `rpc` = `get_admin_malo_breakdown`; `fallback` = built from the last 200 `tips` rows (partial); `null` = not read. */
+  source: 'rpc' | 'fallback' | null;
 };
+
+/** Row cap on the `tips` fallback read. Totals built from it are partial. */
+export const MALO_FALLBACK_LIMIT = 200;
 
 const EMPTY_BREAKDOWN: PortalMaloBreakdown = {
   configured: false,
   error: null,
+  source: null,
   byOrigin: [],
   byEntry: [],
   byDay: [],
@@ -382,13 +479,13 @@ const EMPTY_BREAKDOWN: PortalMaloBreakdown = {
 export function maloOriginTitle(origin: string): string {
   if (origin === 'highlight') return 'Highlight';
   if (origin === 'qr') return 'QR link';
-  if (origin === 'wishlist') return 'Wishlist';
+  if (origin === 'wishlist') return 'Gear goal';
   if (origin === 'live') return 'Live feed';
   return 'Profile';
 }
 
 export function maloEntryTitle(entry: string): string {
-  return entry === 'qr_link' ? 'QR gift link' : 'In the app';
+  return entry === 'qr_link' ? 'QR donation link' : 'In the app';
 }
 
 export function maloChannel(origin: string, entry: string, sourceLabel: string): string {
@@ -402,7 +499,10 @@ function asRows(value: unknown): Record<string, unknown>[] {
   return value.filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object');
 }
 
-function parseBreakdown(payload: Record<string, unknown>): PortalMaloBreakdown {
+/**
+ * @purpose Parse a `get_admin_malo_breakdown` payload. Pure. Marked `source: 'rpc'`.
+ */
+export function parseBreakdown(payload: Record<string, unknown>): PortalMaloBreakdown {
   const byOrigin = asRows(payload.by_origin).map((row) => {
     const key = asText(row.origin, 'profile');
     return { key, label: maloOriginTitle(key), cents: asInt(row.cents), count: asInt(row.count) };
@@ -430,15 +530,16 @@ function parseBreakdown(payload: Record<string, unknown>): PortalMaloBreakdown {
     reel_id: asText(row.reel_id) || null,
     wishlist_item_id: asText(row.wishlist_item_id) || null,
   })).filter((row) => row.id);
-  return { configured: true, error: null, byOrigin, byEntry, byDay, recent };
+  return { configured: true, error: null, byOrigin, byEntry, byDay, recent, source: 'rpc' };
 }
 
 /**
- * @purpose Where each Mālo started, plus the latest gift rows, for the web Money desk.
- * @sideEffects `get_admin_malo_breakdown`. Admin-only. Falls back to a `tips` SELECT when the RPC is not applied yet.
+ * @purpose Where each donation started, plus the latest donation rows, for the web Money desk.
+ * @sideEffects `get_admin_malo_breakdown`. Admin-only. Falls back to a `tips` SELECT (last 200 rows, `source: 'fallback'`)
+ *   when the RPC is not applied yet.
  */
 export async function fetchPortalMaloBreakdown(): Promise<PortalMaloBreakdown> {
-  const supabase = await getSupabaseServerClient();
+  const supabase = await serverClient();
   if (!supabase) return { ...EMPTY_BREAKDOWN, error: 'Supabase env missing' };
   const rpc = await supabase.rpc('get_admin_malo_breakdown');
   if (!rpc.error && rpc.data && typeof rpc.data === 'object') {
@@ -448,15 +549,22 @@ export async function fetchPortalMaloBreakdown(): Promise<PortalMaloBreakdown> {
     .from('tips')
     .select('id, amount_cents, created_at, origin, entry, source_label, reel_id, wishlist_item_id, player_id')
     .order('created_at', { ascending: false })
-    .limit(200);
+    .limit(MALO_FALLBACK_LIMIT);
   if (listed.error || !Array.isArray(listed.data)) {
-    return { ...EMPTY_BREAKDOWN, configured: true, error: rpc.error?.message ?? listed.error?.message ?? 'Could not load Mālo.' };
+    return { ...EMPTY_BREAKDOWN, configured: true, error: rpc.error?.message ?? listed.error?.message ?? 'Could not load donations.' };
   }
-  const rows = listed.data as Record<string, unknown>[];
+  return breakdownFromTips(listed.data as Record<string, unknown>[]);
+}
+
+/**
+ * @purpose Build the donation breakdown from raw `tips` rows (the RPC fallback). Pure. Marked `source: 'fallback'`:
+ *   it only sees the rows it was given (at most `MALO_FALLBACK_LIMIT`), so its totals are partial.
+ */
+export function breakdownFromTips(rows: Record<string, unknown>[], now: number = Date.now()): PortalMaloBreakdown {
   const originMap = new Map<string, { cents: number; count: number }>();
   const entryMap = new Map<string, { cents: number; count: number }>();
   const dayMap = new Map<string, number>();
-  const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  const cutoff = now - 14 * 24 * 60 * 60 * 1000;
   for (const row of rows) {
     const origin = asText(row.origin, 'profile');
     const entry = asText(row.entry, 'in_app');
@@ -479,6 +587,7 @@ export async function fetchPortalMaloBreakdown(): Promise<PortalMaloBreakdown> {
   return {
     configured: true,
     error: null,
+    source: 'fallback',
     byOrigin: [...originMap.entries()]
       .map(([key, bucket]) => ({ key, label: maloOriginTitle(key), ...bucket }))
       .sort((a, b) => b.cents - a.cents),

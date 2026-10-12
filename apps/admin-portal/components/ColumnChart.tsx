@@ -1,8 +1,26 @@
 /**
- * @purpose Seven-day column chart for the admin home. Inline SVG, no chart library.
- *   Values stay in the caption so the shape is not the only reading.
+ * Back-compat wrapper (ADM-01a). The 7-day column chart now lives in the chart kit as
+ * `components/charts/TrendChart`. This keeps the old name and props so AnalyticsBoard keeps
+ * compiling while ANALYST moves to TrendChart (Home already did in ADM-01b). Points accept a
+ * null value or a null list (not in this read), which TrendChart shows as "—". Do not add features here.
  */
+import { TrendChart, type ChartColor } from './charts';
 
+const ACCENTS: Record<string, ChartColor> = {
+  'var(--jade)': 'jade',
+  'var(--cyan)': 'cyan',
+  'var(--gold)': 'gold',
+  'var(--violet)': 'violet',
+  'var(--ember)': 'bad',
+};
+
+/**
+ * @purpose Seven-day column chart, now rendered by TrendChart (variant "columns").
+ * @param title Chart title.
+ * @param points Daily points, oldest first. Null = the series was not in this read.
+ * @param formatValue Formats a value for labels, the summary, and the Data table.
+ * @param accent Old CSS colour string ('var(--jade)', 'var(--gold)', 'var(--ember)', ...). Unknown values fall back to jade.
+ */
 export function ColumnChart({
   title,
   points,
@@ -10,48 +28,18 @@ export function ColumnChart({
   accent = 'var(--jade)',
 }: {
   title: string;
-  points: { label: string; value: number }[];
+  points: { label: string; value: number | null }[] | null;
   formatValue: (value: number) => string;
   accent?: string;
 }) {
-  const max = Math.max(...points.map((point) => point.value), 1);
-  const summary =
-    points.length === 0
-      ? `${title}. No days in this read.`
-      : `${title}. ${points.map((point) => `${point.label} ${formatValue(point.value)}`).join(', ')}.`;
-
   return (
-    <figure className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4" style={{ boxShadow: 'var(--shadow-card)' }}>
-      <figcaption className="text-sm font-extrabold tracking-tight">{title}</figcaption>
-      <p className="mt-1 text-xs text-[var(--text-muted)]">Last 7 days, UTC. One bar per day.</p>
-      {points.length === 0 ? (
-        <p className="mt-6 text-sm text-[var(--text-muted)]">This read did not include the series.</p>
-      ) : (
-        <div className="mt-4" role="img" aria-label={summary}>
-          <div className="flex h-28 items-end gap-2">
-            {points.map((point, index) => {
-              const height = point.value <= 0 ? 4 : Math.max(8, Math.round((point.value / max) * 112));
-              return (
-                <div key={`${point.label}-${index}`} className="flex h-full flex-1 items-end">
-                  <div
-                    className="w-full rounded-t-md"
-                    style={{ height, background: accent }}
-                    title={`${point.label}: ${formatValue(point.value)}`}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-2 flex gap-2">
-            {points.map((point, index) => (
-              <div key={`${point.label}-label-${index}`} className="min-w-0 flex-1 text-center">
-                <p className="truncate text-[10px] font-bold text-[var(--text-muted)] uppercase">{point.label}</p>
-                <p className="truncate text-[10px] font-extrabold text-[var(--ink)]">{formatValue(point.value)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </figure>
+    <TrendChart
+      title={title}
+      windowLabel="Last 7 days, UTC"
+      points={points}
+      format={formatValue}
+      variant="columns"
+      accent={ACCENTS[accent] ?? 'jade'}
+    />
   );
 }

@@ -1,5 +1,6 @@
 /**
- * Operations desk. Four tabs break down where people are, which buttons they use, errors, and menus.
+ * Health desk (`/operations`). Four tabs break down where people spend time, which buttons
+ * they use, errors and playback, and which menus are on. Read only.
  * @sideEffects `get_admin_reports`, `get_company_revenue_summary`, and the published runtime flags.
  */
 import Link from 'next/link';
@@ -19,10 +20,14 @@ export default async function OperationsPage() {
     fetchPortalRevenue(),
     fetchPortalRuntime(),
   ]);
+  const reportsOk = reports.configured && !reports.error;
   const lenses = buildOperations({
     tabs: reports.tabs,
     buttons: reports.features,
     appErrors: reports.issues,
+    scroll: reports.scroll,
+    dwellSeries: reports.series.dwell,
+    stallSeries: reports.series.stalls,
     portalErrors: managementAlerts({
       reportsError: reports.error,
       revenueError: revenue.error,
@@ -36,17 +41,22 @@ export default async function OperationsPage() {
     usage: reports.usage,
     reliability: reports.reliability,
     published: runtime.published,
+    reportsOk,
+    runtimeOk: runtime.configured,
   });
 
   return (
     <PortalShell active="/operations">
-      <p className="mb-6 text-sm leading-6 text-[var(--ink-soft)]">
-        Start with the sentence on the open tab. The bars are the ranking. Every row under that is the smaller data.
-        Department status stays on <Link href="/manage" className="font-extrabold text-[var(--jade)]">Departments</Link>.
-        Menu switches are made in Expo <code className="rounded bg-[var(--jade-soft)] px-1.5">/admin</code>.
+      <p className="mb-6 max-w-3xl text-sm leading-6 text-[var(--ink-soft)]">
+        Each tab starts with one sentence, then the tiles, the charts, and every smaller row. Use the arrow keys to move
+        between tabs. Department status stays on{' '}
+        <Link href="/manage" className="font-extrabold text-[var(--jade)] underline-offset-2 hover:underline">
+          Departments
+        </Link>
+        . Menu switches are made in Expo <code className="rounded bg-[var(--jade-soft)] px-1.5">/admin</code>.
       </p>
       {!runtime.configured ? (
-        <p className="mb-4 rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)]">
+        <p className="mb-4 rounded-xl border border-[var(--gold)]/30 bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)]">
           Menu on and off needs the Supabase connection. The other tabs still show whatever the reports read returned.
         </p>
       ) : null}

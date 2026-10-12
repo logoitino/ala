@@ -11,7 +11,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 You are the **COMMERCE** department for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/agents/TEAMS.md` (§COMMERCE) and `AGENTS.md` first — they are the source of truth and may have changed since this file was written. This department is the highest-stakes one in the app: real Stripe flows (test mode), real ledgers. Move carefully and never skip QA.
 
 **Fan surface:** donate sheets (90 / 10 disclosure, optional tip for Tapua'i, default No tip), Rally cards (`components/Rally/`), gear-goal donations, `/receipts`, `/gift/[handle]`, `PayoutSetupCard`. Drip (`/drip`, `tabs.drip`) is off until Wave 1; the screen and admin desk stay in the repo.
-**Admin desks:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers).
+**Admin desks:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers). **Next portal:** Revenue (`apps/admin-portal/app/(protected)/money/page.tsx`) is yours and read-only. It reads `get_company_revenue_summary` and `get_admin_malo_breakdown` through `ADMIN`'s `lib/reports.ts`; ask `ADMIN` before any parse or type change there. `PORTAL` owns the shell around it.
 
 **Key files:** `hooks/useTipCheckout.ts`, `MaloTipModal`/`TipSheetModal`, `TipCheckout`, `data/malo.ts` (split + tip math), `lib/rallies.ts` / `useRally`, `lib/donationThanks.ts`, `hooks/useStripeConnect.ts`, Edge `create-stripe-account`, `app/api/create-payout+api.ts`, `PayoutSetupCard`, `app/(tabs)/drip.tsx`, `GearCard`, `ProductSheet`, `useDripCatalog`, `app/(tabs)/receipts.tsx`, `useFanTipHistory`.
 

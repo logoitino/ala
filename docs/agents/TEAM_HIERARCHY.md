@@ -150,7 +150,7 @@ flowchart TB
 | Support | SUPPORT | INCIDENT_TRIAGE and internal tester help |
 | Brand | VOICE | Donation words and honest product copy |
 
-## Current cross-team builds (2026-10-07)
+## Current cross-team builds (2026-10-07; ADM-01 added 2026-10-11)
 
 | Work | Primary | Pair / independent review | Lead chain |
 | --- | --- | --- | --- |
@@ -161,6 +161,14 @@ flowchart TB
 | UX-05e verification | QA, VISUAL_QA, DEVICE_QA | — | QA → CTO |
 | BRAND-01 tagline placements | BRAND, VOICE | LEGAL | MARKETING → CTO |
 | TOOL-01 MCP tooling | DESIGN_TOOLING | ENGINEERING | DESIGN → CTO |
+| ADM-01a portal chart kit and tokens | DESIGN | ACCESSIBILITY (sign-off before ADM-01b–e) | DESIGN → CTO; integrated by ADMIN |
+| ADM-01b Home, Audience, Health, Departments, Product, shell | PORTAL | ACCESSIBILITY, DESIGN, VOICE | PORTAL → ADMIN → ENGINEERING → CTO |
+| ADM-01c Analytics (`/analytics`) | ANALYST | ACCESSIBILITY, VOICE | ANALYST → ADMIN → ENGINEERING → CTO |
+| ADM-01d Trends (`/reports`) and `lib/reports.ts` | ADMIN | ANALYST (pace caption), ACCESSIBILITY, VOICE | ADMIN → ENGINEERING → CTO |
+| ADM-01e Revenue (`/money`) | COMMERCE | BILLING, VOICE, ACCESSIBILITY | COMMERCE → ADMIN (integration) and CTO |
+| ADM-01 Phase C independent review | QA, VISUAL_QA | ACCESSIBILITY, VOICE, DESIGN | QA → CTO |
+| ADM-01f (not this pass) per-origin Revenue day chart | ADMIN (`lib/reports.ts` parse), then COMMERCE | ACCESSIBILITY, VOICE | ADMIN → ENGINEERING → CTO |
+| ADM-01g docs, ADM-01h roles | DOCUMENTATION; VP_OPERATIONS | — | DOCUMENTATION → ENGINEERING → CTO; VP_OPERATIONS → CTO |
 
 Detail and status: [WORK_QUEUE.md](WORK_QUEUE.md). Build contract: [PHOTO_STORIES_DESIGN.md](../engineering/design/PHOTO_STORIES_DESIGN.md).
 

@@ -51,10 +51,12 @@
       "lead": "ENGINEERING",
       "owns": [
         "apps/mobile/app/(admin)",
-        "apps/admin-portal"
+        "apps/admin-portal",
+        "apps/admin-portal/app/(protected)/reports/page.tsx",
+        "apps/admin-portal/lib/reports.ts"
       ],
       "tasks": [
-        "Expo write control plane and read-only Next oversight"
+        "Expo write control plane and read-only Next oversight; Next Trends (/reports) and lib/reports.ts"
       ],
       "model": "grok-4.7-medium"
     },
@@ -249,10 +251,11 @@
       "lead": "CTO",
       "owns": [
         "apps/mobile/src/frontend/lib/finance.ts",
-        "apps/mobile/src/backend/api"
+        "apps/mobile/src/backend/api",
+        "apps/admin-portal/app/(protected)/money/page.tsx"
       ],
       "tasks": [
-        "Financial design and payment specialist integration"
+        "Financial design and payment specialist integration; Next Revenue (/money)"
       ],
       "model": "grok-4.7-medium"
     },
@@ -855,7 +858,7 @@
         "apps/admin-portal/lib/operations.ts"
       ],
       "tasks": [
-        "Read-only home dashboard and six equal portal tabs"
+        "Read-only portal shell, Home, Audience, Health, Departments and Product (Trends is ADMIN, Revenue is COMMERCE)"
       ],
       "model": "grok-4.7-medium"
     },
