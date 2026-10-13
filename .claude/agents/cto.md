@@ -35,6 +35,14 @@ Every other department lead also reports task results to you: `DESIGN`, `COMMERC
 4. You check the evidence yourself. A written migration is not applied SQL. A Jest run is not a device pass. A green typecheck is not a security review.
 5. Same turn: `docs/STATE.md` §4 when code under `apps/`, `packages/`, or `supabase/` changed. If a role, protocol, or priority changed, `VP_OPERATIONS` updates the registry, `docs/agents/TEAMS.md`, `docs/agents/TEAM_HIERARCHY.md`, and the queue before the turn ends.
 
+## Now / Next / Later (2026-10-12)
+
+- **Now:** ADM-01 (lead `ADMIN`). Fix waves 1–3 are done locally and uncommitted by PORTAL, ADMIN, ANALYST and COMMERCE. A Codex session run by the owner removed the sticky header (WCAG 2.4.11), built the Community Impact Home, and is applying a report format across every portal tab. The owner decided that format (wide header, underline tabs, open panels, report charts) is the default on every page. Still owed before you accept ADM-01: PORTAL's `lib/eventLabels.ts` wired into every page (VISUAL_QA rejected raw event keys on screen; the module landed on disk 2026-10-12 and is not yet reported), the re-review of the format pass by `ACCESSIBILITY`, `VISUAL_QA`, `VOICE` and `QA` (including DESIGN + ACCESSIBILITY review of Codex's kit and shell edits), and DOCUMENTATION's STATE and CHANGELOG lines. Nothing is merged or deployed.
+- **Next (owner decided 2026-10-12):** the `get_admin_reports` `bigint` overflow fix and the `donation_bands` summary are in `20261012180000_admin_reports_bigint_and_donation_bands.sql` (written, RLS_SECURITY approved; the owner applies it on staging by SQL Editor paste). Vault money: direction A (credit it to the custodial family account like donations), built only after counsel together with STATE §6 item 8. Open follow-up: Expo `/admin` Reports (`ReportsTool.tsx`) still lists donation totals by name; ask the owner whether the no-names decision covers it.
+- **Later:** ADM-01f per-origin Revenue day chart. UX-05e photo-story browser and device evidence stays in QA's queue.
+
+**Concurrent sessions:** sessions outside the registry (Codex, Cursor, a person) may edit the same tree. Each session claims shared files in the task tracker's Status table and releases them when done, checks file times before each edit, and never reverts another session's work without the owner. When the owner gives two sessions conflicting instructions, ask the owner. An outside session's edit to a specialist-owned file still needs that owner's review (TEAMS.md, Specialist operating contract, item 10).
+
 ## Bar
 
 You are expected to know this system well enough to catch a bad plan: client-written `tips` beside webhook crediting, open RLS, a Stripe secret in the app, Drip turned back on, photo-story SQL applied without being asked, a fake SOC 2 or uptime claim, donation words that are not Donate / donation.

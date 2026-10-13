@@ -252,10 +252,11 @@
       "owns": [
         "apps/mobile/src/frontend/lib/finance.ts",
         "apps/mobile/src/backend/api",
-        "apps/admin-portal/app/(protected)/money/page.tsx"
+        "apps/admin-portal/app/(protected)/money/page.tsx",
+        "apps/admin-portal/components/revenue"
       ],
       "tasks": [
-        "Financial design and payment specialist integration; Next Revenue (/money)"
+        "Financial design and payment specialist integration; Next Revenue (/money) and its components/revenue"
       ],
       "model": "grok-4.7-medium"
     },
@@ -853,12 +854,19 @@
         "apps/admin-portal/app/(protected)/operations/page.tsx",
         "apps/admin-portal/components/PortalShell.tsx",
         "apps/admin-portal/components/ColumnChart.tsx",
+        "apps/admin-portal/components/charts",
+        "apps/admin-portal/lib/chartScale.ts",
+        "apps/admin-portal/lib/chartScale.test.ts",
+        "apps/admin-portal/lib/measureColors.ts",
+        "apps/admin-portal/lib/measureColors.test.ts",
+        "apps/admin-portal/lib/eventLabels.ts",
+        "apps/admin-portal/lib/eventLabels.test.ts",
         "apps/admin-portal/lib/dashboard.ts",
         "apps/admin-portal/lib/departments.ts",
         "apps/admin-portal/lib/operations.ts"
       ],
       "tasks": [
-        "Read-only portal shell, Home, Audience, Health, Departments and Product (Trends is ADMIN, Revenue is COMMERCE)"
+        "Read-only portal shell, Home, Audience, Health, Departments and Product (Trends is ADMIN, Revenue is COMMERCE); owns the shared chart kit (components/charts, lib/chartScale.ts), with DESIGN and ACCESSIBILITY reviewing any prop or visual change; owns lib/measureColors.ts, the one colour per measure for the whole portal, and lib/eventLabels.ts, the shared plain-English labels for telemetry event keys; keeps the owner-adopted report format (2026-10-12) as the portal default"
       ],
       "model": "grok-4.7-medium"
     },

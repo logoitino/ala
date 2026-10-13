@@ -24,8 +24,8 @@ These are navigation/ownership hints, not claims that hosted resources exist. Re
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** Review donation, authentication and upload controls for accessible names and error announcements.
-- **Next (prepare; release gates still apply):** Verify VoiceOver/TalkBack and keyboard paths on available devices.
+- **Now (ADM-01, 2026-10-12):** Your original nine portal items and fix waves 1–3 pass in code review (done locally, uncommitted). The sticky header that hid focus (2.4.11) was removed by a Codex session, and the header must stay static. The owner decided the Codex report format (wide header, underline tabs, open panels, report charts) is the default on every portal page; do not ask for it to be reverted, but review its kit and shell changes with `DESIGN` (outside-session edits to a specialist-owned file still need that owner's review). Pending: your re-review of the cross-tab format pass, including the Codex Home findings (setup h2 before Home's h1, product pill contrast from the unlayered `a { color: inherit }` rule, 320px overflow from the peak label). A trusted Enter keypress on a Data `<summary>` is still owed: Browser Bridge sends no real Enter and headless Chrome cannot launch on this Mac, so record it as not run, not passed.
+- **Next (prepare; release gates still apply):** Review donation, authentication and upload controls for accessible names and error announcements. Verify VoiceOver/TalkBack and keyboard paths on available devices.
 - **Later (gated):** Maintain accessibility acceptance criteria for each new surface.
 
 ## Execute and report

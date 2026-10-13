@@ -24,9 +24,20 @@ Web rendering is not native iOS/Android: `DEVICE_QA` still signs off native layo
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** UX-05e: capture photo story upload (Media → Details → Review, reorder, Remove, progress, partial failure) and feed (counter chip, dots, description, Game Day label) at 320/375/414 widths and large text; BRAND-01 tagline placements (welcome overlay, donate sheet header, profile donate area) fit without truncation; record results in AUDIT_REPORT.
-- **Next (prepare; release gates still apply):** Turn the recurring screenshot set into a repeatable regression checklist with TEST_AUTOMATION; mark press screenshots STALE when chrome moves.
+- **Now (ADM-01, 2026-10-12):** Re-review the admin portal after the Codex report format pass. The owner made that format (wide header, underline tabs, open panels, report charts) the default on every page, so check defects inside it, not whether it should exist. Your last pass (waves 1–3, stopped before the 14:12 format pass) was **REJECT** on raw event keys on screen ("Taps by control", UI-issue lists on Trends, Analytics, Departments and Health); recheck those once PORTAL reports `lib/eventLabels.ts` wired into every page, plus `/login` `metadata.title`. Recheck every "pre-format" styling note. Widths 1728/1440/1024/768/390/375/320 and 200% text; chart colours against `lib/measureColors.ts`; no horizontal overflow; header static. Use `.smoke/admin-portal-mock/` (mock Supabase, signed-in cookie). UX-05e photo-story captures stay open after this.
+- **Next (prepare; release gates still apply):** Turn the recurring screenshot set into a repeatable regression checklist with TEST_AUTOMATION, measurement-first (see the tooling notes); mark press screenshots STALE when chrome moves.
 - **Later (gated):** Automated visual diffing in CI only after CI can run a browser and baselines are agreed.
+
+## Tooling notes on this Mac (2026-10-12)
+
+Two review agents crashed on 2026-10-12, one on an API outage and one on a request over the 30 MB limit from full-resolution screenshots. Work so a crash loses little and never hits that limit.
+
+- **Screenshots:** downscale to 1000 px or less on the long side before you view one (`sips -Z 1000 in.png --out out.png`). View at most about 40 per run. Keep the full-size files on disk for the record, and cite them by name.
+- **Measure first:** prefer DOM measurements to looking at pixels. Use `document.documentElement.scrollWidth` against `clientWidth` for overflow, `getBoundingClientRect()` for overlap and focus position, `getComputedStyle` for position and colour, and `window.innerWidth` to confirm the viewport. Look at an image only for what a number cannot tell you.
+- **Builds:** build in a copy outside the repo (`/tmp/...`) with `node_modules` symlinked to the repo's. Never run `next build` inside `apps/admin-portal` while the owner's dev server is on `:3001`, because it rewrites `.next`.
+- **Headless Chrome is blocked:** Playwright's Chrome cannot launch here (macOS denies its startup handshake). Do not keep retrying; use Browser Bridge, or record the check as not run.
+- **Browser Bridge limits:** it cannot send a real (trusted) Enter keypress, so Enter activation stays **not run**, never passed. Its viewport resets when another agent uses the same bridge, so run one agent on it at a time, read `window.innerWidth` before each capture, and reject any capture whose width changed.
+- **Save as you go:** append findings to the task tracker's Log (for example `docs/agents/ADM-01.md`) or a scratch file after each page, so an outage mid-run does not lose the pass.
 
 ## Execute and report
 

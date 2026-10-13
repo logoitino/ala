@@ -24,8 +24,8 @@ Work with `PORTAL` on the shell and Home link. Trends (`/reports`) and `lib/repo
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** Eight dashboards (Highlights, Donations, Audience, Attention, Trust, Game day, Playback, Ledger) and the measure catalog on `/analytics`.
-- **Next (prepare; release gates still apply):** Add a measure only when `get_admin_reports` or the revenue summary already returns it.
+- **Now (ADM-01, 2026-10-12):** Eight dashboards (Highlights, Donations, Audience, Attention, Trust, Live games, Playback, Ledger) and the measure catalog on `/analytics`. Fix waves W2-ANALYST and W3-ANALYST are done locally and uncommitted. The owner decided the Codex report format (wide header, underline tabs, open panels, report charts) is the default on every portal page, `/analytics` included; keep it and fix defects inside it. Open from the VISUAL_QA re-review: "Taps by control" and the UI-issue list print raw event keys (`reel.seki`, `upload.retry · upload`) from `lib/analytics.ts`; map them with PORTAL's `lib/eventLabels.ts` (`featureLabel`, `issueLabel`). Colours come only from `lib/measureColors.ts`. Then the format pass goes to re-review (`ACCESSIBILITY`, `VISUAL_QA`, `VOICE`, `QA`).
+- **Next (prepare; release gates still apply):** Add a measure only when `get_admin_reports` or the revenue summary already returns it. Owner decisions of 2026-10-12: the `bigint` overflow fix and `donation_bands` are in `20261012180000_admin_reports_bigint_and_donation_bands.sql` (staging paste pending; until then the Donations board shows the bands as missing, never zero). Vault money: direction A, built after counsel with STATE §6 item 8; until then the payee-share note says "Vault athletes" and never "family account" for Vault.
 - **Later (gated):** A partner export waits on the owner. Do not open the database to a third party from this role.
 
 ## Execute and report

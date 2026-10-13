@@ -150,7 +150,7 @@ flowchart TB
 | Support | SUPPORT | INCIDENT_TRIAGE and internal tester help |
 | Brand | VOICE | Donation words and honest product copy |
 
-## Current cross-team builds (2026-10-07; ADM-01 added 2026-10-11)
+## Current cross-team builds (2026-10-07; ADM-01 added 2026-10-11, updated 2026-10-12)
 
 | Work | Primary | Pair / independent review | Lead chain |
 | --- | --- | --- | --- |
@@ -167,6 +167,9 @@ flowchart TB
 | ADM-01d Trends (`/reports`) and `lib/reports.ts` | ADMIN | ANALYST (pace caption), ACCESSIBILITY, VOICE | ADMIN → ENGINEERING → CTO |
 | ADM-01e Revenue (`/money`) | COMMERCE | BILLING, VOICE, ACCESSIBILITY | COMMERCE → ADMIN (integration) and CTO |
 | ADM-01 Phase C independent review | QA, VISUAL_QA | ACCESSIBILITY, VOICE, DESIGN | QA → CTO |
+| ADM-01 fix waves 1–3 (done locally 2026-10-12, uncommitted) | PORTAL (kit, `lib/measureColors.ts`, shell, Home/Audience/Health/Departments/Product), ADMIN (`lib/reports.ts`, Trends, LoginForm), ANALYST, COMMERCE | ACCESSIBILITY, VOICE, VISUAL_QA, QA | page owner → ADMIN → ENGINEERING → CTO |
+| ADM-01 shared event labels, `lib/eventLabels.ts` (landed on disk, not yet reported) | PORTAL | ADMIN, ANALYST (consumers); VISUAL_QA recheck | PORTAL → ADMIN → ENGINEERING → CTO |
+| ADM-01 report format, every portal page (owner decision 2026-10-12; built by an owner-run Codex session, not a registry agent) | PORTAL owns the files Codex edited (shell, chart kit, `globals.css` with ADMIN approval) | DESIGN + ACCESSIBILITY (kit and shell changes), VOICE, VISUAL_QA, QA (re-review pending) | PORTAL → ADMIN → ENGINEERING → CTO |
 | ADM-01f (not this pass) per-origin Revenue day chart | ADMIN (`lib/reports.ts` parse), then COMMERCE | ACCESSIBILITY, VOICE | ADMIN → ENGINEERING → CTO |
 | ADM-01g docs, ADM-01h roles | DOCUMENTATION; VP_OPERATIONS | — | DOCUMENTATION → ENGINEERING → CTO; VP_OPERATIONS → CTO |
 
@@ -181,6 +184,7 @@ Detail and status: [WORK_QUEUE.md](WORK_QUEUE.md). Build contract: [PHOTO_STORIE
 - Minor, footage, school-mark and privacy decisions include the relevant safety/privacy specialist and LEGAL/COMPLIANCE. Counsel and the owner retain legal and business decisions.
 - DOCUMENTATION synchronizes every department handoff with code comments, architecture, current state and tester evidence. Feature owners supply verified facts; generated blocks and approved legal conclusions retain their owners.
 - QA records actual automated and product results. DEVICE_QA records actual native/device evidence. Unrun checks and hosted prerequisites stay named.
+- Concurrent sessions (Codex, Cursor, a person) claim shared files in the task tracker's Status table, check file times before each edit, and never revert another session's work without the owner. Conflicting owner instructions go back to the owner. An outside session's edit to a specialist-owned file still needs that owner's review. Full rule: TEAMS.md, Specialist operating contract, item 10.
 - Definitions authorize local scoped work under the session instruction; no automatic external SQL/deployment/publication/contact, live money, marketplace activation or counsel decisions.
 
 ## Agents by team
@@ -359,7 +363,7 @@ Every agent is listed in the team it reports to. Specialists sit under their lea
 | --- | --- | --- | --- |
 | `VOICE` | Brand | `CTO` | [voice.md](../../.claude/agents/voice.md) |
 
-**91 callable agents** + Facilitator. Grouped by the lead each agent reports to (2026-10-08). Responsibility is assigned to every critical function; execution and launch status are tracked separately in the work queue and STATE.
+**92 callable agents** + Facilitator. Grouped by the lead each agent reports to (2026-10-08). Responsibility is assigned to every critical function; execution and launch status are tracked separately in the work queue and STATE.
 
 ## Paste to call someone
 

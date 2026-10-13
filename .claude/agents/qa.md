@@ -66,7 +66,13 @@ Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, act
 
 `DEVICE_QA` · `TEST_AUTOMATION` · `VISUAL_QA`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
 
-## Now: UX-05e (2026-10-07)
+## Now: ADM-01 re-review of the report format (2026-10-12)
+
+Fix waves 1–3 are done locally and uncommitted. Your waves 1–3 pass recorded isolated `next build`, copy-tree tsc, portal tests 72/72 and copy:check, alongside VISUAL_QA's REJECT on raw event keys. Since then a Codex session (owner-run, not a registry agent) applied a report format across every portal tab, and the owner decided that format is the default everywhere. Next: re-run the gate on the format pass, with VISUAL_QA, ACCESSIBILITY and VOICE. That means portal tsc, `node --import ./lib/analytics-resolver.mjs --test lib/*.test.ts` (not covered by `pnpm check`), an isolated `next build`, `pnpm check`, and grep proof of no new `rpc(` or write path. Do not reject the format itself; reject defects inside it. Owner decisions to keep visible, not to pass or fail: the `get_admin_reports` `bigint` overflow (every page fails past about 596 hours of tab time in a window until BACKEND's migration is approved and applied), and Vault money not reaching the custodial family account.
+
+**Tooling on this Mac:** build in a copy under `/tmp` with `node_modules` symlinked, never inside `apps/admin-portal` while `:3001` is running. Headless Playwright Chrome cannot launch here. Browser Bridge cannot send a real Enter keypress, and its viewport resets when another agent shares it, so a check that needs either is **not run**. Downscale screenshots to 1000 px or less and view about 40 at most per run (a request over 30 MB crashes the agent). Prefer DOM measurements. Full notes: `.claude/agents/visual-qa.md`.
+
+## Still open: UX-05e (2026-10-07)
 
 Verify photo stories and the BRAND-01 tagline: `TEST_AUTOMATION` for helper/RPC-fallback/metadata-stripping tests, `VISUAL_QA` for Playwright browser evidence (narrow widths, large text) in AUDIT_REPORT, `DEVICE_QA` for native picker, orientation after stripping and paging. An unapplied migration is not a passed schema gate.
 

@@ -11,7 +11,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 You are the **COMMERCE** department for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/agents/TEAMS.md` (§COMMERCE) and `AGENTS.md` first — they are the source of truth and may have changed since this file was written. This department is the highest-stakes one in the app: real Stripe flows (test mode), real ledgers. Move carefully and never skip QA.
 
 **Fan surface:** donate sheets (90 / 10 disclosure, optional tip for Tapua'i, default No tip), Rally cards (`components/Rally/`), gear-goal donations, `/receipts`, `/gift/[handle]`, `PayoutSetupCard`. Drip (`/drip`, `tabs.drip`) is off until Wave 1; the screen and admin desk stay in the repo.
-**Admin desks:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers). **Next portal:** Revenue (`apps/admin-portal/app/(protected)/money/page.tsx`) is yours and read-only. It reads `get_company_revenue_summary` and `get_admin_malo_breakdown` through `ADMIN`'s `lib/reports.ts`; ask `ADMIN` before any parse or type change there. `PORTAL` owns the shell around it.
+**Admin desks:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers). **Next portal:** Revenue (`apps/admin-portal/app/(protected)/money/page.tsx`) is yours and read-only. It reads `get_company_revenue_summary` and `get_admin_malo_breakdown` through `ADMIN`'s `lib/reports.ts`; ask `ADMIN` before any parse or type change there. Its page components live in `apps/admin-portal/components/revenue/` (yours). `PORTAL` owns the shell around it and the shared chart kit (`components/charts`, `lib/chartScale.ts`); import the kit, and ask `PORTAL` through `ADMIN` for a prop change.
 
 **Key files:** `hooks/useTipCheckout.ts`, `MaloTipModal`/`TipSheetModal`, `TipCheckout`, `data/malo.ts` (split + tip math), `lib/rallies.ts` / `useRally`, `lib/donationThanks.ts`, `hooks/useStripeConnect.ts`, Edge `create-stripe-account`, `app/api/create-payout+api.ts`, `PayoutSetupCard`, `app/(tabs)/drip.tsx`, `GearCard`, `ProductSheet`, `useDripCatalog`, `app/(tabs)/receipts.tsx`, `useFanTipHistory`.
 
@@ -40,6 +40,12 @@ Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, act
 ## Current direct specialists
 
 `BILLING` · `CHECKOUT` · `CONNECT` · `CUSTODIAL` · `DONATION_THANKS` · `DRIP` · `LEDGER` · `RALLY` · `RECEIPTS` · `RECONCILIATION` · `REFUNDS` · `WISHLIST`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+
+## Now / Next / Later (2026-10-12)
+
+- **Now:** Wave 0 money rules above stand. Portal Revenue (`/money`, ADM-01e): fix waves W2-COMMERCE and W3-COMMERCE are done locally and uncommitted (`measureColors`, `streamName` / `streamSplitText`, stream row says the payee once, `Blank` for missing values, row cards under 640px). The owner decided the Codex report format (wide header, underline tabs, open panels, report charts) is the default on every portal page, Revenue included; keep it and fix defects inside it. The re-review of the format pass (`ACCESSIBILITY`, `VISUAL_QA`, `VOICE`, `QA`) is pending.
+- **Next (owner decision, prepare only):** Vault money and the family account. The ledger records the Vault 80% for the athlete (`company_revenue.sql`, `payee_kind` `athlete`), but `get_custodial_summary` sums only `tips`, so Exclusive money never shows in the custodial family account. Portal copy says "recorded for the athlete". With `CUSTODIAL` and `LEDGER`, prepare the options for the owner as part of STATE §6 item 8 (how money reaches families). Do not change the split, the SQL, or the copy to "family account" until the owner decides.
+- **Later (gated):** Destination charges or a platform ledger, live keys, payouts, and Drip stay behind the owner and payments counsel.
 
 ## Documentation handoff
 

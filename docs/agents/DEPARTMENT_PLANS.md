@@ -1,6 +1,6 @@
 # Department plans — where we are, and what each team will do
 
-**Date:** 2026-10-09. **Assigned by:** CTO. **Kept current by:** `VP_OPERATIONS`.
+**Date:** 2026-10-09 (ADM-01 rows 2026-10-12). **Assigned by:** CTO. **Kept current by:** `VP_OPERATIONS`.
 **Sources:** [STATE.md](../STATE.md), [ROADMAP.md](../product/ROADMAP.md), [WORK_QUEUE.md](WORK_QUEUE.md), [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md), [DATA_PRIVACY_MAP.md](../engineering/DATA_PRIVACY_MAP.md).
 
 This is a plan, not a launch approval. Stripe stays in test mode. No team applies hosted SQL, merges, or turns on live money unless the owner asks.
@@ -46,6 +46,10 @@ Going public means Wave 1 in the roadmap: one metro, live donations, a productio
 6. Account export and deletion designed with counsel before it is built ([DATA_PRIVACY_MAP.md](../engineering/DATA_PRIVACY_MAP.md) §3.4).
 7. A production environment (readiness R3), which waits on a database that can be rebuilt from migrations (R2).
 
+## Status — 2026-10-12 (admin portal, ADM-01)
+
+ADM-01 fix waves 1–3 are done locally and uncommitted (PORTAL, ADMIN, ANALYST, COMMERCE). New shared module `lib/measureColors.ts` gives every measure one colour across the portal (PORTAL). A Codex session run by the owner removed the sticky header, built the Community Impact Home, and is applying a report format across every tab. The owner decided that format is the default on every page. Still open: PORTAL's `lib/eventLabels.ts`, on disk and being finished (VISUAL_QA rejected raw event keys on screen), the re-review of the format pass (ACCESSIBILITY, VISUAL_QA, VOICE, QA), and DOCUMENTATION's STATE and CHANGELOG lines. Two owner decisions came out of the reviews: the `get_admin_reports` `bigint` overflow fix (needs a migration), and whether Vault money reaches the custodial family account. Nothing merged or deployed. The board below is still the 2026-10-10 picture for every other team.
+
 ## Status — 2026-10-10
 
 Each team worked its current plan item. Nobody applied SQL, started a public release, or drafted counsel's documents.
@@ -78,14 +82,14 @@ Later the same day, every agent was connected to a model, and each department le
 
 **Lead:** `CTO`. **Also:** `VP_OPERATIONS`.
 
-**Where we are.** The CTO assigns every app fix. The VP of Operations keeps roles, protocols, and this plan current. Ninety agents are registered. The current assignment is still Wave 0 local work, not a new feature.
+**Where we are.** The CTO assigns every app fix. The VP of Operations keeps roles, protocols, and this plan current. Ninety-two agents are registered. The current assignment is still Wave 0 local work, not a new feature.
 
 **What we have.** The hierarchy, the call sheet, and the work queue. QA can reject a fix. The owner still decides SQL, merge, prices, counsel, and live money.
 
 **What we will do.**
 
 1. Keep this file as the priority board. When a department finishes or a gate moves, the VP updates this plan, the queue, and the role files in the same turn.
-2. Assign the next test-wave checks only: QA's photo-story browser and device evidence, and any owner-asked SQL.
+2. Assign the next test-wave checks only: the ADM-01 re-review of the report format, QA's photo-story browser and device evidence, and any owner-asked SQL.
 3. Refuse a public date until the public gate above is actually done.
 
 **What we will not do.** Start Drip, the Aura-card signature, a Hudl file import, or live Stripe because a plan mentions them.
@@ -159,7 +163,7 @@ Later the same day, every agent was connected to a model, and each department le
 
 ### Admin — `ADMIN`
 
-**Have:** Expo desks for games, content, commerce, flags, and look. Next portal is read-only. **Will do:** keep writes in Expo admin. **Will not do:** give the Next portal a save button.
+**Have:** Expo desks for games, content, commerce, flags, and look. Next portal is read-only, with charts on every page and the owner-adopted report format (ADM-01 fix waves 1–3 done locally, uncommitted). **Will do:** keep writes in Expo admin. Integrate ADM-01: shared event labels (`lib/eventLabels.ts`, PORTAL), `/login` title, then the format re-review. **Will not do:** give the Next portal a save button.
 
 ### Aura — `AURA`
 
@@ -182,6 +186,7 @@ Later the same day, every agent was connected to a model, and each department le
 1. Leave those files unapplied until the owner asks. Say so in every status.
 2. When asked, apply on staging first, with Security's negative tests, and copy nothing onto an already-applied file.
 3. Design export and deletion only after Product, Legal, and counsel agree what must be kept (donations, other people's clips).
+4. Owner decision from the ADM-01 review (approved 2026-10-12): `get_admin_reports` summed `duration_ms` as `int`, which overflows past about 596 hours of tab time in a window and fails every admin portal page. `20261012180000_admin_reports_bigint_and_donation_bands.sql` casts every ms/cents sum to `bigint` and adds `donation_bands` (counts of athletes by all-time donations, no names). Written and approved by RLS_SECURITY; the owner applies it on staging by SQL Editor paste.
 
 **What we will not do.** Open RLS to "make photos work." Edit a migration after it has been applied.
 
@@ -228,7 +233,7 @@ Later the same day, every agent was connected to a model, and each department le
 
 **What we will do.**
 
-1. Review only the screens the CTO assigns. Photo-story feed and upload are the open visual check with QA.
+1. Review only the screens the CTO assigns. Now: with ACCESSIBILITY, the Codex report format pass on the admin portal (the owner made that format the default; review the kit and shell edits, do not revert the look). Photo-story feed and upload stay the open visual check with QA.
 2. Keep one primary action on a sheet, and keep empty, loading, and error visually distinct.
 3. Hold the Later visuals (share card, backer wall, badges, signature on the Aura card).
 
@@ -255,7 +260,7 @@ Later the same day, every agent was connected to a model, and each department le
 | Refunds | Not a product flow | Design with the ledger, before live money |
 | Drip | Off | Wave 1 marketplace only after the owner turns the tab on |
 
-**What we will do.** Keep the donate sheet's disclosures. Prepare the single credit path as a design. Leave payouts at 503.
+**What we will do.** Keep the donate sheet's disclosures. Prepare the single credit path as a design. Leave payouts at 503. Vault money from the ADM-01 review: the ledger records the Vault 80% for the athlete, but `get_custodial_summary` sums only `tips`, so it never shows in the custodial family account. The owner chose direction A on 2026-10-12 (credit it to the family account like donations); build it only after counsel, together with STATE §6 item 8.
 
 **What we will not do.** Live keys. Destination charges or a platform ledger until the owner and payments counsel pick one. Filmer cash. Holding Pathway savings.
 
@@ -323,7 +328,7 @@ Same gaps as [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) "Compliance routing
 
 **Where we are.** Money language is Donate / donation. "Mālo!" is only a thank-you. The approved line "Donate. Elevate. Celebrate." is in the welcome overlay, the donate Amount step, and under an athlete's Donate button.
 
-**What we will do.** Run the copy check on every money-screen change. Review store listing text with Legal before anyone submits it.
+**What we will do.** Run the copy check on every money-screen change. Review store listing text with Legal before anyone submits it. Give the ADM-01 disposition on the wave 3 wording and re-review the portal format pass. Vault stays "recorded for the athlete" until the owner decides.
 
 **What we will not do.** Tie a donation to a stat, a win, or a recruiting outcome. Publish the store listing.
 
@@ -361,7 +366,7 @@ Same gaps as [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) "Compliance routing
 
 **What we will do.**
 
-1. Record the photo-story browser check when Expo web is up. Leave device paging as not run until a device is used.
+1. Re-run the ADM-01 gate on the report format pass with VISUAL_QA (portal tests, isolated build in `/tmp`, `pnpm check`, screenshots downscaled to 1000 px or less). Record the photo-story browser check when Expo web is up. Leave device paging and Enter-key activation as not run until a tool can do them (headless Chrome is blocked on this Mac).
 2. Fail any public recommendation that skips the public gate, invents SOC 2, or quotes an uptime number.
 3. Re-run the tester script on a staging build after the owner asks for that build. The script is the acceptance test, not a green Jest run.
 
@@ -391,10 +396,11 @@ Same gaps as [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) "Compliance routing
 
 ## Order of work
 
-The CTO's order until the owner says otherwise. Status as of 2026-10-10 is in the board above.
+The CTO's order until the owner says otherwise. Status as of 2026-10-10 is in the board above; ADM-01 as of 2026-10-12.
 
-1. **Quality** checked the photo-story counter and five dots in a browser fixture (320, 375, and 320 at 200% CSS text). Next moves `1 / 5` to `2 / 5`. The photo bitmap did not paint. Upload steps, tagline placements, a live feed, and device paging stay open.
-2. **Database and Security** hold the written SQL until the owner asks to apply it on staging.
-3. **Product** wrote the STATE §6 decision list into this file. Public acceptance criteria wait on the open rows and on counsel.
-4. **Legal** routed the 2026-10-10 compliance gaps in LEGAL_BRIEFING. Counsel's documents stay with counsel. The app is not public-ready.
-5. **Every other team** stays inside its "will do" list. Later items stay later.
+1. **Admin portal (ADM-01, 2026-10-12)**: PORTAL finishes `lib/eventLabels.ts`; ACCESSIBILITY, VISUAL_QA, VOICE and QA re-review the owner-adopted report format; DOCUMENTATION writes STATE and CHANGELOG. Owner decisions of 2026-10-12: the `bigint` overflow migration is written and approved (staging paste pending); donation bands replace the named list; Vault money goes direction A after counsel.
+2. **Quality** checked the photo-story counter and five dots in a browser fixture (320, 375, and 320 at 200% CSS text). Next moves `1 / 5` to `2 / 5`. The photo bitmap did not paint. Upload steps, tagline placements, a live feed, and device paging stay open.
+3. **Database and Security** hold the written SQL until the owner asks to apply it on staging.
+4. **Product** wrote the STATE §6 decision list into this file. Public acceptance criteria wait on the open rows and on counsel.
+5. **Legal** routed the 2026-10-10 compliance gaps in LEGAL_BRIEFING. Counsel's documents stay with counsel. The app is not public-ready.
+6. **Every other team** stays inside its "will do" list. Later items stay later.

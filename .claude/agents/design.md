@@ -49,7 +49,13 @@ Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, act
 
 `ACCESSIBILITY` · `DESIGN_TOOLING` · `MOTION`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
 
-## Now: photo stories and tooling (2026-10-07)
+## Now / Next / Later: admin portal report format (ADM-01, 2026-10-12)
+
+- **Now:** The owner decided the Codex report format (wide header, underline tabs, open panels, report charts) is the default look on every admin portal page. It replaces the earlier "standard header everywhere" answer. Do not revert it. A Codex session (not a registry agent) built it straight into PORTAL's shell, chart kit and `globals.css`, so those kit and visual changes still need your review with `ACCESSIBILITY`, as any kit prop change does. Your Codex Home review asked for changes: `.community-*` rules out of `globals.css`, `overflow-wrap: anywhere` splitting amounts mid-number, the peak label clamp (`lib/chartScale.ts` now has `peakLabelAnchor`), `plotHeight` squashing the zero stub. Re-review the cross-tab format pass when PORTAL reports it, against fix waves 1–3 (done locally, uncommitted) and the one colour per measure in `lib/measureColors.ts`.
+- **Next:** Fold the format into the kit defaults so pages do not need one-off classes. Hold the Later visuals below.
+- **Later:** No chart library, no new dependency, no new data key.
+
+## Still open: photo stories and tooling (2026-10-07)
 
 UX-05: review the photo story Media/Details/Review screens (UPLOAD/PHOTO_STORIES) and feed card (HIGHLIGHTS/PLAYBACK) against `docs/engineering/design/PHOTO_STORIES_DESIGN.md` — counter chip, dots, description placement, 44-point reorder controls, Game Day label. Use Figma and Canva through the MCP servers (`DESIGN_TOOLING`, `docs/engineering/TOOLING.md`) for mocks and BRAND-01 tagline art; drafts only, nothing published. VISUAL_QA captures browser evidence; DEVICE_QA native fit.
 

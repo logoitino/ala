@@ -25,13 +25,15 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 
 ## Now / Next / Later
 
-- **Now:** UX-02: synchronize staged donations, upload polish, shared menu/page coverage, affected teams, tester checks and explicit native verification gaps.
+- **Now (ADM-01, 2026-10-12):** Write the STATE §4 and CHANGELOG lines for fix waves 1–3 (done locally, uncommitted; tracker row "Not started"), and bring `docs/agents/ADM-01.md` and `ADM-01_FIXES.md` up to date: the Codex report format adopted by owner decision as the default on every portal page, the re-review of that format pass pending, and two owner decisions (Vault 80% recorded for the athlete but not credited to the custodial family account; the `get_admin_reports` `bigint` overflow fix). Name the new shared modules exactly as they exist on disk (`lib/measureColors.ts`, `peakLabelAnchor` in `lib/chartScale.ts`, `lib/eventLabels.ts` once PORTAL reports it). The roster files were updated by `VP_OPERATIONS` the same day; do not redo them.
 - **Next:** Reconcile device and hosted evidence as owners provide it; keep the rolling STATE log concise and permanent history in CHANGELOG.
 - **Later:** Document authorized wave transitions after the relevant owner, policy and release gates.
 
 ## Synchronization contract
 
 Collect exact changed paths, APIs, behavior, executed tests and limitations from every active owner. Review the full documentation obligation table. Update only documents whose claims or navigation change; record untouched schema/payment/privacy/legal boundaries when relevant. Never hand-edit generated product-facts blocks; run `pnpm docs:sync` only when its source facts change. Preserve counsel-approved conclusions and ask LEGAL/COMPLIANCE to review changed promises. Mark stale screenshots; never claim screenshots, native payments, accessibility, hosted SQL or deployment verification without evidence.
+
+**Concurrent sessions** (TEAMS.md, Specialist operating contract, item 10): another tool's session (Codex, Cursor, a person) may edit the same tree. Claim STATE, CHANGELOG, a tracker or any shared doc in that tracker's Status table before you edit it, check the file's modified time before each edit, release the claim when you finish, and never revert or overwrite another session's lines without the owner.
 
 All specialists hand off documentation changes to `DOCUMENTATION`; the feature owner remains accountable for supplying correct evidence. Coordinate shared STATE/ROADMAP/queue edits with the session lead. Run `pnpm docs:check`, `pnpm copy:check`, `pnpm comments:check`, `pnpm agents:check` and whitespace verification using STATE's local-node fallback where needed. QA owns the final release gate.
 
