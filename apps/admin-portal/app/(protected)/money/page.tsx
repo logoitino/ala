@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import {
@@ -18,23 +19,54 @@ import {
   donationSplit,
   entryName,
   fillDays,
+  kpiUsd,
   originName,
   payeeName,
   shortDay,
-  streamName,
 } from '@/components/revenue/revenueModel';
-import { MALO_FALLBACK_LIMIT, fetchPortalMaloBreakdown, fetchPortalReports, fetchPortalRevenue, formatUsd } from '@/lib/reports';
+import { measureColor } from '@/lib/measureColors';
+import {
+  MALO_FALLBACK_LIMIT,
+  fetchPortalMaloBreakdown,
+  fetchPortalReports,
+  fetchPortalRevenue,
+  formatUsd,
+  streamName,
+  streamSplitText,
+} from '@/lib/reports';
 
 export const dynamic = 'force-dynamic';
+
+/** Tab title "Revenue · Tapua'i Admin" through the layout's title template (A11Y #3). */
+export const metadata: Metadata = { title: 'Revenue' };
+
+// One colour per measure across the portal (lib/measureColors.ts): donation amounts jade,
+// payee share jade, Tapua'i share gold.
+const DONATIONS = measureColor('donations');
+const PAYEE = measureColor('payeeShare');
+const TAPUAI = measureColor('tapuaiShare');
 
 const usd = (cents: number) => formatUsd(cents);
 const count = (n: number) => n.toLocaleString('en-US');
 
+/** "Donations · 90% to the family account, 10% to Tapua'i". The split comes from basis points
+ *  (`streamSplitText`) and already names the payee, so the payee is said once (W3-COMMERCE #1). When the
+ *  read cannot support a split, the payee alone stands in ("Donations · to athlete's family account");
+ *  never the RPC's raw `split` text (VOICE #3, #4). */
+function streamRowLabel(stream: Parameters<typeof streamSplitText>[0] & { label: string; payee: string }): string {
+  const split = streamSplitText(stream);
+  return `${streamName(stream.source, stream.label)} · ${split ?? `to ${payeeName(stream.payee)}`}`;
+}
+
 /**
- * @purpose Web Money desk — company totals plus every Mālo broken down by where the gift started.
+ * @purpose Web Revenue desk — company totals plus every donation broken down by where it started.
  * @sideEffects `get_company_revenue_summary` and `get_admin_malo_breakdown` (same ledgers as Expo `/admin/money`).
  *   ADM-01e (COMMERCE): also reads `get_admin_reports` for the `money` section and the 7-day `series.malo`.
  *   Wave 0 is Stripe test mode and payouts are blocked; the page says so and never shows a payout as sent.
+ *   ADM-01i W2-COMMERCE: shared measure colours, h2 sections, VOICE wording (#18–#23, #36), split text
+ *   from basis points (never the raw SQL `split`), whole-dollar headline tiles, phone-width row cards.
+ *   ADM-01 W3-COMMERCE: stream rows name the payee once; payee share names Vault athletes (Vault money is
+ *   recorded for the athlete, not credited to the family account); Tapua'i share includes all of Drip.
  */
 export default async function MoneyPage() {
   const [revenue, malo, reports] = await Promise.all([fetchPortalRevenue(), fetchPortalMaloBreakdown(), fetchPortalReports()]);
@@ -59,13 +91,15 @@ export default async function MoneyPage() {
   // Ledger: where recorded gross went. "Not split" only appears when the parts fall short of gross.
   const unsplit = gross != null && net != null && payouts != null ? Math.max(0, gross - net - payouts) : 0;
   const ringParts = [
-    { label: "Tapua'i share", value: net, color: 'gold' as const },
-    { label: 'Payee share (families, operators)', value: payouts, color: 'jade' as const },
+    { label: "Tapua'i share", value: net, color: TAPUAI },
+    { label: 'Payee share (families, athletes, operators)', value: payouts, color: PAYEE },
     ...(unsplit > 0 ? [{ label: 'Recorded gross not split', value: unsplit, color: 'muted' as const }] : []),
   ];
 
   const split = revenueOk ? donationSplit(revenue.streams) : null;
-  const paidTone: StatTone = stripePaid != null && stripePaid > 0 ? 'warn' : 'neutral';
+  // Payout rows marked paid while payouts are blocked: the tile warns and the banner stops saying "nothing sent" (VOICE #21).
+  const paidWarn = stripePaid != null && stripePaid > 0;
+  const paidTone: StatTone = paidWarn ? 'warn' : 'neutral';
 
   // Cross-check: ledger donation gross vs the `tips` table total. Both are reads; the page only compares them.
   const tipsAll = m('malo_cents_all');
@@ -87,41 +121,49 @@ export default async function MoneyPage() {
         <span className="inline-flex w-fit shrink-0 rounded-full bg-[var(--surface)] px-2.5 py-1 text-xs font-extrabold tracking-wide text-[var(--gold)] uppercase">
           Wave 0 · Test mode
         </span>
-        <p className="leading-5">
-          Stripe is in test mode, so every amount here is a test record and no real money has moved. Payouts are blocked:
-          nothing has been sent to a family, athlete, or operator.
-          {queued != null ? ` Queued payout requests: ${count(queued)}, none sent.` : ''}
-        </p>
+        {paidWarn ? (
+          <p className="leading-5">
+            Stripe is in test mode, so every amount here is a test record and no real money has moved. Payouts are blocked.
+            {queued != null ? ` Queued payout requests: ${count(queued)}.` : ''} Some payout rows are marked paid. Check them
+            before trusting this banner.
+          </p>
+        ) : (
+          <p className="leading-5">
+            Stripe is in test mode, so every amount here is a test record and no real money has moved. Payouts are blocked:
+            nothing has been sent to a family, athlete, or operator.
+            {queued != null ? ` Queued payout requests: ${count(queued)}, none sent.` : ''}
+          </p>
+        )}
       </div>
 
-      <SectionHeading title="Ledger totals" hint="company_revenue_logs · all time · test mode" />
+      <SectionHeading level={2} title="Ledger totals" hint="company_revenue_logs · all time · test mode" />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           label="Gross volume"
-          value={gross != null ? usd(gross) : ''}
+          value={gross != null ? kpiUsd(gross) : ''}
           missing={gross == null}
           hint="Every stream, as test-mode ledger records"
         />
         <StatTile
           label="Tapua'i share"
-          value={net != null ? usd(net) : ''}
+          value={net != null ? kpiUsd(net) : ''}
           missing={net == null}
-          hint="10% of donations, tips for Tapua'i, and other stream shares"
+          hint="What the ledger records for Tapua'i: its share of donations, tips for Tapua'i, boosters, Vault, and all of Drip"
         />
         <StatTile
           label="Payee share recorded"
-          value={payouts != null ? usd(payouts) : ''}
+          value={payouts != null ? kpiUsd(payouts) : ''}
           missing={payouts == null}
-          hint="Owed to families and operators on the ledger. Not paid out: payouts are blocked."
+          hint="Recorded for families, Vault athletes, and booster operators. Test records only; nothing has been paid out."
         />
         <StatTile
-          label="Disbursements marked paid"
-          value={stripePaid != null ? usd(stripePaid) : ''}
+          label="Payouts marked paid"
+          value={stripePaid != null ? kpiUsd(stripePaid) : ''}
           missing={stripePaid == null}
           tone={paidTone}
           hint={
             paidTone === 'warn'
-              ? 'Expected $0 while payouts are blocked. These are test-mode rows; check disbursements.'
+              ? 'Should be $0 while payouts are blocked. Check the paid rows in the disbursements table.'
               : 'Stays $0 while payouts are blocked in Wave 0'
           }
         />
@@ -140,17 +182,17 @@ export default async function MoneyPage() {
           parts={ringParts}
           format={usd}
           centerLabel="Recorded gross"
-          centerValue={gross != null ? usd(gross) : '—'}
+          centerValue={gross != null ? compactUsd(gross) : '—'}
           totalLabel="Recorded gross"
           source="get_company_revenue_summary · gross_volume_cents, company_net_cents, payouts_cents"
           error={revenue.error}
         />
         <SplitBar
           title="Donation split, from the ledger"
-          caption={split ? `Stated policy for this stream: ${split.policy}` : 'Donations stream'}
+          caption={split?.policy ? `Stated policy for this stream: ${split.policy}` : 'Donations stream'}
           parts={[
-            { label: "Family accounts (athlete's family)", value: split ? split.family : null, color: 'jade' },
-            { label: "Tapua'i share (covers card processing)", value: split ? split.platform : null, color: 'gold' },
+            { label: "Athletes' family accounts", value: split ? split.family : null, color: PAYEE },
+            { label: "Tapua'i share (covers card processing)", value: split ? split.platform : null, color: TAPUAI },
             ...(split && split.unsplit > 0 ? [{ label: 'Recorded but not split', value: split.unsplit, color: 'muted' as const }] : []),
           ]}
           format={usd}
@@ -175,20 +217,20 @@ export default async function MoneyPage() {
         </p>
       ) : null}
 
-      <SectionHeading title="Streams" hint="Per stream: gross, Tapua'i share, payee share" />
-      <div className="mb-8 grid gap-4 lg:grid-cols-5">
+      <SectionHeading level={2} title="Streams" hint="Per stream: gross, Tapua'i share, payee share" />
+      <div className="mb-8 grid items-start gap-4 lg:grid-cols-5">
         <div className="min-w-0 lg:col-span-3">
           <StackedBars
             title="Split per stream"
             caption="Each bar is the stream's recorded gross"
             series={[
-              { key: 'payout', label: 'Payee share', color: 'jade' },
-              { key: 'platform', label: "Tapua'i share", color: 'gold' },
+              { key: 'payout', label: 'Payee share', color: PAYEE },
+              { key: 'platform', label: "Tapua'i share", color: TAPUAI },
             ]}
             rows={
               revenueOk
                 ? revenue.streams.map((stream) => ({
-                    label: `${streamName(stream.source, stream.label)} · to ${payeeName(stream.payee)} · ${stream.split}`,
+                    label: streamRowLabel(stream),
                     segments: { payout: stream.payout_cents, platform: stream.platform_cents },
                     total: stream.gross_cents,
                   }))
@@ -206,7 +248,7 @@ export default async function MoneyPage() {
             caption="Largest first"
             rows={revenueOk ? revenue.streams.map((stream) => ({ label: streamName(stream.source, stream.label), value: stream.gross_cents })) : null}
             format={usd}
-            accent="cyan"
+            accent={DONATIONS}
             emptyText="No stream rows yet."
             source="get_company_revenue_summary.streams[].gross_cents"
             error={revenue.error}
@@ -214,20 +256,20 @@ export default async function MoneyPage() {
         </div>
       </div>
 
-      <SectionHeading title="Donations" hint="Donations table · rolling windows, UTC" />
+      <SectionHeading level={2} title="Donations" hint="Donations table · rolling windows, UTC" />
       <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           label="Donations, last 7 days"
-          value={donations7d != null ? usd(donations7d) : ''}
+          value={donations7d != null ? kpiUsd(donations7d) : ''}
           missing={donations7d == null}
           delta={donations7d != null && donationsPrev7d != null ? { current: donations7d, previous: donationsPrev7d } : null}
           goodDirection="up"
-          spark={sparkPoints.length > 0 ? { points: sparkPoints, format: usd, accent: 'jade' } : undefined}
+          spark={sparkPoints.length > 0 ? { points: sparkPoints, format: usd, accent: DONATIONS } : undefined}
           hint={has('malo_count_7d') ? plural(money.malo_count_7d, 'donation', 'donations') : undefined}
         />
         <StatTile
           label="Donations, last 24 hours"
-          value={has('malo_cents_24h') ? usd(money.malo_cents_24h) : ''}
+          value={has('malo_cents_24h') ? kpiUsd(money.malo_cents_24h) : ''}
           missing={!has('malo_cents_24h')}
           hint={has('malo_count_24h') ? plural(money.malo_count_24h, 'donation', 'donations') : undefined}
         />
@@ -239,7 +281,7 @@ export default async function MoneyPage() {
         />
         <StatTile
           label="Donations, all time"
-          value={has('malo_cents_all') ? usd(money.malo_cents_all) : ''}
+          value={has('malo_cents_all') ? kpiUsd(money.malo_cents_all) : ''}
           missing={!has('malo_cents_all')}
           hint={has('malo_count_all') ? plural(money.malo_count_all, 'donation', 'donations') : undefined}
         />
@@ -253,10 +295,12 @@ export default async function MoneyPage() {
 
       {malo.source === 'fallback' ? (
         <p role="note" className="mb-4 text-xs leading-5 text-[var(--text-muted)]">
-          Partial: last {MALO_FALLBACK_LIMIT} donations. The breakdown read is not applied yet, so the per-day, origin, and arrival charts count only those rows.
+          Partial: only the last {MALO_FALLBACK_LIMIT} donations were read, because <code>get_admin_malo_breakdown</code> is not on
+          this database yet. &ldquo;Donations per day&rdquo;, &ldquo;Where donations start&rdquo; and &ldquo;How donors arrived&rdquo; count
+          only these rows. A day can show $0 when its donations are older than these {MALO_FALLBACK_LIMIT}.
         </p>
       ) : null}
-      <div className="mb-4 grid gap-4 lg:grid-cols-3">
+      <div className="mb-4 grid items-start gap-4 lg:grid-cols-3">
         <div className="min-w-0 lg:col-span-2">
           <TrendChart
             title="Donations per day"
@@ -266,7 +310,7 @@ export default async function MoneyPage() {
             tickUnit={100}
             tickFormat={compactUsd}
             variant="columns"
-            accent="jade"
+            accent={DONATIONS}
             source="get_admin_malo_breakdown.by_day"
             error={malo.error}
           />
@@ -283,13 +327,13 @@ export default async function MoneyPage() {
         />
       </div>
 
-      <div className="mb-8 grid gap-4 lg:grid-cols-2">
+      <div className="mb-8 grid items-start gap-4 lg:grid-cols-2">
         <HBarList
           title="Where donations start"
           caption="All time · amount, with the number of donations"
           rows={malo.error ? null : malo.byOrigin.map((row) => ({ label: `${originName(row.key)} (${plural(row.count, 'donation', 'donations')})`, value: row.cents }))}
           format={usd}
-          accent="jade"
+          accent={DONATIONS}
           emptyText="No donations yet."
           source="get_admin_malo_breakdown.by_origin"
           error={malo.error}
@@ -299,19 +343,19 @@ export default async function MoneyPage() {
           caption="All time · amount, with the number of donations"
           rows={malo.error ? null : malo.byEntry.map((row) => ({ label: `${entryName(row.key)} (${plural(row.count, 'donation', 'donations')})`, value: row.cents }))}
           format={usd}
-          accent="violet"
+          accent={DONATIONS}
           emptyText="No donations yet."
           source="get_admin_malo_breakdown.by_entry"
           error={malo.error}
         />
       </div>
 
-      <SectionHeading title="Recent ledger" hint="Newest first · up to 40 rows" />
+      <SectionHeading level={2} title="Recent ledger" hint="Newest first · up to 40 rows" />
       <div className="mb-8">
         <RecentLedgerTable rows={revenue.recent} error={revenue.error} />
       </div>
 
-      <SectionHeading title="Latest donations" hint="Newest first · up to 40 rows" />
+      <SectionHeading level={2} title="Latest donations" hint="Newest first · up to 40 rows" />
       <div className="mb-6">
         <RecentDonationsTable rows={malo.recent} error={malo.error} />
       </div>

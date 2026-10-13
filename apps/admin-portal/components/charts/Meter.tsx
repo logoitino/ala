@@ -1,4 +1,7 @@
 /**
+ * Open report meter matches Home's value blocks without a separate card surface (report format
+ * is the default on every page, owner decision 2026-10-12). The percent never wraps; the
+ * "part of whole" line may wrap between words but not inside a number.
  * Part-of-a-whole meter (e.g. verified profiles / all profiles). Percent comes from
  * `sharePercent` in `lib/dashboard.ts`. A whole of 0 or null prints "—" and "No denominator in
  * this read"; a missing part prints "—" and "Not in this read". Text carries the meaning; the
@@ -22,7 +25,7 @@ export type MeterProps = {
 /**
  * @purpose Big percent, "part of whole" in words, and a single bar.
  * @param props See `MeterProps`.
- * @returns A card `<div>`.
+ * @returns An open value `<div>`; the page decides the grid.
  */
 export function Meter({ label, part, whole, format, hint, accent = 'jade', source }: MeterProps) {
   const noWhole = !isNum(whole) || whole <= 0;
@@ -32,10 +35,10 @@ export function Meter({ label, part, whole, format, hint, accent = 'jade', sourc
   const fill = pct == null ? 0 : Math.min(100, Math.max(0, pct));
 
   return (
-    <div className="flex min-w-0 flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4" style={{ boxShadow: 'var(--shadow-card)' }}>
+    <div className="portal-stat flex min-w-0 flex-col gap-2 border-b border-[var(--border)] py-4">
       <p className="text-[11px] font-extrabold tracking-[0.08em] text-[var(--text-muted)] uppercase">{label}</p>
       <div className="flex flex-wrap items-baseline gap-x-2">
-        <p className={`chart-tabular text-2xl leading-8 font-extrabold tracking-tight ${pct == null ? 'text-[var(--text-muted)]' : 'text-[var(--ink)]'}`}>
+        <p className={`chart-tabular text-3xl leading-tight font-black tracking-tight whitespace-nowrap ${pct == null ? 'text-[var(--text-muted)]' : 'text-[var(--ink)]'}`}>
           {pct == null ? MISSING : `${pct}%`}
         </p>
         <p className="chart-tabular text-sm text-[var(--ink-soft)]">{status}</p>
@@ -50,7 +53,7 @@ export function Meter({ label, part, whole, format, hint, accent = 'jade', sourc
       </div>
       {hint ? <p className="text-xs leading-4 text-[var(--text-muted)]">{hint}</p> : null}
       {source ? (
-        <p className="font-mono text-[11px] break-all text-[var(--text-muted)]">
+        <p className="font-mono text-[11px] break-words text-[var(--text-muted)]">
           <span className="sr-only">Source: </span>
           {source}
         </p>

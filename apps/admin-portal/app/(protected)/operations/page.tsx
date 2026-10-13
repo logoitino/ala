@@ -1,8 +1,10 @@
 /**
  * Health desk (`/operations`). Four tabs break down where people spend time, which buttons
- * they use, errors and playback, and which menus are on. Read only.
+ * they use, errors and playback, and which menus are on. Read only. A failed read is one alert
+ * above the tabs (OperationsBoard), not one per tab.
  * @sideEffects `get_admin_reports`, `get_company_revenue_summary`, and the published runtime flags.
  */
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { OperationsBoard } from '@/components/OperationsBoard';
@@ -13,6 +15,8 @@ import { fetchPortalReports, fetchPortalRevenue } from '@/lib/reports';
 import { fetchPortalRuntime } from '@/lib/softWall';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Health' };
 
 export default async function OperationsPage() {
   const [reports, revenue, runtime] = await Promise.all([
@@ -31,12 +35,13 @@ export default async function OperationsPage() {
     portalErrors: managementAlerts({
       reportsError: reports.error,
       revenueError: revenue.error,
-      donations7dCents: 0,
-      sessions24h: 0,
-      issues24h: 0,
-      openBugs: 0,
-      stalls24h: 0,
-      reconnects24h: 0,
+      // Only the two read errors matter for alerts; counts are not read here, so they stay null.
+      donations7dCents: null,
+      sessions24h: null,
+      issues24h: null,
+      openBugs: null,
+      stalls24h: null,
+      reconnects24h: null,
     }),
     usage: reports.usage,
     reliability: reports.reliability,

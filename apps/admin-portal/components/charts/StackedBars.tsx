@@ -1,12 +1,13 @@
 /**
  * Horizontal stacked bars: one row per item, segments per series, bars scaled to the largest
- * row total. Each row prints its total and every segment value as text. Built for Revenue
+ * row total. Each segment wraps its label, value and share at enlarged text sizes so it
+ * stays inside the open report. Each row prints its total and every segment value as text. Built for Revenue
  * streams (platform_cents vs payout_cents per stream). Server-Component safe.
  */
 import { sharesTo100 } from '../../lib/chartScale';
 
 import { ChartFrame } from './ChartFrame';
-import { chartColor, ChartNotice, isNum, show, Swatch, type ChartColor, type ChartFormat } from './shared';
+import { chartColor, ChartNotice, isNum, show, SrOnly, Swatch, type ChartColor, type ChartFormat } from './shared';
 
 export type StackSeries = { key: string; label: string; color: ChartColor };
 
@@ -125,10 +126,12 @@ export function StackedBars({ title, series, rows, format, emptyText = 'Nothing 
                   </div>
                   <p className="chart-tabular mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--ink-soft)]">
                     {series.map((item, seriesIndex) => (
-                      <span key={item.key} className="inline-flex items-center gap-1.5">
+                      <span key={item.key} className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-x-1.5 gap-y-1">
                         <Swatch color={item.color} />
-                        {item.label} <span className="font-extrabold text-[var(--ink)]">{show(row.segments[item.key] ?? null, format)}</span>
-                        {shares && isNum(row.segments[item.key] ?? null) ? <span className="text-[var(--text-muted)]">{shares[seriesIndex]}%</span> : null}
+                        {item.label} <span className="min-w-0 break-words font-extrabold text-[var(--ink)]">{show(row.segments[item.key] ?? null, format)}</span>
+                        {shares && isNum(row.segments[item.key] ?? null) ? <span className="text-[var(--text-muted)]">
+                            {shares[seriesIndex]}%<SrOnly> of this row&apos;s total</SrOnly>
+                          </span> : null}
                       </span>
                     ))}
                   </p>

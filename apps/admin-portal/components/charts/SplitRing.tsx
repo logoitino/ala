@@ -17,7 +17,11 @@ export type SplitRingProps = {
   format: ChartFormat;
   /** Small words in the ring centre, e.g. "Recorded gross". */
   centerLabel: string;
-  /** Formatted figure in the ring centre, e.g. "$1,240.00". Pass "—" when missing. */
+  /**
+   * Formatted figure in the ring centre, e.g. "$1,240.00". Pass "—" when missing. The text shrinks
+   * with its length to stay inside the hole; for large amounts pass a compact figure (e.g.
+   * "$73.7K") and keep the full value in the legend, summary, and Data table.
+   */
   centerValue: string;
   totalLabel?: string;
   caption?: string;
@@ -31,6 +35,17 @@ const R = 58;
 const STROKE = 18;
 // 2px separator expressed as a fraction of the ring's circumference.
 const GAP_TURN = 2 / (2 * Math.PI * R);
+// The hole inside the ring: inner radius R - STROKE/2 = 49px, so the centre text box is inset to it.
+const HOLE_INSET = SIZE / 2 - (R - STROKE / 2);
+
+/** Centre figure size by length, so "$73,734.50" fits the 98px hole without breaking. */
+function centerSize(text: string): string {
+  const length = text.length;
+  if (length <= 7) return 'text-base leading-5';
+  if (length <= 9) return 'text-sm leading-5';
+  if (length <= 11) return 'text-xs leading-4';
+  return 'text-[11px] leading-4';
+}
 
 /**
  * @purpose Ring partition with a centre figure and a full legend.
@@ -68,8 +83,8 @@ export function SplitRing({ title, parts, format, centerLabel, centerValue, tota
                 ) : null,
               )}
             </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-              <span className="chart-tabular text-base leading-5 font-extrabold tracking-tight break-all text-[var(--ink)]">{centerValue}</span>
+            <div className="absolute flex flex-col items-center justify-center px-1 text-center" style={{ inset: HOLE_INSET }}>
+              <span className={`chart-tabular ${centerSize(centerValue)} font-extrabold tracking-tight whitespace-nowrap text-[var(--ink)]`}>{centerValue}</span>
               <span className="mt-0.5 text-[10px] leading-3 font-bold text-[var(--text-muted)]">{centerLabel}</span>
             </div>
           </div>

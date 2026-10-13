@@ -1,9 +1,17 @@
-/** Read-only Profile oversight; staff change and publish profile chrome in Expo Admin. */
+/**
+ * Read-only Profile oversight; staff change and publish profile chrome in Expo Admin. Browser tab
+ * title "Profile · Tapua'i Admin". Section headings under the shell's h1 are h2 and the Panels
+ * beneath them are h3, so the outline never skips a level (W3-PORTAL, 2026-10-12).
+ */
+import type { Metadata } from 'next';
+
 import { Badge, FlagStatusList, Panel, PortalShell, SectionHeading, StatCard } from '@/components/PortalShell';
 import { fetchProfileOversight } from '@/lib/profile';
 import { fetchPortalRuntime } from '@/lib/softWall';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Profile' };
 
 /**
  * @purpose Next Profile hierarchy oversight — Look chrome flags + claimed roster signal. Read-only:
@@ -71,13 +79,13 @@ export default async function ProfileOversightPage() {
       </Panel>
 
       <div className="mt-8">
-        <SectionHeading title="Profile chrome flags" hint="Live status — toggle from Expo /admin/look" />
+        <SectionHeading level={2} title="Profile chrome flags" hint="Live status — toggle from Expo /admin/look" />
         {!runtime.configured ? (
           <p className="rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)]">
             Supabase env missing.
           </p>
         ) : (
-          <Panel title="Profile chrome" kicker="Read-only status">
+          <Panel level={3} title="Profile chrome" kicker="Read-only status">
             <FlagStatusList published={runtime.published} groupIds={['profile']} />
           </Panel>
         )}

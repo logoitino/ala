@@ -1,8 +1,12 @@
 /**
  * KPI tile for admin portal dashboards: label, big value, optional week-over-week delta,
  * optional 7-day sparkline, and a hint. Deltas use `weekChange` from `lib/dashboard.ts` and are
- * printed as glyph + sign + words, never colour alone. Only the two measures with a prior week
- * (clips_7d and malo_cents_7d) may pass `delta`. Server-Component safe.
+ * printed as glyph + sign + words, never colour alone. The open value block and bottom divider
+ * match Home so desk grids read as one report rather than repeated floating cards (report format
+ * is the default on every page, owner decision 2026-10-12). The value never wraps mid-figure
+ * (`whitespace-nowrap`); phones use a smaller display size so enlarged whole-money values fit.
+ * The label and hint wrap at word boundaries. Only the two measures with a
+ * prior week (clips_7d and malo_cents_7d) may pass `delta`. Server-Component safe.
  */
 import { weekChange } from '../../lib/dashboard';
 
@@ -76,9 +80,9 @@ function DeltaLine({ current, previous, goodDirection }: { current: number; prev
 }
 
 /**
- * @purpose One KPI card. Missing, zero, and a value all look different.
+ * @purpose One open KPI value block. Missing, zero, and a value all look different.
  * @param props See `StatTileProps`.
- * @returns A card `<div>`; the page decides the grid.
+ * @returns An open value `<div>`; the page decides the grid.
  */
 export function StatTile({ label, value, hint, tone = 'neutral', missing = false, delta, goodDirection = 'up', spark }: StatTileProps) {
   const sparkText =
@@ -87,7 +91,7 @@ export function StatTile({ label, value, hint, tone = 'neutral', missing = false
       : null;
 
   return (
-    <div className="flex min-w-0 flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4" style={{ boxShadow: 'var(--shadow-card)' }}>
+    <div className="portal-stat flex min-w-0 flex-col gap-2 border-b border-[var(--border)] py-4">
       <p className="flex items-center gap-1.5 text-[11px] font-extrabold tracking-[0.08em] text-[var(--text-muted)] uppercase">
         {TONE_WORD[tone] ? (
           <span aria-hidden="true" className="grid size-3.5 shrink-0 place-items-center rounded-full text-[9px] leading-none font-black text-white" style={{ background: TONE_DOT[tone] }}>
@@ -101,12 +105,14 @@ export function StatTile({ label, value, hint, tone = 'neutral', missing = false
           {label}
         </span>
       </p>
-      <div className="flex items-end justify-between gap-3">
-        <p className={`chart-tabular min-w-0 text-2xl leading-8 font-extrabold tracking-tight break-words ${missing ? 'text-[var(--text-muted)]' : 'text-[var(--ink)]'}`}>
+      {/* The value is one unbroken figure: "$12,345.67" must never split across lines. At enlarged
+          text the sparkline drops below it instead of forcing the grid wider than the viewport. */}
+      <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
+        <p className={`chart-tabular min-w-0 text-xl leading-tight font-black tracking-tight whitespace-nowrap min-[400px]:text-3xl ${missing ? 'text-[var(--text-muted)]' : 'text-[var(--ink)]'}`}>
           {missing ? MISSING : value}
         </p>
         {!missing && spark && spark.points.length > 0 ? (
-          <div className="mb-1 hidden min-[360px]:block">
+          <div className="mb-1 hidden shrink-0 min-[360px]:block">
             <Sparkline points={spark.points} accent={spark.accent ?? 'jade'} />
           </div>
         ) : null}

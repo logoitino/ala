@@ -1,6 +1,13 @@
 /**
- * Reports + Money loaders for the Next admin portal.
- * Same RPCs Expo `/admin/reports` and `/admin/money` call.
+ * Reports + Money loaders for the Next admin portal (Trends, Revenue, Analytics read these).
+ * Same RPCs Expo `/admin/reports` and `/admin/money` call. Read-only: absent keys stay `null` ("—"),
+ * never 0. Labels, notes, stream names and split text use VOICE money words (Vault is "recorded for
+ * the athlete", never "family account").
+ * `donation_bands` (owner decision 2026-10-12, "3C") replaces any named donation-total list on the
+ * portal: three counts of athletes by all-time donation total, no names. It is `null` until the
+ * owner applies the 2026-10-12 reports migration (and always on the development project); missing
+ * is never read as zero.
+ * @sideEffects `get_admin_reports`, `get_company_revenue_summary`, `get_admin_malo_breakdown` (reads only).
  */
 
 // `supabase.server` (server-only) is loaded inside each fetcher, so `node --test` can import the pure parsers here.
@@ -34,6 +41,22 @@ export type PortalReports = {
   scroll: ReportLeader[] | null;
   leaders: { malo: ReportLeader[] | null; hype: ReportLeader[] | null; schools: ReportLeader[] | null };
   series: ReportSeries;
+  /** `get_admin_reports.donation_bands`. `null` = not in this read (migration not applied) or not an object. */
+  donationBands: DonationBands | null;
+};
+
+/**
+ * Athletes counted by all-time donation total (owner decision 2026-10-12). Each count is `null`
+ * when that band is absent or not a number in the read, so a partial payload never shows a 0 it
+ * did not return.
+ */
+export type DonationBands = {
+  /** More than $0 and under $50. */
+  under50: number | null;
+  /** $50 up to (not including) $250. */
+  from50to250: number | null;
+  /** $250 and up. */
+  over250: number | null;
 };
 
 export type ReportPoint = { label: string; value: number };
@@ -98,6 +121,7 @@ const EMPTY_REPORTS: PortalReports = {
   scroll: null,
   leaders: { malo: null, hype: null, schools: null },
   series: { clips: null, malo: null, stalls: null, dwell: null },
+  donationBands: null,
 };
 
 const EMPTY_REVENUE: PortalRevenue = {
@@ -162,6 +186,57 @@ export function asLeaders(value: unknown): ReportLeader[] | null {
     .filter((row): row is ReportLeader => Boolean(row));
 }
 
+/** The three bands in display order: RPC key, typed field, and the label people read. */
+export const DONATION_BANDS: readonly { key: 'under_50' | '50_to_250' | '250_plus'; field: keyof DonationBands; label: string }[] = [
+  { key: 'under_50', field: 'under50', label: 'Under $50' },
+  { key: '50_to_250', field: 'from50to250', label: '$50–$250' },
+  { key: '250_plus', field: 'over250', label: '$250 and up' },
+];
+
+/** Title shared by Trends and Analytics. */
+export const DONATION_BANDS_TITLE = 'Athletes by all-time donations';
+
+/** Shown when a working read has no `donation_bands` key: the migration is not on this database yet. */
+export const DONATION_BANDS_MISSING_NOTE = 'Needs the 2026-10-12 reports update on this database.';
+
+/**
+ * @purpose Parse `get_admin_reports.donation_bands`. Pure.
+ * @param value The raw key: `{ under_50, 50_to_250, 250_plus }` counts.
+ * @returns `null` when the key is absent, not an object, or has none of the three counts (malformed);
+ *   otherwise each band is a whole count, or `null` when that band is absent or not a number (partial).
+ */
+export function parseDonationBands(value: unknown): DonationBands | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const bag = value as Record<string, unknown>;
+  const count = (raw: unknown): number | null => {
+    if (typeof raw === 'number') return Number.isFinite(raw) && raw >= 0 ? Math.round(raw) : null;
+    // Postgres bigint can arrive as a numeric string.
+    if (typeof raw === 'string' && /^\d+$/.test(raw.trim())) return Number(raw.trim());
+    return null;
+  };
+  const bands: DonationBands = { under50: count(bag.under_50), from50to250: count(bag['50_to_250']), over250: count(bag['250_plus']) };
+  return bands.under50 == null && bands.from50to250 == null && bands.over250 == null ? null : bands;
+}
+
+/**
+ * @purpose The three bands as chart rows in display order. A band not in the read keeps `value: null` ("—").
+ */
+export function donationBandRows(bands: DonationBands): { label: string; value: number | null }[] {
+  return DONATION_BANDS.map((band) => ({ label: band.label, value: bands[band.field] }));
+}
+
+/**
+ * @purpose One plain sentence for the bands chart: each band with its count of athletes, or "not in this read".
+ */
+export function donationBandsSentence(bands: DonationBands): string {
+  const parts = DONATION_BANDS.map((band) => {
+    const value = bands[band.field];
+    if (value == null) return `${band.label}: not in this read`;
+    return `${band.label}: ${value.toLocaleString('en-US')} ${value === 1 ? 'athlete' : 'athletes'}`;
+  });
+  return `${DONATION_BANDS_TITLE}. ${parts.join('; ')}.`;
+}
+
 function dollarsToCents(value: unknown): number {
   if (typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 1_000_000 && !Number.isInteger(value)) {
     return Math.max(0, Math.round(value * 100));
@@ -199,14 +274,14 @@ export const REPORT_LABELS: Record<string, string> = {
   malo_cents_prev_7d: 'Donations (prior 7d)',
   avg_tip_cents_7d: 'Average donation (7d)',
   queued_payouts: 'Queued payouts',
-  paid_payouts_cents: 'Paid out',
-  active_subs: 'Active subscriptions',
+  paid_payouts_cents: 'Payouts marked paid',
+  active_subs: 'Exclusive rows marked active',
   flagged: 'Open flags',
   removed: 'Removed clips',
   vault: 'Vault clips',
   exclusive_clips: 'Exclusive clips',
-  flash_live: 'Flash Unlock live',
-  spotlight_live: 'Live Spotlight awards',
+  flash_live: 'Flash unlocks still open',
+  spotlight_live: 'Spotlight awards live today',
   qna: 'Subscriber Q&A requests',
   game_play: 'Game Day clips',
   train_like_me: 'Train Like Me clips',
@@ -214,7 +289,7 @@ export const REPORT_LABELS: Record<string, string> = {
   profiles: 'Profiles',
   athletes: 'Athletes',
   verified: 'Verified profiles',
-  admins: 'Admins',
+  admins: 'Admin accounts',
   schools: 'Schools',
   pending_verify: 'Verify queue',
   live_games: 'Live games',
@@ -222,21 +297,22 @@ export const REPORT_LABELS: Record<string, string> = {
   poll_votes: 'Poll votes',
   active_polls: 'Active polls',
   active_boosters: 'Active boosters',
-  drip_skus: 'Drip SKUs on rack',
-  stalls_24h: 'Stalls (24h)',
+  drip_skus: 'Drip products on the rack',
+  stalls_24h: 'Video stalls (24h)',
   reconnects_24h: 'Reconnects (24h)',
   checkouts_24h: 'Checkout step timings (24h)',
-  avg_checkout_ms_24h: 'Average checkout step time (24h)',
+  avg_checkout_ms_24h: 'Average checkout step (24h)',
   events_24h: 'Telemetry events (24h)',
-  sessions_24h: 'Tab sessions (24h)',
+  sessions_24h: 'Tab opens (24h)',
   dwell_ms_24h: 'Time on tabs (24h)',
   dwell_ms_7d: 'Time on tabs (7d)',
   taps_24h: 'Feature taps (24h)',
   taps_7d: 'Feature taps (7d)',
-  issues_24h: 'Control issues (24h)',
-  issues_7d: 'Control issues (7d)',
+  issues_24h: 'UI issues (24h)',
+  issues_7d: 'UI issues (7d)',
   feedback_bugs_open: 'Open bug reports',
-  avg_scroll_pct_7d: 'Avg scroll depth (7d)',
+  avg_scroll_pct_7d: 'Average scroll depth (7d)',
+  donation_bands: DONATION_BANDS_TITLE,
 };
 
 /**
@@ -254,12 +330,14 @@ export function formatCount(value: number): string {
 }
 
 /**
- * @purpose Format milliseconds of time on tabs as minutes ("42 min", "3.5 min"). `tabs` and `dwell` values are ms.
+ * @purpose Format milliseconds of time on tabs as minutes ("0 min", "<1 min", "42 min"). `tabs` and
+ *   `dwell` values are ms. Same rule as `formatMinutes` in lib/dashboard.ts so Trends, Home, Health
+ *   and Analytics print one value the same way.
  */
 export function formatMinutes(ms: number): string {
-  const minutes = Math.max(0, ms) / 60000;
-  const digits = minutes > 0 && minutes < 10 ? 1 : 0;
-  return `${minutes.toLocaleString('en-US', { maximumFractionDigits: digits })} min`;
+  if (ms <= 0) return '0 min';
+  if (ms < 60000) return '<1 min';
+  return `${Math.round(ms / 60000).toLocaleString('en-US')} min`;
 }
 
 /**
@@ -344,6 +422,7 @@ export function parseReportsPayload(data: unknown): PortalReports {
       schools: asLeaders(leadersRaw.schools),
     },
     series: asSeries(row.series),
+    donationBands: parseDonationBands(row.donation_bands),
   };
 }
 
@@ -358,6 +437,12 @@ export async function fetchPortalRevenue(): Promise<PortalRevenue> {
   if (error) return { ...EMPTY_REVENUE, configured: true, error: error.message };
   return parseRevenueSummary(data);
 }
+
+/** Short notes under a report value, where the label alone could mislead. Keyed like `REPORT_LABELS`. */
+export const REPORT_NOTES: Record<string, string> = {
+  paid_payouts_cents: 'Disbursement rows marked paid. Same sum on the Donations and Ledger boards. Should be $0 while payouts are blocked in Wave 0.',
+  donation_bands: 'All time. Counts of athletes by all-time donation total (more than $0 and under $50, $50 to under $250, $250 and up), no names. Athletes with no donations are not counted.',
+};
 
 /** Cents field, else the older dollars field, else `null` (absent = not in this read, never $0). */
 function centsOrNull(cents: unknown, dollars: unknown): number | null {
@@ -435,6 +520,56 @@ export function parseRevenueSummary(data: unknown): PortalRevenue {
       error: caught instanceof Error ? caught.message : 'Could not parse revenue summary.',
     };
   }
+}
+
+/**
+ * Display name per revenue `source` (stream and `company_revenue_logs` row), so older hosted labels
+ * ("Mālo Micro-Tips", "Merch & Vault Subscriptions") never show. VOICE money words.
+ */
+const STREAM_NAMES: Record<string, string> = {
+  malo: 'Donations',
+  tip: "Optional tips for Tapua'i",
+  booster: 'Booster sponsorships',
+  vault: 'Vault subscriptions',
+  merch: 'Drip merch',
+  merch_vault: 'Vault and Drip',
+};
+
+/** VOICE name for a revenue `source`; `fallback` (usually the RPC label) when the source is unknown. */
+export function streamName(source: string, fallback: string): string {
+  return STREAM_NAMES[source] ?? fallback;
+}
+
+/** "90" for 9000 basis points, "12.5" for 1250. */
+function bpsPercent(bps: number): string {
+  return (bps / 100).toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+/**
+ * `merch_vault` comes back with null basis points because it mixes two rates. Checked 2026-10-12 against
+ * `company_revenue_bps`, `record_company_revenue` and `sync_company_revenue_logs` in
+ * apps/mobile/src/backend/db/schema.sql and supabase/company_revenue.sql: vault = 2000 bps to Tapua'i,
+ * the rest to the athlete (payee_kind 'athlete'); merch (Drip) = 10000 bps, payout 0. The Vault 80% is
+ * "recorded for the athlete", never "family account": `get_custodial_summary` sums only `tips`, so Vault
+ * money is not credited to the custodial family account (VOICE re-review 2026-10-12).
+ */
+const MERCH_VAULT_SPLIT = "Vault: 80% recorded for the athlete, 20% to Tapua'i · Drip: 100% to Tapua'i";
+
+/**
+ * @purpose The stated split of one `get_company_revenue_summary` stream in VOICE words, built from
+ *   `payout_bps` / `platform_bps`. Never returns the RPC's raw `split` text.
+ * @returns The sentence, or `null` when this read cannot support one (unknown source, missing basis
+ *   points, or basis points that do not add up to 100%).
+ */
+export function streamSplitText(stream: Pick<RevenueStream, 'source' | 'payout_bps' | 'platform_bps'>): string | null {
+  if (stream.source === 'merch_vault') return MERCH_VAULT_SPLIT;
+  const payout = stream.payout_bps;
+  const platform = stream.platform_bps;
+  if (payout == null || platform == null || payout + platform !== 10_000) return null;
+  if (stream.source === 'malo') return `${bpsPercent(payout)}% to the family account, ${bpsPercent(platform)}% to Tapua'i`;
+  if (stream.source === 'booster') return `${bpsPercent(payout)}% to the operator, ${bpsPercent(platform)}% to Tapua'i`;
+  if (stream.source === 'tip') return payout === 0 ? "100% to Tapua'i (donor's choice)" : null;
+  return null;
 }
 
 export type MaloSlice = { key: string; label: string; cents: number; count: number };

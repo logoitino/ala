@@ -1,27 +1,35 @@
 /**
  * Management desk (`/manage`, shown as Departments). One page for Billing, Marketing, Support,
  * API, and IT. Reads the same reports and revenue the other desks already load. Nothing here
- * writes. Tab time is shown in minutes; a missing key shows "—"; a failed read is an alert.
+ * writes. Tab time is shown in minutes; a missing key shows "—"; a failed read is an alert, and a
+ * failed reports read leaves desk counts null so a desk says "did not load", never "nothing happened".
+ * Stream names come from `streamName` (lib/reports.ts) and colours from `lib/measureColors.ts`
+ * (payee share jade, Tapua'i share gold, as on Revenue). Counts are full numbers, never "48.2K".
+ * Panels sit under each desk's h2, so they are h3; prose cards keep their own height (`items-start`).
+ * Support's queue is the open bug reports and UI issues it shows; reported clips stay in Expo /admin.
+ * Issue types read as words via `issueLabel` (lib/eventLabels.ts), never "upload.retry · upload".
+ * The payee share covers families, Vault athletes and booster operators (W3-PORTAL, 2026-10-12).
  * @sideEffects `get_admin_reports` and `get_company_revenue_summary`.
  */
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { HBarList, StackedBars, StatTile } from '@/components/charts';
 import { Badge, Panel, PortalShell, SectionHeading } from '@/components/PortalShell';
-import { formatCompactCount, formatCount, formatMinutes, readKey } from '@/lib/dashboard';
-import { APP_API_ROUTES, managementAlerts, managementDeskStatus } from '@/lib/departments';
-import { fetchPortalReports, fetchPortalRevenue, formatUsd } from '@/lib/reports';
+import { formatCount, formatMinutes, readKey } from '@/lib/dashboard';
+import { APP_API_ROUTES, deskLabel, managementAlerts, managementDeskStatus, type ManagementSnapshot } from '@/lib/departments';
+import { issueLabel, labelRows } from '@/lib/eventLabels';
+import { measureColor } from '@/lib/measureColors';
+import { fetchPortalReports, fetchPortalRevenue, formatUsd, streamName } from '@/lib/reports';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Departments' };
 
 function toneBadge(tone: 'ok' | 'warn' | 'danger') {
   if (tone === 'danger') return 'danger' as const;
   if (tone === 'warn') return 'warn' as const;
   return 'ok' as const;
-}
-
-function deskValue(tone: 'ok' | 'warn' | 'danger') {
-  return tone === 'danger' ? 'Failed' : tone === 'warn' ? 'Look' : 'Clear';
 }
 
 export default async function ManagementPage() {
@@ -42,15 +50,16 @@ export default async function ManagementPage() {
   const gross = revenueOk ? revenue.gross_volume_cents : null;
   const net = revenueOk ? revenue.company_net_cents : null;
 
-  const snapshot = {
+  // Null stays null (QA #2): a failed reports read is "did not load", not an empty window.
+  const snapshot: ManagementSnapshot = {
     reportsError: reports.error,
     revenueError: revenue.error,
-    donations7dCents: donations7d ?? 0,
-    sessions24h: sessions24h ?? 0,
-    issues24h: issues24h ?? 0,
-    openBugs: openBugs ?? 0,
-    stalls24h: stalls24h ?? 0,
-    reconnects24h: reconnects24h ?? 0,
+    donations7dCents: donations7d,
+    sessions24h,
+    issues24h,
+    openBugs,
+    stalls24h,
+    reconnects24h,
   };
   const alerts = managementAlerts(snapshot);
   const desks = managementDeskStatus(snapshot);
@@ -88,7 +97,7 @@ export default async function ManagementPage() {
         <nav aria-label="Departments on this page" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {desks.map((item) => (
             <a key={item.id} href={`#${item.id}`} className="block rounded-2xl">
-              <StatTile label={item.title} value={deskValue(item.tone)} hint={item.status} tone={item.tone === 'ok' ? 'ok' : item.tone === 'warn' ? 'warn' : 'danger'} />
+              <StatTile label={item.title} value={deskLabel(item.tone)} hint={item.status} tone={item.tone === 'ok' ? 'ok' : item.tone === 'warn' ? 'warn' : 'danger'} />
             </a>
           ))}
         </nav>
@@ -99,34 +108,34 @@ export default async function ManagementPage() {
           <SectionHeading id="billing-heading" level={2} title="Billing" hint="Ledger detail is on Revenue" />
           <div className="mb-4 grid gap-3 sm:grid-cols-3">
             <StatTile label="Donations · 7d" value={usd(donations7d)} missing={donations7d == null} hint="Recorded donations, last 7 days" goodDirection="none" />
-            <StatTile label="Gross" value={usd(gross)} missing={gross == null} hint="All streams in the ledger" goodDirection="none" />
-            <StatTile label="Tapua'i keeps" value={usd(net)} missing={net == null} hint="Platform share recorded in the ledger" goodDirection="none" />
+            <StatTile label="Gross, all streams" value={usd(gross)} missing={gross == null} hint="Recorded gross in the ledger" goodDirection="none" />
+            <StatTile label="Tapua'i share, all streams" value={usd(net)} missing={net == null} hint="Recorded for Tapua'i in the ledger" goodDirection="none" />
           </div>
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid items-start gap-4 lg:grid-cols-2">
             <StackedBars
-              title="Streams: Tapua'i share and payouts"
-              caption="Each stream's recorded gross, split into what Tapua'i keeps and what is paid out"
+              title="Streams: payee share and Tapua'i share"
+              caption="Each stream's recorded gross, split into the payee share (families, athletes, operators) and Tapua'i share"
               source="get_company_revenue_summary.streams"
               rows={
                 revenueOk
                   ? revenue.streams.map((row) => ({
-                      label: row.label,
-                      segments: { platform: row.platform_cents, payout: row.payout_cents },
+                      label: streamName(row.source, row.label),
+                      segments: { payout: row.payout_cents, platform: row.platform_cents },
                       total: row.gross_cents,
                     }))
                   : null
               }
               series={[
-                { key: 'platform', label: "Tapua'i share", color: 'jade' },
-                { key: 'payout', label: 'Payouts', color: 'gold' },
+                { key: 'payout', label: 'Payee share', color: measureColor('payeeShare') },
+                { key: 'platform', label: "Tapua'i share", color: measureColor('tapuaiShare') },
               ]}
               format={formatUsd}
               emptyText="No revenue streams in this read."
             />
-            <Panel title="Donations and revenue" kicker="Test mode" action={<Badge tone={toneBadge(desk('billing').tone)}>{desk('billing').status}</Badge>}>
+            <Panel level={3} title="Donations and revenue" kicker="Test mode" action={<Badge tone={toneBadge(desk('billing').tone)}>{desk('billing').status}</Badge>}>
               <p className="text-sm leading-6 text-[var(--ink-soft)]">
-                Donation policy is 90 to the family. Payouts stay blocked in this test. The full ledger, donations by day, and where
-                donations started are on{' '}
+                Donation policy: 90% to the family account, 10% to Tapua&apos;i. Payouts stay blocked in this test. The full ledger,
+                donations by day, and where donations started are on{' '}
                 <Link href="/money" className="font-extrabold text-[var(--jade)] underline-offset-2 hover:underline">
                   Revenue
                 </Link>
@@ -142,17 +151,17 @@ export default async function ManagementPage() {
             <StatTile label="Tab opens · 24h" value={count(sessions24h)} missing={sessions24h == null} hint="Events, not distinct people" goodDirection="none" />
             <StatTile label="Feature taps · 24h" value={count(taps24h)} missing={taps24h == null} hint="Tap events, not people" goodDirection="none" />
           </div>
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid items-start gap-4 lg:grid-cols-2">
             <HBarList
               title="Time on each tab"
               caption="Last 7 days · minutes, all people together"
               rows={reportsOk ? reports.tabs : null}
               format={formatMinutes}
-              accent="jade"
+              accent={measureColor('timeOnTabs')}
               emptyText="No tab time in the last 7 days."
               source="get_admin_reports.tabs"
             />
-            <Panel title="Who showed up" kicker="24 hours" action={<Badge tone={toneBadge(desk('marketing').tone)}>{desk('marketing').status}</Badge>}>
+            <Panel level={3} title="Tab activity" kicker="24 hours" action={<Badge tone={toneBadge(desk('marketing').tone)}>{desk('marketing').status}</Badge>}>
               <p className="text-sm leading-6 text-[var(--ink-soft)]">
                 Tab opens and taps are events. The same person can open a tab many times. Daily people and returning people are not
                 measured. Detail is on{' '}
@@ -170,24 +179,24 @@ export default async function ManagementPage() {
         </section>
 
         <section id="support" aria-labelledby="support-heading" className="scroll-mt-40">
-          <SectionHeading id="support-heading" level={2} title="Support" hint="Start with the red and gold lines" />
+          <SectionHeading id="support-heading" level={2} title="Support" hint="Start with any desk marked Check or Failed under Right now" />
           <div className="mb-4 grid gap-3 sm:grid-cols-2">
-            <StatTile label="UI issues · 24h" value={count(issues24h)} missing={issues24h == null} hint="Control issues reported by the app" tone={warnIf(issues24h)} goodDirection="down" />
+            <StatTile label="UI issues · 24h" value={count(issues24h)} missing={issues24h == null} hint="Problems the app logged on a button or screen" tone={warnIf(issues24h)} goodDirection="down" />
             <StatTile label="Open bug reports" value={count(openBugs)} missing={openBugs == null} hint="Feedback not shipped or declined" tone={warnIf(openBugs)} goodDirection="down" />
           </div>
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid items-start gap-4 lg:grid-cols-2">
             <HBarList
               title="Issue types"
               caption="UI issues in the last 7 days, plus open bug reports"
-              rows={reportsOk ? reports.issues : null}
+              rows={reportsOk && reports.issues ? labelRows(reports.issues, issueLabel) : null}
               format={formatCount}
-              accent="bad"
+              accent={measureColor('issues')}
               emptyText="No issue types in this window."
               source="get_admin_reports.issues"
             />
-            <Panel title="What needs a person" kicker="Assist" action={<Badge tone={toneBadge(desk('support').tone)}>{desk('support').status}</Badge>}>
+            <Panel level={3} title="What needs a person" kicker="Assist" action={<Badge tone={toneBadge(desk('support').tone)}>{desk('support').status}</Badge>}>
               <p className="text-sm leading-6 text-[var(--ink-soft)]">
-                A gold or red status is the queue. The clip and the reporter stay on Expo{' '}
+                The queue is the open bug reports and UI issues above. Reported clips and who reported them stay in Expo{' '}
                 <code className="rounded bg-[var(--jade-soft)] px-1.5">/admin</code> moderation.
               </p>
             </Panel>
@@ -196,8 +205,8 @@ export default async function ManagementPage() {
 
         <section id="api" aria-labelledby="api-heading" className="scroll-mt-40">
           <SectionHeading id="api-heading" level={2} title="API" hint="Reads this portal uses" />
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Panel title="Portal reads" kicker="Data" action={<Badge tone={toneBadge(desk('api').tone)}>{desk('api').status}</Badge>}>
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            <Panel level={3} title="Portal reads" kicker="Data" action={<Badge tone={toneBadge(desk('api').tone)}>{desk('api').status}</Badge>}>
               <ul className="space-y-2">
                 {[
                   { name: 'get_admin_reports', configured: reports.configured, failed: Boolean(reports.error) },
@@ -210,7 +219,7 @@ export default async function ManagementPage() {
                 ))}
               </ul>
             </Panel>
-            <Panel title="App routes" kicker="Named, not called from here">
+            <Panel level={3} title="App routes" kicker="Named, not called from here">
               <ul className="space-y-2">
                 {APP_API_ROUTES.map((route) => (
                   <li key={route.path} className="rounded-xl border border-[var(--border)] px-3 py-2">
@@ -233,9 +242,9 @@ export default async function ManagementPage() {
             <StatTile label="Live reconnects · 24h" value={count(reconnects24h)} missing={reconnects24h == null} hint="Live connection dropped and came back" tone={warnIf(reconnects24h)} goodDirection="down" />
             <StatTile
               label="Telemetry events · 24h"
-              value={events24h == null ? '—' : formatCompactCount(events24h)}
+              value={count(events24h)}
               missing={events24h == null}
-              hint={events24h == null ? undefined : `${formatCount(events24h)} rows written by the app`}
+              hint={events24h == null ? undefined : 'Rows written by the app'}
               goodDirection="none"
             />
           </div>

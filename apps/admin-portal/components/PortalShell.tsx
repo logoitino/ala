@@ -1,8 +1,19 @@
 /**
  * Shell for every page of the read-only Next admin portal: brand, the six equal section tabs,
- * the Analytics and Departments utility links, sign out, the page title, and the shared card
- * primitives (StatCard, Panel, SectionHeading, Badge, BarRow, FlagStatusList). Exports and their
- * props are frozen because Trends, Revenue, Analytics, and the product desks import them.
+ * the Analytics and Departments utility links, sign out, the page title, and the shared open
+ * primitives (StatCard, Panel, SectionHeading, Badge, BarRow, FlagStatusList). Exports and props
+ * stay stable (Panel `level`, shell `presentation`/`heading`), because Trends, Revenue, Analytics,
+ * and the product desks import them. The Product sub-nav starts with Overview (`/product`) so one
+ * link is always active on every Product page.
+ * Report format is the default on every page, by owner decision 2026-10-12 (ADM-01 owner
+ * decision 0): the 1680px report width, underline tabs, open panels with dividers instead of
+ * cards, and the bold page title. `presentation="standard"` (7xl width, pill tabs) stays only for
+ * compatibility. Home supplies its own community hero through `heading={null}`.
+ * Contrast (2026-10-12, from the globals.css values): the active underline tab and the active
+ * Product link are --jade text and a 2px --jade underline on the white header, 5.97:1 (5.60:1
+ * against --canvas), so both clear 4.5:1 for text and 3:1 for the indicator.
+ * FlagStatusList wraps long flag names and hints rather than cutting them off (W3-PORTAL), and
+ * every heading wrapper is `min-w-0` so long headings wrap inside grids.
  * Owner: PORTAL. The Analytics header link is shared with ANALYST.
  */
 import Link from 'next/link';
@@ -35,6 +46,7 @@ const TABS: { href: PortalHref; label: string; match: PortalHref[]; icon: string
 ];
 
 const PRODUCT_LINKS: { href: PortalHref; label: string }[] = [
+  { href: '/product', label: 'Overview' },
   { href: '/features', label: 'Features' },
   { href: '/profile', label: 'Profile' },
   { href: '/auth', label: 'Sign-in' },
@@ -56,13 +68,17 @@ const TITLES: Record<PortalHref, string> = {
   '/people': 'People',
 };
 
-/** One line under the page title, so each page says what it is for. */
+/**
+ * One line under the page title, so each page says what it is for. Home passes `heading={null}`
+ * (its community hero holds the h1), so `'/'` shows only if Home ever drops that hero; it stays
+ * because the shell types every route.
+ */
 const SUBTITLES: Record<PortalHref, string> = {
-  '/': 'The measured week: donations, clips, attention, and playback, with what is not measured.',
+  '/': "This week's donations, clips, attention and playback, plus the rates we do not measure.",
   '/reports': 'How the numbers move over the last 7 days.',
   '/audience': 'Who is on the platform: profiles, athletes, schools, and the clip mix.',
   '/money': 'Donations and the ledger, read from the recorded rows.',
-  '/operations': 'Where people spend time, what they tap, what breaks, and which menus are on.',
+  '/operations': 'Time on tabs, taps, what breaks, and which menus are on.',
   '/manage': 'Billing, Marketing, Support, API, and IT on one read-only page.',
   '/analytics': 'Dashboards and the measure catalog. Every number names its source.',
   '/product': 'Menus, profile, sign-in, and people. Changes stay in Expo /admin.',
@@ -82,8 +98,8 @@ function Icon({ d }: { d: string }) {
 
 function tabClass(on: boolean) {
   return on
-    ? 'flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[var(--surface)] px-3 text-sm font-extrabold text-[var(--jade)] shadow-[var(--shadow-card)] ring-1 ring-[var(--border)]'
-    : 'flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 text-sm font-bold text-[var(--ink-soft)] hover:bg-[var(--surface)]/70 hover:text-[var(--ink)]';
+    ? 'flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[var(--surface)] px-1.5 text-center text-sm font-extrabold text-[var(--jade)] shadow-[var(--shadow-card)] ring-1 ring-[var(--border)] sm:px-3'
+    : 'flex min-h-10 items-center justify-center gap-2 rounded-xl px-1.5 text-center text-sm font-bold text-[var(--ink-soft)] hover:bg-[var(--surface)]/70 hover:text-[var(--ink)] sm:px-3';
 }
 
 function utilityClass(on: boolean) {
@@ -92,20 +108,38 @@ function utilityClass(on: boolean) {
     : 'inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-bold text-[var(--ink-soft)] hover:bg-[var(--surface-muted)] hover:text-[var(--ink)]';
 }
 
+/** Product sub-nav follows the primary report tabs; aria-current and the jade underline name the active desk.
+ * On a sub-desk the Product tab says aria-current="true" (current section) and only the desk link says "page". */
 function subClass(on: boolean) {
   return on
-    ? 'inline-flex min-h-9 items-center justify-center rounded-full bg-[var(--jade)] px-4 text-sm font-extrabold text-white'
-    : 'inline-flex min-h-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-bold text-[var(--ink-soft)] hover:border-[var(--jade)] hover:text-[var(--ink)]';
+    ? 'inline-flex min-h-9 items-center justify-center border-b-2 border-[var(--jade)] px-4 text-sm font-extrabold text-[var(--jade)]'
+    : 'inline-flex min-h-9 items-center justify-center border-b-2 border-transparent px-4 text-sm font-bold text-[var(--ink-soft)] hover:border-[var(--border)] hover:text-[var(--ink)]';
 }
 
 /**
- * @purpose Page frame for the admin portal. Six equal tabs in a segmented bar; Product opens a
- *   second row for its four desks. Analytics and Departments are utility links, not a seventh
- *   uneven tab. The header is sticky only on wide screens so it never covers content at 200% zoom.
+ * @purpose Page frame for the admin portal. Six equal tabs default to Home's report
+ *   underline; Product opens a
+ *   second row: Overview plus its four desks. Analytics and Departments are utility links, not a seventh
+ *   uneven tab. The header scrolls with the page so backward keyboard navigation cannot hide
+ *   a focused control behind it, including when Product adds a second navigation row.
  * @param active The current route; drives the title, the subtitle, and every active state.
+ * @param heading Replaces the standard kicker + h1 + subtitle block. Omit it for the standard
+ *   title. Pass `null` when the page renders its own h1 (Home's community hero); the page must
+ *   then supply exactly one h1 before any other heading.
+ * @param presentation `'report'` (default, owner decision 2026-10-12): 1680px width, underline
+ *   tabs, open report surface (`portal-report`). `'standard'`: the older 7xl width and pill tabs,
+ *   kept for compatibility only.
  */
-export function PortalShell({ children, active }: { children: ReactNode; active: PortalHref }) {
+export function PortalShell({ children, active, heading, presentation = 'report' }: {
+  children: ReactNode;
+  active: PortalHref;
+  /** Replaces the standard title block; `null` means the page renders its own h1. */
+  heading?: ReactNode;
+  /** `'report'` by default (owner decision 2026-10-12); `'standard'` is legacy. */
+  presentation?: 'standard' | 'report';
+}) {
   const productOpen = TABS[5].match.includes(active);
+  const report = presentation === 'report';
 
   return (
     <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
@@ -115,9 +149,9 @@ export function PortalShell({ children, active }: { children: ReactNode; active:
       >
         Skip to content
       </a>
-      <header className="border-b border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur lg:sticky lg:top-0 lg:z-30">
-        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6">
-          <Link href="/" className="flex min-h-10 shrink-0 items-center gap-2.5 rounded-xl pr-2">
+      <header className="border-b border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur">
+        <div className={`mx-auto flex w-full flex-wrap items-center gap-x-2 gap-y-3 px-4 py-3 sm:gap-x-4 sm:px-6 ${report ? 'max-w-[1680px] lg:px-10' : 'max-w-7xl'}`}>
+          <Link href="/" className="flex min-h-10 shrink-0 items-center gap-2.5 rounded-xl pr-1 sm:pr-2">
             <span aria-hidden="true" className="grid size-9 place-items-center rounded-xl bg-[var(--jade)] text-base font-black text-white shadow-[var(--shadow-card)]">
               T
             </span>
@@ -127,23 +161,26 @@ export function PortalShell({ children, active }: { children: ReactNode; active:
             </span>
           </Link>
           <nav aria-label="Portal" className="order-3 w-full xl:order-none xl:w-auto xl:flex-1">
-            <ul className="grid grid-cols-3 gap-1 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-1 sm:grid-cols-6 xl:mx-auto xl:max-w-3xl">
+            <ul className={`gap-1 xl:mx-auto xl:max-w-3xl ${report ? 'flex flex-wrap gap-x-2' : 'grid grid-cols-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-1 sm:grid-cols-6'}`}>
               {TABS.map((tab) => {
                 const on = tab.match.includes(active);
                 return (
-                  <li key={tab.href} className="min-w-0">
-                    <Link href={tab.href} className={tabClass(on)} aria-current={on ? 'page' : undefined}>
+                  <li key={tab.href} className={`min-w-0 ${report ? 'flex-1 basis-[6rem]' : ''}`}>
+                    <Link href={tab.href} className={report ? `flex min-h-10 items-center justify-center gap-2 border-b-2 px-1.5 text-sm font-bold sm:px-3 ${on ? 'border-[var(--jade)] text-[var(--jade)]' : 'border-transparent text-[var(--ink-soft)] hover:border-[var(--border)] hover:text-[var(--ink)]'}` : tabClass(on)} aria-current={on ? (tab.href === active ? 'page' : 'true') : undefined}>
                       <span className="hidden 2xl:inline-flex">
                         <Icon d={tab.icon} />
                       </span>
-                      <span className="truncate">{tab.label}</span>
+                      {/* No truncate: a tab name is one word and must read whole at 320px and 400% zoom. */}
+                      <span>{tab.label}</span>
                     </Link>
                   </li>
                 );
               })}
             </ul>
           </nav>
-          <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-1">
+          {/* Phones: brand and Sign out share the first row, Analytics and Departments get their own
+              row, then the tabs, so Sign out never wraps alone. From sm up it is one row again. */}
+          <div className="order-2 flex w-full min-w-0 flex-wrap items-center gap-1 sm:order-none sm:ml-auto sm:w-auto sm:justify-end">
             <Link href="/analytics" className={utilityClass(active === '/analytics')} aria-current={active === '/analytics' ? 'page' : undefined}>
               <span className="hidden sm:inline-flex">
                 <Icon d="M4 20V10m6 10V4m6 16v-7m4 7H2" />
@@ -156,13 +193,15 @@ export function PortalShell({ children, active }: { children: ReactNode; active:
               </span>
               Departments
             </Link>
-            <span aria-hidden="true" className="mx-1 hidden h-6 w-px bg-[var(--border)] sm:block" />
+          </div>
+          <div className="order-1 ml-auto flex shrink-0 items-center sm:order-none sm:-ml-2">
+            <span aria-hidden="true" className="mr-2 hidden h-6 w-px bg-[var(--border)] sm:block" />
             <SignOutButton />
           </div>
         </div>
         {productOpen ? (
           <nav aria-label="Product" className="border-t border-[var(--border)] bg-[var(--surface)]">
-            <ul className="mx-auto flex w-full max-w-7xl flex-wrap gap-2 px-4 py-2.5 sm:px-6">
+            <ul className={`mx-auto flex w-full flex-wrap gap-2 px-4 py-2.5 sm:px-6 ${report ? 'max-w-[1680px] lg:px-10' : 'max-w-7xl'}`}>
               {PRODUCT_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className={subClass(link.href === active)} aria-current={link.href === active ? 'page' : undefined}>
@@ -174,14 +213,14 @@ export function PortalShell({ children, active }: { children: ReactNode; active:
           </nav>
         ) : null}
       </header>
-      <main id="portal-main" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-16 outline-none sm:px-6 sm:pt-8">
-        <div className="mb-6 border-b border-[var(--border)] pb-5">
+      <main id="portal-main" tabIndex={-1} className={`mx-auto w-full flex-1 px-4 pt-6 pb-16 outline-none sm:px-6 sm:pt-8 ${report ? 'portal-report max-w-[1680px] lg:px-10' : 'max-w-7xl'}`}>
+        {heading !== undefined ? heading : <div className="portal-page-heading mb-8 border-b border-[var(--border)] pb-6">
           <p className="text-[11px] font-extrabold tracking-[0.18em] text-[var(--jade)] uppercase">
             {productOpen && active !== '/product' ? 'Product' : "Tapua'i admin"}
           </p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">{TITLES[active]}</h1>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--ink-soft)]">{SUBTITLES[active]}</p>
-        </div>
+          <h1 className="mt-2 text-3xl leading-tight font-black tracking-tight sm:text-4xl">{TITLES[active]}</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--ink-soft)]">{SUBTITLES[active]}</p>
+        </div>}
         {children}
       </main>
     </div>
@@ -209,8 +248,7 @@ export function StatCard({
           : 'text-[var(--ink)]';
   return (
     <div
-      className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4"
-      style={{ boxShadow: 'var(--shadow-card)' }}
+      className="portal-stat min-w-0 border-b border-[var(--border)] pb-5"
     >
       <p className="text-[11px] font-extrabold tracking-wide text-[var(--text-muted)] uppercase">{label}</p>
       <p className={`mt-2 text-2xl font-extrabold tracking-tight ${accent}`}>{value}</p>
@@ -219,30 +257,38 @@ export function StatCard({
   );
 }
 
+/**
+ * @purpose Open report section with a kicker, heading, optional action, and its content.
+ * @param level Heading level, default 2 (unchanged for older pages). Use 3 when the Panel sits
+ *   under a section that already has an h2, so the outline does not skip or repeat a level.
+ */
 export function Panel({
   title,
   children,
   kicker,
   action,
+  level = 2,
 }: {
   title: string;
   children: ReactNode;
   kicker?: string;
   action?: ReactNode;
+  level?: 2 | 3;
 }) {
+  const Heading = level === 3 ? 'h3' : 'h2';
   return (
     <section
-      className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5"
-      style={{ boxShadow: 'var(--shadow-card)' }}
+      className="portal-panel min-w-0 border-b border-[var(--border)] py-5"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        {/* min-w-0 + break-words: a long heading wraps inside a grid track instead of widening it. */}
+        <div className="min-w-0 max-w-full">
           {kicker ? (
-            <p className="text-[11px] font-extrabold tracking-[0.16em] text-[var(--gold)] uppercase">{kicker}</p>
+            <p className="text-[11px] font-extrabold tracking-[0.16em] break-words text-[var(--gold)] uppercase">{kicker}</p>
           ) : null}
-          <h2 className="mt-1 text-lg font-extrabold tracking-tight">{title}</h2>
+          <Heading className="mt-1 text-xl font-extrabold tracking-tight break-words">{title}</Heading>
         </div>
-        {action ? <div className="shrink-0 pt-0.5">{action}</div> : null}
+        {action ? <div className="min-w-0 max-w-full pt-0.5">{action}</div> : null}
       </div>
       <div className="mt-4 space-y-3">{children}</div>
     </section>
@@ -257,11 +303,11 @@ export function Panel({
 export function SectionHeading({ title, hint, id, level = 3 }: { title: string; hint?: string; id?: string; level?: 2 | 3 }) {
   const Heading = level === 2 ? 'h2' : 'h3';
   return (
-    <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-      <Heading id={id} className="text-sm font-extrabold tracking-[0.08em] text-[var(--ink-soft)] uppercase">
+    <div className="portal-section-heading mb-5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      <Heading id={id} className="min-w-0 text-sm font-extrabold tracking-[0.08em] break-words text-[var(--ink-soft)] uppercase">
         {title}
       </Heading>
-      {hint ? <p className="text-xs text-[var(--text-muted)]">{hint}</p> : null}
+      {hint ? <p className="min-w-0 text-xs break-words text-[var(--text-muted)]">{hint}</p> : null}
     </div>
   );
 }
@@ -283,7 +329,7 @@ export function Badge({ tone, children }: { tone: 'ok' | 'warn' | 'neutral' | 'd
 export function BarRow({ label, value, max, formatted }: { label: string; value: number; max: number; formatted: string }) {
   const pct = max > 0 ? Math.max(4, Math.round((value / max) * 100)) : 0;
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] px-3 py-2">
+    <div className="flex min-w-0 items-center gap-3 border-b border-[var(--border)] py-3">
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate text-sm font-bold">{label}</span>
@@ -315,6 +361,7 @@ function readFlag(bag: Record<string, unknown>, path: string): boolean {
  *   (Features / Look desks). Renders live (published) state as plain Badges, no toggle affordance.
  * @param published `app_runtime_config.published` bag.
  * @param groupIds Limit to specific flag groups (e.g. `['profile']` on the Profile desk); omit for all.
+ *   Flag names and hints wrap (`break-words`) instead of truncating, so no words are cut off.
  */
 export function FlagStatusList({
   published,
@@ -336,11 +383,11 @@ export function FlagStatusList({
               return (
                 <div
                   key={row.path}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] px-4 py-3"
+                  className="flex min-w-0 items-center justify-between gap-3 border-b border-[var(--border)] py-3"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold">{row.label}</p>
-                    <p className="truncate text-xs text-[var(--text-muted)]">{row.hint}</p>
+                    <p className="text-sm font-bold break-words">{row.label}</p>
+                    <p className="text-xs break-words text-[var(--text-muted)]">{row.hint}</p>
                   </div>
                   <Badge tone={on ? 'ok' : 'warn'}>{on ? 'On' : 'Off'}</Badge>
                 </div>

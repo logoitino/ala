@@ -5,11 +5,37 @@
  * for the inline chart kit in `components/charts`, and the measure catalog. It never computes a
  * measure the report does not return. A key the read did not return stays blank (`—`), a prior
  * week of zero never becomes a percent, and only clips and donations have a prior week.
+ * Chart colours come from `lib/measureColors.ts`, stream names from `streamName`, and shared labels
+ * from `REPORT_LABELS`, so a measure reads and looks the same here as on Trends, Home and Revenue.
+ * Minutes and durations use the Home/Health formatters (`<1 min`, `1.3 s`). Measure and list names
+ * match Health and Trends (checkout steps, "Time on each tab", "Taps by control", "Most-hyped
+ * clips"). "Taps by control" and "UI issues and open bugs" name their rows with `featureLabel` /
+ * `issueLabel` (lib/eventLabels.ts), never the raw telemetry key. Live games draws only the
+ * live/parked split: poll, booster and shop counts are tiles or catalog rows, because an all-time
+ * vote total does not belong on one chart with current counts.
+ * Donations draws "Athletes by all-time donations" from `get_admin_reports.donation_bands` (three
+ * catalog measures, counts of athletes, no names; owner decision 2026-10-12). The named
+ * `leaders.malo` list is no longer drawn on any board; it stays in the list catalog by row count
+ * only so every report key is still named. Bands missing from a working read (migration not applied)
+ * stay blank with a note, never zeros.
  * Pure data, no React, so `node --test` can check it.
  */
 
-import { weekChange, weekSentence } from '@/lib/dashboard';
-import type { PortalReports, PortalRevenue, ReportLeader, ReportSection } from '@/lib/reports';
+import { formatMinutes, formatMs, weekChange, weekSentence } from '@/lib/dashboard';
+import { featureLabel, issueLabel, labelRows } from '@/lib/eventLabels';
+import { measureColor } from '@/lib/measureColors';
+import {
+  DONATION_BANDS,
+  DONATION_BANDS_MISSING_NOTE,
+  DONATION_BANDS_TITLE,
+  REPORT_LABELS,
+  REPORT_NOTES,
+  donationBandsSentence,
+  streamName,
+  type PortalReports,
+  type PortalRevenue,
+  type ReportLeader,
+} from '@/lib/reports';
 
 export type BoardId =
   | 'highlights'
@@ -23,6 +49,7 @@ export type BoardId =
 
 export type MeasureSection =
   | keyof Pick<PortalReports, 'engagement' | 'money' | 'content' | 'audience' | 'live' | 'reliability' | 'usage'>
+  | 'donation_bands'
   | 'revenue';
 
 /** `minutes` measures arrive as milliseconds and display as minutes. */
@@ -69,7 +96,14 @@ type ChartBase = {
 };
 
 export type TrendSpec = ChartBase & { kind: 'columns' | 'line' | 'area'; windowLabel: string; points: AnalyticsPoint[] | null };
-export type BarsSpec = ChartBase & { kind: 'bars'; points: AnalyticsPoint[] | null; emptyText: string; keepOrder: boolean };
+export type BarsSpec = ChartBase & {
+  kind: 'bars';
+  points: AnalyticsPoint[] | null;
+  emptyText: string;
+  keepOrder: boolean;
+  /** Replaces the kit's generated sentence when set (the donation bands, and their missing note). */
+  summary?: string;
+};
 export type SplitPartSpec = { key: string; label: string; value: number | null; color: ChartAccent };
 export type SplitSpec = ChartBase & { kind: 'split'; parts: SplitPartSpec[]; totalLabel: string };
 export type RingSpec = ChartBase & {
@@ -188,7 +222,7 @@ export const BOARDS: BoardDef[] = [
   {
     id: 'donations',
     title: 'Donations',
-    question: 'How much was donated, and to which athletes?',
+    question: 'How much was donated, how often, and are any payouts queued?',
     tileKeys: ['malo_cents_7d', 'malo_count_7d', 'avg_tip_cents_7d', 'malo_cents_all'],
   },
   {
@@ -211,8 +245,8 @@ export const BOARDS: BoardDef[] = [
   },
   {
     id: 'gameday',
-    title: 'Game day',
-    question: 'What is live around a game, a poll, or the shop?',
+    title: 'Live games',
+    question: 'Which games are live, and how active are polls, boosters and the shop?',
     tileKeys: ['live_games', 'active_polls', 'poll_votes', 'active_boosters'],
   },
   {
@@ -224,7 +258,7 @@ export const BOARDS: BoardDef[] = [
   {
     id: 'ledger',
     title: 'Ledger',
-    question: 'What gross, share, and payouts has the company ledger recorded?',
+    question: "What gross, Tapua'i share, and payee share has the ledger recorded?",
     tileKeys: ['gross_volume_cents', 'company_net_cents', 'payouts_cents', 'stripe_paid_cents'],
   },
 ];
@@ -249,8 +283,11 @@ export const MEASURES: MeasureDef[] = [
   { key: 'malo_cents_prev_7d', board: 'donations', section: 'money', label: 'Donations, the week before', unit: 'cents', grain: 'prior7d', note: 'The week used as the comparison.' },
   { key: 'avg_tip_cents_7d', board: 'donations', section: 'money', label: 'Average donation, 7 days', unit: 'cents', grain: '7d', note: 'Mean donation this week. Not the share of people who donated.' },
   { key: 'queued_payouts', board: 'donations', section: 'money', label: 'Queued payouts', unit: 'count', grain: 'now', note: 'Payout rows waiting. Not money sent.' },
-  { key: 'paid_payouts_cents', board: 'donations', section: 'money', label: 'Paid out', unit: 'cents', grain: 'all', note: 'Payout rows marked paid.' },
+  { key: 'paid_payouts_cents', board: 'donations', section: 'money', label: REPORT_LABELS.paid_payouts_cents, unit: 'cents', grain: 'all', note: REPORT_NOTES.paid_payouts_cents },
   { key: 'active_subs', board: 'donations', section: 'money', label: 'Exclusive rows marked active', unit: 'count', grain: 'now', note: 'One-time Exclusive. This is a row count, not a renewal.' },
+  { key: 'under_50', board: 'donations', section: 'donation_bands', label: 'Athletes with all-time donations under $50', unit: 'count', grain: 'all', note: 'Athletes whose all-time donation total is more than $0 and under $50. A count, no names.' },
+  { key: '50_to_250', board: 'donations', section: 'donation_bands', label: 'Athletes with all-time donations of $50–$250', unit: 'count', grain: 'all', note: 'Athletes whose all-time donation total is $50 or more and under $250. A count, no names.' },
+  { key: '250_plus', board: 'donations', section: 'donation_bands', label: 'Athletes with all-time donations of $250 and up', unit: 'count', grain: 'all', note: 'Athletes whose all-time donation total is $250 or more. A count, no names.' },
   { key: 'profiles', board: 'audience', section: 'audience', label: 'Profiles', unit: 'count', grain: 'now', note: 'Account rows.' },
   { key: 'athletes', board: 'audience', section: 'audience', label: 'Athletes', unit: 'count', grain: 'now', note: 'Player rows.' },
   { key: 'verified', board: 'audience', section: 'audience', label: 'Verified profiles', unit: 'count', grain: 'now', note: 'Profiles marked verified. Not a share until it is divided by profiles.' },
@@ -262,17 +299,17 @@ export const MEASURES: MeasureDef[] = [
   { key: 'dwell_ms_7d', board: 'attention', section: 'usage', label: 'Time on tabs, 7 days', unit: 'minutes', grain: '7d', note: 'Sum of tab time this week, not time per person.' },
   { key: 'taps_24h', board: 'attention', section: 'usage', label: 'Feature taps, 24 hours', unit: 'count', grain: '24h', note: 'Button taps in the last day.' },
   { key: 'taps_7d', board: 'attention', section: 'usage', label: 'Feature taps, 7 days', unit: 'count', grain: '7d', note: 'Button taps this week.' },
-  { key: 'issues_24h', board: 'attention', section: 'usage', label: 'Control issues, 24 hours', unit: 'count', grain: '24h', note: 'Recorded control problems in the last day.' },
-  { key: 'issues_7d', board: 'attention', section: 'usage', label: 'Control issues, 7 days', unit: 'count', grain: '7d', note: 'Recorded control problems this week.' },
+  { key: 'issues_24h', board: 'attention', section: 'usage', label: 'UI issues, 24 hours', unit: 'count', grain: '24h', note: 'Problems the app logged on a button or screen in the last day.' },
+  { key: 'issues_7d', board: 'attention', section: 'usage', label: 'UI issues, 7 days', unit: 'count', grain: '7d', note: 'Problems the app logged on a button or screen this week.' },
   { key: 'feedback_bugs_open', board: 'attention', section: 'usage', label: 'Open bug reports', unit: 'count', grain: 'now', note: 'Bug reports not shipped or declined.' },
   { key: 'avg_scroll_pct_7d', board: 'attention', section: 'usage', label: 'Average scroll depth, 7 days', unit: 'percent', grain: '7d', note: 'Average of the scroll samples. Not a share of people.' },
   { key: 'flagged', board: 'trust', section: 'content', label: 'Open flags', unit: 'count', grain: 'now', note: 'Flagged clips that are still up.' },
   { key: 'removed', board: 'trust', section: 'content', label: 'Removed clips', unit: 'count', grain: 'now', note: 'Clips taken off Home.' },
   { key: 'vault', board: 'trust', section: 'content', label: 'Vault clips', unit: 'count', grain: 'now', note: 'Clips locked to Vault.' },
   { key: 'exclusive_clips', board: 'trust', section: 'content', label: 'Exclusive clips', unit: 'count', grain: 'now', note: 'Clips marked one-time Exclusive.' },
-  { key: 'flash_live', board: 'trust', section: 'content', label: 'Flash unlocks still open', unit: 'count', grain: 'now', note: 'Vault clips in a timed unlock.' },
+  { key: 'flash_live', board: 'trust', section: 'content', label: 'Flash unlocks still open', unit: 'count', grain: 'now', note: 'Clips still up with a timed unlock open.' },
   { key: 'spotlight_live', board: 'trust', section: 'content', label: 'Spotlight awards live today', unit: 'count', grain: 'now', note: 'Awards whose dates include today.' },
-  { key: 'qna', board: 'trust', section: 'content', label: 'Vault questions', unit: 'count', grain: 'all', note: 'Question rows. Not a count of people.' },
+  { key: 'qna', board: 'trust', section: 'content', label: REPORT_LABELS.qna, unit: 'count', grain: 'all', note: 'Request rows. Not a count of people.' },
   { key: 'game_play', board: 'trust', section: 'content', label: 'Game Day clips', unit: 'count', grain: 'now', note: 'Live clips in Game Day.' },
   { key: 'train_like_me', board: 'trust', section: 'content', label: 'Train Like Me clips', unit: 'count', grain: 'now', note: 'Live clips in Train Like Me.' },
   { key: 'serve_like_me', board: 'trust', section: 'content', label: 'Serve Like Me clips', unit: 'count', grain: 'now', note: 'Live clips in Serve Like Me.' },
@@ -284,34 +321,34 @@ export const MEASURES: MeasureDef[] = [
   { key: 'drip_skus', board: 'gameday', section: 'live', label: 'Drip products on the rack', unit: 'count', grain: 'now', note: 'Shop products marked active.' },
   { key: 'stalls_24h', board: 'playback', section: 'reliability', label: 'Video stalls, 24 hours', unit: 'count', grain: '24h', note: 'Playback stall events in the last day.' },
   { key: 'reconnects_24h', board: 'playback', section: 'reliability', label: 'Reconnects, 24 hours', unit: 'count', grain: '24h', note: 'Socket reconnect events in the last day.' },
-  { key: 'checkouts_24h', board: 'playback', section: 'reliability', label: 'Checkout events, 24 hours', unit: 'count', grain: '24h', note: 'Checkout timing events in the last day.' },
-  { key: 'avg_checkout_ms_24h', board: 'playback', section: 'reliability', label: 'Average checkout time, 24 hours', unit: 'milliseconds', grain: '24h', note: 'Mean of the recorded checkout times.' },
+  { key: 'checkouts_24h', board: 'playback', section: 'reliability', label: 'Checkout step timings, 24 hours', unit: 'count', grain: '24h', note: 'Donation checkout steps that logged a time in the last day.' },
+  { key: 'avg_checkout_ms_24h', board: 'playback', section: 'reliability', label: 'Average checkout step, 24 hours', unit: 'milliseconds', grain: '24h', note: 'Mean across every logged checkout step, not one whole checkout.' },
   { key: 'events_24h', board: 'playback', section: 'reliability', label: 'Telemetry events, 24 hours', unit: 'count', grain: '24h', note: 'All telemetry rows in the last day.' },
   { key: 'gross_volume_cents', board: 'ledger', section: 'revenue', label: 'Gross recorded', unit: 'cents', grain: 'all', note: 'Company ledger gross.' },
-  { key: 'company_net_cents', board: 'ledger', section: 'revenue', label: 'Tapua\'i recorded share', unit: 'cents', grain: 'all', note: 'What the ledger recorded for Tapua\'i. Donation policy is still 90 to the family.' },
-  { key: 'payouts_cents', board: 'ledger', section: 'revenue', label: 'Recorded payouts', unit: 'cents', grain: 'all', note: 'Payouts in the company ledger.' },
-  { key: 'stripe_paid_cents', board: 'ledger', section: 'revenue', label: 'Stripe paid', unit: 'cents', grain: 'all', note: 'Paid amount the revenue summary returned from Stripe.' },
+  { key: 'company_net_cents', board: 'ledger', section: 'revenue', label: 'Tapua\'i share', unit: 'cents', grain: 'all', note: 'What the ledger recorded for Tapua\'i across every stream. Donation policy: 90% to the family account, 10% to Tapua\'i.' },
+  { key: 'payouts_cents', board: 'ledger', section: 'revenue', label: 'Payee share recorded', unit: 'cents', grain: 'all', note: 'Recorded for families, Vault athletes, and booster operators. Nothing is paid out in Wave 0.' },
+  { key: 'stripe_paid_cents', board: 'ledger', section: 'revenue', label: 'Payouts marked paid', unit: 'cents', grain: 'all', note: 'Disbursement rows marked paid. Same sum on the Donations and Ledger boards. Should be $0 while payouts are blocked in Wave 0.' },
 ];
 
 export type SeriesId = 'clips' | 'malo' | 'dwell' | 'stalls';
 
 export const SERIES: readonly { id: SeriesId; title: string; board: BoardId; source: string; format: MeasureUnit; accent: ChartAccent; note: string }[] = [
-  { id: 'clips', title: 'Clips uploaded', board: 'highlights', source: 'get_admin_reports.series.clips', format: 'count', accent: 'jade', note: 'New clip rows per UTC day, last 7 days.' },
-  { id: 'malo', title: 'Donations', board: 'donations', source: 'get_admin_reports.series.malo', format: 'cents', accent: 'cyan', note: 'Sum of donation rows per UTC day, last 7 days.' },
-  { id: 'dwell', title: 'Time on tabs', board: 'attention', source: 'get_admin_reports.series.dwell', format: 'minutes', accent: 'gold', note: 'Sum of tab time per UTC day, last 7 days. Not time per person.' },
-  { id: 'stalls', title: 'Video stalls', board: 'playback', source: 'get_admin_reports.series.stalls', format: 'count', accent: 'bad', note: 'Playback stall events per UTC day, last 7 days.' },
+  { id: 'clips', title: 'Clips uploaded', board: 'highlights', source: 'get_admin_reports.series.clips', format: 'count', accent: measureColor('clips'), note: 'New clip rows per UTC day, last 7 days.' },
+  { id: 'malo', title: 'Donations', board: 'donations', source: 'get_admin_reports.series.malo', format: 'cents', accent: measureColor('donations'), note: 'Sum of donation rows per UTC day, last 7 days.' },
+  { id: 'dwell', title: 'Time on tabs', board: 'attention', source: 'get_admin_reports.series.dwell', format: 'minutes', accent: measureColor('timeOnTabs'), note: 'Sum of tab time per UTC day, last 7 days. Not time per person.' },
+  { id: 'stalls', title: 'Video stalls', board: 'playback', source: 'get_admin_reports.series.stalls', format: 'count', accent: measureColor('stalls'), note: 'Playback stall events per UTC day, last 7 days.' },
 ];
 
 export type RankingId = 'tabs' | 'features' | 'scroll' | 'issues' | 'malo' | 'hype' | 'schools';
 
 export const RANKINGS: readonly { id: RankingId; title: string; board: BoardId; source: string; format: MeasureUnit; note: string }[] = [
-  { id: 'tabs', title: 'Time by tab', board: 'attention', source: 'get_admin_reports.tabs', format: 'minutes', note: 'Sum of tab time over 7 days. Not distinct people.' },
-  { id: 'features', title: 'Feature taps', board: 'attention', source: 'get_admin_reports.features', format: 'count', note: 'Taps over 7 days, excluding tab opens.' },
+  { id: 'tabs', title: 'Time on each tab', board: 'attention', source: 'get_admin_reports.tabs', format: 'minutes', note: 'Sum of tab time over 7 days. Not distinct people.' },
+  { id: 'features', title: 'Taps by control', board: 'attention', source: 'get_admin_reports.features', format: 'count', note: 'Taps over 7 days, excluding tab opens.' },
   { id: 'scroll', title: 'Scroll depth by surface', board: 'attention', source: 'get_admin_reports.scroll', format: 'percent', note: 'Average scroll sample per surface, 7 days. Not a share of people.' },
-  { id: 'issues', title: 'Control issues and bug reports', board: 'playback', source: 'get_admin_reports.issues', format: 'count', note: 'Issues over 7 days, plus open bug reports by surface.' },
-  { id: 'malo', title: 'Athletes by donations', board: 'donations', source: 'get_admin_reports.leaders.malo', format: 'cents', note: 'Top five athletes by donation cents, all time.' },
-  { id: 'hype', title: 'Hype leaders', board: 'highlights', source: 'get_admin_reports.leaders.hype', format: 'count', note: 'Top five live clips by Seki, Aura, and Flex combined.' },
-  { id: 'schools', title: 'Athletes by school', board: 'audience', source: 'get_admin_reports.leaders.schools', format: 'count', note: 'Top five schools by player rows.' },
+  { id: 'issues', title: 'UI issues and open bugs', board: 'playback', source: 'get_admin_reports.issues', format: 'count', note: 'UI issues over 7 days (problems the app logged on a button or screen), plus open bug reports by surface.' },
+  { id: 'malo', title: 'Donation totals by athlete (not drawn)', board: 'donations', source: 'get_admin_reports.leaders.malo', format: 'cents', note: 'All time, top 5, named. Read but not drawn: the portal names no one by donation total (owner decision 2026-10-12). Donations shows athletes by all-time donations instead.' },
+  { id: 'hype', title: 'Most-hyped clips', board: 'highlights', source: 'get_admin_reports.leaders.hype', format: 'count', note: 'Top five live clips by Seki, Aura, and Flex combined.' },
+  { id: 'schools', title: 'Schools by athletes listed', board: 'audience', source: 'get_admin_reports.leaders.schools', format: 'count', note: 'Top 5 schools · player rows.' },
 ];
 
 /** Plain words for the catalog's grain column. */
@@ -328,13 +365,13 @@ export const UNIT_LABEL: Readonly<Record<MeasureUnit, string>> = {
   count: 'Count',
   cents: 'Dollars',
   minutes: 'Minutes',
-  milliseconds: 'Milliseconds',
+  milliseconds: 'Duration (ms or s)',
   percent: 'Percent, an average',
 };
 
-export const STREAMS_SOURCE ='get_company_revenue_summary.streams';
+export const STREAMS_SOURCE = 'get_company_revenue_summary.streams';
 
-const STREAMS_NOTE = 'Gross, Tapua\'i recorded share, and payouts per revenue stream, all time.';
+const STREAMS_NOTE = 'Gross, Tapua\'i share, and payee share per stream, all time.';
 
 const WEEK = 'Last 7 days, UTC';
 
@@ -350,8 +387,8 @@ function formatUsd(cents: number): string {
  */
 export function formatMeasure(unit: MeasureUnit, value: number): string {
   if (unit === 'cents') return formatUsd(value);
-  if (unit === 'minutes') return `${Math.round(value / 60000).toLocaleString('en-US')} min`;
-  if (unit === 'milliseconds') return `${Math.round(value).toLocaleString('en-US')} ms`;
+  if (unit === 'minutes') return formatMinutes(value);
+  if (unit === 'milliseconds') return formatMs(value);
   if (unit === 'percent') return `${Math.round(value).toLocaleString('en-US')}%`;
   return Math.round(value).toLocaleString('en-US');
 }
@@ -434,6 +471,15 @@ function revenueBag(revenue: PortalRevenue): Record<string, number | null> {
   };
 }
 
+/**
+ * @purpose A measure's note, plus the 2026-10-12 update note when a donation band is blank in a
+ *   working read, so "—" says why instead of looking like nothing was donated.
+ */
+function noteFor(measure: MeasureDef, value: number | null, reports: PortalReports): string {
+  if (measure.section === 'donation_bands' && value == null && stateOf(reports) === 'ok') return `${measure.note} ${DONATION_BANDS_MISSING_NOTE}`;
+  return measure.note;
+}
+
 function measureDef(key: string): MeasureDef {
   const found = MEASURES.find((measure) => measure.key === key);
   if (!found) throw new Error(`Unknown measure ${key}`);
@@ -455,6 +501,11 @@ export function readMeasure(key: string, reports: PortalReports, revenue: Portal
     return Object.prototype.hasOwnProperty.call(bag, key) ? bag[key] : null;
   }
   if (stateOf(reports) !== 'ok') return null;
+  if (measure.section === 'donation_bands') {
+    // The whole key is null until the 2026-10-12 migration is applied; one band can also be null.
+    const band = DONATION_BANDS.find((item) => item.key === key);
+    return band && reports.donationBands ? reports.donationBands[band.field] : null;
+  }
   const bag = reports[measure.section];
   if (!Object.prototype.hasOwnProperty.call(bag, key)) return null;
   const value = bag[key];
@@ -473,7 +524,11 @@ function rankingRows(id: RankingId, reports: PortalReports): AnalyticsPoint[] | 
   const rows: ReportLeader[] | null =
     id === 'malo' || id === 'hype' || id === 'schools' ? reports.leaders[id] : reports[id];
   // null = the list was not in the payload ("missing"); [] = read, nothing ranked (empty state).
-  return rows == null ? null : rows.map((row) => ({ label: row.label, value: row.value }));
+  if (rows == null) return null;
+  // Taps and UI issues arrive as telemetry keys; they read as people words, as on Health and Trends.
+  if (id === 'features') return labelRows(rows, featureLabel);
+  if (id === 'issues') return labelRows(rows, issueLabel);
+  return rows.map((row) => ({ label: row.label, value: row.value }));
 }
 
 function seriesDef(id: SeriesId) {
@@ -521,6 +576,36 @@ function ranking(id: RankingId, reports: PortalReports, error: string | null, ac
     points: rankingRows(id, reports),
     emptyText,
     keepOrder: false,
+  };
+}
+
+/**
+ * @purpose "Athletes by all-time donations": the three `donation_bands` measures as bars in band
+ *   order. Counts of athletes, no names (owner decision 2026-10-12).
+ * @returns `points: null` (kit "missing") when the read did not include the key, with a summary that
+ *   names the 2026-10-12 reports update; a partial key keeps its missing band as `null` ("—").
+ */
+function donationBands(reports: PortalReports, revenue: PortalRevenue, error: string | null): BarsSpec {
+  const ok = stateOf(reports) === 'ok';
+  const bands = ok ? reports.donationBands : null;
+  const defs = DONATION_BANDS.map((band) => measureDef(band.key));
+  let summary: string | undefined;
+  if (ok) summary = bands ? donationBandsSentence(bands) : `${DONATION_BANDS_TITLE}: not in this read. ${DONATION_BANDS_MISSING_NOTE}`;
+  return {
+    id: 'bands-donations',
+    kind: 'bars',
+    title: DONATION_BANDS_TITLE,
+    caption: 'All time. Counts of athletes, no names.',
+    source: 'get_admin_reports.donation_bands',
+    keys: defs.map(sourceOf),
+    format: 'count',
+    accent: measureColor('donations'),
+    error,
+    points: bands ? DONATION_BANDS.map((band) => ({ label: band.label, value: readMeasure(band.key, reports, revenue) })) : null,
+    emptyText: 'No athletes have donations yet.',
+    // Bands, not a ranking: fixed order, no rank numbers, no "leads" line.
+    keepOrder: true,
+    summary,
   };
 }
 
@@ -602,7 +687,7 @@ function compare(currentKey: string, subject: string, title: string, reports: Po
     source: `get_admin_reports.${current.section}`,
     keys: [sourceOf(current), sourceOf(previous)],
     format: current.unit,
-    accent: current.unit === 'cents' ? 'cyan' : 'jade',
+    accent: current.unit === 'cents' ? measureColor('donations') : measureColor('clips'),
     error,
     current: { label: 'Last 7 days', value: now },
     previous: { label: 'The 7 days before', value: then },
@@ -617,29 +702,29 @@ function ledgerRing(revenue: PortalRevenue): RingSpec {
   const net = ok ? revenue.company_net_cents : null;
   const payouts = ok ? revenue.payouts_cents : null;
   const parts: SplitPartSpec[] = [
-    { key: 'company_net_cents', label: 'Tapua\'i recorded share', value: net, color: 'jade' },
-    { key: 'payouts_cents', label: 'Recorded payouts', value: payouts, color: 'cyan' },
+    { key: 'payouts_cents', label: 'Payee share recorded', value: payouts, color: measureColor('payeeShare') },
+    { key: 'company_net_cents', label: 'Tapua\'i share', value: net, color: measureColor('tapuaiShare') },
   ];
-  let caption = 'Share and payouts as parts of recorded gross. Donation policy is still 90 to the family.';
+  let caption = 'Tapua\'i share and payee share as parts of recorded gross. Donation policy: 90% to the family account, 10% to Tapua\'i.';
   let totalLabel = 'Recorded gross';
   if (gross != null && net != null && payouts != null) {
     const rest = gross - net - payouts;
     if (rest > 0) {
       parts.push({ key: 'gross_volume_cents', label: 'Recorded gross not split', value: rest, color: 'muted' });
     } else if (rest < 0) {
-      totalLabel = 'Share plus payouts';
-      caption = `Share plus payouts is ${formatUsd(-rest)} more than recorded gross, so the ring shows their sum, not gross.`;
+      totalLabel = 'Shares together';
+      caption = `The two shares add up to ${formatUsd(-rest)} more than recorded gross, so the ring shows their sum, not gross.`;
     }
   }
   return {
     id: 'ledger-ring',
     kind: 'ring',
-    title: 'Where recorded gross went',
+    title: 'Where recorded gross goes',
     caption,
     source: 'get_company_revenue_summary',
     keys: ['get_company_revenue_summary.company_net_cents', 'get_company_revenue_summary.payouts_cents', 'get_company_revenue_summary.gross_volume_cents'],
     format: 'cents',
-    accent: 'jade',
+    accent: measureColor('payeeShare'),
     error: stateOf(revenue) === 'error' ? revenue.error : null,
     parts,
     totalLabel,
@@ -658,16 +743,16 @@ function ledgerStack(revenue: PortalRevenue): StackSpec {
     source: STREAMS_SOURCE,
     keys: [STREAMS_SOURCE],
     format: 'cents',
-    accent: 'jade',
+    accent: measureColor('payeeShare'),
     error: stateOf(revenue) === 'error' ? revenue.error : null,
     series: [
-      { key: 'platform_cents', label: 'Tapua\'i recorded share', color: 'jade' },
-      { key: 'payout_cents', label: 'Recorded payouts', color: 'cyan' },
+      { key: 'payout_cents', label: 'Payee share recorded', color: measureColor('payeeShare') },
+      { key: 'platform_cents', label: 'Tapua\'i share', color: measureColor('tapuaiShare') },
     ],
     rows: ok
       ? revenue.streams.map((stream) => ({
-          label: stream.label,
-          segments: { platform_cents: stream.platform_cents, payout_cents: stream.payout_cents },
+          label: streamName(stream.source, stream.label),
+          segments: { payout_cents: stream.payout_cents, platform_cents: stream.platform_cents },
           total: stream.gross_cents,
         }))
       : null,
@@ -686,34 +771,35 @@ function chartsFor(board: BoardId, reports: PortalReports, revenue: PortalRevenu
         'Hype on live clips',
         'Seki, Aura, and Flex totals on clips still on Home. Counts, not people.',
         [
-          { key: 'seki', color: 'jade' },
-          { key: 'aura', color: 'violet' },
-          { key: 'flex', color: 'gold' },
+          { key: 'seki', color: measureColor('seki') },
+          { key: 'aura', color: measureColor('aura') },
+          { key: 'flex', color: measureColor('flex') },
         ],
         'Hype on live clips',
         reports,
         revenue,
         error,
       ),
-      ranking('hype', reports, error, 'violet', 'No live clips have hype yet.'),
+      ranking('hype', reports, error, measureColor('hype'), 'No live clips have hype yet.'),
     ];
   }
   if (board === 'donations') {
     return [
       trend('malo', 'area', reports, error),
       compare('malo_cents_7d', 'Donations', 'Donations, this week and the week before', reports, revenue, error),
-      ranking('malo', reports, error, 'cyan', 'No donations recorded yet.'),
+      donationBands(reports, revenue, error),
     ];
   }
   if (board === 'audience') {
-    return [ranking('schools', reports, error, 'jade', 'No athletes have a school yet.')];
+    // Cyan, as on Trends and Audience (no measure-map key for schools yet).
+    return [ranking('schools', reports, error, measureColor('schools'), 'No athletes have a school yet.')];
   }
   if (board === 'attention') {
     return [
       trend('dwell', 'line', reports, error),
-      ranking('tabs', reports, error, 'gold', 'No tab time in the last 7 days.'),
-      ranking('features', reports, error, 'cyan', 'No feature taps in the last 7 days.'),
-      ranking('scroll', reports, error, 'violet', 'No scroll samples in the last 7 days.'),
+      ranking('tabs', reports, error, measureColor('timeOnTabs'), 'No tab time in the last 7 days.'),
+      ranking('features', reports, error, measureColor('featureTaps'), 'No feature taps in the last 7 days.'),
+      ranking('scroll', reports, error, measureColor('scrollDepth'), 'No scroll samples in the last 7 days.'),
     ];
   }
   if (board === 'trust') {
@@ -723,9 +809,9 @@ function chartsFor(board: BoardId, reports: PortalReports, revenue: PortalRevenu
         'Live clips by category',
         'Live clips in Game Day, Train Like Me, and Serve Like Me.',
         [
-          { key: 'game_play', label: 'Game Day', color: 'jade' },
-          { key: 'train_like_me', label: 'Train Like Me', color: 'cyan' },
-          { key: 'serve_like_me', label: 'Serve Like Me', color: 'violet' },
+          { key: 'game_play', label: 'Game Day', color: measureColor('gameDay') },
+          { key: 'train_like_me', label: 'Train Like Me', color: measureColor('trainLikeMe') },
+          { key: 'serve_like_me', label: 'Serve Like Me', color: measureColor('serveLikeMe') },
         ],
         'Live clips in these categories',
         reports,
@@ -751,30 +837,20 @@ function chartsFor(board: BoardId, reports: PortalReports, revenue: PortalRevenu
         'Games, live and parked',
         'Every game row is either active or inactive, so these two add up to all games.',
         [
-          { key: 'live_games', color: 'jade' },
-          { key: 'parked_games', color: 'muted' },
+          { key: 'live_games', color: measureColor('live') },
+          { key: 'parked_games', color: measureColor('parked') },
         ],
         'All games',
         reports,
         revenue,
         error,
       ),
-      measureBars(
-        'bars-gameday',
-        'Around the game',
-        'Separate counts from polls, boosters, and the shop. Votes are not people.',
-        ['poll_votes', 'active_polls', 'active_boosters', 'drip_skus'],
-        reports,
-        revenue,
-        error,
-        'cyan',
-      ),
     ];
   }
   if (board === 'playback') {
     return [
       trend('stalls', 'columns', reports, error),
-      ranking('issues', reports, error, 'bad', 'No control issues or open bug reports.'),
+      ranking('issues', reports, error, measureColor('issues'), 'No UI issues or open bugs.'),
     ];
   }
   return [ledgerRing(revenue), ledgerStack(revenue)];
@@ -860,7 +936,7 @@ export function buildAnalytics(
       grain: measure.grain,
       unit: measure.unit,
       source: sourceOf(measure),
-      note: measure.note,
+      note: noteFor(measure, value, reports),
       value: value == null ? '—' : formatMeasure(measure.unit, value),
       missing: value == null,
     };
@@ -899,7 +975,7 @@ export function buildAnalytics(
       source: STREAMS_SOURCE,
       note: STREAMS_NOTE,
       ...listValue(
-        stateOf(revenue) === 'ok' ? revenue.streams.map((stream) => ({ label: stream.label, value: stream.gross_cents })) : null,
+        stateOf(revenue) === 'ok' ? revenue.streams.map((stream) => ({ label: streamName(stream.source, stream.label), value: stream.gross_cents })) : null,
         'ranking',
       ),
     },
@@ -924,7 +1000,7 @@ export function buildAnalytics(
           key: measure.key,
           label: measure.label,
           display: value == null ? '—' : formatMeasure(measure.unit, value),
-          note: measure.note,
+          note: noteFor(measure, value, reports),
           source: sourceOf(measure),
           missing: value == null,
         };

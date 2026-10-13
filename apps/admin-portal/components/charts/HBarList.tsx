@@ -1,6 +1,8 @@
 /**
  * Ranked horizontal bar list for leader lists (`leaders.*`, `tabs`, `features`, `issues`,
  * `scroll`). Each row prints rank, label, and the formatted value as text; the bar is extra.
+ * With `keepOrder` the list is in the caller's order, not a ranking: no rank numbers, no
+ * "leads" sentence, and the summary names the largest row by value instead.
  * Replaces PortalShell `BarRow` lists. HTML bars, no SVG needed. Server-Component safe.
  */
 import { ChartFrame } from './ChartFrame';
@@ -22,12 +24,20 @@ export type HBarListProps = {
   /** Replaces the generated summary sentence. */
   summary?: string;
   error?: string | null;
-  /** Keep the caller's order instead of sorting by value (default false: largest first). */
+  /**
+   * Keep the caller's order instead of sorting by value (default false: largest first). The list
+   * is then not a ranking: rank numbers and the "leads" sentence are dropped.
+   */
   keepOrder?: boolean;
 };
 
+/** "A", "A and B", "A, B and C": the rows tied at the largest value. */
+function joinNames(names: string[]): string {
+  return names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
 /**
- * @purpose Ranked `<ol>` of labelled bars, largest first.
+ * @purpose Ranked `<ol>` of labelled bars, largest first (or a plain `<ul>` in the caller's order).
  * @param props See `HBarListProps`.
  * @returns A `ChartFrame` figure.
  */
@@ -37,8 +47,14 @@ export function HBarList({ title, rows, format, accent = 'jade', limit = 8, empt
   const shown = sorted.slice(0, Math.max(1, limit));
   const hidden = sorted.length - shown.length;
   const max = Math.max(0, ...sorted.map((row) => (isNum(row.value) ? row.value : 0))) || 1;
-  const top = sorted.find((row) => isNum(row.value));
+  const known = sorted.filter((row) => isNum(row.value));
+  // Largest value computed from every row, so it is honest whether or not the list is sorted.
+  const peak = known.length ? Math.max(...known.map((row) => row.value as number)) : null;
+  const atPeak = peak != null ? known.filter((row) => row.value === peak).map((row) => row.label) : [];
   const color = chartColor(accent);
+  const count = `${sorted.length} ${sorted.length === 1 ? 'row' : 'rows'}`;
+  const missingCount = sorted.length - known.length;
+  const missingText = missingCount > 0 ? ` ${missingCount} not in this read.` : '';
 
   const sentence =
     summary ??
@@ -46,11 +62,22 @@ export function HBarList({ title, rows, format, accent = 'jade', limit = 8, empt
       ? `${title}: this read did not include the list.`
       : sorted.length === 0
         ? `${title}: ${emptyText}`
-        : top && (top.value as number) > 0
-          ? `${title}: ${sorted.length} ${sorted.length === 1 ? 'row' : 'rows'}. ${top.label} leads at ${format(top.value as number)}.`
-          : `${title}: ${sorted.length} ${sorted.length === 1 ? 'row' : 'rows'}, all at 0.`);
+        : peak == null
+          ? `${title}: ${count}, none in this read.`
+          : peak > 0
+            ? keepOrder
+              ? `${title}: ${count}. Largest: ${joinNames(atPeak)} at ${format(peak)}.${missingText}`
+              : atPeak.length > 1
+                ? `${title}: ${count}. ${joinNames(atPeak)} tie for the lead at ${format(peak)}.${missingText}`
+                : `${title}: ${count}. ${atPeak[0]} leads at ${format(peak)}.${missingText}`
+            : `${title}: ${count}, all at 0.${missingText}`);
 
-  const table = { columns: ['Rank', 'Name', 'Value'], rows: sorted.map((row, index) => [String(index + 1), row.label, show(row.value, format)]) };
+  const table = keepOrder
+    ? { columns: ['Name', 'Value'], rows: sorted.map((row) => [row.label, show(row.value, format)]) }
+    : { columns: ['Rank', 'Name', 'Value'], rows: sorted.map((row, index) => [String(index + 1), row.label, show(row.value, format)]) };
+  const List = keepOrder ? 'ul' : 'ol';
+  // Bars line up under the label: past the rank column when ranked, flush when not.
+  const indent = keepOrder ? '' : 'ml-7';
 
   return (
     <ChartFrame title={title} caption={caption} source={source} summary={sentence} table={table} error={error}>
@@ -60,19 +87,19 @@ export function HBarList({ title, rows, format, accent = 'jade', limit = 8, empt
         <ChartNotice kind="empty">{emptyText}</ChartNotice>
       ) : (
         <>
-          <ol className="flex flex-col gap-3">
+          <List className="flex flex-col gap-3">
             {shown.map((row, index) => {
               const pct = isNum(row.value) ? Math.max(0, Math.min(100, (row.value / max) * 100)) : 0;
               return (
                 <li key={`${row.label}-${index}`} className="min-w-0">
                   <div className="flex items-baseline gap-2 text-sm">
-                    <span className="chart-tabular w-5 shrink-0 text-right text-xs font-bold text-[var(--text-muted)]">{index + 1}</span>
+                    {keepOrder ? null : <span className="chart-tabular w-5 shrink-0 text-right text-xs font-bold text-[var(--text-muted)]">{index + 1}</span>}
                     <span className="min-w-0 flex-1 break-words text-[var(--ink-soft)]">{row.label}</span>
                     <span className={`chart-tabular shrink-0 font-extrabold ${isNum(row.value) ? 'text-[var(--ink)]' : 'text-[var(--text-muted)]'}`}>
                       {show(row.value, format)}
                     </span>
                   </div>
-                  <div aria-hidden="true" className="mt-1.5 ml-7 h-2 overflow-hidden rounded-full bg-[var(--chart-track)]">
+                  <div aria-hidden="true" className={`mt-1.5 ${indent} h-2 overflow-hidden rounded-full bg-[var(--chart-track)]`}>
                     {isNum(row.value) ? (
                       <div
                         className="chart-mark h-full rounded-full"
@@ -84,8 +111,8 @@ export function HBarList({ title, rows, format, accent = 'jade', limit = 8, empt
                 </li>
               );
             })}
-          </ol>
-          {hidden > 0 ? <p className="mt-3 ml-7 text-xs text-[var(--text-muted)]">{hidden} more in the Data table.</p> : null}
+          </List>
+          {hidden > 0 ? <p className={`mt-3 ${indent} text-xs text-[var(--text-muted)]`}>{hidden} more in the Data table.</p> : null}
         </>
       )}
     </ChartFrame>

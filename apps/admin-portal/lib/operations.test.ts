@@ -1,10 +1,11 @@
 /**
  * Tests for the Health (operations) lenses: summaries, units, missing reads, and menu splits.
+ * Button and error rows (including the Errors headline) read as words, never telemetry keys.
  */
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { buildOperations, formatOperationsValue, type OperationsInput } from './operations.ts';
+import { buildOperations, featureLabel, formatOperationsValue, type OperationsInput } from './operations.ts';
 
 const base: OperationsInput = {
   tabs: [
@@ -25,7 +26,7 @@ const base: OperationsInput = {
 test('names the busiest place and the most used button', () => {
   const lenses = buildOperations(base);
   assert.equal(lenses[0]?.summary, 'Home is where people spend the most time.');
-  assert.equal(lenses[1]?.summary, 'Donate is the button people use the most.');
+  assert.equal(lenses[1]?.summary, 'Donate is the most tapped button.');
   assert.equal(lenses[2]?.summary, 'Playback stall is the most reported app error.');
 });
 
@@ -55,7 +56,8 @@ test('tab time is minutes and scroll is a percent, not raw counts', () => {
   assert.equal(scrollRanking?.kind, 'percent');
   assert.equal(formatOperationsValue('minutes', 180000), '3 min');
   assert.equal(formatOperationsValue('percent', 64), '64%');
-  assert.equal(formatOperationsValue('ms', 1250), '1,250 ms');
+  assert.equal(formatOperationsValue('ms', 850), '850 ms');
+  assert.equal(formatOperationsValue('ms', 1250), '1.3 s');
   const dwell = where?.details.find((row) => row.label === 'Time on tabs · 7d');
   assert.equal(dwell?.value, '10 min');
   const scroll = where?.details.find((row) => row.label === 'Average scroll depth · 7d');
@@ -100,4 +102,53 @@ test('a list missing from a working read is null (missing); a present empty list
   assert.deepEqual(buttons?.rankings[0]?.rows, []);
   const errors = lenses.find((lens) => lens.id === 'errors');
   assert.equal(errors?.rankings.find((ranking) => ranking.source.endsWith('.issues'))?.rows, null);
+});
+
+test('button keys read as words, never as raw event keys', () => {
+  // `featureLabel` is still exported here for older callers; the map lives in lib/eventLabels.ts.
+  assert.equal(featureLabel('hype.seki'), 'Seki on a Highlight');
+  assert.equal(featureLabel('reel.seki'), 'Seki on a Highlight');
+  assert.equal(featureLabel('malo'), 'Donate');
+  assert.equal(featureLabel('share_qr.copy'), 'Copy the QR donation link');
+  assert.equal(featureLabel('spotlight.open_modal'), 'Open Spotlight');
+  const buttons = buildOperations({ ...base, buttons: [{ label: 'hype.seki', value: 9 }, { label: 'crew.join', value: 2 }] }).find((lens) => lens.id === 'buttons');
+  assert.equal(buttons?.summary, 'Seki on a Highlight is the most tapped button.');
+  assert.deepEqual(buttons?.rankings[0]?.rows?.map((row) => row.label), ['Seki on a Highlight', 'Join Crew']);
+  assert.ok(buttons?.details.every((row) => !row.label.includes('.')));
+});
+
+test('error keys read as words in the headline, the chart and Every row (VISUAL_QA 2026-10-12)', () => {
+  const errors = buildOperations({
+    ...base,
+    appErrors: [
+      { label: 'malo.sheet.dismiss_error · home', value: 22 },
+      { label: 'upload.retry · upload', value: 31 },
+      { label: 'profile bug', value: 9 },
+    ],
+  }).find((lens) => lens.id === 'errors');
+  assert.equal(errors?.summary, 'Upload retry (upload) is the most reported app error.');
+  assert.deepEqual(errors?.rankings[0]?.rows?.map((row) => row.label), [
+    'Upload retry (upload)',
+    'Donate sheet closed with an error (Home)',
+    'Open bug reports (Profile)',
+  ]);
+  assert.deepEqual(errors?.bars.map((row) => row.label), errors?.rankings[0]?.rows?.map((row) => row.label));
+  const every = errors?.details.map((row) => row.label) ?? [];
+  assert.ok(every.includes('Upload retry (upload)'));
+  // Reliability rows keep their "· 24h" names; no row is a raw key.
+  assert.ok(every.every((label) => !/[a-z]\.[a-z]/.test(label) && !/ bug$/.test(label)));
+  assert.ok(!every.includes('upload.retry · upload'));
+});
+
+test('a missing stall count has no hint, like Home (QA #1)', () => {
+  const errors = buildOperations({ ...base, reliability: {} }).find((lens) => lens.id === 'errors');
+  const stalls = errors?.stats.find((stat) => stat.key === 'stalls_24h');
+  assert.equal(stalls?.value, null);
+  assert.equal(stalls?.hint, '');
+});
+
+test('checkout timings are per step, not one whole checkout (VOICE #24, #25)', () => {
+  const errors = buildOperations(base).find((lens) => lens.id === 'errors');
+  assert.equal(errors?.stats.find((stat) => stat.key === 'avg_checkout_ms_24h')?.label, 'Average checkout step · 24h');
+  assert.equal(errors?.stats.find((stat) => stat.key === 'checkouts_24h')?.label, 'Checkout step timings · 24h');
 });

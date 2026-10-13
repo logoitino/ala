@@ -2,7 +2,7 @@
  * Chart math for the admin portal chart kit (`components/charts/*`). Pure functions, no React,
  * no DOM, so `node --test` covers them and every chart scales the same way.
  * Rule: `null` means "not in this read" and is never treated as 0. Shares come only from a
- * total above zero.
+ * total above zero. `peakLabelAnchor` keeps an edge-day peak callout inside the plot (2026-10-12).
  */
 
 export type ChartValue = number | null;
@@ -226,4 +226,74 @@ export function peakIndex(values: ChartValue[]): number {
     }
   });
   return best;
+}
+
+/**
+ * @purpose Horizontal anchor for a label pinned to slot `index` of `count`, so a callout near
+ *   either edge grows inward instead of past the plot (a 320px page must not scroll sideways).
+ *   Slots in the first ~15% of the axis anchor at their start, the last ~15% at their end, and
+ *   every other slot is centred. With 7 days that is Mon start, Sun end, the rest middle.
+ * @param index Slot position, oldest first.
+ * @param count Number of slots.
+ * @returns An SVG/CSS-style anchor: 'start', 'middle' or 'end'. 'middle' when count is 0 or less.
+ */
+export function peakLabelAnchor(index: number, count: number): 'start' | 'middle' | 'end' {
+  if (!(count > 0)) return 'middle';
+  const centre = (index + 0.5) / count;
+  if (centre <= 0.15) return 'start';
+  if (centre >= 0.85) return 'end';
+  return 'middle';
+}
+
+/**
+ * Container widths (CSS px) of the container-query steps the kit uses, smallest first: every
+ * 16px from 13rem to 24rem (a phone card is about 254px at 320 and 309px at 375, so coarse steps
+ * would thin labels that fit), then wider steps up to Tailwind's `@7xl` (80rem). `TrendChart`
+ * maps each width to a literal class.
+ */
+export const CONTAINER_STEPS = [208, 224, 240, 256, 272, 288, 304, 320, 336, 352, 368, 384, 416, 448, 480, 512, 576, 672, 768, 896, 1024, 1152, 1280] as const;
+
+/**
+ * @purpose The smallest container step at or above a needed width, so a label only shows once the
+ *   card is wide enough for it.
+ * @param px Container content width the content needs.
+ * @returns 0 when nothing is needed (always show), the step width, or null when no step is wide
+ *   enough (never show; the value stays in the summary and Data table).
+ */
+export function containerStepFor(px: number): number | null {
+  if (!(px > 0)) return 0;
+  for (const step of CONTAINER_STEPS) if (px <= step) return step;
+  return null;
+}
+
+/**
+ * @purpose How far apart axis labels may be thinned while this label still shows. Counted from the
+ *   last (newest) label, so it always shows: stride 1 shows every label, 2 every second, 4 every
+ *   fourth. A label at distance d from the end survives every power-of-two stride that divides d.
+ * @param index Label position, oldest first.
+ * @param count Number of labels.
+ * @returns The largest power-of-two stride that keeps this label; Infinity for the newest label.
+ */
+export function axisLabelStride(index: number, count: number): number {
+  const fromEnd = count - 1 - index;
+  if (fromEnd <= 0) return Infinity;
+  let stride = 1;
+  while (fromEnd % (stride * 2) === 0) stride *= 2;
+  return stride;
+}
+
+/**
+ * @purpose Minimum container width for each x-axis label, so a crowded axis drops to every 2nd,
+ *   4th, … label instead of truncating ("S… O…"). At stride s each shown label has s slots of room.
+ * @param count Number of days (slots) on the axis.
+ * @param labelPx Widest label in CSS px, including breathing room.
+ * @param fixedPx Container width the axis does not get (the gridline gutter and gap).
+ * @returns Per label, the container width it needs (0 = always shown).
+ */
+export function axisLabelMinWidths(count: number, labelPx: number, fixedPx: number): number[] {
+  return Array.from({ length: count }, (_, index) => {
+    const stride = axisLabelStride(index, count);
+    if (stride === Infinity) return 0;
+    return Math.ceil(fixedPx + (count * labelPx) / stride);
+  });
 }

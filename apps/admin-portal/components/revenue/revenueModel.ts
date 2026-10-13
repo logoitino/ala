@@ -3,9 +3,13 @@
  * Display words for ledger codes, UTC day grids, and the donation split read from the ledger.
  * No fetching and no new measures: every number here is a field from `lib/reports.ts` or a
  * ratio of two of them. Money words follow docs/product/VOICE.md (Donate / donation; "tip" only
- * for the tip for Tapua'i).
+ * for the tip for Tapua'i). A value that is missing comes back as `null`, never a bare "—": the
+ * table renders the dash aria-hidden with sr-only words (W3-COMMERCE #3).
  */
-import type { MaloDay, RevenueStream } from '@/lib/reports';
+import { formatUsd, formatUsdWhole, streamName, streamSplitText, type MaloDay, type RevenueStream } from '@/lib/reports';
+
+/** Stream names live in `lib/reports.ts` (one list for every desk); re-exported for existing imports. */
+export { streamName };
 
 /** Compact USD for gridline labels only ("$1.2K"). Values are cents. */
 export function compactUsd(cents: number): string {
@@ -21,20 +25,6 @@ export function compactUsd(cents: number): string {
 export function percent1(part: number, whole: number): number | null {
   if (!(whole > 0)) return null;
   return Math.round((Math.max(0, part) / whole) * 1000) / 10;
-}
-
-/** Display name per `company_revenue_logs.source` / stream `source`, so older hosted labels ("Mālo …") never show. */
-const STREAM_NAMES: Record<string, string> = {
-  malo: 'Donations',
-  tip: "Optional tips for Tapua'i",
-  booster: 'Booster sponsorships',
-  vault: 'Vault subscriptions',
-  merch: 'Drip merch',
-  merch_vault: 'Vault and Drip',
-};
-
-export function streamName(source: string, fallback: string): string {
-  return STREAM_NAMES[source] ?? fallback;
 }
 
 const PAYEE_NAMES: Record<string, string> = {
@@ -83,11 +73,12 @@ export function shortDay(day: string): string {
   return at.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
-/** "Oct 3, 4:05 PM UTC". Fixed to UTC so the server's time zone never changes the table. */
-export function utcStamp(iso: string): string {
-  if (!iso) return '—';
+/** "Oct 3, 4:05 PM UTC". Fixed to UTC so the server's time zone never changes the table. `null` when the
+ *  read has no usable time; the caller shows the dash with sr-only words, not a bare "—". */
+export function utcStamp(iso: string): string | null {
+  if (!iso) return null;
   const at = new Date(iso);
-  if (Number.isNaN(at.getTime())) return '—';
+  if (Number.isNaN(at.getTime())) return null;
   return `${at.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'UTC' })} UTC`;
 }
 
@@ -117,13 +108,9 @@ export type DonationSplit = {
   unsplit: number;
   familyPct: number | null;
   platformPct: number | null;
-  policy: string;
+  /** Stated policy in VOICE words from `streamSplitText`, or null when the read has no usable basis points. */
+  policy: string | null;
 };
-
-/** "90" for 9000 basis points, "12.5" for 1250. */
-function bpsPercent(bps: number): string {
-  return (bps / 100).toLocaleString('en-US', { maximumFractionDigits: 2 });
-}
 
 export function donationSplit(streams: RevenueStream[]): DonationSplit | null {
   const stream = streams.find((row) => row.source === 'malo');
@@ -136,10 +123,16 @@ export function donationSplit(streams: RevenueStream[]): DonationSplit | null {
     unsplit: Math.max(0, gross - stream.payout_cents - stream.platform_cents),
     familyPct: percent1(stream.payout_cents, gross),
     platformPct: percent1(stream.platform_cents, gross),
-    // Stated policy: from the RPC's basis points when present (VOICE words), else its `split` text.
-    policy:
-      stream.payout_bps != null && stream.platform_bps != null
-        ? `${bpsPercent(stream.payout_bps)}% to the family account, ${bpsPercent(stream.platform_bps)}% to Tapua'i`
-        : stream.split,
+    // Never the RPC's raw `split` text (VOICE #3, #4): it says "platform" and "athlete".
+    policy: streamSplitText(stream),
   };
+}
+
+/**
+ * @purpose Money for a headline tile: whole dollars from $1,000 up, where cents add nothing at that
+ *   size ("$73,735"); cents below that, so a small non-zero amount never reads as "$0". Tables,
+ *   legends, summaries and Data tables keep `formatUsd` with cents.
+ */
+export function kpiUsd(cents: number): string {
+  return Math.abs(cents) >= 100_000 ? formatUsdWhole(cents) : formatUsd(cents);
 }

@@ -1,7 +1,8 @@
 /**
  * Tests for the admin chart kit math (`lib/chartScale.ts`). Run from `apps/admin-portal`:
  * `node --import ./lib/analytics-resolver.mjs --test lib/*.test.ts`.
- * Covers empty, all-zero, single point, missing (null) values, and shares that sum to 100.
+ * Covers empty, all-zero, single point, missing (null) values, shares that sum to 100, and the
+ * edge-day peak label anchor.
  */
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -9,13 +10,18 @@ import test from 'node:test';
 import {
   arcPath,
   areaPath,
+  axisLabelMinWidths,
+  axisLabelStride,
   columnPath,
+  CONTAINER_STEPS,
+  containerStepFor,
   linearScale,
   linePath,
   niceMax,
   niceScale,
   normalizeRow,
   peakIndex,
+  peakLabelAnchor,
   sharesTo100,
   slotCenter,
 } from './chartScale.ts';
@@ -110,4 +116,52 @@ test('peakIndex picks the first largest and ignores zero rows', () => {
   assert.equal(peakIndex([]), -1);
   assert.equal(peakIndex([0, 0]), -1);
   assert.equal(peakIndex([1, 3, 3, null]), 1);
+});
+
+test('peakLabelAnchor: edge days grow inward, the rest are centred', () => {
+  // 7 days: slot centres at 7%, 21%, ..., 93%.
+  assert.deepEqual(
+    Array.from({ length: 7 }, (_, index) => peakLabelAnchor(index, 7)),
+    ['start', 'middle', 'middle', 'middle', 'middle', 'middle', 'end'],
+  );
+  // 14 days: the first two and last two slots sit inside the outer 15%.
+  assert.deepEqual(
+    Array.from({ length: 14 }, (_, index) => peakLabelAnchor(index, 14)),
+    ['start', 'start', 'middle', 'middle', 'middle', 'middle', 'middle', 'middle', 'middle', 'middle', 'middle', 'middle', 'end', 'end'],
+  );
+  assert.equal(peakLabelAnchor(0, 1), 'middle');
+  assert.equal(peakLabelAnchor(0, 0), 'middle');
+});
+
+test('containerStepFor: smallest step that fits, 0 for nothing needed, null when too wide', () => {
+  assert.equal(containerStepFor(0), 0);
+  assert.equal(containerStepFor(-5), 0);
+  assert.equal(containerStepFor(100), 208);
+  assert.equal(containerStepFor(250), 256);
+  assert.equal(containerStepFor(256), 256);
+  assert.equal(containerStepFor(257), 272);
+  assert.equal(containerStepFor(300), 304);
+  assert.equal(containerStepFor(CONTAINER_STEPS[CONTAINER_STEPS.length - 1]), 1280);
+  assert.equal(containerStepFor(5000), null);
+});
+
+test('axisLabelStride: newest label always shows; thinning is nested powers of two from the end', () => {
+  assert.deepEqual(
+    Array.from({ length: 7 }, (_, index) => axisLabelStride(index, 7)),
+    [2, 1, 4, 1, 2, 1, Infinity],
+  );
+  assert.equal(axisLabelStride(0, 1), Infinity);
+  // 14 days: every 2nd label from the end survives stride 2.
+  const strides = Array.from({ length: 14 }, (_, index) => axisLabelStride(index, 14));
+  assert.deepEqual(strides.map((stride, index) => (stride >= 2 ? index : -1)).filter((index) => index >= 0), [1, 3, 5, 7, 9, 11, 13]);
+});
+
+test('axisLabelMinWidths: wider strides need less room; the newest label needs none', () => {
+  const widths = axisLabelMinWidths(7, 30, 40);
+  assert.equal(widths[6], 0);
+  // Stride 1 labels need room for all 7; stride 2 for half that; stride 4 for a quarter.
+  assert.equal(widths[5], 40 + 7 * 30);
+  assert.equal(widths[4], Math.ceil(40 + (7 * 30) / 2));
+  assert.equal(widths[2], Math.ceil(40 + (7 * 30) / 4));
+  assert.deepEqual(axisLabelMinWidths(0, 30, 40), []);
 });

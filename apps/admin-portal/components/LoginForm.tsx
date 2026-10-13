@@ -1,3 +1,10 @@
+/**
+ * Admin portal sign-in form (`/login`): Supabase Auth email + password or a magic link. Only proves a real
+ * session; the admin check runs afterwards in `app/(protected)/layout.tsx`. Two always-mounted live regions:
+ * `role="alert"` for failures, `role="status"` for progress and the magic-link note (never one region that
+ * switches politeness in the same render).
+ * @sideEffects Supabase Auth `signInWithPassword` / `signInWithOtp` (browser client). No database writes.
+ */
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -23,8 +30,9 @@ export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
+  // Kept apart so each lands in its own fixed live region (alert vs status).
+  const [failure, setFailure] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const configured = isAdminPortalConfigured();
 
@@ -32,13 +40,13 @@ export function LoginForm() {
     event.preventDefault();
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      setFailed(true);
-      setMessage('Add NEXT_PUBLIC_SUPABASE_* to apps/admin-portal/.env.local (same project as the Expo app).');
+      setNotice(null);
+      setFailure('Add NEXT_PUBLIC_SUPABASE_* to apps/admin-portal/.env.local (same project as the Expo app).');
       return;
     }
     setBusy(true);
-    setMessage(null);
-    setFailed(false);
+    setFailure(null);
+    setNotice(null);
     try {
       if (mode === 'password') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -52,11 +60,10 @@ export function LoginForm() {
             : undefined;
         const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
         if (error) throw error;
-        setMessage(`Magic link sent to ${email}. Open it on this device to finish signing in.`);
+        setNotice(`Magic link sent to ${email}. Open it on this device to finish signing in.`);
       }
     } catch (caught) {
-      setFailed(true);
-      setMessage(caught instanceof Error ? caught.message : 'Could not sign in.');
+      setFailure(caught instanceof Error ? caught.message : 'Could not sign in.');
     } finally {
       setBusy(false);
     }
@@ -89,6 +96,7 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => setMode('password')}
+                aria-pressed={mode === 'password'}
                 className={
                   mode === 'password'
                     ? 'rounded-full bg-[var(--jade)] px-3 py-1.5 text-xs font-bold text-white'
@@ -100,6 +108,7 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => setMode('magic-link')}
+                aria-pressed={mode === 'magic-link'}
                 className={
                   mode === 'magic-link'
                     ? 'rounded-full bg-[var(--jade)] px-3 py-1.5 text-xs font-bold text-white'
@@ -119,7 +128,7 @@ export function LoginForm() {
                   autoComplete="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--jade)] focus:outline-none"
+                  className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus-visible:border-[var(--jade)]"
                   placeholder="you@tapuai.app"
                 />
               </label>
@@ -132,23 +141,31 @@ export function LoginForm() {
                     autoComplete="current-password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--jade)] focus:outline-none"
+                    className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus-visible:border-[var(--jade)]"
                     placeholder="••••••••"
                   />
                 </label>
               ) : null}
 
-              {message ? (
-                <p
-                  className={
-                    failed
-                      ? 'rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-3 py-2 text-xs font-semibold text-[var(--gold)]'
-                      : 'rounded-xl border border-[var(--jade-soft)] bg-[var(--jade-soft)] px-3 py-2 text-xs font-semibold text-[var(--jade)]'
-                  }
-                >
-                  {message}
-                </p>
-              ) : null}
+              {/* Two fixed live regions, both always mounted so screen readers register them before any text
+                  arrives: a failure interrupts (alert); progress and the magic-link note wait (status). */}
+              <div role="alert" aria-atomic="true">
+                {failure ? (
+                  <p className="rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-3 py-2 text-xs font-semibold text-[var(--gold)]">
+                    {failure}
+                  </p>
+                ) : null}
+              </div>
+              <div role="status" aria-atomic="true">
+                {busy ? (
+                  // The submit button already shows this visually; the status region says it aloud.
+                  <span className="sr-only">{mode === 'password' ? 'Signing in…' : 'Sending the magic link…'}</span>
+                ) : notice ? (
+                  <p className="rounded-xl border border-[var(--jade-soft)] bg-[var(--jade-soft)] px-3 py-2 text-xs font-semibold text-[var(--jade)]">
+                    {notice}
+                  </p>
+                ) : null}
+              </div>
 
               <button
                 type="submit"

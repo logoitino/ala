@@ -1,11 +1,14 @@
 'use client';
 
 /**
- * Tabbed Health board (Where, Buttons, Errors, Menus). The server page already loaded the
+ * Tabbed Health board (Where, Buttons, Errors, Menus). The open sections and underline tabs
+ * match Home's shared report format while preserving the existing keyboard tab behavior. The server page already loaded the
  * numbers; switching tabs does not fetch again. Follows the WAI-ARIA tabs pattern: a tablist
  * with roving tabindex, Left/Right/Home/End keys (automatic activation), and one tabpanel per
  * tab wired with aria-controls / aria-labelledby. Values arrive as plain data with a unit name;
- * the formatters live on this side because functions cannot cross from a server page.
+ * the formatters live on this side because functions cannot cross from a server page. A read
+ * failure is one alert above the tabs (not repeated in each panel), and chart and tile grids
+ * pick their column count from how many items they hold so no row ends with a lone half card.
  */
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 
@@ -45,6 +48,8 @@ export function OperationsBoard({ lenses }: { lenses: OperationsLens[] }) {
   const activeIndex = Math.max(0, lenses.findIndex((lens) => lens.id === active));
   const tabId = (id: OperationsTabId) => `${baseId}-tab-${id}`;
   const panelId = (id: OperationsTabId) => `${baseId}-panel-${id}`;
+  // Every lens carries the same read failures; announce them once, outside the tab panels.
+  const alerts = [...new Set(lenses.flatMap((lens) => lens.alerts))];
 
   const focusTab = (index: number) => {
     const next = (index + lenses.length) % lenses.length;
@@ -63,10 +68,19 @@ export function OperationsBoard({ lenses }: { lenses: OperationsLens[] }) {
 
   return (
     <div>
+      {alerts.length > 0 ? (
+        <div role="alert" className="mb-4 space-y-2">
+          {alerts.map((alert) => (
+            <p key={alert} className="rounded-xl border border-[var(--ember)]/30 bg-[var(--ember-soft)] px-4 py-3 text-sm font-semibold text-[var(--ember)]">
+              {alert}
+            </p>
+          ))}
+        </div>
+      ) : null}
       <div
         role="tablist"
         aria-label="Health"
-        className="mb-6 grid grid-cols-2 gap-1 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-1 sm:inline-grid sm:grid-cols-4"
+        className="mb-8 grid grid-cols-2 gap-x-3 gap-y-1 border-b border-[var(--border)] sm:inline-grid sm:grid-cols-4"
       >
         {lenses.map((item, index) => {
           const on = index === activeIndex;
@@ -84,10 +98,10 @@ export function OperationsBoard({ lenses }: { lenses: OperationsLens[] }) {
               tabIndex={on ? 0 : -1}
               onClick={() => setActive(item.id)}
               onKeyDown={onKeyDown}
-              className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-extrabold ${
+              className={`inline-flex min-h-10 items-center justify-center gap-2 border-b-2 px-3 text-sm font-extrabold ${
                 on
-                  ? 'bg-[var(--surface)] text-[var(--jade)] shadow-[var(--shadow-card)] ring-1 ring-[var(--border)]'
-                  : 'text-[var(--ink-soft)] hover:bg-[var(--surface)]/70 hover:text-[var(--ink)]'
+                  ? 'border-[var(--jade)] text-[var(--jade)]'
+                  : 'border-transparent text-[var(--ink-soft)] hover:border-[var(--border)] hover:text-[var(--ink)]'
               }`}
             >
               <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -116,23 +130,31 @@ export function OperationsBoard({ lenses }: { lenses: OperationsLens[] }) {
   );
 }
 
+/** Tile columns that leave no orphan: 4 → 2 then 4, 3 → 3, 6 → 2 then 3, otherwise 2 then 3. */
+function tileColumns(count: number): string {
+  if (count % 4 === 0) return 'sm:grid-cols-2 lg:grid-cols-4';
+  if (count === 3) return 'md:grid-cols-3';
+  if (count % 3 === 0) return 'sm:grid-cols-2 lg:grid-cols-3';
+  return 'sm:grid-cols-2 xl:grid-cols-3';
+}
+
+function chartCount(lens: OperationsLens): number {
+  return lens.series.length + lens.rankings.length;
+}
+
+/** With an odd number of charts in a two-column grid, the last one takes the full row. */
+function spanLast(lens: OperationsLens, index: number): string {
+  const count = chartCount(lens);
+  return count > 1 && count % 2 === 1 && index === count - 1 ? 'lg:col-span-2' : '';
+}
+
 function LensPanel({ lens }: { lens: OperationsLens }) {
   return (
     <div className="space-y-6">
       <p className="text-base leading-7 font-semibold text-[var(--ink)]">{lens.summary}</p>
 
-      {lens.alerts.length > 0 ? (
-        <div role="alert" className="space-y-2">
-          {lens.alerts.map((alert) => (
-            <p key={alert} className="rounded-xl border border-[var(--ember)]/30 bg-[var(--ember-soft)] px-4 py-3 text-sm font-semibold text-[var(--ember)]">
-              {alert}
-            </p>
-          ))}
-        </div>
-      ) : null}
-
       {lens.stats.length > 0 ? (
-        <div className={`grid gap-3 sm:grid-cols-2 ${lens.stats.length >= 4 ? 'xl:grid-cols-3 2xl:grid-cols-6' : 'xl:grid-cols-3'}`}>
+        <div className={`grid gap-3 ${tileColumns(lens.stats.length)}`}>
           {lens.stats.map((stat) => (
             <StatTile
               key={stat.key}
@@ -149,33 +171,35 @@ function LensPanel({ lens }: { lens: OperationsLens }) {
       ) : null}
 
       {lens.series.length > 0 || lens.rankings.length > 0 ? (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {lens.series.map((series) => (
-            <TrendChart
-              key={series.source}
-              title={series.title}
-              windowLabel="Last 7 days, UTC"
-              points={series.points}
-              format={FORMATS[series.kind]}
-              variant={series.variant}
-              accent={series.accent}
-              source={series.source}
-              tickUnit={TICK_UNIT[series.kind]}
-              tickFormat={series.kind === 'count' ? formatCompactCount : undefined}
-            />
+        <div className={`grid gap-4 ${chartCount(lens) > 1 ? 'lg:grid-cols-2' : ''}`}>
+          {lens.series.map((series, index) => (
+            <div key={series.source} className={`min-w-0 ${spanLast(lens, index)}`}>
+              <TrendChart
+                title={series.title}
+                windowLabel="Last 7 days, UTC"
+                points={series.points}
+                format={FORMATS[series.kind]}
+                variant={series.variant}
+                accent={series.accent}
+                source={series.source}
+                tickUnit={TICK_UNIT[series.kind]}
+                tickFormat={series.kind === 'count' ? formatCompactCount : undefined}
+              />
+            </div>
           ))}
-          {lens.rankings.map((ranking) => (
-            <HBarList
-              key={ranking.source}
-              title={ranking.title}
-              caption={ranking.caption}
-              rows={ranking.rows}
-              format={FORMATS[ranking.kind]}
-              accent={ranking.accent}
-              emptyText={ranking.emptyText}
-              source={ranking.source}
-              summary={ranking.summary}
-            />
+          {lens.rankings.map((ranking, index) => (
+            <div key={ranking.source} className={`min-w-0 ${spanLast(lens, lens.series.length + index)}`}>
+              <HBarList
+                title={ranking.title}
+                caption={ranking.caption}
+                rows={ranking.rows}
+                format={FORMATS[ranking.kind]}
+                accent={ranking.accent}
+                emptyText={ranking.emptyText}
+                source={ranking.source}
+                summary={ranking.summary}
+              />
+            </div>
           ))}
         </div>
       ) : null}
@@ -199,7 +223,7 @@ function LensPanel({ lens }: { lens: OperationsLens }) {
         </div>
       ) : null}
 
-      <section aria-label={`${lens.label}: every row`} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5" style={{ boxShadow: 'var(--shadow-card)' }}>
+      <section aria-label={`${lens.label}: every row`} className="portal-panel min-w-0 border-t border-[var(--border)] pt-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-base font-extrabold tracking-tight">Every row</h2>
           <p className="text-xs text-[var(--text-muted)]">{lens.details.length.toLocaleString('en-US')} rows</p>
@@ -209,11 +233,17 @@ function LensPanel({ lens }: { lens: OperationsLens }) {
         ) : (
           <dl className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {lens.details.map((row, index) => (
-              <div key={`${row.label}-${index}`} className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-[var(--border)] px-3 py-2">
+              <div key={`${row.label}-${index}`} className="flex min-w-0 items-center justify-between gap-3 border-b border-[var(--border)] py-3">
                 <dt className="min-w-0 text-sm break-words text-[var(--ink-soft)]">{row.label}</dt>
-                <dd className="chart-tabular min-w-0 text-right text-sm font-extrabold break-words">
-                  {row.value === 'On' ? <Badge tone="ok">On</Badge> : row.value === 'Off' ? <Badge tone="warn">Off</Badge> : row.value}
-                </dd>
+                {row.value === 'On' || row.value === 'Off' ? (
+                  // The badge never shrinks, so "On" / "Off" never splits across two lines.
+                  <dd className="shrink-0 whitespace-nowrap">
+                    <Badge tone={row.value === 'On' ? 'ok' : 'warn'}>{row.value}</Badge>
+                  </dd>
+                ) : (
+                  // The value never shrinks or wraps (a long label wraps instead), so "22" never splits at 320px.
+                  <dd className="chart-tabular shrink-0 whitespace-nowrap text-right text-sm font-extrabold">{row.value}</dd>
+                )}
               </div>
             ))}
           </dl>

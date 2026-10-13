@@ -1,7 +1,16 @@
+/**
+ * People desk (`/people`, under Product). Read-only roster of recent fan profiles; verifying and
+ * granting admin stay in Expo /admin People. Browser tab title "People · Tapua'i Admin".
+ * @sideEffects `profiles` SELECT via `fetchPortalPeople` and `fetchSoftWallOversight`.
+ */
+import type { Metadata } from 'next';
+
 import { Badge, Panel, PortalShell, StatCard } from '@/components/PortalShell';
 import { fetchPortalPeople, fetchSoftWallOversight } from '@/lib/softWall';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'People' };
 
 /**
  * @purpose Soft-Wall fan roster for the web portal (verify / grant admin still live in Expo People).

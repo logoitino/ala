@@ -1,7 +1,17 @@
+/**
+ * Features desk (`/features`, under Product). Read-only list of the published menu switches from
+ * `app_runtime_config`; toggling and publishing happen only in Expo /admin. Browser tab title
+ * "Features · Tapua'i Admin".
+ * @sideEffects `app_runtime_config` SELECT via `fetchPortalRuntime`.
+ */
+import type { Metadata } from 'next';
+
 import { FlagStatusList, Panel, PortalShell } from '@/components/PortalShell';
 import { fetchPortalRuntime } from '@/lib/softWall';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Features' };
 
 /**
  * @purpose Read-only Features status. This portal is oversight only — toggling and publishing chrome

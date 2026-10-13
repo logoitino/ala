@@ -1,9 +1,11 @@
 /**
+ * Desk links use the shared open report dividers so Product follows Home's format.
  * Product tab (`/product`). A meter of menus switched on per flag group, from the published
  * runtime flags Health already reads, then four equal links into the read-only product desks.
  * Unread flags show "—", never "all on". Switches are changed only in Expo /admin.
  * @sideEffects `app_runtime_config` SELECT (published flags) via `fetchPortalRuntime`.
  */
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { Meter } from '@/components/charts';
@@ -13,6 +15,8 @@ import { menuSplits } from '@/lib/operations';
 import { fetchPortalRuntime } from '@/lib/softWall';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Product' };
 
 const LINKS = [
   { href: '/features', title: 'Features', detail: 'Which menus are on. Changes stay in Expo /admin.' },
@@ -68,8 +72,7 @@ export default async function ProductPage() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="group flex min-h-28 flex-col justify-between rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 hover:border-[var(--jade)]"
-                style={{ boxShadow: 'var(--shadow-card)' }}
+                className="group flex min-h-28 flex-col justify-between border-b border-[var(--border)] py-5 hover:border-[var(--jade)]"
               >
                 <span className="flex items-center justify-between gap-2 text-base font-extrabold">
                   {item.title}

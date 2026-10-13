@@ -2,11 +2,16 @@
  * Plain breakdowns for the Health (operations) page. The page passes report rows, the 7-day
  * series, and the live menu flags. Ranking, units, and sentences stay here so the client tabs
  * only display them. Pure data: no functions cross into the client board; each value names its
- * unit (`kind`) and the board picks the formatter.
+ * unit (`kind`) and the board picks the formatter. Button and error rows are telemetry keys; they
+ * pass through `featureLabel` / `issueLabel` (lib/eventLabels.ts) before ranking, summaries or
+ * "Every row", so the tab never shows "reel.seki" or "upload.retry · upload".
  */
 import { APP_RUNTIME_FLAG_GROUPS } from '@tapuai/shared-types';
 
+import type { ChartColor } from '@/components/charts/shared';
 import { formatCount, formatMinutes, formatMs, formatPercent, isMeasured, tapsPerOpen } from '@/lib/dashboard';
+import { featureLabel, issueLabel, labelRows } from '@/lib/eventLabels';
+import { measureColor } from '@/lib/measureColors';
 
 export type OperationsTabId = 'where' | 'buttons' | 'errors' | 'menus';
 
@@ -35,7 +40,7 @@ export type OperationsStat = {
   tone?: 'neutral' | 'ok' | 'warn' | 'danger';
   goodDirection?: 'up' | 'down' | 'none';
   /** Decorative 7-day line under the value; the tile repeats it as screen-reader text. */
-  spark?: { points: OperationsPoint[]; accent: 'jade' | 'gold' | 'bad' };
+  spark?: { points: OperationsPoint[]; accent: ChartColor };
 };
 
 /** One ranked list. `rows` null = not in this read; [] = read, nothing in the window. */
@@ -45,7 +50,7 @@ export type OperationsRanking = {
   source: string;
   rows: OperationsBar[] | null;
   kind: OperationsKind;
-  accent: 'jade' | 'cyan' | 'gold' | 'violet' | 'bad';
+  accent: ChartColor;
   emptyText: string;
   summary?: string;
 };
@@ -57,7 +62,7 @@ export type OperationsSeries = {
   points: OperationsPoint[] | null;
   kind: OperationsKind;
   variant: 'columns' | 'line' | 'area';
-  accent: 'jade' | 'gold' | 'bad';
+  accent: ChartColor;
 };
 
 /** Menus on and off inside one flag group. Null counts = the published flags were not read. */
@@ -73,7 +78,7 @@ export type OperationsLens = {
   id: OperationsTabId;
   label: string;
   summary: string;
-  /** Read failures shown as an alert on this tab. */
+  /** Read failures for this tab. The board shows every lens's alerts once, above the tabs. */
   alerts: string[];
   stats: OperationsStat[];
   series: OperationsSeries[];
@@ -139,7 +144,7 @@ function kindOfKey(key: string): OperationsKind {
  * @purpose Format one value by its unit. Shared by the server lib and the client board.
  * @param kind Unit of the value.
  * @param value Raw number from the read.
- * @returns Display text, e.g. "12 min", "42%", "1,250 ms".
+ * @returns Display text, e.g. "12 min", "42%", "850 ms", "1.3 s".
  */
 export function formatOperationsValue(kind: OperationsKind, value: number): string {
   if (kind === 'minutes') return formatMinutes(value);
@@ -148,6 +153,9 @@ export function formatOperationsValue(kind: OperationsKind, value: number): stri
   if (kind === 'ratio') return value.toLocaleString('en-US');
   return formatCount(value);
 }
+
+/** Kept for older callers; the words now live in `lib/eventLabels.ts` with `issueLabel`. */
+export { featureLabel };
 
 const DETAIL_LABELS: Record<string, string> = {
   sessions_24h: 'Tab opens · 24h',
@@ -161,8 +169,8 @@ const DETAIL_LABELS: Record<string, string> = {
   avg_scroll_pct_7d: 'Average scroll depth · 7d',
   stalls_24h: 'Video stalls · 24h',
   reconnects_24h: 'Live reconnects · 24h',
-  checkouts_24h: 'Donation checkouts timed · 24h',
-  avg_checkout_ms_24h: 'Average donation checkout · 24h',
+  checkouts_24h: 'Checkout step timings · 24h',
+  avg_checkout_ms_24h: 'Average checkout step · 24h',
   events_24h: 'Telemetry events · 24h',
 };
 
@@ -212,7 +220,10 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
   const runtimeOk = input.runtimeOk ?? true;
   const tabs = ranked(input.tabs ?? []);
   const buttons = ranked(input.buttons ?? []);
-  const appErrors = ranked(input.appErrors ?? []);
+  // Raw `feature_tap` keys ("hype.seki") read as people words ("Seki on a Highlight") everywhere on the tab.
+  const buttonsNamed = labelRows(buttons, featureLabel);
+  // Raw `ui_issue` rows ("upload.retry · upload") read as "Upload retry (upload)" in the headline, chart and Every row.
+  const appErrors = labelRows(ranked(input.appErrors ?? []), issueLabel);
   const scroll = ranked(input.scroll ?? []);
   // A list missing from the read stays null ("Not in this read"); a read empty list stays [] (empty state).
   const list = (raw: OperationsBar[] | null | undefined, rows: OperationsBar[]) => (reportsOk && raw != null ? rows : null);
@@ -255,12 +266,12 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           kind: 'minutes',
           hint: 'Sum of tab time, not time per person',
           goodDirection: 'none',
-          spark: series(input.dwellSeries) ? { points: input.dwellSeries ?? [], accent: 'gold' } : undefined,
+          spark: series(input.dwellSeries) ? { points: input.dwellSeries ?? [], accent: measureColor('timeOnTabs') } : undefined,
         },
         { key: 'avg_scroll_pct_7d', label: 'Average scroll depth · 7d', value: usage('avg_scroll_pct_7d'), kind: 'percent', hint: 'Average scroll sample. Not a share of people.', goodDirection: 'none' },
       ],
       series: [
-        { title: 'Time on tabs', source: 'get_admin_reports.series.dwell', points: series(input.dwellSeries), kind: 'minutes', variant: 'line', accent: 'gold' },
+        { title: 'Time on tabs', source: 'get_admin_reports.series.dwell', points: series(input.dwellSeries), kind: 'minutes', variant: 'line', accent: measureColor('timeOnTabs') },
       ],
       rankings: [
         {
@@ -269,7 +280,7 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           source: 'get_admin_reports.tabs',
           rows: list(input.tabs, tabs),
           kind: 'minutes',
-          accent: 'jade',
+          accent: measureColor('timeOnTabs'),
           emptyText: 'No tab time in the last 7 days.',
         },
         {
@@ -278,7 +289,7 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           source: 'get_admin_reports.scroll',
           rows: list(input.scroll, scroll),
           kind: 'percent',
-          accent: 'cyan',
+          accent: measureColor('scrollDepth'),
           emptyText: 'No scroll samples in the last 7 days.',
         },
       ],
@@ -290,7 +301,7 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
       id: 'buttons',
       label: 'Buttons',
       summary: reportsOk
-        ? topSentence('the button people use the most', buttons, 'No button taps in this window.')
+        ? topSentence('the most tapped button', buttonsNamed, 'No button taps in this window.')
         : 'The reports read did not load, so button taps are not shown.',
       alerts: notRead,
       stats: [
@@ -311,15 +322,15 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           title: 'Most used buttons',
           caption: 'Last 7 days · taps, tab switches left out',
           source: 'get_admin_reports.features',
-          rows: list(input.buttons, buttons),
+          rows: list(input.buttons, buttonsNamed),
           kind: 'count',
-          accent: 'violet',
+          accent: measureColor('featureTaps'),
           emptyText: 'No button taps in the last 7 days.',
         },
       ],
       splits: [],
-      bars: buttons,
-      details: buttons.map((row) => ({ label: row.label, value: formatCount(row.value) })),
+      bars: buttonsNamed,
+      details: buttonsNamed.map((row) => ({ label: row.label, value: formatCount(row.value) })),
     },
     {
       id: 'errors',
@@ -334,10 +345,10 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           label: 'Video stalls · 24h',
           value: stalls24h,
           kind: 'count',
-          hint: isMeasured(stalls24h) && stalls24h > 0 ? 'Playback stalled. Fewer is better.' : 'No stalls in 24 hours',
+          hint: !isMeasured(stalls24h) ? '' : stalls24h > 0 ? 'Playback stalled. Fewer is better.' : 'No stalls in 24 hours',
           tone: !isMeasured(stalls24h) ? 'neutral' : stalls24h > 0 ? 'warn' : 'ok',
           goodDirection: 'down',
-          spark: series(input.stallSeries) ? { points: input.stallSeries ?? [], accent: 'bad' } : undefined,
+          spark: series(input.stallSeries) ? { points: input.stallSeries ?? [], accent: measureColor('stalls') } : undefined,
         },
         {
           key: 'reconnects_24h',
@@ -348,14 +359,21 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           tone: !isMeasured(reconnects24h) ? 'neutral' : reconnects24h > 0 ? 'warn' : 'ok',
           goodDirection: 'down',
         },
-        { key: 'checkouts_24h', label: 'Checkouts timed · 24h', value: reliability('checkouts_24h'), kind: 'count', hint: 'Donation checkouts with a timing sample', goodDirection: 'none' },
-        { key: 'avg_checkout_ms_24h', label: 'Average checkout · 24h', value: reliability('avg_checkout_ms_24h'), kind: 'ms', hint: 'Mean time to finish a donation checkout', goodDirection: 'down' },
+        { key: 'checkouts_24h', label: 'Checkout step timings · 24h', value: reliability('checkouts_24h'), kind: 'count', hint: 'Donation checkout steps that logged a time', goodDirection: 'none' },
+        {
+          key: 'avg_checkout_ms_24h',
+          label: 'Average checkout step · 24h',
+          value: reliability('avg_checkout_ms_24h'),
+          kind: 'ms',
+          hint: 'Mean across every logged donation checkout step, not one whole checkout',
+          goodDirection: 'down',
+        },
         {
           key: 'issues_24h',
           label: 'UI issues · 24h',
           value: issues24h,
           kind: 'count',
-          hint: 'Control issues reported by the app',
+          hint: 'Problems the app logged on a button or screen',
           tone: !isMeasured(issues24h) ? 'neutral' : issues24h > 0 ? 'warn' : 'ok',
           goodDirection: 'down',
         },
@@ -370,7 +388,7 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
         },
       ],
       series: [
-        { title: 'Video stalls', source: 'get_admin_reports.series.stalls', points: series(input.stallSeries), kind: 'count', variant: 'columns', accent: 'bad' },
+        { title: 'Video stalls', source: 'get_admin_reports.series.stalls', points: series(input.stallSeries), kind: 'count', variant: 'columns', accent: measureColor('stalls') },
       ],
       rankings: [
         {
@@ -379,7 +397,7 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           source: 'get_admin_reports.issues',
           rows: list(input.appErrors, appErrors),
           kind: 'count',
-          accent: 'bad',
+          accent: measureColor('issues'),
           emptyText: 'No app errors in this window.',
         },
       ],

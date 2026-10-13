@@ -2,6 +2,10 @@
  * Home-dashboard math and number formats for the admin portal. Percents come only from a prior
  * week that already has a count. Event totals are not treated as people. A missing key stays
  * null all the way to the tile. Pure module: safe to import from server pages and client boards.
+ * Home's ledger tile is a percent, so it is labelled "Tapua'i share of gross, all streams";
+ * Departments shows the dollar figure and keeps "Tapua'i share, all streams" (W3-PORTAL, 2026-10-12).
+ * Home's overview reads every tile label from `homeKpis`, so the clips tile says
+ * "Clips uploaded · 7d" here rather than in the page (Codex Home fixes, 2026-10-12).
  */
 
 export type WeekTone = 'up' | 'down' | 'flat' | 'new';
@@ -92,9 +96,15 @@ export function formatMinutes(ms: number): string {
   return `${Math.round(ms / 60000).toLocaleString('en-US')} min`;
 }
 
-/** Whole milliseconds, e.g. checkout time. */
+/**
+ * @purpose A short duration such as a checkout step. Same rule as Trends (`formatDuration` in
+ *   lib/reports.ts): under a second reads in ms, a second or more reads in seconds.
+ * @param ms Milliseconds.
+ * @returns e.g. "850 ms", "1.3 s".
+ */
 export function formatMs(ms: number): string {
-  return `${Math.round(ms).toLocaleString('en-US')} ms`;
+  if (ms < 1000) return `${Math.round(ms).toLocaleString('en-US')} ms`;
+  return `${(ms / 1000).toLocaleString('en-US', { maximumFractionDigits: 1 })} s`;
 }
 
 /** A value that is already a percent (0 to 100), e.g. average scroll depth. */
@@ -146,13 +156,13 @@ export function weekChange(current: number, previous: number): WeekChange {
  */
 export function weekSentence(label: string, change: WeekChange, format: (value: number) => string): string {
   if (change.tone === 'new') {
-    return `${label} is ${format(change.current)} this week. The prior week was empty, so there is no percent.`;
+    return `${label}: ${format(change.current)} this week. The prior week had none, so there is no percent.`;
   }
   if (change.tone === 'flat') {
-    return `${label} is flat versus the prior week (${format(change.current)}).`;
+    return `${label}: flat versus the prior week (${format(change.current)}).`;
   }
   const word = change.tone === 'up' ? 'up' : 'down';
-  return `${label} is ${word} ${Math.abs(change.percent ?? 0)}% versus the prior week (${format(change.previous)} to ${format(change.current)}).`;
+  return `${label}: ${word} ${Math.abs(change.percent ?? 0)}% versus the prior week (${format(change.previous)} to ${format(change.current)}).`;
 }
 
 /**
@@ -198,7 +208,7 @@ export const UNMEASURED = [
   },
   {
     name: 'Donation conversion',
-    why: 'A donation count is gifts, not the share of people who watched a Highlight and then donated.',
+    why: 'The donation count is donations, not the share of people who watched a Highlight and then donated.',
   },
   {
     name: 'Cost to bring a family in',
@@ -255,7 +265,7 @@ export function homeKpis(input: DashboardInput, formatUsd: (cents: number) => st
     },
     {
       id: 'clips',
-      label: 'Clips · 7d',
+      label: 'Clips uploaded · 7d',
       value: isMeasured(input.clips7d) ? formatCount(input.clips7d) : '—',
       hint: clipsDelta ? 'Clips uploaded, last 7 days' : 'The prior week is not in this read',
       tone: 'neutral',
@@ -309,13 +319,13 @@ export function homeKpis(input: DashboardInput, formatUsd: (cents: number) => st
     },
     {
       id: 'platformShare',
-      label: 'Recorded platform share',
+      label: "Tapua'i share of gross, all streams",
       value: platform == null ? '—' : `${platform}%`,
       hint: !ledger
         ? 'Ledger not in this read'
         : platform == null
           ? 'No gross in the ledger yet'
-          : `Tapua'i keeps ${formatUsd(input.companyNetCents as number)} of ${formatUsd(input.grossCents as number)}. Donation policy is still 90 to the family.`,
+          : `The ledger records ${formatUsd(input.companyNetCents as number)} for Tapua'i out of ${formatUsd(input.grossCents as number)} gross across every stream. Donation policy: 90% to the family account, 10% to Tapua'i.`,
       tone: 'neutral',
       missing: !ledger,
       delta: null,

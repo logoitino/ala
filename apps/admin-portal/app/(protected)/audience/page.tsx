@@ -1,16 +1,22 @@
 /**
- * Audience desk (`/audience`). Stock counts from `get_admin_reports`: profiles, athletes,
+ * Audience desk (`/audience`). Open verification blocks follow Home's report layout. Stock counts from `get_admin_reports`: profiles, athletes,
  * schools, the verify queue, verified share, schools by athletes listed, and the clip mix of clips not removed
  * (Game Day / Train Like Me / Serve Like Me). Counts are rows, not people who returned.
- * A missing key shows "—"; a failed read is an alert.
+ * A missing key shows "—"; a failed read is an alert. Clip-type colours come from
+ * `lib/measureColors.ts` (Game Day jade, Train Like Me cyan, Serve Like Me gold), as on every page.
  * @sideEffects `get_admin_reports`.
  */
+import type { Metadata } from 'next';
+
 import { HBarList, Meter, SplitBar, StatTile } from '@/components/charts';
 import { PortalShell, SectionHeading } from '@/components/PortalShell';
 import { formatCount, readKey } from '@/lib/dashboard';
+import { measureColor } from '@/lib/measureColors';
 import { fetchPortalReports } from '@/lib/reports';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Audience' };
 
 /**
  * @purpose Audience desk. Verified share uses profiles as the denominator because that is the table the count comes from.
@@ -65,7 +71,7 @@ export default async function AudiencePage() {
             hint="Verified profiles of all profiles. A share of accounts, not of athletes."
             source="get_admin_reports.audience.verified / profiles"
           />
-          <div className="flex min-w-0 flex-col justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4" style={{ boxShadow: 'var(--shadow-card)' }}>
+          <div className="portal-stat flex min-w-0 flex-col justify-between gap-3 border-b border-[var(--border)] py-4">
             <p className="text-[11px] font-extrabold tracking-[0.08em] text-[var(--text-muted)] uppercase">Admin accounts</p>
             <p className="text-sm leading-6 text-[var(--ink)]">
               {admins == null ? (
@@ -88,13 +94,13 @@ export default async function AudiencePage() {
 
       <section aria-labelledby="audience-mix">
         <SectionHeading id="audience-mix" level={2} title="Schools and clips" hint="Live catalog" />
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid items-start gap-4 lg:grid-cols-2">
           <HBarList
             title="Schools by athletes listed"
             caption="Top 5 schools · player rows"
             rows={ok ? reports.leaders.schools : null}
             format={formatCount}
-            accent="cyan"
+            accent={measureColor('schools')}
             emptyText="No schools with listed athletes in this read."
             source="get_admin_reports.leaders.schools"
           />
@@ -105,9 +111,9 @@ export default async function AudiencePage() {
             format={formatCount}
             source="get_admin_reports.content.game_play · train_like_me · serve_like_me"
             parts={[
-              { label: 'Game Day', value: content('game_play'), color: 'jade' },
-              { label: 'Train Like Me', value: content('train_like_me'), color: 'gold' },
-              { label: 'Serve Like Me', value: content('serve_like_me'), color: 'violet' },
+              { label: 'Game Day', value: content('game_play'), color: measureColor('gameDay') },
+              { label: 'Train Like Me', value: content('train_like_me'), color: measureColor('trainLikeMe') },
+              { label: 'Serve Like Me', value: content('serve_like_me'), color: measureColor('serveLikeMe') },
             ]}
           />
         </div>

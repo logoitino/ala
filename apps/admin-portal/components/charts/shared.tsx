@@ -1,4 +1,5 @@
 /**
+ * Wrapping money legends keep value/share text on the report surface at enlarged phone text.
  * Shared pieces for the admin chart kit: the colour names, the state notices (missing, empty,
  * error), the legend swatch, and the visually hidden text helper. Server-Component safe: no
  * hooks, no 'use client', no next/* imports. Pages import from `components/charts`, not this file.
@@ -102,11 +103,13 @@ export function LegendRow({
   share?: string | null;
 }) {
   return (
-    <li className="flex min-w-0 items-baseline gap-2 text-sm">
+    <li className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 text-sm">
       <Swatch color={color} />
-      <span className="min-w-0 flex-1 break-words text-[var(--ink-soft)]">{label}</span>
-      <span className="chart-tabular shrink-0 font-extrabold text-[var(--ink)]">{value}</span>
-      {share != null ? <span className="chart-tabular w-11 shrink-0 text-right text-xs font-bold text-[var(--text-muted)]">{share}</span> : null}
+      <span className="min-w-0 flex-1 basis-[8rem] break-words text-[var(--ink-soft)]">{label}</span>
+      <span className="chart-tabular ml-auto flex min-w-0 max-w-full flex-wrap items-baseline justify-end gap-x-3 gap-y-1">
+        <span className="min-w-0 break-words font-extrabold text-[var(--ink)]">{value}</span>
+        {share != null ? <span className="w-11 shrink-0 text-right text-xs font-bold text-[var(--text-muted)]">{share}</span> : null}
+      </span>
     </li>
   );
 }

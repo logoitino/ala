@@ -1,4 +1,5 @@
 /**
+ * Total labels wrap beside money values so open report figures fit enlarged phone text.
  * One 100% bar split into parts, with 2px `--chart-gap` separators and a legend that lists every
  * part (zero parts too) with its value and share. Use only when the parts are a real partition
  * of one whole (clip mix, Seki/Aura/Flex, live vs parked games, menus on/off).
@@ -86,9 +87,9 @@ export function SplitBar({ title, parts, format, totalLabel = 'Total', caption, 
               <LegendRow key={`${part.label}-${index}`} color={part.color} label={part.label} value={show(part.value, format)} share={model.shareText(index)} />
             ))}
           </ul>
-          <p className="mt-3 flex items-baseline justify-between gap-2 border-t border-[var(--border)] pt-2 text-sm">
+          <p className="mt-3 flex flex-wrap items-baseline justify-between gap-2 border-t border-[var(--border)] pt-2 text-sm">
             <span className="text-[var(--text-muted)]">{totalLabel}</span>
-            <span className="chart-tabular font-extrabold text-[var(--ink)]">{format(model.total)}</span>
+            <span className="chart-tabular shrink-0 whitespace-nowrap font-extrabold text-[var(--ink)]">{format(model.total)}</span>
           </p>
         </>
       )}
