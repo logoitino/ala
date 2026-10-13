@@ -927,8 +927,11 @@ Gold **Publish to app** in the admin sidebar. Incremental: `supabase/app_runtime
 get_admin_reports() returns jsonb
   -- generated_at, engagement, money, content, audience, live, reliability,
   -- usage, tabs, features, issues, scroll, leaders,
+  -- donation_bands { under_50, 50_to_250, 250_plus },
   -- series { clips, malo, stalls, dwell }
 ```
+
+**2026-10-12 (owner decisions; `supabase/migrations/20261012180000_admin_reports_bigint_and_donation_bands.sql`, written, not applied anywhere):** every milliseconds or cents sum is cast to `bigint` instead of `int` (`usage.dwell_ms_24h` / `dwell_ms_7d`, `tabs[].value`, `series.dwell`, `series.malo`, the `money.*_cents` sums, `leaders.malo[].value`). A 7-day tab-dwell sum passed 2^31 ms at about 596 hours and the cast failed the whole RPC. Values below 2^31 are unchanged. New top-level `donation_bands` (owner decision 3C) counts athletes by all-time donation total in cents: `under_50` is more than 0 and under 5000, `50_to_250` is 5000 to under 25000, `250_plus` is 25000 and up. Counts only, never names or ids; same source as `leaders.malo` (every `tips` row, grouped per player), so the numbers agree; `{"under_50": 0, "50_to_250": 0, "250_plus": 0}` when there are no donations. `leaders.malo` (top-5 names) is still returned so existing readers keep working; the portal stops showing names, and dropping the key is a later call. EXECUTE is revoked from `public` and `anon` and granted to `authenticated`.
 
 Usage windows (24h / 7d / previous 7d), Mālo, Vault / Flash Unlock / Spotlight mix, Crew follows, telemetry stalls, **tab dwell / scroll / feature taps / control issues**, top Mālo / hottest clips / athletes-by-school, and `series` (7-day clips / Mālo / stalls / dwell). Incremental: `supabase/app_runtime.sql` + `supabase/admin_reports.sql` + `supabase/usage_reports.sql`. Client: Expo `/admin/reports` and Next `http://localhost:3001/reports`. **2026-09 audit:** `EXECUTE` restricted to `authenticated`; internally calls `require_admin_guard()` (new helper — `language sql` functions can't use `if/raise` directly) and raises unless the caller is admin. Was previously anon-executable with no role check at all — anyone could read platform-wide money/audience aggregates.
 

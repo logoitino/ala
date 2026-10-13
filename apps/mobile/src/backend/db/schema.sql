@@ -4782,6 +4782,10 @@ drop function if exists public.get_admin_reports();
 -- platform-wide money/audience/content aggregates. `select public.require_admin_guard();` as the
 -- first statement raises before the report query runs if the caller is not an admin; the report
 -- query itself is the function's returned (final-statement) result, unchanged otherwise.
+-- 2026-10-12 (supabase/migrations/20261012180000_admin_reports_bigint_and_donation_bands.sql, written,
+-- not applied anywhere): ms and cents sums are bigint (a 7-day tab-dwell sum overflowed int at about
+-- 596 hours and failed the RPC), and a new top-level donation_bands key counts athletes by all-time
+-- donation total with no names (owner decision 3C). leaders.malo stays for existing readers.
 create or replace function public.get_admin_reports()
 returns jsonb
 language sql
@@ -4805,16 +4809,16 @@ as $$
       'crew_follows', (select count(*)::int from public.crew_follows)
     ),
     'money', jsonb_build_object(
-      'malo_cents_all', (select coalesce(sum(amount_cents), 0)::int from public.tips),
+      'malo_cents_all', (select coalesce(sum(amount_cents), 0)::bigint from public.tips),
       'malo_count_all', (select count(*)::int from public.tips),
-      'malo_cents_24h', (select coalesce(sum(amount_cents), 0)::int from public.tips where created_at >= timezone('utc', now()) - interval '24 hours'),
+      'malo_cents_24h', (select coalesce(sum(amount_cents), 0)::bigint from public.tips where created_at >= timezone('utc', now()) - interval '24 hours'),
       'malo_count_24h', (select count(*)::int from public.tips where created_at >= timezone('utc', now()) - interval '24 hours'),
-      'malo_cents_7d', (select coalesce(sum(amount_cents), 0)::int from public.tips where created_at >= timezone('utc', now()) - interval '7 days'),
+      'malo_cents_7d', (select coalesce(sum(amount_cents), 0)::bigint from public.tips where created_at >= timezone('utc', now()) - interval '7 days'),
       'malo_count_7d', (select count(*)::int from public.tips where created_at >= timezone('utc', now()) - interval '7 days'),
-      'malo_cents_prev_7d', (select coalesce(sum(amount_cents), 0)::int from public.tips where created_at >= timezone('utc', now()) - interval '14 days' and created_at < timezone('utc', now()) - interval '7 days'),
+      'malo_cents_prev_7d', (select coalesce(sum(amount_cents), 0)::bigint from public.tips where created_at >= timezone('utc', now()) - interval '14 days' and created_at < timezone('utc', now()) - interval '7 days'),
       'avg_tip_cents_7d', (select coalesce(avg(amount_cents), 0)::int from public.tips where created_at >= timezone('utc', now()) - interval '7 days'),
       'queued_payouts', (select count(*)::int from public.disbursements where status = 'queued'),
-      'paid_payouts_cents', (select coalesce(sum(amount_cents), 0)::int from public.disbursements where status = 'paid'),
+      'paid_payouts_cents', (select coalesce(sum(amount_cents), 0)::bigint from public.disbursements where status = 'paid'),
       'active_subs', (select count(*)::int from public.subscriptions where coalesce(status, 'active') = 'active')
     ),
     'content', jsonb_build_object(
@@ -4856,7 +4860,7 @@ as $$
       'malo', (
         select coalesce(jsonb_agg(jsonb_build_object('label', ranked.label, 'value', ranked.value)), '[]'::jsonb)
         from (
-          select coalesce(nullif(p.name, ''), 'Unknown') as label, sum(t.amount_cents)::int as value
+          select coalesce(nullif(p.name, ''), 'Unknown') as label, sum(t.amount_cents)::bigint as value
           from public.tips t
           left join public.players p on p.id = t.player_id
           group by p.id, p.name
@@ -4886,6 +4890,26 @@ as $$
         ) ranked
       )
     ),
+    -- Owner decision 3C (2026-10-12): athletes counted by all-time donation total, counts only, never
+    -- names or ids. Same source as leaders.malo (every public.tips row, grouped per player, no other
+    -- filter); tips.player_id is NOT NULL with an FK, so the inner join drops no rows. A player whose
+    -- total is 0 is in no band. Bounds in cents: (0, 5000) / [5000, 25000) / [25000, inf).
+    'donation_bands', coalesce(
+      (
+        select jsonb_build_object(
+          'under_50', (count(*) filter (where totals.total_cents > 0 and totals.total_cents < 5000))::int,
+          '50_to_250', (count(*) filter (where totals.total_cents >= 5000 and totals.total_cents < 25000))::int,
+          '250_plus', (count(*) filter (where totals.total_cents >= 25000))::int
+        )
+        from (
+          select p.id, sum(t.amount_cents)::bigint as total_cents
+          from public.tips t
+          join public.players p on p.id = t.player_id
+          group by p.id
+        ) totals
+      ),
+      '{"under_50": 0, "50_to_250": 0, "250_plus": 0}'::jsonb
+    ),
     'series', jsonb_build_object(
       'clips', (
         select coalesce(jsonb_agg(jsonb_build_object('label', to_char(bucket.d, 'Dy'), 'value', bucket.n) order by bucket.d), '[]'::jsonb)
@@ -4900,10 +4924,10 @@ as $$
       'malo', (
         select coalesce(jsonb_agg(jsonb_build_object('label', to_char(bucket.d, 'Dy'), 'value', bucket.n) order by bucket.d), '[]'::jsonb)
         from (
-          select d::date as d, coalesce(c.n, 0)::int as n
+          select d::date as d, coalesce(c.n, 0)::bigint as n
           from generate_series((timezone('utc', now()))::date - 6, (timezone('utc', now()))::date, interval '1 day') as d
           left join (
-            select created_at::date as day, coalesce(sum(amount_cents), 0)::int as n from public.tips group by 1
+            select created_at::date as day, coalesce(sum(amount_cents), 0)::bigint as n from public.tips group by 1
           ) c on c.day = d::date
         ) bucket
       ),
@@ -4923,10 +4947,10 @@ as $$
       'dwell', (
         select coalesce(jsonb_agg(jsonb_build_object('label', to_char(bucket.d, 'Dy'), 'value', bucket.n) order by bucket.d), '[]'::jsonb)
         from (
-          select d::date as d, coalesce(c.n, 0)::int as n
+          select d::date as d, coalesce(c.n, 0)::bigint as n
           from generate_series((timezone('utc', now()))::date - 6, (timezone('utc', now()))::date, interval '1 day') as d
           left join (
-            select created_at::date as day, coalesce(sum(duration_ms), 0)::int as n
+            select created_at::date as day, coalesce(sum(duration_ms), 0)::bigint as n
             from public.telemetry_logs
             where event_type = 'tab_dwell'
             group by 1
@@ -4936,8 +4960,8 @@ as $$
     ),
     'usage', jsonb_build_object(
       'sessions_24h', (select count(*)::int from public.telemetry_logs where event_type = 'tab_dwell' and created_at >= timezone('utc', now()) - interval '24 hours'),
-      'dwell_ms_24h', (select coalesce(sum(duration_ms), 0)::int from public.telemetry_logs where event_type = 'tab_dwell' and created_at >= timezone('utc', now()) - interval '24 hours'),
-      'dwell_ms_7d', (select coalesce(sum(duration_ms), 0)::int from public.telemetry_logs where event_type = 'tab_dwell' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'dwell_ms_24h', (select coalesce(sum(duration_ms), 0)::bigint from public.telemetry_logs where event_type = 'tab_dwell' and created_at >= timezone('utc', now()) - interval '24 hours'),
+      'dwell_ms_7d', (select coalesce(sum(duration_ms), 0)::bigint from public.telemetry_logs where event_type = 'tab_dwell' and created_at >= timezone('utc', now()) - interval '7 days'),
       'taps_24h', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and created_at >= timezone('utc', now()) - interval '24 hours'),
       'taps_7d', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and created_at >= timezone('utc', now()) - interval '7 days'),
       'issues_24h', (select count(*)::int from public.telemetry_logs where event_type = 'ui_issue' and created_at >= timezone('utc', now()) - interval '24 hours'),
@@ -4958,7 +4982,7 @@ as $$
             when 'upload' then 'Upload'
             else coalesce(nullif(channel, ''), 'Other')
           end as label,
-          coalesce(sum(duration_ms), 0)::int as value
+          coalesce(sum(duration_ms), 0)::bigint as value
         from public.telemetry_logs
         where event_type = 'tab_dwell'
           and created_at >= timezone('utc', now()) - interval '7 days'
@@ -5037,6 +5061,7 @@ grant select on public.app_runtime_config to anon, authenticated;
 grant insert, update on public.app_runtime_config to authenticated;
 grant execute on function public.patch_app_runtime_draft(jsonb) to authenticated;
 grant execute on function public.publish_app_runtime() to authenticated;
+revoke execute on function public.get_admin_reports() from public, anon;
 grant execute on function public.get_admin_reports() to authenticated;
 grant execute on function public.require_admin_guard() to authenticated;
 
