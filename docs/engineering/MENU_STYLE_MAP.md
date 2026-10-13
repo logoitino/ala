@@ -123,3 +123,16 @@ remain pending. Local web export passed for UX-03 as recorded above. Follow TEST
 on a small Android phone and registered iPad; record build, viewport, text scale and screenshots.
 Press stills are marked stale. No schema, privacy collection, fees, credit path or legal conclusion
 changes are implied by this visual pass.
+
+
+## Read-only admin portal — shared report format (2026-10-12)
+
+Home’s accepted format now supplies the frame, font hierarchy, navigation and open surfaces throughout the portal. Home keeps its distinct community support hero; every other desk retains its own title, content and controls.
+
+| Surfaces | Shared format |
+| --- | --- |
+| Home, Trends, Audience, Revenue, Health, Product, Analytics, Departments | `PortalShell`: shared report width, scrolling header, underline navigation and bold page titles. |
+| Product’s Features, Profile, Sign-in and People desks | Same shell, wrapping subnavigation and open `Panel` sections. |
+| Charts, KPI values, meters, ledgers and department status | Open dividers; full summaries, source disclosures, Data rows, missing-state words and legal ledger notes retained. Enlarged text may wrap labels and values. |
+
+Local evidence and remaining browser-tool coverage limits: [COMMUNITY_DASHBOARD_QA.md](design/COMMUNITY_DASHBOARD_QA.md).

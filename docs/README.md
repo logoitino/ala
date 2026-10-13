@@ -31,6 +31,8 @@ order, then dip into the folders as you need them.
 | [design/ATHLETE_VERIFICATION_DESIGN.md](engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | Athlete verification ladder, open sign-up, fake-highlight takedown. |
 | [design/PHOTO_STORIES_DESIGN.md](engineering/design/PHOTO_STORIES_DESIGN.md) | Photo stories in Highlights: data model, RPC, screens, privacy rules and build ownership. |
 | [design/PARENT_PAYEE_CONNECT_DESIGN.md](engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md) | Guardian-as-payee and custodial money rules. |
+| [design/COMMUNITY_DASHBOARD.md](engineering/design/COMMUNITY_DASHBOARD.md) | Selected Community Impact dashboard, scoped implementation plan and verification requirements. |
+| [design/COMMUNITY_DASHBOARD_QA.md](engineering/design/COMMUNITY_DASHBOARD_QA.md) | Community Home and report-format design QA: source/render comparison and local browser checks (screenshots in `design/community-preview/`). |
 
 Also: [`supabase/migrations/README.md`](../supabase/migrations/README.md) for how database changes are made.
 
@@ -73,6 +75,7 @@ location (tracked in [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_P
 | [WORK_QUEUE.md](agents/WORK_QUEUE.md) | Ordered tasks with acceptance criteria and owners. |
 | [DEPARTMENT_PLANS.md](agents/DEPARTMENT_PLANS.md) | Each department: what is in the app today, and what that team will do before a public release. |
 | [EXPERT_STANDARDS.md](agents/EXPERT_STANDARDS.md) | The expert bar for each department, and which model is connected to each agent. |
+| [ADM-01.md](agents/ADM-01.md) | Live tracker for the admin portal charts work (ADM-01): status, owner decisions, how to resume. Brief: [ADM-01_ASSIGNMENT.md](agents/ADM-01_ASSIGNMENT.md); fix list: [ADM-01_FIXES.md](agents/ADM-01_FIXES.md). |
 
 The agent definitions themselves are in `.claude/agents/`; `pnpm agents:check` keeps them in step
 with these files.

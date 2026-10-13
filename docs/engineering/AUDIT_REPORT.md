@@ -10,6 +10,87 @@
 
 ---
 
+## ENV-01 — local Expo launch recovery — 2026-10-12
+
+**Scope:** the owner's Lightning CSS launch-error screenshots. Codex outside-session
+repair and independent Codex reviews; the registry's pinned Cursor agents did not run.
+App source, dependency versions and hosted settings were not changed.
+
+- Both installed ARM64 Lightning CSS bindings (1.33.0 and 1.32.0), code signatures,
+  direct CSS transforms and a worker transform passed **before** repair. The original
+  loading failure was not reproduced in this shell. The wrapper catches its first
+  native error and tries the missing file shown in the screenshots.
+- Seven native files had regained Firefox quarantine. Removed that attribute only
+  from the installed Lightning CSS, fsevents, Next SWC, Tailwind oxide and Sharp/libvips
+  files. Started fresh Metro from `apps/mobile` with the existing public client env.
+- Web/server bundles and an iOS development bundle passed. `GET /` returned app HTML
+  without the native-loader error; `/status` returned `packager-status:running`.
+  Browser Bridge tab 1335871309 rendered Home, scoreboard, feed controls and athlete
+  actions. Initial browser navigation exceeded its 60-second timeout during the cold
+  one-worker build; inspected the resulting tab rather than opening a duplicate.
+- `pnpm check` passed both typechecks, **78 suites / 443 tests** and all guards.
+  Evidence: `/tmp/ala-sports-launch-check-20261012.log`,
+  `/tmp/ala-sports-launch-normal-20261012.log`,
+  `/tmp/ala-sports-launch-working-20261012.png` and
+  `/tmp/ala-sports-launch-ios-20261012.js` (temporary local artifacts).
+
+**Limits:** shell rendering does not prove video playback. Browser logs included
+interrupted `play()` request AbortErrors, and the captured media stage was blank;
+playback remains a separate check. The failed video's settled DOM had error 4
+(`MEDIA_ERR_SRC_NOT_SUPPORTED`), readyState 0 and no decoded dimensions. A HEAD request
+to that exact legacy MP4 URL returned **200 / `text/plain`**, as did another visible
+legacy video. File contents and codec were not fetched, so changing metadata is not
+yet a proven cure. The current uploader supplies `video/mp4`; route existing object
+inspection/repair to BACKEND/STORAGE (ENV-02) rather than changing playback on the
+basis of canceled `play()` requests. Evidence:
+`/tmp/ala-sports-launch-failed-video-head-20261012.json` and
+`/tmp/ala-sports-launch-video-state-20261012.json`.
+No native linking, installed-device, PaymentSheet,
+photo bitmap, photo upload or hosted SQL/RLS verification. Metro is left on port 8081.
+Repeatable diagnosis is in [TROUBLESHOOTING.md](TROUBLESHOOTING.md) §0b.
+
+---
+
+## ADM-01 waves 1–3 and report format — 2026-10-12
+
+**Scope:** the admin portal (`apps/admin-portal`) after fix waves 1–3, the readable event labels, Codex's report format (made the default on every page by owner decision) and PORTAL's defect fixes inside that format. Summary of every review verdict; the full record, with file and line detail, is the Log in [ADM-01.md](../agents/ADM-01.md). All work is local and uncommitted. No SQL, deploy or hosted data.
+
+| Review | Verdict | Disposition |
+| --- | --- | --- |
+| Phase C (QA, VOICE, ACCESSIBILITY, VISUAL_QA) | QA **ACCEPT** (3 low defects, SQL overflow note); VOICE 43 strings; ACCESSIBILITY **FAIL** (reflow, sticky focus, headings, titles, Health alert, nav truncation, ledger regions, LoginForm); VISUAL_QA defects and a top-10 list from 60 screenshots | Fix waves 1–3 by PORTAL, ADMIN, ANALYST and COMMERCE |
+| Code re-review after waves 1–2 | ACCESSIBILITY **FAIL** on one item: the sticky header could hide focus (WCAG 2.4.11); VOICE **CHANGES REQUESTED** (11 items) | Codex made the header static; wave 3 closed the 11 VOICE items |
+| Codex Home review, code only (DESIGN, ACCESSIBILITY, VOICE) | All three **CHANGES REQUESTED** | Mid-number wrapping, the peak label at the chart edge, the squashed `plotHeight`, and the `.community-*` CSS fixed by PORTAL; Codex moved the anchor reset into the base layer; the different-look finding became the owner's report-format decision. The heading-order and plural findings are not marked closed in the log |
+| VISUAL_QA + QA browser re-review of waves 1–3 (before the report format) | VISUAL_QA **REJECT** on one defect: raw event keys on screen; P3 `/login` had no title | `lib/eventLabels.ts` and the "Sign in" title fixed both. The same pass found titles on all 12 signed-in pages, a name on every figure, map colours on 45 figures, no overflow on 41 captures, and a static header with Shift+Tab never under it at 1280px |
+| Codex report-format QA (Codex's own check) | Locally verified by Codex: 22 desktop/phone captures, 11 pages at 320px with normal and doubled text, focus and Data checks | Recorded in Codex's STATE §4 entry and [COMMUNITY_DASHBOARD_QA.md](design/COMMUNITY_DASHBOARD_QA.md) |
+| Final VISUAL_QA + ACCESSIBILITY browser review of the report format and the defect fixes | VISUAL_QA **REJECT** on one P2: Health > Errors "Every row" split the count `22` across two lines at 320px. ACCESSIBILITY **PASS** | 58 width-verified DOM captures: every page at 1440/768/375, plus 320 for Home, Analytics and Health. No overflow, every title correct, event labels read as words, one h1 per page, the Home peak label inside its chart, header static, keyboard focus visible and never covered. The P2 was fixed by the session lead (below) |
+| VISUAL_QA targeted recheck of the fixes | VISUAL_QA **ACCEPT** for ADM-01 | Health value cell in `OperationsBoard.tsx` is `shrink-0 whitespace-nowrap` and `22` stays on one line at 320 and 375; SplitBar totals are nowrap; the Product tab uses `aria-current="true"` on its sub-desks; Home's "Data sources" summary shows its disclosure marker. Evidence `.smoke/admin-portal-mock/shots-recheck/`, final shots `shots-final/` |
+
+**Checks executed:** `pnpm check` passes (both typechecks, 78 suites / 443 tests, docs/links/copy/boundaries/comments/agents/client-keys guards); portal unit tests 80/80 on Node v24.21.0.
+
+**Result:** ADM-01 accepted locally: VISUAL_QA ACCEPT, ACCESSIBILITY PASS, QA gates pass. The owner commits and merges.
+
+**Not verified:** Enter on a Data `<summary>` (Browser Bridge cannot send that keypress; Space works), native devices, and hosted data.
+
+**P3s left open:** source and config keys show outside a Data disclosure, worst on the Sign-in desk (`auth/page.tsx`); `LedgerTables.tsx:87` detail values use the old wrap pattern but did not split. Owner decisions of 2026-10-12: the `get_admin_reports` `bigint` overflow fix is approved (migration written, staging application pending the owner's paste); Vault money in the custodial summary takes direction A, built after counsel with STATE §6 item 8; counts by donation band, with no names, replace the all-time donation-total list (VOICE #26).
+
+---
+
+## ADM-01 keyboard/header follow-up (Codex) — 2026-10-12
+
+**Scope:** the remaining desktop-header finding in [ADM-01.md](../agents/ADM-01.md). This is a bounded local patch and partial verification, not a completed portal UX or accessibility audit.
+
+1. **Baseline Home — issue reproduced.** Browser Bridge rendered the portal with the local synthetic Supabase fixture on `:54399`, in an isolated build on `:3021`. Shift+Tab focused “Data for Donations versus the prior week” at y=10–34, beneath the sticky header ending at y=75. The accepted baseline captures are `.smoke/uiux-shots/home-before-1280.png` and `focus-before-1280.png`; “1280” is the requested width in the filename, not a validated final viewport.
+2. **Header patch — code/build checks pass.** `components/PortalShell.tsx` uses normal document flow, with its comment updated. A runtime read returned `position: static`. No fixed scroll-padding estimate or new client measurement code was added.
+3. **Post-fix keyboard/reflow — not accepted.** The focus rectangle was below the viewport and the saved screenshot showed Audience instead of Home. Later reads also showed unexpected page navigation and a 1728px viewport after requesting 1280px. The post-fix screenshot was renamed `rejected-focus-after-1280.png`. The responsive matrix was stopped with no accepted entries. Re-run at 320/768/1280 and 200% zoom with a stable browser session; no full keyboard, screen-reader or accessibility pass is claimed.
+
+**Checks executed on Node v24.21.0:** `pnpm check` passed, including both app typechecks, 78 mobile suites / 443 tests and every guard. The separate portal command `node --import ./lib/analytics-resolver.mjs --test lib/*.test.ts` passed 69/69. Optimized Next builds before and after the header patch passed in `.smoke/uiux-portal`; the other session's `:3020` server and its `.next` were preserved.
+
+**JEV assistance:** the virtualenv interpreter link points at an unavailable `/Users/ian` installation. System Python 3.12 loaded the existing SDK packages, and `.smoke/uiux-jev-review.py` prepared a small product/constraint brief without source code, credentials or customer data. Requests failed at the TCP connection (`Operation not permitted`); this session has external internet disabled. No JEV recommendation, confidence or token count is reported.
+
+**Next owner:** PORTAL integrates the patch; ACCESSIBILITY and VISUAL_QA re-run the browser checks, and VOICE resolves its remaining findings. Hosted/device checks remain unrun. No SQL, write path, route, dependency or payment behavior changed.
+
+---
+
 ## Photo-story pager, browser fixture (VISUAL_QA) — 2026-10-09
 
 **Scope:** the feed counter and dots in `PhotoStoryMedia`, not the upload steps and not a live development feed. The photo SQL is still unapplied, so this pass bundled the real component with five fixture photos and did not call Supabase.
