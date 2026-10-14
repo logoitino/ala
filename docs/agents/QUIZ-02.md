@@ -8,7 +8,7 @@
 | Stage | Status |
 | --- | --- |
 | Enrollment | Planned at 2026-10-14T16:15:21Z before new source; isolated codex/fan-zone. |
-| Timed backend / admin | Backendd2d0af2+3f5902c, SDKa369d93 committed; timed44/historical34 and SDK/admin50tests pass. Independent source review requires history-CAS, canonical-repeat and strict-SDK corrections; first fix wave assigned. Root fresh build passes but canonical reapply fails; admin-ready remains unset. |
+| Timed backend / admin | Backendf785e695 and SDK9d34abd corrections independently PASS; root canonical105/Fan154/historical34/timed50 exit0; workerSDK/admin77tests/types0. Actual local admin checkpoint16:53:17Z; [evidence](../engineering/evidence/QUIZ-02-admin.md). Selected gate precedes participant dispatch. |
 | Timed participant | Starts only after new actual QUIZ-02 admin-ready exit 0. |
 | Final / Documentation / VP | Pending actual source, actor/full tests and coordination receipts. |
 

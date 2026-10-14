@@ -19335,24 +19335,32 @@ $$;
 -- Repair: pause, retain evidence and use a reviewed forward migration; no automatic untimed restoration.
 -- No money/Aura/public badge. Settings fence precedes account/attempt locks; helpers are never client APIs.
 
-alter table public.sport_quiz_questions add column topic_category text not null default 'sport'
+-- The mode column is the durable transition marker. Capture it before structural additions.
+-- This private DDL context is overwritten here; a repeat must not reset an already timed cohort/history.
+do $$ begin
+ perform set_config('quiz.initial_upgrade',(not exists(select 1 from pg_attribute where attrelid='public.sport_quiz_attempts'::regclass and attname='mode' and not attisdropped))::text,true);
+end $$;
+
+alter table public.sport_quiz_questions add column if not exists topic_category text not null default 'sport'
   check(topic_category in ('sport','science','geography','general'));
-alter table public.sport_quiz_questions add column source_notes text not null default '' check(char_length(source_notes)<=1000);
-alter table public.sport_quiz_attempts drop constraint sport_quiz_attempts_status_check;
+alter table public.sport_quiz_questions add column if not exists source_notes text not null default '' check(char_length(source_notes)<=1000);
+alter table public.sport_quiz_attempts drop constraint if exists sport_quiz_attempts_status_check;
 alter table public.sport_quiz_attempts add constraint sport_quiz_attempts_status_check check(status in ('issued','completed','skipped','void','ended','expired'));
-alter table public.sport_quiz_attempts add column mode text not null default 'legacy' check(mode in ('legacy','timed'));
-alter table public.sport_quiz_attempts add column duration_seconds integer check(duration_seconds in (30,90));
-alter table public.sport_quiz_attempts add column started_at timestamptz;
-alter table public.sport_quiz_attempts add column expires_at timestamptz;
-alter table public.sport_quiz_attempts add column session_hash text check(session_hash ~ '^[0-9a-f]{64}$');
-alter table public.sport_quiz_attempts add column closed_at timestamptz;
-alter table public.sport_quiz_attempts add column close_reason text;
+alter table public.sport_quiz_attempts add column if not exists mode text not null default 'legacy' check(mode in ('legacy','timed'));
+alter table public.sport_quiz_attempts add column if not exists duration_seconds integer check(duration_seconds in (30,90));
+alter table public.sport_quiz_attempts add column if not exists started_at timestamptz;
+alter table public.sport_quiz_attempts add column if not exists expires_at timestamptz;
+alter table public.sport_quiz_attempts add column if not exists session_hash text check(session_hash ~ '^[0-9a-f]{64}$');
+alter table public.sport_quiz_attempts add column if not exists closed_at timestamptz;
+alter table public.sport_quiz_attempts add column if not exists close_reason text;
+alter table public.sport_quiz_attempts drop constraint if exists quiz_timed_window;
 alter table public.sport_quiz_attempts add constraint quiz_timed_window check(mode<>'timed' or status='skipped' or
   (duration_seconds is not null and started_at is not null and expires_at is not null and expires_at=started_at+duration_seconds*interval '1 second'));
+alter table public.sport_quiz_attempts drop constraint if exists quiz_timed_capability;
 alter table public.sport_quiz_attempts add constraint quiz_timed_capability check(mode<>'timed' or status<>'issued' or session_hash is not null);
-alter table public.sport_quiz_badges drop constraint sport_quiz_badges_label_check;
+alter table public.sport_quiz_badges drop constraint if exists sport_quiz_badges_label_check;
 alter table public.sport_quiz_badges add constraint sport_quiz_badges_label_check check(label in ('Sport Learner','Trivia Explorer'));
-alter table public.sport_quiz_audit drop constraint sport_quiz_audit_action_check;
+alter table public.sport_quiz_audit drop constraint if exists sport_quiz_audit_action_check;
 alter table public.sport_quiz_audit add constraint sport_quiz_audit_action_check check(action in
   ('settings','question_create','question_edit','question_approve','question_archive','question_void','start','answer','skip','end','retention'));
 
@@ -19385,23 +19393,29 @@ create table if not exists public.sport_quiz_requests (
  capacity_class text not null default 'ordinary' check(capacity_class in ('ordinary','answer','off','end')),
  primary key(profile_id,request_id)
 );
-create index quiz_requests_prune on public.sport_quiz_requests(prune_after);
-create unique index quiz_reserved_request_slot on public.sport_quiz_requests(profile_id,week_start,capacity_class) where capacity_class<>'ordinary';
-create index quiz_guards_prune on public.sport_quiz_week_guards(prune_after);
-create index quiz_history_order on public.sport_quiz_attempts(profile_id,week_start desc,id desc);
-create index quiz_bank_order on public.sport_quiz_questions(created_at desc,id desc);
+create index if not exists quiz_requests_prune on public.sport_quiz_requests(prune_after);
+create unique index if not exists quiz_reserved_request_slot on public.sport_quiz_requests(profile_id,week_start,capacity_class) where capacity_class<>'ordinary';
+create index if not exists quiz_guards_prune on public.sport_quiz_week_guards(prune_after);
+create index if not exists quiz_history_order on public.sport_quiz_attempts(profile_id,week_start desc,id desc);
+create index if not exists quiz_bank_order on public.sport_quiz_questions(created_at desc,id desc);
 
 -- Backfill all exposed families, including voided versions; old active rounds cannot become timed.
+do $$ begin
+if current_setting('quiz.initial_upgrade',true)='true' then
 insert into public.sport_quiz_exposures(profile_id,question_key,question_id,first_issued_at)
  select distinct on(a.profile_id,q.question_key) a.profile_id,q.question_key,q.id,a.issued_at
  from public.sport_quiz_attempts a join public.sport_quiz_questions q on q.id=a.question_id
- order by a.profile_id,q.question_key,a.issued_at,a.id;
+ order by a.profile_id,q.question_key,a.issued_at,a.id on conflict do nothing;
 insert into public.sport_quiz_week_guards(profile_id,week_start,spent_at,prune_after)
  select profile_id,week_start,issued_at,issued_at+interval '35 days' from public.sport_quiz_attempts
- where issued_at+interval '35 days'>statement_timestamp();
-update public.sport_quiz_attempts set status='ended',closed_at=statement_timestamp(),close_reason='legacy_transition' where status='issued';
+ where issued_at+interval '35 days'>statement_timestamp() on conflict do nothing;
+update public.sport_quiz_attempts set status='ended',closed_at=statement_timestamp(),close_reason='legacy_transition',session_hash=null where status='issued';
 update public.sport_quiz_attempts set closed_at=coalesce(completed_at,voided_at,issued_at) where status<>'issued' and closed_at is null;
 update public.sport_quiz_settings set enabled=false,pilot_accounts='{}',reason='Paused for timed trivia admin review.',updated_at=statement_timestamp();
+insert into public.sport_quiz_preferences(profile_id,history_version) select distinct profile_id,1 from public.sport_quiz_attempts on conflict do nothing;
+end if;
+perform set_config('quiz.initial_upgrade','false',true);
+end $$;
 
 create or replace function public.quiz_week_at(p_time timestamptz)
 returns date language sql immutable set search_path='' as $$ select date_trunc('week',p_time at time zone 'UTC')::date $$;
@@ -19502,7 +19516,7 @@ end $$;
 
 create or replace function public.quiz_admin_settings(p_payload jsonb,p_reason text,p_expected_actor_id uuid)
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare me uuid:=public.quiz_expected_actor(p_expected_actor_id,true);testers uuid[];next_enabled boolean;at timestamptz;
+declare me uuid:=public.quiz_expected_actor(p_expected_actor_id,true);testers uuid[];next_enabled boolean;at timestamptz;affected uuid;
 begin
  if jsonb_typeof(p_payload) is distinct from 'object' or jsonb_typeof(p_payload->'enabled') is distinct from 'boolean'
   or jsonb_typeof(p_payload->'pilot_accounts') is distinct from 'array' or char_length(btrim(coalesce(p_reason,''))) not between 10 and 500
@@ -19518,9 +19532,14 @@ begin
  perform 1 from public.sport_quiz_settings where singleton for update;if not found then raise exception 'quiz_unavailable';end if;at:=clock_timestamp();
  update public.sport_quiz_settings set enabled=next_enabled,pilot_accounts=testers,reason=btrim(p_reason),updated_at=at,updated_by=me where singleton;
  -- Pausing/removing an audience is terminal, so an old capability cannot revive after re-enable.
- update public.sport_quiz_attempts set status=case when expires_at<=at then 'expired' else 'ended' end,
+ for affected in select distinct profile_id from public.sport_quiz_attempts where status='issued' and (not next_enabled or not(profile_id=any(testers))) order by profile_id loop
+  perform public.quiz_lock(affected);
+ end loop;
+ for affected in with changed as (update public.sport_quiz_attempts set status=case when expires_at<=at then 'expired' else 'ended' end,
   closed_at=case when expires_at<=at then expires_at else at end,close_reason=case when expires_at<=at then 'deadline' when not next_enabled then 'paused' else 'access_revoked' end,session_hash=null
-  where status='issued' and (not next_enabled or not(profile_id=any(testers)));
+  where status='issued' and (not next_enabled or not(profile_id=any(testers))) returning profile_id) select distinct profile_id from changed order by profile_id loop
+  perform public.quiz_bump_history(affected);
+ end loop;
  insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'settings',btrim(p_reason),at);
  return jsonb_build_object('contract_version',2,'enabled',next_enabled,'testing_only',true,'pilot_accounts',testers);
 end $$;
@@ -19528,11 +19547,14 @@ end $$;
 create or replace function public.quiz_admin_question(p_id uuid,p_action text,p_payload jsonb,p_expected_actor_id uuid)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare me uuid:=public.quiz_expected_actor(p_expected_actor_id,true);q public.sport_quiz_questions%rowtype;nextq public.sport_quiz_questions%rowtype;
- why text:=btrim(p_payload->>'reason');family uuid;at timestamptz;
+ why text:=btrim(p_payload->>'reason');family uuid;at timestamptz;affected uuid;
 begin
  if jsonb_typeof(p_payload) is distinct from 'object' or coalesce(p_action,'') not in ('create','edit','approve','archive','void') or char_length(coalesce(why,'')) not between 10 and 500
   or exists(select 1 from jsonb_object_keys(p_payload)k where k not in ('reason','sport','prompt','options','correct_option','explanation','topic_category','source_notes','family_action','question_key')) then raise exception 'quiz_question_action_invalid';end if;
  perform 1 from public.sport_quiz_settings where singleton for update;if not found then raise exception 'quiz_unavailable';end if;at:=clock_timestamp();
+ if p_action='void' then
+  for affected in select distinct profile_id from public.sport_quiz_attempts where question_id=p_id order by profile_id loop perform public.quiz_lock(affected);end loop;
+ end if;
  if p_action<>'create' then select * into q from public.sport_quiz_questions where id=p_id for update;if not found then raise exception 'quiz_question_missing';end if;
  elsif p_id is not null then raise exception 'quiz_create_id_invalid';end if;
  if p_action in ('create','edit') then
@@ -19563,7 +19585,8 @@ begin
   update public.sport_quiz_questions set status=case p_action when 'approve' then 'approved' when 'archive' then 'archived' else 'void' end,
    reason=why,reviewed_at=at,reviewed_by=me where id=q.id returning * into nextq;
   if p_action='void' then
-   update public.sport_quiz_attempts set status='void',voided_at=at,closed_at=coalesce(closed_at,at),correction_reason=why,session_hash=null where question_id=q.id and status<>'skipped';
+   for affected in with changed as (update public.sport_quiz_attempts set status='void',voided_at=at,closed_at=coalesce(closed_at,at),correction_reason=why,session_hash=null
+    where question_id=q.id and status<>'skipped' returning profile_id) select distinct profile_id from changed order by profile_id loop perform public.quiz_bump_history(affected);end loop;
    update public.sport_quiz_badges set voided_at=at where attempt_id in(select id from public.sport_quiz_attempts where question_id=q.id) and voided_at is null;
   end if;
  end if;
@@ -19576,6 +19599,14 @@ begin
  perform 1 from public.sport_quiz_settings where singleton for share;
  if not found then raise exception 'quiz_unavailable'; end if;
  perform pg_advisory_xact_lock(hashtextextended('sport-quiz:'||p_me,0));
+end $$;
+create or replace function public.quiz_bump_history(p_me uuid)
+returns void language plpgsql security definer set search_path='' as $$
+begin
+ -- The same settings/account fence protects erasure and every material history revision.
+ perform public.quiz_lock(p_me);
+ insert into public.sport_quiz_preferences(profile_id) values(p_me) on conflict do nothing;
+ update public.sport_quiz_preferences set history_version=history_version+1,updated_at=clock_timestamp() where profile_id=p_me;
 end $$;
 create or replace function public.quiz_preferences_dto(p_me uuid)
 returns jsonb language sql stable security definer set search_path='' as $$
@@ -19627,12 +19658,12 @@ begin
  return receipt;
 end $$;
 
-drop function public.quiz_start(text);
-drop function public.quiz_answer(uuid,integer,uuid);
-drop function public.quiz_skip();
-drop function public.quiz_admin_snapshot(bigint);
-drop function public.quiz_admin_settings(jsonb,text);
-drop function public.quiz_admin_question(uuid,text,jsonb);
+drop function if exists public.quiz_start(text);
+drop function if exists public.quiz_answer(uuid,integer,uuid);
+drop function if exists public.quiz_skip();
+drop function if exists public.quiz_admin_snapshot(bigint);
+drop function if exists public.quiz_admin_settings(jsonb,text);
+drop function if exists public.quiz_admin_question(uuid,text,jsonb);
 
 create or replace function public.quiz_start(p_topic_category text,p_sport text,p_duration_seconds integer,p_expected_week date,
  p_notice_version text,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
@@ -19684,6 +19715,7 @@ begin
  insert into public.sport_quiz_attempts(profile_id,week_start,question_id,status,issued_at,mode,duration_seconds,started_at,expires_at,session_hash)
   values(me,w,q.id,'issued',at,'timed',p_duration_seconds,at,at+p_duration_seconds*interval '1 second',encode(public.digest(p_session_secret,'sha256'),'hex')) returning * into a;
  insert into public.sport_quiz_exposures values(me,q.question_key,q.id,at);
+ perform public.quiz_bump_history(me);
  insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,created_at) values(me,'start',q.id,a.id,at);
  receipt:=public.quiz_save_request(me,p_request_id,'start',w,d,a.id,'started',at);
  return receipt||jsonb_build_object('server_now',at,'active_question',public.quiz_question_dto(q.id));
@@ -19712,6 +19744,7 @@ begin
  if a.expires_at<=at then perform public.quiz_expire(me,at);return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at);end if;
  update public.sport_quiz_attempts set status='completed',answered_option=p_option,request_id=p_request_id,completed_at=at,closed_at=at,close_reason='answered',session_hash=null where id=a.id;
  insert into public.sport_quiz_badges(profile_id,attempt_id,week_start,label,issued_at) values(me,a.id,a.week_start,'Trivia Explorer',at);
+ perform public.quiz_bump_history(me);
  insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,created_at) values(me,'answer',q.id,a.id,at);
  return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'completed',at);
 end $$;
@@ -19736,6 +19769,7 @@ begin
    -- A pending unknown Start can be cancelled once. Existing active rounds retain their End slot.
    if exists(select 1 from public.sport_quiz_week_guards where profile_id=me and week_start=w) then raise exception 'quiz_round_closed';end if;
    perform public.quiz_spend(me,w,at);
+   perform public.quiz_bump_history(me);
    perform public.quiz_save_request(me,p_start_request_id,'start',w,null,null,'cancelled',at);
    return public.quiz_save_request(me,p_request_id,'end',w,d,null,'cancelled',at);
   end if;
@@ -19749,6 +19783,7 @@ begin
   outcome:=case when a.expires_at<=at then 'expired' else 'ended' end;
   update public.sport_quiz_attempts set status=outcome,closed_at=case when outcome='expired' then expires_at else at end,
    close_reason=case when outcome='expired' then 'deadline' else p_reason end,session_hash=null where id=a.id;
+  perform public.quiz_bump_history(me);
   insert into public.sport_quiz_audit(actor_id,action,attempt_id,created_at) values(me,'end',a.id,at);
  else outcome:=a.status;end if;
  return public.quiz_save_request(me,p_request_id,'end',a.week_start,d,a.id,outcome,at);
@@ -19769,6 +19804,7 @@ begin
  perform public.quiz_spend(me,p_expected_week,at);
  insert into public.sport_quiz_attempts(profile_id,week_start,status,issued_at,mode,closed_at,close_reason)
   values(me,p_expected_week,'skipped',at,'timed',at,'skip') returning * into a;
+ perform public.quiz_bump_history(me);
  insert into public.sport_quiz_audit(actor_id,action,attempt_id,created_at) values(me,'skip',a.id,at);
  return public.quiz_save_request(me,p_request_id,'skip',p_expected_week,d,a.id,'skipped',at);
 end $$;
@@ -19785,9 +19821,14 @@ returns void language sql security definer set search_path='' as $$
  insert into public.sport_quiz_week_guards values(p_me,p_week,p_at,p_at+interval '35 days') on conflict do nothing
 $$;
 create or replace function public.quiz_expire(p_me uuid,p_at timestamptz)
-returns void language sql security definer set search_path='' as $$
+returns void language plpgsql security definer set search_path='' as $$
+declare changed bigint;
+begin
  update public.sport_quiz_attempts set status='expired',closed_at=expires_at,close_reason='deadline',session_hash=null
- where profile_id=p_me and status='issued' and expires_at<=p_at
+ where profile_id=p_me and status='issued' and expires_at<=p_at;
+ get diagnostics changed=row_count;
+ if changed>0 then perform public.quiz_bump_history(p_me);end if;
+end
 $$;
 
 create or replace function public.quiz_fun_slot(p_me uuid,p_week date)
@@ -19920,6 +19961,7 @@ end $$;
 do $$ declare t text;f record;begin
  foreach t in array array['sport_quiz_preferences','sport_quiz_exposures','sport_quiz_week_guards','sport_quiz_requests'] loop
   execute format('alter table public.%I enable row level security',t);
+  execute format('drop policy if exists quiz_closed_account on public.%I',t);
   execute format('create policy quiz_closed_account on public.%I as restrictive for all to authenticated using (public.my_profile_id() is not null and public.profile_age_band(public.my_profile_id()) in (''adult'',''teen_13_15'',''teen_16_17'')) with check (public.my_profile_id() is not null and public.profile_age_band(public.my_profile_id()) in (''adult'',''teen_13_15'',''teen_16_17''))',t);
   execute format('revoke all on table public.%I from public,anon,authenticated,service_role',t);
  end loop;

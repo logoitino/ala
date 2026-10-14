@@ -3789,6 +3789,7 @@
       "writers": [],
       "readers": [],
       "sqlWriters": [
+        "quiz_bump_history",
         "quiz_erase_history",
         "quiz_invitation",
         "quiz_preferences"
@@ -8281,6 +8282,24 @@
       ]
     },
     {
+      "name": "quiz_bump_history",
+      "owner": "PROFILE",
+      "callers": [
+        "sql:quiz_admin_question",
+        "sql:quiz_admin_settings",
+        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_expire",
+        "sql:quiz_skip",
+        "sql:quiz_start"
+      ],
+      "manual": "Protected settings/account-serialized monotonic learning revision on material issuance, terminal, badge/correction/pause changes; exact retries do not bump. Prevents stale erasure deleting new learning.",
+      "writes": [
+        "sport_quiz_preferences"
+      ],
+      "reads": []
+    },
+    {
       "name": "quiz_cursor",
       "owner": "POLLS",
       "callers": [
@@ -8448,7 +8467,10 @@
       "name": "quiz_lock",
       "owner": "RLS_SECURITY",
       "callers": [
+        "sql:quiz_admin_question",
+        "sql:quiz_admin_settings",
         "sql:quiz_answer",
+        "sql:quiz_bump_history",
         "sql:quiz_end",
         "sql:quiz_erase_history",
         "sql:quiz_invitation",

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-14 — Timed trivia admin acceptance
+
+Reviewed trivia administration now includes full bank/audit paging, permanent Pause, correction and bounded retention. Local server and SDK privacy fixes pass independent review; canonical105/Fan154/historical34/timed50 pass. Timed player implementation follows actual QUIZ-02 admin-ready.
+
 ## 2026-10-14 — Approved timed trivia admin development
 
 The owner approved optional sports-first30/90-second learning. QUIZ-02 was enrolled before

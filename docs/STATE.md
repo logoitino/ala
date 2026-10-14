@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-10-14 · Owner approved optional timed trivia (30/90 seconds) by asking to continue. New QUIZ-02 enrolled planned before source; implementation plan approved for local backend/admin work, then participant after actual admin-ready. Prior Fan app-ready/full1146 and untimed QUIZ-01 evidence remain historical. Both pilots inactive/empty testing cohorts; no hosted SQL/deployment/spending/merge/push. [FUN-01](agents/FUN-01.md) · [QUIZ-02](agents/QUIZ-02.md).
+**Last updated:** 2026-10-14 · QUIZ-02 backend/admin independent acceptance and root canonical105/Fan154/historical34/timed50 pass after owned corrections; actual local admin checkpoint16:53:17Z is recorded. Selected gate precedes timed participant work. Owner-approved30/90; prior Fan/untimed evidence preserved. Pilots paused/empty; no hosted/deployment/spending/merge/push.
 
 **Fan Zone / Sport Quiz implementation:** owner approved the family-fun build and added optional weekly quizzes. Actual Fan admin checkpoint is 2026-10-14T13:42:36Z; Quiz is 2026-10-14T06:09:57Z. Fan participant `bcb898c` plus `070a58b` independently passes scoped review (35 focused checks), as does private video `a4f4acd` (13). Shared integration `8179b7b` includes Home, four HQs, profile and real control-map/stop paths; current guardian recovery survives participation dismissal. Independent shared consumer acceptance passes at 8179b7b; full pnpm check passes 148 suites/1,146 assertions and all guards; independent whole-branch and selected local Fan app-ready pass; actual Documentation/VP scope reviews pass and final status continuation is retained. Per-user growth and joint Legal/Dev/capacity plans retain the October 20 packet. No live measures or launch readiness are inferred.
 
@@ -274,6 +274,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- 2026-10-14 · Timed Backendf785e695 and SDK9d34abd corrections independently PASS: material-history CAS, repeat-safe canonical state and strict private projections. Root actual canonical105/Fan154/historical34/timed50 all exit0; exact canonical62ff4e50 and regenerated map0rules. QUIZ-02 admin evidence16:53:17Z recorded; selected gate must pass before timed participant source. Full current check/player still pending.
 
 - 2026-10-14 · Timed Backendd2d0af2+3f5902c and SDKa369d93 committed, root exact canonical append/mastermap0rulefail. Root Fan154/historical34/timed44 pass; canonical first build passes but reapply fails at duplicate column, leaving that test DB in partial reapply state50/105. Independent review requires monotonic history revisions, safe canonical repeats and stricter SDK private-field rejection. First owned fix wave underway; no admin/participant readiness claimed.
 

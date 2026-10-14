@@ -689,6 +689,10 @@
     "quiz_fun_available": {
       "owner": "POLLS",
       "use": "Internal reviewed unseen optional-topic availability; no silent sports/fun substitution when exhausted."
+    },
+    "quiz_bump_history": {
+      "owner": "PROFILE",
+      "use": "Protected settings/account-serialized monotonic learning revision on material issuance, terminal, badge/correction/pause changes; exact retries do not bump. Prevents stale erasure deleting new learning."
     }
   },
   "exceptions": {

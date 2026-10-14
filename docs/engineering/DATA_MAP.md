@@ -11,7 +11,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Views | 3 |
 | Storage buckets | 5 |
 | Feature switches read by the fan app | 38 of 38 |
-| Database functions | 330 (80 used by hand, 29 trigger functions) |
+| Database functions | 331 (81 used by hand, 29 trigger functions) |
 | Tables reached by at least one screen or server route | 85 of 86 |
 | Code files that read or write the database | 81 |
 | Exported symbols nothing imports | 31 (0 proposed for archive, 31 kept on purpose) |
@@ -45,7 +45,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `PHOTO_STORIES` | `reel_photos`, `reel_photos_feed` | 0 |
 | `PLAYBACK` | `reel_views` | 0 |
 | `POLLS` | `cheer_polls`, `fan_zone_ballots`, `fan_zone_campaigns`, `fan_zone_reflections`, `fan_zone_requests`, `sport_quiz_attempts`, `sport_quiz_exposures`, `sport_quiz_questions`, `sport_quiz_requests`, `sport_quiz_settings`, `sport_quiz_week_guards` | 31 |
-| `PROFILE` | `friend_request_log`, `friendships`, `guardian_approval_requests`, `guardian_invite_attempts`, `guardian_invites`, `guardian_links`, `profiles`, `sport_quiz_preferences`, `supervision_events`, `user_blocks`, `profiles_public` | 76 |
+| `PROFILE` | `friend_request_log`, `friendships`, `guardian_approval_requests`, `guardian_invite_attempts`, `guardian_invites`, `guardian_links`, `profiles`, `sport_quiz_preferences`, `supervision_events`, `user_blocks`, `profiles_public` | 77 |
 | `RALLY` | `rallies` | 7 |
 | `RECOVERY` | `support_releases` | 1 |
 | `RLS_SECURITY` | `fan_zone_audit`, `sport_quiz_audit` | 13 |
@@ -620,7 +620,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 **Owner:** `PROFILE` · Optional default-off weekly invitations, sports/mix choice, versioned notice acceptance, once-weekly invitation claim and CAS history revision. No inferred interests or disability reason.
 
-- Written by: —; database functions: `quiz_erase_history`, `quiz_invitation`, `quiz_preferences`
+- Written by: —; database functions: `quiz_bump_history`, `quiz_erase_history`, `quiz_invitation`, `quiz_preferences`
 - Read by: —; database functions: `quiz_admin_snapshot`, `quiz_invitation`, `quiz_preferences`, `quiz_preferences_dto`, `quiz_start`
 - Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
@@ -1090,6 +1090,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `quiz_admin_settings` | `ADMIN` | By hand: Admin default-paused testing audience/settings change with authoritative rationale. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_settings` | `profiles` |
 | `quiz_admin_snapshot` | `ADMIN` | By hand: Complete100-slot bank through50-row opaque question paging, independent50-row bigint audit, full topic/lifecycle totals and effective expiry; no individual answer/token list. | — | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` +6 more |
 | `quiz_answer` | `POLLS` | By hand: Canonical expected-profile/token-bound predeadline answer commit with exact option/request recovery; equal private noncash badge, no proficiency/earnings claim. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` | `sport_quiz_attempts`, `sport_quiz_questions`, `sport_quiz_requests` |
+| `quiz_bump_history` | `PROFILE` | By hand: Protected settings/account-serialized monotonic learning revision on material issuance, terminal, badge/correction/pause changes; exact retries do not bump. Prevents stale erasure deleting new learning. | `sport_quiz_preferences` | — |
 | `quiz_cursor` | `POLLS` | By hand: Internal bounded exact version/stream/timestamp/ID cursor validation for full inventory/history paging. | — | — |
 | `quiz_digest` | `RLS_SECURITY` | By hand: Internal normalized request input SHA binding, never plaintext token persistence. | — | — |
 | `quiz_end` | `POLLS` | By hand: Owned secret-free terminal closure by exactly one attempt or Start UUID; cancellation-beforeStart fence, fixed reason and exact expected-week/profile/request. | `sport_quiz_attempts`, `sport_quiz_audit` | `sport_quiz_attempts`, `sport_quiz_requests`, `sport_quiz_week_guards` |

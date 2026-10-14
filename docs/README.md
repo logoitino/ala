@@ -149,6 +149,7 @@ with these files.
 | [QUIZ-01](agents/QUIZ-01.md) | Actual weekly pop quiz implementation/evidence. |
 | [Sport Pop Quiz design](engineering/design/SPORT_POP_QUIZ_DESIGN.md) | Optional weekly questions, noncash badge and correction contracts. |
 
+| [QUIZ-02 admin evidence](engineering/evidence/QUIZ-02-admin.md) | Timed authority/admin local acceptance, actor checks and actual checkpoint; participant follows selected gate. |
 | [QUIZ-01 admin evidence](engineering/evidence/QUIZ-01-admin.md) | Local weekly quiz admin source, independent acceptance and actual checks; no hosted release. |
 
-| [Timed trivia proposal](engineering/design/TIMED_TRIVIA_PROPOSAL.md) | Owner-review draft: opt-in, sports-first topics, 30/90 timing, question history and new admin-first requirements. |
+| [Timed trivia proposal](engineering/design/TIMED_TRIVIA_PROPOSAL.md) | Owner-approved design: opt-in, sports-first topics, 30/90 timing, question history and admin-first requirements. |
