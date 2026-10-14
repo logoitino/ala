@@ -11,7 +11,7 @@ it('maps shared discovery, private history and participant controls to Sport Qui
   for (const row of rows) {
     expect(row.adminHref).toBe('/admin/sport-quiz');
     expect(row.flag).toBeUndefined(); expect(row.telemetry).toBeUndefined();
-    expect(row.hint).toMatch(/quiz_settings/);
+    expect(row.hint).toMatch(/sport_quiz_settings/);
   }
   expect(rows.length).toBeGreaterThan(0);
 });
