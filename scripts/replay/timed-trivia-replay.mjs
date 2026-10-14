@@ -15,7 +15,7 @@ const bootstrap = fs.readFileSync('scripts/replay/schema-replay.mjs','utf8').mat
 assert.ok(bootstrap);
 await db.exec(bootstrap);
 await db.exec(fs.readFileSync('apps/mobile/src/backend/db/schema.sql','utf8').split('\n-- QUIZ-02:')[0]);
-const ids = Object.fromEntries(['admin','fan','teen','other','unknown','blocked','legacy','cancel','expired','paused','erased','voided','correct','clock','skip','invite','quota','quotaActive','topic','legacyDone'].map((k,i)=>[k,`00000000-0000-0000-0000-${String(i+200).padStart(12,'0')}`]));
+const ids = Object.fromEntries(['admin','fan','teen','other','unknown','blocked','legacy','cancel','expired','paused','erased','voided','correct','clock','skip','invite','quota','quotaActive','topic','legacyDone','revStart','revAnswer','revEnd','revSkip','revExpire','revPause','revVoid','revCancel','revPreserve'].map((k,i)=>[k,`00000000-0000-0000-0000-${String(i+200).padStart(12,'0')}`]));
 const year = Number((await db.query('select extract(year from current_date)::int y')).rows[0].y);
 for (const [k,id] of Object.entries(ids)) await db.query('insert into auth.users(id,raw_user_meta_data) values($1,$2::jsonb)',[id,JSON.stringify(k==='unknown'?{}:{birth_year:year-(k==='teen'?15:30),birth_month:1})]);
 await db.query("update public.profiles set role='admin',is_admin=true where user_id=$1",[ids.admin]);
@@ -77,7 +77,8 @@ await test('guest/service cannot execute and private tables/helpers remain denie
   await assert.rejects(()=>actor('fan',`select * from public.sport_quiz_${t}`),/permission denied/);
   await assert.rejects(()=>actor('service',`delete from public.sport_quiz_${t}`),/permission denied/);
  }
- await denied('fan','public.quiz_actor()');await denied('fan','public.quiz_week_at(statement_timestamp())');
+  await denied('fan','public.quiz_actor()');await denied('fan','public.quiz_week_at(statement_timestamp())');
+  for(const k of ['anon','fan','service']) await denied(k,'public.quiz_bump_history($1)',[profiles.fan]);
  await denied('fan','public.quiz_admin_snapshot()');
 });
 await test('old untimed overloads removed',async()=>{
@@ -267,12 +268,48 @@ await test('admin ordinary history erase removes own play audit but preserves ed
  const fresh=await question(null,'create',{...payload,sport:'Cricket',prompt:'How many choices does this reviewed cricket question have?'});await question(fresh.id,'approve',{reason:'Reviewed bounded source and all answer choices.'});
  const a=await start('admin');await answer('admin',a.attempt.id,0);
  const editorial=(await db.query("select count(*)::int n from public.sport_quiz_audit where actor_id=$1 and action like 'question_%'",[profiles.admin])).rows[0].n;
- const result=await rpc('admin','public.quiz_erase_history(0,$1)',[profiles.admin]);assert.equal(result.removed_audit,2);
+ const rev=(await snapshot('admin')).history_version;
+ const result=await rpc('admin','public.quiz_erase_history($1,$2)',[rev,profiles.admin]);assert.equal(result.removed_audit,2);
  assert.equal((await db.query("select count(*)::int n from public.sport_quiz_audit where actor_id=$1 and action in ('start','answer','skip','end')",[profiles.admin])).rows[0].n,0);
  assert.equal((await db.query("select count(*)::int n from public.sport_quiz_audit where actor_id=$1 and action like 'question_%'",[profiles.admin])).rows[0].n,editorial);
 });
 await test('admin audit redacts participant actor and question graph, no token/request fields',async()=>{
  const a=await admin('public.quiz_admin_snapshot()');for(const x of a.audit){if(['start','answer','skip','end'].includes(x.action)){assert.equal(x.actor_id,null);assert.equal(x.question_id,null);}assert.equal('attempt_id' in x,false);assert.equal('request_id' in x,false);assert.equal('session_hash' in x,false);}
+});
+await test('pre-Start history confirmation becomes stale; exact Start retry never advances revision',async()=>{
+ await prefs('revStart');const before=(await snapshot('revStart')).history_version;const req=randomUUID();await start('revStart',req);
+ const after=(await snapshot('revStart')).history_version;await assert.rejects(()=>rpc('revStart','public.quiz_erase_history($1,$2)',[before,profiles.revStart]),/quiz_history_stale/);
+ assert.ok(after>before);await start('revStart',req);assert.equal((await snapshot('revStart')).history_version,after);
+ const erased=await rpc('revStart','public.quiz_erase_history($1,$2)',[after,profiles.revStart]);assert.equal(erased.removed_attempts,1);
+});
+await test('pre-answer history confirmation cannot erase a newly committed badge; exact answer retry is stable',async()=>{
+ await prefs('revAnswer');const a=await start('revAnswer');const before=(await snapshot('revAnswer')).history_version;const req=randomUUID();await answer('revAnswer',a.attempt.id,1,req);
+ await assert.rejects(()=>rpc('revAnswer','public.quiz_erase_history($1,$2)',[before,profiles.revAnswer]),/quiz_history_stale/);
+ const after=(await snapshot('revAnswer')).history_version;assert.ok(after>before);await answer('revAnswer',a.attempt.id,1,req);assert.equal((await snapshot('revAnswer')).history_version,after);
+ assert.equal((await rpc('revAnswer','public.quiz_history()')).items[0].badge.label,'Trivia Explorer');
+});
+await test('End, Skip and unknown Start cancellation advance material history revision exactly once',async()=>{
+ await prefs('revEnd');const a=await start('revEnd');const before=(await snapshot('revEnd')).history_version;const req=randomUUID();await end('revEnd',a.attempt.id,null,req);
+ await assert.rejects(()=>rpc('revEnd','public.quiz_erase_history($1,$2)',[before,profiles.revEnd]),/quiz_history_stale/);
+ const after=(await snapshot('revEnd')).history_version;await end('revEnd',a.attempt.id,null,req);assert.equal((await snapshot('revEnd')).history_version,after);
+ const skipBefore=(await snapshot('revSkip')).history_version;await rpc('revSkip','public.quiz_skip($1,$2,$3)',[week,randomUUID(),profiles.revSkip]);
+ await assert.rejects(()=>rpc('revSkip','public.quiz_erase_history($1,$2)',[skipBefore,profiles.revSkip]),/quiz_history_stale/);
+ const cancelBefore=(await snapshot('revCancel')).history_version;await end('revCancel',null,randomUUID());
+ await assert.rejects(()=>rpc('revCancel','public.quiz_erase_history($1,$2)',[cancelBefore,profiles.revCancel]),/quiz_history_stale/);
+});
+await test('persisted expiry and pause closure invalidate earlier history confirmation',async()=>{
+ await prefs('revExpire');const a=await start('revExpire');const before=(await snapshot('revExpire')).history_version;await backdate(a.attempt.id);await answer('revExpire',a.attempt.id);
+ await assert.rejects(()=>rpc('revExpire','public.quiz_erase_history($1,$2)',[before,profiles.revExpire]),/quiz_history_stale/);
+ await prefs('revPause');await start('revPause');const pauseBefore=(await snapshot('revPause')).history_version;await settings(false);
+ await assert.rejects(()=>rpc('revPause','public.quiz_erase_history($1,$2)',[pauseBefore,profiles.revPause]),/quiz_history_stale/);
+ await settings(true);
+});
+await test('correction invalidates history CAS without removing new result or correction',async()=>{
+ const c=await question(null,'create',{...payload,sport:'Revision sport'});await question(c.id,'approve',{reason:'Reviewed the isolated correction source.'});
+ await prefs('revVoid');const a=await start('revVoid',randomUUID(),30,secret,profiles.revVoid,week,'sport','Revision sport');await answer('revVoid',a.attempt.id,1);
+ const before=(await snapshot('revVoid')).history_version;await question(c.id,'void',{reason:'Correction invalidates this isolated learning question.'});
+ await assert.rejects(()=>rpc('revVoid','public.quiz_erase_history($1,$2)',[before,profiles.revVoid]),/quiz_history_stale/);
+ const h=await rpc('revVoid','public.quiz_history()');assert.equal(h.items[0].attempt.status,'void');assert.ok(h.items[0].badge.voided_at);
 });
 await test('receipt saturation reserves Off, answer and exact End without blocking closure',async()=>{
  await prefs('quota','weekly');const a=await start('quota');
@@ -312,5 +349,15 @@ await test('timed row cannot omit its deadline or active capability hash',async(
 await test('ordinary and admin snapshots do not change any private table row count',async()=>{
  const counts=async()=>Object.fromEntries(await Promise.all(['preferences','exposures','week_guards','requests','attempts','questions','badges','audit','settings'].map(async t=>[t,(await db.query(`select count(*)::int n from public.sport_quiz_${t}`)).rows[0].n])));
  const before=await counts();await snapshot('fan');await snapshot('topic');await admin('public.quiz_admin_snapshot()');assert.deepEqual(await counts(),before);
+});
+await test('full canonical second application preserves nondefault timed settings, preferences, history and correction',async()=>{
+ await prefs('revPreserve');const live=await start('revPreserve',randomUUID(),90);
+ const tables=['settings','preferences','questions','attempts','exposures','week_guards','requests','badges','audit'];
+ const state=async()=>Object.fromEntries(await Promise.all(tables.map(async t=>[t,(await db.query(`select to_jsonb(x) row from public.sport_quiz_${t} x order by to_jsonb(x)::text`)).rows])));
+ const before=await state();assert.equal(before.settings[0].row.enabled,true);assert.ok(before.preferences.some(x=>x.row.topic_mode==='mix'));assert.ok(before.attempts.some(x=>x.row.status==='void'));
+ assert.ok(before.attempts.some(x=>x.row.id===live.attempt.id&&x.row.status==='issued'&&x.row.session_hash));
+ const canonical=fs.readFileSync('apps/mobile/src/backend/db/schema.sql','utf8').split('\n-- QUIZ-02:')[0]+'\n'+fs.readFileSync(migration,'utf8');
+ await db.exec(canonical);assert.deepEqual(await state(),before);
+ for(const signature of ['quiz_start(text)','quiz_answer(uuid,integer,uuid)','quiz_skip()','quiz_admin_snapshot(bigint)']) assert.equal((await db.query('select to_regprocedure($1)::text f',[`public.${signature}`])).rows[0].f,null);
 });
 await finish(); }
