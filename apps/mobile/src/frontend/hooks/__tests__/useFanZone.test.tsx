@@ -90,3 +90,21 @@ it('confirms all-revision removal only from matching actual API receipts',async(
  bank=fanSnapshotFixture();const view=await ready();jest.mocked(removeFanZoneMedia).mockResolvedValueOnce({ok:true,revision:1,entry:FUN_IDS.entry,completed:false,status:'revision_removed'} as never).mockResolvedValueOnce({ok:true,revision:2,entry:FUN_IDS.entry,completed:true,status:'removed'} as never);
  await act(async()=>{await view.result.current.removeAll(bank.entry!);});expect(removeFanZoneMedia).toHaveBeenNthCalledWith(1,FUN_IDS.entry,1);expect(removeFanZoneMedia).toHaveBeenNthCalledWith(2,FUN_IDS.entry,2);expect(view.result.current.removal).toMatchObject({removed:2,total:2,completed:true});
 });
+
+it.each(['assent', 'grant'] as const)('invalidates refused %s scope before its authoritative refresh and resets review even for equal current scope', async action => {
+ bank=fanSnapshotFixture();if(action==='grant')bank={...bank,entry:null,guardian_queue:[bank.entry!]};
+ const view=await ready();const oldEntry=bank.entry??bank.guardian_queue[0],next=deferred<unknown>();
+ mockRpc.mockImplementation((fn:string)=>fn==='fun_permission'?Promise.resolve({data:null,error:{message:'FUN_PERMISSION_SCOPE_STALE'}}):next.promise);
+ let write!:Promise<unknown>;await act(async()=>{write=view.result.current.permission(oldEntry,action);});
+ await waitFor(()=>expect(view.result.current.loading).toBe(true));expect(view.result.current.snapshot).toBeNull();
+ await act(async()=>{next.resolve({data:bank,error:null});await write;});
+ expect(view.result.current.snapshot).toEqual(bank);expect(view.result.current.permissionReviewEpoch).toBe(1);expect(view.result.current.error).toMatch(/review the exact revision again/);
+ expect(mockRpc.mock.calls.filter(([fn])=>fn==='fun_permission')).toHaveLength(1);
+});
+it('keeps private permission scope unavailable when the stale-refusal refresh fails',async()=>{
+ bank=fanSnapshotFixture();const view=await ready();const entry=bank.entry!;
+ mockRpc.mockImplementation(async(fn:string)=>({data:null,error:{message:fn==='fun_permission'?'FUN_PERMISSION_SCOPE_STALE':'FUN_CAMPAIGN_UNAVAILABLE'}}));
+ await act(async()=>{await view.result.current.permission(entry,'assent');});
+ expect(view.result.current.snapshot).toBeNull();expect(view.result.current.loading).toBe(false);expect(view.result.current.permissionReviewEpoch).toBe(1);
+ await act(async()=>{await view.result.current.permission(entry,'assent');});expect(mockRpc.mock.calls.filter(([fn])=>fn==='fun_permission')).toHaveLength(1);
+});

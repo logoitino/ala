@@ -35,7 +35,7 @@ export function FanZoneScreen({ campaignId = null, initialSection }: {
     }>({ identity: state.identityKey, draft: { uri: '', alias: '', caption: '', rights: false } });
     const draft = local.identity === state.identityKey ? local.draft : { uri: '', alias: '', caption: '', rights: false };
     const close = useCallback(() => { activeVideo.current = null; setOpenKey(null); setReadyKey(null); }, []);
-    useEffect(() => { close(); }, [state.identityKey, close]);
+    useEffect(() => { close(); }, [state.identityKey, state.permissionReviewEpoch, close]);
     useEffect(() => { if (!state.snapshot)
         close(); }, [state.snapshot, close]);
     const open = useCallback((key: string) => { activeVideo.current = key; setReadyKey(null); setOpenKey(key); }, []);
@@ -81,8 +81,8 @@ export function FanZoneScreen({ campaignId = null, initialSection }: {
  </FanPanel> : null}
  {c.status === 'finalized' ? <FanPanel title="Recognition results">{c.recount_required ? <Text>Results are awaiting a valid recount.</Text> : s?.results.length ? <><Text>{s.results.length > 1 ? 'Shared recognition — tied valid ballots.' : 'Recognition from valid free ballots.'}</Text>{s.results.map(r => <Text key={r.entry_id}>{`${s.candidates.find(e => e.id === r.entry_id)?.alias ?? 'Eligible entry'}: ${r.votes} valid ballots`}</Text>)}</> : <Text>No award: there are no visible valid winning ballots.</Text>}</FanPanel> : null}
  </> : null}
- {s?.entry ? <><Text>{`Private entry ${s.entry.status}${s.entry.reason ? ': ' + s.entry.reason : ''}. A private receipt is separate from public candidacy.`}</Text><FanZonePermission key={JSON.stringify([state.identityKey, s.entry.consent_scope])} entry={s.entry} guardian={false} state={state} video={video}/></> : null}
- {s?.guardian_queue.length ? <><Text accessibilityRole="header" style={fanStyles.title}>{initialSection === 'permissions' ? 'Guardian permission review' : 'Your selected-campaign guardian queue'}</Text><Text>These are private entries for this campaign only. Being a reviewer does not enroll you to vote.</Text>{s.guardian_queue.map(e => <FanZonePermission key={JSON.stringify([state.identityKey, e.id, e.consent_scope])} entry={e} guardian state={state} video={video}/>)}</> : null}
+ {s?.entry ? <><Text>{`Private entry ${s.entry.status}${s.entry.reason ? ': ' + s.entry.reason : ''}. A private receipt is separate from public candidacy.`}</Text><FanZonePermission key={JSON.stringify([state.identityKey, state.permissionReviewEpoch, s.entry.id, s.entry.consent_scope])} entry={s.entry} guardian={false} state={state} video={video}/></> : null}
+ {s?.guardian_queue.length ? <><Text accessibilityRole="header" style={fanStyles.title}>{initialSection === 'permissions' ? 'Guardian permission review' : 'Your selected-campaign guardian queue'}</Text><Text>These are private entries for this campaign only. Being a reviewer does not enroll you to vote.</Text>{s.guardian_queue.map(e => <FanZonePermission key={JSON.stringify([state.identityKey, state.permissionReviewEpoch, e.id, e.consent_scope])} entry={e} guardian state={state} video={video}/>)}</> : null}
  <FanZoneSafety key={state.identityKey} state={state}/>
  </ScrollView></ScreenShell>;
 }

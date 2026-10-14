@@ -95,3 +95,43 @@ it('keeps the exact ballot retry available when a confirmed write is followed by
  bank.entry=null;await open();mockRpc.mockImplementation(async(fn:string,args:Record<string,unknown>)=>fn==='fun_vote'?{data:{ok:true,request_id:args.p_request_id,ballot:{id:FUN_IDS.ballot,campaign_id:FUN_IDS.campaign,entry_id:FUN_IDS.entry,version:1,invalidated:false}},error:null}:{data:null,error:{message:'FUN_CAMPAIGN_UNAVAILABLE'}});
  await fireEvent.press(screen.getByLabelText('Vote for Family Fan'));await screen.findByText('Fan Zone could not complete this action. Refresh or contact Support.');expect(screen.getByLabelText('Retry original ballot')).toBeTruthy();expect(screen.queryByText(/Current ballot:/)).toBeNull();
 });
+
+it('requires fresh video and caption review after a stale permission refusal even when refreshed scope compares equal',async()=>{
+ bank={...bank,entry:null,candidates:[],can_participate:false,guardian_queue:[bank.entry!]};await open();
+ await fireEvent.press(screen.getByLabelText('I reviewed this caption and exact permission scope'));
+ await fireEvent.press(screen.getByLabelText('Open exact video'));await fireEvent.press(screen.getByLabelText('Video frame ready'));
+ mockRpc.mockImplementation(async(fn:string)=>fn==='fun_permission'?{data:null,error:{message:'FUN_PERMISSION_SCOPE_STALE'}}:{data:bank,error:null});
+ await fireEvent.press(screen.getByLabelText('Grant exact revision permission'));
+ await screen.findByText('Permission scope changed. Refresh and review the exact revision again.');
+ expect(screen.getByLabelText('Grant exact revision permission')).toBeDisabled();
+ expect(screen.getByLabelText('I reviewed this caption and exact permission scope').props.accessibilityState.checked).toBe(false);
+ expect(screen.queryByLabelText('Video frame ready')).toBeNull();
+ await fireEvent.press(screen.getByLabelText('Open exact video'));await fireEvent.press(screen.getByLabelText('Video frame ready'));
+ expect(screen.getByLabelText('Grant exact revision permission')).toBeDisabled();
+ await fireEvent.press(screen.getByLabelText('I reviewed this caption and exact permission scope'));expect(screen.getByLabelText('Grant exact revision permission')).not.toBeDisabled();
+ expect(mockRpc.mock.calls.filter(([fn])=>fn==='fun_permission')).toHaveLength(1);
+});
+it('removes stale private permission controls while the current scope is unavailable',async()=>{
+ bank={...bank,entry:null,candidates:[],can_participate:false,guardian_queue:[bank.entry!]};await open();
+ await fireEvent.press(screen.getByLabelText('I reviewed this caption and exact permission scope'));
+ await fireEvent.press(screen.getByLabelText('Open exact video'));await fireEvent.press(screen.getByLabelText('Video frame ready'));
+ mockRpc.mockImplementation(async(fn:string)=>({data:null,error:{message:fn==='fun_permission'?'FUN_PERMISSION_SCOPE_STALE':'FUN_CAMPAIGN_UNAVAILABLE'}}));
+ await fireEvent.press(screen.getByLabelText('Grant exact revision permission'));await screen.findByText('Permission scope changed. Refresh and review the exact revision again.');
+ expect(screen.queryByLabelText('Grant exact revision permission')).toBeNull();expect(screen.queryByLabelText('Open exact video')).toBeNull();expect(screen.getByLabelText('Refresh Fan Zone')).toBeTruthy();
+});
+
+it('shows only the refreshed changed revision after stale grant and binds the next grant to its newly reviewed scope',async()=>{
+ bank={...bank,entry:null,candidates:[],can_participate:false,guardian_queue:[bank.entry!]};await open();
+ await fireEvent.press(screen.getByLabelText('I reviewed this caption and exact permission scope'));await fireEvent.press(screen.getByLabelText('Open exact video'));await fireEvent.press(screen.getByLabelText('Video frame ready'));
+ const oldScope=bank.guardian_queue[0].consent_scope;let writes=0;
+ mockRpc.mockImplementation(async(fn:string)=>{
+  if(fn==='fun_permission'&&++writes===1){bank={...bank,guardian_queue:bank.guardian_queue.map(e=>({...e,revision:3,digest:'b'.repeat(64),caption:'Changed exact caption',consent_scope:{...e.consent_scope,revision:3,digest:'b'.repeat(64),caption:'Changed exact caption'}}))};return{data:null,error:{message:'FUN_PERMISSION_SCOPE_STALE'}};}
+  return{data:fn==='fun_permission'?{ok:true,entry:bank.guardian_queue[0]}:bank,error:null};
+ });
+ await fireEvent.press(screen.getByLabelText('Grant exact revision permission'));await screen.findByText('Revision 3: Family Fan — Changed exact caption');
+ expect(screen.queryByText('Revision 2: Family Fan — Our family cheer')).toBeNull();expect(screen.getByLabelText('Grant exact revision permission')).toBeDisabled();
+ await fireEvent.press(screen.getByLabelText('Open exact video'));await fireEvent.press(screen.getByLabelText('Video frame ready'));expect(screen.getByLabelText('Grant exact revision permission')).toBeDisabled();
+ await fireEvent.press(screen.getByLabelText('I reviewed this caption and exact permission scope'));await fireEvent.press(screen.getByLabelText('Grant exact revision permission'));
+ await waitFor(()=>expect(mockRpc.mock.calls.filter(([fn])=>fn==='fun_permission')).toHaveLength(2));
+ const grants=mockRpc.mock.calls.filter(([fn])=>fn==='fun_permission');expect(grants[0][1].p_expected_scope).toEqual(oldScope);expect(grants[1][1]).toMatchObject({p_revision:3,p_expected_scope:bank.guardian_queue[0].consent_scope});
+});

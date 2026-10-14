@@ -52,6 +52,7 @@ type Data = {
     busy: string | null;
     notice: string | null;
     pendingBallot: PendingBallot | null;
+    permissionReviewEpoch: number;
     cases: FanZoneCaseRecord[];
     removal: FanZoneRemoval | null;
 };
@@ -63,7 +64,7 @@ type Scope = Data & {
     upload: Upload | null;
     caseRequest: CaseRequest | null;
 };
-const empty = (): Data => ({ snapshot: null, loading: false, error: null, busy: null, notice: null, pendingBallot: null, cases: [], removal: null });
+const empty = (): Data => ({ snapshot: null, loading: false, error: null, busy: null, notice: null, pendingBallot: null, permissionReviewEpoch: 0, cases: [], removal: null });
 const safe = (caught: unknown) => caught instanceof FanZoneError ? caught.message : 'Fan Zone could not confirm this action. Refresh or try again.';
 const sameScope = (a: FanZoneEntry, b: FanZoneEntry) => a.id === b.id && a.revision === b.revision && JSON.stringify(a.consent_scope) === JSON.stringify(b.consent_scope);
 const validDraft = (d: FanZoneDraft) => !!d.uri && Array.from(d.alias).length <= 40 && !!d.alias.replace(/^ +| +$/g, '') && Array.from(d.caption).length <= 240 && !!d.caption.replace(/^ +| +$/g, '') && d.rights;
@@ -84,7 +85,7 @@ export function useFanZone(campaignId: string | null = null) {
         if (!current())
             return;
         const s = ref.current;
-        setView({ epoch, snapshot: s.snapshot, loading: s.loading, error: s.error, busy: s.busy, notice: s.notice, pendingBallot: s.pendingBallot ? { ...s.pendingBallot } : null, cases: [...s.cases], removal: s.removal ? { ...s.removal } : null });
+        setView({ epoch, snapshot: s.snapshot, loading: s.loading, error: s.error, busy: s.busy, notice: s.notice, pendingBallot: s.pendingBallot ? { ...s.pendingBallot } : null, permissionReviewEpoch: s.permissionReviewEpoch, cases: [...s.cases], removal: s.removal ? { ...s.removal } : null });
     }, [current, epoch]);
     const read = useCallback(async (afterWrite = false) => {
         if (!current() || !authenticated || (ref.current.busy && !afterWrite))
@@ -289,14 +290,26 @@ export function useFanZone(campaignId: string | null = null) {
         publish();
     } }, [current, publish]);
     const permission = useCallback((e: FanZoneEntry, action: FanZonePermissionAction) => run('permission', async () => {
-        const visible = ref.current.snapshot?.entry?.id === e.id ? ref.current.snapshot.entry : ref.current.snapshot?.guardian_queue.find(row => row.id === e.id);
-        if (!authenticated || !visible || !sameScope(e, visible))
-            throw new FanZoneError('FUN_PERMISSION_SCOPE_STALE');
-        const receipt = await fanZoneRpc('fun_permission', { p_entry_id: e.id, p_revision: e.revision, p_action: action, p_expected_scope: e.consent_scope });
-        if (current())
-            ref.current.notice = action === 'revoke' ? 'Your permission revoked. Subsequent exposure requires valid current permission.' : 'Exact revision permission recorded. Review and separate teen/guardian permission still apply.';
-        return receipt.entry;
-    }), [authenticated, current, run]);
+        try {
+            const visible = ref.current.snapshot?.entry?.id === e.id ? ref.current.snapshot.entry : ref.current.snapshot?.guardian_queue.find(row => row.id === e.id);
+            if (!authenticated || !visible || !sameScope(e, visible))
+                throw new FanZoneError('FUN_PERMISSION_SCOPE_STALE');
+            const receipt = await fanZoneRpc('fun_permission', { p_entry_id: e.id, p_revision: e.revision, p_action: action, p_expected_scope: e.consent_scope });
+            if (current())
+                ref.current.notice = action === 'revoke' ? 'Your permission revoked. Subsequent exposure requires valid current permission.' : 'Exact revision permission recorded. Review and separate teen/guardian permission still apply.';
+            return receipt.entry;
+        }
+        catch (caught) {
+            if (current() && caught instanceof FanZoneError && caught.code === 'FUN_PERMISSION_SCOPE_STALE') {
+                // Invalidate before reading. An explicit generation also resets review when React batches an equal fresh DTO.
+                ref.current.snapshot = null;
+                ++ref.current.permissionReviewEpoch;
+                publish();
+                await read(true);
+            }
+            throw caught;
+        }
+    }), [authenticated, current, publish, read, run]);
     const entryAction = useCallback((e: FanZoneEntry, action: 'submit' | 'withdraw') => run(action, async () => {
         if (!authenticated)
             throw new FanZoneError('FUN_ACCOUNT_INELIGIBLE');

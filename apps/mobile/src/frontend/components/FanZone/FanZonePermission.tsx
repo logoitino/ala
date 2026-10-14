@@ -20,7 +20,7 @@ export function FanZonePermission({ entry, guardian, state, video }: {
     video: FanVideoControl;
 }) {
     const [confirmed, setConfirmed] = useState(false);
-    const key = JSON.stringify([state.identityKey, entry.id, entry.revision, entry.digest, entry.consent_scope]);
+    const key = JSON.stringify([state.identityKey, state.permissionReviewEpoch, entry.id, entry.revision, entry.digest, entry.consent_scope]);
     const disabled = !!state.busy || state.loading;
     const canConfirm = entry.verified && !entry.removed_at && entry.status !== 'withdrawn' && video.readyKey === key && confirmed;
     return <FanPanel title={guardian ? 'Guardian permission review' : 'Exact entry permission'}>
