@@ -82,9 +82,9 @@ commit window for owned files only.
 **Owned files:** root integrates governed data-ownership/DATA_MAP/SCHEMA/migration README, detection sensors and adminCoverage. DOCUMENTATION reviews affected feature/product/legal/growth docs; VP_OPERATIONS reconciles existing roles/queue/plan tasks with actual executors, preserving model pins.
 **Interfaces:** Consumes prior task reports/commits and exact tests; no invented hosted/legal readiness.
 
-- [ ] Reconcile all new tables/functions/storage/source/export ownership, migration dependencies, support sensor gaps, entry controls and readable module map.
-- [ ] Complete independent broad code/Safety/Data review, correct concrete failures and run covered checks.
-- [ ] Run `pnpm check`, local SQL replay, declared admin/app feature gates and source diff checks; record actual outputs and untested hosted/device/policy paths.
+- [x] Reconcile all new tables/functions/storage/source/export ownership, migration dependencies, support sensor gaps, entry controls and readable module map.
+- [x] Complete independent broad code/Safety/Data review, correct concrete failures and run covered checks.
+- [x] Run pnpm check, local SQL replay, selected Fan app-ready and source checks. Preserve Quiz historical admin checkpoint; revised timed Quiz app gate remains pending separately. Record actual outputs and untested hosted/device/policy paths.
 - [ ] Preserve final evidence and update STATE/CHANGELOG/task progress. Keep build in isolated checkout for concrete review; no merge/push/deployment.
 
 ### Task 6: Sport Pop Quiz operational backend/admin
@@ -121,7 +121,7 @@ Quiz admin-ready was recorded at 2026-10-14T06:09:57Z before Task7 source. Fan a
 was recorded at 2026-10-14T13:42:36Z before Task4 source. These are actual selected CLI gates
 and retained independent operational reviews, not inferred timestamps. Task7 and Task8 Quiz
 consumer reviews pass; Task4 video producer review passes. Task4 caller recovery correction `070a58b` independently passes specification/quality and
-local Data/Safety/SUPPORT. Task8 Fan extension 8179b7b has independent specification/quality/Data/Safety/SUPPORT PASS; root read/hash verified the receipt. Whole-branch review remains pending. Task5 full pnpm check passes 148 suites/1,146 assertions and all guards; whole-branch/Fan app-ready and actual Documentation/VP receipts remain required before local Fan completion. Revised timed Quiz readiness stays pending. Public feature ledgers and
+local Data/Safety/SUPPORT. Task8 Fan extension 8179b7b has independent specification/quality/Data/Safety/SUPPORT PASS; root read/hash verified the receipt. Whole-branch review independently passes. Task5 full pnpm check passes 148 suites/1,146 assertions and all guards; selected local Fan app-ready and actual Documentation/VP scope reviews pass; final status continuation is retained. Revised timed Quiz readiness stays pending. Public feature ledgers and
 engineering/evidence preserve the latest state; private SDD reports preserve detailed hashes.
 
 ## New trivia scope

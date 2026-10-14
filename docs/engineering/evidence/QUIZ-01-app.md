@@ -38,7 +38,7 @@ hashes and distinguish reviewer commands from worker test runs. Actual hosted, f
 keyboard/screen-reader, content-fact, jurisdiction/terms/retention and staffed operations remain release work.
 Fan shared integration `8179b7b` preserves the Quiz runtime body, hook, SDK and invitation.
 Its final affected shared discovery/Home/HQ checks pass 53 tests, with a separately passed
-coverage test and mobile typecheck. Independent shared consumer review passes. Root full pnpm check passes 148 suites/1,146 assertions and all guards after fixture/import-only repairs. Whole-branch handoff remains pending; revised timed Quiz app-ready remains unset.
+coverage test and mobile typecheck. Independent shared and whole-branch consumer reviews pass. Root full pnpm check passes 148 suites/1,146 assertions and all guards after fixture/import-only repairs. Revised timed Quiz app-ready remains unset.
 
 ## Revised scope is not implemented
 

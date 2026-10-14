@@ -1,7 +1,6 @@
 # FUN-01 local participant evidence
 
-Fan Zone source is built in the isolated `codex/fan-zone` checkout. Independent caller recovery correction is accepted. Shared discovery independently passes consumer review; whole-branch review, final combined checks
-and the app-ready gate remain pending. This record does not activate a pilot.
+Fan Zone local source is accepted in the isolated `codex/fan-zone` checkout. Participant, shared and whole-branch reviews and the root full check pass. The actual selected local app-ready gate passes at metadata date 2026-10-14T14:49:04Z, after admin-ready 2026-10-14T13:42:36Z. Actual Documentation and VP role reviews pass; final status continuation is retained. This record does not activate a pilot.
 
 [Design](../design/FAN_ZONE_DESIGN.md) · [Admin checkpoint](FUN-01-admin.md)
 · [Owner ledger](../../agents/FUN-01.md).
@@ -55,7 +54,7 @@ does not receive a report. A staffed public guest fallback remains release work.
 Root logs are `.smoke/support/family-fun-final-canonical.log`,
 `family-fun-final-fan-actors.log` and `family-fun-final-quiz-actors.log`. Private SDD reports
 retain exact source/package hashes and distinguish worker runs from reviewer commands.
-Shared consumer review independently passes. Whole-branch review and selected app-ready remain pending; full-check results below are actual.
+Shared and whole-branch consumer review independently pass. Selected local Fan app-ready passes; full-check results below are actual.
 
 ## Release work
 
@@ -95,4 +94,10 @@ checks, 13 feature-admin tests, 6 SQL-map tests, map/unused checks, 10 recovery 
 Log: .smoke/support/family-fun-final-check-round3.log. Earlier failed logs remain intact.
 Fixture independent specification/quality review passes; root read and SHA256-verified it.
 No runtime source changed after this run; subsequent handoff corrections are documentation.
-The independent whole-branch and actual Documentation/VP receipts remain required.
+Independent whole-branch and actual Documentation/VP scope reviews pass; final status continuation is retained.
+
+## Final source and selected local gate
+
+Independent whole-branch specification/quality/Data/Safety/SUPPORT PASS binds the exact 133-path package at 76ca9e3. Root fully read and SHA256-verified source receipt dd3978d1fb5caa80ddccf0f90f075c6c2a6a623adab4f9a3700637b8114e2faa, Documentation 30b5c18a7548f5870d634dc8eb83c7b0ee7e2adb50630e8b001fedb820b483ab and VP 406e1095867ce5243dcf6643c7a1b82f56f09c9b60fd1e490921c9c251d3c86f. All 106 role metadata/pins and 14 copied sources are preserved.
+
+Root `pnpm feature-admin:check --feature FUN-01 --require app-ready` exits 0; tool chunk 6e10af records the actual selected gate. Final changes are documentation/local feature metadata only. Revised timed Quiz app readiness remains unset pending owner design review and new admin handling. Pilots remain inactive.

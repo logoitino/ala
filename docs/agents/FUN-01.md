@@ -1,7 +1,7 @@
 # FUN-01 — Fan Zone pilot
 
 **Owner authorization:** the owner approved the recommended family-fun build, including fan submissions and free voting, then added weekly sport quizzes. Both remain part of this task.
-**Source status:** backend/media implemented and corrected in isolated `codex/fan-zone`; scoped independent review passes. Corrected admin gate passed; fan participant source and correction have independent caller acceptance; shared discovery independently passes consumer specification/quality/Data/Safety/SUPPORT review. No hosted deployment or applied migration.
+**Source status:** local source, independent participant/shared/whole-branch reviews and root full check pass in isolated `codex/fan-zone`. Actual selected app-ready passes at metadata date 2026-10-14T14:49:04Z after admin-ready 2026-10-14T13:42:36Z. Actual Documentation and VP role reviews pass; final status continuation is retained. No hosted deployment or applied migration.
 **Primary owner:** POLLS under ENGINEERING, paired with ADMIN / UPLOAD / FULLSTACK.
 **Required reviews:** MINOR_SAFETY, PRIVACY_ENGINEERING, RLS_SECURITY, DATA_GOVERNANCE,
 MODERATION, SUPPORT, VOICE, independent QA; DOCUMENTATION and VP_OPERATIONS perform actual handoff.
@@ -28,7 +28,7 @@ completion/repeat/donation/burden baselines are unknown. Growth retains the Oct2
 | Backend/media | Fix commit766e0ff:135/135 actors,14/14 API,105/105 canonical; independent spec/quality PASS in task-1-2-round1-review.md (local source correction scope). |
 | Admin | Correction920bc8d passes 154 actor and 45 SDK/admin checks and independent specification/quality/Data/Safety/SUPPORT acceptance. Root canonical replay passes 105 checks; actual selected admin-ready gate passes at 2026-10-14T13:42:36Z. |
 | Fan UI | Task4 bcb898c plus 070a58b: 35 hook/screen tests and mobile typecheck pass. Separate video a4f4acd: 13 tests and producer PASS. T4-I1 stale recovery correction independently passes specification/quality and local Data/Safety/SUPPORT; shared discovery 8179b7b is built with 53 final affected checks plus one coverage test and mobile typecheck; independent consumer review PASS at 8179b7b. |
-| Documentation / coordination / final QA | Root full check PASS (148 suites/1,146 assertions, all guards). Whole-branch/Fan app-ready and actual Documentation/VP receipts pending. |
+| Documentation / coordination / final QA | Root full check PASS (148 suites/1,146 assertions, all guards); independent whole-branch/Data/Safety/SUPPORT and actual Documentation/VP scope reviews PASS; selected local Fan app-ready PASS. Final status continuation retained. |
 
 QUIZ-01 separately implements the owner-added weekly sport pop quiz and private noncash learning badge. It does not change the fan-award recap into Aura/cash. [Quiz design](../engineering/design/SPORT_POP_QUIZ_DESIGN.md).
 

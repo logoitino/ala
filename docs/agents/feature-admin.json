@@ -382,7 +382,7 @@
       "id": "FUN-01",
       "title": "Fan Zone testing-only fan submissions and free ballots",
       "owner": "POLLS",
-      "status": "admin-ready",
+      "status": "app-ready",
       "plannedAt": "2026-10-14T05:29:26Z",
       "exemption": null,
       "source": {
@@ -451,7 +451,16 @@
             }
           ]
         },
-        "app": null
+        "app": {
+          "date": "2026-10-14T14:49:04Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/FUN-01-app.md",
+              "command": "pnpm check",
+              "result": "Root exit0:148 mobile suites/1146 assertions, both typechecks and all guards; canonical105/Fan154/Quiz34 actors pass. Independent broad source/Data/Safety/SUPPORT and actual Documentation/VP role reviews PASS. Local source only; no hosted/device/counsel release."
+            }
+          ]
+        }
       }
     },
     {
