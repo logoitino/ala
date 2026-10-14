@@ -328,7 +328,7 @@
     },
     "sport_quiz_audit": {
       "owner": "RLS_SECURITY",
-      "purpose": "Append-only authoritative quiz settings/content/correction history; participant answers/identities omitted from admin count export."
+      "purpose": "Authoritative quiz settings/content/correction history remains immutable. Own participant learning associations are erased only under protected history-erasure context; admin export redacts participant actor/question/attempt links and never exports answers."
     },
     "sport_quiz_preferences": {
       "owner": "PROFILE",
@@ -612,7 +612,7 @@
     },
     "quiz_erase_history": {
       "owner": "PROFILE",
-      "use": "Owned history CAS erasure terminalizes current/pending round, removes learning/exposures/badges/receipts, increments revision and preserves disclosed35-day minimal quota."
+      "use": "Owned history CAS erasure terminalizes current/pending round, removes learning/exposures/badges/receipts/own participant audit associations, increments retained revision and preserves preferences/notices/disclosed35-day minimal quota. Editorial audit remains immutable."
     },
     "quiz_admin_retention": {
       "owner": "ADMIN",
