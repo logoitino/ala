@@ -143,9 +143,9 @@ const deadlineRemaining = Math.max(0, Date.parse(receipt.expires_at) - Date.pars
 
 - [x] Run current canonical actor replay, unchanged Fan actor replay, explicit historical Quiz replay and current timed actor replay. Retain commands, exit codes and hashes; no hosted execution.
 - [x] Run `pnpm check`; verify both TypeScript checks, full Jest, schema/copy/map/docs/feature/roles/security/detection/recovery gates. Fix only concrete failures through owning worker and scoped review.
-- [ ] Produce whole-phase review package from `34b540361b96e3357cf604f0fc274eeb03aab217` to final source commit. Independent reviewer checks source/spec/acceptance and any task findings. Actual Documentation and VP coordination reviews reconcile all 106 preserved roles and team responsibilities.
-- [ ] Record QUIZ-02 app evidence after original admin date; run `pnpm feature-admin:check --feature QUIZ-02 --require app-ready`. Update STATE §4/header, CHANGELOG, index, legal/growth/engineering status and per-user growth recommendations with precise local/hosted distinction. Preserve prior readiness dates unchanged.
-- [ ] Keep isolated branch/workspace while merge/push remain unapproved. Final report explains installed local behavior, tests and device/hosted gaps; retained ledger contains every controller ruling with cost if wrong.
+- [x] Produce whole-phase review package from `34b540361b96e3357cf604f0fc274eeb03aab217` to final source commit. Independent reviewer checks source/spec/acceptance and any task findings. Actual Documentation and VP coordination reviews reconcile all 106 preserved roles and team responsibilities.
+- [x] Record QUIZ-02 app evidence after original admin date; run `pnpm feature-admin:check --feature QUIZ-02 --require app-ready`. Update STATE §4/header, CHANGELOG, index, legal/growth/engineering status and per-user growth recommendations with precise local/hosted distinction. Preserve prior readiness dates unchanged.
+- [x] Keep isolated branch/workspace while merge/push remain unapproved. Final report explains installed local behavior, tests and device/hosted gaps; retained ledger contains every controller ruling with cost if wrong.
 
 ## Controller self-review
 

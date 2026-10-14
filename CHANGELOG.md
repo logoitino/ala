@@ -2,7 +2,7 @@
 
 ## 2026-10-14 — Optional timed trivia player
 
-Trivia now offers explicit30- or90-second rounds, manual play or optional weekly invitations, reviewed unseen questions, private participation badges and private history controls. Leaving clears the question; interrupted responses recover only permitted committed results. Clear-history explains retained preferences/notices and the35-day weekly quota. Final independent source review accepts the participant corrections, including safe initial status loading. Root150-suite/1,219-test full check, both app types and all guards pass. Selected local app-ready passes after the preserved admin checkpoint; final Documentation/VP handoff is pending and the pilot remains paused.
+Trivia now offers explicit30- or90-second rounds, manual play or optional weekly invitations, reviewed unseen questions, private participation badges and private history controls. Leaving clears the question; interrupted responses recover only permitted committed results. Clear-history explains retained preferences/notices and the35-day weekly quota. Final independent source review accepts the participant corrections, including safe initial status loading. Root150-suite/1,219-test full check, both app types and all guards pass. Selected local app-ready passes after the preserved admin checkpoint; actual final Documentation/VP handoff passes and the pilot remains paused.
 
 ## 2026-10-14 — Timed trivia admin acceptance
 

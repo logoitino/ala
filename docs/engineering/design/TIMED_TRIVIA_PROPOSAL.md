@@ -1,6 +1,6 @@
 # Timed trivia proposal
 
-**Status:** owner approved the design by asking to continue on 2026-10-14: explicit Start, 30 seconds or 90 seconds chosen before reveal, optional invitations and the reviewed bank. QUIZ-02 implements this replacement; prior QUIZ-01 evidence remains historical. Backend/admin are independently accepted with an actual selected admin-ready checkpoint before participant source. Final independent source review, current full check and selected local app-ready pass; final Documentation/VP handoff is tracked in QUIZ-02. Local implementation is authorized; hosted SQL and launch are separate decisions.
+**Status:** owner approved the design by asking to continue on 2026-10-14: explicit Start, 30 seconds or 90 seconds chosen before reveal, optional invitations and the reviewed bank. QUIZ-02 implements this replacement; prior QUIZ-01 evidence remains historical. Backend/admin are independently accepted with an actual selected admin-ready checkpoint before participant source. Final independent source review, current full check and selected local app-ready pass; actual final Documentation/VP handoff passes and is recorded in QUIZ-02. Local implementation is authorized; hosted SQL and launch are separate decisions.
 
 [Current source ledger](../../agents/QUIZ-02.md) · [Earlier quiz design](SPORT_POP_QUIZ_DESIGN.md) · [Family activities](../../product/FAMILY_FUN_PLAYBOOK.md).
 
