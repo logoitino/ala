@@ -111,13 +111,13 @@ export async function fetchSportQuizAdmin(before: string | null = null): Promise
 export async function saveSportQuizSettings(payload: QuizSettingsInput, reason: string, expectedActorId: string): Promise<TimedQuizSettingsReceipt> {
   const value = await callRpc<unknown>('quiz_admin_settings', { p_payload: payload, p_reason: reason, p_expected_actor_id: expectedActorId });
   if (!settingsReceipt(value) || value.contract_version !== 2) throw unavailable();
-  return value as unknown as TimedQuizSettingsReceipt;
+  return projectDto<TimedQuizSettingsReceipt>(value,settingsShape);
 }
 /** @purpose Draft/create new version, fact approval, archive or irreversible correction/void with authoritative audit. */
 export async function saveSportQuizQuestion(id: string | null, action: QuizQuestionAction, payload: QuizQuestionPayload | TimedQuizAdminQuestionInput, expectedActorId: string): Promise<QuizQuestionReceipt> {
   const value = await callRpc<unknown>('quiz_admin_question', { p_id: id, p_action: action, p_payload: payload, p_expected_actor_id: expectedActorId });
   if (!questionReceipt(value)) throw unavailable();
-  return value;
+  return projectDto<QuizQuestionReceipt>(value,questionReceiptShape);
 }
 
 const topics = ['sport','science','geography','general'];
@@ -128,10 +128,60 @@ const integer = (v: unknown): v is number => typeof v === 'number' && Number.isS
 const nullableTime = (v: unknown) => v === null || timestamp(v);
 const opaqueCursor = (v: unknown) => v === null || text(v);
 const topic = (v: unknown) => topics.includes(String(v));
+type WireShape = { [key:string]:true|WireShape|[WireShape] };
+const fields=(...keys:string[]):WireShape=>Object.fromEntries(keys.map(key=>[key,true as const]));
+const settingsShape=fields('contract_version','enabled','testing_only','pilot_accounts');
+const questionReceiptShape=fields('id','question_key','version','status');
+const preferencesShape=fields('invitation_mode','topic_mode','notice_version','notice_accepted_at','version','history_version','last_invited_week');
+const attemptShape=fields('id','week_start','mode','status','started_at','expires_at','duration_seconds','closed_at','close_reason','effective_expired','correction_reason');
+const questionShape=fields('id','question_key','version','topic_category','sport','prompt','options');
+const resultShape=fields('answered_option','correct_option','was_correct','explanation','completed_at');
+const receiptShape:WireShape={...fields('contract_version','profile_id','request_id','operation','outcome','week_start','committed_at'),attempt:attemptShape,result:resultShape,preferences:preferencesShape};
+const startShape:WireShape={...receiptShape,server_now:true,active_question:questionShape};
+const snapshotShape:WireShape={...fields('contract_version','profile_id','server_now','week_start','week_end','testing_only','availability','week_spent','scheduled_topic','history_version','history_count','badge_count','correction_count'),
+  preferences:preferencesShape,attempt:attemptShape,pools:[fields('topic_category','sport','unseen_count','allowed')]};
+const historyShape:WireShape={...fields('contract_version','profile_id','server_now','history_version','total','next_before'),
+  items:[{attempt:attemptShape,question:questionShape,result:resultShape,badge:fields('id','label','visibility','issued_at','voided_at')}]};
+const adminShape:WireShape={...fields('contract_version','generated_at','week_start','week_end','question_total','question_cap','next_question_cursor','next_before'),
+  settings:{...settingsShape,...fields('reason','updated_at','updated_by')},
+  questions:[{...questionShape,...fields('correct_option','explanation','source_notes','reason','status','created_at','created_by','reviewed_at','reviewed_by')}],
+  audit:[fields('id','action','actor_id','question_id','reason','created_at')],counts:fields(...timedCounts),pools:[fields('topic_category','sport','approved_count')]};
+const eraseShape=fields('contract_version','profile_id','history_version','week_start','week_spent','quota_prune_after','removed_attempts','removed_exposures','removed_badges','removed_requests','removed_audit');
+const retentionShape=fields('contract_version','removed_guards','removed_requests','preserved_guards','batch_limit');
 // Prompt capabilities and SQL hashes are never legal DTO fields, including nested recovery/audit data.
 function hasSecret(v: unknown): boolean {
   if (Array.isArray(v)) return v.some(hasSecret);
-  return object(v) && Object.entries(v).some(([key,value]) => /^(session_secret|session_secret_hash|secret|secret_hash|capability)$/.test(key) || hasSecret(value));
+  return object(v) && Object.entries(v).some(([key,value]) => /^(hash|.*_hash|.*(?:secret|token|capability)(?:_digest)?)$/i.test(key) || hasSecret(value));
+}
+const protectedExtra=(key:string)=>['question','active_question','prompt','options','question_id','question_key','correct_option','answer_key','result','explanation',
+  'answered_option','was_correct','attempt','attempt_id','start_request_id','request_id','actor_id','profile_id'].includes(key);
+function protectedTree(v:unknown):boolean{
+  if(Array.isArray(v))return v.some(protectedTree);
+  return object(v)&&Object.entries(v).some(([key,value])=>protectedExtra(key)||protectedTree(value));
+}
+/** @purpose Project only the approved context, rejecting hidden learning/association fields before discarding harmless extras. */
+function projectNode(value:unknown,shape:WireShape):unknown{
+  if(value===null)return null;
+  if(!object(value))throw unavailable();
+  for(const [key,child] of Object.entries(value)){
+    if(!Object.prototype.hasOwnProperty.call(shape,key)&&(protectedExtra(key)||protectedTree(child)))throw unavailable();
+  }
+  const output:Record<string,unknown>={};
+  for(const [key,childShape] of Object.entries(shape)){
+    const child=value[key];
+    if(childShape===true){
+      if(object(child)||(Array.isArray(child)&&child.some(item=>object(item)||Array.isArray(item))))throw unavailable();
+      output[key]=Array.isArray(child)?[...child]:child;
+    }else if(Array.isArray(childShape)){
+      if(!Array.isArray(child))throw unavailable();
+      output[key]=child.map(item=>projectNode(item,childShape[0]));
+    }else output[key]=projectNode(child,childShape);
+  }
+  return output;
+}
+function projectDto<T>(value:unknown,shape:WireShape):T{
+  if(hasSecret(value))throw unavailable();
+  return projectNode(value,shape) as T;
 }
 function promptFree(v: Record<string,unknown>) {
   return !['question','active_question','prompt','options','question_id','question_key','correct_option','answer_key','result'].some(key => key in v);
@@ -172,13 +222,13 @@ function receiptValid(v: unknown, allowStart = false): v is TimedQuizReceipt & R
 function checkReceipt(v: unknown, operation?: string, expectedProfile?: string, expectedRequest?: string): TimedQuizReceipt {
   if (!receiptValid(v) || (operation && v.operation !== operation) || (expectedProfile && v.profile_id !== expectedProfile)
     || (expectedRequest && v.request_id !== expectedRequest)) throw unavailable();
-  return v;
+  return projectDto<TimedQuizReceipt>(v,receiptShape);
 }
 /** @purpose Read sanitized account opportunity/preferences/counts; an active prompt can never come from this read. */
 export async function fetchTimedSportQuiz(): Promise<TimedQuizSnapshot> {
   const v = await callRpc<unknown>('quiz_snapshot');
   if (!object(v) || v.contract_version !== 2 || !hasSecretFreeSnapshot(v)) throw unavailable();
-  return v as unknown as TimedQuizSnapshot;
+  return projectDto<TimedQuizSnapshot>(v,snapshotShape);
 }
 function hasSecretFreeSnapshot(v: Record<string,unknown>) {
   return !hasSecret(v) && !hasLearningFields(v) && (v.profile_id === null || text(v.profile_id)) && timestamp(v.server_now)
@@ -205,7 +255,7 @@ export async function startTimedSportQuiz(input: TimedQuizStartInput): Promise<T
     || !('active_question' in v) || (v.active_question !== null && (!timedQuestion(v.active_question) || !object(v.attempt)
       || v.attempt.status !== 'issued' || v.attempt.mode !== 'timed' || v.attempt.effective_expired || !timestamp(v.attempt.expires_at)
       || Date.parse(v.attempt.expires_at) <= Date.parse(v.server_now)))) throw unavailable();
-  return v as unknown as TimedQuizStartReceipt;
+  return projectDto<TimedQuizStartReceipt>(v,startShape);
 }
 /** @purpose Submit only the caller's exact chosen option/request/capability; no queue or fresh answer retry. */
 export async function answerTimedSportQuiz(input: TimedQuizAnswerInput): Promise<TimedQuizReceipt> {
@@ -233,7 +283,7 @@ export async function fetchTimedSportQuizHistory(before: string | null = null): 
       && (i.question === null || timedQuestion(i.question,true)) && (i.result === null || timedResult(i.result))
       && (i.badge === null || (object(i.badge) && text(i.badge.id) && ['Sport Learner','Trivia Explorer'].includes(String(i.badge.label))
         && i.badge.visibility === 'private' && timestamp(i.badge.issued_at) && nullableTime(i.badge.voided_at))))) throw unavailable();
-  return v as unknown as TimedQuizHistoryPage;
+  return projectDto<TimedQuizHistoryPage>(v,historyShape);
 }
 /** @purpose CAS erasure spends this week and retains the disclosed minimal quota guard. Uncertain success requires a new review. */
 export async function eraseTimedSportQuizHistory(expectedHistoryVersion: number, expectedProfileId: string): Promise<TimedQuizEraseReceipt> {
@@ -241,7 +291,7 @@ export async function eraseTimedSportQuizHistory(expectedHistoryVersion: number,
   if (!object(v) || v.contract_version !== 2 || hasSecret(v) || v.profile_id !== expectedProfileId || !integer(v.history_version)
     || !date(v.week_start) || v.week_spent !== true || !timestamp(v.quota_prune_after)
     || !['removed_attempts','removed_exposures','removed_badges','removed_requests','removed_audit'].every(k=>integer(v[k]))) throw unavailable();
-  return v as unknown as TimedQuizEraseReceipt;
+  return projectDto<TimedQuizEraseReceipt>(v,eraseShape);
 }
 /** @purpose Read one 50-row question page independently of the bigint audit cursor, with authoritative full counts. */
 export async function fetchTimedSportQuizAdmin(input: {question_cursor?: string|null; audit_before?: string|null} = {}): Promise<TimedQuizAdminSnapshot> {
@@ -251,14 +301,22 @@ export async function fetchTimedSportQuizAdmin(input: {question_cursor?: string|
     || !integer(v.question_total) || v.question_total > 100 || v.question_cap !== 100 || !opaqueCursor(v.next_question_cursor)
     || !Array.isArray(v.questions) || v.questions.length > 50 || v.questions.length > v.question_total
     || !v.questions.every(q=>object(q) && topic(q.topic_category) && typeof q.source_notes === 'string' && Array.from(q.source_notes.replace(/^ +| +$/g,'')).length <= 1000 && adminQuestion(q))
-    || !Array.isArray(v.audit) || v.audit.length > 50 || !v.audit.every(a=>object(a) && cursor(a.id) && text(a.action) && nullableText(a.actor_id) && nullableText(a.question_id) && nullableText(a.reason) && timestamp(a.created_at))
+    || !Array.isArray(v.audit) || v.audit.length > 50 || !v.audit.every(timedAdminAudit)
     || (v.next_before !== null && !cursor(v.next_before)) || !object(v.counts) || !timedCounts.every(k=>integer((v.counts as Record<string,unknown>)[k]))
     || !Array.isArray(v.pools) || !v.pools.every(p=>object(p) && topic(p.topic_category) && text(p.sport,2,80) && integer(p.approved_count))) throw unavailable();
-  return v as unknown as TimedQuizAdminSnapshot;
+  return projectDto<TimedQuizAdminSnapshot>(v,adminShape);
+}
+function timedAdminAudit(a:unknown):boolean{
+  if(!object(a)||!cursor(a.id)||!text(a.action)||!nullableText(a.actor_id)||!nullableText(a.question_id)||!nullableText(a.reason)||!timestamp(a.created_at))return false;
+  const editorial=['question_create','question_edit','question_approve','question_archive','question_void'].includes(a.action);
+  const management=['settings','retention'].includes(a.action);
+  const participant=['start','answer','skip','end','preferences','invitation'].includes(a.action);
+  // Editorial records retain permitted provenance. Participant graphs and management question links remain redacted.
+  return editorial||(management&&a.question_id===null)||(participant&&a.actor_id===null&&a.question_id===null);
 }
 /** @purpose Reap only bounded expired recovery/guard records, with an actor-bound audit reason and honest preserved count. */
 export async function pruneTimedSportQuizHistory(reason: string, expectedActorId: string): Promise<TimedQuizRetentionReceipt> {
   const v=await callRpc<unknown>('quiz_admin_retention',{p_reason:reason,p_expected_actor_id:expectedActorId});
   if (!object(v) || v.contract_version !== 2 || hasSecret(v) || v.batch_limit !== 500 || !['removed_guards','removed_requests','preserved_guards'].every(k=>integer(v[k]))) throw unavailable();
-  return v as unknown as TimedQuizRetentionReceipt;
+  return projectDto<TimedQuizRetentionReceipt>(v,retentionShape);
 }

@@ -202,4 +202,81 @@ describe('QUIZ-02 strict timed adapter', () => {
     mockClient.response={contract_version:2,removed_guards:-1,removed_requests:3,preserved_guards:4,batch_limit:500};
     await expect(timedQuiz.pruneTimedSportQuizHistory('Remove expired recovery records.',profile)).rejects.toThrow(/unavailable/i);
   });
+  const terminalAttempt={...attempt,status:'completed',closed_at:snapshot.server_now};
+  const terminalResult={answered_option:0,correct_option:1,was_correct:false,explanation:'A touchdown scores six points.',completed_at:snapshot.server_now};
+  const history={contract_version:2,profile_id:profile,server_now:snapshot.server_now,history_version:0,total:1,
+    items:[{attempt:terminalAttempt,question,result:terminalResult,badge:{id:'badge',label:'Trivia Explorer',visibility:'private',issued_at:snapshot.server_now,voided_at:null}}],next_before:null};
+  const startInput={topic_category:'sport' as const,sport:null,duration_seconds:30 as const,expected_week:'2026-10-12',notice_version:'timed-trivia-v1-testing' as const,request_id:request,session_secret:'a'.repeat(64),expected_profile_id:profile};
+  const erased={contract_version:2,profile_id:profile,history_version:1,week_start:'2026-10-12',week_spent:true,quota_prune_after:'2026-11-18T00:00:00Z',removed_attempts:1,removed_exposures:1,removed_badges:1,removed_requests:1,removed_audit:1};
+  const retention={contract_version:2,removed_guards:2,removed_requests:3,preserved_guards:4,batch_limit:500};
+  const secretContexts=[
+    {name:'snapshot SQL session_hash',payload:{...snapshot,session_hash:'hash'},call:()=>timedQuiz.fetchTimedSportQuiz()},
+    {name:'nested snapshot session_hash',payload:{...snapshot,preferences:{...preferences,debug:[{session_hash:'hash'}]}},call:()=>timedQuiz.fetchTimedSportQuiz()},
+    {name:'ordinary receipt nested session_hash',payload:{...receipt,preferences:{...preferences,debug:{session_hash:'hash'}}},call:()=>timedQuiz.fetchTimedSportQuizReceipt(request)},
+    {name:'Start question session_hash',payload:{...receipt,attempt,server_now:snapshot.server_now,active_question:{...question,session_hash:'hash'}},call:()=>timedQuiz.startTimedSportQuiz(startInput)},
+    {name:'terminal history nested session_hash',payload:{...history,items:[{...history.items[0],badge:{...history.items[0].badge,debug:{session_hash:'hash'}}}]},call:()=>timedQuiz.fetchTimedSportQuizHistory()},
+    {name:'admin question session_hash',payload:{...admin,questions:[{...admin.questions[0],session_hash:'hash'}]},call:()=>timedQuiz.fetchTimedSportQuizAdmin()},
+    {name:'settings receipt nested token hash',payload:{contract_version:2,enabled:false,testing_only:true,pilot_accounts:[],debug:{token_hash:'hash'}},call:()=>saveSportQuizSettings({enabled:false,pilot_accounts:[]},'Pause for protected review.',profile)},
+    {name:'question receipt session_hash',payload:{id:'q1',question_key:'key1',version:1,status:'draft',session_hash:'hash'},call:()=>saveSportQuizQuestion(null,'create',{reason:'Create a reviewed draft.'},profile)},
+    {name:'retention session_hash',payload:{...retention,debug:{session_hash:'hash'}},call:()=>timedQuiz.pruneTimedSportQuizHistory('Prune expired recovery records.',profile)},
+    {name:'erasure session_hash',payload:{...erased,debug:{session_hash:'hash'}},call:()=>timedQuiz.eraseTimedSportQuizHistory(0,profile)},
+  ];
+  it.each(secretContexts)('T2-I1 rejects actual hash/capability fields recursively: $name',async({payload,call})=>{
+    mockClient.response=payload;await expect(call()).rejects.toThrow(/unavailable/i);
+  });
+  it.each([
+    {preferences:{...preferences,active_question:{prompt:'not allowed'}}},
+    {preferences:{...preferences,debug:{active_question:{prompt:'not allowed'}}}},
+    {preferences:{...preferences,debug:[{attempt:{question:{prompt:'not allowed'}}}]}},
+    {debug:{result:{explanation:'not authorized here'}}},
+    {result:{...terminalResult,debug:{active_question:{prompt:'not allowed'}}},attempt:terminalAttempt},
+  ])('T2-I1 rejects active learning in unauthorized ordinary receipt locations: %j',async patch=>{
+    mockClient.response={...receipt,operation:'preferences',preferences,...patch};
+    await expect(timedQuiz.fetchTimedSportQuizReceipt(request)).rejects.toThrow(/unavailable/i);
+  });
+  const participantAudit={id:'8',action:'start',actor_id:null,question_id:null,reason:null,created_at:snapshot.server_now};
+  it.each([
+    {...participantAudit,actor_id:profile,question_id:'q1',attempt_id:'attempt'},
+    {...participantAudit,actor_id:profile},
+    {...participantAudit,question_id:'q1'},
+    {...participantAudit,attempt_id:'attempt'},
+    {...participantAudit,debug:{request_id:request}},
+    {...participantAudit,debug:[{links:{attempt_id:'attempt'}}]},
+    {...participantAudit,action:'settings',actor_id:profile,question_id:'q1'},
+    {...participantAudit,action:'question_void',actor_id:profile,question_id:'q1',debug:{request_id:request}},
+  ])('T2-I1 rejects participant audit graphs and unauthorized admin links: %j',async audit=>{
+    mockClient.response={...admin,audit:[audit]};await expect(timedQuiz.fetchTimedSportQuizAdmin()).rejects.toThrow(/unavailable/i);
+  });
+  it('T2-I1 projects ordinary snapshot/receipt fields and preserves terminal result explanation',async()=>{
+    mockClient.response={...snapshot,debug:{message:'benign'},preferences:{...preferences,debug:{message:'benign'}}};
+    expect(await timedQuiz.fetchTimedSportQuiz()).toEqual(snapshot);
+    const completed={...receipt,operation:'answer',attempt:terminalAttempt,result:terminalResult};
+    mockClient.response={...completed,debug:{message:'benign'},result:{...terminalResult,debug:{message:'benign'}}};
+    expect(await timedQuiz.fetchTimedSportQuizReceipt(request)).toEqual(completed);
+  });
+  it('T2-I1 projects live Start and own terminal history, preserving private legacy correction bytes',async()=>{
+    const started={...receipt,attempt,server_now:snapshot.server_now,active_question:question};
+    mockClient.response={...started,active_question:{...question,debug:{message:'benign'}}};
+    expect(await timedQuiz.startTimedSportQuiz(startInput)).toEqual(started);
+    const legacy={...history,items:[{...history.items[0],attempt:{...terminalAttempt,mode:'legacy',status:'void',correction_reason:'Duplicate choices corrected.'},
+      question:{...question,options:['3','3\t','7','2']},badge:{...history.items[0].badge,label:'Sport Learner',voided_at:snapshot.server_now}}]};
+    mockClient.response={...legacy,debug:{message:'benign'},items:[{...legacy.items[0],debug:{message:'benign'},question:{...legacy.items[0].question,debug:{message:'benign'}}}]};
+    expect(await timedQuiz.fetchTimedSportQuizHistory()).toEqual(legacy);
+  });
+  it('T2-I1 permits redacted participant audit and explicit editorial/stop provenance only',async()=>{
+    const allowed={...admin,audit:[participantAudit,{...participantAudit,id:'9',action:'question_void',actor_id:profile,question_id:'q1',reason:'Void erroneous wording.'},
+      {...participantAudit,id:'10',action:'settings',actor_id:profile,reason:'Pause for protected review.'}]};
+    mockClient.response={...allowed,debug:{message:'benign'},questions:[{...allowed.questions[0],debug:{message:'benign'}}],audit:allowed.audit.map(a=>({...a,debug:{message:'benign'}}))};
+    expect(await timedQuiz.fetchTimedSportQuizAdmin()).toEqual(allowed);
+  });
+  it('T2-I1 projects mutation and erasure/retention receipts without unknown nested data',async()=>{
+    const settings={contract_version:2,enabled:false,testing_only:true,pilot_accounts:[]};
+    mockClient.response={...settings,debug:{message:'benign'}};
+    expect(await saveSportQuizSettings({enabled:false,pilot_accounts:[]},'Pause for protected review.',profile)).toEqual(settings);
+    const saved={id:'q1',question_key:'key1',version:1,status:'draft'};
+    mockClient.response={...saved,debug:{message:'benign'}};
+    expect(await saveSportQuizQuestion(null,'create',{reason:'Create a reviewed draft.'},profile)).toEqual(saved);
+    mockClient.response={...erased,debug:{message:'benign'}};expect(await timedQuiz.eraseTimedSportQuizHistory(0,profile)).toEqual(erased);
+    mockClient.response={...retention,debug:{message:'benign'}};expect(await timedQuiz.pruneTimedSportQuizHistory('Prune expired recovery records.',profile)).toEqual(retention);
+  });
 });
