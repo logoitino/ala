@@ -14,7 +14,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Database functions | 308 (58 used by hand, 29 trigger functions) |
 | Tables reached by at least one screen or server route | 81 of 82 |
 | Code files that read or write the database | 81 |
-| Exported symbols nothing imports | 23 (0 proposed for archive, 23 kept on purpose) |
+| Exported symbols nothing imports | 22 (0 proposed for archive, 22 kept on purpose) |
 | Rule failures | 0 |
 
 ## Owners
@@ -586,7 +586,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `quiz_admin_question`, `quiz_answer`, `quiz_skip`, `quiz_start`
 - Read by: —; database functions: `quiz_admin_snapshot`, `quiz_answer`, `quiz_snapshot`
-- Screens: `/admin/sport-quiz`, `/sport-quiz`
+- Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_audit`
 
@@ -595,7 +595,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `quiz_admin_question`, `quiz_admin_settings`, `quiz_answer`, `quiz_skip`, `quiz_start`
 - Read by: —; database functions: `quiz_admin_snapshot`
 - Triggers: `quiz_audit_guard → quiz_guard_audit`, `quiz_audit_truncate_guard → quiz_guard_audit`
-- Screens: `/admin/sport-quiz`, `/sport-quiz`
+- Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_badges`
 
@@ -603,7 +603,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `quiz_admin_question`, `quiz_answer`
 - Read by: —; database functions: `quiz_admin_snapshot`, `quiz_snapshot`
-- Screens: `/admin/sport-quiz`, `/sport-quiz`
+- Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_questions`
 
@@ -612,7 +612,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `quiz_admin_question`
 - Read by: —; database functions: `quiz_admin_question`, `quiz_admin_snapshot`, `quiz_answer`, `quiz_snapshot`, `quiz_start`
 - Triggers: `quiz_question_guard → quiz_guard_question`
-- Screens: `/admin/sport-quiz`, `/sport-quiz`
+- Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_settings`
 
@@ -620,7 +620,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `quiz_admin_settings`
 - Read by: —; database functions: `quiz_admin_question`, `quiz_admin_snapshot`, `quiz_require_testing`, `quiz_snapshot`
-- Screens: `/admin/sport-quiz`, `/sport-quiz`
+- Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `spotlight_awards`
 
@@ -1139,7 +1139,6 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | File | Export | Decision | Reason |
 | --- | --- | --- | --- |
 | `apps/mobile/src/backend/services/payouts.ts` | `disburseAthleteFunds` | keep | Payout service alias held for the Wave 1 payout path (payouts are blocked by decision). |
-| `@/components/SportQuiz/SportQuizInvitation.tsx` | `SportQuizInvitation` | keep | Task7 producer invitation awaiting independent review before root Home/HQ consumer integration; remove temporary entry once connected. |
 | `@/data/contentRights.ts` | `REPORTS_BEFORE_HIDE` | keep | Mirrors the SQL rule (three distinct reporters hide a clip) so copy and docs have one constant. |
 | `@/data/finance.ts` | `BOOSTER_OPERATOR_SHARE_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |
 | `@/data/finance.ts` | `VAULT_ATHLETE_SHARE_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |

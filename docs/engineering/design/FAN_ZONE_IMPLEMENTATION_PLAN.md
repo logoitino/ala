@@ -54,7 +54,7 @@ Workers do not spawn reviewers. Commit only owned files; report exact tests/resu
 **Owned files:** new frontend `components/FanZone/` files/tests, `hooks/useFanZone.ts`/tests, route `app/fan-zone.tsx`; shared Home/profile/HQ discovery is delegated to Task8. Root owns coverage/index/state integration.
 **Interfaces:** Consumes shared DTOs and `lib/fanZone.ts`, Task 2 media API. Existing public free reel and profile navigation supply curated stories; no new payment code.
 
-- [ ] Write failing visible flow tests for private upload/permission/review, guardian exact revision, free ballot retry/refetch, optional reflection/report/withdraw/deletion and unavailable states.
+- [ ] Write failing visible flow tests for private upload/permission/review, guardian exact revision, free ballot retry/refetch, optional reflection/report/withdraw/deletion, in-screen Help & Safety/contact/status and unavailable states.
 - [ ] Build one welcoming Fan Zone screen with three paths, concise testing notices, explicit dates/rules and a preserved upload draft. No mandatory money, athlete tagging or service.
 - [ ] Use private reserved paths; verified MP4 only; exact permission read/review, candidate video playback with headers/no cache, ballot version/request receipt/single-flight and fresh state after retry.
 - [ ] Render current authorized stories/results, optional private service receipts and distinct withdrawal/removal/case status. Guest browsing remains read-only and joining uses existing account flow.
@@ -88,7 +88,7 @@ Workers do not spawn reviewers. Commit only owned files; report exact tests/resu
 
 ### Task 8: Shared discovery and control-map integration
 
-**Ownership delegated by root:** new frontend `components/FamilyFun/FamilyFunDiscovery.tsx` and meaningful tests; existing Home `app/(tabs)/index.tsx`, profile menu in `app/(tabs)/profile.tsx`, role home routes `app/(parent)/parent/index.tsx`, `(booster)/booster/index.tsx`, `(sponsor)/sponsor/index.tsx`, `operator/index.tsx`; `lib/adminCoverage.ts` and relevant existing/new control-map tests. Root retains docs/schema/registry/data map/final gates. Preserve all concurrent source.
+**Ownership delegated by root:** new frontend `components/FamilyFun/FamilyFunDiscovery.tsx` and meaningful tests; root `app/_layout.tsx` navigation registration, existing Home `app/(tabs)/index.tsx`, profile menu in `app/(tabs)/profile.tsx`, role home routes `app/(parent)/parent/index.tsx`, `(booster)/booster/index.tsx`, `(sponsor)/sponsor/index.tsx`, `operator/index.tsx`; `lib/adminCoverage.ts` and relevant existing/new control-map tests. Root retains docs/schema/registry/data map/final gates. Preserve all concurrent source.
 
 - [ ] Quiz integration starts only after Task7 independent review PASS and actual QUIZ admin-ready; reuse its typed hook/invitation. Fan discovery extension starts only after Task4 review PASS and actual FUN admin-ready.
 - [ ] Place dismissible optional invitation inside Home's measured top chrome and role-HQ scroll content; no modal/new bottom tab/payment/upload interruption. Keep root account links accessible to every eligible role, private history and guardian review through appropriate server snapshots.

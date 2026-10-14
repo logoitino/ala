@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-14 — Weekly quiz participant and discovery source
+
+Optional weekly Sport Quiz page includes explanations, private completion badges, honest Skip/retry and account isolation;23local tests and independent review pass. Home/four HQ/profile integration passes44local tests and typecheck, with consumer review/full gates pending. Fan admin review requests stale-revision safety guards before its admin checkpoint; composite paging strengthens recovery robustness, while existing timestamp guards already protect normal writes. No hosted activation.
+
 ## 2026-10-14 — Weekly Sport Quiz local admin checkpoint
 
 Question bank, paused tester controls, complete Data/audit and private correction rules pass independent local review. Quiz actor34/34, two admin/adapter suites30tests and root canonical105/105 pass. Actual QUIZ admin-ready gate passes before participant page/card work. Learning badges are noncash/private; migrations remain unapplied.

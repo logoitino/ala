@@ -71,7 +71,7 @@ role independently. Paused campaigns deny new submissions/ballots; private withd
 revocation and reports remain available. Report/appeal intake supports an entrant/guardian and
 a non-account person concerned about an entry; public intake has bounded text/rate/queue limits
 and an unguessable receipt secret for status. A report does not itself hide an innocent candidate.
-A quota-refused concern displays the configured support contact when available and an existing Help/Safety path; quota exhaustion cannot silently end reporting or hide a candidate. Staff can suspend/remove an entry, resolve a case with a reason and finalize again under the
+A quota-refused concern displays the configured support contact when an authorized snapshot provides it and opens the in-screen Help & Safety section with concern intake/status and selectable contact text; quota exhaustion cannot silently end reporting or hide a candidate. No existing general Help/Safety destination was found. Minor Safety policy information is distinct from receiving a report; missing authorized contact is shown as unavailable, without exposing private campaign details to guests. A staffed public fallback for guest quota failures remains release work. Staff can suspend/remove an entry, resolve a case with a reason and finalize again under the
 published rules. A support contact must be configured before a campaign opens for testing.
 
 ## Data and stable interfaces

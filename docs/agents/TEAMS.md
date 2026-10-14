@@ -857,9 +857,11 @@ Operating design: [ENGINEERING_SUPPORT_CONSOLE.md](../engineering/design/ENGINEE
 Owner authorized the recommended local build and added weekly Sport Pop Quiz. Earlier
 brainstorming sections remain dated history. Current source and actual evidence are in
 [FUN-01](FUN-01.md) and [QUIZ-01](QUIZ-01.md), in the isolated codex/fan-zone checkout.
-Fan backend/media scoped reviews PASS; Fan admin is building and its participant UI waits
-for its own gate. Quiz corrected admin source has independent Data/Safety/SUPPORT acceptance
-and actual admin-ready gate at2026-10-14T06:09:57Z; participant UI is now building.
+Fan backend/media scoped reviews PASS; Fan admin source has59local tests but independent review
+requires stale-revision review correction; composite paging adds recovery robustness. Fan participant source waits
+for its own actual gate. Quiz admin-ready passed2026-10-14T06:09:57Z; its participant page
+passes23local tests and independent review. Shared Home/HQ/profile discovery passes44local
+tests and awaits consumer review; final app-ready/full checks remain pending.
 
 POLLS with ADMIN/UPLOAD/BACKEND owns operational source; Content/VOICE verifies sport facts
 and contextual wording. Data/Safety/SUPPORT independently checks ownership, privacy,

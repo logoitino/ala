@@ -759,13 +759,6 @@
       "decision": "keep",
       "reason": "Enrolled FUN-01 fan snapshot consumer waits for independent admin-ready gate; remove this temporary entry when Task4 connects the hook.",
       "status": "kept"
-    },
-    {
-      "file": "apps/mobile/src/frontend/components/SportQuiz/SportQuizInvitation.tsx",
-      "name": "SportQuizInvitation",
-      "decision": "keep",
-      "reason": "Task7 producer invitation awaiting independent review before root Home/HQ consumer integration; remove temporary entry once connected.",
-      "status": "kept"
     }
   ],
   "archived": [
