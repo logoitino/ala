@@ -182,3 +182,23 @@ An authorized outside session can perform the function and must name its actual 
 repository model pins remain governed by their role files. CI checks structure and drift; a
 role definition, dispatch or passing CI does not prove semantic review or continuous activity.
 See [COORD-01](docs/agents/COORD-01.md) for actual assignments and the current checkpoint.
+
+
+## Family activities source map — FUN-01 / QUIZ-01 (2026-10-14)
+
+| Responsibility | Source / owner boundary |
+| --- | --- |
+| Private fan campaign, entry scope, free ballot, concern/removal state | `supabase/migrations/20261014130000_fan_zone.sql`, canonical backend schema, shared `fanZone.ts`; POLLS/UPLOAD/MINOR_SAFETY with BACKEND/RLS_SECURITY. |
+| Private MP4 validation and revocable media | backend `services/fanZoneMedia.ts`, `fanZoneMp4.ts`, API `fanZoneMedia.ts`, thin `app/api/fan-zone-*+api.ts`; server-only service key, no public/signed fallback. |
+| Fan client and correction desk | frontend `lib/fanZone.ts`, `components/Admin/FanZone/`, `/admin/fan-zone`; ADMIN mounts behind AdminShell, SDK excludes service-only commits. |
+| Account fan journey | root `/fan-zone`, frontend `components/FanZone/` and `hooks/useFanZone.ts`; participant source follows its actual admin-ready gate. |
+| Weekly private sport learning | quiz migration, shared `sportQuiz.ts`, frontend `lib/sportQuiz.ts`, Admin/SportQuiz tool and `/admin/sport-quiz`; POLLS with Content/VOICE fact review, AURA owns noncash badge data. |
+| Quiz account journey | root `/sport-quiz`, frontend `components/SportQuiz/` and `hooks/useSportQuiz.ts`; dismissible invitation, weekly server assignment, explanation/private badges, local Not now and honest persisted Skip. |
+
+Root account routes stay outside the fan-only `(tabs)` role gate so eligible enrolled parent,
+operator, booster, sponsor and other account roles can participate. No new bottom tabs.
+Default empty tester cohorts/testing-only source are authoritative; migrations are written,
+not applied. `FUN-01.md`/`QUIZ-01.md` and feature-admin.json preserve actual local checkpoints.
+Data/Safety/SUPPORT reviews operational privacy, corrections/stop and source maps;
+DOCUMENTATION/VP_OPERATIONS records actual execution and per-user Growth handoff.
+Private Sport Learner acknowledgments do not credit Aura, cash, ballots or school rankings.

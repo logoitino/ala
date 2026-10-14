@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-14 — Weekly Sport Quiz local admin checkpoint
+
+Question bank, paused tester controls, complete Data/audit and private correction rules pass independent local review. Quiz actor34/34, two admin/adapter suites30tests and root canonical105/105 pass. Actual QUIZ admin-ready gate passes before participant page/card work. Learning badges are noncash/private; migrations remain unapplied.
+
+## 2026-10-14 — Fan Zone backend/media correction review
+
+Private Fan Zone source now has explicit guardian approval binding, safe upload retry, tracked removal available despite reporting quotas, blocked-owner admin deletion intake and a Storage mutation fence. Scoped independent source review passes; local135actor/14API/105canonical checks pass. Admin and quiz contract correction are in progress; no fan UI or hosted activation yet. Weekly Sport Quiz learning direction added to the per-user engagement playbook.
+
 ## 2026-10-14 — Fan Zone implementation enrolled; Finance catalog repair
 
 Owner authorizes the recommended first Fan Zone. FUN-01 design/plan and planned admin-first contract are recorded in an isolated checkout; no feature or release readiness yet. Corrected the existing payout_flag_overrides.payouts_enabled catalog omission as a CONNECT control (no journal/money movement); focused existing Finance coverage 15/15 passes. No SQL application or payee behavior change.

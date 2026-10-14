@@ -239,6 +239,34 @@
       ],
       "limitation": "Unsigned source capsules exclude reviewed credential/runtime paths and reject ambiguous data; no database backup or hosted compatibility certification.",
       "next": "RECOVERY/RELEASE rehearse approved DB backup and compatible old code before owner-approved cutover."
+    },
+    {
+      "id": "fan-zone-state-and-media",
+      "area": "app",
+      "owner": "SUPPORT",
+      "status": "partial",
+      "detects": "Locally invoked real-actor SQL/RLS replay and API/client parser tests detect private-scope/revision/deadline/ballot/removal failures; UI displays fixed-code unavailable/permission notices. No raw tokens/media/aliases in new error responses.",
+      "evidence": [
+        "scripts/replay/fan-zone-replay.mjs",
+        "apps/mobile/src/backend/api/__tests__/fanZoneMedia.test.ts",
+        "apps/mobile/src/frontend/lib/__tests__/fanZoneMedia.test.ts"
+      ],
+      "limitation": "No hosted replay/API/device/storage/rate/backlog/removal delivery sensors, passive per-control telemetry or alert routing verified. API full bounded-object range delivery cost remains unknown.",
+      "next": "SUPPORT with UPLOAD/POLLS/RLS_SECURITY/Privacy verifies hosted unauthorized reads/removal/actor logs and accepted moderation/abuse/cost thresholds before widening test audience."
+    },
+    {
+      "id": "sport-quiz-weekly-learning",
+      "area": "app",
+      "owner": "SUPPORT",
+      "status": "partial",
+      "detects": "Locally invoked real-actor weekly assignment/skip/request/badge/void replay and typed adapter/admin tests detect quiz state/content failures; quiz unavailable is distinct from a zero count.",
+      "evidence": [
+        "scripts/replay/sport-quiz-replay.mjs",
+        "apps/mobile/src/frontend/lib/__tests__/sportQuiz.test.ts",
+        "apps/mobile/src/frontend/components/Admin/SportQuiz/__tests__/SportQuizTool.test.tsx"
+      ],
+      "limitation": "No hosted retention/abuse/content-review-backlog delivery or passive new Growth tracking; fact approval and device/accessibility gates pending.",
+      "next": "POLLS/Content/VOICE with SUPPORT and Privacy verifies sport facts, corrections/skip/explanation/badge lifecycle and actual completion/return/support burden after approved pilot."
     }
   ]
 }

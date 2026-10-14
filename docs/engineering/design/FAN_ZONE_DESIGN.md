@@ -16,7 +16,7 @@ form, new earning program or legal opinion. [FAMILY_FUN_PLAYBOOK](../../product/
   accessible preset ideas and private, deletable reflection receipts; no beneficiary photos or addresses.
 - Expo SDK 57, expo-video 57.0.5, no video caching; no dependency or hosting purchases.
 - New Fan Zone media stays in a private bucket, separate from public reels and paid Vault content.
-- Campaigns start in draft, testing-only. No SQL application, hosted deployment or live publication.
+- Campaigns start in draft, testing-only with an empty canonical-profile tester allowlist (maximum 100). Opening requires an approved nonempty tester list and support contact; production mode is rejected. Campaign/candidate/media browsing is limited to eligible enrolled testers/admins. No SQL application, hosted deployment or live publication.
 - Unknown ages, blocked/closed accounts and under-13 accounts cannot enter, consent or vote.
   Adults and eligible teens need no athlete, school, Stripe or payee status for these fan actions.
 - Client hiding is insufficient: every read/write/media authorization applies server rules.
@@ -30,7 +30,7 @@ No real name, school ID, athlete tagging or payout onboarding is required. The s
 private during review. Staff accept it, request changes or reject it with a private reason.
 
 Public voting requires explicit permission for the exact entry revision, sanitized media digest,
-alias/caption, campaign, public audience and consent form version. Adults assent for themselves.
+alias/caption, campaign, approved-pilot-account audience, no-reuse choice and consent form version. The UI passes the server-provided full expected scope; a stale form/scope is rejected. Adults assent for themselves.
 Teens assent and a confirmed, active linked guardian grants separate permission for that entry.
 The link is a supervision link, not independently verified proof of legal guardianship. Consent
 copy remains a marked testing draft for counsel. An edit invalidates review and permission;
@@ -71,7 +71,7 @@ role independently. Paused campaigns deny new submissions/ballots; private withd
 revocation and reports remain available. Report/appeal intake supports an entrant/guardian and
 a non-account person concerned about an entry; public intake has bounded text/rate/queue limits
 and an unguessable receipt secret for status. A report does not itself hide an innocent candidate.
-Staff can suspend/remove an entry, resolve a case with a reason and finalize again under the
+A quota-refused concern displays the configured support contact when available and an existing Help/Safety path; quota exhaustion cannot silently end reporting or hide a candidate. Staff can suspend/remove an entry, resolve a case with a reason and finalize again under the
 published rules. A support contact must be configured before a campaign opens for testing.
 
 ## Data and stable interfaces
@@ -79,7 +79,7 @@ published rules. A support contact must be configured before a campaign opens fo
 Tables: `fan_zone_campaigns`, `fan_zone_entries`, `fan_zone_consents`, `fan_zone_ballots`,
 `fan_zone_requests`, `fan_zone_cases`, `fan_zone_audit`, `fan_zone_reflections`.
 POLLS owns campaign/ballot data; UPLOAD owns media entries; MINOR_SAFETY owns consent;
-MODERATION owns cases; AUDIT owns trace records. DATA_GOVERNANCE accepts all paths.
+MODERATION owns cases; RLS_SECURITY owns immutable trace records. DATA_GOVERNANCE accepts all paths.
 No direct client table mutation/read grants; narrow definer RPCs supply redacted DTOs.
 The storage bucket `fan_zone` is private. Only a server-reserved path is insertable, while the
 owner has an editable draft in an open entry window. Overwrites and direct client reads denied.
@@ -94,7 +94,7 @@ return JSON envelopes and use the canonical profile ID, not an assumed auth.uid(
 | `fun_admin_snapshot` | `p_campaign_id uuid default null`, `p_before timestamptz default null` | admin campaign list and complete selected entries, bounded case/audit pages, counts and next cursor |
 | `fun_admin_campaign` | `p_id uuid`, `p_action text`, `p_payload jsonb` | create/configure/open/pause/close/finalize/recount; actor/time audit; immutable opened rules |
 | `fun_entry` | `p_campaign_id uuid`, `p_entry_id uuid`, `p_action text`, `p_payload jsonb` | reserve/edit/submit/withdraw; path/revision/digest receipt; rights/verified media needed to submit |
-| `fun_permission` | `p_entry_id uuid`, `p_revision integer`, `p_action text` | adult assent / teen assent / guardian grant / revoke; exact revision/digest and active guardian link |
+| `fun_permission` | `p_entry_id uuid`, `p_revision integer`, `p_action text`, `p_expected_scope jsonb` | adult assent / teen assent / guardian grant / revoke; exact revision/digest and active guardian link |
 | `fun_vote` | `p_campaign_id uuid`, `p_entry_id uuid`, `p_request_id uuid`, `p_expected_version integer` | atomic idempotent ballot receipt with version; rejects self, stale, paused, closed, ineligible |
 | `fun_admin_entry` | `p_entry_id uuid`, `p_action text`, `p_reason text` | accept/changes/reject/suspend; no staff winner selection |
 | `fun_admin_ballot` | `p_ballot_id uuid`, `p_reason text` | invalidation and recount-required audit |
@@ -102,18 +102,20 @@ return JSON envelopes and use the canonical profile ID, not an assumed auth.uid(
 | `fun_case_status` | `p_case_id uuid`, `p_secret uuid` | minimal reporter receipt/status, no other case text |
 | `fun_admin_case` | `p_case_id uuid`, `p_action text`, `p_reason text` | resolve/escalate, audit; deletion completion only after server object removal |
 | `fun_reflection` | `p_campaign_id uuid`, `p_id uuid`, `p_idea text`, `p_action text` | create/delete own private preset reflection; no free-text proof required |
-| `fun_media_access` | `p_entry_id uuid`, `p_revision integer`, `p_intent text` | authorized path/revision for read, verify or remove; private auth or current public permission checks |
+| `fun_media_access` | `p_entry_id uuid`, `p_revision integer`, `p_intent text` | authorized path/revision for read, verify or remove; private auth or current approved-pilot-audience permission checks |
 | `fun_verify_media` | `p_entry_id uuid`, `p_revision integer`, `p_digest text`, `p_bytes integer`, `p_duration_ms integer` | service-role only, commits sanitized verified immutable draft media |
 | `fun_complete_removal` | `p_entry_id uuid`, `p_revision integer` | service-role only marks media removed and matching deletion cases complete |
 
+Consent scope contains campaign_id/revision/digest/alias/caption/audience=approved_pilot_accounts/form_version=fan-zone-v1-testing/reuse=false; returned own/guardian entries carry the exact scope to approve. Receipt secrets are stored as SHA-256, expire after 30 days, and never reveal private entry existence. New ballot mutations are capped at 60/account/window; request replay receipts expire 30 days after voting closes. Public reports are bounded to 5/entry/day and queue limits, with identical unavailable responses for unauthorized private targets. Counsel-approved full record retention remains a release dependency.
+
 Backend owns final additional helper names and DTO fields, documents any justified change before
 consumers start. Helper privileges are revoked from clients; PUBLIC default execute is revoked
-on all functions before narrow grants. Fan reads may be anonymous only for public DTO/media.
+on all functions before narrow grants. Testing campaign reads require the approved tester audience; guests receive no campaign/candidate DTO or media. A non-account concern may be filed for a supplied currently eligible entry ID without unlocking content.
 
 ## Revocable media serving
 
-API `/api/fan-zone-media` authenticates optional bearer and calls `fun_media_access` for each
-request, then streams private storage bytes with `Cache-Control: no-store`; range requests are
+API `/api/fan-zone-media` authenticates bearer and calls `fun_media_access` for each
+request, then serves bounded private storage bytes with `Cache-Control: no-store`; range requests are
 validated. Storage signed URLs are never handed to clients. A previously delivered/buffered copy
 cannot be retracted; revocation denies subsequent requests, not already saved copies.
 
@@ -124,7 +126,7 @@ replaces only the authorized immutable draft and calls service-only `fun_verify_
 fallback to original unsanitized media. This is file validation/metadata removal, not transcoding
 or a new CDN. `/api/fan-zone-remove` removes an authorized object and records actual completion.
 Missing API origin/service key is unavailable; no public storage fallback. Hosted API, secrets,
-native bearer video headers/ranges and browser playback need separate release verification.
+native bearer video headers/ranges and browser playback need separate release verification. Expo Video web does not send source headers: web explicitly fetches bounded authorized bytes into an object URL, releases it on replacement/unmount, and never puts a session token in a URL. A delivered browser blob is an already delivered copy.
 Client reuses `compressHighlight`/`bytesFromUri` without writing ordinary reels. No thumbnail
 or duplicated media path. One explicitly started video player; pause on leaving the screen.
 

@@ -277,12 +277,64 @@
     "wishlist_items": {
       "owner": "WISHLIST",
       "purpose": "Gear goals fans donate to."
+    },
+    "fan_zone_campaigns": {
+      "owner": "POLLS",
+      "purpose": "Default-off testing-only fan award campaigns, approved tester audience, immutable rules/windows and free-ballot result revisions."
+    },
+    "fan_zone_entries": {
+      "owner": "UPLOAD",
+      "purpose": "Private fan-video drafts/revisions, server-reserved immutable storage paths, verified media metadata, review and withdrawal state. Private guardian_consent_id pins the current exact grant; no automatic historical guardian substitution."
+    },
+    "fan_zone_consents": {
+      "owner": "MINOR_SAFETY",
+      "purpose": "Immutable exact-entry assent/guardian permission/revocation receipts tied to scope/media revision and active confirmed supervision link."
+    },
+    "fan_zone_ballots": {
+      "owner": "POLLS",
+      "purpose": "One current versioned free ballot per canonical eligible profile/campaign, with restricted invalidation rationale."
+    },
+    "fan_zone_requests": {
+      "owner": "POLLS",
+      "purpose": "Caller/request/argument-bound ballot retry receipts, capped60/window and expired30days after vote close."
+    },
+    "fan_zone_cases": {
+      "owner": "MODERATION",
+      "purpose": "Private bounded report/appeal/deletion cases with hashed reporter receipt secret/30day receipt access, actual removal completion and escalation."
+    },
+    "fan_zone_audit": {
+      "owner": "RLS_SECURITY",
+      "purpose": "Immutable server actor/time Fan Zone configuration/review/consent/ballot/result/removal trace; restricted corrective access."
+    },
+    "fan_zone_reflections": {
+      "owner": "POLLS",
+      "purpose": "Voluntary private preset service reflection receipts, deletable by owner; no beneficiary detail or payment condition."
+    },
+    "sport_quiz_settings": {
+      "owner": "POLLS",
+      "purpose": "Default-paused/testing-only quiz switch with approved canonical-profile tester allowlist."
+    },
+    "sport_quiz_questions": {
+      "owner": "POLLS",
+      "purpose": "Human-reviewed sport question versions, draft/approved/archive/void state and stable issued answer/explanation."
+    },
+    "sport_quiz_attempts": {
+      "owner": "POLLS",
+      "purpose": "One own-scoped random approved question assignment/skip/completion per account UTC week; exact request retry."
+    },
+    "sport_quiz_badges": {
+      "owner": "AURA",
+      "purpose": "Private noncash Sport Learner weekly completion acknowledgments; no Aura wallet, voting or payment value; erroneous content corrections."
+    },
+    "sport_quiz_audit": {
+      "owner": "RLS_SECURITY",
+      "purpose": "Append-only authoritative quiz settings/content/correction history; participant answers/identities omitted from admin count export."
     }
   },
   "buckets": {
     "reels": {
       "owner": "UPLOAD",
-      "purpose": "Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…)."
+      "purpose": "Public Highlight videos (reels/<uid>/\u2026) and photo-story photos (<uid>/stories/\u2026)."
     },
     "game_highlights": {
       "owner": "UPLOAD",
@@ -295,6 +347,10 @@
     "reel_vault": {
       "owner": "VAULT",
       "purpose": "Private Vault clips, read only through short-lived signed URLs."
+    },
+    "fan_zone": {
+      "owner": "UPLOAD",
+      "purpose": "Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal."
     }
   },
   "functions": {
@@ -337,6 +393,198 @@
     "admin_end_friendship": {
       "owner": "TRUST_SAFETY",
       "use": "SQL Editor only, for a safety case (for example a guardian report): ends the friendship between two named profiles. The People desk deliberately never shows who is friends with whom, so it has no button."
+    },
+    "fun_eligible": {
+      "owner": "AUTH",
+      "use": "Internal canonical-profile known-age/open-account eligibility predicate for fan actions."
+    },
+    "fun_actor": {
+      "owner": "AUTH",
+      "use": "Internal authenticated canonical profile/age guard; never assumes profile ID equals Auth user ID."
+    },
+    "fun_admin_guard": {
+      "owner": "ADMIN",
+      "use": "Internal admin/known-age guard for corrective Fan Zone operations."
+    },
+    "fun_pilot": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal testing-only campaign/tester-audience authorization, empty allowlist denies by default."
+    },
+    "fun_scope": {
+      "owner": "MINOR_SAFETY",
+      "use": "Internal exact revision/digest/alias/caption/campaign/audience/form/no-reuse consent scope."
+    },
+    "fun_guardian": {
+      "owner": "MINOR_SAFETY",
+      "use": "Internal currently active confirmed supervision-link predicate; does not prove legal guardianship."
+    },
+    "fun_permission_valid": {
+      "owner": "MINOR_SAFETY",
+      "use": "Internal current exact-entry assent/guardian-link/grant/revocation validity."
+    },
+    "fun_candidate": {
+      "owner": "MODERATION",
+      "use": "Internal accepted/currentverified/media-present/permission-valid candidate eligibility predicate."
+    },
+    "fun_entry_json": {
+      "owner": "UPLOAD",
+      "use": "Internal redacted private own/guardian/admin entry DTO including tracked media revision removal list."
+    },
+    "fun_campaign_json": {
+      "owner": "POLLS",
+      "use": "Internal campaign DTO with approved tester identities restricted to admins."
+    },
+    "fun_case_json": {
+      "owner": "MODERATION",
+      "use": "Internal minimal secret-authorized case receipt projection; no other case text."
+    },
+    "fun_audit": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal append-only trusted actor/time corrective event capture."
+    },
+    "fun_signature": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal hash of ballot request arguments for caller-bound exact retry."
+    },
+    "fun_admin_campaign": {
+      "owner": "POLLS",
+      "use": "Admin create/configure/testing-open/pause/close/finalize/recount; winners derived from valid free totals."
+    },
+    "fun_entry": {
+      "owner": "UPLOAD",
+      "use": "Caller-owned private reserve/edit/verified-submit/withdraw with immutable revision paths and server entry window."
+    },
+    "fun_permission": {
+      "owner": "MINOR_SAFETY",
+      "use": "Exact expected-scope assent/linked guardian grant/revoke; edit/stale form/link ending invalidates publication."
+    },
+    "fun_vote": {
+      "owner": "POLLS",
+      "use": "Atomic one free ballot/account/window; version CAS, caller/request/args retry binding, no-self vote and capped mutations."
+    },
+    "fun_admin_entry": {
+      "owner": "MODERATION",
+      "use": "Admin eligibility/rights/safety review and suspension with private rationale; no winner selection."
+    },
+    "fun_admin_ballot": {
+      "owner": "POLLS",
+      "use": "Admin proven ballot invalidation with reason and recount-required audit."
+    },
+    "fun_media_access": {
+      "owner": "RLS_SECURITY",
+      "use": "Caller-scoped exact revision read/verify/remove authorization before server private storage access."
+    },
+    "fun_verify_media": {
+      "owner": "UPLOAD",
+      "use": "Service-only sanitized digest/bytes/duration commit to still-authorized immutable draft; no client media assertion."
+    },
+    "fun_complete_removal": {
+      "owner": "UPLOAD",
+      "use": "Service-only actual object-absence completion across all tracked entry revisions/deletion cases."
+    },
+    "fun_case": {
+      "owner": "MODERATION",
+      "use": "Bounded report/appeal/removal request with hashed secret; public report saturation cannot deny owner deletion."
+    },
+    "fun_case_status": {
+      "owner": "MODERATION",
+      "use": "Secret-authorized unexpired minimal case status; no private target existence leak."
+    },
+    "fun_admin_case": {
+      "owner": "MODERATION",
+      "use": "Admin case resolve/escalation with reason; completion only server-confirmed deletion."
+    },
+    "fun_reflection": {
+      "owner": "POLLS",
+      "use": "Own private voluntary preset service receipt create/delete, separate from badges/money."
+    },
+    "fun_snapshot": {
+      "owner": "POLLS",
+      "use": "Own/guardian plus enrolled-pilot campaign/candidate/result/curated-story projection; eligible is known-age, can_participate is caller enrollment capability; no tester list/voter identity exposure."
+    },
+    "fun_admin_snapshot": {
+      "owner": "ADMIN",
+      "use": "Complete selected bounded campaign Data with separately paged cases/audit, defined counts and corrective identity scope."
+    },
+    "fan_zone_private.upload_allowed": {
+      "owner": "RLS_SECURITY",
+      "use": "Private-schema Storage INSERT policy helper; schema usage denied to API roles, only policy-bound execute; owner editable reserved path/window and no existing object."
+    },
+    "fun_page_time": {
+      "owner": "RLS_SECURITY",
+      "use": "Insert trigger ensures timestamp-page ordering without same-transaction skipped case/audit rows."
+    },
+    "fun_immutable_record": {
+      "owner": "RLS_SECURITY",
+      "use": "Trigger protects exact consent/audit receipts against mutation/truncate; identity nulling handled for deletion."
+    },
+    "fun_prune_receipts": {
+      "owner": "POLLS",
+      "use": "Service-only explicit expiry cleanup for bounded ballot retry records; no scheduler or hosted execution established."
+    },
+    "quiz_week": {
+      "owner": "POLLS",
+      "use": "Internal authoritative UTC Monday start for one weekly assignment/badge."
+    },
+    "quiz_actor": {
+      "owner": "AUTH",
+      "use": "Internal canonical account/knownage/closed check; no client-supplied participant identity."
+    },
+    "quiz_admin_actor": {
+      "owner": "ADMIN",
+      "use": "Internal protected quiz content/settings admin guard."
+    },
+    "quiz_require_testing": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal default-paused/tester allowlist/production-refusal guard for quiz participation."
+    },
+    "quiz_guard_question": {
+      "owner": "POLLS",
+      "use": "Trigger freezes issued question wording/answers; edits become new reviewed versions."
+    },
+    "quiz_guard_audit": {
+      "owner": "RLS_SECURITY",
+      "use": "Trigger keeps trusted quiz audit immutable; allowed FK nulling on identity deletion."
+    },
+    "quiz_snapshot": {
+      "owner": "POLLS",
+      "use": "Own week/prompt/question/status/explanation/private badges and corrections; answer withheld until own completion."
+    },
+    "quiz_start": {
+      "owner": "POLLS",
+      "use": "Atomic random approved sport question once per canonical account/UTCweek; refresh/sport changes reuse assignment."
+    },
+    "quiz_answer": {
+      "owner": "POLLS",
+      "use": "Owned current unvoided question completion with exact option/request retry and one private noncash badge; no proficiency/earnings claim."
+    },
+    "quiz_skip": {
+      "owner": "POLLS",
+      "use": "Own current UTC-week dismissal without reward/penalty or capability loss."
+    },
+    "quiz_admin_settings": {
+      "owner": "ADMIN",
+      "use": "Admin default-paused testing audience/settings change with authoritative rationale."
+    },
+    "quiz_admin_question": {
+      "owner": "POLLS",
+      "use": "Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction."
+    },
+    "quiz_admin_snapshot": {
+      "owner": "ADMIN",
+      "use": "Complete <=100 question-version bank, defined current-week counts and bigint-paged audit; no participant answer list."
+    },
+    "fun_storage_guard": {
+      "owner": "RLS_SECURITY",
+      "use": "Private Fan Zone Storage INSERT/UPDATE trigger locks campaign then entry; blocks stale/path-moving/service writes after withdrawal/deletion or verification. Catalog fence only, hosted provider compensation still unverified."
+    },
+    "fun_guardian_grant_valid": {
+      "owner": "MINOR_SAFETY",
+      "use": "Internal exact relied-on guardian consent receipt/link/scope validity; historical other grants do not substitute after revocation/link loss."
+    },
+    "quiz_normalize_options": {
+      "owner": "POLLS",
+      "use": "Protected Unicode/ECMAScript-whitespace option canonicalization for new content/approval/assignment; malformed legacy question rows stay admin-correctable and cannot issue or complete."
     }
   },
   "exceptions": {
@@ -352,6 +600,9 @@
     },
     "reel_tag_rejections": {
       "noReader": "Read only inside the tag trigger (no re-tag, 3-decline bar) and confirm_reel_player_tag (admin undo restores the athlete); who declined is never shown."
+    },
+    "fan_zone_requests": {
+      "noReader": "fun_vote actually selects caller/request retry receipts while also writing them; the map classifies this mixed function as a writer. Raw retry signatures are intentionally not exported to admin/fan reports."
     }
   },
   "exportsTriage": [
@@ -493,6 +744,27 @@
       "name": "guardianConsentTemplate",
       "decision": "keep",
       "reason": "The exact signed text; guardianConsent.test.ts hashes it and pins it to the migration's guardian_consent_form_sha256 (MINOR-01).",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/fanZoneMedia.ts",
+      "name": "verifyFanZoneUpload",
+      "decision": "keep",
+      "reason": "Admin-first operational boundary and planned fan consumer in enrolled FUN-01/QUIZ-01; root must remove temporary unused entry when app stage wires it.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/fanZone.ts",
+      "name": "fetchFanZone",
+      "decision": "keep",
+      "reason": "Enrolled FUN-01 fan snapshot consumer waits for independent admin-ready gate; remove this temporary entry when Task4 connects the hook.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/SportQuiz/SportQuizInvitation.tsx",
+      "name": "SportQuizInvitation",
+      "decision": "keep",
+      "reason": "Task7 producer invitation awaiting independent review before root Home/HQ consumer integration; remove temporary entry once connected.",
       "status": "kept"
     }
   ],

@@ -1,14 +1,14 @@
 # FUN-01 — Fan Zone pilot
 
 **Owner authorization:** implement the recommended first build; fans' valid free ballots select the winner.
-**Source status:** planned in isolated checkout `codex/fan-zone`; no hosted deployment or applied migration.
+**Source status:** backend/media implemented and corrected in isolated `codex/fan-zone`; scoped independent review passes. Admin building; fan UI waits for gate. No hosted deployment or applied migration.
 **Primary owner:** POLLS under ENGINEERING, paired with ADMIN / UPLOAD / FULLSTACK.
 **Required reviews:** MINOR_SAFETY, PRIVACY_ENGINEERING, RLS_SECURITY, DATA_GOVERNANCE,
 MODERATION, SUPPORT, VOICE, independent QA; DOCUMENTATION and VP_OPERATIONS perform actual handoff.
 **Actual executor:** outside-session Codex root and specifically assigned Codex agents, not evidence of pinned registry runtimes or counsel.
 
 [Design](../engineering/design/FAN_ZONE_DESIGN.md) · [Implementation plan](../engineering/design/FAN_ZONE_IMPLEMENTATION_PLAN.md)
-· [Feature contract](feature-admin.json) · [Product direction](../product/FAMILY_FUN_PLAYBOOK.md#12-perfecting-the-first-family-fun-journey)
+· [Feature contract](feature-admin.json) · [Product direction](../product/FAMILY_FUN_PLAYBOOK.md#12-refinement-one-welcoming-weekly-experience)
 
 ## Experiment and progress
 
@@ -25,9 +25,12 @@ completion/repeat/donation/burden baselines are unknown. Growth retains the Oct2
 | Isolated source snapshot | Branch codex/fan-zone baseline 8ebcf6b; original dirty source preserved; dependencies linked locally with workspace package pointers rebound to this checkout. |
 | Baseline repair | Existing Finance coverage failed on payout_flag_overrides.payouts_enabled (3 tests). Added one catalog control entry; focused financeData 15/15 pass. Full check running. No SQL/payee behavior change. |
 | Enrollment/design | Planned before Fan Zone source. Admin-first checkpoint pending. |
-| Backend/media/admin | Assigned after concrete interface design; pending actual evidence. |
+| Backend/media | Fix commit766e0ff:135/135 actors,14/14 API,105/105 canonical; independent spec/quality PASS in task-1-2-round1-review.md (local source correction scope). |
+| Admin | Task3 source released after producer fix review; tests and independent admin gate pending. |
 | Fan UI | Must wait for verified admin-ready checkpoint. |
 | Documentation / coordination / final QA | Pending actual executor receipts; root integrates shared docs. |
+
+QUIZ-01 separately implements the owner-added weekly sport pop quiz and private noncash learning badge. It does not change the fan-award recap into Aura/cash. [Quiz design](../engineering/design/SPORT_POP_QUIZ_DESIGN.md).
 
 ## Release boundaries
 

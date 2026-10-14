@@ -112,3 +112,12 @@ and selected-table atomic audit. Requires October bookkeeping and existing role 
 Prepared and replayed locally only; apply only with owner approval. Rollback disables RPCs/triggers
 through reviewed migration and preserves records. Never restore old SQL automatically or undo money
 when switching source versions. Canonical schema contains the same support section.
+
+## Family fun testing pilots (written, not applied)
+
+| Migration | Dependency / handling | Applied |
+| --- | --- | --- |
+| `20261014130000_fan_zone.sql` | After `20261014120000_payee_verification.sql`/MINOR-01; private bucket, exact entry consent, versioned free ballots, reporting/removal. Default draft/empty approved tester audience, production refusal. Local actor replay only; no deployment/scheduler. | No. |
+| `20261014140000_sport_pop_quiz.sql` | After FUN-01; private weekly question/badge and corrected-content handling. Default paused/empty tester audience; all seed questions draft awaiting fact review. | No. |
+
+Owner approves actual SQL/release. See [Fan Zone design](../../docs/engineering/design/FAN_ZONE_DESIGN.md) and [Quiz design](../../docs/engineering/design/SPORT_POP_QUIZ_DESIGN.md). Rollback headers require reviewed retention/access handling; do not delete records or restore old SQL automatically.

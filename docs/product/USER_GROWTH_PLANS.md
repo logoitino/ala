@@ -201,3 +201,29 @@ The next existing Growth packet is **October 20, 2026**. Include every segment's
 five prior safety/payment decisions and the fan/video/photo/retag/recognition proposals. Actual
 review execution and checks belong in GROWTH-01; counsel, hosted/device and release acceptance
 remain separate from this planning work.
+
+
+## Weekly learning alongside each account path — QUIZ-01
+
+Owner-authorized local build adds optional sport learning, following the account’s usual
+journey. [Playbook §13](FAMILY_FUN_PLAYBOOK.md#13-weekly-sport-pop-quiz-learning-path)
+defines one weekly approved random question, explanation, private Sport Learner completion
+badge, local Not now and persisted Skip when the active quiz can save it. No perfection or
+streak pressure, money/Aura/ballot weight, institutional privilege or compulsory service.
+
+| Segment | Growth opportunity | Decision evidence to gather after approved pilot |
+| --- | --- | --- |
+| Casual fan, family or friend | Learn a rule, recognize a moment at the game, come back for another simple question | Voluntary completion/return and support burden; do not assume this increases donations. |
+| Filmer | Learn context for a clip without athlete or payee setup | Whether clear rules help participation/upload confidence; no extra badge for publishing a child’s video. |
+| Athlete | Welcome other-sport curiosity alongside their own story | Untimed comprehension feedback; avoid public proficiency/performance ranks. |
+| Guardian or parent | Understand the sport together while keeping each account’s answer private | Consent/friction feedback and usable corrections; no access to a child’s answer through a new report. |
+| Donor, booster or sponsor | Learn personally before choosing optional existing support actions | Return/correction feedback; purchases and donations never improve quiz or voting standing. |
+| Operator, staff or admin account | Optional personal learning alongside operational work | Whether discovery interferes with work; keep it dismissible and nonblocking. |
+| New or accessibility user | Four plain options and an explanation after any answer | Accessible controls, easy leave/Skip and consented feedback; never claim mastery from participation. |
+
+Growth proposes measures, Content/VOICE approves rule context, Legal/Safety reviews age/privacy
+and recognition wording, Dev builds weekly/retry/skip/correction controls, and Support tracks
+pause/errors/correction workload. Current source status and actual local gates are in
+[QUIZ-01](../agents/QUIZ-01.md). Real completion/return/donation/capacity measures remain
+unknown; no new tracking collector or live experiment is introduced. The October20 joint
+packet brings evidence and feasible options to the owner before expansion.

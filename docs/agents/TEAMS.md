@@ -850,3 +850,27 @@ Engineering Support under Dev owns the issue/repair workflow; Security independe
 suspicious evidence, false-positive safeguards, audit integrity and safe recovery.
 Definition: [.claude/agents/threat-detection.md](../../.claude/agents/threat-detection.md).
 Operating design: [ENGINEERING_SUPPORT_CONSOLE.md](../engineering/design/ENGINEERING_SUPPORT_CONSOLE.md).
+
+
+## Current FUN-01 / QUIZ-01 implementation handoff — 2026-10-14
+
+Owner authorized the recommended local build and added weekly Sport Pop Quiz. Earlier
+brainstorming sections remain dated history. Current source and actual evidence are in
+[FUN-01](FUN-01.md) and [QUIZ-01](QUIZ-01.md), in the isolated codex/fan-zone checkout.
+Fan backend/media scoped reviews PASS; Fan admin is building and its participant UI waits
+for its own gate. Quiz corrected admin source has independent Data/Safety/SUPPORT acceptance
+and actual admin-ready gate at2026-10-14T06:09:57Z; participant UI is now building.
+
+POLLS with ADMIN/UPLOAD/BACKEND owns operational source; Content/VOICE verifies sport facts
+and contextual wording. Data/Safety/SUPPORT independently checks ownership, privacy,
+corrections, removal and stop controls before expansion; QA reviews visible behavior and
+actual gates. PRODUCT/RESEARCH and Growth include casual fans, filmers, athletes, families,
+friends, guardians and optional personal learning by donor/booster/sponsor/staff/operator
+accounts, without institutional privileges. Private Sport Learner completion badges are
+separate from Aura, earnings, public ranking, fan ballots and voluntary service.
+
+GROWTH_ANALYTICS gathers the October20 evidence packet: optional engagement/return,
+onboarding friction, corrections/support burden and operational capacity; unknown real
+measurements stay unknown. DOCUMENTATION/VP_OPERATIONS records actual executors, source
+checks and next owners. Wider audience, hosted release, money/service expansion and counsel
+decisions retain their existing gates; no new spending, scheduler or external outreach.

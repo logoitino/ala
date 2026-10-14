@@ -7,14 +7,14 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 
 | Measure | Count |
 | --- | --- |
-| Tables | 66 |
+| Tables | 79 |
 | Views | 3 |
-| Storage buckets | 4 |
+| Storage buckets | 5 |
 | Feature switches read by the fan app | 38 of 38 |
-| Database functions | 260 (10 used by hand, 24 trigger functions) |
-| Tables reached by at least one screen or server route | 68 of 69 |
-| Code files that read or write the database | 77 |
-| Exported symbols nothing imports | 20 (0 proposed for archive, 20 kept on purpose) |
+| Database functions | 308 (58 used by hand, 29 trigger functions) |
+| Tables reached by at least one screen or server route | 81 of 82 |
+| Code files that read or write the database | 81 |
+| Exported symbols nothing imports | 23 (0 proposed for archive, 23 kept on purpose) |
 | Rule failures | 0 |
 
 ## Owners
@@ -24,6 +24,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `ACCOUNT_TAGS` | `reel_account_tags`, `reel_tag_rejections` | 4 |
 | `ATHLETE_STATS` | `athlete_career_stats`, `athlete_game_logs`, `sport_configs` | 4 |
 | `ATHLETE_VERIFICATION` | `athlete_vouches`, `school_confirmers`, `verification_requests` | 11 |
+| `AURA` | `sport_quiz_badges` | 0 |
 | `BILLING` | `subscriber_requests`, `subscriptions` | 0 |
 | `CONNECT` | `payee_verifications`, `payout_flag_overrides` | 8 |
 | `CONTROLLER` | `ledger_accounts`, `ledger_manual_entries`, `ledger_manual_lines`, `ledger_period_closes`, `ledger_period_reopens` | 6 |
@@ -36,16 +37,18 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `INCIDENT_TRIAGE` | `support_reviews` | 1 |
 | `LEDGER` | `company_revenue_logs`, `stripe_webhook_events`, `tips` | 7 |
 | `LOCAL` | `games` | 2 |
-| `MODERATION` | `reel_reports` | 0 |
+| `MINOR_SAFETY` | `fan_zone_consents` | 5 |
+| `MODERATION` | `fan_zone_cases`, `reel_reports` | 6 |
 | `NOTIFICATIONS` | `crew_push_queue` | 0 |
 | `OPERATOR` | `game_events`, `operator_checkins`, `operator_gigs` | 1 |
 | `PARTNERSHIPS` | `sponsorships` | 0 |
 | `PHOTO_STORIES` | `reel_photos`, `reel_photos_feed` | 0 |
 | `PLAYBACK` | `reel_views` | 0 |
-| `POLLS` | `cheer_polls` | 2 |
+| `POLLS` | `cheer_polls`, `fan_zone_ballots`, `fan_zone_campaigns`, `fan_zone_reflections`, `fan_zone_requests`, `sport_quiz_attempts`, `sport_quiz_questions`, `sport_quiz_settings` | 17 |
 | `PROFILE` | `friend_request_log`, `friendships`, `guardian_approval_requests`, `guardian_invite_attempts`, `guardian_invites`, `guardian_links`, `profiles`, `supervision_events`, `user_blocks`, `profiles_public` | 72 |
 | `RALLY` | `rallies` | 7 |
 | `RECOVERY` | `support_releases` | 1 |
+| `RLS_SECURITY` | `fan_zone_audit`, `sport_quiz_audit` | 11 |
 | `ROSTERS` | `players` | 20 |
 | `RUNTIME_CONFIG` | `app_runtime_config` | 4 |
 | `SCHOOL_PARTNERS` | `schools_and_teams` | 2 |
@@ -55,6 +58,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `TELEMETRY` | `support_signals`, `telemetry_logs` | 3 |
 | `THREAT_DETECTION` | `support_audit_events` | 2 |
 | `TREASURY` | `disbursements` | 0 |
+| `UPLOAD` | `fan_zone_entries` | 4 |
 | `WISHLIST` | `wishlist_items` | 2 |
 
 ## Tables and views
@@ -75,7 +79,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/runtime.ts`; database functions: `patch_app_runtime_draft`, `publish_app_runtime`
 - Read by: `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `@/lib/adminReports.ts`, `@/lib/runtime.ts`; database functions: `friend_requests_enabled`, `guardian_links_enabled`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +55 more
 
 ### `athlete_birthdates`
 
@@ -178,6 +182,76 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `get_donations_to_thank`, `get_my_donation_thanks`
 - Screens: `/activity`, `/parent`, `/profile`, `/user/[id]`
 
+### `fan_zone_audit`
+
+**Owner:** `RLS_SECURITY` · Immutable server actor/time Fan Zone configuration/review/consent/ballot/result/removal trace; restricted corrective access.
+
+- Written by: —; database functions: `fun_audit`
+- Read by: —; database functions: `fun_admin_snapshot`, `fun_complete_removal`, `fun_entry_json`, `fun_media_access`, `fun_page_time`
+- Triggers: `fan_zone_audit_time → fun_page_time`, `fan_zone_audit_immutable → fun_immutable_record`
+- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`
+
+### `fan_zone_ballots`
+
+**Owner:** `POLLS` · One current versioned free ballot per canonical eligible profile/campaign, with restricted invalidation rationale.
+
+- Written by: —; database functions: `fun_admin_ballot`, `fun_vote`
+- Read by: —; database functions: `fun_admin_campaign`, `fun_admin_snapshot`, `fun_signature`, `fun_snapshot`
+- Screens: `/admin/fan-zone`
+
+### `fan_zone_campaigns`
+
+**Owner:** `POLLS` · Default-off testing-only fan award campaigns, approved tester audience, immutable rules/windows and free-ballot result revisions.
+
+- Written by: —; database functions: `fun_admin_ballot`, `fun_admin_campaign`, `fun_admin_entry`, `fun_complete_removal`, `fun_entry`, `fun_permission`
+- Read by: —; database functions: `fan_zone_private.upload_allowed`, `fun_admin_case`, `fun_admin_snapshot`, `fun_case`, `fun_media_access`, `fun_pilot` +5 more
+- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`
+
+### `fan_zone_cases`
+
+**Owner:** `MODERATION` · Private bounded report/appeal/deletion cases with hashed reporter receipt secret/30day receipt access, actual removal completion and escalation.
+
+- Written by: —; database functions: `fun_admin_case`, `fun_case`, `fun_complete_removal`
+- Read by: —; database functions: `fun_admin_snapshot`, `fun_case_status`, `fun_media_access`, `fun_page_time`, `fun_storage_guard`
+- Triggers: `fan_zone_case_time → fun_page_time`
+- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`
+
+### `fan_zone_consents`
+
+**Owner:** `MINOR_SAFETY` · Immutable exact-entry assent/guardian permission/revocation receipts tied to scope/media revision and active confirmed supervision link.
+
+- Written by: —; database functions: `fun_permission`
+- Read by: —; database functions: `fun_guardian_grant_valid`, `fun_permission_valid`
+- Triggers: `fan_zone_consent_immutable → fun_immutable_record`
+- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`
+
+### `fan_zone_entries`
+
+**Owner:** `UPLOAD` · Private fan-video drafts/revisions, server-reserved immutable storage paths, verified media metadata, review and withdrawal state. Private guardian_consent_id pins the current exact grant; no automatic historical guardian substitution.
+
+- Written by: —; database functions: `fun_admin_entry`, `fun_complete_removal`, `fun_entry`, `fun_permission`, `fun_verify_media`
+- Read by: —; database functions: `fan_zone_private.upload_allowed`, `fun_admin_campaign`, `fun_admin_case`, `fun_admin_snapshot`, `fun_case`, `fun_media_access` +4 more
+- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`
+
+### `fan_zone_reflections`
+
+**Owner:** `POLLS` · Voluntary private preset service reflection receipts, deletable by owner; no beneficiary detail or payment condition.
+
+- Written by: —; database functions: `fun_reflection`
+- Read by: —; database functions: `fun_snapshot`
+- Removed by: `fun_reflection`
+- Screens: `/admin/fan-zone`
+
+### `fan_zone_requests`
+
+**Owner:** `POLLS` · Caller/request/argument-bound ballot retry receipts, capped60/window and expired30days after vote close.
+
+- Written by: —; database functions: `fun_vote`
+- Read by: —; database functions: —
+- Removed by: `fun_prune_receipts`
+- Screens: `/admin/fan-zone`
+- Exception: noReader — fun_vote actually selects caller/request retry receipts while also writing them; the map classifies this mixed function as a writer. Raw retry signatures are intentionally not exported to admin/fan reports.
+
 ### `filmer_props`
 
 **Owner:** `FILMER_REWARDS` · Non-cash Props fans give filmers.
@@ -234,7 +308,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `cancel_my_approval_request`, `enforce_minor_consent`, `guardian_decide_approval`, `set_my_privacy`
 - Read by: —; database functions: `admin_minor_report`, `guardian_decide_approval`, `guardian_list_minors`, `minor_status_json`
 - Removed by: `admin_purge_minor_records`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +42 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +45 more
 
 ### `guardian_consents`
 
@@ -243,7 +317,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `close_guardian_link`, `record_guardian_consent`, `revoke_guardian_consent`
 - Read by: —; database functions: `admin_minor_overview`, `guardian_list_minors`, `minor_has_consent`, `minor_status_json`
 - Triggers: `guardian_consents_append_only → guard_consent_records`, `guardian_consents_no_truncate → guard_consent_truncate`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +42 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +45 more
 
 ### `guardian_invite_attempts`
 
@@ -269,8 +343,8 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `PROFILE` · A teen's linked parent or guardian (MINOR-01): from the teen's invite code (counts once the teen confirms) or the admin-set guardian on record; at most two; either side ends it, and a block ends it. Supervision only, never control. No client access.
 
 - Written by: —; database functions: `accept_guardian_invite`, `close_guardian_link`, `respond_guardian_link`, `sign_guardian_consent`
-- Read by: —; database functions: `admin_end_guardian_link`, `admin_minor_overview`, `admin_minor_report`, `close_guardian_link`, `close_under_13_account`, `end_guardian_link` +12 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +42 more
+- Read by: —; database functions: `admin_end_guardian_link`, `admin_minor_overview`, `admin_minor_report`, `close_guardian_link`, `close_under_13_account`, `end_guardian_link` +15 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +48 more
 
 ### `ledger_accounts`
 
@@ -357,16 +431,16 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/lib/adminCatalog.ts`, `@/lib/boosterPortal.ts`, `@/lib/hype.ts`, `@/lib/payments.ts`, `@/lib/vault.ts`; database functions: `add_user_aura`, `admin_approve_player_consent`, `admin_set_player_guardian`, `increment_backer_count`, `increment_player_hype`, `parent_set_player_consent` +1 more
 - Read by: `apps/mobile/app/operator/[gameId].tsx`, `apps/mobile/app/operator/scorer.tsx`, `@/hooks/useLocalSearch.ts`, `@/hooks/useRoster.ts`, `@/lib/admin.ts`, `@/lib/athleteStats.ts` +4 more; database functions: `admin_add_athlete_game_log`, `admin_payee_overview`, `admin_record_payee_check`, `admin_upsert_athlete_career_stats`, `athlete_payout_status`, `can_confirm_player_tag` +27 more
 - Triggers: `players_payee_supersede → payee_changes_supersede`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +55 more
 
 ### `profiles`
 
 **Owner:** `PROFILE` · Account profiles, roles and settings.
 
 - Written by: `apps/mobile/src/backend/api/createStripeAccount.ts`, `@/context/AuthContext.tsx`, `@/lib/adminCatalog.ts`, `@/lib/auth.ts`, `@/lib/legal.ts`, `@/lib/teams.ts` +2 more; database functions: `add_user_aura`, `add_user_role`, `admin_decide_payout_override`, `admin_decide_verification`, `admin_revoke_verification`, `admin_set_birth_month` +11 more
-- Read by: `portal/lib/authz.ts`, `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `apps/mobile/src/backend/api/createPayout.ts`, `apps/mobile/src/backend/api/createStripeAccount.ts`, `@/context/AuthContext.tsx` +10 more; database functions: `admin_add_school_confirmer`, `admin_list_age_blocked`, `admin_minor_overview`, `admin_minor_report`, `admin_payee_overview`, `admin_privacy_report` +93 more
+- Read by: `portal/lib/authz.ts`, `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `apps/mobile/src/backend/api/createPayout.ts`, `apps/mobile/src/backend/api/createStripeAccount.ts`, `@/context/AuthContext.tsx` +10 more; database functions: `admin_add_school_confirmer`, `admin_list_age_blocked`, `admin_minor_overview`, `admin_minor_report`, `admin_payee_overview`, `admin_privacy_report` +97 more
 - Triggers: `guard_profiles_admin_escalation → guard_profiles_admin_escalation`, `guard_profiles_verification → guard_profiles_verification`, `profiles_privacy_guard → guard_profiles_privacy`, `profiles_new_account_rules → profiles_apply_new_account_rules`, `profiles_age_guard → guard_profiles_age`, `profiles_payout_flags_guard → guard_payout_flags` +1 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +63 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +69 more
 
 ### `rallies`
 
@@ -401,7 +475,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `set_reel_photos`
 - Read by: —; database functions: `view:reels_feed`, `view:reel_photos_feed`
 - Removed by: `set_reel_photos`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +39 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +41 more
 
 ### `reel_reports`
 
@@ -434,9 +508,9 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `HIGHLIGHTS` · Highlights: clips and photo stories with their tags and counters.
 
 - Written by: `@/lib/adminCatalog.ts`, `@/lib/crew.ts`, `@/lib/photoStories.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `block_user`, `clear_reel_hype`, `close_under_13_account`, `confirm_reel_player_tag`, `increment_reel_hype`, `increment_reel_tips` +6 more
-- Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/photoStories.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `athlete_highlight_views`, `can_read_reel_vault`, `clear_reel_hype`, `confirm_reel_player_tag`, `filmer_stats`, `get_active_spotlight_award` +23 more
+- Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/photoStories.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `athlete_highlight_views`, `can_read_reel_vault`, `clear_reel_hype`, `confirm_reel_player_tag`, `filmer_stats`, `fun_snapshot` +24 more
 - Triggers: `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_filmer_rewards → reels_filmer_rewards`, `reels_reset_photo_count → reels_reset_photo_count`, `reels_apply_tag_defaults → reels_apply_tag_defaults`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +49 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
 
 ### `saved_reels`
 
@@ -461,7 +535,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/adminCatalog.ts`; database functions: `admin_set_school_branding`, `set_malo_freeze`
 - Read by: `@/lib/adminCatalog.ts`, `@/lib/adminControls.ts`, `@/lib/teams.ts`; database functions: `athlete_school_badge`, `can_confirm_player_tag`, `get_active_spotlight_award`, `get_admin_reports`, `get_my_verification`, `get_school_confirmation_queue` +4 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +53 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
 
 ### `shop_orders`
 
@@ -506,6 +580,48 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Removed by: `delete_sport_config`
 - Screens: `/`, `/admin/athletes`, `/admin/games`, `/admin/sports`, `/game/[id]`, `/local/game/[id]`, `/operator/[gameId]`, `/operator/scorer`, `/profile`, `/user/[id]`
 
+### `sport_quiz_attempts`
+
+**Owner:** `POLLS` · One own-scoped random approved question assignment/skip/completion per account UTC week; exact request retry.
+
+- Written by: —; database functions: `quiz_admin_question`, `quiz_answer`, `quiz_skip`, `quiz_start`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_answer`, `quiz_snapshot`
+- Screens: `/admin/sport-quiz`, `/sport-quiz`
+
+### `sport_quiz_audit`
+
+**Owner:** `RLS_SECURITY` · Append-only authoritative quiz settings/content/correction history; participant answers/identities omitted from admin count export.
+
+- Written by: —; database functions: `quiz_admin_question`, `quiz_admin_settings`, `quiz_answer`, `quiz_skip`, `quiz_start`
+- Read by: —; database functions: `quiz_admin_snapshot`
+- Triggers: `quiz_audit_guard → quiz_guard_audit`, `quiz_audit_truncate_guard → quiz_guard_audit`
+- Screens: `/admin/sport-quiz`, `/sport-quiz`
+
+### `sport_quiz_badges`
+
+**Owner:** `AURA` · Private noncash Sport Learner weekly completion acknowledgments; no Aura wallet, voting or payment value; erroneous content corrections.
+
+- Written by: —; database functions: `quiz_admin_question`, `quiz_answer`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_snapshot`
+- Screens: `/admin/sport-quiz`, `/sport-quiz`
+
+### `sport_quiz_questions`
+
+**Owner:** `POLLS` · Human-reviewed sport question versions, draft/approved/archive/void state and stable issued answer/explanation.
+
+- Written by: —; database functions: `quiz_admin_question`
+- Read by: —; database functions: `quiz_admin_question`, `quiz_admin_snapshot`, `quiz_answer`, `quiz_snapshot`, `quiz_start`
+- Triggers: `quiz_question_guard → quiz_guard_question`
+- Screens: `/admin/sport-quiz`, `/sport-quiz`
+
+### `sport_quiz_settings`
+
+**Owner:** `POLLS` · Default-paused/testing-only quiz switch with approved canonical-profile tester allowlist.
+
+- Written by: —; database functions: `quiz_admin_settings`
+- Read by: —; database functions: `quiz_admin_question`, `quiz_admin_snapshot`, `quiz_require_testing`, `quiz_snapshot`
+- Screens: `/admin/sport-quiz`, `/sport-quiz`
+
 ### `spotlight_awards`
 
 **Owner:** `SPOTLIGHT` · Player of the Week / Month / Year awards.
@@ -537,7 +653,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/hooks/useAthleteSubscription.ts`; database functions: —
 - Read by: `@/hooks/useAthleteSubscription.ts`, `@/lib/bookkeeping.ts`; database functions: `can_read_reel_vault`, `get_admin_reports`, `sync_company_revenue_logs`, `view:reels_feed`, `view:reel_photos_feed`
 - Triggers: `company_revenue_subscriptions_ai → company_revenue_after_source_insert`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +46 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +48 more
 
 ### `supervision_events`
 
@@ -546,7 +662,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `log_supervision_event`
 - Read by: —; database functions: `supervision_json`
 - Removed by: `admin_purge_minor_records`, `log_supervision_event`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +42 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +45 more
 
 ### `support_audit_events`
 
@@ -578,7 +694,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `insert_support_signal`
 - Read by: —; database functions: `get_engineering_support_snapshot`, `record_support_review`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +48 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +51 more
 
 ### `telemetry_logs`
 
@@ -587,7 +703,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/services/TelemetryManager.ts`, `supabase/functions/stripe-webhook/index.ts`; database functions: —
 - Read by: `@/lib/admin.ts`; database functions: `get_admin_platform_metrics`, `get_admin_reports`
 - Removed by: `@/lib/admin.ts`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +51 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +53 more
 
 ### `tips`
 
@@ -606,7 +722,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `admin_get_privacy`, `admin_privacy_report`, `is_blocked_between`, `list_my_blocks`, `supervision_json`, `view:profiles_public`
 - Removed by: `unblock_user`
 - Triggers: `user_blocks_end_links → user_blocks_end_guardian_links`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +43 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +49 more
 
 ### `verification_requests`
 
@@ -614,7 +730,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/boosterPortal.ts`; database functions: `admin_decide_verification`, `admin_revoke_verification`, `claim_athlete`, `redeem_team_code`, `school_confirm_athlete`, `start_school_check`
 - Read by: `@/lib/adminCatalog.ts`, `@/lib/boosterPortal.ts`; database functions: `admin_decide_verification`, `athlete_payout_status`, `athlete_profile_for_player`, `athlete_school_badge`, `claim_athlete`, `get_admin_reports` +8 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +50 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +53 more
 
 ### `wishlist_items`
 
@@ -630,7 +746,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: —
 - Read by: `@/lib/privacy.ts`; database functions: `get_public_profiles`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +43 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +46 more
 
 ### `reel_photos_feed` (view)
 
@@ -646,16 +762,17 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: —
 - Read by: `@/lib/reels.ts`, `@/lib/spotlight.ts`; database functions: —
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +39 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +41 more
 
 ## Storage buckets
 
 | Bucket | Owner | Purpose | Uploaded by | Read by | Screens |
 | --- | --- | --- | --- | --- | --- |
-| `avatars` | `PROFILE` | Profile pictures and booster/sponsor logos. | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +46 more |
-| `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +46 more |
-| `reel_vault` | `VAULT` | Private Vault clips, read only through short-lived signed URLs. | `@/services/MediaUploadService.ts` | `@/lib/reels.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +46 more |
-| `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). | `@/services/MediaUploadService.ts` | `@/lib/photoStories.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +46 more |
+| `avatars` | `PROFILE` | Profile pictures and booster/sponsor logos. | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +48 more |
+| `fan_zone` | `UPLOAD` | Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal. | `apps/mobile/src/backend/api/fanZoneMedia.ts` | `apps/mobile/src/backend/services/fanZoneMedia.ts` | `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api` |
+| `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +48 more |
+| `reel_vault` | `VAULT` | Private Vault clips, read only through short-lived signed URLs. | `@/services/MediaUploadService.ts` | `@/lib/reels.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +48 more |
+| `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). | `@/services/MediaUploadService.ts` | `@/lib/photoStories.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +48 more |
 
 ## Feature switches
 
@@ -785,7 +902,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `create_rally` | `RALLY` | `@/lib/rallies.ts` | `rallies` | `profiles` |
 | `crew_follow_blocked` | `PROFILE` | `sql:RLS policy`, `sql:check constraint`, `sql:toggle_crew_follow` | — | `profiles` |
 | `current_payee_check` | `CONNECT` | `sql:payee_missing_checks` | — | `payee_verifications` |
-| `current_user_role` | `PROFILE` | `sql:RLS policy`, `sql:add_user_role`, `sql:admin_approve_player_consent` +39 more | — | `profiles` |
+| `current_user_role` | `PROFILE` | `sql:RLS policy`, `sql:add_user_role`, `sql:admin_approve_player_consent` +44 more | — | `profiles` |
 | `custodial_role` | `ROSTERS` | `sql:RLS policy`, `sql:decide_custodial_withdrawal`, `sql:get_custodial_summary` +2 more | — | `players`, `profiles` |
 | `decide_custodial_withdrawal` | `CUSTODIAL` | `@/lib/custodial.ts` | `custodial_withdrawals` | `profiles` |
 | `delete_sport_config` | `BACKEND` | `@/lib/sports.ts`, `sql:check constraint` | — | — |
@@ -794,9 +911,43 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `end_guardian_link` | `PROFILE` | `@/lib/minors.ts` | — | `guardian_links` |
 | `enforce_minor_consent` | `PROFILE` | `sql:apply_teen_defaults`, `sql:close_guardian_link`, `sql:record_guardian_consent` +3 more | `guardian_approval_requests` | `profiles` |
 | `expire_operator_checkins` | `BACKEND` | `sql:admin_list_operator_checkins`, `sql:admin_purge_operator_checkins`, `sql:operator_checkins_minimize` | — | — |
+| `fan_zone_private.upload_allowed` | `RLS_SECURITY` | By hand: Private-schema Storage INSERT policy helper; schema usage denied to API roles, only policy-bound execute; owner editable reserved path/window and no existing object. | — | `fan_zone_campaigns`, `fan_zone_entries` |
 | `filmer_stats` | `FILMER_REWARDS` | `@/lib/filmers.ts` | — | `filmer_props`, `filmer_rewards`, `profiles` +1 more |
 | `first_name_of` | `PROFILE` | `sql:accept_guardian_invite`, `sql:close_guardian_link`, `sql:guardian_list_minors` +5 more | — | `profiles` |
 | `friend_requests_enabled` | `RUNTIME_CONFIG` | `sql:admin_privacy_report`, `sql:request_friend` | — | `app_runtime_config` |
+| `fun_actor` | `AUTH` | By hand: Internal authenticated canonical profile/age guard; never assumes profile ID equals Auth user ID. | — | — |
+| `fun_admin_ballot` | `POLLS` | By hand: Admin proven ballot invalidation with reason and recount-required audit. | `fan_zone_ballots`, `fan_zone_campaigns` | — |
+| `fun_admin_campaign` | `POLLS` | By hand: Admin create/configure/testing-open/pause/close/finalize/recount; winners derived from valid free totals. | `fan_zone_campaigns` | `fan_zone_ballots`, `fan_zone_entries` |
+| `fun_admin_case` | `MODERATION` | By hand: Admin case resolve/escalation with reason; completion only server-confirmed deletion. | `fan_zone_cases` | `fan_zone_campaigns`, `fan_zone_entries` |
+| `fun_admin_entry` | `MODERATION` | By hand: Admin eligibility/rights/safety review and suspension with private rationale; no winner selection. | `fan_zone_campaigns`, `fan_zone_entries` | — |
+| `fun_admin_guard` | `ADMIN` | By hand: Internal admin/known-age guard for corrective Fan Zone operations. | — | — |
+| `fun_admin_snapshot` | `ADMIN` | By hand: Complete selected bounded campaign Data with separately paged cases/audit, defined counts and corrective identity scope. | — | `fan_zone_audit`, `fan_zone_ballots`, `fan_zone_campaigns` +2 more |
+| `fun_audit` | `RLS_SECURITY` | By hand: Internal append-only trusted actor/time corrective event capture. | `fan_zone_audit` | — |
+| `fun_campaign_json` | `POLLS` | By hand: Internal campaign DTO with approved tester identities restricted to admins. | — | — |
+| `fun_candidate` | `MODERATION` | By hand: Internal accepted/currentverified/media-present/permission-valid candidate eligibility predicate. | — | — |
+| `fun_case` | `MODERATION` | By hand: Bounded report/appeal/removal request with hashed secret; public report saturation cannot deny owner deletion. | `fan_zone_cases` | `fan_zone_campaigns`, `fan_zone_entries` |
+| `fun_case_json` | `MODERATION` | By hand: Internal minimal secret-authorized case receipt projection; no other case text. | — | — |
+| `fun_case_status` | `MODERATION` | By hand: Secret-authorized unexpired minimal case status; no private target existence leak. | — | `fan_zone_cases` |
+| `fun_complete_removal` | `UPLOAD` | By hand: Service-only actual object-absence completion across all tracked entry revisions/deletion cases. | `fan_zone_campaigns`, `fan_zone_cases`, `fan_zone_entries` | `fan_zone_audit` |
+| `fun_eligible` | `AUTH` | By hand: Internal canonical-profile known-age/open-account eligibility predicate for fan actions. | — | `profiles` |
+| `fun_entry` | `UPLOAD` | By hand: Caller-owned private reserve/edit/verified-submit/withdraw with immutable revision paths and server entry window. | `fan_zone_campaigns`, `fan_zone_entries` | — |
+| `fun_entry_json` | `UPLOAD` | By hand: Internal redacted private own/guardian/admin entry DTO including tracked media revision removal list. | — | `fan_zone_audit` |
+| `fun_guardian` | `MINOR_SAFETY` | By hand: Internal currently active confirmed supervision-link predicate; does not prove legal guardianship. | — | `guardian_links` |
+| `fun_guardian_grant_valid` | `MINOR_SAFETY` | By hand: Internal exact relied-on guardian consent receipt/link/scope validity; historical other grants do not substitute after revocation/link loss. | — | `fan_zone_consents`, `guardian_links` |
+| `fun_immutable_record` | `RLS_SECURITY` | By hand: Trigger protects exact consent/audit receipts against mutation/truncate; identity nulling handled for deletion. | — | — |
+| `fun_media_access` | `RLS_SECURITY` | By hand: Caller-scoped exact revision read/verify/remove authorization before server private storage access. | — | `fan_zone_audit`, `fan_zone_campaigns`, `fan_zone_cases` +1 more |
+| `fun_page_time` | `RLS_SECURITY` | By hand: Insert trigger ensures timestamp-page ordering without same-transaction skipped case/audit rows. | — | `fan_zone_audit`, `fan_zone_cases` |
+| `fun_permission` | `MINOR_SAFETY` | By hand: Exact expected-scope assent/linked guardian grant/revoke; edit/stale form/link ending invalidates publication. | `fan_zone_campaigns`, `fan_zone_consents`, `fan_zone_entries` | `guardian_links` |
+| `fun_permission_valid` | `MINOR_SAFETY` | By hand: Internal current exact-entry assent/guardian-link/grant/revocation validity. | — | `fan_zone_consents` |
+| `fun_pilot` | `RLS_SECURITY` | By hand: Internal testing-only campaign/tester-audience authorization, empty allowlist denies by default. | — | `fan_zone_campaigns` |
+| `fun_prune_receipts` | `POLLS` | By hand: Service-only explicit expiry cleanup for bounded ballot retry records; no scheduler or hosted execution established. | — | — |
+| `fun_reflection` | `POLLS` | By hand: Own private voluntary preset service receipt create/delete, separate from badges/money. | `fan_zone_reflections` | `fan_zone_campaigns` |
+| `fun_scope` | `MINOR_SAFETY` | By hand: Internal exact revision/digest/alias/caption/campaign/audience/form/no-reuse consent scope. | — | — |
+| `fun_signature` | `RLS_SECURITY` | By hand: Internal hash of ballot request arguments for caller-bound exact retry. | — | `fan_zone_ballots`, `fan_zone_entries` |
+| `fun_snapshot` | `POLLS` | By hand: Own/guardian plus enrolled-pilot campaign/candidate/result/curated-story projection; eligible is known-age, can_participate is caller enrollment capability; no tester list/voter identity exposure. | — | `fan_zone_ballots`, `fan_zone_campaigns`, `fan_zone_entries` +3 more |
+| `fun_storage_guard` | `RLS_SECURITY` | By hand: Private Fan Zone Storage INSERT/UPDATE trigger locks campaign then entry; blocks stale/path-moving/service writes after withdrawal/deletion or verification. Catalog fence only, hosted provider compensation still unverified. | — | `fan_zone_campaigns`, `fan_zone_cases`, `fan_zone_entries` +1 more |
+| `fun_verify_media` | `UPLOAD` | By hand: Service-only sanitized digest/bytes/duration commit to still-authorized immutable draft; no client media assertion. | `fan_zone_entries` | `fan_zone_campaigns` |
+| `fun_vote` | `POLLS` | By hand: Atomic one free ballot/account/window; version CAS, caller/request/args retry binding, no-self vote and capped mutations. | `fan_zone_ballots`, `fan_zone_requests` | `fan_zone_campaigns`, `fan_zone_entries` |
 | `get_active_rally` | `RALLY` | `@/lib/rallies.ts` | — | `rallies` |
 | `get_active_spotlight_award` | `ROSTERS` | `@/lib/spotlight.ts` | — | `players`, `profiles`, `reels` +2 more |
 | `get_admin_malo_breakdown` | `ROSTERS` | `portal/lib/reports.ts`, `@/lib/adminReports.ts` | — | `players`, `profiles`, `tips` |
@@ -856,10 +1007,10 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `increment_reel_tips` | `HIGHLIGHTS` | `@/lib/reels.ts`, `sql:check constraint` | `reels` | — |
 | `insert_support_signal` | `TELEMETRY` | By hand: Private helper validates and appends client/trusted observations. | `support_signals` | — |
 | `is_admin_or_db` | `BACKEND` | `sql:admin_add_school_confirmer`, `sql:admin_decide_verification`, `sql:admin_revoke_school_confirmer` +7 more | — | — |
-| `is_blocked_between` | `PROFILE` | `sql:crew_follow_blocked`, `sql:guardian_invite_for_code`, `sql:list_my_friends` +4 more | — | `user_blocks` |
+| `is_blocked_between` | `PROFILE` | `sql:crew_follow_blocked`, `sql:fun_admin_campaign`, `sql:fun_admin_snapshot` +12 more | — | `user_blocks` |
 | `is_guardian_of_profile` | `ROSTERS` | `sql:viewer_relationship` | — | `players`, `profiles` |
 | `is_guardian_of_record` | `ROSTERS` | `sql:guardian_list_minors`, `sql:guardian_view`, `sql:minor_status_json` +3 more | — | `players`, `profiles` |
-| `is_minor_band` | `BACKEND` | `sql:accept_guardian_invite`, `sql:admin_minor_report`, `sql:admin_set_birth_month` +13 more | — | — |
+| `is_minor_band` | `BACKEND` | `sql:accept_guardian_invite`, `sql:admin_minor_report`, `sql:admin_set_birth_month` +14 more | — | — |
 | `is_school_operator_for` | `ROSTERS` | `sql:reels_apply_tag_defaults` | — | `players`, `profiles`, `schools_and_teams` |
 | `is_supervising_guardian` | `PROFILE` | `sql:guardian_decide_approval`, `sql:guardian_get_supervision`, `sql:guardian_view` | — | `guardian_links` |
 | `is_trusted_server` | `BACKEND` | `sql:add_user_aura`, `sql:check constraint`, `sql:chip_in_wishlist_item` +12 more | — | — |
@@ -870,13 +1021,13 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `log_supervision_event` | `PROFILE` | `sql:admin_set_birth_month`, `sql:cancel_my_approval_request`, `sql:close_guardian_link` +9 more | `supervision_events` | — |
 | `malo_target_frozen` | `PROFILE` | `apps/mobile/src/backend/api/createPaymentIntent.ts`, `sql:RLS policy`, `sql:add_user_aura` +6 more | — | `profiles`, `schools_and_teams` |
 | `minor_guardian_count` | `PROFILE` | `sql:admin_minor_report`, `sql:enforce_minor_consent`, `sql:respond_guardian_link` +1 more | — | `guardian_links` |
-| `minor_has_consent` | `CUSTODIAL` | `sql:admin_minor_report`, `sql:enforce_minor_consent`, `sql:guardian_decide_approval` +3 more | — | `guardian_consents`, `guardian_links`, `players` +1 more |
+| `minor_has_consent` | `CUSTODIAL` | `sql:admin_minor_report`, `sql:enforce_minor_consent`, `sql:fun_snapshot` +4 more | — | `guardian_consents`, `guardian_links`, `players` +1 more |
 | `minor_link_slots_used` | `PROFILE` | `sql:accept_guardian_invite`, `sql:create_guardian_invite`, `sql:sign_guardian_consent` | — | `guardian_links` |
 | `minor_payout_hold_reason` | `CUSTODIAL` | `sql:athlete_payout_status` | — | `athlete_birthdates`, `profiles` |
 | `minor_status_json` | `PROFILE` | `sql:cancel_my_approval_request`, `sql:get_my_privacy`, `sql:get_my_supervision` +4 more | — | `guardian_approval_requests`, `guardian_consents`, `guardian_links` +1 more |
 | `moderate_flagged_reel` | `HIGHLIGHTS` | `@/lib/admin.ts`, `@/lib/adminCatalog.ts` | `reels` | `reels` |
 | `my_claimed_player_id` | `PROFILE` | `sql:get_my_payout_status` | — | `profiles`, `verification_requests` |
-| `my_profile_id` | `PROFILE` | `sql:RLS policy`, `sql:accept_guardian_invite`, `sql:admin_decide_payout_override` +36 more | — | `profiles` |
+| `my_profile_id` | `PROFILE` | `sql:RLS policy`, `sql:accept_guardian_invite`, `sql:admin_decide_payout_override` +44 more | — | `profiles` |
 | `my_vouching_school_id` | `PROFILE` | `sql:get_teammates_to_vouch`, `sql:vouch_for_teammate` | — | `profiles`, `verification_requests` |
 | `normalize_team_code` | `BACKEND` | `sql:redeem_team_code`, `sql:team_code_school_key` | — | — |
 | `operator_checkins_minimize` | `BACKEND` | `trigger:operator_checkins_minimize on operator_checkins` | — | — |
@@ -890,11 +1041,25 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `preview_guardian_invite` | `PROFILE` | `@/lib/minors.ts` | — | `guardian_invites`, `profiles` |
 | `privacy_default_audience` | `BACKEND` | `sql:admin_reset_privacy`, `sql:apply_privacy_settings`, `sql:audience_allows` +2 more | — | — |
 | `privacy_settings_json` | `PROFILE` | `sql:admin_get_privacy`, `sql:apply_privacy_settings`, `sql:get_my_privacy` +2 more | — | `profiles` |
-| `profile_age_band` | `PROFILE` | `sql:accept_guardian_invite`, `sql:admin_minor_overview`, `sql:admin_minor_report` +16 more | — | `profiles` |
+| `profile_age_band` | `PROFILE` | `sql:accept_guardian_invite`, `sql:admin_minor_overview`, `sql:admin_minor_report` +23 more | — | `profiles` |
 | `profile_item_visible` | `PROFILE` | `sql:athlete_stats_visible`, `sql:get_aura_board`, `sql:get_leaderboards` +3 more | — | `profiles` |
 | `profiles_apply_new_account_rules` | `BACKEND` | `trigger:profiles_new_account_rules on profiles` | — | — |
 | `publish_app_runtime` | `RUNTIME_CONFIG` | `@/lib/runtime.ts` | `app_runtime_config` | — |
 | `publish_spotlight_award` | `SPOTLIGHT` | `@/lib/admin.ts`, `sql:check constraint` | `spotlight_awards` | `players`, `profiles`, `reels` |
+| `quiz_actor` | `AUTH` | By hand: Internal canonical account/knownage/closed check; no client-supplied participant identity. | — | — |
+| `quiz_admin_actor` | `ADMIN` | By hand: Internal protected quiz content/settings admin guard. | — | — |
+| `quiz_admin_question` | `POLLS` | By hand: Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` +1 more | `sport_quiz_questions`, `sport_quiz_settings` |
+| `quiz_admin_settings` | `ADMIN` | By hand: Admin default-paused testing audience/settings change with authoritative rationale. | `sport_quiz_audit`, `sport_quiz_settings` | `profiles` |
+| `quiz_admin_snapshot` | `ADMIN` | By hand: Complete <=100 question-version bank, defined current-week counts and bigint-paged audit; no participant answer list. | — | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` +2 more |
+| `quiz_answer` | `POLLS` | By hand: Owned current unvoided question completion with exact option/request retry and one private noncash badge; no proficiency/earnings claim. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` | `sport_quiz_attempts`, `sport_quiz_questions` |
+| `quiz_guard_audit` | `RLS_SECURITY` | By hand: Trigger keeps trusted quiz audit immutable; allowed FK nulling on identity deletion. | — | — |
+| `quiz_guard_question` | `POLLS` | By hand: Trigger freezes issued question wording/answers; edits become new reviewed versions. | — | — |
+| `quiz_normalize_options` | `POLLS` | By hand: Protected Unicode/ECMAScript-whitespace option canonicalization for new content/approval/assignment; malformed legacy question rows stay admin-correctable and cannot issue or complete. | — | — |
+| `quiz_require_testing` | `RLS_SECURITY` | By hand: Internal default-paused/tester allowlist/production-refusal guard for quiz participation. | — | `sport_quiz_settings` |
+| `quiz_skip` | `POLLS` | By hand: Own current UTC-week dismissal without reward/penalty or capability loss. | `sport_quiz_attempts`, `sport_quiz_audit` | — |
+| `quiz_snapshot` | `POLLS` | By hand: Own week/prompt/question/status/explanation/private badges and corrections; answer withheld until own completion. | — | `sport_quiz_attempts`, `sport_quiz_badges`, `sport_quiz_questions` +1 more |
+| `quiz_start` | `POLLS` | By hand: Atomic random approved sport question once per canonical account/UTCweek; refresh/sport changes reuse assignment. | `sport_quiz_attempts`, `sport_quiz_audit` | `sport_quiz_questions` |
+| `quiz_week` | `POLLS` | By hand: Internal authoritative UTC Monday start for one weekly assignment/badge. | — | — |
 | `rally_manager_role` | `ROSTERS` | `sql:RLS policy`, `sql:approve_rally`, `sql:close_rally` +5 more | — | `players`, `profiles` |
 | `record_company_revenue` | `LEDGER` | `sql:check constraint`, `sql:company_revenue_after_source_insert` | `company_revenue_logs` | — |
 | `record_guardian_consent` | `CUSTODIAL` | `sql:accept_guardian_invite`, `sql:sign_guardian_consent` | `guardian_consents` | `guardian_links` |
@@ -974,6 +1139,7 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | File | Export | Decision | Reason |
 | --- | --- | --- | --- |
 | `apps/mobile/src/backend/services/payouts.ts` | `disburseAthleteFunds` | keep | Payout service alias held for the Wave 1 payout path (payouts are blocked by decision). |
+| `@/components/SportQuiz/SportQuizInvitation.tsx` | `SportQuizInvitation` | keep | Task7 producer invitation awaiting independent review before root Home/HQ consumer integration; remove temporary entry once connected. |
 | `@/data/contentRights.ts` | `REPORTS_BEFORE_HIDE` | keep | Mirrors the SQL rule (three distinct reporters hide a clip) so copy and docs have one constant. |
 | `@/data/finance.ts` | `BOOSTER_OPERATOR_SHARE_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |
 | `@/data/finance.ts` | `VAULT_ATHLETE_SHARE_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |
@@ -985,6 +1151,8 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | `@/data/highlights.ts` | `HIGHLIGHT_FEED_SEKI` | keep | Feed switch parked while Seki is off the Highlight bar (owner, 2026-10-11). |
 | `@/hooks/useStoryPhotos.ts` | `resetStoryPhotoCache` | keep | Test hook (clears the story cache between tests). |
 | `@/lib/adminCatalog.ts` | `setShopProductActive` | keep | Drip desk action for when Drip turns on (Wave 1). |
+| `@/lib/fanZone.ts` | `fetchFanZone` | keep | Enrolled FUN-01 fan snapshot consumer waits for independent admin-ready gate; remove this temporary entry when Task4 connects the hook. |
+| `@/lib/fanZoneMedia.ts` | `verifyFanZoneUpload` | keep | Admin-first operational boundary and planned fan consumer in enrolled FUN-01/QUIZ-01; root must remove temporary unused entry when app stage wires it. |
 | `@/lib/leaderboards.ts` | `resetReelViewSessionForTests` | keep | Test hook. |
 | `@/lib/payouts.ts` | `requestPayout` | keep | Wave 1 payout request (payouts are blocked by decision). |
 | `@/lib/photoStories.ts` | `resetPhotoStoriesProbe` | keep | Test hook. |

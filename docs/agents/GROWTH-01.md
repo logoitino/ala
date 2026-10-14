@@ -584,3 +584,21 @@ and focused admin-first implementation design. Existing Engineering/Security/Dat
 Content Rights/Minor Safety/School/Support/QA and Commerce/Finance/Legal owners retain their
 required evidence. Fan voting selects the winner; no public award, voting feature, service
 program or earning model is launched by this refinement.
+
+
+## Implementation continuation: FUN-01 and QUIZ-01
+
+Owner authorized the recommended local first build and then added weekly sport pop quizzes.
+Actual source work is in the isolated codex/fan-zone checkout. Current status and evidence
+are tracked in [FUN-01](FUN-01.md) and [QUIZ-01](QUIZ-01.md); historical refinement receipts
+above describe the earlier recommendation-only pass. Fan backend/media and corrected quiz admin source have scoped independent PASS reviews.
+QUIZ-01 local Data/Safety/SUPPORT acceptance and actual admin-ready gate passed
+2026-10-14T06:09:57Z before quiz participant source began. Fan admin source is building;
+Fan participant source still awaits its admin-ready gate. Final UI/full checks remain pending.
+
+The playbook §13 adds an untimed learning path for fans, filmers, athletes, families, friends
+and guardians: one optional question, explanation, private completion badge and Skip.
+Legal/Safety, Content, Dev, Support and Growth must communicate fact corrections, pause
+ability, enrollment friction and support burden at the same decision checkpoint. The standing
+October20 Growth review retains expansion proposals, real measures and an owner decision.
+No new scheduler, outreach, payment, growth tracking or hosted rollout occurs in this local build.

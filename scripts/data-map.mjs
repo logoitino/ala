@@ -27,6 +27,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sqlFunctionBodies } from './lib/sql-functions.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rel = (file) => path.relative(root, file).split(path.sep).join('/');
@@ -48,22 +49,8 @@ const views = [...new Set([...sql.matchAll(/create (?:or replace )?view (?:publi
 const relations = [...tables, ...views];
 const relationSet = new Set(relations);
 
-// Function bodies: per signature the last definition wins, like Postgres; overloads (same name,
-// different argument types) all exist, so a name's lineage is the union of its live signatures.
-const signatureBodies = new Map();
-for (const m of sql.matchAll(/create or replace function public\.(\w+)\s*\(([\s\S]*?)\)\s*returns([\s\S]*?)\$\$([\s\S]*?)\$\$/gi)) {
-  const types = m[2].split(',').map((param) => param.trim().split(/\s+/)[1] ?? '').join(',');
-  signatureBodies.set(`${m[1]}(${types})`, { name: m[1], body: m[4] });
-}
-// A function dropped after its last definition (archived by a migration) no longer exists.
-const lastIndex = (pattern) => { let at = -1; for (const m of sql.matchAll(pattern)) at = m.index; return at; };
-const functionBodies = new Map();
-for (const { name, body } of signatureBodies.values()) functionBodies.set(name, `${functionBodies.get(name) ?? ''}\n${body}`);
-for (const name of [...functionBodies.keys()]) {
-  const created = lastIndex(new RegExp(`create or replace function public\\.${name}\\s*\\(`, 'gi'));
-  const dropped = lastIndex(new RegExp(`drop function if exists public\\.${name}\\s*\\(`, 'gi'));
-  if (dropped > created) functionBodies.delete(name);
-}
+// Private-schema policy helpers retain qualified names; public names preserve the existing map contract.
+const functionBodies = sqlFunctionBodies(sql);
 const functions = [...functionBodies.keys()].sort();
 const functionSet = new Set(functions);
 
@@ -82,14 +69,14 @@ for (const [fn, body] of functionBodies) {
   const removes = new Set([...body.matchAll(/\bdelete\s+from\s+(?:public\.)?(\w+)/gi)].map((m) => m[1]).filter((t) => relationSet.has(t)));
   const reads = new Set([...body.matchAll(/\b(?:from|join)\s+(?:public\.)?(\w+)/gi)].map((m) => m[1]).filter((t) => relationSet.has(t) && !writes.has(t)));
   for (const m of body.matchAll(/%rowtype|\b(\w+)%rowtype/gi)) if (m[1] && relationSet.has(m[1])) reads.add(m[1]);
-  const fnCalls = new Set([...body.matchAll(/(?<![\w.$])(?:public\.)?(\w+)\s*\(/g)].map((m) => m[1]).filter((name) => functionSet.has(name) && name !== fn));
+  const fnCalls = new Set([...body.matchAll(/(?<![\w.$])(?:(\w+)\.)?(\w+)\s*\(/g)].map((m) => m[1] && m[1] !== 'public' ? `${m[1]}.${m[2]}` : m[2]).filter((name) => functionSet.has(name) && name !== fn));
   for (const t of removes) if (!writes.has(t)) reads.delete(t);
   sqlTouches.set(fn, { reads, writes, removes, calls: fnCalls });
 }
 
 // ---------------------------------------------------------------- code
 const CODE_ROOTS = ['apps/mobile/app', 'apps/mobile/src', 'apps/admin-portal/app', 'apps/admin-portal/lib', 'apps/admin-portal/components', 'supabase/functions', 'packages/shared-types'];
-const isTest = (file) => /__tests__|\.test\.|__mocks__/.test(file);
+const isTest = (file) => /__tests__|\.test\.|__mocks__|__fixtures__/.test(file);
 const walk = (dir) => (fs.existsSync(path.join(root, dir)) ? fs.readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((entry) => {
   const child = `${dir}/${entry.name}`;
   if (entry.isDirectory()) return entry.name === 'node_modules' || entry.name.startsWith('.') ? [] : walk(child);

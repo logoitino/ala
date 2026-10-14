@@ -26,7 +26,7 @@
     "feature-admin:check": "node scripts/check-feature-admin.mjs",
     "feature-admin:test": "node --test scripts/__tests__/check-feature-admin.test.mjs",
     "data:map": "node scripts/data-map.mjs",
-    "data:map:check": "node scripts/data-map.mjs --check",
+    "data:map:check": "node --test scripts/__tests__/sql-functions.test.mjs && node scripts/data-map.mjs --check",
     "detection:check": "node scripts/detection.mjs --check",
     "detection:test": "node --test scripts/__tests__/detection.test.mjs",
     "detection:scan": "node scripts/detection.mjs --scan",

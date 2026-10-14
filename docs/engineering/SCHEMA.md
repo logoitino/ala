@@ -1505,3 +1505,79 @@ reasons `needs_guardian_consent` and `needs_birth_month` (`minor_payout_hold_rea
 | `admin_minor_overview(target_profile_id)` · `admin_set_birth_month(target_profile_id, birth_y, birth_m, reason)` · `admin_end_guardian_link(link_id, reason)` · `admin_minor_report()` · `admin_list_age_blocked()` · `admin_purge_minor_records()` | People desk: case file (names), corrections and link endings with a reason, counts and abuse signals, the under-13 deletion list, retention. |
 | `guardian_links_enabled()` · `guardian_consent_form_version()` · `guardian_consent_form_sha256()` | Switch `minors.guardian_links`; the accepted form version and text hash. |
 | `first_name_of` · `minor_has_consent` · `minor_guardian_count` · `minor_link_slots_used` · `is_supervising_guardian` · `is_guardian_of_record` · `log_supervision_event` · `athlete_profile_for_player` · `minor_payout_hold_reason` · `enforce_minor_consent` · `apply_teen_defaults` · `close_under_13_account` · `caller_not_age_blocked` · `minor_status_json` · `guardian_invite_for_code` · `record_guardian_consent` · `close_guardian_link` · `user_blocks_end_guardian_links` · `verified_player_of` · `supervision_json` · `guardian_view` · `guard_consent_records` · `guard_consent_truncate` · `profiles_apply_new_account_rules` · `guard_profiles_age` | Internal helpers and triggers (server only; `caller_not_age_blocked` is callable so the policies can use it).
+
+## FUN-01 / QUIZ-01 — locally written testing pilots
+
+Default-off, approved account testing only; no hosted SQL applied. [Fan Zone design](design/FAN_ZONE_DESIGN.md), [Sport Pop Quiz design](design/SPORT_POP_QUIZ_DESIGN.md), task evidence FUN-01/QUIZ-01. No payment/Aura/contest release.
+
+| Table | Purpose |
+| --- | --- |
+| `fan_zone_campaigns` | Default-off testing-only fan award campaigns, approved tester audience, immutable rules/windows and free-ballot result revisions. |
+| `fan_zone_entries` | Private fan-video drafts/revisions, server-reserved immutable storage paths, verified media metadata, review and withdrawal state. |
+| `fan_zone_consents` | Immutable exact-entry assent/guardian permission/revocation receipts tied to scope/media revision and active confirmed supervision link. |
+| `fan_zone_ballots` | One current versioned free ballot per canonical eligible profile/campaign, with restricted invalidation rationale. |
+| `fan_zone_requests` | Caller/request/argument-bound ballot retry receipts, capped60/window and expired30days after vote close. |
+| `fan_zone_cases` | Private bounded report/appeal/deletion cases with hashed reporter receipt secret/30day receipt access, actual removal completion and escalation. |
+| `fan_zone_audit` | Immutable server actor/time Fan Zone configuration/review/consent/ballot/result/removal trace; restricted corrective access. |
+| `fan_zone_reflections` | Voluntary private preset service reflection receipts, deletable by owner; no beneficiary detail or payment condition. |
+| `sport_quiz_settings` | Default-paused/testing-only quiz switch with approved canonical-profile tester allowlist. |
+| `sport_quiz_questions` | Human-reviewed sport question versions, draft/approved/archive/void state and stable issued answer/explanation. |
+| `sport_quiz_attempts` | One own-scoped random approved question assignment/skip/completion per account UTC week; exact request retry. |
+| `sport_quiz_badges` | Private noncash Sport Learner weekly completion acknowledgments; no Aura wallet, voting or payment value; erroneous content corrections. |
+| `sport_quiz_audit` | Append-only authoritative quiz settings/content/correction history; participant answers/identities omitted from admin count export. |
+
+| Function | Use (narrow caller/admin/service guard; helpers internal) |
+| --- | --- |
+| `fun_eligible` | Internal canonical-profile known-age/open-account eligibility predicate for fan actions. |
+| `fun_actor` | Internal authenticated canonical profile/age guard; never assumes profile ID equals Auth user ID. |
+| `fun_admin_guard` | Internal admin/known-age guard for corrective Fan Zone operations. |
+| `fun_pilot` | Internal testing-only campaign/tester-audience authorization, empty allowlist denies by default. |
+| `fun_scope` | Internal exact revision/digest/alias/caption/campaign/audience/form/no-reuse consent scope. |
+| `fun_guardian` | Internal currently active confirmed supervision-link predicate; does not prove legal guardianship. |
+| `fun_permission_valid` | Internal current exact-entry assent/guardian-link/grant/revocation validity. |
+| `fun_candidate` | Internal accepted/currentverified/media-present/permission-valid candidate eligibility predicate. |
+| `fun_entry_json` | Internal redacted private own/guardian/admin entry DTO including tracked media revision removal list. |
+| `fun_campaign_json` | Internal campaign DTO with approved tester identities restricted to admins. |
+| `fun_case_json` | Internal minimal secret-authorized case receipt projection; no other case text. |
+| `fun_audit` | Internal append-only trusted actor/time corrective event capture. |
+| `fun_signature` | Internal hash of ballot request arguments for caller-bound exact retry. |
+| `fun_admin_campaign` | Admin create/configure/testing-open/pause/close/finalize/recount; winners derived from valid free totals. |
+| `fun_entry` | Caller-owned private reserve/edit/verified-submit/withdraw with immutable revision paths and server entry window. |
+| `fun_permission` | Exact expected-scope assent/linked guardian grant/revoke; edit/stale form/link ending invalidates publication. |
+| `fun_vote` | Atomic one free ballot/account/window; version CAS, caller/request/args retry binding, no-self vote and capped mutations. |
+| `fun_admin_entry` | Admin eligibility/rights/safety review and suspension with private rationale; no winner selection. |
+| `fun_admin_ballot` | Admin proven ballot invalidation with reason and recount-required audit. |
+| `fun_media_access` | Caller-scoped exact revision read/verify/remove authorization before server private storage access. |
+| `fun_verify_media` | Service-only sanitized digest/bytes/duration commit to still-authorized immutable draft; no client media assertion. |
+| `fun_complete_removal` | Service-only actual object-absence completion across all tracked entry revisions/deletion cases. |
+| `fun_case` | Bounded report/appeal/removal request with hashed secret; public report saturation cannot deny owner deletion. |
+| `fun_case_status` | Secret-authorized unexpired minimal case status; no private target existence leak. |
+| `fun_admin_case` | Admin case resolve/escalation with reason; completion only server-confirmed deletion. |
+| `fun_reflection` | Own private voluntary preset service receipt create/delete, separate from badges/money. |
+| `fun_snapshot` | Own/guardian plus enrolled-pilot campaign/candidate/result/story; eligible is known age, can_participate is own tester capability; private guardian queue independent. |
+| `fun_admin_snapshot` | Complete selected bounded campaign Data with separately paged cases/audit, defined counts and corrective identity scope. |
+| `fan_zone_private.upload_allowed` | Private-schema Storage INSERT policy helper; schema usage denied to API roles, only policy-bound execute; owner editable reserved path/window and no existing object. |
+| `fun_page_time` | Insert trigger ensures timestamp-page ordering without same-transaction skipped case/audit rows. |
+| `fun_immutable_record` | Trigger protects exact consent/audit receipts against mutation/truncate; identity nulling handled for deletion. |
+| `fun_prune_receipts` | Service-only explicit expiry cleanup for bounded ballot retry records; no scheduler or hosted execution established. |
+| `quiz_week` | Internal authoritative UTC Monday start for one weekly assignment/badge. |
+| `quiz_actor` | Internal canonical account/knownage/closed check; no client-supplied participant identity. |
+| `quiz_admin_actor` | Internal protected quiz content/settings admin guard. |
+| `quiz_require_testing` | Internal default-paused/tester allowlist/production-refusal guard for quiz participation. |
+| `quiz_guard_question` | Trigger freezes issued question wording/answers; edits become new reviewed versions. |
+| `quiz_guard_audit` | Trigger keeps trusted quiz audit immutable; allowed FK nulling on identity deletion. |
+| `quiz_snapshot` | Own week/prompt/question/status/explanation/private badges and corrections; answer withheld until own completion. |
+| `quiz_start` | Atomic random approved sport question once per canonical account/UTCweek; refresh/sport changes reuse assignment. |
+| `quiz_answer` | Owned current unvoided question completion with exact option/request retry and one private noncash badge; no proficiency/earnings claim. |
+| `quiz_skip` | Own current UTC-week dismissal without reward/penalty or capability loss. |
+| `quiz_admin_settings` | Admin default-paused testing audience/settings change with authoritative rationale. |
+| `quiz_admin_question` | Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction. |
+| `quiz_admin_snapshot` | Complete <=100 question-version bank, defined current-week counts and bigint-paged audit; no participant answer list. |
+
+| `fun_storage_guard` | Campaign→entry Storage INSERT/UPDATE mutation fence, including service writes; stale/path-moving/post-withdrawal/deletion/verified writes refused. Actual provider compensation still needs hosted proof. |
+
+| `fun_guardian_grant_valid` | Current pinned exact guardian receipt/link/scope check; a replacement requires a fresh explicit grant after revocation/link loss. |
+
+`fan_zone_entries.guardian_consent_id` is a nullable private FK to the relied-on exact consent receipt. First valid grant stays pinned; older other grants cannot replace it automatically. A fresh explicit replacement does not let the earlier actor’s stale revoke disable the replacement.
+
+| `quiz_normalize_options` | Protected option whitespace canonicalization; legacy invalid options remain visible for audited admin correction, deny assignment/completion. |

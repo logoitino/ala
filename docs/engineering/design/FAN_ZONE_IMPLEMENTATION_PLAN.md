@@ -22,21 +22,21 @@ Workers do not spawn reviewers. Commit only owned files; report exact tests/resu
 **Owned files:** new `supabase/migrations/20261014130000_fan_zone.sql`, append to `apps/mobile/src/backend/db/schema.sql`, new `packages/shared-types/fanZone.ts`, shared package export, new `scripts/replay/fan-zone-replay.mjs`.
 **Interfaces:** Produces spec RPCs and shared DTOs/actions for Tasks 2–4. No direct table writes/read or storage reads for clients.
 
-- [ ] Write runnable real-actor failing replay scenarios using existing cached PGlite stubs; prove missing RPC red failure.
-- [ ] Implement bounded campaign/private entry/exact permission/ballot/case/reflection state machines and private bucket policies. Server roles, age, canonical profile IDs, all deadlines and idempotency apply.
-- [ ] Test bad actors, unknown/closed/teen/guardian cases, late/stale/duplicate ballots, ties/recount and private media boundaries with actual SQL and grants.
-- [ ] Append migration to canonical schema, expose strongly typed JSON DTOs, document any interface adjustment for consumers.
-- [ ] Run targeted replay and mobile typecheck; self-review grants/data minimization and commit owned paths. Root handles schema/data registry docs.
+- [x] Write runnable real-actor failing replay scenarios using existing cached PGlite stubs; prove missing RPC red failure.
+- [x] Implement bounded campaign/private entry/exact permission/ballot/case/reflection state machines and private bucket policies. Server roles, age, canonical profile IDs, all deadlines and idempotency apply.
+- [x] Test bad actors, unknown/closed/teen/guardian cases, late/stale/duplicate ballots, ties/recount and private media boundaries with actual SQL and grants.
+- [x] Append migration to canonical schema, expose strongly typed JSON DTOs, document any interface adjustment for consumers.
+- [x] Run targeted replay and mobile typecheck; self-review grants/data minimization and commit owned paths. Root handles schema/data registry docs.
 
 ### Task 2: Private media validation and API
 
 **Owned files:** new backend `services/fanZoneMedia.ts` and focused MP4 validator, API `fanZoneMedia.ts`/`fanZoneUpload.ts`/`fanZoneRemove.ts`, thin matching `app/api/*+api.ts`, backend Jest tests.
 **Interfaces:** Consumes Task 1 `fun_media_access`, `fun_verify_media`, `fun_complete_removal`; publishes media GET, upload verify POST and remove POST with explicit JSON result/error and authenticated bearer contract. Return bytes/secret-free errors; no signed URL.
 
-- [ ] Write failing duration/container/metadata corruption/authorization/no-cache/range and remove failure tests.
-- [ ] Implement bounded MP4 metadata sanitization with preserved offsets, SHA-256 and real server-only storage calls; verify caller before service access and after upload before commit.
-- [ ] Implement revocable media serving and tracked removal; no public fallback or result completion before actual storage deletion.
-- [ ] Document exact API request/query/response contracts for Task 4, run tests/typecheck and commit owned files.
+- [x] Write failing duration/container/metadata corruption/authorization/no-cache/range and remove failure tests.
+- [x] Implement bounded MP4 metadata sanitization with preserved offsets, SHA-256 and real server-only storage calls; verify caller before service access and after upload before commit.
+- [x] Implement revocable media serving and tracked removal; no public fallback or result completion before actual storage deletion.
+- [x] Document exact API request/query/response contracts for Task 4, run tests/typecheck and commit owned files.
 
 ### Task 3: Admin desk and client adapter
 
@@ -51,7 +51,7 @@ Workers do not spawn reviewers. Commit only owned files; report exact tests/resu
 
 ### Task 4: Fan discovery, private entry, guardian consent and free ballot journey
 
-**Owned files:** new frontend `components/FanZone/` files/tests, `hooks/useFanZone.ts`/tests, route `app/(tabs)/fan-zone.tsx`, Home discovery card in its existing consuming component. Root owns coverage/index/state integration.
+**Owned files:** new frontend `components/FanZone/` files/tests, `hooks/useFanZone.ts`/tests, route `app/fan-zone.tsx`; shared Home/profile/HQ discovery is delegated to Task8. Root owns coverage/index/state integration.
 **Interfaces:** Consumes shared DTOs and `lib/fanZone.ts`, Task 2 media API. Existing public free reel and profile navigation supply curated stories; no new payment code.
 
 - [ ] Write failing visible flow tests for private upload/permission/review, guardian exact revision, free ballot retry/refetch, optional reflection/report/withdraw/deletion and unavailable states.
@@ -69,3 +69,30 @@ Workers do not spawn reviewers. Commit only owned files; report exact tests/resu
 - [ ] Complete independent broad code/Safety/Data review, correct concrete failures and run covered checks.
 - [ ] Run `pnpm check`, local SQL replay, declared admin/app feature gates and source diff checks; record actual outputs and untested hosted/device/policy paths.
 - [ ] Preserve final evidence and update STATE/CHANGELOG/task progress. Keep build in isolated checkout for concrete review; no merge/push/deployment.
+
+### Task 6: Sport Pop Quiz operational backend/admin
+
+**Spec:** [SPORT_POP_QUIZ_DESIGN.md](SPORT_POP_QUIZ_DESIGN.md), newly requested by owner during FUN-01 implementation.
+**Owned files:** new quiz migration, shared sportQuiz types, client lib, replay, Admin/SportQuiz components/tests and route. Root serializes schema append/shared export/admin nav/governance.
+- [x] TDD real actor weekly assignment, no answer leak, exact retry, skip, void/correction and noncash badge constraints.
+- [x] Build approved versioned bank, default paused settings, admin Data/actions/audit and client adapter; no fan source yet.
+- [x] Run replay/admin tests/typecheck, commit only owned paths; independent review and root admin-ready gate.
+
+### Task 7: Sport Pop Quiz fan card/view
+
+**Owned files:** new SportQuiz components/tests, hook/tests, route. Root serializes Home discovery/card integration.
+- [ ] After QUIZ-01 admin-ready, build dismissible Home learning invitation, sport choice, weekly question/answer/explanation, private badge collection and skip.
+- [ ] Test visible unavailable/skip/incorrect/correct/completed/retry and no money/vote influence; no push or interrupting modal.
+- [ ] Independent review and final gates/docs integrated with Task 5 after both features.
+
+
+### Task 8: Shared discovery and control-map integration
+
+**Ownership delegated by root:** new frontend `components/FamilyFun/FamilyFunDiscovery.tsx` and meaningful tests; existing Home `app/(tabs)/index.tsx`, profile menu in `app/(tabs)/profile.tsx`, role home routes `app/(parent)/parent/index.tsx`, `(booster)/booster/index.tsx`, `(sponsor)/sponsor/index.tsx`, `operator/index.tsx`; `lib/adminCoverage.ts` and relevant existing/new control-map tests. Root retains docs/schema/registry/data map/final gates. Preserve all concurrent source.
+
+- [ ] Quiz integration starts only after Task7 independent review PASS and actual QUIZ admin-ready; reuse its typed hook/invitation. Fan discovery extension starts only after Task4 review PASS and actual FUN admin-ready.
+- [ ] Place dismissible optional invitation inside Home's measured top chrome and role-HQ scroll content; no modal/new bottom tab/payment/upload interruption. Keep root account links accessible to every eligible role, private history and guardian review through appropriate server snapshots.
+- [ ] Refresh reads on return/focus and week changes without assigning automatically; local Not now state scoped to current identity/week, distinct from server-confirmed Skip. Ignore stale identity data and keep unavailable honest.
+- [ ] Add authenticated profile menu links for quiz/private badges and Fan Zone, direct root paths. Existing account/role/payments/roster actions preserved.
+- [ ] Map every new visible control to the actual admin desk; no fabricated runtime flag or passive telemetry. SQL campaign/settings are the authoritative stop controls.
+- [ ] Meaningful consumer tests for role discovery, eligibility/private history/guardian queue, local dismissal versus failed/durable Skip, focus/week refresh and source absence. Run typecheck/relevant tests and self-review; commit only owned paths in root's serialized window, independent review before final gates.

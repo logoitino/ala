@@ -450,3 +450,35 @@ This refinement is discussion-ready product direction, not an approved implement
 Next, refine ballot details and the first pilot audience, then present a focused entry/review/
 voting design with the admin contract. Existing charter §11 and team duties already cover
 these responsibilities; no new roles, source paths or automatic team activity are introduced.
+
+
+## 13. Weekly Sport Pop Quiz learning path
+
+Owner addition: a simple question about a chosen sport can appear weekly on an account.
+Accepted local build uses a dismissible Home card and an account learning page; no surprise
+modal or interruption while uploading or donating. One server-random approved question per
+UTC Monday–Sunday week, four answer choices, and an explanation. For American football:
+“How many points is a touchdown before any extra point or conversion?” Answer: 6.
+
+Completing earns a private **Sport Learner** badge, including after a wrong answer. You may
+always ignore or leave the quiz. Not now dismisses the invitation locally; saving Skip for the
+week requires an active authorized quiz source and must report a failed save honestly. The badge acknowledges participation; it is not a proficiency rank, Aura,
+money, school standing or an advantage in fan voting. Badges and voluntary service stay separate.
+
+| User path | Welcoming activity and return opportunity | Boundary / team decision |
+| --- | --- | --- |
+| Casual fan or filmer | Learn one rule, then enjoy filming/cheering; return next week for another question | No athlete, school or Stripe setup to learn; no upload requirement. |
+| Family, friend or guardian | Learn about a young athlete’s sport; talk about the explanation together | Each account has its own private answer/badge; no household leaderboard or public child answer. |
+| Athlete or school supporter | Learn another sport and celebrate fair play alongside weekly fan activities | No athletic eligibility/proficiency claim or unofficial school endorsement. |
+| Newcomer or accessibility user | Four plain choices, untimed response, explanation after any answer, easy Skip | Content names rule context; accessible labels and device review required before release. |
+| Donor, booster, sponsor, staff or operator | Enjoy optional personal sport learning alongside their account’s usual tasks | Same account eligibility; no organization privilege, donation advantage or public school rank. |
+
+Content owns fact review and approval, Legal/Minor Safety owns age/privacy/reward wording,
+Dev owns weekly assignment/retry/skip/correction, Support owns pause and reported errors,
+and Growth proposes how to measure optional completion and return against support burden.
+A joint checkpoint decides expansion after real evidence; no donation target, pressure to
+complete or invented engagement uplift. Wrong facts can be voided with a private correction.
+
+Source progress and actual local gates live in [QUIZ-01](../agents/QUIZ-01.md) and the
+[quiz design](../engineering/design/SPORT_POP_QUIZ_DESIGN.md). This section describes the
+approved direction; it does not claim hosted deployment, approved seed facts or fan UI completion.

@@ -422,11 +422,11 @@
       "access": {
         "roles": [
           "admin",
-          "eligible account",
+          "eligible enrolled tester",
           "confirmed linked guardian",
-          "guest public browsing"
+          "non-account concern receipt"
         ],
-        "deniedBehavior": "RPC guards and closed-account restrictive RLS; no client direct table writes/private media reads or overwrites. Exact entry revision permission, active guardian and verified sanitized media required for public candidacy. Guests/unknown/closed/under-13 cannot submit/consent/vote; private reads bounded by ownership/link/admin. Real actor SQL replay required.",
+        "deniedBehavior": "RPC guards and closed-account restrictive RLS; no client direct table writes/private media reads or overwrites. Exact entry revision permission, active guardian and verified sanitized media required for public candidacy. Guests/unknown/closed/under-13 cannot submit/consent/vote; private reads bounded by ownership/link/admin. Real actor SQL replay required. Testing audience is an empty-by-default canonical profile allowlist; guest/unlisted users cannot read campaigns/candidates/media. Consent compares exact current expected scope/form version.",
         "paths": [
           "supabase/migrations/20261014130000_fan_zone.sql",
           "scripts/replay/fan-zone-replay.mjs"
@@ -435,13 +435,86 @@
       "app": {
         "route": "/fan-zone",
         "paths": [
-          "apps/mobile/app/(tabs)/fan-zone.tsx",
+          "apps/mobile/app/fan-zone.tsx",
           "apps/mobile/src/frontend/components/FanZone/FanZoneScreen.tsx",
           "apps/mobile/src/frontend/hooks/useFanZone.ts"
         ]
       },
       "readiness": {
         "admin": null,
+        "app": null
+      }
+    },
+    {
+      "id": "QUIZ-01",
+      "title": "Weekly Sport Pop Quiz with noncash private learning badges",
+      "owner": "POLLS",
+      "status": "admin-ready",
+      "plannedAt": "2026-10-14T05:31:01Z",
+      "exemption": null,
+      "source": {
+        "description": "Server-assigned approved question version once per canonical eligible profile/UTC week, durable answer/idempotent request, private noncash completion badge, skip status. No correct-answer leakage before completion; no money/Aura/vote effect. Design docs/engineering/design/SPORT_POP_QUIZ_DESIGN.md.",
+        "paths": [
+          "supabase/migrations/20261014140000_sport_pop_quiz.sql",
+          "packages/shared-types/sportQuiz.ts",
+          "apps/mobile/src/frontend/lib/sportQuiz.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/sport-quiz",
+        "actions": [
+          "Manage/review versioned questions; pause/enable testing; archive/void erroneous question with reasons and corrected badge status."
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/sport-quiz",
+        "metrics": [
+          "Complete <=100 question Data bank, current UTC-week issued/completed/skipped counts, noncash valid/void badge counts, paged audit; unknown reads unavailable; no raw account answers/identities in Growth. Link existing Analytics/Health/Support; SUPPORT accepts safe fixed-code error/test sensors and explicit hosted gaps."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Default paused/testing-only server setting denies start/answer; prior private valid badges remain readable. Skip optional; void question prevents later answers and hides invalid badge. No runtime/hosted publication or payment impact. Missing migration unavailable.",
+        "paths": [
+          "supabase/migrations/20261014140000_sport_pop_quiz.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible enrolled tester"
+        ],
+        "deniedBehavior": "No direct table writes or correct-answer reads; narrow server RPCs use canonical auth/profile/age/week/settings/ownership; guests/unknown/closed/under-13 denied participation. Real actor SQL replay verifies duplicate/stale/wrong-owner/void behavior. Default paused/empty tester allowlist, production enable refused.",
+        "paths": [
+          "supabase/migrations/20261014140000_sport_pop_quiz.sql",
+          "scripts/replay/sport-quiz-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/sport-quiz",
+        "paths": [
+          "apps/mobile/app/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizScreen.tsx",
+          "apps/mobile/src/frontend/hooks/useSportQuiz.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-14T06:09:57Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-01-admin.md",
+              "command": "node scripts/replay/schema-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "Root105/105 PGlite18.6 after final migration append; worker34/34 Quiz actor checks and2suites30tests; independent local Data/Safety/SUPPORT source acceptance PASS. No hosted/device/counsel release."
+            }
+          ]
+        },
         "app": null
       }
     }

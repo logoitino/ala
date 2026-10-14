@@ -1049,6 +1049,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -1070,6 +1071,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -1092,6 +1094,7 @@
         "/receipts",
         "/school-confirm",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]",
         "portal:/auth",
@@ -1522,6 +1525,225 @@
       ]
     },
     {
+      "name": "fan_zone_audit",
+      "kind": "table",
+      "owner": "RLS_SECURITY",
+      "purpose": "Immutable server actor/time Fan Zone configuration/review/consent/ballot/result/removal trace; restricted corrective access.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "fun_audit"
+      ],
+      "sqlReaders": [
+        "fun_admin_snapshot",
+        "fun_complete_removal",
+        "fun_entry_json",
+        "fun_media_access",
+        "fun_page_time"
+      ],
+      "removers": [],
+      "triggers": [
+        "fan_zone_audit_time → fun_page_time",
+        "fan_zone_audit_immutable → fun_immutable_record"
+      ],
+      "screens": [
+        "/admin/fan-zone",
+        "/api/fan-zone-media+api",
+        "/api/fan-zone-remove+api",
+        "/api/fan-zone-upload+api"
+      ]
+    },
+    {
+      "name": "fan_zone_ballots",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "One current versioned free ballot per canonical eligible profile/campaign, with restricted invalidation rationale.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "fun_admin_ballot",
+        "fun_vote"
+      ],
+      "sqlReaders": [
+        "fun_admin_campaign",
+        "fun_admin_snapshot",
+        "fun_signature",
+        "fun_snapshot"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/admin/fan-zone"
+      ]
+    },
+    {
+      "name": "fan_zone_campaigns",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "Default-off testing-only fan award campaigns, approved tester audience, immutable rules/windows and free-ballot result revisions.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "fun_admin_ballot",
+        "fun_admin_campaign",
+        "fun_admin_entry",
+        "fun_complete_removal",
+        "fun_entry",
+        "fun_permission"
+      ],
+      "sqlReaders": [
+        "fan_zone_private.upload_allowed",
+        "fun_admin_case",
+        "fun_admin_snapshot",
+        "fun_case",
+        "fun_media_access",
+        "fun_pilot",
+        "fun_reflection",
+        "fun_snapshot",
+        "fun_storage_guard",
+        "fun_verify_media",
+        "fun_vote"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/admin/fan-zone",
+        "/api/fan-zone-media+api",
+        "/api/fan-zone-remove+api",
+        "/api/fan-zone-upload+api"
+      ]
+    },
+    {
+      "name": "fan_zone_cases",
+      "kind": "table",
+      "owner": "MODERATION",
+      "purpose": "Private bounded report/appeal/deletion cases with hashed reporter receipt secret/30day receipt access, actual removal completion and escalation.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "fun_admin_case",
+        "fun_case",
+        "fun_complete_removal"
+      ],
+      "sqlReaders": [
+        "fun_admin_snapshot",
+        "fun_case_status",
+        "fun_media_access",
+        "fun_page_time",
+        "fun_storage_guard"
+      ],
+      "removers": [],
+      "triggers": [
+        "fan_zone_case_time → fun_page_time"
+      ],
+      "screens": [
+        "/admin/fan-zone",
+        "/api/fan-zone-media+api",
+        "/api/fan-zone-remove+api",
+        "/api/fan-zone-upload+api"
+      ]
+    },
+    {
+      "name": "fan_zone_consents",
+      "kind": "table",
+      "owner": "MINOR_SAFETY",
+      "purpose": "Immutable exact-entry assent/guardian permission/revocation receipts tied to scope/media revision and active confirmed supervision link.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "fun_permission"
+      ],
+      "sqlReaders": [
+        "fun_guardian_grant_valid",
+        "fun_permission_valid"
+      ],
+      "removers": [],
+      "triggers": [
+        "fan_zone_consent_immutable → fun_immutable_record"
+      ],
+      "screens": [
+        "/admin/fan-zone",
+        "/api/fan-zone-media+api",
+        "/api/fan-zone-remove+api",
+        "/api/fan-zone-upload+api"
+      ]
+    },
+    {
+      "name": "fan_zone_entries",
+      "kind": "table",
+      "owner": "UPLOAD",
+      "purpose": "Private fan-video drafts/revisions, server-reserved immutable storage paths, verified media metadata, review and withdrawal state. Private guardian_consent_id pins the current exact grant; no automatic historical guardian substitution.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "fun_admin_entry",
+        "fun_complete_removal",
+        "fun_entry",
+        "fun_permission",
+        "fun_verify_media"
+      ],
+      "sqlReaders": [
+        "fan_zone_private.upload_allowed",
+        "fun_admin_campaign",
+        "fun_admin_case",
+        "fun_admin_snapshot",
+        "fun_case",
+        "fun_media_access",
+        "fun_signature",
+        "fun_snapshot",
+        "fun_storage_guard",
+        "fun_vote"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/admin/fan-zone",
+        "/api/fan-zone-media+api",
+        "/api/fan-zone-remove+api",
+        "/api/fan-zone-upload+api"
+      ]
+    },
+    {
+      "name": "fan_zone_reflections",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "Voluntary private preset service reflection receipts, deletable by owner; no beneficiary detail or payment condition.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "fun_reflection"
+      ],
+      "sqlReaders": [
+        "fun_snapshot"
+      ],
+      "removers": [
+        "fun_reflection"
+      ],
+      "triggers": [],
+      "screens": [
+        "/admin/fan-zone"
+      ]
+    },
+    {
+      "name": "fan_zone_requests",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "Caller/request/argument-bound ballot retry receipts, capped60/window and expired30days after vote close.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "fun_vote"
+      ],
+      "sqlReaders": [],
+      "removers": [
+        "fun_prune_receipts"
+      ],
+      "triggers": [],
+      "screens": [
+        "/admin/fan-zone"
+      ]
+    },
+    {
       "name": "filmer_props",
       "kind": "table",
       "owner": "FILMER_REWARDS",
@@ -1759,6 +1981,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -1780,6 +2003,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -1798,6 +2022,7 @@
         "/profile",
         "/receipts",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]"
       ]
@@ -1837,6 +2062,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -1858,6 +2084,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -1876,6 +2103,7 @@
         "/profile",
         "/receipts",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]"
       ]
@@ -1947,6 +2175,9 @@
         "close_guardian_link",
         "close_under_13_account",
         "end_guardian_link",
+        "fun_guardian",
+        "fun_guardian_grant_valid",
+        "fun_permission",
         "guardian_list_minors",
         "guardian_view",
         "is_supervising_guardian",
@@ -1974,6 +2205,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -1995,12 +2227,16 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
         "/admin/support",
         "/admin/trends",
         "/admin/wishlist",
+        "/api/fan-zone-media+api",
+        "/api/fan-zone-remove+api",
+        "/api/fan-zone-upload+api",
         "/athlete",
         "/booster",
         "/drip",
@@ -2013,6 +2249,7 @@
         "/profile",
         "/receipts",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]"
       ]
@@ -2292,6 +2529,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -2313,6 +2551,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -2333,6 +2572,7 @@
         "/profile",
         "/receipts",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]",
         "edge:stripe-webhook",
@@ -2431,6 +2671,9 @@
         "enforce_minor_consent",
         "filmer_stats",
         "first_name_of",
+        "fun_eligible",
+        "fun_snapshot",
+        "fun_storage_guard",
         "get_active_spotlight_award",
         "get_admin_malo_breakdown",
         "get_admin_reports",
@@ -2469,6 +2712,7 @@
         "profile_age_band",
         "profile_item_visible",
         "publish_spotlight_award",
+        "quiz_admin_settings",
         "rally_manager_role",
         "record_reel_view",
         "redeem_team_code",
@@ -2520,6 +2764,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -2541,6 +2786,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -2550,6 +2796,9 @@
         "/api/create-payment-intent+api",
         "/api/create-payout+api",
         "/api/create-stripe-account+api",
+        "/api/fan-zone-media+api",
+        "/api/fan-zone-remove+api",
+        "/api/fan-zone-upload+api",
         "/athlete",
         "/auth/callback",
         "/booster",
@@ -2567,6 +2816,7 @@
         "/receipts",
         "/school-confirm",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]",
         "edge:create-payment-intent",
@@ -2719,6 +2969,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -2740,6 +2991,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -2874,6 +3126,7 @@
         "clear_reel_hype",
         "confirm_reel_player_tag",
         "filmer_stats",
+        "fun_snapshot",
         "get_active_spotlight_award",
         "get_admin_platform_metrics",
         "get_admin_reports",
@@ -2918,6 +3171,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -2939,6 +3193,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -2957,6 +3212,7 @@
         "/profile",
         "/receipts",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]",
         "portal:/",
@@ -3089,6 +3345,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -3110,6 +3367,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -3130,6 +3388,7 @@
         "/receipts",
         "/school-confirm",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]",
         "edge:create-payment-intent",
@@ -3332,6 +3591,129 @@
       ]
     },
     {
+      "name": "sport_quiz_attempts",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "One own-scoped random approved question assignment/skip/completion per account UTC week; exact request retry.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_question",
+        "quiz_answer",
+        "quiz_skip",
+        "quiz_start"
+      ],
+      "sqlReaders": [
+        "quiz_admin_snapshot",
+        "quiz_answer",
+        "quiz_snapshot"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/admin/sport-quiz",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_audit",
+      "kind": "table",
+      "owner": "RLS_SECURITY",
+      "purpose": "Append-only authoritative quiz settings/content/correction history; participant answers/identities omitted from admin count export.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_question",
+        "quiz_admin_settings",
+        "quiz_answer",
+        "quiz_skip",
+        "quiz_start"
+      ],
+      "sqlReaders": [
+        "quiz_admin_snapshot"
+      ],
+      "removers": [],
+      "triggers": [
+        "quiz_audit_guard → quiz_guard_audit",
+        "quiz_audit_truncate_guard → quiz_guard_audit"
+      ],
+      "screens": [
+        "/admin/sport-quiz",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_badges",
+      "kind": "table",
+      "owner": "AURA",
+      "purpose": "Private noncash Sport Learner weekly completion acknowledgments; no Aura wallet, voting or payment value; erroneous content corrections.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_question",
+        "quiz_answer"
+      ],
+      "sqlReaders": [
+        "quiz_admin_snapshot",
+        "quiz_snapshot"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/admin/sport-quiz",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_questions",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "Human-reviewed sport question versions, draft/approved/archive/void state and stable issued answer/explanation.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_question"
+      ],
+      "sqlReaders": [
+        "quiz_admin_question",
+        "quiz_admin_snapshot",
+        "quiz_answer",
+        "quiz_snapshot",
+        "quiz_start"
+      ],
+      "removers": [],
+      "triggers": [
+        "quiz_question_guard → quiz_guard_question"
+      ],
+      "screens": [
+        "/admin/sport-quiz",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_settings",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "Default-paused/testing-only quiz switch with approved canonical-profile tester allowlist.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_settings"
+      ],
+      "sqlReaders": [
+        "quiz_admin_question",
+        "quiz_admin_snapshot",
+        "quiz_require_testing",
+        "quiz_snapshot"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/admin/sport-quiz",
+        "/sport-quiz"
+      ]
+    },
+    {
       "name": "spotlight_awards",
       "kind": "table",
       "owner": "SPOTLIGHT",
@@ -3499,6 +3881,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -3520,6 +3903,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -3576,6 +3960,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -3597,6 +3982,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -3615,6 +4001,7 @@
         "/profile",
         "/receipts",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]"
       ]
@@ -3704,6 +4091,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -3725,6 +4113,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -3749,6 +4138,7 @@
         "/receipts",
         "/school-confirm",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]"
       ]
@@ -3786,6 +4176,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -3807,6 +4198,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -3953,6 +4345,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -3974,12 +4367,16 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
         "/admin/support",
         "/admin/trends",
         "/admin/wishlist",
+        "/api/fan-zone-media+api",
+        "/api/fan-zone-remove+api",
+        "/api/fan-zone-upload+api",
         "/athlete",
         "/booster",
         "/drip",
@@ -3993,6 +4390,7 @@
         "/profile",
         "/receipts",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]"
       ]
@@ -4047,6 +4445,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -4068,6 +4467,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -4087,6 +4487,7 @@
         "/receipts",
         "/school-confirm",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]",
         "portal:/",
@@ -4150,6 +4551,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -4171,6 +4573,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -4190,6 +4593,7 @@
         "/profile",
         "/receipts",
         "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]"
       ]
@@ -4240,6 +4644,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -4261,6 +4666,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -5367,6 +5773,10 @@
         "sql:check constraint",
         "sql:confirm_reel_player_tag",
         "sql:custodial_role",
+        "sql:fun_admin_guard",
+        "sql:fun_case",
+        "sql:fun_media_access",
+        "sql:fun_snapshot",
         "sql:get_admin_malo_breakdown",
         "sql:get_admin_platform_metrics",
         "sql:get_company_revenue_summary",
@@ -5383,6 +5793,7 @@
         "sql:patch_app_runtime_draft",
         "sql:publish_app_runtime",
         "sql:publish_spotlight_award",
+        "sql:quiz_admin_actor",
         "sql:rally_manager_role",
         "sql:record_support_review",
         "sql:reels_apply_tag_defaults",
@@ -5511,6 +5922,17 @@
       "reads": []
     },
     {
+      "name": "fan_zone_private.upload_allowed",
+      "owner": "RLS_SECURITY",
+      "callers": [],
+      "manual": "Private-schema Storage INSERT policy helper; schema usage denied to API roles, only policy-bound execute; owner editable reserved path/window and no existing object.",
+      "writes": [],
+      "reads": [
+        "fan_zone_campaigns",
+        "fan_zone_entries"
+      ]
+    },
+    {
       "name": "filmer_stats",
       "owner": "FILMER_REWARDS",
       "callers": [
@@ -5555,6 +5977,496 @@
       "writes": [],
       "reads": [
         "app_runtime_config"
+      ]
+    },
+    {
+      "name": "fun_actor",
+      "owner": "AUTH",
+      "callers": [
+        "sql:fun_admin_guard",
+        "sql:fun_entry",
+        "sql:fun_permission",
+        "sql:fun_reflection",
+        "sql:fun_vote"
+      ],
+      "manual": "Internal authenticated canonical profile/age guard; never assumes profile ID equals Auth user ID.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "fun_admin_ballot",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Admin proven ballot invalidation with reason and recount-required audit.",
+      "writes": [
+        "fan_zone_ballots",
+        "fan_zone_campaigns"
+      ],
+      "reads": []
+    },
+    {
+      "name": "fun_admin_campaign",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Admin create/configure/testing-open/pause/close/finalize/recount; winners derived from valid free totals.",
+      "writes": [
+        "fan_zone_campaigns"
+      ],
+      "reads": [
+        "fan_zone_ballots",
+        "fan_zone_entries"
+      ]
+    },
+    {
+      "name": "fun_admin_case",
+      "owner": "MODERATION",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Admin case resolve/escalation with reason; completion only server-confirmed deletion.",
+      "writes": [
+        "fan_zone_cases"
+      ],
+      "reads": [
+        "fan_zone_campaigns",
+        "fan_zone_entries"
+      ]
+    },
+    {
+      "name": "fun_admin_entry",
+      "owner": "MODERATION",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Admin eligibility/rights/safety review and suspension with private rationale; no winner selection.",
+      "writes": [
+        "fan_zone_campaigns",
+        "fan_zone_entries"
+      ],
+      "reads": []
+    },
+    {
+      "name": "fun_admin_guard",
+      "owner": "ADMIN",
+      "callers": [
+        "sql:fun_admin_ballot",
+        "sql:fun_admin_campaign",
+        "sql:fun_admin_case",
+        "sql:fun_admin_entry",
+        "sql:fun_admin_snapshot",
+        "sql:fun_case"
+      ],
+      "manual": "Internal admin/known-age guard for corrective Fan Zone operations.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "fun_admin_snapshot",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Complete selected bounded campaign Data with separately paged cases/audit, defined counts and corrective identity scope.",
+      "writes": [],
+      "reads": [
+        "fan_zone_audit",
+        "fan_zone_ballots",
+        "fan_zone_campaigns",
+        "fan_zone_cases",
+        "fan_zone_entries"
+      ]
+    },
+    {
+      "name": "fun_audit",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "sql:fun_admin_ballot",
+        "sql:fun_admin_campaign",
+        "sql:fun_admin_case",
+        "sql:fun_admin_entry",
+        "sql:fun_case",
+        "sql:fun_complete_removal",
+        "sql:fun_entry",
+        "sql:fun_permission",
+        "sql:fun_verify_media"
+      ],
+      "manual": "Internal append-only trusted actor/time corrective event capture.",
+      "writes": [
+        "fan_zone_audit"
+      ],
+      "reads": []
+    },
+    {
+      "name": "fun_campaign_json",
+      "owner": "POLLS",
+      "callers": [
+        "sql:fun_snapshot"
+      ],
+      "manual": "Internal campaign DTO with approved tester identities restricted to admins.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "fun_candidate",
+      "owner": "MODERATION",
+      "callers": [
+        "sql:fun_admin_campaign",
+        "sql:fun_admin_snapshot",
+        "sql:fun_case",
+        "sql:fun_media_access",
+        "sql:fun_signature",
+        "sql:fun_snapshot",
+        "sql:fun_vote"
+      ],
+      "manual": "Internal accepted/currentverified/media-present/permission-valid candidate eligibility predicate.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "fun_case",
+      "owner": "MODERATION",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Bounded report/appeal/removal request with hashed secret; public report saturation cannot deny owner deletion.",
+      "writes": [
+        "fan_zone_cases"
+      ],
+      "reads": [
+        "fan_zone_campaigns",
+        "fan_zone_entries"
+      ]
+    },
+    {
+      "name": "fun_case_json",
+      "owner": "MODERATION",
+      "callers": [
+        "sql:fun_admin_case",
+        "sql:fun_case",
+        "sql:fun_case_status"
+      ],
+      "manual": "Internal minimal secret-authorized case receipt projection; no other case text.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "fun_case_status",
+      "owner": "MODERATION",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Secret-authorized unexpired minimal case status; no private target existence leak.",
+      "writes": [],
+      "reads": [
+        "fan_zone_cases"
+      ]
+    },
+    {
+      "name": "fun_complete_removal",
+      "owner": "UPLOAD",
+      "callers": [
+        "apps/mobile/src/backend/api/fanZoneMedia.ts",
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Service-only actual object-absence completion across all tracked entry revisions/deletion cases.",
+      "writes": [
+        "fan_zone_campaigns",
+        "fan_zone_cases",
+        "fan_zone_entries"
+      ],
+      "reads": [
+        "fan_zone_audit"
+      ]
+    },
+    {
+      "name": "fun_eligible",
+      "owner": "AUTH",
+      "callers": [
+        "sql:fan_zone_private.upload_allowed",
+        "sql:fun_actor",
+        "sql:fun_admin_campaign",
+        "sql:fun_case",
+        "sql:fun_guardian",
+        "sql:fun_media_access",
+        "sql:fun_permission_valid",
+        "sql:fun_pilot",
+        "sql:fun_snapshot"
+      ],
+      "manual": "Internal canonical-profile known-age/open-account eligibility predicate for fan actions.",
+      "writes": [],
+      "reads": [
+        "profiles"
+      ]
+    },
+    {
+      "name": "fun_entry",
+      "owner": "UPLOAD",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Caller-owned private reserve/edit/verified-submit/withdraw with immutable revision paths and server entry window.",
+      "writes": [
+        "fan_zone_campaigns",
+        "fan_zone_entries"
+      ],
+      "reads": []
+    },
+    {
+      "name": "fun_entry_json",
+      "owner": "UPLOAD",
+      "callers": [
+        "sql:fun_admin_entry",
+        "sql:fun_admin_snapshot",
+        "sql:fun_entry",
+        "sql:fun_permission",
+        "sql:fun_snapshot",
+        "sql:fun_verify_media"
+      ],
+      "manual": "Internal redacted private own/guardian/admin entry DTO including tracked media revision removal list.",
+      "writes": [],
+      "reads": [
+        "fan_zone_audit"
+      ]
+    },
+    {
+      "name": "fun_guardian",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "sql:fun_case",
+        "sql:fun_guardian_grant_valid",
+        "sql:fun_media_access",
+        "sql:fun_permission",
+        "sql:fun_snapshot"
+      ],
+      "manual": "Internal currently active confirmed supervision-link predicate; does not prove legal guardianship.",
+      "writes": [],
+      "reads": [
+        "guardian_links"
+      ]
+    },
+    {
+      "name": "fun_guardian_grant_valid",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "sql:fun_permission",
+        "sql:fun_permission_valid"
+      ],
+      "manual": "Internal exact relied-on guardian consent receipt/link/scope validity; historical other grants do not substitute after revocation/link loss.",
+      "writes": [],
+      "reads": [
+        "fan_zone_consents",
+        "guardian_links"
+      ]
+    },
+    {
+      "name": "fun_immutable_record",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "trigger:fan_zone_audit_immutable on fan_zone_audit",
+        "trigger:fan_zone_consent_immutable on fan_zone_consents"
+      ],
+      "manual": "Trigger protects exact consent/audit receipts against mutation/truncate; identity nulling handled for deletion.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "fun_media_access",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "apps/mobile/src/backend/services/fanZoneMedia.ts",
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Caller-scoped exact revision read/verify/remove authorization before server private storage access.",
+      "writes": [],
+      "reads": [
+        "fan_zone_audit",
+        "fan_zone_campaigns",
+        "fan_zone_cases",
+        "fan_zone_entries"
+      ]
+    },
+    {
+      "name": "fun_page_time",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "trigger:fan_zone_audit_time on fan_zone_audit",
+        "trigger:fan_zone_case_time on fan_zone_cases"
+      ],
+      "manual": "Insert trigger ensures timestamp-page ordering without same-transaction skipped case/audit rows.",
+      "writes": [],
+      "reads": [
+        "fan_zone_audit",
+        "fan_zone_cases"
+      ]
+    },
+    {
+      "name": "fun_permission",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Exact expected-scope assent/linked guardian grant/revoke; edit/stale form/link ending invalidates publication.",
+      "writes": [
+        "fan_zone_campaigns",
+        "fan_zone_consents",
+        "fan_zone_entries"
+      ],
+      "reads": [
+        "guardian_links"
+      ]
+    },
+    {
+      "name": "fun_permission_valid",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "sql:fun_candidate",
+        "sql:fun_entry_json"
+      ],
+      "manual": "Internal current exact-entry assent/guardian-link/grant/revocation validity.",
+      "writes": [],
+      "reads": [
+        "fan_zone_consents"
+      ]
+    },
+    {
+      "name": "fun_pilot",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "sql:fan_zone_private.upload_allowed",
+        "sql:fun_admin_campaign",
+        "sql:fun_admin_snapshot",
+        "sql:fun_candidate",
+        "sql:fun_case",
+        "sql:fun_entry",
+        "sql:fun_media_access",
+        "sql:fun_permission",
+        "sql:fun_reflection",
+        "sql:fun_signature",
+        "sql:fun_snapshot",
+        "sql:fun_storage_guard",
+        "sql:fun_verify_media",
+        "sql:fun_vote"
+      ],
+      "manual": "Internal testing-only campaign/tester-audience authorization, empty allowlist denies by default.",
+      "writes": [],
+      "reads": [
+        "fan_zone_campaigns"
+      ]
+    },
+    {
+      "name": "fun_prune_receipts",
+      "owner": "POLLS",
+      "callers": [],
+      "manual": "Service-only explicit expiry cleanup for bounded ballot retry records; no scheduler or hosted execution established.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "fun_reflection",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Own private voluntary preset service receipt create/delete, separate from badges/money.",
+      "writes": [
+        "fan_zone_reflections"
+      ],
+      "reads": [
+        "fan_zone_campaigns"
+      ]
+    },
+    {
+      "name": "fun_scope",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "sql:fun_entry_json",
+        "sql:fun_guardian_grant_valid",
+        "sql:fun_permission",
+        "sql:fun_permission_valid"
+      ],
+      "manual": "Internal exact revision/digest/alias/caption/campaign/audience/form/no-reuse consent scope.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "fun_signature",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "sql:fun_admin_campaign",
+        "sql:fun_snapshot"
+      ],
+      "manual": "Internal hash of ballot request arguments for caller-bound exact retry.",
+      "writes": [],
+      "reads": [
+        "fan_zone_ballots",
+        "fan_zone_entries"
+      ]
+    },
+    {
+      "name": "fun_snapshot",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Own/guardian plus enrolled-pilot campaign/candidate/result/curated-story projection; eligible is known-age, can_participate is caller enrollment capability; no tester list/voter identity exposure.",
+      "writes": [],
+      "reads": [
+        "fan_zone_ballots",
+        "fan_zone_campaigns",
+        "fan_zone_entries",
+        "fan_zone_reflections",
+        "profiles",
+        "reels"
+      ]
+    },
+    {
+      "name": "fun_storage_guard",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "trigger:fan_zone_storage_guard on storage"
+      ],
+      "manual": "Private Fan Zone Storage INSERT/UPDATE trigger locks campaign then entry; blocks stale/path-moving/service writes after withdrawal/deletion or verification. Catalog fence only, hosted provider compensation still unverified.",
+      "writes": [],
+      "reads": [
+        "fan_zone_campaigns",
+        "fan_zone_cases",
+        "fan_zone_entries",
+        "profiles"
+      ]
+    },
+    {
+      "name": "fun_verify_media",
+      "owner": "UPLOAD",
+      "callers": [
+        "apps/mobile/src/backend/api/fanZoneMedia.ts",
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Service-only sanitized digest/bytes/duration commit to still-authorized immutable draft; no client media assertion.",
+      "writes": [
+        "fan_zone_entries"
+      ],
+      "reads": [
+        "fan_zone_campaigns"
+      ]
+    },
+    {
+      "name": "fun_vote",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/fanZone.ts"
+      ],
+      "manual": "Atomic one free ballot/account/window; version CAS, caller/request/args retry binding, no-self vote and capped mutations.",
+      "writes": [
+        "fan_zone_ballots",
+        "fan_zone_requests"
+      ],
+      "reads": [
+        "fan_zone_campaigns",
+        "fan_zone_entries"
       ]
     },
     {
@@ -6362,6 +7274,14 @@
       "owner": "PROFILE",
       "callers": [
         "sql:crew_follow_blocked",
+        "sql:fun_admin_campaign",
+        "sql:fun_admin_snapshot",
+        "sql:fun_case",
+        "sql:fun_guardian",
+        "sql:fun_media_access",
+        "sql:fun_signature",
+        "sql:fun_snapshot",
+        "sql:fun_vote",
         "sql:guardian_invite_for_code",
         "sql:list_my_friends",
         "sql:reels_apply_tag_defaults",
@@ -6416,6 +7336,7 @@
         "sql:apply_teen_defaults",
         "sql:create_guardian_invite",
         "sql:enforce_minor_consent",
+        "sql:fun_guardian",
         "sql:guardian_decide_approval",
         "sql:is_supervising_guardian",
         "sql:log_supervision_event",
@@ -6600,6 +7521,7 @@
       "callers": [
         "sql:admin_minor_report",
         "sql:enforce_minor_consent",
+        "sql:fun_snapshot",
         "sql:guardian_decide_approval",
         "sql:minor_payout_hold_reason",
         "sql:minor_status_json",
@@ -6708,6 +7630,12 @@
         "sql:create_guardian_invite",
         "sql:crew_follow_blocked",
         "sql:end_guardian_link",
+        "sql:fan_zone_private.upload_allowed",
+        "sql:fun_actor",
+        "sql:fun_audit",
+        "sql:fun_case",
+        "sql:fun_media_access",
+        "sql:fun_snapshot",
         "sql:get_my_privacy",
         "sql:get_my_supervision",
         "sql:guardian_decide_approval",
@@ -6720,6 +7648,8 @@
         "sql:list_my_friends",
         "sql:log_supervision_event",
         "sql:preview_guardian_invite",
+        "sql:quiz_actor",
+        "sql:quiz_snapshot",
         "sql:record_guardian_consent",
         "sql:remove_friend",
         "sql:request_friend",
@@ -6918,6 +7848,10 @@
         "sql:apply_teen_defaults",
         "sql:create_guardian_invite",
         "sql:enforce_minor_consent",
+        "sql:fun_eligible",
+        "sql:fun_guardian",
+        "sql:fun_permission_valid",
+        "sql:fun_snapshot",
         "sql:guardian_decide_approval",
         "sql:guardian_invite_for_code",
         "sql:guardian_list_minors",
@@ -6926,6 +7860,9 @@
         "sql:minor_payout_hold_reason",
         "sql:minor_status_json",
         "sql:payee_for_player",
+        "sql:quiz_actor",
+        "sql:quiz_admin_settings",
+        "sql:quiz_snapshot",
         "sql:request_friend",
         "sql:set_my_birth_month",
         "sql:set_my_privacy",
@@ -6992,6 +7929,205 @@
         "profiles",
         "reels"
       ]
+    },
+    {
+      "name": "quiz_actor",
+      "owner": "AUTH",
+      "callers": [
+        "sql:quiz_admin_actor",
+        "sql:quiz_answer",
+        "sql:quiz_skip",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal canonical account/knownage/closed check; no client-supplied participant identity.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_admin_actor",
+      "owner": "ADMIN",
+      "callers": [
+        "sql:quiz_admin_question",
+        "sql:quiz_admin_settings",
+        "sql:quiz_admin_snapshot"
+      ],
+      "manual": "Internal protected quiz content/settings admin guard.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_admin_question",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction.",
+      "writes": [
+        "sport_quiz_attempts",
+        "sport_quiz_audit",
+        "sport_quiz_badges",
+        "sport_quiz_questions"
+      ],
+      "reads": [
+        "sport_quiz_questions",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_admin_settings",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Admin default-paused testing audience/settings change with authoritative rationale.",
+      "writes": [
+        "sport_quiz_audit",
+        "sport_quiz_settings"
+      ],
+      "reads": [
+        "profiles"
+      ]
+    },
+    {
+      "name": "quiz_admin_snapshot",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Complete <=100 question-version bank, defined current-week counts and bigint-paged audit; no participant answer list.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_audit",
+        "sport_quiz_badges",
+        "sport_quiz_questions",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_answer",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Owned current unvoided question completion with exact option/request retry and one private noncash badge; no proficiency/earnings claim.",
+      "writes": [
+        "sport_quiz_attempts",
+        "sport_quiz_audit",
+        "sport_quiz_badges"
+      ],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_guard_audit",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "trigger:quiz_audit_guard on sport_quiz_audit",
+        "trigger:quiz_audit_truncate_guard on sport_quiz_audit"
+      ],
+      "manual": "Trigger keeps trusted quiz audit immutable; allowed FK nulling on identity deletion.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_guard_question",
+      "owner": "POLLS",
+      "callers": [
+        "trigger:quiz_question_guard on sport_quiz_questions"
+      ],
+      "manual": "Trigger freezes issued question wording/answers; edits become new reviewed versions.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_normalize_options",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_answer",
+        "sql:quiz_guard_question",
+        "sql:quiz_snapshot",
+        "sql:quiz_start"
+      ],
+      "manual": "Protected Unicode/ECMAScript-whitespace option canonicalization for new content/approval/assignment; malformed legacy question rows stay admin-correctable and cannot issue or complete.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_require_testing",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "sql:quiz_answer",
+        "sql:quiz_skip",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal default-paused/tester allowlist/production-refusal guard for quiz participation.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_skip",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Own current UTC-week dismissal without reward/penalty or capability loss.",
+      "writes": [
+        "sport_quiz_attempts",
+        "sport_quiz_audit"
+      ],
+      "reads": []
+    },
+    {
+      "name": "quiz_snapshot",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts",
+        "sql:quiz_answer",
+        "sql:quiz_skip",
+        "sql:quiz_start"
+      ],
+      "manual": "Own week/prompt/question/status/explanation/private badges and corrections; answer withheld until own completion.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_badges",
+        "sport_quiz_questions",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_start",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Atomic random approved sport question once per canonical account/UTCweek; refresh/sport changes reuse assignment.",
+      "writes": [
+        "sport_quiz_attempts",
+        "sport_quiz_audit"
+      ],
+      "reads": [
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_week",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_snapshot",
+        "sql:quiz_answer",
+        "sql:quiz_skip",
+        "sql:quiz_snapshot",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal authoritative UTC Monday start for one weekly assignment/badge.",
+      "writes": [],
+      "reads": []
     },
     {
       "name": "rally_manager_role",
@@ -8021,6 +9157,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -8042,6 +9179,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -8062,6 +9200,22 @@
         "/sponsor",
         "/spotlight",
         "/user/[id]"
+      ]
+    },
+    {
+      "name": "fan_zone",
+      "owner": "UPLOAD",
+      "purpose": "Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal.",
+      "writers": [
+        "apps/mobile/src/backend/api/fanZoneMedia.ts"
+      ],
+      "readers": [
+        "apps/mobile/src/backend/services/fanZoneMedia.ts"
+      ],
+      "screens": [
+        "/api/fan-zone-media+api",
+        "/api/fan-zone-remove+api",
+        "/api/fan-zone-upload+api"
       ]
     },
     {
@@ -8086,6 +9240,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -8107,6 +9262,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -8152,6 +9308,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -8173,6 +9330,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",
@@ -8218,6 +9376,7 @@
         "/admin/catalog",
         "/admin/departments",
         "/admin/drip",
+        "/admin/fan-zone",
         "/admin/features",
         "/admin/feedback",
         "/admin/games",
@@ -8239,6 +9398,7 @@
         "/admin/qa",
         "/admin/revenue",
         "/admin/schools",
+        "/admin/sport-quiz",
         "/admin/sports",
         "/admin/spotlight",
         "/admin/studio",

@@ -135,3 +135,12 @@ with these files.
 | [FUN-01](agents/FUN-01.md) | Actual build/review/evidence and release gaps. |
 | [Fan Zone design](engineering/design/FAN_ZONE_DESIGN.md) | Private entry, exact permission, free ballots, media and admin contracts. |
 | [Fan Zone plan](engineering/design/FAN_ZONE_IMPLEMENTATION_PLAN.md) | Owned implementation stages, admin before fan. |
+
+## Weekly Sport Pop Quiz
+
+| Document | Purpose |
+| --- | --- |
+| [QUIZ-01](agents/QUIZ-01.md) | Actual weekly pop quiz implementation/evidence. |
+| [Sport Pop Quiz design](engineering/design/SPORT_POP_QUIZ_DESIGN.md) | Optional weekly questions, noncash badge and correction contracts. |
+
+| [QUIZ-01 admin evidence](engineering/evidence/QUIZ-01-admin.md) | Local weekly quiz admin source, independent acceptance and actual checks; no hosted release. |
