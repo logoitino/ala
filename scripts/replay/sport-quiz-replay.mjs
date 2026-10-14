@@ -18,8 +18,12 @@ const db = new PGlite({ extensions: { pgcrypto } });
 const bootstrap = fs.readFileSync('scripts/replay/schema-replay.mjs', 'utf8').match(/const SUPABASE_STUBS = String.raw`([\s\S]*?)`;/)?.[1];
 assert.ok(bootstrap, 'existing Supabase bootstrap is available');
 await db.exec(bootstrap);
-await db.exec(fs.readFileSync(schemaPath, 'utf8'));
-if (fs.existsSync(migrationPath)) await db.exec(fs.readFileSync(migrationPath, 'utf8'));
+// This receipt deliberately exercises the historical untimed contract, before its replacement.
+const historicalSchema = fs.readFileSync(schemaPath, 'utf8').split('\n-- QUIZ-02:')[0];
+await db.exec(historicalSchema);
+if (!historicalSchema.includes('create table if not exists public.sport_quiz_settings') && fs.existsSync(migrationPath)) {
+  await db.exec(fs.readFileSync(migrationPath, 'utf8'));
+}
 
 const ids = Object.fromEntries(['admin', 'fan', 'teen', 'other', 'unknown', 'closed', 'legacy'].map((key, i) => [key, `00000000-0000-0000-0000-${String(i + 1).padStart(12, '0')}`]));
 const year = Number((await db.query('select extract(year from current_date)::int as y')).rows[0].y);
