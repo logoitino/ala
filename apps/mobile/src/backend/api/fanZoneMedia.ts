@@ -4,7 +4,9 @@
  * @sideEffects Caller RPCs; server-only Storage access and service-only verify/removal receipt RPCs.
  */
 import { createHash } from 'node:crypto';
+import { FAN_ZONE_MEDIA_LIMITS } from '@shared/fanZone';
 import { downloadFanMedia, fanMediaAccess, fanMediaBody, fanMediaClients, FanMediaError, UUID_PATTERN } from '../services/fanZoneMedia';
+import type { FanMediaAccess } from '../services/fanZoneMedia';
 import { sanitizeFanZoneMp4 } from '../services/fanZoneMp4';
 
 const PRIVATE_HEADERS = { 'Cache-Control': 'no-store', 'Vary': 'Authorization', 'X-Content-Type-Options': 'nosniff' };
@@ -47,15 +49,34 @@ export async function fanZoneMediaHandler(request: Request): Promise<Response> {
   } catch (caught) { return failed(caught); }
 }
 
-/** @purpose Sanitize the reserved draft object, then commit server-derived digest/size/duration. */
+/** @purpose Check a previously committed immutable receipt against bytes without rewriting the object. */
+function existingReceipt(access: FanMediaAccess, bytes: Uint8Array) {
+  if (!access.digest || !/^[a-f0-9]{64}$/.test(access.digest)
+    || !Number.isSafeInteger(access.bytes) || access.bytes !== bytes.length || bytes.length < 1 || bytes.length > FAN_ZONE_MEDIA_LIMITS.maxBytes
+    || !Number.isSafeInteger(access.duration_ms) || Number(access.duration_ms) < FAN_ZONE_MEDIA_LIMITS.minDurationMs
+    || Number(access.duration_ms) > FAN_ZONE_MEDIA_LIMITS.maxDurationMs
+    || createHash('sha256').update(bytes).digest('hex') !== access.digest) throw new FanMediaError('FUN_MEDIA_UNAVAILABLE', 503);
+  return { ok: true, revision: access.revision, digest: access.digest, bytes: access.bytes, duration_ms: access.duration_ms };
+}
+
+/** @purpose Sanitize a reserved draft or acknowledge its exact verified receipt; never overwrite committed media on retry. */
 export async function fanZoneUploadHandler(request: Request): Promise<Response> {
   try {
     const { entry, revision } = await fanMediaBody(request);
     const { caller, service } = await fanMediaClients(request);
     const access = await fanMediaAccess(caller, entry, revision, 'verify');
-    const sanitized = sanitizeFanZoneMp4(await downloadFanMedia(service, access));
+    const downloaded = await downloadFanMedia(service, access);
+    if (access.digest !== null && access.digest !== undefined) {
+      const receipt = existingReceipt(access, downloaded);
+      const again = await fanMediaAccess(caller, entry, revision, 'verify');
+      if (again.path !== access.path || again.digest !== access.digest || again.bytes !== access.bytes || again.duration_ms !== access.duration_ms) throw new FanMediaError('FUN_MEDIA_DENIED', 403);
+      return json(receipt);
+    }
+    const sanitized = sanitizeFanZoneMp4(downloaded);
     const again = await fanMediaAccess(caller, entry, revision, 'verify');
     if (again.path !== access.path) throw new FanMediaError('FUN_MEDIA_DENIED', 403);
+    // A concurrent verifier may have committed while this request read/sanitized its original bytes.
+    if (again.digest !== null && again.digest !== undefined) return json(existingReceipt(again, sanitized.bytes));
     const digest = createHash('sha256').update(sanitized.bytes).digest('hex');
     const { error: uploadError } = await service.storage.from('fan_zone').upload(access.path, sanitized.bytes, { contentType: 'video/mp4', cacheControl: '0', upsert: true });
     if (uploadError) throw new FanMediaError('FUN_MEDIA_UNAVAILABLE', 503);

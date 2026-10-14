@@ -18386,6 +18386,8 @@ create table if not exists public.fan_zone_consents (
   scope jsonb not null,
   created_at timestamptz not null default now()
 );
+-- Explicit publication binding: historical grants cannot replace a revoked or ended relied-on grant.
+alter table public.fan_zone_entries add column if not exists guardian_consent_id uuid references public.fan_zone_consents(id);
 create table if not exists public.fan_zone_ballots (
   id uuid primary key default gen_random_uuid(),
   campaign_id uuid not null references public.fan_zone_campaigns(id),
@@ -18442,6 +18444,8 @@ create table if not exists public.fan_zone_reflections (
 );
 create index if not exists fan_zone_consents_entry on public.fan_zone_consents(entry_id,revision,created_at desc);
 create index if not exists fan_zone_cases_page on public.fan_zone_cases(entry_id,created_at desc);
+-- One deletion request covers every historical revision; exact retries reuse its receipt rather than adding cases.
+create unique index if not exists fan_zone_one_deletion on public.fan_zone_cases(entry_id) where kind='deletion';
 create index if not exists fan_zone_audit_page on public.fan_zone_audit(campaign_id,created_at desc);
 
 -- Table grants are closed even under Supabase's permissive default privileges. Definer APIs enforce actor gates.
@@ -18480,15 +18484,19 @@ create or replace function public.fun_guardian(p_owner uuid,p_actor uuid) return
  and public.is_minor_band(public.profile_age_band(p_owner)) and not public.is_blocked_between(p_actor,p_owner)
  and exists(select 1 from public.guardian_links l where l.minor_id=p_owner and l.guardian_id=p_actor and l.confirmed_at is not null and l.ended_at is null);
 $$;
+create or replace function public.fun_guardian_grant_valid(p_entry public.fan_zone_entries) returns boolean language sql stable security definer set search_path='' as $$
+ select exists(select 1 from public.fan_zone_consents s join public.guardian_links l on l.id=s.link_id
+ where s.id=p_entry.guardian_consent_id and s.entry_id=p_entry.id and s.revision=p_entry.revision
+ and s.scope=public.fun_scope(p_entry) and s.action='grant'
+ and l.minor_id=p_entry.owner_id and l.guardian_id=s.actor_id and l.confirmed_at is not null and l.ended_at is null
+ and public.fun_guardian(p_entry.owner_id,s.actor_id) and not exists(select 1 from public.fan_zone_consents x
+ where x.entry_id=s.entry_id and x.revision=s.revision and x.actor_id=s.actor_id and x.sequence_id>s.sequence_id));
+$$;
 create or replace function public.fun_permission_valid(p_entry public.fan_zone_entries) returns boolean language sql stable security definer set search_path='' as $$
  select public.fun_eligible(p_entry.owner_id) and p_entry.verified and p_entry.removed_at is null and exists(
  select 1 from public.fan_zone_consents s where s.entry_id=p_entry.id and s.revision=p_entry.revision and s.actor_id=p_entry.owner_id
  and s.scope=public.fun_scope(p_entry) and s.action='assent' and not exists(select 1 from public.fan_zone_consents x where x.entry_id=s.entry_id and x.revision=s.revision and x.actor_id=s.actor_id and x.sequence_id>s.sequence_id))
- and (public.profile_age_band(p_entry.owner_id)='adult' or exists(
- select 1 from public.fan_zone_consents s join public.guardian_links l on l.id=s.link_id
- where s.entry_id=p_entry.id and s.revision=p_entry.revision and s.scope=public.fun_scope(p_entry) and s.action='grant'
- and l.minor_id=p_entry.owner_id and l.guardian_id=s.actor_id and l.confirmed_at is not null and l.ended_at is null
- and public.fun_guardian(p_entry.owner_id,s.actor_id) and not exists(select 1 from public.fan_zone_consents x where x.entry_id=s.entry_id and x.revision=s.revision and x.actor_id=s.actor_id and x.sequence_id>s.sequence_id)));
+ and (public.profile_age_band(p_entry.owner_id)='adult' or public.fun_guardian_grant_valid(p_entry));
 $$;
 create or replace function public.fun_candidate(p_entry public.fan_zone_entries) returns boolean language sql stable security definer set search_path='' as $$
  select p_entry.status='accepted' and public.fun_pilot(p_entry.campaign_id,p_entry.owner_id) and public.fun_permission_valid(p_entry);
@@ -18564,7 +18572,7 @@ begin
    if not public.fun_pilot(c.id,me) or c.status<>'open' or now()<c.entry_opens_at or now()>=c.entry_closes_at or e.status='withdrawn' then raise exception 'FUN_ENTRY_WINDOW_CLOSED'; end if;
    if p_action='edit' then
     -- A changed revision never points at old sanitized bytes or old public permission.
-    update public.fan_zone_entries set revision=revision+1,path=id::text||'/'||(revision+1)::text||'/'||gen_random_uuid()::text||'.mp4',alias=coalesce(p_payload->>'alias',''),caption=coalesce(p_payload->>'caption',''),rights_confirmed=coalesce((p_payload->>'rights_confirmed')::boolean,false),status='draft',reason=null,verified=false,digest=null,bytes=null,duration_ms=null,removed_at=null,updated_at=now() where id=e.id returning * into e;
+    update public.fan_zone_entries set revision=revision+1,path=id::text||'/'||(revision+1)::text||'/'||gen_random_uuid()::text||'.mp4',alias=coalesce(p_payload->>'alias',''),caption=coalesce(p_payload->>'caption',''),rights_confirmed=coalesce((p_payload->>'rights_confirmed')::boolean,false),status='draft',reason=null,verified=false,digest=null,bytes=null,duration_ms=null,removed_at=null,guardian_consent_id=null,updated_at=now() where id=e.id returning * into e;
     update public.fan_zone_campaigns set recount_required=true where id=c.id;
    elsif p_action='submit' then
     if e.status<>'draft' or not e.verified or e.removed_at is not null or not e.rights_confirmed or char_length(trim(e.alias))<1 or char_length(trim(e.caption))<1 then raise exception 'FUN_VERIFIED_RIGHTS_REQUIRED'; end if;
@@ -18578,7 +18586,7 @@ begin
 end $$;
 
 create or replace function public.fun_permission(p_entry_id uuid,p_revision integer,p_action text,p_expected_scope jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
-declare me uuid:=public.fun_actor(); e public.fan_zone_entries; c public.fan_zone_campaigns; link uuid; scope jsonb;
+declare me uuid:=public.fun_actor(); e public.fan_zone_entries; c public.fan_zone_campaigns; link uuid; scope jsonb; receipt_id uuid; bind_grant boolean:=false;
 begin
  select c0.* into c from public.fan_zone_campaigns c0 join public.fan_zone_entries e0 on e0.campaign_id=c0.id where e0.id=p_entry_id for update of c0;
  select * into e from public.fan_zone_entries where id=p_entry_id for update;
@@ -18590,11 +18598,14 @@ begin
  elsif p_action='grant' then
   if not public.fun_guardian(e.owner_id,me) then raise exception 'FUN_PERMISSION_UNAVAILABLE'; end if;
   select id into link from public.guardian_links where minor_id=e.owner_id and guardian_id=me and confirmed_at is not null and ended_at is null;
+  -- A different guardian's receipt is retained but cannot replace a still-valid relied-on guardian.
+  bind_grant:=not public.fun_guardian_grant_valid(e) or exists(select 1 from public.fan_zone_consents s where s.id=e.guardian_consent_id and s.actor_id=me);
  elsif p_action='revoke' then
   if me<>e.owner_id then select id into link from public.guardian_links where minor_id=e.owner_id and guardian_id=me and confirmed_at is not null and ended_at is null; end if;
  else raise exception 'FUN_ACTION_INVALID'; end if;
  if p_action<>'revoke' and (not e.verified or e.removed_at is not null or e.status='withdrawn' or not public.fun_pilot(c.id,e.owner_id)) then raise exception 'FUN_PERMISSION_UNAVAILABLE'; end if;
- insert into public.fan_zone_consents(entry_id,revision,actor_id,link_id,action,scope) values(e.id,e.revision,me,link,p_action,scope);
+ insert into public.fan_zone_consents(entry_id,revision,actor_id,link_id,action,scope) values(e.id,e.revision,me,link,p_action,scope) returning id into receipt_id;
+ if bind_grant then update public.fan_zone_entries set guardian_consent_id=receipt_id,updated_at=now() where id=e.id returning * into e; end if;
  update public.fan_zone_campaigns set recount_required=true where id=e.campaign_id;
  perform public.fun_audit(e.campaign_id,'permission_'||p_action,e.id,jsonb_build_object('revision',e.revision));
  return jsonb_build_object('ok',true,'entry',public.fun_entry_json(e));
@@ -18664,7 +18675,8 @@ begin
   if e.revision<>p_revision or e.removed_at is not null then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
   media_path:=e.path;
   if p_intent='verify' then
-   if me<>e.owner_id or not public.fun_pilot(e.campaign_id,me) or e.status<>'draft' or e.verified or not exists(select 1 from public.fan_zone_campaigns c where c.id=e.campaign_id and c.status='open' and now()>=c.entry_opens_at and now()<c.entry_closes_at) then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
+   -- Only the owner may reauthorize a current draft; an existing digest permits a receipt retry, never another Storage write.
+   if me<>e.owner_id or not public.fun_pilot(e.campaign_id,me) or e.status<>'draft' or not exists(select 1 from public.fan_zone_campaigns c where c.id=e.campaign_id and c.status='open' and now()>=c.entry_opens_at and now()<c.entry_closes_at) then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
   elsif p_intent='read' then
    if not e.verified or (me<>e.owner_id and not public.fun_guardian(e.owner_id,me) and not coalesce(public.current_user_role()='admin',false)
     and not (public.fun_pilot(e.campaign_id,me) and public.fun_candidate(e) and not public.is_blocked_between(me,e.owner_id))) then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
@@ -18704,26 +18716,32 @@ begin
 end $$;
 
 create or replace function public.fun_case(p_entry_id uuid,p_kind text,p_details text,p_secret uuid) returns jsonb language plpgsql security definer set search_path='' as $$
-declare me uuid:=public.my_profile_id(); e public.fan_zone_entries; k public.fan_zone_cases; h text;
+declare me uuid:=public.my_profile_id(); e public.fan_zone_entries; k public.fan_zone_cases; h text; staff boolean:=coalesce(public.current_user_role()='admin',false);
 begin
  if p_secret is null or p_details is null or char_length(trim(p_details)) not between 3 and 1000 or p_kind not in ('report','appeal','deletion') or p_kind is null then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
  if auth.uid() is not null and not public.fun_eligible(me) then raise exception 'FUN_ACCOUNT_INELIGIBLE'; end if;
  h:=encode(public.digest(p_secret::text,'sha256'),'hex');
- -- The intake lock prevents concurrent anonymous submissions from bypassing the entry/global queue bounds.
- perform pg_advisory_xact_lock(710014);
+ -- All entry/case mutations take campaign then entry, before a case lock or its audit campaign FK lock.
+ perform 1 from public.fan_zone_campaigns c join public.fan_zone_entries e0 on e0.campaign_id=c.id where e0.id=p_entry_id for update of c;
  select * into e from public.fan_zone_entries where id=p_entry_id for update;
  if not found or not coalesce((me=e.owner_id or public.fun_guardian(e.owner_id,me) or coalesce(public.current_user_role()='admin',false)
   or (p_kind='report' and public.fun_candidate(e) and (me is null or public.fun_pilot(e.campaign_id,me)) and not public.is_blocked_between(me,e.owner_id))),false) then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
- if p_kind in ('appeal','deletion') and not coalesce((me=e.owner_id or public.fun_guardian(e.owner_id,me)),false) then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
+ if p_kind='appeal' and not coalesce((me=e.owner_id or public.fun_guardian(e.owner_id,me)),false) then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
+ if p_kind='deletion' and not coalesce((me=e.owner_id or public.fun_guardian(e.owner_id,me) or staff),false) then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
+ if staff then perform public.fun_admin_guard(); end if;
+ -- Global intake accounting follows campaign/entry locks; it never blocks the path to an existing removal request.
+ perform pg_advisory_xact_lock(710014);
+ -- Receipt lookup can be foreign to this entry; read it without taking a foreign case lock out of order.
  select * into k from public.fan_zone_cases where secret_hash=h;
  if found then
   if k.entry_id<>e.id or k.kind<>p_kind or k.details<>p_details or k.reporter_id is distinct from me or now()>=k.expires_at then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
   return jsonb_build_object('ok',true,'case',public.fun_case_json(k));
  end if;
+ if p_kind='deletion' and exists(select 1 from public.fan_zone_cases where entry_id=e.id and kind='deletion') then raise exception 'FUN_DELETION_ALREADY_REQUESTED'; end if;
  -- Public report volume must not prevent the owner from requesting actual removal.
  if (p_kind='report' and ((select count(*) from public.fan_zone_cases where entry_id=e.id and kind='report' and created_at>now()-interval '1 day')>=5
  or (select count(*) from public.fan_zone_cases where kind='report' and status in ('open','escalated'))>=500))
- or (me is not null and (select count(*) from public.fan_zone_cases where reporter_id=me and created_at>now()-interval '1 day')>=10) then raise exception 'FUN_CASE_RATE_LIMIT'; end if;
+ or (p_kind<>'deletion' and me is not null and (select count(*) from public.fan_zone_cases where reporter_id=me and kind<>'deletion' and created_at>now()-interval '1 day')>=10) then raise exception 'FUN_CASE_RATE_LIMIT'; end if;
  insert into public.fan_zone_cases(entry_id,revision,path,reporter_id,kind,details,secret_hash) values(e.id,e.revision,e.path,me,p_kind,p_details,h) returning * into k;
  perform public.fun_audit(e.campaign_id,'case_'||p_kind,k.id);
  return jsonb_build_object('ok',true,'case',public.fun_case_json(k));
@@ -18738,6 +18756,9 @@ end $$;
 create or replace function public.fun_admin_case(p_case_id uuid,p_action text,p_reason text) returns jsonb language plpgsql security definer set search_path='' as $$
 declare me uuid:=public.fun_admin_guard(); k public.fan_zone_cases; campaign uuid;
 begin
+ -- Match entry/permission/removal mutation lock order; audit insertion needs the already-held campaign FK lock.
+ perform 1 from public.fan_zone_campaigns c join public.fan_zone_entries e on e.campaign_id=c.id join public.fan_zone_cases k0 on k0.entry_id=e.id where k0.id=p_case_id for update of c;
+ perform 1 from public.fan_zone_entries e join public.fan_zone_cases k0 on k0.entry_id=e.id where k0.id=p_case_id for update of e;
  select * into k from public.fan_zone_cases where id=p_case_id for update;
  if not found or k.status not in ('open','escalated') or p_reason is null or char_length(trim(p_reason)) not between 5 and 500 or p_action not in ('resolve','escalate') or p_action is null then raise exception 'FUN_CASE_INVALID'; end if;
  if k.kind='deletion' and p_action='resolve' then raise exception 'FUN_ACTUAL_REMOVAL_REQUIRED'; end if;
@@ -18768,7 +18789,7 @@ begin
  select * into c from public.fan_zone_campaigns x where (p_campaign_id is null or x.id=p_campaign_id) and public.fun_eligible(me)
  and (public.fun_pilot(x.id,me) or coalesce(public.current_user_role()='admin',false) or exists(select 1 from public.fan_zone_entries e where e.campaign_id=x.id and (e.owner_id=me or public.fun_guardian(e.owner_id,me))))
  and (x.opened_at is not null or coalesce(public.current_user_role()='admin',false)) order by x.created_at desc,x.id desc limit 1;
- if c.id is null then return jsonb_build_object('ok',true,'campaign',null,'candidates','[]'::jsonb,'results','[]'::jsonb,'entry',null,'ballot',null,'guardian_queue','[]'::jsonb,'reflections','[]'::jsonb,'story',null,'eligible',public.fun_eligible(me)); end if;
+ if c.id is null then return jsonb_build_object('ok',true,'campaign',null,'candidates','[]'::jsonb,'results','[]'::jsonb,'entry',null,'ballot',null,'guardian_queue','[]'::jsonb,'reflections','[]'::jsonb,'story',null,'eligible',public.fun_eligible(me),'can_participate',false); end if;
  select public.fun_entry_json(e) into own from public.fan_zone_entries e where campaign_id=c.id and owner_id=me;
  select jsonb_build_object('id',b.id,'campaign_id',b.campaign_id,'entry_id',b.entry_id,'version',b.version,'invalidated',b.invalidated_at is not null) into ballot from public.fan_zone_ballots b where b.campaign_id=c.id and b.voter_id=me;
  select coalesce(jsonb_agg(jsonb_build_object('id',e.id,'revision',e.revision,'alias',e.alias,'caption',e.caption) order by md5(e.id::text||current_date::text)),'[]') into candidates from public.fan_zone_entries e where e.campaign_id=c.id and public.fun_pilot(c.id,me) and public.fun_candidate(e) and not public.is_blocked_between(me,e.owner_id);
@@ -18782,7 +18803,7 @@ begin
  select jsonb_build_object('id',r.id,'player_id',r.player_id,'video_url',r.video_url,'title',r.title) into story from public.reels r join public.profiles p on p.id=r.uploaded_by
  where r.id=c.story_reel_id and r.tag_status='confirmed' and r.media_type='video' and not r.is_removed and not r.is_flagged and not r.is_vault_only and not r.is_exclusive and not p.account_private and public.fun_eligible(p.id) and (public.profile_age_band(p.id)='adult' or public.minor_has_consent(p.id,'public_profile')) and not public.is_blocked_between(me,p.id);
  return jsonb_build_object('ok',true,'campaign',public.fun_campaign_json(c)||jsonb_build_object('results',results,'recount_required',c.recount_required or (c.result_signature is not null and c.result_signature<>public.fun_signature(c.id))),
- 'candidates',candidates,'results',results,'entry',own,'ballot',ballot,'guardian_queue',queue,'reflections',reflections,'story',story,'eligible',public.fun_eligible(me));
+ 'candidates',candidates,'results',results,'entry',own,'ballot',ballot,'guardian_queue',queue,'reflections',reflections,'story',story,'eligible',public.fun_eligible(me),'can_participate',public.fun_pilot(c.id,me));
 end $$;
 create or replace function public.fun_admin_snapshot(p_campaign_id uuid default null,p_before timestamptz default null) returns jsonb language plpgsql stable security definer set search_path='' as $$
 declare me uuid:=public.fun_admin_guard(); c public.fan_zone_campaigns; campaigns jsonb; entries jsonb; cases jsonb; audit jsonb; ballots jsonb; counts jsonb; cursor timestamptz;
@@ -18814,6 +18835,25 @@ revoke all on function fan_zone_private.upload_allowed(text,uuid) from public,an
 grant execute on function fan_zone_private.upload_allowed(text,uuid) to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('fan_zone','fan_zone',false,20971520,array['video/mp4']) on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
 create unique index if not exists fan_zone_object_unique on storage.objects(bucket_id,name) where bucket_id='fan_zone';
+-- A service upsert must also obey the reserved draft invariant: a late upload cannot recreate removed media.
+-- This protects Storage catalog rows; physical provider writes/metadata compatibility require hosted verification.
+create or replace function public.fun_storage_guard() returns trigger language plpgsql security definer set search_path='' as $$
+declare e public.fan_zone_entries; c public.fan_zone_campaigns; owner_user uuid;
+begin
+ if tg_op='UPDATE' and (old.bucket_id='fan_zone' or new.bucket_id='fan_zone')
+ and (new.bucket_id,new.name,new.owner) is distinct from (old.bucket_id,old.name,old.owner) then raise exception 'FUN_STORAGE_IMMUTABLE'; end if;
+ if new.bucket_id<>'fan_zone' then return new; end if;
+ select c0.* into c from public.fan_zone_campaigns c0 join public.fan_zone_entries e0 on e0.campaign_id=c0.id where e0.path=new.name for update of c0;
+ select * into e from public.fan_zone_entries where path=new.name for update;
+ if not found or e.status<>'draft' or e.verified or e.removed_at is not null or not public.fun_pilot(c.id,e.owner_id)
+ or c.status<>'open' or now()<c.entry_opens_at or now()>=c.entry_closes_at
+ or exists(select 1 from public.fan_zone_cases k where k.entry_id=e.id and k.kind='deletion') then raise exception 'FUN_STORAGE_IMMUTABLE'; end if;
+ select user_id into owner_user from public.profiles where id=e.owner_id;
+ if new.owner is not null and new.owner is distinct from owner_user then raise exception 'FUN_STORAGE_IMMUTABLE'; end if;
+ return new;
+end $$;
+drop trigger if exists fan_zone_storage_guard on storage.objects;
+create trigger fan_zone_storage_guard before insert or update on storage.objects for each row execute function public.fun_storage_guard();
 drop policy if exists fan_zone_insert on storage.objects;
 create policy fan_zone_insert on storage.objects for insert to authenticated with check(bucket_id='fan_zone' and fan_zone_private.upload_allowed(name,owner));
 drop policy if exists fan_zone_insert_boundary on storage.objects;

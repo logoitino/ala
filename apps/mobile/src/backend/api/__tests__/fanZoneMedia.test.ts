@@ -57,6 +57,36 @@ describe('Fan Zone media API', () => {
     expect((await fanZoneUploadHandler(request('POST', { entry: ENTRY, revision: 1 }))).status).toBe(403);
     expect(mockUpload).not.toHaveBeenCalled();
   });
+  it('returns the existing immutable receipt on a second verification without another upload or commit', async () => {
+    const first = await fanZoneUploadHandler(request('POST', { entry: ENTRY, revision: 1 }));
+    expect(first.status).toBe(200);
+    const receipt = await first.json();
+    const clean = sanitizeFanZoneMp4(sampleMp4()).bytes;
+    mockDownload.mockResolvedValue({ data: new Blob([clean]), error: null });
+    mockCallerRpc.mockResolvedValue({ data: { ok: true, bucket: 'fan_zone', path: 'reserved/1.mp4', revision: 1,
+      digest: receipt.digest, bytes: receipt.bytes, duration_ms: receipt.duration_ms }, error: null });
+    const again = await fanZoneUploadHandler(request('POST', { entry: ENTRY, revision: 1 }));
+    expect(again.status).toBe(200); expect(await again.json()).toEqual(receipt);
+    expect(mockUpload).toHaveBeenCalledTimes(1); expect(mockServiceRpc).toHaveBeenCalledTimes(1);
+  });
+  it('refuses a downloaded digest mismatch instead of rewriting previously verified media', async () => {
+    const clean = sanitizeFanZoneMp4(sampleMp4()).bytes;
+    mockDownload.mockResolvedValue({ data: new Blob([clean]), error: null });
+    mockCallerRpc.mockResolvedValue({ data: { ok: true, bucket: 'fan_zone', path: 'reserved/1.mp4', revision: 1,
+      digest: 'b'.repeat(64), bytes: clean.length, duration_ms: 10000 }, error: null });
+    expect((await fanZoneUploadHandler(request('POST', { entry: ENTRY, revision: 1 }))).status).toBe(503);
+    expect(mockUpload).not.toHaveBeenCalled(); expect(mockServiceRpc).not.toHaveBeenCalled();
+  });
+  it('reuses a matching receipt if another verifier commits before the second caller gate', async () => {
+    const clean = sanitizeFanZoneMp4(sampleMp4()).bytes;
+    const digest = createHash('sha256').update(clean).digest('hex');
+    mockCallerRpc.mockResolvedValueOnce({ data: { ok: true, bucket: 'fan_zone', path: 'reserved/1.mp4', revision: 1, digest: null }, error: null })
+      .mockResolvedValueOnce({ data: { ok: true, bucket: 'fan_zone', path: 'reserved/1.mp4', revision: 1, digest, bytes: clean.length, duration_ms: 10000 }, error: null });
+    const response = await fanZoneUploadHandler(request('POST', { entry: ENTRY, revision: 1 }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true, revision: 1, digest, bytes: clean.length, duration_ms: 10000 });
+    expect(mockUpload).not.toHaveBeenCalled(); expect(mockServiceRpc).not.toHaveBeenCalled();
+  });
   it('serves a validated byte range with no-store and never exposes a storage URL', async () => {
     const clean = sanitizeFanZoneMp4(sampleMp4()).bytes;
     mockDownload.mockResolvedValue({ data: new Blob([clean]), error: null });

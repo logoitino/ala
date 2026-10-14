@@ -76,6 +76,9 @@ for(const [who,v]of Object.entries(entries)){
  const read=await act(who,`select count(*)::int as r from storage.objects where bucket_id='fan_zone'`);check(who+' cannot directly read private storage',read===0);
  await deny('client cannot forge verification '+who,who,`select public.fun_verify_media('${e.id}',${e.revision},'${'a'.repeat(64)}',1024,1000)`);
  await call('server','fun_verify_media',`'${e.id}',${e.revision},'${'a'.repeat(64)}',1024,1000`);
+ try {const receipt=await call(who,'fun_media_access',`'${e.id}',${e.revision},'verify'`);check(who+' can retry its own verified draft authorization',receipt.digest==='a'.repeat(64)&&receipt.bytes===1024&&receipt.duration_ms===1000);}catch(e){check(who+' can retry its own verified draft authorization',false);}
+ await deny('another viewer cannot verify '+who+' verified draft',who==='adult'?'other':'adult',`select public.fun_media_access('${e.id}',${e.revision},'verify')`);
+ await deny('service cannot upsert '+who+' verified draft','server',`update storage.objects set metadata='{}' where bucket_id='fan_zone' and name='${e.path}' returning id as r`,/FUN_STORAGE_IMMUTABLE/);
  await call(who,'fun_entry',`'${c}','${e.id}','submit','{}'`);
  await call('admin','fun_admin_entry',`'${e.id}','accept','Rights reviewed for pilot'`);
 }
@@ -89,7 +92,12 @@ const link=(await q(`insert into public.guardian_links(minor_id,guardian_id,sour
 await deny('unlinked adult cannot consent for teen','guardian2',`select public.fun_permission('${T.id}',${T.revision},'grant',${lit(T.consent_scope)})`);
 await permit('guardian',T,'grant');
 check('guardian can review exact media revision',(await call('guardian','fun_media_access',`'${T.id}',${T.revision},'read'`)).revision===T.revision);
-const guest=await call('guest','fun_snapshot',`'${c}'`);check('guest cannot discover testing campaigns',guest.campaign===null&&guest.candidates.length===0);const pub=await call('guardian','fun_snapshot',`'${c}'`);check('public candidates expose no owner, path, digest or private reasons',pub.candidates.length===3&&pub.candidates.every(x=>!('owner_id'in x)&&!('path'in x)&&!('digest'in x)&&!('reason'in x)));
+check('enrolled known-age account has an explicit participation flag',(await call('adult','fun_snapshot',`'${c}'`)).can_participate===true);
+await db.exec(`update public.fan_zone_campaigns set pilot_accounts=array_remove(pilot_accounts,'${profiles.guardian}'::uuid) where id='${c}'`);
+const privateGuardian=await call('guardian','fun_snapshot',`'${c}'`);
+check('unlisted guardian can review privately but cannot participate',privateGuardian.eligible===true&&privateGuardian.can_participate===false&&privateGuardian.campaign.id===c&&privateGuardian.guardian_queue.some(e=>e.id===T.id)&&privateGuardian.candidates.length===0);
+await db.exec(`update public.fan_zone_campaigns set pilot_accounts=array_append(pilot_accounts,'${profiles.guardian}'::uuid) where id='${c}'`);
+const guest=await call('guest','fun_snapshot',`'${c}'`);check('guest cannot discover testing campaigns',guest.campaign===null&&guest.candidates.length===0);check('no campaign never grants participation',guest.can_participate===false);const pub=await call('guardian','fun_snapshot',`'${c}'`);check('public candidates expose no owner, path, digest or private reasons',pub.candidates.length===3&&pub.candidates.every(x=>!('owner_id'in x)&&!('path'in x)&&!('digest'in x)&&!('reason'in x)));
 await deny('self vote denied','adult',`select public.fun_vote('${c}','${A.id}',gen_random_uuid(),0)`);
 for(const who of ['guest','unknown','closed','claimless'])await deny(`${who} cannot vote`,who,`select public.fun_vote('${c}','${A.id}',gen_random_uuid(),0)`);
 const request='10000000-0000-0000-0000-000000000001';
@@ -182,5 +190,77 @@ const auditRewrite=await db.exec(`delete from public.fan_zone_audit where action
 for(let i=0;i<5;i++) await call('guest','fun_case',`'${A.id}','report','Pilot safety concern ${i}',gen_random_uuid()`);
 const unblockedRemoval=await call('adult','fun_case',`'${A.id}','deletion','Remove despite saturated public reports',gen_random_uuid()`);
 check('anonymous report cap cannot block owner deletion',unblockedRemoval.case.kind==='deletion');
+// The explicitly relied-on guardian must not be replaced by another historical exact grant.
+const bindingCampaign=(await call('admin','fun_admin_campaign',`null,'create',${lit(payload)}`)).campaign.id;
+await call('admin','fun_admin_campaign',`'${bindingCampaign}','open','{}'`);
+let bindingEntry=(await call('teen','fun_entry',`'${bindingCampaign}',null,'reserve','{}'`)).entry;
+bindingEntry=(await call('teen','fun_entry',`'${bindingCampaign}','${bindingEntry.id}','edit',${lit({alias:'Teen cheer',caption:'Family cheer',rights_confirmed:true})}`)).entry;
+await act('teen',`insert into storage.objects(bucket_id,name,owner) values('fan_zone','${bindingEntry.path}','${ids.teen}')`);
+await call('server','fun_verify_media',`'${bindingEntry.id}',${bindingEntry.revision},'${'b'.repeat(64)}',1024,1000`);
+bindingEntry=(await call('teen','fun_entry',`'${bindingCampaign}','${bindingEntry.id}','submit','{}'`)).entry;
+await call('admin','fun_admin_entry',`'${bindingEntry.id}','accept','Exact testing media reviewed'`);
+const secondLink=(await q(`insert into public.guardian_links(minor_id,guardian_id,source,confirmed_at) values('${profiles.teen}','${profiles.guardian2}','invite',now()) returning id`))[0].id;
+await permit('teen',bindingEntry,'assent');
+const firstBinding=(await permit('guardian',bindingEntry,'grant')).entry.guardian_consent_id;
+const historicalGrant=await permit('guardian2',bindingEntry,'grant');
+check('another guardian receipt does not replace the explicitly relied-on grant',!!firstBinding&&historicalGrant.entry.guardian_consent_id===firstBinding);
+await call('other','fun_vote',`'${bindingCampaign}','${bindingEntry.id}',gen_random_uuid(),0`);
+for(const boundary of ['revoke','ended_link']){
+ await db.exec(`update public.fan_zone_campaigns set entry_closes_at=now()-interval '2 minute',vote_closes_at=now()-interval '1 minute' where id='${bindingCampaign}'`);
+ const recognized=await call('admin','fun_admin_campaign',`'${bindingCampaign}','finalize','{}'`);
+ check(boundary+' starts with a valid exact guardian-backed result',recognized.campaign.results.length===1&&recognized.campaign.results[0].entry_id===bindingEntry.id);
+ if(boundary==='revoke')await permit('guardian',bindingEntry,'revoke');
+ else await db.exec(`update public.guardian_links set ended_at=now() where id='${secondLink}'`);
+ check(boundary+' hides results despite another historical guardian grant',(await call('other','fun_snapshot',`'${bindingCampaign}'`)).results.length===0);
+ await db.exec(`update public.fan_zone_campaigns set status='open',entry_closes_at=now()+interval '1 hour',vote_closes_at=now()+interval '2 hours' where id='${bindingCampaign}'`);
+ check(boundary+' removes candidate instead of substituting a historical guardian',!(await call('other','fun_snapshot',`'${bindingCampaign}'`)).candidates.some(x=>x.id===bindingEntry.id));
+ await deny(boundary+' denies subsequent pilot media','other',`select public.fun_media_access('${bindingEntry.id}',${bindingEntry.revision},'read')`);
+ await deny(boundary+' denies a new ballot','guardian',`select public.fun_vote('${bindingCampaign}','${bindingEntry.id}',gen_random_uuid(),0)`,/FUN_CANDIDATE_UNAVAILABLE/);
+ const replacement=boundary==='revoke'?'guardian2':'guardian';
+ const replacementEntry=(await permit(replacement,bindingEntry,'grant')).entry;
+ const exactReceipt=(await q(`select actor_id,link_id,scope from public.fan_zone_consents where id='${replacementEntry.guardian_consent_id}'`))[0];
+ check(boundary+' binds the fresh replacement actor, link and exact scope',exactReceipt.actor_id===profiles[replacement]&&exactReceipt.link_id===(replacement==='guardian2'?secondLink:link)&&JSON.stringify(exactReceipt.scope)===JSON.stringify(bindingEntry.consent_scope));
+ check(boundary+' allows a fresh explicit replacement grant',(await call('other','fun_snapshot',`'${bindingCampaign}'`)).candidates.some(x=>x.id===bindingEntry.id));
+ if(boundary==='revoke'){
+  const staleRevoke=await permit('guardian',bindingEntry,'revoke');
+  check('stale prior guardian revoke cannot revoke the newly bound replacement',staleRevoke.entry.guardian_consent_id===replacementEntry.guardian_consent_id&&(await call('other','fun_snapshot',`'${bindingCampaign}'`)).candidates.some(x=>x.id===bindingEntry.id));
+  await permit('guardian',bindingEntry,'grant');
+ }
+}
+// Requested Task 1 Safety regressions use only the replay's synthetic in-memory database.
+const removalCampaign=(await call('admin','fun_admin_campaign',`null,'create',${lit({...payload,pilot_accounts:[profiles.guardian,profiles.guardian2]})}`)).campaign.id;
+await call('admin','fun_admin_campaign',`'${removalCampaign}','open','{}'`);
+const saturated=(await call('guardian','fun_entry',`'${removalCampaign}',null,'reserve','{}'`)).entry;
+await act('guardian',`insert into storage.objects(bucket_id,name,owner) values('fan_zone','${saturated.path}','${ids.guardian}')`);
+check('service can sanitize only the current editable draft',(await act('server',`update storage.objects set metadata='{"sanitized":true}' where bucket_id='fan_zone' and name='${saturated.path}' returning id as r`))!==undefined);
+await deny('service cannot rename a reserved object','server',`update storage.objects set name='unreserved.mp4' where bucket_id='fan_zone' and name='${saturated.path}' returning id as r`,/FUN_STORAGE_IMMUTABLE/);
+await deny('service cannot move a reserved object to another bucket','server',`update storage.objects set bucket_id='avatars' where bucket_id='fan_zone' and name='${saturated.path}' returning id as r`,/FUN_STORAGE_IMMUTABLE/);
+await deny('service cannot transfer immutable reserved object ownership','server',`update storage.objects set owner='${ids.admin}' where bucket_id='fan_zone' and name='${saturated.path}' returning id as r`,/FUN_STORAGE_IMMUTABLE/);
+for(let i=0;i<10;i++) await call('guardian','fun_case',`'${saturated.id}','appeal','Private signed intake ${i}',gen_random_uuid()`);
+// Seed the independent public queue bound; authorized removal must remain available at global saturation too.
+await db.exec(`insert into public.fan_zone_cases(entry_id,revision,path,kind,details,secret_hash) select '${A.id}',${A.revision},'${A.path}','report','Global intake saturation fixture',encode(public.digest('queue-fixture-'||i::text,'sha256'),'hex') from generate_series(1,495) i`);
+check('public report queue reaches its bounded population',(await q(`select count(*)::int n from public.fan_zone_cases where kind='report' and status in ('open','escalated')`))[0].n>=500);
+let saturatedDeletion;
+try{saturatedDeletion=await call('guardian','fun_case',`'${saturated.id}','deletion','Remove after signed intake cap',gen_random_uuid()`);check('signed intake saturation cannot prevent owner deletion',saturatedDeletion.case.kind==='deletion');}catch(e){check('signed intake saturation cannot prevent owner deletion',false);}
+if(saturatedDeletion){
+ await deny('duplicate deletion does not create an unbounded second active case','guardian',`select public.fun_case('${saturated.id}','deletion','Duplicate removal request',gen_random_uuid())`);
+ check('existing deletion still authorizes owner object removal',(await call('guardian','fun_media_access',`'${saturated.id}',${saturated.revision},'remove'`)).path===saturated.path);
+ await deny('service cannot rewrite a draft with tracked removal requested','server',`update storage.objects set metadata='{}' where bucket_id='fan_zone' and name='${saturated.path}' returning id as r`,/FUN_STORAGE_IMMUTABLE/);
+ const active=(await q(`select count(*)::int n from public.fan_zone_cases where entry_id='${saturated.id}' and kind='deletion' and status in ('open','escalated')`))[0].n;check('one active deletion request bounds duplicates',active===1);
+}
+const blockedOwner=(await call('guardian2','fun_entry',`'${removalCampaign}',null,'reserve','{}'`)).entry;
+await act('guardian2',`insert into storage.objects(bucket_id,name,owner) values('fan_zone','${blockedOwner.path}','${ids.guardian2}')`);
+await db.exec(`update public.profiles set age_blocked_at=now() where id='${profiles.guardian2}'`);
+let staffDeletion;
+try{staffDeletion=await call('admin','fun_case',`'${blockedOwner.id}','deletion','Staff safety removal for closed owner',gen_random_uuid()`);check('admin can initiate tracked removal for age-blocked owner',staffDeletion.case.kind==='deletion');}catch(e){check('admin can initiate tracked removal for age-blocked owner',false);}
+if(staffDeletion){
+ check('staff deletion authorizes private object removal',(await call('admin','fun_media_access',`'${blockedOwner.id}',${blockedOwner.revision},'remove'`)).path===blockedOwner.path);
+ await deny('blocked owner cannot authorize removal as a client','guardian2',`select public.fun_media_access('${blockedOwner.id}',${blockedOwner.revision},'remove')`);
+ await call('admin','fun_admin_case',`'${staffDeletion.case.id}','escalate','Staff removal is awaiting actual server deletion'`);
+ await db.exec(`delete from storage.objects where bucket_id='fan_zone' and name='${blockedOwner.path}'`);
+ check('service removal completes the staff initiated tracked receipt',(await call('server','fun_complete_removal',`'${blockedOwner.id}',${blockedOwner.revision}`)).completed===true);
+}
+await deny('service cannot overwrite a verified immutable object','server',`update storage.objects set metadata='{}' where bucket_id='fan_zone' and name='${A.path}' returning id as r`,/FUN_STORAGE_IMMUTABLE/);
+await deny('late service insert cannot recreate an object after completed removal','server',`insert into storage.objects(bucket_id,name,owner) values('fan_zone','${O.path}','${ids.other}')`,/FUN_STORAGE_IMMUTABLE/);
 await db.exec(fs.readFileSync('supabase/migrations/20261014130000_fan_zone.sql','utf8'));check('Fan Zone migration replays idempotently',true);
 console.log(`\n${tests.filter(t=>t.ok).length}/${tests.length} Fan Zone actor checks passed`);await db.close();process.exit(tests.every(t=>t.ok)?0:1);

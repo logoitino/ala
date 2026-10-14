@@ -73,6 +73,8 @@ export interface FanZoneEntry {
   bytes: number | null;
   duration_ms: number | null;
   removed_at: string | null;
+  /** Exact relied-on guardian grant; historical grants never substitute automatically. */
+  guardian_consent_id: string | null;
   created_at: string;
   updated_at: string;
   consent_scope: FanZoneConsentScope;
@@ -134,6 +136,8 @@ export interface FanZoneSnapshot {
   reflections: FanZoneReflection[];
   story: FanZoneStory | null;
   eligible: boolean;
+  /** Known age alone does not enroll an owner, guardian or admin in this campaign's approved audience. */
+  can_participate: boolean;
 }
 export interface FanZoneAdminSnapshot {
   ok: true;

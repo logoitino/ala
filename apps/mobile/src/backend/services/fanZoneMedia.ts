@@ -6,7 +6,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { FAN_ZONE_MAX_BYTES } from './fanZoneMp4';
 
-export type FanMediaAccess = { ok: true; bucket: 'fan_zone'; path: string; revision: number; digest?: string | null };
+export type FanMediaAccess = { ok: true; bucket: 'fan_zone'; path: string; revision: number; digest?: string | null; bytes?: number | null; duration_ms?: number | null };
 export class FanMediaError extends Error {
   constructor(message: string, readonly status = 400) { super(message); }
 }
