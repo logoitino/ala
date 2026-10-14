@@ -86,6 +86,8 @@ let q1;
 await test('draft content has no available sport until explicit approval', async () => {
   q1 = await question(null, 'create', questionPayload); await settings(true);
   assert.deepEqual((await snapshot()).sports, []);
+  assert.equal((await snapshot()).availability, 'unavailable');
+  assert.equal((await snapshot()).status, 'unavailable');
   await assert.rejects(() => rpc('fan', "public.quiz_start('American football')"), /quiz_no_question/);
   await question(q1.id, 'approve', { reason: 'Verified six-point touchdown under American football rules.' });
   assert.deepEqual((await snapshot()).sports, ['American football']);
@@ -105,6 +107,20 @@ await test('one weekly random approved assignment exposes no answer', async () =
   assert.equal((await rpc('fan', "public.quiz_start('rugby')")).attempt.id, attempt.id);
   const rows = (await db.query('select count(*)::int as n from public.sport_quiz_attempts where profile_id=$1', [profiles.fan])).rows;
   assert.equal(rows[0].n, 1);
+});
+await test('missing settings fails closed for enrolled and unenrolled readers, including an issued question', async () => {
+  const saved = (await db.query('select * from public.sport_quiz_settings')).rows[0];
+  await db.exec('delete from public.sport_quiz_settings');
+  try {
+    for (const key of ['fan','other']) {
+      const s = await snapshot(key); assert.equal(s.availability,'unavailable'); assert.equal(s.status,'unavailable');
+      assert.deepEqual(s.sports,[]); assert.equal(s.attempt,null); assert.deepEqual(s.badges,[]);
+      await denied(key,"public.quiz_start('American football')");
+    }
+    await denied('fan','public.quiz_answer($1,0,gen_random_uuid())',[attempt.id]);
+  } finally {
+    await db.query('insert into public.sport_quiz_settings select * from jsonb_populate_record(null::public.sport_quiz_settings,$1::jsonb)',[JSON.stringify(saved)]);
+  }
 });
 await test('another account and invalid options cannot answer the attempt', async () => {
   await denied('teen', 'public.quiz_answer($1, 0, gen_random_uuid())', [attempt.id]);
@@ -199,6 +215,11 @@ await test('age closure hides historical badges and refuses completion without e
   await db.query('update public.profiles set age_blocked_at=now() where id=$1',[profiles.teen]);
   const s = await snapshot('teen'); assert.equal(s.availability,'ineligible'); assert.deepEqual(s.badges,[]); assert.equal(s.attempt,null);
   await denied('teen',"public.quiz_start('American football')");
+});
+await test('pause succeeds with a now-closed tester while enabling that stale audience is still refused', async () => {
+  const paused = await settings(false,[profiles.fan,profiles.teen]); assert.equal(paused.enabled,false);
+  assert.equal((await snapshot()).availability,'paused');
+  await assert.rejects(() => settings(true,[profiles.fan,profiles.teen]),/quiz_testers_ineligible/);
 });
 await test('migration can reapply without resetting settings, review states or correction history', async () => {
   const before = await admin('public.quiz_admin_snapshot()');

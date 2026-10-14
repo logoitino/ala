@@ -1,5 +1,5 @@
 /** QUIZ-01 JSON RPC contracts. Private completion badges have no Aura, money, public ranking or vote effects. */
-export type QuizAvailability = 'ready' | 'paused' | 'not_enrolled' | 'ineligible';
+export type QuizAvailability = 'ready' | 'paused' | 'not_enrolled' | 'ineligible' | 'unavailable';
 export type QuizAttemptStatus = 'issued' | 'completed' | 'skipped' | 'void';
 export type QuizQuestionStatus = 'draft' | 'approved' | 'archived' | 'void';
 export type QuizQuestionAction = 'create' | 'edit' | 'approve' | 'archive' | 'void';

@@ -105,7 +105,8 @@ declare s public.sport_quiz_settings%rowtype;
 begin
   -- User writes share this lock; admin pause/allowlist/void serializes before any new completion.
   select * into s from public.sport_quiz_settings where singleton for share;
-  if s.enabled is not true or s.testing_only is not true then raise exception 'quiz_paused'; end if;
+  if not found or s.testing_only is not true then raise exception 'quiz_unavailable'; end if;
+  if s.enabled is not true then raise exception 'quiz_paused'; end if;
   if not (me = any(s.pilot_accounts)) then raise exception 'quiz_not_enrolled'; end if;
 end;
 $$;
@@ -156,10 +157,11 @@ begin
   select * into s from public.sport_quiz_settings where singleton;
   availability := case
     when me is null or public.profile_age_band(me) not in ('adult','teen_13_15','teen_16_17') then 'ineligible'
+    when s.singleton is null or s.testing_only is not true then 'unavailable'
     when not s.enabled then 'paused'
     when not (me = any(s.pilot_accounts)) then 'not_enrolled'
     else 'ready' end;
-  if availability <> 'ineligible' then
+  if availability not in ('ineligible','unavailable') then
     select * into a from public.sport_quiz_attempts where profile_id = me and week_start = public.quiz_week();
     if a.id is not null then
       select * into q from public.sport_quiz_questions where id = a.question_id;
@@ -177,6 +179,8 @@ begin
   end if;
   if availability = 'ready' then
     select coalesce(jsonb_agg(x.sport order by x.sport),'[]') into sports from (select distinct sport from public.sport_quiz_questions where status = 'approved') x;
+    -- An empty approved pool cannot offer a new question. Already-issued versions remain stable and answerable.
+    if jsonb_array_length(sports) = 0 and a.id is null then availability := 'unavailable'; end if;
   end if;
   return jsonb_build_object('availability',availability,'testing_only',true,'week_start',public.quiz_week(),'week_end',public.quiz_week()+7,
     'status',case when a.id is not null then a.status when availability = 'ready' then 'available' else 'unavailable' end,
@@ -249,7 +253,8 @@ begin
   select coalesce(array_agg(x::uuid),'{}'::uuid[]) into testers from jsonb_array_elements_text(p_payload->'pilot_accounts') x;
   next_enabled := (p_payload->>'enabled')::boolean;
   if cardinality(testers) <> (select count(distinct x) from unnest(testers) x) then raise exception 'quiz_testers_duplicate'; end if;
-  if exists(select 1 from unnest(testers) x where not exists(select 1 from public.profiles p where p.id = x and p.age_blocked_at is null
+  -- Pause must remain available after a listed tester closes; re-enabling still requires a valid eligible audience.
+  if next_enabled and exists(select 1 from unnest(testers) x where not exists(select 1 from public.profiles p where p.id = x and p.age_blocked_at is null
      and public.profile_age_band(p.id) in ('adult','teen_13_15','teen_16_17'))) then raise exception 'quiz_testers_ineligible'; end if;
   if next_enabled and cardinality(testers) = 0 then raise exception 'quiz_testers_required'; end if;
   update public.sport_quiz_settings set enabled = next_enabled, pilot_accounts = testers,reason = btrim(p_reason),updated_at = now(),updated_by = me where singleton;

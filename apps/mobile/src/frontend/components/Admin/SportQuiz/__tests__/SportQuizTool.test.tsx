@@ -68,3 +68,14 @@ it('blocks empty tester enable and preserves authoritative errors', async () => 
   await fireEvent.press(screen.getByLabelText('Enable for listed testers'));
   expect(await screen.findByText('quiz_testers_ineligible')).toBeTruthy();
 });
+it('pauses with the authoritative list even after a tester has closed, without requiring list edits', async () => {
+  const staleTesters = ['00000000-0000-0000-0000-000000000001'];
+  api.fetchSportQuizAdmin.mockResolvedValueOnce({ ...bank,settings:{ ...bank.settings,enabled:true,pilot_accounts:staleTesters } });
+  await render(<SportQuizTool />); await screen.findByText('Question bank');
+  await fireEvent.changeText(screen.getByLabelText('Review or correction reason'), 'Pause after tester safety closure.');
+  expect(screen.getByLabelText('Pause quiz')).not.toBeDisabled();
+  await fireEvent.press(screen.getByLabelText('Pause quiz'));
+  expect(api.saveSportQuizSettings).toHaveBeenCalledWith({ enabled:false,pilot_accounts:staleTesters },'Pause after tester safety closure.');
+  expect(await screen.findByText('Paused for local testing.')).toBeTruthy();
+  expect(screen.getByText(/Paused.*testing only/i)).toBeTruthy();
+});

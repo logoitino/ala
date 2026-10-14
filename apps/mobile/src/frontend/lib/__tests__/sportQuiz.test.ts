@@ -61,3 +61,35 @@ it('rejects incomplete admin counts rather than showing missing values as a heal
   mockClient.response = { settings: { enabled: false, testing_only: true, pilot_accounts: [] }, questions: [], audit: [], counts: {} };
   await expect(fetchSportQuizAdmin()).rejects.toThrow(/unavailable/i);
 });
+const validQuestion = { id:'q1',question_key:'key1',version:1,sport:'American football',prompt:'How many points is a touchdown before any conversion?',
+  options:['3','6','7','2'],correct_option:1,explanation:'A touchdown scores six points.',status:'draft',reason:'Draft; human fact approval required.',
+  created_at:'2026-10-14',created_by:null,reviewed_at:null,reviewed_by:null };
+const validAdmin = { generated_at:'2026-10-14',week_start:'2026-10-12',week_end:'2026-10-19',
+  settings:{ enabled:false,testing_only:true,pilot_accounts:[],reason:'Local testing paused.',updated_at:'2026-10-14',updated_by:null },
+  questions:[validQuestion],audit:[],next_before:null,
+  counts:{ questions_draft:1,questions_approved:0,questions_archived:0,questions_void:0,week_issued:0,week_completed:0,week_skipped:0,week_void:0,badges_issued:0,badges_void:0 } };
+it.each([{}, { ...validQuestion,options:undefined }, { ...validQuestion,options:['3',6,'7','2'] }, { ...validQuestion,correct_option:4 }, { ...validQuestion,status:'active' }])(
+  'rejects malformed question DTOs before the Data renderer receives them: %j', async question => {
+    mockClient.response = { ...validAdmin, questions:[question] };
+    await expect(fetchSportQuizAdmin()).rejects.toThrow(/unavailable/i);
+  },
+);
+it.each([
+  { generated_at:undefined }, { week_start:'not-a-date' }, { next_before:9007199254740992 },
+  { audit:[{}] }, { settings:{ ...validAdmin.settings,updated_at:null } },
+])('rejects malformed admin envelope/audit fields consumed by the desk: %j', async fields => {
+  mockClient.response = { ...validAdmin,...fields };
+  await expect(fetchSportQuizAdmin()).rejects.toThrow(/unavailable/i);
+});
+it('accepts the complete question and string bigint audit cursor without losing Data fields', async () => {
+  mockClient.response = { ...validAdmin,next_before:'9007199254740993',audit:[{
+    id:'9007199254740994',action:'question_create',actor_id:'admin-1',question_id:'q1',reason:'Draft question.',created_at:'2026-10-14',
+  }] };
+  expect(await fetchSportQuizAdmin()).toEqual(mockClient.response);
+});
+it('refuses malformed mutation receipts instead of allowing the desk to report success', async () => {
+  mockClient.response = {};
+  await expect(saveSportQuizQuestion('q1','approve',{ reason:'Human fact approval.' })).rejects.toThrow(/unavailable/i);
+  mockClient.response = { enabled:false,testing_only:false,pilot_accounts:[] };
+  await expect(saveSportQuizSettings({ enabled:false,pilot_accounts:[] },'Pause local testing.')).rejects.toThrow(/unavailable/i);
+});
