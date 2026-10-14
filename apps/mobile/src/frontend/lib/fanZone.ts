@@ -11,8 +11,8 @@ import { removeFanZoneMedia } from '@/lib/fanZoneMedia';
 export type * from '@shared/fanZone';
 const messages: Record<string, string> = {
     FUN_UNAVAILABLE: 'Fan Zone is unavailable. Refresh or contact Support.',
-    FUN_NOT_APPLIED: 'Fan Zone is not switched on yet: its database update has not been applied.',
-    FUN_NOT_CONFIGURED: 'Fan Zone is not configured in this build.',
+    FUN_NOT_APPLIED: 'Fan Zone is not available yet. Please try again later.',
+    FUN_NOT_CONFIGURED: 'Fan Zone is unavailable right now. Please try again later.',
     FUN_INVALID_RESPONSE: 'Fan Zone returned incomplete data. Refresh or contact Support.',
     FUN_INVALID_REQUEST: 'This Fan Zone request is not supported. Refresh or contact Support.',
     FUN_ACCOUNT_INELIGIBLE: 'This account cannot use Fan Zone. Check age/account status or contact Support.',
