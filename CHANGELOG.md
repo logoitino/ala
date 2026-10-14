@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-14 — Optional timed trivia player
+
+Trivia now offers explicit30- or90-second rounds, manual play or optional weekly invitations, reviewed unseen questions, private participation badges and private history controls. Leaving clears the question; interrupted responses recover only permitted committed results. Clear-history explains retained preferences/notices and the35-day weekly quota. Local129focused tests pass; independent review/full project acceptance pending.
+
 ## 2026-10-14 — Timed trivia admin acceptance
 
 Reviewed trivia administration now includes full bank/audit paging, permanent Pause, correction and bounded retention. Local server and SDK privacy fixes pass independent review; canonical105/Fan154/historical34/timed50 pass. Timed player implementation follows actual QUIZ-02 admin-ready.

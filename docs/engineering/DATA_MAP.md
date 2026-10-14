@@ -14,7 +14,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Database functions | 331 (81 used by hand, 29 trigger functions) |
 | Tables reached by at least one screen or server route | 85 of 86 |
 | Code files that read or write the database | 81 |
-| Exported symbols nothing imports | 31 (0 proposed for archive, 31 kept on purpose) |
+| Exported symbols nothing imports | 20 (0 proposed for archive, 20 kept on purpose) |
 | Rule failures | 0 |
 
 ## Owners
@@ -1214,17 +1214,6 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | `@/lib/payouts.ts` | `requestPayout` | keep | Wave 1 payout request (payouts are blocked by decision). |
 | `@/lib/photoStories.ts` | `resetPhotoStoriesProbe` | keep | Test hook. |
 | `@/lib/runtime.ts` | `discardAppRuntimeDraft` | keep | "Discard draft" action not yet wired into Publish; RUNTIME_CONFIG to wire or archive. |
-| `@/lib/sportQuiz.ts` | `fetchSportQuizAdmin` | keep | QUIZ-02 replaces the historical admin export; preserve until Task3 owned archive after actual admin gate, then remove this entry. |
-| `@/lib/sportQuiz.ts` | `fetchTimedSportQuiz` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
-| `@/lib/sportQuiz.ts` | `saveTimedSportQuizPreferences` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
-| `@/lib/sportQuiz.ts` | `claimTimedSportQuizInvitation` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
-| `@/lib/sportQuiz.ts` | `startTimedSportQuiz` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
-| `@/lib/sportQuiz.ts` | `answerTimedSportQuiz` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
-| `@/lib/sportQuiz.ts` | `endTimedSportQuiz` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
-| `@/lib/sportQuiz.ts` | `skipTimedSportQuiz` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
-| `@/lib/sportQuiz.ts` | `fetchTimedSportQuizReceipt` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
-| `@/lib/sportQuiz.ts` | `fetchTimedSportQuizHistory` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
-| `@/lib/sportQuiz.ts` | `eraseTimedSportQuizHistory` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
 | `@/services/MediaUploadService.ts` | `stripJpegMetadata` | keep | Tested wrapper over parseJpeg/buildCleanJpeg; its byte-rule tests prove the GPS/EXIF stripping uploadStoryPhoto performs (privacy). |
 | `shared/admin/analytics.ts` | `knownSources` | keep | Used by the analytics catalog test to prove no chart reads an invented measure. |
 | `shared/admin/financeCatalog.ts` | `catalogCoverage` | keep | Used by the finance data catalog coverage test. |

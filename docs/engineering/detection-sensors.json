@@ -262,12 +262,16 @@
       "area": "app",
       "owner": "SUPPORT",
       "status": "partial",
-      "detects": "Locally invoked current timed actor replay plus explicitly historical untimed replay and strict SDK/admin tests detect deadline/family/retry/closure/erasure/identity/content failures; unknown reads differ from zero. These source tests are not hosted monitors.",
+      "detects": "Locally invoked current timed/historical actor replay, strict SDK/admin, account/round/screen and independent Fan-discovery regressions detect deadline/family/exact retry/lifecycle/account/erasure/content failures; unknown reads differ from zero. Source tests are not hosted monitors.",
       "evidence": [
         "scripts/replay/sport-quiz-replay.mjs",
         "scripts/replay/timed-trivia-replay.mjs",
         "apps/mobile/src/frontend/lib/__tests__/sportQuiz.test.ts",
-        "apps/mobile/src/frontend/components/Admin/SportQuiz/__tests__/SportQuizTool.test.tsx"
+        "apps/mobile/src/frontend/components/Admin/SportQuiz/__tests__/SportQuizTool.test.tsx",
+        "apps/mobile/src/frontend/hooks/__tests__/useSportQuiz.test.tsx",
+        "apps/mobile/src/frontend/hooks/__tests__/useTimedSportQuizRound.test.tsx",
+        "apps/mobile/src/frontend/components/SportQuiz/__tests__/SportQuizScreen.test.tsx",
+        "apps/mobile/src/frontend/components/FamilyFun/__tests__/FamilyFunDiscoveryFan.test.tsx"
       ],
       "limitation": "No hosted lifecycle/retention/rate/content-review-backlog delivery or passive new Growth tracking; real native/web interruption and accessibility review, counsel notices and active cohort remain pending.",
       "next": "POLLS/Content/VOICE with SUPPORT and Privacy verifies timed facts, original deadline/recovery/End/Off/erasure/correction and aggregate optional completion/return/support burden before widening an approved cohort."

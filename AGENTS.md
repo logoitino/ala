@@ -191,6 +191,7 @@ See [COORD-01](docs/agents/COORD-01.md) for actual assignments and the current c
 | Private fan campaign, entry scope, free ballot, concern/removal state | `supabase/migrations/20261014130000_fan_zone.sql`, canonical backend schema, shared `fanZone.ts`; POLLS/UPLOAD/MINOR_SAFETY with BACKEND/RLS_SECURITY. |
 | Private MP4 validation and revocable media | backend `services/fanZoneMedia.ts`, `fanZoneMp4.ts`, API `fanZoneMedia.ts`, thin `app/api/fan-zone-*+api.ts`; server-only service key, no public/signed fallback. |
 | Fan client and correction desk | frontend `lib/fanZone.ts`, `components/Admin/FanZone/`, `/admin/fan-zone`; ADMIN mounts behind AdminShell, SDK excludes service-only commits. |
+| Synthetic timed trivia test inputs | frontend `lib/__fixtures__/timedSportQuizFixtures.ts`; shared synthetic wire fixtures only, excluded from runtime/export graph. |
 | Synthetic Fan SDK test inputs | frontend `lib/__fixtures__/fanZoneFixtures.ts`; shared DTO fixtures used by tests, excluded from Jest suite discovery and the product export graph; no runtime account data. |
 | Account fan journey | root `/fan-zone`, frontend `components/FanZone/` and `hooks/useFanZone.ts`; participant source follows its actual admin-ready gate. |
 | Weekly private trivia authority | new QUIZ-02 timed migration, shared `timedSportQuiz.ts` with reusable earlier `sportQuiz.ts`, frontend `lib/sportQuiz.ts`, Admin/SportQuiz tool and paged `SportQuizBank.tsx`; POLLS with Content/VOICE fact review, AURA owns noncash private badges. Prior QUIZ-01 source/checkpoint is historical. |

@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-10-14 · QUIZ-02 backend/admin independent acceptance and root canonical105/Fan154/historical34/timed50 pass after owned corrections; actual local admin checkpoint16:53:17Z is recorded. Selected gate precedes timed participant work. Owner-approved30/90; prior Fan/untimed evidence preserved. Pilots paused/empty; no hosted/deployment/spending/merge/push.
+**Last updated:** 2026-10-14 · QUIZ-02 participant55123f80 has129focused tests/types0, but rootfull round1 fails4 obsolete HQ fixtures (149suites/1178tests pass); HQ fixtures corrected ae40ecd9 with43focused tests/types0. Independent Task3 review requires3 Important consent/Off/notice fixes; owned round1 underway. Archive header correcteda239d739; map regenerated. Actual admin-ready16:53:17Z preserved; app-ready unset. Pilots paused/empty; no hosted/deployment/spending/merge/push.
 
 **Prior Fan Zone / untimed Sport Quiz implementation (historical full-check evidence; current timed full check pending):** owner approved the family-fun build and added optional weekly quizzes. Actual Fan admin checkpoint is 2026-10-14T13:42:36Z; Quiz is 2026-10-14T06:09:57Z. Fan participant `bcb898c` plus `070a58b` independently passes scoped review (35 focused checks), as does private video `a4f4acd` (13). Shared integration `8179b7b` includes Home, four HQs, profile and real control-map/stop paths; current guardian recovery survives participation dismissal. Independent shared consumer acceptance passes at 8179b7b; full pnpm check passes 148 suites/1,146 assertions and all guards; independent whole-branch and selected local Fan app-ready pass; actual Documentation/VP scope reviews pass and final status continuation is retained. Per-user growth and joint Legal/Dev/capacity plans retain the October 20 packet. No live measures or launch readiness are inferred.
 
@@ -274,6 +274,10 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- 2026-10-14 · Root fullcheck round1 exits1 with only4stale actualHQ quiz fixtures,149/150suites and1178/1182tests; Growth owns v2 fixture/opt-in migration while preservingHQduties/Fan guardians. Archive missing required ARCHIVED header fixeda239d739 without changing historical excerpt. Independent Task3 probes reproduce queued consent Start after blur, stale preference pending blocking Off and incomplete beforeStart delay/lost-response disclosure; formalreview/scoped fixes pending. No app-ready or full pass claimed.
+
+- 2026-10-14 · Timed player55123f80 adds explicit30/90/notice, default-off/manual/weekly invitations, ephemeral original-deadline round, End-before-Start/lifecycle/account isolation, exact terminal answer recovery and private history/CAS erase without preliminary-End race. Worker8suites129tests/mobile/sharedtypes0; original FanDiscovery body unchanged. Five old RPC wrappers preserved in authorized archive;11temporary SDK triages removed after real consumers. Independent Task3 Data/Safety/SUPPORT/source review and root fullcheck pending.
 
 - 2026-10-14 · Timed Backendf785e695 and SDK9d34abd corrections independently PASS: material-history CAS, repeat-safe canonical state and strict private projections. Root actual canonical105/Fan154/historical34/timed50 all exit0; exact canonical62ff4e50 and regenerated map0rules. QUIZ-02 admin evidence16:53:17Z recorded; selected gate must pass before timed participant source. Full current check/player still pending.
 
