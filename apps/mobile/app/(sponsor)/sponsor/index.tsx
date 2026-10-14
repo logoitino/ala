@@ -10,6 +10,7 @@ import { Stack } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
+import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, radii } from '@/constants/theme';
@@ -86,6 +87,7 @@ export default function SponsorHomeScreen() {
           title="Sponsor Studio"
           lede={live.copy.sponsorLede}
         />
+        <FamilyFunDiscovery />
         <DashboardPanel title="Digital stadium ad manager">
           <TextInput value={title} onChangeText={setTitle} style={styles.input} />
           <Pressable

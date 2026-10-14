@@ -13,6 +13,7 @@ import { ReceivedMaloPanel } from '@/components/Profile/ReceivedMaloPanel';
 import { RallyCard } from '@/components/Rally/RallyCard';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
+import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { EmptyState } from '@/components/UI/EmptyState';
@@ -84,6 +85,7 @@ export default function ParentHomeScreen() {
           title="Parent Guardian"
           lede={live.copy.parentLede}
         />
+        <FamilyFunDiscovery />
         <TagConfirmList
           tags={pending.tags}
           busyId={pending.busyId}

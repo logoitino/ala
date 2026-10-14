@@ -46,3 +46,14 @@ it('identifies the surfaces sharing a telemetry key', async () => {
   const consumers = COVERAGE_CONTROLS.filter(c => c.telemetry === key).map(row => `${row.label} (${row.surface})`).join(', ');
   expect(screen.getByText(consumers)).toBeTruthy();
 });
+
+it('exposes Sport Quiz controls through their actual desk without inventing published state or telemetry', async () => {
+  await render(<AdminReportCoverage data={emptyAdminReportData()} />);
+  await fireEvent.press(screen.getByRole('tab', { name: 'Sport Quiz' }));
+  const rows = COVERAGE_CONTROLS.filter(row => row.surface === 'sport-quiz');
+  expect(rows.length).toBeGreaterThan(0);
+  expect(screen.getAllByRole('link', { name: /^Manage / })).toHaveLength(rows.length);
+  expect(screen.getAllByText(/quiz_settings enabled\/testing-only pilot allowlist/)).toHaveLength(rows.length);
+  expect(screen.getAllByText('No telemetry key registered')).toHaveLength(rows.length);
+  expect(screen.queryByText(/0 taps/)).toBeNull();
+});

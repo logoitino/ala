@@ -35,10 +35,14 @@ jest.mock('@/components/Reels/LiveMatchBanner', () => ({ LiveMatchBanner: () => 
 jest.mock('@/components/Local/RivalryWeekBanner', () => ({ RivalryWeekBanner: () => null }));
 jest.mock('@/components/Rally/RallyMeter', () => ({ RallyMeter: () => null }));
 jest.mock('@/components/Onboarding/SlangGuideBanner', () => ({ SlangGuideBanner: () => null }));
+jest.mock('@/components/FamilyFun/FamilyFunDiscovery', () => ({ FamilyFunDiscovery: () => {
+  const { Text } = require('react-native');
+  return <Text>Optional quiz discovery</Text>;
+} }));
 jest.mock('@/components/TipSheetModal', () => ({ MaloTipModal: () => null }));
 jest.mock('@/components/Reels/ReelPage', () => {
-  const { View } = require('react-native');
-  return { ReelPage: ({ children }: { children?: React.ReactNode }) => <View>{children}</View> };
+  const { View, Text } = require('react-native');
+  return { ReelPage: ({ children, peekInsetTop }: { children?: React.ReactNode; peekInsetTop: number }) => <View><Text>{`peek:${peekInsetTop}`}</Text>{children}</View> };
 });
 
 // The only signal the tests need: which clip the pager considers active.
@@ -191,6 +195,15 @@ beforeEach(() => {
   mockSpotlight.award = null;
   mockSpotlight.visible = false;
   mockSpotlight.dismiss = jest.fn(async () => undefined);
+});
+
+it('includes optional discovery inside measured chrome without changing the reel viewport', async () => {
+  await mountTab();
+  let host: typeof screen.root | null = screen.getByText('Optional quiz discovery');
+  while (host && typeof host.props.onLayout !== 'function') host = host.parent;
+  expect(host).not.toBeNull();
+  await fireEvent(host!, 'layout', { nativeEvent: { layout: { width: 390, height: 240 } } });
+  expect(screen.getAllByText('peek:252').length).toBeGreaterThan(0);
 });
 
 describe('Highlights search jump', () => {

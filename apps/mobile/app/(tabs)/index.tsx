@@ -16,6 +16,7 @@ import { SpotlightModal } from '@/components/Spotlight/SpotlightModal';
 import { SlangGuideBanner } from '@/components/Onboarding/SlangGuideBanner';
 import { MaloTipModal } from '@/components/TipSheetModal';
 import { TabScreen } from '@/components/TabScreen';
+import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
@@ -668,6 +669,7 @@ export default function HighlightsTab() {
               </View>
             )}
           </View>
+          <FamilyFunDiscovery />
           <SlangGuideBanner />
         </View>
         <HomeSearchOverlay

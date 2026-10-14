@@ -267,6 +267,12 @@ export default function MyHubTab() {
     }
     if (!isGuest) {
       items.push({
+        id: 'sport-quiz',
+        label: 'Sport Quiz & private history',
+        hint: 'Optional weekly learning · your private badges and corrections',
+        onPress: () => router.push('/sport-quiz' as Href),
+      });
+      items.push({
         id: 'edit-profile',
         label: 'Edit Profile',
         hint: 'Bio, social links, and what other users can see',

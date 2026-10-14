@@ -19,6 +19,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { PINClaimModal } from '@/components/Operator/PINClaimModal';
 import { ScreenHeading } from '@/components/ScreenHeading';
+import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { colors, radii } from '@/constants/theme';
@@ -136,6 +137,7 @@ export default function OperatorPortalScreen() {
           title="Field Operator Portal"
           lede={live.copy.operatorLede}
         />
+        <FamilyFunDiscovery />
         <TagConfirmList
           tags={pending.tags}
           busyId={pending.busyId}
