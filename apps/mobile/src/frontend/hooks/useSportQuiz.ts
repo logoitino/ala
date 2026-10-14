@@ -1,118 +1,202 @@
-/**
- * QUIZ-01 optional weekly learning, scoped to both authenticated and canonical account identity.
- * @sideEffects Own quiz SDK reads/writes and an in-memory answer request UUID; no storage, queue or telemetry.
+/** QUIZ-02 identity-isolated account state, preferences and private terminal history; no prompt or capability.
+ * @sideEffects Own sanitized reads, explicit preferences/Skip/CAS erasure and a settled optional weekly invitation claim.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { useAuth } from '@/context/AuthContext';
-import { answerSportQuiz, fetchSportQuiz, skipSportQuiz, startSportQuiz, type QuizSnapshot } from '@/lib/sportQuiz';
-
-export type SportQuizBusy = 'start' | 'answer' | 'skip' | null;
-export type SportQuizPendingAnswer = { option: number; uncertain: boolean };
-export type SportQuizState = {
-  snapshot: QuizSnapshot | null; loading: boolean; error: string | null; busy: SportQuizBusy;
-  pendingAnswer: SportQuizPendingAnswer | null;
-  refresh: () => Promise<void>; start: (sport: string) => Promise<QuizSnapshot | null>;
-  answer: (option: number) => Promise<QuizSnapshot | null>; skip: () => Promise<QuizSnapshot | null>;
+import { claimTimedSportQuizInvitation, eraseTimedSportQuizHistory, fetchTimedSportQuiz, fetchTimedSportQuizHistory, saveTimedSportQuizPreferences, skipTimedSportQuiz } from '@/lib/sportQuiz';
+import { TIMED_QUIZ_NOTICE_VERSION, type TimedQuizSnapshot, type TimedQuizHistoryPage, type TimedQuizPreferencesInput, type TimedQuizReceipt } from '@shared/timedSportQuiz';
+export type SportQuizBusy = 'preferences' | 'invitation' | 'skip' | 'erase' | null;
+type Pending = {
+    kind: Exclude<SportQuizBusy, null | 'erase'>;
+    id: string;
+    week: string;
+    version: number;
+    payload?: TimedQuizPreferencesInput;
 };
-type Pending = SportQuizPendingAnswer & { attemptId: string; week: string; requestId: string };
-type Scope = { key: string | null; epoch: number; active: boolean; read: number; loading: boolean; busy: SportQuizBusy; snapshot: QuizSnapshot | null; error: string | null; pending: Pending | null };
-type ViewState = { epoch: number; snapshot: QuizSnapshot | null; loading: boolean; error: string | null; busy: SportQuizBusy };
-const unavailable = 'Sport Pop Quiz is unavailable. Refresh to try again.';
-
-/** @purpose Reject stale reads/writes across account switches and retain uncertain answers for exact, explicit retry. */
-export function useSportQuiz(): SportQuizState {
-  const auth = useAuth();
-  const key = !auth.loading && !auth.isGuest && auth.user?.id && auth.profile?.id
-    && auth.profile.user_id === auth.user.id && !auth.profile.age_blocked_at
-    ? JSON.stringify([auth.user.id, auth.profile.id]) : null;
-  const scope = useRef<Scope>({ key, epoch: 0, active: false, read: 0, loading: false, busy: null, snapshot: null, error: null, pending: null });
-  // Invalidate synchronously before a mismatched identity can render or an old completion can publish.
-  if (scope.current.key !== key) scope.current = { key, epoch: scope.current.epoch + 1, active: false, read: 0, loading: false, busy: null, snapshot: null, error: null, pending: null };
-  const epoch = scope.current.epoch;
-  const [view, setView] = useState<ViewState>({ epoch: -1, snapshot: null, loading: false, error: null, busy: null });
-  const current = useCallback(() => key !== null && scope.current.key === key && scope.current.epoch === epoch && scope.current.active, [epoch, key]);
-  const publish = useCallback(() => {
-    if (!current()) return;
-    const next = scope.current;
-    setView(old => current() ? { epoch, snapshot: next.snapshot, loading: next.loading, error: next.error, busy: next.busy } : old);
-  }, [current, epoch]);
-  const accept = useCallback((snapshot: QuizSnapshot) => {
-    if (!current()) return;
-    const s = scope.current;
-    s.snapshot = snapshot; s.error = null;
-    if (s.pending && (snapshot.week_start !== s.pending.week || snapshot.attempt?.id !== s.pending.attemptId || snapshot.attempt.status !== 'issued')) s.pending = null;
-    publish();
-  }, [current, publish]);
-  const read = useCallback(async (afterWrite = false) => {
-    if (!current() || (scope.current.busy && !afterWrite)) return;
-    const sequence = ++scope.current.read;
-    scope.current.loading = true; publish();
-    try {
-      const next = await fetchSportQuiz();
-      if (current() && sequence === scope.current.read) accept(next);
-    } catch {
-      if (current() && sequence === scope.current.read) { scope.current.error = unavailable; publish(); }
-    } finally {
-      if (current() && sequence === scope.current.read) { scope.current.loading = false; publish(); }
+type Scope = {
+    key: string | null;
+    profile: string | null;
+    active: boolean;
+    read: number;
+    historyRead: number;
+    snapshot: TimedQuizSnapshot | null;
+    history: TimedQuizHistoryPage | null;
+    loading: boolean;
+    historyLoading: boolean;
+    error: string | null;
+    historyError: string | null;
+    busy: SportQuizBusy;
+    pending: Pending | null;
+    suppressed: boolean;
+    preferenceUncertain: boolean;
+    erasureUncertain: boolean;
+};
+/** @purpose Captured identity and source sequences prevent delayed reads/writes from publishing to another account. */
+export function useSportQuiz() {
+    const auth = useAuth();
+    const profileId = !auth.loading && !auth.isGuest && auth.user?.id && auth.profile?.id && auth.profile.user_id === auth.user.id && !auth.profile.age_blocked_at ? auth.profile.id : null;
+    const identityKey = profileId ? JSON.stringify([auth.user!.id, profileId]) : null;
+    const make = (): Scope => ({ key: identityKey, profile: profileId, active: false, read: 0, historyRead: 0, snapshot: null, history: null, loading: false, historyLoading: false, error: null, historyError: null, busy: null, pending: null, suppressed: false, preferenceUncertain: false, erasureUncertain: false });
+    const holder = useRef(make());
+    if (holder.current.key !== identityKey)
+        holder.current = make();
+    const scope = holder.current;
+    const [, draw] = useState(0);
+    const current = useCallback(() => holder.current === scope && scope.active && scope.key !== null, [scope]);
+    const publish = useCallback(() => { if (current())
+        draw(n => n + 1); }, [current]);
+    const read = useCallback(async () => { if (!current())
+        return; const sequence = ++scope.read; scope.loading = true; publish(); try {
+        const snapshot = await fetchTimedSportQuiz();
+        if (!current() || sequence !== scope.read)
+            return;
+        if (snapshot.profile_id !== scope.profile && !(snapshot.profile_id === null && snapshot.availability === 'ineligible'))
+            throw Error('identity mismatch');
+        if (scope.snapshot?.history_version !== snapshot.history_version) {
+            ++scope.historyRead;
+            scope.history = null;
+            scope.historyLoading = false;
+        }
+        scope.snapshot = snapshot;
+        scope.error = null;
+        scope.erasureUncertain = false;
+        if (!scope.preferenceUncertain)
+            scope.suppressed = snapshot.preferences.invitation_mode === 'off';
     }
-  }, [accept, current, publish]);
-  const refresh = useCallback(() => read(), [read]);
-  useEffect(() => {
-    scope.current.active = true;
-    if (key) void read();
-    else setView({ epoch, snapshot: null, loading: false, error: null, busy: null });
-    return () => { if (scope.current.epoch === epoch) scope.current.active = false; };
-  }, [epoch, key, read]);
-
-  const run = useCallback(async (kind: Exclude<SportQuizBusy, null>, work: () => Promise<QuizSnapshot>) => {
-    if (!current() || scope.current.busy) return null;
-    scope.current.busy = kind; scope.current.error = null; scope.current.loading = false; ++scope.current.read; publish();
-    try {
-      const next = await work();
-      if (!current()) return null;
-      accept(next);
-      await read(true); // A prior identity cannot launch or publish this follow-up read.
-      return current() ? scope.current.snapshot : null;
-    } catch {
-      if (current()) {
-        if (kind === 'answer' && scope.current.pending) scope.current.pending.uncertain = true;
-        scope.current.error = kind === 'answer'
-          ? 'We could not confirm your answer. Refresh to check it, or retry the same answer.' : unavailable;
+    catch {
+        if (current() && sequence === scope.read)
+            scope.error = 'Sport Pop Quiz is unavailable. Refresh to check availability.';
+    }
+    finally {
+        if (current() && sequence === scope.read) {
+            scope.loading = false;
+            publish();
+        }
+    } }, [current, scope, publish]);
+    const loadHistory = useCallback(async (more = false) => { if (!current())
+        return; const before = more ? scope.history?.next_before ?? null : null; if (more && !before)
+        return; const revision = scope.snapshot?.history_version; const sequence = ++scope.historyRead; scope.historyLoading = true; scope.historyError = null; publish(); try {
+        const page = await fetchTimedSportQuizHistory(before);
+        if (!current() || sequence !== scope.historyRead || revision !== scope.snapshot?.history_version)
+            return;
+        if (page.profile_id !== scope.profile)
+            throw Error('identity mismatch');
+        if (more && scope.history && scope.history.history_version !== page.history_version) {
+            scope.historyError = 'Your history changed. Refresh private history before loading more.';
+            return;
+        }
+        scope.history = more && scope.history && scope.history.history_version === page.history_version ? { ...page, items: [...scope.history.items, ...page.items] } : page;
+    }
+    catch {
+        if (current() && sequence === scope.historyRead)
+            scope.historyError = 'Your private history is unavailable. Refresh history to try again.';
+    }
+    finally {
+        if (current() && sequence === scope.historyRead) {
+            scope.historyLoading = false;
+            publish();
+        }
+    } }, [current, scope, publish]);
+    const refresh = useCallback(async () => { const hadHistory = scope.history !== null || scope.erasureUncertain; await read(); if (current() && hadHistory)
+        await loadHistory(); }, [read, current, scope, loadHistory]);
+    useEffect(() => { scope.active = true; if (identityKey)
+        void read(); return () => { scope.active = false; ++scope.read; ++scope.historyRead; scope.pending = null; }; }, [scope, identityKey, read]);
+    const run = useCallback(async (pending: Pending, work: () => Promise<TimedQuizReceipt>) => { if (!current() || scope.busy)
+        return null; scope.busy = pending.kind; scope.error = null; ++scope.read; scope.loading = false; publish(); try {
+        const receipt = await work();
+        if (!current())
+            return null;
+        if (receipt.profile_id !== scope.profile || receipt.request_id !== pending.id || receipt.operation !== pending.kind)
+            throw Error('identity mismatch');
+        scope.pending = null;
+        if (pending.kind === 'preferences') {
+            scope.preferenceUncertain = false;
+            scope.suppressed = pending.payload?.invitation_mode === 'off';
+        }
+        await read();
+        return current() ? receipt : null;
+    }
+    catch {
+        if (current()) {
+            if (pending.kind === 'preferences')
+                scope.preferenceUncertain = true;
+            scope.error = pending.kind === 'skip' ? 'Skip was not confirmed. Refresh to check this week.' : pending.kind === 'preferences' ? 'Your choices were not confirmed. Refresh to check them or retry the same choices.' : 'The weekly invitation was not confirmed. Refresh to check availability.';
+            publish();
+        }
+        return null;
+    }
+    finally {
+        if (current()) {
+            scope.busy = null;
+            publish();
+        }
+    } }, [current, scope, publish, read]);
+    const savePreferences = useCallback(async (payload: TimedQuizPreferencesInput) => { if (!current() || scope.busy || !scope.snapshot)
+        return null; if (payload.invitation_mode === 'off') {
+        scope.suppressed = true;
         publish();
-      }
-      return null;
-    } finally {
-      if (current()) { scope.current.busy = null; publish(); }
+    } let pending = scope.pending; if (pending && (pending.kind !== 'preferences' || JSON.stringify(pending.payload) !== JSON.stringify(payload))) {
+        scope.error = 'Refresh and review the unconfirmed choices before choosing different settings.';
+        publish();
+        return null;
+    } if (!pending) {
+        try {
+            pending = { kind: 'preferences', id: randomUUID(), week: scope.snapshot.week_start, version: scope.snapshot.preferences.version, payload: { ...payload } };
+            scope.pending = pending;
+        }
+        catch {
+            return null;
+        }
+    } const exact = pending; return run(exact, () => saveTimedSportQuizPreferences(exact.payload!, exact.version, exact.id, scope.profile!)); }, [current, scope, publish, run]);
+    const claimInvitation = useCallback(async () => { const s = scope.snapshot; if (!current() || scope.busy || scope.loading || scope.error || scope.suppressed || !s || s.availability !== 'ready' || s.week_spent || s.preferences.invitation_mode !== 'weekly' || s.preferences.notice_version !== TIMED_QUIZ_NOTICE_VERSION || s.preferences.last_invited_week === s.week_start)
+        return null; if (scope.pending && scope.pending.kind !== 'invitation')
+        return null; try {
+        const p = scope.pending ?? { kind: 'invitation' as const, id: randomUUID(), week: s.week_start, version: s.preferences.version };
+        scope.pending = p;
+        return run(p, () => claimTimedSportQuizInvitation(p.week, p.id, scope.profile!));
     }
-  }, [accept, current, publish, read]);
-  const start = useCallback(async (sport: string) => {
-    const s = scope.current;
-    if (!current() || s.busy || s.loading || s.error || s.snapshot?.availability !== 'ready' || s.snapshot.status !== 'available' || !s.snapshot.sports.includes(sport)) return null;
-    return run('start', () => startSportQuiz(sport));
-  }, [current, run]);
-  const answer = useCallback(async (option: number) => {
-    const s = scope.current; const a = s.snapshot?.attempt;
-    if (!current() || s.busy || s.loading || !Number.isInteger(option) || option < 0 || option > 3
-      || s.snapshot?.availability !== 'ready' || a?.status !== 'issued' || !a.question) return null;
-    if (s.pending && s.pending.option !== option) {
-      s.error = 'Retry your original answer or refresh to check its result.'; publish(); return null;
+    catch {
+        return null;
+    } }, [current, scope, run]);
+    const skip = useCallback(async () => { const s = scope.snapshot; if (!current() || scope.busy || scope.loading || !s || s.availability !== 'ready' || s.week_spent)
+        return null; if (scope.pending && scope.pending.kind !== 'skip')
+        return null; try {
+        const p = scope.pending ?? { kind: 'skip' as const, id: randomUUID(), week: s.week_start, version: s.preferences.version };
+        scope.pending = p;
+        return run(p, () => skipTimedSportQuiz(p.week, p.id, scope.profile!));
     }
-    if (!s.pending) {
-      try { s.pending = { attemptId: a.id, week: s.snapshot.week_start, option, requestId: randomUUID(), uncertain: false }; }
-      catch { s.error = unavailable; publish(); return null; }
+    catch {
+        return null;
+    } }, [current, scope, run]);
+    const eraseHistory = useCallback(async (expectedVersion: number) => { if (!current() || scope.busy || scope.erasureUncertain || scope.loading || expectedVersion !== scope.snapshot?.history_version)
+        return null; scope.busy = 'erase'; scope.error = null; ++scope.read; ++scope.historyRead; scope.historyLoading = false; publish(); try {
+        const receipt = await eraseTimedSportQuizHistory(expectedVersion, scope.profile!);
+        if (!current())
+            return null;
+        if (receipt.profile_id !== scope.profile)
+            throw Error('identity mismatch');
+        scope.history = null;
+        scope.pending = null;
+        await read();
+        await loadHistory();
+        return current() ? receipt : null;
     }
-    const pending = s.pending;
-    return run('answer', () => answerSportQuiz(pending.attemptId, pending.option, pending.requestId));
-  }, [current, publish, run]);
-  const skip = useCallback(async () => {
-    const s = scope.current;
-    if (!current() || s.busy || s.loading || s.error || s.pending || s.snapshot?.availability !== 'ready' || !['available','issued'].includes(s.snapshot.status)) return null;
-    return run('skip', skipSportQuiz);
-  }, [current, run]);
-  const visible = view.epoch === epoch && key !== null;
-  const pending = key && scope.current.pending;
-  return { snapshot: visible ? view.snapshot : null, loading: auth.loading || (!!key && (!visible || view.loading)),
-    error: visible ? view.error : null, busy: visible ? view.busy : null,
-    pendingAnswer: pending ? { option: pending.option, uncertain: pending.uncertain } : null, refresh, start, answer, skip };
+    catch {
+        if (current()) {
+            scope.erasureUncertain = true;
+            scope.error = 'History clearing was not confirmed. Refresh, review the current history and confirm again if needed.';
+            publish();
+        }
+        return null;
+    }
+    finally {
+        if (current()) {
+            scope.busy = null;
+            publish();
+        }
+    } }, [current, scope, publish, read, loadHistory]);
+    const visible = holder.current === scope && identityKey !== null;
+    return { identityKey, profileId, snapshot: visible ? scope.snapshot : null, history: visible ? scope.history : null, loading: auth.loading || (!!identityKey && (!scope.active || scope.loading)), historyLoading: visible && scope.historyLoading, error: visible ? scope.error : null, historyError: visible ? scope.historyError : null, busy: visible ? scope.busy : null, invitationsSuppressed: visible && scope.suppressed, preferenceUncertain: visible && scope.preferenceUncertain, erasureUncertain: visible && scope.erasureUncertain, refresh, loadHistory, savePreferences, claimInvitation, skip, eraseHistory };
 }
+export type SportQuizState = ReturnType<typeof useSportQuiz>;

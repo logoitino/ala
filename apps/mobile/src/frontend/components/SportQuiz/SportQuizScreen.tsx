@@ -1,83 +1,76 @@
-/**
- * QUIZ-01 optional sport choice, own question/result and private completion/correction history.
- * @sideEffects Own useSportQuiz RPC actions and explicit Back/account Home navigation; no automatic assignment.
+/** QUIZ-02 optional preparation, foreground timed round and own terminal history.
+ * @sideEffects Explicit account/round SDK actions and usable Back/account Home; no automatic Start or secret persistence.
  */
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useRouter, type Href } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
+import { useIsFocused, useRouter, type Href } from 'expo-router';
 import { ScreenShell } from '@/components/ScreenShell';
 import { useAuth } from '@/context/AuthContext';
-import { useSportQuiz } from '@/hooks/useSportQuiz';
+import { useSportQuiz, type SportQuizState } from '@/hooks/useSportQuiz';
+import { useTimedSportQuizRound } from '@/hooks/useTimedSportQuizRound';
 import { ROLE_HOME } from '@/lib/roles';
-import { colors, radii } from '@/constants/theme';
+import { TIMED_QUIZ_NOTICE_VERSION, type TimedQuizTopic } from '@shared/timedSportQuiz';
 import { QuizButton } from './QuizButton';
-
-/** @purpose A dismissible learning view; only server-confirmed completion/skip/badges are presented as durable. */
-export function SportQuizScreen() {
-  const auth = useAuth(); const router = useRouter(); const quiz = useSportQuiz();
-  const s = quiz.snapshot; const a = s?.attempt; const result = a?.result;
-  const home = () => router.replace(ROLE_HOME[auth.role] as Href);
-  const leave = () => { if (router.canGoBack()) router.back(); else home(); };
-  const active = s?.availability === 'ready';
-  const blocked = quiz.loading || !!quiz.busy;
-  const canSkip = active && !!s && ['available', 'issued'].includes(s.status) && !quiz.pendingAnswer && !quiz.error;
-  const question = a?.status === 'issued' && active ? a.question : null;
-  const notice = s?.availability === 'paused' ? 'Sport Pop Quiz is paused. You can still view your private history.'
-    : s?.availability === 'not_enrolled' ? 'Sport Pop Quiz is not available for this account yet.'
-      : s?.availability === 'ineligible' ? 'Sport Pop Quiz is not available for this account.'
-        : s?.availability === 'unavailable' ? 'Sport Pop Quiz is unavailable right now.' : null;
-  return <ScreenShell edges={['top', 'bottom', 'left', 'right']}>
-    <ScrollView contentContainerStyle={styles.page}>
-      <View style={styles.navigation}><QuizButton label="Back" quiet onPress={leave} /><QuizButton label="Account Home" quiet onPress={home} /></View>
-      <Text accessibilityRole="header" style={styles.heading}>Sport Pop Quiz</Text>
-      <Text style={styles.copy}>Optional weekly learning · Testing only</Text>
-      <Text style={styles.copy}>One question each week. Right or wrong, completion can earn a private Sport Learner badge.</Text>
-      {quiz.loading && !s ? <Text style={styles.copy}>Checking quiz availability…</Text> : null}
-      {!s && !quiz.loading && !quiz.error ? <Text style={styles.copy}>Sport Pop Quiz is not available for this account. You can keep browsing.</Text> : null}
-      {quiz.error ? <Text accessibilityRole="alert" style={styles.notice}>{quiz.error}</Text> : null}
-      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
-      {a?.unavailable_reason ? <Text style={styles.notice}>{a.unavailable_reason}</Text> : null}
-      <QuizButton label="Refresh quiz" quiet disabled={!!quiz.busy} onPress={() => { void quiz.refresh(); }} />
-      {s ? <>
-        <Text style={styles.copy}>{`UTC week starts ${s.week_start}. The next week starts ${s.week_end}.`}</Text>
-        {active && s.status === 'available' && !quiz.error ? <View style={styles.panel}>
-          <Text accessibilityRole="header" style={styles.title}>Choose your sport</Text>
-          {s.sports.map(sport => <QuizButton key={sport} label={`Choose ${sport}`} disabled={blocked} onPress={() => { void quiz.start(sport); }} />)}
-        </View> : null}
-        {question ? <View style={styles.panel}>
-          <Text style={styles.title}>{question.sport}</Text><Text style={styles.question}>{question.prompt}</Text>
-          {question.options.map((option, index) => <QuizButton key={index} label={`Answer ${index + 1}: ${option}`}
-            disabled={blocked || quiz.pendingAnswer !== null || !!quiz.error} onPress={() => { void quiz.answer(index); }} />)}
-          {quiz.pendingAnswer?.uncertain ? <>
-            <Text style={styles.copy}>{`Your answer: ${question.options[quiz.pendingAnswer.option]}. Its result has not been confirmed.`}</Text>
-            <QuizButton label="Retry this answer" disabled={blocked} onPress={() => { if (quiz.pendingAnswer) void quiz.answer(quiz.pendingAnswer.option); }} />
-          </> : null}
-        </View> : null}
-        {canSkip ? <QuizButton label="Skip this week" quiet disabled={blocked} onPress={() => { void quiz.skip(); }} /> : null}
-        {s.status === 'skipped' ? <Text style={styles.notice}>Skipped for this week. Come back whenever you like.</Text> : null}
-        {a?.status === 'completed' && result ? <View style={styles.panel}>
-          <Text accessibilityRole="header" style={styles.title}>Quiz complete</Text>
-          <Text style={styles.copy}>{result.was_correct ? 'That’s right.' : 'Thanks for learning.'}</Text>
-          <Text style={styles.copy}>{result.explanation}</Text>
-        </View> : null}
-        <View style={styles.panel}>
-          <Text accessibilityRole="header" style={styles.title}>Your private badges</Text>
-          <Text style={styles.copy}>Private, noncash completion acknowledgments.</Text>
-          {s.badges.length === 0 ? <Text style={styles.copy}>No private badges to show.</Text> : s.badges.map(badge => <View key={badge.id} style={styles.badge}>
-            <Text style={styles.title}>{badge.label}</Text><Text style={styles.copy}>{`Week starting ${badge.week_start}`}</Text>
-          </View>)}
-          {s.corrections.length ? <Text accessibilityRole="header" style={styles.title}>Corrections</Text> : null}
-          {s.corrections.map(correction => <View key={correction.attempt_id}>
-            <Text style={styles.copy}>{`Week starting ${correction.week_start}`}</Text><Text style={styles.copy}>{correction.reason}</Text>
-          </View>)}
-        </View>
-      </> : null}
-    </ScrollView>
-  </ScreenShell>;
+import { SportQuizPreparation } from './SportQuizPreparation';
+import { SportQuizPreferences } from './SportQuizPreferences';
+import { SportQuizHistory } from './SportQuizHistory';
+/** @purpose Remount preparation/round with canonical identity, while navigation remains available during every state. */
+export function SportQuizScreen() { const quiz = useSportQuiz(); return <ScreenShell edges={['top', 'bottom', 'left', 'right']}><SportQuizContent key={quiz.identityKey ?? 'unavailable'} quiz={quiz}/></ScreenShell>; }
+function SportQuizContent({ quiz }: {
+    quiz: SportQuizState;
+}) {
+    const auth = useAuth();
+    const router = useRouter();
+    const focused = useIsFocused();
+    const changed = async () => { await quiz.refresh(); await quiz.loadHistory(); };
+    const round = useTimedSportQuizRound({ identityKey: quiz.identityKey, profileId: quiz.profileId, snapshot: quiz.snapshot, focused, onChanged: changed });
+    const s = quiz.snapshot;
+    const busy = !!quiz.busy || !!round.busy;
+    const [intent, setIntent] = useState<{
+        topic: TimedQuizTopic;
+        sport: string | null;
+        duration: 30 | 90;
+    } | null>(null);
+    useEffect(() => { if (quiz.identityKey && focused && quiz.snapshot)
+        void quiz.loadHistory(); }, [quiz.identityKey, focused, quiz.snapshot?.history_version, quiz.loadHistory]);
+    useEffect(() => { if (intent && focused && quiz.snapshot?.preferences.notice_version === TIMED_QUIZ_NOTICE_VERSION) {
+        setIntent(null);
+        void round.start(intent.topic, intent.sport, intent.duration);
+    } }, [intent, focused, quiz.snapshot?.preferences.notice_version, round.start]);
+    const home = () => { round.leave('left_page'); router.replace(ROLE_HOME[auth.role] as Href); };
+    const back = () => { round.leave('left_page'); if (router.canGoBack())
+        router.back();
+    else
+        router.replace(ROLE_HOME[auth.role] as Href); };
+    const start = async (topic: TimedQuizTopic, sport: string | null, duration: 30 | 90) => { if (!s)
+        return; if (s.preferences.notice_version !== TIMED_QUIZ_NOTICE_VERSION) {
+        const receipt = await quiz.savePreferences({ invitation_mode: s.preferences.invitation_mode, topic_mode: s.preferences.topic_mode, notice_version: TIMED_QUIZ_NOTICE_VERSION });
+        if (!receipt)
+            return;
+        setIntent({ topic, sport, duration });
+        return;
+    } await round.start(topic, sport, duration); };
+    return <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+ <View style={{ flexDirection: 'row', gap: 12 }}><QuizButton label="Back" quiet onPress={back}/><QuizButton label="Account Home" quiet onPress={home}/></View>
+ <Text accessibilityRole="header" style={{ fontSize: 28 }}>Sport Pop Quiz</Text><Text>Optional timed trivia · Testing only</Text>
+ {quiz.loading && !s ? <Text>Checking quiz availability…</Text> : null}{!s && !quiz.loading && !quiz.error ? <Text>Trivia is not available for this account. You can keep browsing.</Text> : null}
+ {quiz.error ? <Text accessibilityRole="alert">{quiz.error}</Text> : null}{round.error ? <Text accessibilityRole="alert">{round.error}</Text> : null}
+ <QuizButton label="Refresh quiz" quiet disabled={busy} onPress={() => { void quiz.refresh(); }}/>
+ {s ? <><Text>{`UTC week starts ${s.week_start}; next week ${s.week_end}.`}</Text>
+ {s.availability !== 'ready' ? <Text>{s.availability === 'paused' ? 'Sport Pop Quiz is paused. Private history remains available.' : s.availability === 'not_enrolled' ? 'Trivia is not available for this account yet.' : 'Trivia is unavailable for this account right now.'}</Text> : null}
+ {!round.live && !round.pendingStart && !round.ended && s.availability === 'ready' && !s.week_spent ? <SportQuizPreparation snapshot={s} busy={busy || quiz.loading} onStart={(...args) => { void start(...args); }}/> : null}
+ {round.pendingStart ? <><Text>Start is unconfirmed. Only the original choices can be retried on this foreground view before its original deadline.</Text><QuizButton label="Retry original Start" disabled={busy} onPress={() => { void round.retryStart(); }}/></> : null}
+ {round.live ? <View style={{ gap: 12 }}><Text accessibilityRole="header">{round.live.question.sport}</Text><Text>{round.live.question.prompt}</Text><Text accessibilityLabel="Time remaining">{round.remainingSeconds} seconds remaining</Text>
+ {round.live.question.options.map((option, index) => <QuizButton key={index} label={`Answer ${index + 1}: ${option}`} disabled={busy || !!round.pendingAnswer} onPress={() => { void round.answer(index); }}/>)}
+ {round.pendingAnswer?.uncertain ? <><Text>{`Your selected answer: ${round.live.question.options[round.pendingAnswer.option]}. Result not confirmed.`}</Text><QuizButton label="Retry this answer" disabled={busy} onPress={() => { if (round.pendingAnswer)
+                void round.answer(round.pendingAnswer.option); }}/></> : null}</View> : null}
+ {round.live || round.pendingStart || s.attempt?.status === 'issued' ? <QuizButton label="End round" quiet disabled={quiz.busy==='erase'} onPress={() => round.leave('user_end')}/> : null}
+ {!round.live && (round.ended || s.attempt?.status === 'expired' || s.attempt?.status === 'ended' || s.attempt?.status === 'issued') && !round.result?.result ? <Text>Round ended or unavailable on this view. No question is resumed after leaving. You can keep browsing and check private history.</Text> : null}
+ {round.result?.result ? <View style={{ gap: 10 }}><Text accessibilityRole="header">Trivia complete</Text><Text>{round.result.result.was_correct ? 'That’s right.' : 'Thanks for learning.'}</Text><Text>{round.result.result.explanation}</Text><Text>Right or wrong, the completion badge is private and noncash. Check the confirmed badge in your history below.</Text></View> : null}
+ {!round.live && round.pendingAnswer?.uncertain ? <QuizButton label="Check committed answer" disabled={busy} onPress={() => { void round.recoverAnswer(); }}/> : null}
+ {s.attempt?.status === 'skipped' ? <Text>Skipped for this week. Come back whenever you like.</Text> : null}
+ {s.availability === 'ready' && !s.week_spent && !round.pendingStart && !round.live ? <QuizButton label="Skip this week" quiet disabled={busy || quiz.loading} onPress={() => { void quiz.skip(); }}/> : null}
+ <SportQuizPreferences snapshot={s} busy={!!quiz.busy} suppressed={quiz.invitationsSuppressed} uncertain={quiz.preferenceUncertain} onSave={p => { void quiz.savePreferences(p); }}/>
+ <SportQuizHistory quiz={quiz} onBeforeErase={round.discardForHistoryErase}/></> : null}
+ </ScrollView>;
 }
-const styles = StyleSheet.create({
-  page: { padding: 20, gap: 16 }, navigation: { flexDirection: 'row', gap: 12 }, heading: { color: colors.text, fontSize: 28, fontWeight: '700' },
-  panel: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.lg, padding: 16, gap: 12 },
-  title: { color: colors.text, fontSize: 19, fontWeight: '600' }, copy: { color: colors.textMuted, fontSize: 16, lineHeight: 23 },
-  question: { color: colors.text, fontSize: 21, lineHeight: 29 }, notice: { color: colors.text, fontSize: 16, lineHeight: 23 },
-  badge: { padding: 12, borderRadius: radii.md, backgroundColor: colors.goldSoft, gap: 4 },
-});

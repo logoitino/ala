@@ -1,117 +1,21 @@
-/** QUIZ-01 real hook/SDK with only external auth, random UUID and database transport doubled. Synthetic actors. */
-import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { useSportQuiz } from '@/hooks/useSportQuiz';
-import type { QuizSnapshot } from '@shared/sportQuiz';
-
-let mockAuth = { user:{ id:'auth-a' },profile:{ id:'profile-a',user_id:'auth-a',age_blocked_at:null as string|null },isGuest:false,loading:false };
-jest.mock('@/context/AuthContext', () => ({ useAuth:() => mockAuth }));
-let mockNonce = 0;
-jest.mock('expo-crypto', () => ({ randomUUID:() => `00000000-0000-0000-0000-${String(++mockNonce).padStart(12,'0')}` }));
-const available: QuizSnapshot = { availability:'ready',testing_only:true,week_start:'2026-10-12',week_end:'2026-10-19',status:'available',sports:['American football'],attempt:null,badges:[],corrections:[] };
-const issued: QuizSnapshot = { ...available,status:'issued',attempt:{ id:'attempt-a',week_start:'2026-10-12',sport:'American football',status:'issued',result:null,
-  question:{ id:'q1',question_key:'key1',version:1,sport:'American football',prompt:'How many points is a touchdown before conversion?',options:['3','6','7','2'] } } };
-function completion(option:number,requestId:string): QuizSnapshot {
-  return { ...issued,status:'completed',attempt:{ ...issued.attempt!,status:'completed',result:{ option,correct_option:1,was_correct:option===1,explanation:'A touchdown scores six points before any conversion.',completed_at:'2026-10-14T06:00:00Z',request_id:requestId } },
-    badges:[{ id:'badge-a',attempt_id:'attempt-a',week_start:'2026-10-12',label:'Sport Learner',visibility:'private',issued_at:'2026-10-14T06:00:00Z' }] };
-}
-const mockClient = {
-  current:available, calls:[] as { fn:string;args:Record<string,unknown> }[],
-  handler:null as null|((fn:string,args:Record<string,unknown>) => Promise<QuizSnapshot>),
-  async rpc(fn:string,args:Record<string,unknown>) {
-    this.calls.push({ fn,args });
-    const data = this.handler ? await this.handler(fn,args) : this.current;
-    return { data,error:null };
-  },
-};
-jest.mock('@/lib/supabase', () => ({ get supabase() { return mockClient; },isSupabaseConfigured:true }));
-function deferred<T>() { let resolve!:(value:T)=>void; const promise = new Promise<T>(done => { resolve=done; }); return { promise,resolve }; }
-beforeEach(() => { mockAuth={ user:{ id:'auth-a' },profile:{ id:'profile-a',user_id:'auth-a',age_blocked_at:null },isGuest:false,loading:false }; mockNonce=0;mockClient.calls=[];mockClient.handler=null;mockClient.current=available; });
-
-it.each(['auth','profile'])('ignores a delayed prior %s identity read and clears the visible snapshot immediately', async kind => {
-  const old=deferred<QuizSnapshot>(); mockClient.handler=async () => old.promise;
-  const view=await renderHook(() => useSportQuiz());
-  const next={ ...issued,attempt:{ ...issued.attempt!,id:'attempt-b',question:{ ...issued.attempt!.question!,prompt:'New account question' } } };
-  if (kind==='auth') mockAuth={ ...mockAuth,user:{ id:'auth-b' },profile:{ id:'profile-b',user_id:'auth-b',age_blocked_at:null } };
-  else mockAuth={ ...mockAuth,profile:{ ...mockAuth.profile,id:'profile-b' } };
-  mockClient.handler=async () => next; await view.rerender({});
-  await waitFor(() => expect(view.result.current.snapshot?.attempt?.id).toBe('attempt-b'));
-  await act(async () => { old.resolve(issued); await old.promise; });
-  expect(view.result.current.snapshot?.attempt?.question?.prompt).toBe('New account question');
-  expect(view.result.current.pendingAnswer).toBeNull();
-});
-it('does not read an authenticated user through a profile belonging to a different user', async () => {
-  mockAuth.profile.user_id='auth-old';
-  const view=await renderHook(() => useSportQuiz());
-  expect(view.result.current.snapshot).toBeNull();expect(mockClient.calls).toEqual([]);
-});
-it('does not overwrite a newer refresh with an older read', async () => {
-  const old=deferred<QuizSnapshot>(); mockClient.handler=async () => old.promise;
-  const view=await renderHook(() => useSportQuiz());
-  mockClient.handler=async () => issued;
-  await act(async () => { await view.result.current.refresh(); });
-  await act(async () => { old.resolve(available); await old.promise; });
-  expect(view.result.current.snapshot?.status).toBe('issued');
-});
-it('submits one answer on duplicate presses and exposes only its committed result and private badge', async () => {
-  mockClient.current=issued; const write=deferred<QuizSnapshot>();
-  mockClient.handler=async fn => fn==='quiz_answer' ? write.promise : mockClient.current;
-  const view=await renderHook(() => useSportQuiz()); await waitFor(() => expect(view.result.current.loading).toBe(false));
-  let first!:Promise<QuizSnapshot|null>;let duplicate!:Promise<QuizSnapshot|null>;
-  await act(async () => { first=view.result.current.answer(0);duplicate=view.result.current.answer(0); });
-  expect(mockClient.calls.filter(call => call.fn==='quiz_answer')).toHaveLength(1);
-  expect(view.result.current.busy).toBe('answer');
-  mockClient.current=completion(0,'00000000-0000-0000-0000-000000000001');
-  await act(async () => { write.resolve(mockClient.current); await first;await duplicate; });
-  expect(view.result.current.snapshot?.attempt?.result?.was_correct).toBe(false);
-  expect(view.result.current.snapshot?.badges[0].visibility).toBe('private');
-});
-it('preserves uncertain answer choice/request for exact retry and refuses a different choice', async () => {
-  mockClient.current=issued; let writes=0;
-  mockClient.handler=async (fn,args) => {
-    if (fn!=='quiz_answer') return mockClient.current;
-    if (++writes===1) throw new Error('Transport reply lost');
-    return mockClient.current=completion(Number(args.p_option),String(args.p_request_id));
-  };
-  const view=await renderHook(() => useSportQuiz()); await waitFor(() => expect(view.result.current.loading).toBe(false));
-  await act(async () => { await view.result.current.answer(0); });
-  expect(view.result.current.pendingAnswer).toEqual({ option:0,uncertain:true });
-  await act(async () => { await view.result.current.refresh();await view.result.current.answer(1); });
-  expect(mockClient.calls.filter(call => call.fn==='quiz_answer')).toHaveLength(1);
-  await act(async () => { await view.result.current.answer(0); });
-  const calls=mockClient.calls.filter(call => call.fn==='quiz_answer');
-  expect(calls[0].args).toEqual({ p_attempt_id:'attempt-a',p_option:0,p_request_id:'00000000-0000-0000-0000-000000000001' });
-  expect(calls[1].args).toEqual(calls[0].args);expect(view.result.current.pendingAnswer).toBeNull();
-});
-it('ignores a prior-account answer and never starts its follow-up refresh after an account switch', async () => {
-  mockClient.current=issued;const old=deferred<QuizSnapshot>();
-  mockClient.handler=async fn => fn==='quiz_answer' ? old.promise : mockClient.current;
-  const view=await renderHook(() => useSportQuiz());await waitFor(() => expect(view.result.current.loading).toBe(false));
-  let answer!:Promise<QuizSnapshot|null>;await act(async () => { answer=view.result.current.answer(0); });
-  mockAuth={ ...mockAuth,user:{ id:'auth-b' },profile:{ id:'profile-b',user_id:'auth-b',age_blocked_at:null } };mockClient.current=available;
-  await view.rerender({});await waitFor(() => expect(view.result.current.loading).toBe(false));
-  const before=mockClient.calls.length;
-  await act(async () => { old.resolve(completion(0,'old-request'));await answer; });
-  expect(mockClient.calls).toHaveLength(before);expect(view.result.current.snapshot?.status).toBe('available');
-  expect(view.result.current.pendingAnswer).toBeNull();expect(view.result.current.error).toBeNull();
-});
-it('ignores a delayed write-follow-up read after canonical profile identity switches', async () => {
-  mockClient.current=issued;const delayed=deferred<QuizSnapshot>();let reads=0;
-  mockClient.handler=async (fn,args) => {
-    if (fn==='quiz_answer') return completion(Number(args.p_option),String(args.p_request_id));
-    return ++reads===1 ? issued : delayed.promise;
-  };
-  const view=await renderHook(() => useSportQuiz());await waitFor(() => expect(view.result.current.loading).toBe(false));
-  let write!:Promise<QuizSnapshot|null>;await act(async () => { write=view.result.current.answer(0); });
-  await waitFor(() => expect(reads).toBe(2));
-  mockAuth={ ...mockAuth,profile:{ ...mockAuth.profile,id:'profile-b' } };mockClient.handler=async()=>available;
-  await view.rerender({});await waitFor(() => expect(view.result.current.snapshot?.status).toBe('available'));
-  await act(async () => { delayed.resolve(completion(0,'prior-account-request'));await write; });
-  expect(view.result.current.snapshot?.badges).toEqual([]);expect(view.result.current.busy).toBeNull();
-});
-it('keeps missing transport unavailable and never fabricates a question or skipped state', async () => {
-  mockClient.handler=async () => { throw new Error('Missing quiz RPC'); };
-  const view=await renderHook(() => useSportQuiz());await waitFor(() => expect(view.result.current.loading).toBe(false));
-  expect(view.result.current.snapshot).toBeNull();expect(view.result.current.error).toMatch(/unavailable/i);
-  await act(async () => { await view.result.current.skip(); });
-  expect(mockClient.calls.every(call => call.fn==='quiz_snapshot')).toBe(true);
-});
+/** QUIZ-02 real sanitized account hook and adapter, with external auth/crypto/RPC transport doubled. */
+import {act,renderHook,waitFor} from '@testing-library/react-native';
+import {useSportQuiz} from '../useSportQuiz';
+import {quizSnapshot,quizReceipt,quizHistory} from '@/lib/__fixtures__/timedSportQuizFixtures';
+let mockAuth={user:{id:'auth-a'},profile:{id:'profile-a',user_id:'auth-a',age_blocked_at:null as string|null},isGuest:false,loading:false};
+jest.mock('@/context/AuthContext',()=>({useAuth:()=>mockAuth}));let mockNonce=0;
+jest.mock('expo-crypto',()=>({randomUUID:()=>`00000000-0000-0000-0000-${String(++mockNonce).padStart(12,'0')}`}));
+const mockClient={current:quizSnapshot,calls:[] as {fn:string,args:Record<string,unknown>}[],handler:null as null|((fn:string,args:Record<string,unknown>)=>Promise<unknown>),async rpc(fn:string,args:Record<string,unknown>){this.calls.push({fn,args});return{data:this.handler?await this.handler(fn,args):fn==='quiz_history'?quizHistory():this.current,error:null};}};
+jest.mock('@/lib/supabase',()=>({get supabase(){return mockClient;},isSupabaseConfigured:true}));
+const deferred=<T,>()=>{let resolve!:(v:T)=>void;return{promise:new Promise<T>(done=>{resolve=done}),resolve:(v:T)=>resolve(v)};};
+beforeEach(()=>{mockAuth={user:{id:'auth-a'},profile:{id:'profile-a',user_id:'auth-a',age_blocked_at:null},isGuest:false,loading:false};mockNonce=0;mockClient.current=quizSnapshot;mockClient.calls=[];mockClient.handler=null;});
+it('reads sanitized snapshot without automatically starting, inviting or loading history',async()=>{const r=await renderHook(()=>useSportQuiz());await waitFor(()=>expect(r.result.current.snapshot?.contract_version).toBe(2));expect(mockClient.calls.map(c=>c.fn)).toEqual(['quiz_snapshot']);expect(r.result.current.history).toBeNull();});
+it('rejects mismatched profile ownership without RPC and clears old identity immediately',async()=>{const r=await renderHook(()=>useSportQuiz());await waitFor(()=>expect(r.result.current.snapshot).not.toBeNull());mockAuth.profile.user_id='another-auth';await r.rerender({});expect(r.result.current.snapshot).toBeNull();expect(r.result.current.identityKey).toBeNull();});
+it('ignores a prior-account delayed read and rejects wrong response actor',async()=>{const pending=deferred<typeof quizSnapshot>();mockClient.handler=async()=>pending.promise;const r=await renderHook(()=>useSportQuiz());mockAuth={...mockAuth,user:{id:'auth-b'},profile:{...mockAuth.profile,id:'profile-b',user_id:'auth-b'}};mockClient.handler=async()=>({...quizSnapshot,profile_id:'profile-b'});await r.rerender({});await waitFor(()=>expect(r.result.current.snapshot?.profile_id).toBe('profile-b'));await act(async()=>{pending.resolve(quizSnapshot);await pending.promise;});expect(r.result.current.snapshot?.profile_id).toBe('profile-b');});
+it('Manual only saves off, suppresses invitations immediately even when its response is lost, and retains exact retry',async()=>{mockClient.current={...quizSnapshot,preferences:{...quizSnapshot.preferences,invitation_mode:'weekly'}};let calls=0;mockClient.handler=async(fn,args)=>{if(fn!=='quiz_preferences')return mockClient.current;if(++calls===1)throw Error('lost');mockClient.current=quizSnapshot;return{...quizReceipt('preferences',String(args.p_request_id),'saved_off'),preferences:quizSnapshot.preferences};};const r=await renderHook(()=>useSportQuiz());await waitFor(()=>expect(r.result.current.loading).toBe(false));const payload={invitation_mode:'off' as const,topic_mode:'sports' as const,notice_version:'timed-trivia-v1-testing' as const};await act(async()=>{await r.result.current.savePreferences(payload);});expect(r.result.current.invitationsSuppressed).toBe(true);expect(r.result.current.preferenceUncertain).toBe(true);await act(async()=>{await r.result.current.savePreferences(payload);});const writes=mockClient.calls.filter(c=>c.fn==='quiz_preferences');expect(writes[1].args).toEqual(writes[0].args);expect(writes[0].args.p_expected_profile_id).toBe('profile-a');});
+it('claims only an accepted weekly settled account and never assigns a question',async()=>{const r=await renderHook(()=>useSportQuiz());await waitFor(()=>expect(r.result.current.loading).toBe(false));await act(async()=>{await r.result.current.claimInvitation();});expect(mockClient.calls.every(c=>c.fn==='quiz_snapshot')).toBe(true);mockClient.current={...quizSnapshot,preferences:{...quizSnapshot.preferences,invitation_mode:'weekly'}};mockClient.handler=async(fn,args)=>fn==='quiz_invitation'?quizReceipt('invitation',String(args.p_request_id),'claimed'):mockClient.current;await act(async()=>{await r.result.current.refresh();await r.result.current.claimInvitation();});expect(mockClient.calls.filter(c=>c.fn==='quiz_invitation')).toHaveLength(1);expect(mockClient.calls.some(c=>c.fn==='quiz_start')).toBe(false);});
+it('does not fabricate persisted Skip after transport failure',async()=>{mockClient.handler=async(fn)=>{if(fn==='quiz_skip')throw Error('missing');return quizSnapshot;};const r=await renderHook(()=>useSportQuiz());await waitFor(()=>expect(r.result.current.loading).toBe(false));await act(async()=>{await r.result.current.skip();});expect(r.result.current.snapshot?.week_spent).toBe(false);expect(r.result.current.error).toMatch(/not confirmed/i);});
+it('erasure unknown outcome requires Refresh and new explicit confirmation, never silently changes CAS revision',async()=>{let eraseCalls=0;mockClient.handler=async(fn)=>{if(fn==='quiz_erase_history'){eraseCalls++;throw Error('lost');}return fn==='quiz_history'?quizHistory():{...quizSnapshot,history_version:eraseCalls?3:0};};const r=await renderHook(()=>useSportQuiz());await waitFor(()=>expect(r.result.current.loading).toBe(false));await act(async()=>{await r.result.current.eraseHistory(0);await r.result.current.eraseHistory(3);});expect(eraseCalls).toBe(1);expect(r.result.current.erasureUncertain).toBe(true);await act(async()=>{await r.result.current.refresh();});expect(eraseCalls).toBe(1);expect(r.result.current.snapshot?.history_version).toBe(3);expect(r.result.current.erasureUncertain).toBe(false);});
+it('loads own terminal history while paused without any active prompt recovery',async()=>{mockClient.current={...quizSnapshot,availability:'paused',history_count:1,badge_count:1};mockClient.handler=async(fn)=>fn==='quiz_history'?quizHistory(true):mockClient.current;const r=await renderHook(()=>useSportQuiz());await waitFor(()=>expect(r.result.current.loading).toBe(false));await act(async()=>{await r.result.current.loadHistory();});expect(r.result.current.history?.items[0].badge?.label).toBe('Trivia Explorer');expect(mockClient.calls.some(c=>c.fn==='quiz_start')).toBe(false);});
+it('loads subsequent own history using its opaque cursor and refuses to mix a changed history revision',async()=>{mockClient.current={...quizSnapshot,history_version:2};let revision=2;mockClient.handler=async(fn,args)=>{if(fn!=='quiz_history')return mockClient.current;const h=quizHistory(true);return{...h,history_version:revision,total:2,next_before:args.p_before?null:'opaque-history-cursor',items:args.p_before?[{...h.items[0],attempt:{...h.items[0].attempt,id:'attempt-b'}}]:h.items};};const r=await renderHook(()=>useSportQuiz());await waitFor(()=>expect(r.result.current.loading).toBe(false));await act(async()=>{await r.result.current.loadHistory();await r.result.current.loadHistory(true);});expect(r.result.current.history?.items.map(i=>i.attempt.id)).toEqual(['attempt-a','attempt-b']);expect(mockClient.calls.filter(c=>c.fn==='quiz_history')[1].args).toEqual({p_before:'opaque-history-cursor'});await act(async()=>{await r.result.current.loadHistory();});revision=3;await act(async()=>{await r.result.current.loadHistory(true);});expect(r.result.current.historyError).toMatch(/changed|refresh/i);expect(r.result.current.history?.items.map(i=>i.attempt.id)).toEqual(['attempt-a']);});
+it('confirmed CAS erasure clears retained learning and refreshes actual spent-week state',async()=>{mockClient.current={...quizSnapshot,history_version:2,history_count:1,badge_count:1};let erased=false;mockClient.handler=async fn=>{if(fn==='quiz_erase_history'){erased=true;mockClient.current={...quizSnapshot,week_spent:true,history_version:3};return{contract_version:2,profile_id:'profile-a',history_version:3,week_start:quizSnapshot.week_start,week_spent:true,quota_prune_after:'2026-11-18T17:00:00Z',removed_attempts:1,removed_exposures:1,removed_badges:1,removed_requests:1,removed_audit:1};}return fn==='quiz_history'?{...quizHistory(!erased),history_version:erased?3:2}:mockClient.current;};const r=await renderHook(()=>useSportQuiz());await waitFor(()=>expect(r.result.current.loading).toBe(false));await act(async()=>{await r.result.current.loadHistory();});let receipt:unknown;await act(async()=>{receipt=await r.result.current.eraseHistory(2);});expect(receipt).toMatchObject({history_version:3,removed_badges:1});expect(r.result.current.erasureUncertain).toBe(false);expect(r.result.current.snapshot?.week_spent).toBe(true);expect(r.result.current.history?.items).toEqual([]);});

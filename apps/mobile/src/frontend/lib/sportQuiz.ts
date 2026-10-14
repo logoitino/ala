@@ -1,19 +1,19 @@
 /**
- * QUIZ-02 bound timed adapter and temporary historical QUIZ-01 wrappers. Server owns time, identity and private learning.
+ * QUIZ-02 bound timed adapter. Server owns time, identity and private learning.
  * Missing/malformed sources throw; this module never supplies a fallback question or invented counts.
  * @sideEffects Authenticated database RPCs via the shared callRpc binding; no telemetry, storage or payment calls.
  */
 import { callRpc } from '@/lib/rpc';
 import type {
-  QuizAdminQuestion, QuizAdminSnapshot, QuizAudit, QuizQuestionAction, QuizQuestionPayload, QuizQuestionReceipt,
-  QuizSettingsInput, QuizSettingsReceipt, QuizSnapshot,
+  QuizAdminQuestion, QuizQuestionAction, QuizQuestionPayload, QuizQuestionReceipt,
+  QuizSettingsInput, QuizSettingsReceipt,
 } from '@shared/sportQuiz';
 import type {
   TimedQuizSnapshot, TimedQuizPreferencesInput, TimedQuizStartInput, TimedQuizAnswerInput, TimedQuizEndInput,
   TimedQuizReceipt, TimedQuizStartReceipt, TimedQuizHistoryPage, TimedQuizEraseReceipt, TimedQuizAdminSnapshot,
   TimedQuizRetentionReceipt, TimedQuizSettingsReceipt, TimedQuizAdminQuestionInput,
 } from '@shared/timedSportQuiz';
-export type * from '@shared/sportQuiz';
+export type {QuizQuestionAction,QuizQuestionPayload,QuizQuestionReceipt,QuizSettingsInput} from '@shared/sportQuiz';
 export type * from '@shared/timedSportQuiz';
 export { TIMED_QUIZ_NOTICE_VERSION, TIMED_QUIZ_DURATIONS } from '@shared/timedSportQuiz';
 
@@ -57,55 +57,6 @@ function adminQuestion(value: unknown): value is QuizAdminQuestion {
     && typeof value.correct_option === 'number' && Number.isInteger(value.correct_option) && value.correct_option >= 0 && value.correct_option <= 3
     && text(value.explanation, 10, 500) && text(value.reason, 10, 500) && timestamp(value.created_at) && nullableText(value.created_by)
     && (value.reviewed_at === null || timestamp(value.reviewed_at)) && nullableText(value.reviewed_by);
-}
-function adminAudit(value: unknown): value is QuizAudit {
-  return object(value) && cursor(value.id)
-    && typeof value.action === 'string' && ['settings','question_create','question_edit','question_approve','question_archive','question_void','start','answer','skip'].includes(value.action)
-    && nullableText(value.actor_id) && nullableText(value.question_id) && nullableText(value.reason) && timestamp(value.created_at);
-}
-
-/** @purpose Reject malformed/private-contract violations instead of rendering a pretend quiz. */
-function snapshot(value: unknown): QuizSnapshot {
-  if (!object(value) || value.testing_only !== true || !['ready','paused','not_enrolled','ineligible','unavailable'].includes(String(value.availability))
-    || !['available','unavailable','issued','completed','skipped','void'].includes(String(value.status))
-    || typeof value.week_start !== 'string' || typeof value.week_end !== 'string' || !strings(value.sports)
-    || !Array.isArray(value.badges) || !Array.isArray(value.corrections)
-    || value.badges.some(b => !object(b) || b.visibility !== 'private' || b.label !== 'Sport Learner')) throw unavailable();
-  if (value.attempt !== null) {
-    if (!object(value.attempt) || typeof value.attempt.id !== 'string') throw unavailable();
-    const a = value.attempt;
-    if (a.unavailable_reason !== undefined && !nullableText(a.unavailable_reason)) throw unavailable();
-    if (a.result !== null && (a.status !== 'completed' || !object(a.result) || typeof a.result.explanation !== 'string')) throw unavailable();
-    if (a.question !== null && (!object(a.question) || !strings(a.question.options) || a.question.options.length !== 4
-      || 'correct_option' in a.question || 'explanation' in a.question)) throw unavailable();
-  }
-  return value as unknown as QuizSnapshot;
-}
-
-/** @purpose Own-scoped week, prompt, completion and private badge state. */
-export async function fetchSportQuiz(): Promise<QuizSnapshot> { return snapshot(await callRpc('quiz_snapshot')); }
-/** @purpose Start once per UTC account week; the server reuses an existing assignment or skip. */
-export async function startSportQuiz(sport: string): Promise<QuizSnapshot> { return snapshot(await callRpc('quiz_start', { p_sport: sport })); }
-/** @purpose Preserve exact answer/request identity; caller retains this request across uncertain success retries. */
-export async function answerSportQuiz(attemptId: string, option: number, requestId: string): Promise<QuizSnapshot> {
-  return snapshot(await callRpc('quiz_answer', { p_attempt_id: attemptId, p_option: option, p_request_id: requestId }));
-}
-/** @purpose Dismiss this UTC week without losing existing badges or another app capability. */
-export async function skipSportQuiz(): Promise<QuizSnapshot> { return snapshot(await callRpc('quiz_skip')); }
-
-/** @purpose Full bounded admin bank/counts and audit cursor, with no participant answer/identity list. */
-export async function fetchSportQuizAdmin(before: string | null = null): Promise<QuizAdminSnapshot> {
-  const value = await callRpc<unknown>('quiz_admin_snapshot', { p_before: before });
-  if (!object(value) || !timestamp(value.generated_at) || !date(value.week_start) || !date(value.week_end)
-    || !settingsReceipt(value.settings) || !text(value.settings.reason, 10, 500) || !timestamp(value.settings.updated_at) || !nullableText(value.settings.updated_by)
-    || !Array.isArray(value.questions) || value.questions.length > 100 || !value.questions.every(adminQuestion)
-    || !Array.isArray(value.audit) || value.audit.length > 50 || !value.audit.every(adminAudit)
-    || (value.next_before !== null && !cursor(value.next_before))
-    || !object(value.counts) || !countKeys.every(key => {
-      const n = (value.counts as Record<string, unknown>)[key];
-      return typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
-    })) throw unavailable();
-  return value as unknown as QuizAdminSnapshot;
 }
 /** @purpose Restrict local testing to explicit canonical profile IDs; server refuses production mode and empty enable. */
 export async function saveSportQuizSettings(payload: QuizSettingsInput, reason: string, expectedActorId: string): Promise<TimedQuizSettingsReceipt> {

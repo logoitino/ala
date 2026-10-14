@@ -2,7 +2,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { SportQuizScreen } from '@/components/SportQuiz/SportQuizScreen';
 import { SportQuizInvitation } from '@/components/SportQuiz/SportQuizInvitation';
-import type { QuizSnapshot } from '@shared/sportQuiz';
+import {quizSnapshot,quizStart,quizCompletion,quizReceipt,quizHistory} from '@/lib/__fixtures__/timedSportQuizFixtures';
+import {AppState} from 'react-native';
 import type { UserRole } from '@/types/database';
 let mockAuth={ user:{ id:'auth-a' },profile:{ id:'profile-a',user_id:'auth-a',age_blocked_at:null as string|null },role:'parent' as UserRole,isGuest:false,loading:false };
 jest.mock('@/context/AuthContext', () => ({ useAuth:() => mockAuth }));
@@ -10,124 +11,21 @@ jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime:() => ({ live:{ 
 jest.mock('@/services/SupportSignalManager', () => ({ supportSignals:{ capture:jest.fn() } }));
 jest.mock('react-native-safe-area-context', () => ({ SafeAreaView:require('react-native').View,useSafeAreaInsets:() => ({ top:0,bottom:0,left:0,right:0 }) }));
 const mockRouter={ back:jest.fn(),replace:jest.fn(),canGoBack:jest.fn(() => true) };
-jest.mock('expo-router', () => ({ useRouter:() => mockRouter,usePathname:() => '/sport-quiz' }));
-jest.mock('expo-crypto', () => ({ randomUUID:() => '00000000-0000-0000-0000-000000000001' }));
-const available: QuizSnapshot={ availability:'ready',testing_only:true,week_start:'2026-10-12',week_end:'2026-10-19',status:'available',sports:['American football','Basketball'],attempt:null,badges:[],corrections:[] };
-const issued: QuizSnapshot={ ...available,status:'issued',attempt:{ id:'attempt-a',week_start:'2026-10-12',sport:'American football',status:'issued',result:null,
-  question:{ id:'q1',question_key:'key1',version:1,sport:'American football',prompt:'How many points is a touchdown before any conversion?',options:['3','6','7','2'] } } };
-function complete(option:number,requestId:string):QuizSnapshot {
-  return { ...issued,status:'completed',attempt:{ ...issued.attempt!,status:'completed',result:{ option,correct_option:1,was_correct:option===1,explanation:'A touchdown scores six points. Conversion attempts are separate.',completed_at:'2026-10-14T06:00:00Z',request_id:requestId } },
-    badges:[{ id:'badge-a',attempt_id:'attempt-a',week_start:'2026-10-12',label:'Sport Learner',visibility:'private',issued_at:'2026-10-14T06:00:00Z' }] };
-}
-const mockClient={ current:available,calls:[] as { fn:string;args:Record<string,unknown> }[],handler:null as null|((fn:string,args:Record<string,unknown>)=>Promise<QuizSnapshot>),
-  async rpc(fn:string,args:Record<string,unknown>) {
-    this.calls.push({ fn,args });
-    if (this.handler) return { data:await this.handler(fn,args),error:null };
-    if (fn==='quiz_start') this.current=issued;
-    if (fn==='quiz_answer') this.current=complete(Number(args.p_option),String(args.p_request_id));
-    if (fn==='quiz_skip') this.current={ ...available,status:'skipped',attempt:{ id:'skip-a',week_start:'2026-10-12',sport:null,status:'skipped',question:null,result:null } };
-    return { data:this.current,error:null };
-  },
-};
-jest.mock('@/lib/supabase', () => ({ get supabase() { return mockClient; },isSupabaseConfigured:true }));
-beforeEach(() => { jest.clearAllMocks();mockAuth={ user:{ id:'auth-a' },profile:{ id:'profile-a',user_id:'auth-a',age_blocked_at:null },role:'parent',isGuest:false,loading:false };mockClient.calls=[];mockClient.current=available;mockClient.handler=null;mockRouter.canGoBack.mockReturnValue(true); });
+jest.mock('expo-router', () => ({ useRouter:() => mockRouter,usePathname:() => '/sport-quiz',useIsFocused:()=>true }));
+let mockNonce=0;jest.mock('expo-crypto',()=>({randomUUID:()=>`00000000-0000-0000-0000-${String(++mockNonce).padStart(12,'0')}`,getRandomValues:(bytes:Uint8Array)=>{bytes.fill(42);return bytes;}}));
 
-it.each([0,1])('opens only on demand and shows explanation and the same private completion badge for option %s', async option => {
-  await render(<SportQuizScreen />);await screen.findByRole('button',{ name:'Choose American football' });
-  expect(mockClient.calls.map(call=>call.fn)).toEqual(['quiz_snapshot']);
-  expect(screen.queryByText(/touchdown before/)).toBeNull();
-  await fireEvent.press(screen.getByRole('button',{ name:'Choose American football' }));
-  expect(await screen.findByText(/touchdown before/)).toBeTruthy();
-  expect(screen.queryByText(/A touchdown scores six/)).toBeNull();
-  await fireEvent.press(screen.getByRole('button',{ name:`Answer ${option+1}: ${issued.attempt!.question!.options[option]}` }));
-  expect(await screen.findByText(/A touchdown scores six points/)).toBeTruthy();
-  expect(screen.getByText('Sport Learner')).toBeTruthy();expect(screen.getByText(/Private.*completion/i)).toBeTruthy();
-  expect(screen.queryByRole('button',{ name:/Answer 1/ })).toBeNull();
-});
-it('durably skips only after the server confirms and keeps ordinary navigation usable', async () => {
-  await render(<SportQuizScreen />);await screen.findByRole('button',{ name:'Skip this week' });
-  await fireEvent.press(screen.getByRole('button',{ name:'Skip this week' }));
-  expect(await screen.findByText(/Skipped for this week/)).toBeTruthy();
-  expect(screen.queryByRole('button',{ name:'Choose American football' })).toBeNull();
-  await fireEvent.press(screen.getByRole('button',{ name:'Account Home' }));expect(mockRouter.replace).toHaveBeenCalledWith('/parent');
-});
-it('shows missing-source and legacy correction reasons without any fake choices, while Back always works', async () => {
-  mockClient.current={ ...issued,availability:'unavailable',attempt:{ ...issued.attempt!,question:null,unavailable_reason:'This question is unavailable while its answer choices are corrected.' } };
-  await render(<SportQuizScreen />);
-  expect(await screen.findByText(/answer choices are corrected/)).toBeTruthy();
-  expect(screen.queryByRole('button',{ name:/Answer 1/ })).toBeNull();
-  await fireEvent.press(screen.getByRole('button',{ name:'Back' }));expect(mockRouter.back).toHaveBeenCalledTimes(1);
-});
-it.each(['paused','not_enrolled'] as const)('shows private badge/correction history while %s without offering participation', async availability => {
-  mockClient.current={ ...available,availability,status:'unavailable',attempt:null,
-    badges:[{ id:'old-badge',attempt_id:'old-complete',week_start:'2026-10-05',label:'Sport Learner',visibility:'private',issued_at:'2026-10-08T06:00:00Z' }],
-    corrections:[{ attempt_id:'old-void',week_start:'2026-09-28',reason:'The question wording was corrected; that badge is unavailable.',voided_at:'2026-10-14T06:00:00Z' }] };
-  await render(<SportQuizScreen />);expect(await screen.findByText('Sport Learner')).toBeTruthy();
-  expect(screen.getByText(/question wording was corrected/)).toBeTruthy();expect(screen.queryByRole('button',{ name:/Answer/ })).toBeNull();
-});
-it('a failed Skip never claims dismissal was saved and leaves Back usable', async () => {
-  mockClient.handler=async fn => { if (fn==='quiz_skip') throw new Error('reply lost');return available; };
-  await render(<SportQuizScreen />);await screen.findByRole('button',{ name:'Skip this week' });
-  await fireEvent.press(screen.getByRole('button',{ name:'Skip this week' }));
-  expect(await screen.findByText(/Quiz is unavailable/)).toBeTruthy();expect(screen.queryByText(/Skipped for this week/)).toBeNull();
-  await fireEvent.press(screen.getByRole('button',{ name:'Back' }));expect(mockRouter.back).toHaveBeenCalledTimes(1);
-});
-it('ignores a delayed prior account question in the visible screen', async () => {
-  let resolve!:(value:QuizSnapshot)=>void;const prior=new Promise<QuizSnapshot>(done=>{resolve=done;});
-  mockClient.handler=async()=>prior;const view=await render(<SportQuizScreen />);
-  mockAuth={ ...mockAuth,user:{ id:'auth-b' },profile:{ id:'profile-b',user_id:'auth-b',age_blocked_at:null } };
-  mockClient.handler=async()=>available;await view.rerender(<SportQuizScreen />);await screen.findByRole('button',{ name:'Choose American football' });
-  await act(async()=>{resolve(issued);await prior;});
-  expect(screen.queryByText(/touchdown before/)).toBeNull();expect(screen.queryByText('Sport Learner')).toBeNull();
-});
-it('one answer stays in flight on duplicate presses while Back remains enabled', async () => {
-  mockClient.current=issued;let resolve!:(value:QuizSnapshot)=>void;const reply=new Promise<QuizSnapshot>(done=>{resolve=done;});
-  mockClient.handler=async fn=>fn==='quiz_answer'?reply:mockClient.current;
-  await render(<SportQuizScreen />);await screen.findByText(/touchdown before/);
-  await fireEvent.press(screen.getByRole('button',{ name:'Answer 1: 3' }));
-  expect(screen.getByRole('button',{ name:'Answer 1: 3' })).toBeDisabled();
-  await fireEvent.press(screen.getByRole('button',{ name:'Answer 1: 3' }));
-  expect(mockClient.calls.filter(call=>call.fn==='quiz_answer')).toHaveLength(1);
-  expect(screen.getByRole('button',{ name:'Back' })).not.toBeDisabled();
-  mockClient.current=complete(0,'00000000-0000-0000-0000-000000000001');
-  await act(async()=>{resolve(mockClient.current);await reply;});await screen.findByText('Sport Learner');
-});
-it('never displays a stale question or badge when profile ownership no longer matches auth', async () => {
-  mockClient.current=issued;const view=await render(<SportQuizScreen />);await screen.findByText(/touchdown before/);
-  mockAuth={ ...mockAuth,user:{ id:'auth-b' } };await view.rerender(<SportQuizScreen />);
-  expect(screen.queryByText(/touchdown before/)).toBeNull();expect(screen.queryByText('Sport Learner')).toBeNull();
-  expect(mockClient.calls).toHaveLength(1);
-});
-it('uses the role Home when Back has no prior route, including while transport is unavailable', async () => {
-  mockRouter.canGoBack.mockReturnValue(false);mockAuth.role='sponsor';mockClient.handler=async () => { throw new Error('transport unavailable'); };
-  await render(<SportQuizScreen />);await screen.findByText(/Quiz is unavailable/);
-  await fireEvent.press(screen.getByRole('button',{ name:'Back' }));expect(mockRouter.replace).toHaveBeenCalledWith('/sponsor');
-  expect(screen.queryByRole('button',{ name:'Skip this week' })).toBeNull();
-});
-it('keeps an uncertain choice visible and retries only that choice despite duplicate presses', async () => {
-  mockClient.current=issued;let writes=0;
-  mockClient.handler=async (fn,args) => {
-    if (fn!=='quiz_answer') return mockClient.current;
-    if (++writes===1) throw new Error('reply lost');
-    return mockClient.current=complete(Number(args.p_option),String(args.p_request_id));
-  };
-  await render(<SportQuizScreen />);await screen.findByText(/touchdown before/);
-  await fireEvent.press(screen.getByRole('button',{ name:'Answer 1: 3' }));
-  expect(await screen.findByRole('button',{ name:'Retry this answer' })).toBeTruthy();
-  expect(screen.getByRole('button',{ name:'Answer 2: 6' })).toBeDisabled();
-  await fireEvent.press(screen.getByRole('button',{ name:'Retry this answer' }));
-  expect(await screen.findByText('Sport Learner')).toBeTruthy();
-  const calls=mockClient.calls.filter(call=>call.fn==='quiz_answer');expect(calls[1].args).toEqual(calls[0].args);
-});
-it('invitation opens without assignment, and Not now is local presentation rather than persisted Skip', async () => {
-  const open=jest.fn(),skip=jest.fn(async()=>null),dismiss=jest.fn();
-  await render(<SportQuizInvitation snapshot={available} loading={false} error={null} busy={null} onOpen={open} onSkip={skip} onDismiss={dismiss} />);
-  await fireEvent.press(screen.getByRole('button',{ name:'Open quiz' }));expect(open).toHaveBeenCalledTimes(1);expect(mockClient.calls).toEqual([]);
-  await fireEvent.press(screen.getByRole('button',{ name:'Not now' }));expect(dismiss).toHaveBeenCalledTimes(1);expect(skip).not.toHaveBeenCalled();
-});
-it('has no participation invitation when paused or a backend read failed', async () => {
-  const view=await render(<SportQuizInvitation snapshot={{ ...available,availability:'paused' }} loading={false} error={null} busy={null} onOpen={()=>{}} onSkip={async()=>null} />);
-  expect(screen.queryByRole('button',{ name:'Open quiz' })).toBeNull();
-  await view.rerender(<SportQuizInvitation snapshot={available} loading={false} error="unavailable" busy={null} onOpen={()=>{}} onSkip={async()=>null} />);
-  expect(screen.queryByRole('button',{ name:'Open quiz' })).toBeNull();
-});
+const mockClient={current:quizSnapshot,completed:false,calls:[] as {fn:string,args:Record<string,unknown>}[],handler:null as null|((fn:string,args:Record<string,unknown>)=>Promise<unknown>),async rpc(fn:string,args:Record<string,unknown>){this.calls.push({fn,args});if(this.handler)return{data:await this.handler(fn,args),error:null};let data:unknown=this.current;if(fn==='quiz_history')data=quizHistory(this.completed);if(fn==='quiz_start'){data=quizStart(String(args.p_request_id),args.p_duration_seconds as 30|90);this.current={...this.current,week_spent:true,attempt:(data as ReturnType<typeof quizStart>).attempt};}if(fn==='quiz_answer'){data=quizCompletion(String(args.p_request_id),Number(args.p_option));this.completed=true;this.current={...this.current,history_version:2,history_count:1,badge_count:1,attempt:(data as ReturnType<typeof quizCompletion>).attempt};}if(fn==='quiz_preferences'){this.current={...this.current,preferences:{...this.current.preferences,...args.p_payload as object,version:this.current.preferences.version+1}};data={...quizReceipt('preferences',String(args.p_request_id)),preferences:this.current.preferences};}if(fn==='quiz_skip'){this.current={...this.current,week_spent:true,attempt:{...quizStart().attempt!,status:'skipped'}};data={...quizReceipt('skip',String(args.p_request_id),'skipped'),attempt:this.current.attempt};}if(fn==='quiz_end')data=quizReceipt('end',String(args.p_request_id),'ended');return{data,error:null};}};
+jest.mock('@/lib/supabase',()=>({get supabase(){return mockClient;},isSupabaseConfigured:true}));
+beforeEach(()=>{jest.clearAllMocks();mockNonce=0;Object.defineProperty(AppState,'currentState',{configurable:true,value:'active'});jest.spyOn(AppState,'addEventListener').mockReturnValue({remove:jest.fn()});mockAuth={user:{id:'auth-a'},profile:{id:'profile-a',user_id:'auth-a',age_blocked_at:null},role:'parent',isGuest:false,loading:false};mockClient.calls=[];mockClient.current=quizSnapshot;mockClient.completed=false;mockClient.handler=null;mockRouter.canGoBack.mockReturnValue(true);});
+afterEach(()=>jest.restoreAllMocks());
+async function prepare(duration=30){await screen.findByRole('button',{name:'Choose American football'});await fireEvent.press(screen.getByRole('button',{name:'Choose American football'}));if(duration===90)await fireEvent.press(screen.getByRole('button',{name:'90 seconds · more time'}));await fireEvent.press(screen.getByRole('checkbox',{name:'I understand the trivia notice'}));await fireEvent.press(screen.getByRole('button',{name:'Start trivia'}));}
+it.each([0,1])('explicitly prepares, then option%s earns the same actual private badge and explanation',async option=>{await render(<SportQuizScreen/>);await screen.findByRole('button',{name:'Start trivia'});expect(screen.getByRole('button',{name:'Start trivia'})).toBeDisabled();expect(screen.queryByText(/touchdown before/)).toBeNull();expect(mockClient.calls.some(c=>c.fn==='quiz_start')).toBe(false);await prepare();await screen.findByText(/touchdown before/);expect(screen.queryByText(/six points/)).toBeNull();await fireEvent.press(screen.getByRole('button',{name:`Answer ${option+1}: ${option===0?'3':'6'}`}));await screen.findByText('Trivia Explorer');expect(screen.getAllByText(/six points/).length).toBeGreaterThan(0);expect(screen.getByText(/Private, noncash/)).toBeTruthy();expect(screen.queryByRole('button',{name:/Answer 1/})).toBeNull();});
+it('chooses90 before Start and saves notice before starting a first-time account',async()=>{mockClient.current={...quizSnapshot,preferences:{...quizSnapshot.preferences,notice_version:null,notice_accepted_at:null}};await render(<SportQuizScreen/>);await prepare(90);await screen.findByText(/touchdown before/);expect(mockClient.calls.find(c=>c.fn==='quiz_start')?.args.p_duration_seconds).toBe(90);expect(mockClient.calls.findIndex(c=>c.fn==='quiz_preferences')).toBeLessThan(mockClient.calls.findIndex(c=>c.fn==='quiz_start'));});
+it('new mounted active summary cannot reveal a question; End is secret-free and Back remains usable',async()=>{mockClient.current={...quizSnapshot,week_spent:true,attempt:quizStart().attempt};await render(<SportQuizScreen/>);await screen.findByRole('button',{name:'End round'});expect(screen.queryByText(/touchdown before/)).toBeNull();await fireEvent.press(screen.getByRole('button',{name:'End round'}));expect(mockClient.calls.find(c=>c.fn==='quiz_end')?.args).toMatchObject({p_attempt_id:'attempt-a',p_start_request_id:null});await fireEvent.press(screen.getByRole('button',{name:'Back'}));expect(mockRouter.back).toHaveBeenCalledTimes(1);});
+it.each(['paused','not_enrolled'] as const)('keeps terminal history while%s without participation',async availability=>{mockClient.current={...quizSnapshot,availability,history_count:1,badge_count:1};mockClient.completed=true;await render(<SportQuizScreen/>);await screen.findByText('Trivia Explorer');expect(screen.queryByRole('button',{name:'Start trivia'})).toBeNull();});
+it('failed Skip is honest and Account Home keeps the parent route',async()=>{mockClient.handler=async fn=>{if(fn==='quiz_skip')throw Error('lost');return fn==='quiz_history'?quizHistory():quizSnapshot;};await render(<SportQuizScreen/>);await fireEvent.press(await screen.findByRole('button',{name:'Skip this week'}));await screen.findByText(/Skip was not confirmed/);expect(screen.queryByText(/Skipped for this week/)).toBeNull();await fireEvent.press(screen.getByRole('button',{name:'Account Home'}));expect(mockRouter.replace).toHaveBeenCalledWith('/parent');});
+it('history clear requires confirmation, then unknown CAS needs Refresh and reconfirm',async()=>{let erases=0;mockClient.handler=async fn=>{if(fn==='quiz_erase_history'){erases++;throw Error('lost');}return fn==='quiz_history'?quizHistory():{...quizSnapshot,history_version:erases?4:0};};await render(<SportQuizScreen/>);await fireEvent.press(await screen.findByRole('button',{name:'Clear history and end this week'}));expect(erases).toBe(0);expect(screen.getByText(/35 days/)).toBeTruthy();await fireEvent.press(screen.getByRole('button',{name:'Confirm clear history'}));await screen.findByText(/History clearing was not confirmed/);expect(screen.queryByRole('button',{name:'Confirm clear history'})).toBeNull();expect(screen.getByRole('button',{name:'Clear history and end this week'})).toBeDisabled();await fireEvent.press(screen.getByRole('button',{name:'Refresh private history'}));expect(erases).toBe(1);await fireEvent.press(screen.getByRole('button',{name:'Clear history and end this week'}));expect(screen.getByRole('button',{name:'Confirm clear history'})).toBeTruthy();expect(erases).toBe(1);});
+it('Off does not close an active manual round',async()=>{await render(<SportQuizScreen/>);await prepare();await screen.findByText(/touchdown before/);await fireEvent.press(screen.getByRole('button',{name:'Manual only · invitations off'}));expect(screen.getByText(/touchdown before/)).toBeTruthy();expect(mockClient.calls.some(c=>c.fn==='quiz_end')).toBe(false);});
+it('private invitation only opens preparation; Not now never skips',async()=>{const open=jest.fn(),skip=jest.fn(async()=>null),dismiss=jest.fn();await render(<SportQuizInvitation snapshot={{...quizSnapshot,preferences:{...quizSnapshot.preferences,invitation_mode:'weekly'}}} loading={false} error={null} busy={null} onOpen={open} onSkip={skip} onDismiss={dismiss}/>);await fireEvent.press(screen.getByRole('button',{name:'Ready for trivia'}));expect(open).toHaveBeenCalledTimes(1);await fireEvent.press(screen.getByRole('button',{name:'Not now'}));expect(skip).not.toHaveBeenCalled();expect(mockClient.calls).toEqual([]);});
+it('no invitation exists for manual-only or a failed source',async()=>{const v=await render(<SportQuizInvitation snapshot={quizSnapshot} loading={false} error={null} busy={null} onOpen={()=>{}} onSkip={async()=>null}/>);expect(screen.queryByRole('button',{name:'Ready for trivia'})).toBeNull();await v.rerender(<SportQuizInvitation snapshot={{...quizSnapshot,preferences:{...quizSnapshot.preferences,invitation_mode:'weekly'}}} loading={false} error="failed" busy={null} onOpen={()=>{}} onSkip={async()=>null}/>);expect(screen.queryByRole('button',{name:'Ready for trivia'})).toBeNull();});
+it('clears mounted learning locally before atomic history erasure without an End/CAS revision race',async()=>{let source=quizSnapshot;mockClient.handler=async(fn,args)=>{if(fn==='quiz_snapshot')return source;if(fn==='quiz_history')return{...quizHistory(),history_version:source.history_version};if(fn==='quiz_start'){const started=quizStart(String(args.p_request_id));source={...source,week_spent:true,attempt:started.attempt,history_version:1};return started;}if(fn==='quiz_end'){source={...source,history_version:source.history_version+1};return quizReceipt('end',String(args.p_request_id),'ended');}if(fn==='quiz_erase_history'){if(args.p_expected_history_version!==source.history_version)throw Error('stale history');source={...quizSnapshot,week_spent:true,history_version:source.history_version+1};return{contract_version:2,profile_id:'profile-a',history_version:source.history_version,week_start:source.week_start,week_spent:true,quota_prune_after:'2026-11-18T17:00:00Z',removed_attempts:1,removed_exposures:1,removed_badges:0,removed_requests:1,removed_audit:1};}throw Error('Unexpected action');};await render(<SportQuizScreen/>);await prepare();await screen.findByText(/touchdown before/);await fireEvent.press(screen.getByRole('button',{name:'Clear history and end this week'}));await fireEvent.press(screen.getByRole('button',{name:'Confirm clear history'}));expect(mockClient.calls.filter(c=>c.fn==='quiz_end')).toHaveLength(0);await screen.findByText('No retained learning history to show.');expect(screen.queryByText(/touchdown before/)).toBeNull();expect(screen.queryByText(/History clearing was not confirmed/)).toBeNull();expect(source.attempt).toBeNull();});

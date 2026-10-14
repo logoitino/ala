@@ -4,14 +4,15 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import { FamilyFunDiscovery } from '../FamilyFunDiscovery';
 import { fanSnapshotFixture, FUN_IDS } from '@/lib/__fixtures__/fanZoneFixtures';
 import type { FanZoneSnapshot } from '@shared/fanZone';
-import type { QuizSnapshot } from '@shared/sportQuiz';
+import {quizSnapshot} from '@/lib/__fixtures__/timedSportQuizFixtures';
+import type {TimedQuizSnapshot} from '@shared/timedSportQuiz';
 let mockAuth = { user: { id: 'auth-a' }, profile: { id: 'profile-a', user_id: 'auth-a', age_blocked_at: null as string | null }, isGuest: false, loading: false };
 let mockFocused = true;
 const mockPush = jest.fn();
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => mockAuth }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }), useIsFocused: () => mockFocused }));
 jest.mock('@/services/MediaUploadService', () => ({ bytesFromUri: jest.fn(), compressHighlight: jest.fn() }));
-const quiz: QuizSnapshot = { availability: 'paused', testing_only: true, week_start: '2026-10-12', week_end: '2026-10-19', status: 'unavailable', sports: [], attempt: null, badges: [], corrections: [] };
+const quiz:TimedQuizSnapshot={...quizSnapshot,availability:'paused'};
 const empty: FanZoneSnapshot = { ok: true, eligible: true, can_participate: false, campaign: null, entry: null, ballot: null, candidates: [], guardian_queue: [], results: [], reflections: [], story: null };
 const mockClient = { fan: empty, quiz, calls: [] as { fn: string; args: unknown }[], handler: null as null | ((fn: string) => Promise<unknown>),
   async rpc(fn: string, args: unknown) {
@@ -64,12 +65,12 @@ it('offers a recognition recap only from actual authorized finalized results', a
   expect(mockPush).toHaveBeenCalledWith(`/fan-zone?campaign=${FUN_IDS.campaign}`); readOnly();
 });
 it('Fan source failure leaves Quiz invitation and honest Fan refresh independent', async () => {
-  mockClient.quiz = { ...quiz, availability: 'ready', status: 'available', sports: ['Basketball'] };
+  mockClient.quiz = {...quiz,availability:'ready',history_count:1};
   mockClient.handler = async fn => { if (fn === 'fun_snapshot') throw new Error('private source failed'); return mockClient.quiz; };
-  await render(<FamilyFunDiscovery />); await screen.findByRole('button', { name: 'Open quiz' });
+  await render(<FamilyFunDiscovery />); await screen.findByRole('button', { name: 'Private quiz history' });
   expect(await screen.findByText('Fan Zone is unavailable.')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Not now for Fan Zone' }));
-  expect(screen.getByRole('button', { name: 'Open quiz' })).toBeTruthy(); expect(screen.queryByText('Fan Zone is unavailable.')).toBeNull(); readOnly();
+  expect(screen.getByRole('button', { name: 'Private quiz history' })).toBeTruthy(); expect(screen.queryByText('Fan Zone is unavailable.')).toBeNull(); readOnly();
 });
 it('Quiz source failure leaves current private guardian review visible', async () => {
   mockClient.fan = guardian(); mockClient.handler = async fn => { if (fn === 'quiz_snapshot') throw new Error('missing quiz'); return mockClient.fan; };
