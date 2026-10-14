@@ -1,3 +1,6 @@
+// ARCHIVED 2026-10-14 · QUIZ-02 Task3 · owner approved · excerpt apps/mobile/src/frontend/lib/sportQuiz.ts (fetchSportQuiz, startSportQuiz, answerSportQuiz, skipSportQuiz, fetchSportQuizAdmin; supporting historical validation context).
+// Not built, tested or imported. Restore: reintegrate the named excerpt into its original sportQuiz.ts only after owner-approved backend compatibility review; do not overwrite current timed/admin code.
+// Every retired name and its reason: docs/engineering/data-ownership.json → archived; remove those registry entries only after an approved restoration.
 /** Historical QUIZ-01 untimed client implementation, superseded by owner-approved QUIZ-02.
  * @purpose Retains the obsolete wire contract for review only; excluded from runtime and workspace builds.
  */
