@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-14 — Fan Zone implementation enrolled; Finance catalog repair
+
+Owner authorizes the recommended first Fan Zone. FUN-01 design/plan and planned admin-first contract are recorded in an isolated checkout; no feature or release readiness yet. Corrected the existing payout_flag_overrides.payouts_enabled catalog omission as a CONNECT control (no journal/money movement); focused existing Finance coverage 15/15 passes. No SQL application or payee behavior change.
+
 ## 2026-10-13 — Refine the family-fun journey
 
 At the owner's request, FAMILY_FUN_PLAYBOOK §12 proposes one weekly Fan Zone entry point,

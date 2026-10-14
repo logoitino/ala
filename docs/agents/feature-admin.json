@@ -377,6 +377,73 @@
           ]
         }
       }
+    },
+    {
+      "id": "FUN-01",
+      "title": "Fan Zone testing-only fan submissions and free ballots",
+      "owner": "POLLS",
+      "status": "planned",
+      "plannedAt": "2026-10-14T05:29:26Z",
+      "exemption": null,
+      "source": {
+        "description": "Private Fan Zone campaigns, revision-bound entries/consents, one versioned free ballot per eligible profile/window, report/removal receipts and optional private reflection via narrow server RPCs. Unknown reads are unavailable; no payment or Aura credit. Design docs/engineering/design/FAN_ZONE_DESIGN.md.",
+        "paths": [
+          "supabase/migrations/20261014130000_fan_zone.sql",
+          "packages/shared-types/fanZone.ts",
+          "apps/mobile/src/frontend/lib/fanZone.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/fan-zone",
+        "actions": [
+          "Create testing campaign and configure rules/deadlines/curated story; open/pause/close; review entries; invalidate proven bad ballots with reasons; finalize/recount valid results; resolve/escalate cases and complete authorized media removal."
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/fan-zone.tsx",
+          "apps/mobile/src/frontend/components/Admin/FanZone/FanZoneScreen.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/fan-zone",
+        "metrics": [
+          "Complete selected-campaign Data list (cap 100 entries); status/permission/valid ballot/result/case counts with defined windows, cursor-paged cases/audit; source unavailable stays unknown. Restricted personal material stays on corrective desk; Analytics/Health/Support linked; SUPPORT reviews upload/vote/removal and hosted sensor gaps."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/FanZone/FanZoneScreen.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "No new runtime flag: all campaign states enforced on server, default draft/testing-only; pause denies entry/votes. Withdraw/revoke/remove and reports stay available. Invalidated result needs explicit valid recount. Private revocable API never exposes signed URLs; missing API/SQL unavailable. No SQL application or hosted launch.",
+        "paths": [
+          "supabase/migrations/20261014130000_fan_zone.sql",
+          "apps/mobile/src/backend/services/fanZoneMedia.ts"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible account",
+          "confirmed linked guardian",
+          "guest public browsing"
+        ],
+        "deniedBehavior": "RPC guards and closed-account restrictive RLS; no client direct table writes/private media reads or overwrites. Exact entry revision permission, active guardian and verified sanitized media required for public candidacy. Guests/unknown/closed/under-13 cannot submit/consent/vote; private reads bounded by ownership/link/admin. Real actor SQL replay required.",
+        "paths": [
+          "supabase/migrations/20261014130000_fan_zone.sql",
+          "scripts/replay/fan-zone-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/fan-zone",
+        "paths": [
+          "apps/mobile/app/(tabs)/fan-zone.tsx",
+          "apps/mobile/src/frontend/components/FanZone/FanZoneScreen.tsx",
+          "apps/mobile/src/frontend/hooks/useFanZone.ts"
+        ]
+      },
+      "readiness": {
+        "admin": null,
+        "app": null
+      }
     }
   ]
 }

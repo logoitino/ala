@@ -127,3 +127,11 @@ with these files.
 | [DETECT-02 app evidence](engineering/evidence/DETECT-02-app.md) | Runtime integration, bounded recovery and final local checks |
 
 | [Recovery runbook](engineering/RECOVERY_RUNBOOK.md) | Source version previews and approved database backup rehearsal |
+
+## Fan Zone pilot
+
+| Document | Purpose |
+| --- | --- |
+| [FUN-01](agents/FUN-01.md) | Actual build/review/evidence and release gaps. |
+| [Fan Zone design](engineering/design/FAN_ZONE_DESIGN.md) | Private entry, exact permission, free ballots, media and admin contracts. |
+| [Fan Zone plan](engineering/design/FAN_ZONE_IMPLEMENTATION_PLAN.md) | Owned implementation stages, admin before fan. |
