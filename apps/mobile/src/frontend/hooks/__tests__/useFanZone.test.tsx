@@ -1,7 +1,7 @@
 /** FUN-01 real hook/SDK tests double auth, API and Storage only; no public table or offline queue. */
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useFanZone } from '@/hooks/useFanZone';
-import { fanSnapshotFixture, FUN_IDS } from '@/lib/__tests__/fanZoneFixtures';
+import { fanSnapshotFixture, FUN_IDS } from '@/lib/__fixtures__/fanZoneFixtures';
 import type { FanZoneSnapshot } from '@shared/fanZone';
 let mockAuth={user:{id:'auth-a'},profile:{id:FUN_IDS.owner,user_id:'auth-a'},isGuest:false,loading:false};
 jest.mock('@/context/AuthContext',()=>({useAuth:()=>mockAuth}));

@@ -2,7 +2,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { FanZoneScreen } from '@/components/FanZone/FanZoneScreen';
 import FanZoneRoute from '../../../../../app/fan-zone';
-import { fanSnapshotFixture, FUN_IDS } from '@/lib/__tests__/fanZoneFixtures';
+import { fanSnapshotFixture, FUN_IDS } from '@/lib/__fixtures__/fanZoneFixtures';
 import type { FanZoneSnapshot } from '@shared/fanZone';
 let mockAuth={user:{id:'auth-owner'},profile:{id:FUN_IDS.owner,user_id:'auth-owner',birth_year:1980,birth_month:1},isGuest:false,loading:false,role:'parent'};
 const mockRpc=jest.fn(),mockBack=jest.fn(),mockReplace=jest.fn(),mockPush=jest.fn();

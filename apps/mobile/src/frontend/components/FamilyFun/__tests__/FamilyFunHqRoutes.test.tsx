@@ -4,7 +4,7 @@ import Parent from '../../../../../app/(parent)/parent';
 import Booster from '../../../../../app/(booster)/booster';
 import Sponsor from '../../../../../app/(sponsor)/sponsor';
 import Operator from '../../../../../app/operator';
-import { fanSnapshotFixture, FUN_IDS } from '@/lib/__tests__/fanZoneFixtures';
+import { fanSnapshotFixture, FUN_IDS } from '@/lib/__fixtures__/fanZoneFixtures';
 import type { FanZoneSnapshot } from '@shared/fanZone';
 const emptyFan: FanZoneSnapshot = { ok: true, campaign: null, candidates: [], results: [], entry: null, ballot: null, guardian_queue: [], reflections: [], story: null, eligible: false, can_participate: false };
 let mockFan = emptyFan;

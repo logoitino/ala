@@ -3,7 +3,7 @@ import { fireEvent, render, screen, act } from '@testing-library/react-native';
 import { AppState, type AppStateStatus } from 'react-native';
 import { FanZoneVideoReview } from '@/components/Admin/FanZone/FanZoneVideoReview';
 import { loadFanZoneVideo } from '@/lib/fanZoneMedia';
-import { FUN_IDS } from '@/lib/__tests__/fanZoneFixtures';
+import { FUN_IDS } from '@/lib/__fixtures__/fanZoneFixtures';
 jest.mock('@/components/Admin/AdminChrome',()=>{
  const React=require('react');const {Text,Pressable}=require('react-native');return {AdminBtn:({label,onPress,disabled}:{label:string;onPress:()=>void;disabled:boolean})=>React.createElement(Pressable,{accessibilityLabel:label,onPress,disabled},React.createElement(Text,null,label)),AdminNotice:({text}:{text:string})=>text?React.createElement(Text,null,text):null};
 });

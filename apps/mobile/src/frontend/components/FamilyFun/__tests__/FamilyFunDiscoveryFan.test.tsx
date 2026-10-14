@@ -2,7 +2,7 @@
 import { AppState } from 'react-native';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { FamilyFunDiscovery } from '../FamilyFunDiscovery';
-import { fanSnapshotFixture, FUN_IDS } from '@/lib/__tests__/fanZoneFixtures';
+import { fanSnapshotFixture, FUN_IDS } from '@/lib/__fixtures__/fanZoneFixtures';
 import type { FanZoneSnapshot } from '@shared/fanZone';
 import type { QuizSnapshot } from '@shared/sportQuiz';
 let mockAuth = { user: { id: 'auth-a' }, profile: { id: 'profile-a', user_id: 'auth-a', age_blocked_at: null as string | null }, isGuest: false, loading: false };

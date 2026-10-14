@@ -1,7 +1,7 @@
 /** FUN-01 visible admin tests exercise the actual SDK/RPC transport, privacy gate and honest removal outcomes. */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { FanZoneScreen } from '@/components/Admin/FanZone/FanZoneScreen';
-import { fanAdminFixture, fanRemovalFixture, FUN_IDS } from '@/lib/__tests__/fanZoneFixtures';
+import { fanAdminFixture, fanRemovalFixture, FUN_IDS } from '@/lib/__fixtures__/fanZoneFixtures';
 import { loadFanZoneVideo, removeFanZoneMedia } from '@/lib/fanZoneMedia';
 import type { FanZoneAdminSnapshot } from '@shared/fanZone';
 

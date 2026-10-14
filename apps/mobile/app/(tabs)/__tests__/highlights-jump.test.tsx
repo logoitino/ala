@@ -1,13 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import HighlightsTab from '../index';
-import { FUN_IDS } from '@/lib/__tests__/fanZoneFixtures';
+import { FUN_IDS } from '@/lib/__fixtures__/fanZoneFixtures';
 let mockRealDiscovery = false;
 const mockDiscoveryReads: string[] = [];
 jest.mock('@/services/MediaUploadService', () => ({ bytesFromUri: jest.fn(), compressHighlight: jest.fn() }));
 jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: { rpc: async (fn: string) => {
   mockDiscoveryReads.push(fn);
-  const s = jest.requireActual('@/lib/__tests__/fanZoneFixtures').fanSnapshotFixture();
+  const s = jest.requireActual('@/lib/__fixtures__/fanZoneFixtures').fanSnapshotFixture();
   return { data: fn === 'fun_snapshot' ? { ...s, campaign: { ...s.campaign!, status: 'paused' }, entry: null, candidates: [], can_participate: false, guardian_queue: [s.entry] }
     : { availability: 'paused', testing_only: true, week_start: '2026-10-12', week_end: '2026-10-19', status: 'unavailable', sports: [], attempt: null, badges: [], corrections: [] }, error: null };
 } } }));

@@ -1,6 +1,6 @@
 /** FUN-01 adapter tests use the real bound RPC path and complete SQL wire fixtures, never direct tables. */
 import { fanZoneRpc, fetchFanZoneAdmin, fanZoneReasonValid, FanZoneError, removeFanZoneRevision } from '@/lib/fanZone';
-import { fanAdminFixture, fanSnapshotFixture, FUN_IDS } from './fanZoneFixtures';
+import { fanAdminFixture, fanSnapshotFixture, FUN_IDS } from '../__fixtures__/fanZoneFixtures';
 import type { FanZoneRpcMap } from '@shared/fanZone';
 
 const mockTransport = jest.fn();
