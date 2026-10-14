@@ -1,5 +1,5 @@
 /** QUIZ-01 visible journey with real screen/hook/SDK; synthetic database responses, external context/navigation only. */
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { SportQuizScreen } from '@/components/SportQuiz/SportQuizScreen';
 import { SportQuizInvitation } from '@/components/SportQuiz/SportQuizInvitation';
 import type { QuizSnapshot } from '@shared/sportQuiz';
