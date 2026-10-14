@@ -9,7 +9,7 @@
 | --- | --- |
 | Enrollment | Planned at 2026-10-14T16:15:21Z before new source; isolated codex/fan-zone. |
 | Timed backend / admin | Backendf785e695 and SDK9d34abd corrections independently PASS; root canonical105/Fan154/historical34/timed50 exit0; workerSDK/admin77tests/types0. Actual local admin checkpoint16:53:17Z; [evidence](../engineering/evidence/QUIZ-02-admin.md). Selected gate precedes participant dispatch. |
-| Timed participant | Starts only after new actual QUIZ-02 admin-ready exit 0. |
+| Timed participant | Task3 released at03bc1b7 after actual selected QUIZ-02 admin-ready exit0; optional player/lifecycle source in development, no app-ready claim. |
 | Final / Documentation / VP | Pending actual source, actor/full tests and coordination receipts. |
 
 Experiment: optional manual/weekly private learning versus no invitations. No live baseline exists. Adopt locally only if protected actor, exact recovery, no-repeat, deadline, closure, erasure and visible unavailable tests pass. Stop broader enablement on unreliable content review, correction or excessive interruption/support burden. Growth evaluates aggregate opt-in/start/completion/return, exhausted pools and editorial/database costs through Marketing → CTO → owner. No raw child answers or disability timing segmentation.

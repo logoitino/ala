@@ -55,7 +55,7 @@ quiz_admin_question(p_id uuid,p_action text,p_payload jsonb,p_expected_actor_id 
 quiz_admin_retention(p_reason text,p_expected_actor_id uuid)
 ```
 
-- [ ] Write the new runnable actor replay against historical canonical schema; first assertion calls missing timed RPC and fails red. Preserve the old 34-case replay as historical evidence rather than reapplying old functions after the new canonical schema.
+- [x] Write the new runnable actor replay against historical canonical schema; first assertion calls missing timed RPC and fails red. Preserve the old 34-case replay as historical evidence rather than reapplying old functions after the new canonical schema.
 
 ```js
 const snapshot = await rpc('fan', 'quiz_snapshot()');
@@ -64,8 +64,8 @@ assert.equal(snapshot.preferences.invitation_mode, 'off');
 assert.equal('question' in (snapshot.attempt ?? {}), false);
 ```
 
-- [ ] Run `node scripts/replay/timed-trivia-replay.mjs .smoke/runtime/pglite-cache/package/dist`; retain the expected red result in the task report.
-- [ ] Add the four private tables and existing question/attempt/badge extensions specified in spec §7. Bind requests with normalized input digests, expected week and canonical actor. Limit/reap receipts with explicit bounded retention; preserve 35-day guards. Helpers and direct private tables are revoked from PUBLIC/anon/authenticated/service clients; narrow RPCs only.
+- [x] Run `node scripts/replay/timed-trivia-replay.mjs .smoke/runtime/pglite-cache/package/dist`; retain the expected red result in the task report.
+- [x] Add the four private tables and existing question/attempt/badge extensions specified in spec §7. Bind requests with normalized input digests, expected week and canonical actor. Limit/reap receipts with explicit bounded retention; preserve 35-day guards. Helpers and direct private tables are revoked from PUBLIC/anon/authenticated/service clients; narrow RPCs only.
 
 ```sql
 create table public.sport_quiz_week_guards (
@@ -80,10 +80,10 @@ create table public.sport_quiz_week_guards (
 -- Ordinary reads use one statement_timestamp() and never mutate expiry.
 ```
 
-- [ ] Implement exact Start/answer/End/Skip/preference/invitation receipts. End accepts exactly one attempt or Start UUID and no secret. A pre-Start End saves cancellation. Erasure CAS inserts this week's minimal guard before deleting requests, terminalizes active/pending round and increments retained monotonic revision; preferences/notice remain. Purge own participant learning audit associations under a private protected context, report `removed_audit`, keep editorial/admin audit immutable and redact participant actor/question/attempt associations from admin export. Erasure deliberately has no UUID receipt: stale CAS cannot remove later history, unknown response requires Refresh and review/reconfirm rather than a new automatic deletion.
-- [ ] Migrate issued old attempts to closed legacy history, preserve completed/void labels, backfill old exposures/recent guards; drop superseded untimed overloads so old clients fail closed.
-- [ ] Run real actor cases: canonical IDs; denied actors/grants; no prompt leakage; exact/changed recovery; concurrent draws; seen edited family; deadline and server clock after locks; End before Start; answer vs End/pause/void; effective expiry; Off separate from End; mix schedule; exhaustion; erasure/stale retries/retention; legacy; 51 tied inventory rows plus independent audit paging. Snapshot table row counts must remain unchanged.
-- [ ] Typecheck shared package/mobile, self-review and commit only owned paths. Publish DTO and migration hash to Root. Do not edit canonical or project docs.
+- [x] Implement exact Start/answer/End/Skip/preference/invitation receipts. End accepts exactly one attempt or Start UUID and no secret. A pre-Start End saves cancellation. Erasure CAS inserts this week's minimal guard before deleting requests, terminalizes active/pending round and increments retained monotonic revision; preferences/notice remain. Purge own participant learning audit associations under a private protected context, report `removed_audit`, keep editorial/admin audit immutable and redact participant actor/question/attempt associations from admin export. Erasure deliberately has no UUID receipt: stale CAS cannot remove later history, unknown response requires Refresh and review/reconfirm rather than a new automatic deletion.
+- [x] Migrate issued old attempts to closed legacy history, preserve completed/void labels, backfill old exposures/recent guards; drop superseded untimed overloads so old clients fail closed.
+- [x] Run real actor cases: canonical IDs; denied actors/grants; no prompt leakage; exact/changed recovery; concurrent draws; seen edited family; deadline and server clock after locks; End before Start; answer vs End/pause/void; effective expiry; Off separate from End; mix schedule; exhaustion; erasure/stale retries/retention; legacy; 51 tied inventory rows plus independent audit paging. Snapshot table row counts must remain unchanged.
+- [x] Typecheck shared package/mobile, self-review and commit only owned paths. Publish DTO and migration hash to Root. Do not edit canonical or project docs.
 
 ### Task 2: Strict SDK and admin operations before participant source
 
@@ -91,7 +91,7 @@ create table public.sport_quiz_week_guards (
 
 **Interfaces produced:** `fetchTimedSportQuiz`, `saveTimedSportQuizPreferences`, `claimTimedSportQuizInvitation`, `startTimedSportQuiz`, `answerTimedSportQuiz`, `endTimedSportQuiz`, `skipTimedSportQuiz`, `fetchTimedSportQuizReceipt`, `fetchTimedSportQuizHistory`, `eraseTimedSportQuizHistory`, `fetchTimedSportQuizAdmin`, existing question/settings save wrappers, `pruneTimedSportQuizHistory`. SDK input names map exactly to the SQL signatures above.
 
-- [ ] Add failing SDK test for v2 and prompt rejection, exact binding/cursor preservation; admin test for complete inventory versus unavailable page.
+- [x] Add failing SDK test for v2 and prompt rejection, exact binding/cursor preservation; admin test for complete inventory versus unavailable page.
 
 ```ts
 rpc.mockResolvedValue({ contract_version: 2, attempt: { question: { prompt: 'leak' } } });
@@ -102,9 +102,9 @@ expect(rpc).toHaveBeenLastCalledWith('quiz_admin_snapshot', {
 });
 ```
 
-- [ ] Run focused SDK/admin Jest files and retain red evidence.
-- [ ] Implement strict adapter and gated single-flight admin desk. All three writes pass captured canonical admin ID; identity generation discards stale reads/results. Load question pages independently of audit; show loaded/full inventory, full totals, effective expiry, cohort/pause and source-missing states. Draft create requires explicit new/existing family; approve requires bounded sources. Pause remains usable despite malformed local cohort edits. Retention report states removed records and preserved unexpired guards; no raw participant answers or token values.
-- [ ] Run focused tests/typecheck; self-review and commit. Independent source plus Data/Safety/Support review must pass. Root appends canonical and same-turn schema/map/sensor/docs, records actual admin evidence/date and runs `pnpm feature-admin:check --feature QUIZ-02 --require admin-ready`. Participant code waits for its actual exit 0.
+- [x] Run focused SDK/admin Jest files and retain red evidence.
+- [x] Implement strict adapter and gated single-flight admin desk. All three writes pass captured canonical admin ID; identity generation discards stale reads/results. Load question pages independently of audit; show loaded/full inventory, full totals, effective expiry, cohort/pause and source-missing states. Draft create requires explicit new/existing family; approve requires bounded sources. Pause remains usable despite malformed local cohort edits. Retention report states removed records and preserved unexpired guards; no raw participant answers or token values.
+- [x] Run focused tests/typecheck; self-review and commit. Independent source plus Data/Safety/Support review must pass. Root appends canonical and same-turn schema/map/sensor/docs, records actual admin evidence/date and runs `pnpm feature-admin:check --feature QUIZ-02 --require admin-ready`. Participant code waits for its actual exit 0.
 
 ### Task 3: Optional player experience and ephemeral round lifecycle
 
@@ -124,10 +124,10 @@ expect(endTimedSportQuiz).toHaveBeenCalledWith(expect.objectContaining({
 ```
 
 - [ ] Run focused hook/screen/FamilyFun tests and retain red evidence.
-- [ ] Generate 32 random bytes per Start; retain exact UUID/input until resolved while original view active. Leave synchronously clears token/prompt and invalidates generation; best-effort End by Start UUID closes late issuance. Never use new-account identity for old calls. Back/Home usable while requests pending. Timer uses returned server deadline and elapsed monotonic time; no client acceptance guarantee. A lost answer retries only its same option/UUID.
+- [ ] Generate 32 cryptographically secure bytes per Start using Expo57 getRandomValues (getRandomBytes has a development Math.random fallback); fail closed when unavailable; retain exact UUID/input until resolved while original view active. Leave synchronously clears token/prompt and invalidates generation; best-effort End by Start UUID closes late issuance. Never use new-account identity for old calls. Back/Home usable while requests pending. Timer uses returned server deadline and elapsed monotonic time; no client acceptance guarantee. A lost answer retries only its same option/UUID.
 
 ```ts
-const secret = Array.from(Crypto.getRandomBytes(32), b => b.toString(16).padStart(2, '0')).join('');
+const secret = Array.from(Crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('');
 const deadlineRemaining = Math.max(0, Date.parse(receipt.expires_at) - Date.parse(receipt.server_now));
 // Store secret in a mounted ref only; teardown clears it before any async closure.
 // Decrease deadlineRemaining by monotonic elapsed time; SQL owns answer acceptance.
@@ -141,7 +141,7 @@ const deadlineRemaining = Math.max(0, Date.parse(receipt.expires_at) - Date.pars
 
 **Interfaces consumed:** Committed timed source, task reports/reviews, original QUIZ-01/FUN-01 evidence. Root owns integration and actual dates, reviewers own independent receipts.
 
-- [ ] Run current canonical actor replay, unchanged Fan actor replay, explicit historical Quiz replay and current timed actor replay. Retain commands, exit codes and hashes; no hosted execution.
+- [x] Run current canonical actor replay, unchanged Fan actor replay, explicit historical Quiz replay and current timed actor replay. Retain commands, exit codes and hashes; no hosted execution.
 - [ ] Run `pnpm check`; verify both TypeScript checks, full Jest, schema/copy/map/docs/feature/roles/security/detection/recovery gates. Fix only concrete failures through owning worker and scoped review.
 - [ ] Produce whole-phase review package from `34b540361b96e3357cf604f0fc274eeb03aab217` to final source commit. Independent reviewer checks source/spec/acceptance and any task findings. Actual Documentation and VP coordination reviews reconcile all 106 preserved roles and team responsibilities.
 - [ ] Record QUIZ-02 app evidence after original admin date; run `pnpm feature-admin:check --feature QUIZ-02 --require app-ready`. Update STATE §4/header, CHANGELOG, index, legal/growth/engineering status and per-user growth recommendations with precise local/hosted distinction. Preserve prior readiness dates unchanged.

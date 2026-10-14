@@ -582,7 +582,7 @@
           "admin",
           "eligible enrolled tester"
         ],
-        "deniedBehavior": "Canonical JWT plus expected profile on every participant mutation and expected initiating admin actor on settings/question/retention writes; known-age restrictions remain. No direct private table/helper access. Active prompt only exact original Start capability; ordinary snapshot/history/quiz_receipt active-prompt-free, own terminal learning allowed. Owner End no secret; cancelled Start/erasure cannot revive quota. Erasure retains disclosed preferences/notice/revision and35-day minimal quota, uncertain CAS requires Refresh/reconfirm. Upgrade resets enabled/nonempty untimed cohort to paused/empty. Actor replay checks grants/identity/expiry/retry/closure/family/legacy boundaries.",
+        "deniedBehavior": "Canonical JWT plus expected profile on every participant mutation and expected initiating admin actor on settings/question/retention writes; known-age restrictions remain. No direct private table/helper access. Active prompt only exact original Start capability; ordinary snapshot/history/quiz_receipt active-prompt-free, own terminal learning allowed. Owner End no secret; cancelled Start/erasure cannot revive quota. Erasure retains disclosed preferences/notice/revision and35-day minimal quota, uncertain CAS requires Refresh/reconfirm. First legacy upgrade resets enabled/nonempty untimed cohort to paused/empty; subsequent canonical repeats preserve timed settings/preferences/history/live deadlines. Actor replay checks grants/identity/expiry/retry/closure/family/legacy boundaries.",
         "paths": [
           "supabase/migrations/20261014150000_timed_sport_trivia.sql",
           "scripts/replay/timed-trivia-replay.mjs"

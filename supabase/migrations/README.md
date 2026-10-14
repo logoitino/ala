@@ -126,7 +126,7 @@ Owner approves actual SQL/release. See [Fan Zone design](../../docs/engineering/
 
 | File | Purpose | Applied? |
 | --- | --- | --- |
-| `20261014150000_timed_sport_trivia.sql` | After untimed1400: private preferences/exposures/exact recovery/minimal35-day quota,30/90 deadline, original-view capability, secret-free End/cancel, CAS erasure, versioned sources/family review and50-row admin paging. Upgrade resets prior enabled/nonempty cohort to paused/empty; legacy attempts remain historical. | **Local source only; not applied anywhere.** Actual actor/canonical/admin/app evidence in [QUIZ-02](../../docs/agents/QUIZ-02.md). |
+| `20261014150000_timed_sport_trivia.sql` | After untimed1400: private preferences/exposures/exact recovery/minimal35-day quota,30/90 deadline, original-view capability, secret-free End/cancel, CAS erasure, versioned sources/family review and50-row admin paging. First legacy upgrade resets prior enabled/nonempty cohort to paused/empty; later repeats preserve timed settings/preferences/history/live deadlines. Legacy attempts remain historical. | **Local source only; not applied anywhere.** Actual actor/canonical/admin/app evidence in [QUIZ-02](../../docs/agents/QUIZ-02.md). |
 
 Root appends final migration bytes to canonical schema. Revoke old untimed overloads; old clients
 fail closed. Rollback is pause and reviewed forward repair, never automatically restore untimed

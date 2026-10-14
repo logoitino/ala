@@ -1565,11 +1565,11 @@ Default-off, approved account testing only; no hosted SQL applied. [Fan Zone des
 | `quiz_admin_actor` | Internal protected quiz content/settings admin guard. |
 | `quiz_require_testing` | Internal default-paused/tester allowlist/production-refusal guard for quiz participation. |
 | `quiz_guard_question` | Trigger freezes issued question wording/answers; edits become new reviewed versions. |
-| `quiz_guard_audit` | Trigger keeps trusted quiz audit immutable; allowed FK nulling on identity deletion. |
-| `quiz_snapshot` | Own week/prompt/question/status/explanation/private badges and corrections; answer withheld until own completion. |
-| `quiz_start` | Atomic random approved sport question once per canonical account/UTCweek; refresh/sport changes reuse assignment. |
-| `quiz_answer` | Owned current unvoided question completion with exact option/request retry and one private noncash badge; no proficiency/earnings claim. |
-| `quiz_skip` | Own current UTC-week dismissal without reward/penalty or capability loss. |
+| `quiz_guard_audit` | Trusted editorial/admin audit immutable; protected own-learning erasure removes participant audit associations, with FK nulling on identity deletion. |
+| `quiz_snapshot` | Current v2 own account/week/preferences, prompt-free attempt summary, exact unseen pools and history revision/counts; active question never appears. |
+| `quiz_start` | Current v2 atomic unseen approved family once per expected canonical account/UTCweek; only exact original Start capability returns an active prompt with fixed server deadline. Refresh cannot resume a round. |
+| `quiz_answer` | Current v2 original capability/expected profile and server deadline authorize one committed answer; exact option/request recovery preserves one private equal participation badge. |
+| `quiz_skip` | Current v2 expected-profile/week Skip consumes an unspent weekly opportunity without prompt/reward; already-spent returns authoritative status, active closure uses End. Not now is separate local invitation dismissal. |
 | `quiz_admin_settings` | Admin default-paused testing audience/settings change with authoritative rationale. |
 | `quiz_admin_question` | Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction. |
 | `quiz_admin_snapshot` | Complete <=100 question-version bank, defined current-week counts and bigint-paged audit; no participant answer list. |
@@ -1588,7 +1588,7 @@ Fan admin correction changes unapplied RPC signatures together: `fun_admin_entry
 
 New migration `20261014150000_timed_sport_trivia.sql` replaces untimed authority; root canonical
 append and actual verification are recorded in [QUIZ-02](../agents/QUIZ-02.md). Prior QUIZ-01
-checkpoints remain historical. Upgrade resets admission to paused/testing-only/empty cohort.
+checkpoints remain historical. First legacy upgrade resets admission to paused/testing-only/empty cohort; repeated canonical application preserves existing timed settings, live deadlines/capabilities, preferences and history.
 
 | New private table | Purpose and boundaries |
 | --- | --- |

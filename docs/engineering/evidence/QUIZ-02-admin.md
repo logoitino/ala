@@ -26,7 +26,7 @@ Worker focused SDK/admin3suites77tests and mobile TypeScript exit0 are attribute
 - task1-fix1-review.md SHA2563e7adea1616165fd2b30ec2d399f6f9c82a99e2dbc3e84eea70e355ad2208a42: T1-I1/T1-I2 addressed.
 - task2-fix1-review.md SHA2562231fb6b0b62f2fb6e74764c649411c7d5ba9624aadfcaebb4590cfea45e6477: T2-I1 addressed.
 
-Receipts live in .superpowers/sdd/TIMED_TRIVIA_IMPLEMENTATION_PLAN/. Actual selected admin-ready gate follows this record and must exit0 before participant dispatch.
+Receipts live in .superpowers/sdd/TIMED_TRIVIA_IMPLEMENTATION_PLAN/. Root actually ran pnpm feature-admin:check --feature QUIZ-02 --require admin-ready at03bc1b7: exit0, seven registered features validated. Participant Task3 dispatched only afterward.
 
 ## Remaining boundaries
 

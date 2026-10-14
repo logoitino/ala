@@ -534,19 +534,19 @@ Definition: [.claude/agents/threat-detection.md](../../.claude/agents/threat-det
 Operating design: [ENGINEERING_SUPPORT_CONSOLE.md](../engineering/design/ENGINEERING_SUPPORT_CONSOLE.md).
 
 
-## Current FUN-01 / QUIZ-01 implementation handoff — 2026-10-14
+## Current FUN-01 / QUIZ-01 / QUIZ-02 implementation handoff — 2026-10-14
 
 Owner authorized the recommended local build and added weekly Sport Pop Quiz. Earlier
 brainstorming sections remain dated history. Current source and actual evidence are in
 [FUN-01](FUN-01.md) and [QUIZ-01](QUIZ-01.md), in the isolated codex/fan-zone checkout.
-Corrected Fan admin has actual admin-ready at 2026-10-14T13:42:36Z and Quiz at 2026-10-14T06:09:57Z, both before participant source. Fan caller correction 070a58b independently passes specification/quality and local Data/Safety/SUPPORT with 35 focused tests; separate private video has 13. Quiz participant/discovery reviews pass with 23 and 44 focused tests. Shared Fan integration 8179b7b preserves private guardian recovery independently of participation dismissal; final affected checks pass 53 tests plus one coverage test and mobile typecheck. Shared Fan consumer review independently passes at 8179b7b; full check passes 148 suites/1,146 assertions and all guards; independent whole-branch/Data/Safety/SUPPORT and actual Documentation/VP scope reviews PASS; selected local Fan app-ready passes at metadata date 2026-10-14T14:49:04Z, after admin. Final status continuation is retained. Owner now selects 30-second timed trivia with a longer accessible option. Existing Quiz source is untimed; [timed design proposal](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) requires owner review and new admin handling before runtime changes.
+Corrected Fan admin has actual admin-ready at 2026-10-14T13:42:36Z and Quiz at 2026-10-14T06:09:57Z, both before participant source. Fan caller correction 070a58b independently passes specification/quality and local Data/Safety/SUPPORT with 35 focused tests; separate private video has 13. Quiz participant/discovery reviews pass with 23 and 44 focused tests. Shared Fan integration 8179b7b preserves private guardian recovery independently of participation dismissal; final affected checks pass 53 tests plus one coverage test and mobile typecheck. Shared Fan consumer review independently passes at 8179b7b; full check passes 148 suites/1,146 assertions and all guards; independent whole-branch/Data/Safety/SUPPORT and actual Documentation/VP scope reviews PASS; selected local Fan app-ready passes at metadata date 2026-10-14T14:49:04Z, after admin. Final status continuation is retained. Owner approved optional30/90-second timed trivia. [QUIZ-02](QUIZ-02.md) backend/admin source and independent Data/Privacy/Safety/SUPPORT acceptance pass; root canonical105/Fan154/historical34/timed50 exit0. New local admin checkpoint2026-10-14T16:53:17Z and selected admin-ready gate exit0 precede Task3 participant source. Player/full current check/app-ready remain pending; prior Quiz evidence above is historical. [Approved timed design](../engineering/design/TIMED_TRIVIA_PROPOSAL.md).
 
 POLLS with ADMIN/UPLOAD/BACKEND owns operational source; Content/VOICE verifies sport facts
 and contextual wording. Data/Safety/SUPPORT independently checks ownership, privacy,
 corrections, removal and stop controls before expansion; QA reviews visible behavior and
 actual gates. PRODUCT/RESEARCH and Growth include casual fans, filmers, athletes, families,
 friends, guardians and optional personal learning by donor/booster/sponsor/staff/operator
-accounts, without institutional privileges. Private Sport Learner completion badges are
+accounts, without institutional privileges. Private historical Sport Learner and new Trivia Explorer completion badges are
 separate from Aura, earnings, public ranking, fan ballots and voluntary service.
 
 GROWTH_ANALYTICS gathers the October20 evidence packet: optional engagement/return,
