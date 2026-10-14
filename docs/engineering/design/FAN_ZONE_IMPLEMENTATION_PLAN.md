@@ -62,6 +62,8 @@ Workers do not spawn reviewers. Commit only owned files; report exact tests/resu
 
 #### Task4 contract clarifications from producer and discovery preparation
 
+After the actual admin gate, the existing Growth worker owns only `components/FanZone/FanZoneVideo.tsx` and its test. Backend owns the hook, remaining participant UI and route. The video props bind entry/revision/reviewKey and explicit open/close/readiness callbacks. Shared discovery remains Task8. Platform first-frame support must be verified; unsupported readiness must never enable consent.
+
 Source starts only after root records the actual Fan admin gate. Shared discovery remains Task8-owned.
 The stable hook exposes snapshot/null, loading, error, busy and readonly refresh, with identity/read epochs.
 The root route validates optional canonical campaign ID; permissions section is presentation only.

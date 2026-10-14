@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-14 — Fan admin gate passes before participant source
+
+Exact displayed scope now binds normal review; explicit emergency suspension is separate. Composite per-stream cursors preserve recovery ties. The 154 actor, 45 SDK/admin and 105 root canonical checks pass; actual independent technical/operational acceptance and selected admin-ready gate precede Fan participant source. Quiz shared discovery independently passes. Local source only; full gates pending.
+
 ## 2026-10-14 — Weekly quiz participant and discovery source
 
 Optional weekly Sport Quiz page includes explanations, private completion badges, honest Skip/retry and account isolation;23local tests and independent review pass. Home/four HQ/profile integration passes44local tests and typecheck, with consumer review/full gates pending. Fan admin review requests stale-revision safety guards before its admin checkpoint; composite paging strengthens recovery robustness, while existing timestamp guards already protect normal writes. No hosted activation.

@@ -275,6 +275,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+- 2026-10-14 · FUN-01 corrected exact-scope admin review and composite recovery cursors pass 154 actor and 45 SDK/admin checks, root canonical replay105 and actual independent specification/quality/Data/Safety/SUPPORT acceptance. Selected admin-ready gate passes at 2026-10-14T13:42:36Z before Task4 source release. Quiz participant/shared discovery reviews PASS. Fan journey building, full combined checks/app-ready pending; no hosted activation.
+
 - 2026-10-14 · Weekly Sport Quiz participant page passes23local checks and independent spec/quality review; optional Home/four HQ/profile discovery passes44local checks and mobile typecheck at96e4c3d. Shared consumer review and full gates pending. Fan admin source passes59local checks; independent operational review requires exact stale-revision acceptance guards before admin-ready or fan source. Existing timestamp guards protect normal paging; composite cursor adds recovery robustness. Bounded Help & Safety/contact decision recorded; no hosted changes.
 
 - 2026-10-14 · QUIZ-01 corrected sourceac509948 independently passes specification/quality and local Data/Safety/SUPPORT admin review. Root canonical105/105, workerQuiz34/34actor and2suites30tests, root14nav/3map tests. Actual admin-ready feature gate passed2026-10-14T06:09:57Z before participant source release. Private weekly question/explanation/Skip/badge page now building. New normalizer governed; no hosted activation or counsel approval.

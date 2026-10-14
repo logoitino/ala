@@ -535,11 +535,7 @@ unperformed, with authorized audience and owner sharing decisions still required
 Owner authorized the recommended local build and added weekly Sport Pop Quiz. Earlier
 brainstorming sections remain dated history. Current source and actual evidence are in
 [FUN-01](FUN-01.md) and [QUIZ-01](QUIZ-01.md), in the isolated codex/fan-zone checkout.
-Fan backend/media scoped reviews PASS; Fan admin source has59local tests but independent review
-requires stale-revision review correction; composite paging adds recovery robustness. Fan participant source waits
-for its own actual gate. Quiz admin-ready passed2026-10-14T06:09:57Z; its participant page
-passes23local tests and independent review. Shared Home/HQ/profile discovery passes44local
-tests and awaits consumer review; final app-ready/full checks remain pending.
+The owner approved the family-fun build, then added weekly sport quizzes. Corrected Fan admin source passes 154 actor and 45 SDK/admin checks, with independent technical, Data, Safety and SUPPORT acceptance. The actual admin-ready gate passed at 2026-10-14T13:42:36Z before participant source. Quiz admin-ready passed at 2026-10-14T06:09:57Z; its participant and discovery checks (23 and 44 respectively) and independent reviews pass. Final app-ready and combined checks remain pending.
 
 POLLS with ADMIN/UPLOAD/BACKEND owns operational source; Content/VOICE verifies sport facts
 and contextual wording. Data/Safety/SUPPORT independently checks ownership, privacy,

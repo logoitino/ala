@@ -382,7 +382,7 @@
       "id": "FUN-01",
       "title": "Fan Zone testing-only fan submissions and free ballots",
       "owner": "POLLS",
-      "status": "planned",
+      "status": "admin-ready",
       "plannedAt": "2026-10-14T05:29:26Z",
       "exemption": null,
       "source": {
@@ -441,7 +441,16 @@
         ]
       },
       "readiness": {
-        "admin": null,
+        "admin": {
+          "date": "2026-10-14T13:42:36Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/FUN-01-admin.md",
+              "command": "node scripts/replay/schema-replay.mjs .smoke/runtime/pglite-cache/package/dist",
+              "result": "Root105/105 PG18.6 exact canonical composition; worker154/154 Fan actors and2suites45SDK/admin tests; independent specification/quality and local Data/Safety/SUPPORT PASS. No hosted/device/counsel release."
+            }
+          ]
+        },
         "app": null
       }
     },

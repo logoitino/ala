@@ -48,6 +48,7 @@ order, then dip into the folders as you need them.
 | [FEATURE_ADMIN_WORKFLOW.md](engineering/FEATURE_ADMIN_WORKFLOW.md) | Future features: admin contracts, implementation/evidence before app work, and registered lifecycle gates. |
 | [evidence/FAMILY_FUN_BUILD_DECISIONS.md](engineering/evidence/FAMILY_FUN_BUILD_DECISIONS.md) | Concrete Fan Zone and quiz build decisions, reasons and cost of changing them. |
 | [evidence/QUIZ-01-app.md](engineering/evidence/QUIZ-01-app.md) | Actual local quiz participant/integration checks and remaining final gates. |
+| [evidence/FUN-01-admin.md](engineering/evidence/FUN-01-admin.md) | Local Fan admin source/checks and independent gate recording. |
 | [design/ADMIN_DATA_CONSOLIDATION.md](engineering/design/ADMIN_DATA_CONSOLIDATION.md) | All desk/report data ownership, safe menu merges and analysis preservation evidence. |
 | [design/MAIN_ADMIN_PORTAL.md](engineering/design/MAIN_ADMIN_PORTAL.md) | ADM-02: selected report design and all administration controls in one main Expo portal. |
 | [design/COMMUNITY_DASHBOARD_QA.md](engineering/design/COMMUNITY_DASHBOARD_QA.md) | Community Home and report-format design QA: source/render comparison and local browser checks (screenshots in `design/community-preview/`). |

@@ -91,12 +91,12 @@ return JSON envelopes and use the canonical profile ID, not an assumed auth.uid(
 | RPC | Arguments | Output/contract |
 | --- | --- | --- |
 | `fun_snapshot` | `p_campaign_id uuid default null` | latest visible campaign or selected campaign; public candidates/results, own entry/ballot/reflections, own guardian permission queue; no other voter identity/private text |
-| `fun_admin_snapshot` | `p_campaign_id uuid default null`, `p_before timestamptz default null` | admin campaign list and complete selected entries, bounded case/audit pages, counts and next cursor |
+| `fun_admin_snapshot` | `p_campaign_id uuid default null`, `p_before text default null` | admin campaign list and complete selected entries; version1 opaque campaign-bound JSON timestamp/ID cursors with independent case/audit markers and counts |
 | `fun_admin_campaign` | `p_id uuid`, `p_action text`, `p_payload jsonb` | create/configure/open/pause/close/finalize/recount; actor/time audit; immutable opened rules |
 | `fun_entry` | `p_campaign_id uuid`, `p_entry_id uuid`, `p_action text`, `p_payload jsonb` | reserve/edit/submit/withdraw; path/revision/digest receipt; rights/verified media needed to submit |
 | `fun_permission` | `p_entry_id uuid`, `p_revision integer`, `p_action text`, `p_expected_scope jsonb` | adult assent / teen assent / guardian grant / revoke; exact revision/digest and active guardian link |
 | `fun_vote` | `p_campaign_id uuid`, `p_entry_id uuid`, `p_request_id uuid`, `p_expected_version integer` | atomic idempotent ballot receipt with version; rejects self, stale, paused, closed, ineligible |
-| `fun_admin_entry` | `p_entry_id uuid`, `p_action text`, `p_reason text` | accept/changes/reject/suspend; no staff winner selection |
+| `fun_admin_entry` | `p_entry_id uuid`, `p_action text`, `p_reason text`, `p_expected_scope jsonb` | normal accept/changes/reject/suspend compares exact displayed scope; null only explicit emergency Suspend current entry; no staff winner selection |
 | `fun_admin_ballot` | `p_ballot_id uuid`, `p_reason text` | invalidation and recount-required audit |
 | `fun_case` | `p_entry_id uuid`, `p_kind text`, `p_details text`, `p_secret uuid` | report/appeal/deletion request with bounded durable secret receipt; auth/guardian checks for private entries and deletion |
 | `fun_case_status` | `p_case_id uuid`, `p_secret uuid` | minimal reporter receipt/status, no other case text |
@@ -151,3 +151,5 @@ repeat visitors, ballot errors, reports/removal time and review effort separatel
 conversion. No invented baseline or claim that voting represents equal exposure; random/rotating
 candidate order and newcomer discovery should be tested before a wider launch. Stop opening new
 windows if review/safety/removal capacity or ballot integrity cannot be supported.
+
+Normal admin review retains the displayed exact scope across the request. A stale scope refusal clears selection/reason, refetches current source and requires reviewing that revision again. Emergency current-entry suspension remains a distinct labeled safety action; it never accepts an unseen revision.
