@@ -1,6 +1,6 @@
 # Timed trivia proposal
 
-**Status:** proposed replacement for the untimed QUIZ-01 experience, awaiting owner design review. No timed runtime, consent control, expiry or no-repeat ledger is implemented. The owner chose a Ready invitation, explicit Start, 30 seconds and a longer accessible option. Existing QUIZ-01 admin evidence covers its earlier untimed contract only.
+**Status:** owner approved the design by asking to continue on 2026-10-14: explicit Start, 30 seconds or 90 seconds chosen before reveal, optional invitations and the reviewed bank. QUIZ-02 implements this replacement; prior QUIZ-01 evidence remains historical. Timed source and its new admin checkpoint are pending at enrollment. Local implementation is authorized; hosted SQL and launch are separate decisions.
 
 [Current source ledger](../../agents/QUIZ-01.md) · [Earlier quiz design](SPORT_POP_QUIZ_DESIGN.md) · [Family activities](../../product/FAMILY_FUN_PLAYBOOK.md).
 
@@ -10,7 +10,7 @@ Everyone with an eligible account can enjoy trivia without athlete, school or St
 
 Sports-only is the default, covering all supported sports. Users can optionally add a reviewed mix of science, geography and fun general knowledge; at least four of every five scheduled topic opportunities remain sports when sufficient unseen content exists. No automatic topic substitution when the chosen pool is exhausted. This mix is a product proposal, not an inference about a student's interests.
 
-A settled Home/HQ card says **Ready for trivia?** Seeing it or tapping Not now reveals no question and starts no clock. Inside preparation, users choose **30 seconds** or the proposed **90 seconds** longer option before Start. Everyone can choose either without explaining why. Equal rewards; no speed ranking. Do not describe 90 seconds as universally accessible before screen-reader and device review.
+A settled Home/HQ card says **Ready for trivia?** Seeing it or tapping Not now reveals no question and starts no clock. Inside preparation, users choose **30 seconds** or **90 seconds** before Start. Everyone can choose either without explaining why. Equal rewards; no speed ranking. Do not describe 90 seconds as universally accessible before screen-reader and device review.
 
 Start explicitly requests one approved unseen question. Four plain answer choices appear only after a successful response. The server starts the clock when it issues the prompt and returns its deadline; the remaining timer reflects network delivery time. State this plainly before Start. A receipt lost in transit may consume that week's opportunity. Never silently issue a second question or reset the clock.
 
@@ -54,10 +54,22 @@ Lifecycle events are best effort. The operating system can kill the app or lose 
 
 POLLS/Engineering owns lifecycle and UI; Content owns facts/family grouping; Admin owns pause, correction and complete inventory. Data/Privacy reviews purpose, minimal records, own reads/deletion and documented retention. Safety/Legal reviews notices, child access, rewards and interruptions. Support rehearses lost-response, closure, Off and correction recovery. Growth combines optional opt-ins/starts/completions, interruption burden, pool exhaustion and editorial/provider costs through the existing Marketing → CTO → owner decision route. These are assigned responsibilities, not evidence of hired counsel or background monitoring.
 
-Update enrollment and the QUIZ-01 admin contract for the new capability. Verify settings/consent, expiry, history, correction, access and stop controls with independent reviewers and an actual new admin-ready checkpoint **before** timed participant implementation. Preserve prior checkpoints as historical evidence. Launch remains paused/testing-only with an empty cohort until separately authorized.
+Enroll QUIZ-02 for the new capability. Verify settings/consent, expiry, history, correction, access and stop controls with independent reviewers and an actual new admin-ready checkpoint **before** timed participant implementation. Preserve prior QUIZ-01 checkpoints as historical evidence. Launch remains paused/testing-only with an empty cohort until separately authorized.
 
 ## 6. Acceptance and review
 
 Required proof: default-off and easy withdrawal; 30/90 choice before reveal; cross-device and edited-family no-repeat; one weekly draw; no clock reset; exact lost-response recovery; pre/after-deadline answer boundaries; background/route/identity closure and missed-event expiry; exhausted bank; wrong-answer learning; no answer leakage; pause/void/Off; complete admin paging; own deletion; and truthful unknown/network states. Add meaningful actor and UI tests, then full pnpm check and updated feature gates. Native/web interruption and screen-reader behavior require actual device/browser review.
 
-Owner review covers recommended server bank, sports-first optional topic mix, weekly opt-in invitations, 30/90 timing, interruption closure and equal private participation badges. This draft records recommendations for a concrete decision. Approval starts the implementation-plan and admin-first work; it does not authorize hosted SQL, launch, provider spending, merge or push.
+Owner approval covers the reviewed server bank, sports-first optional topic mix, weekly opt-in invitations, 30/90 timing, interruption closure and equal private participation badges. The [implementation plan](TIMED_TRIVIA_IMPLEMENTATION_PLAN.md) records interfaces and acceptance. No hosted SQL, launch, provider spending, merge or push is authorized.
+
+## 7. Accepted implementation boundaries
+
+Use four new private tables for preferences, issued families, mutation receipts and a minimal weekly guard. Invitations default off; manual play remains available. Weekly Home/HQ offers claim one account/week card without starting a question. Deterministic UTC five-week slots offer four sports slots and one optional fun slot, without inferred interests. Topic values are `sport`, `science`, `geography`, `general`; selecting all sports sends a null sport filter.
+
+Every participant mutation verifies an expected canonical profile ID against the current JWT. Start binds a request UUID, expected UTC week, notice version, topic, duration and a 256-bit memory-only secret; store only SHA-256. Owner End requires no secret and accepts exactly one of attempt ID or original Start request ID. End-before-Start records cancellation, so a late Start cannot issue a prompt. Ordinary snapshot, receipt and history never return an active prompt. Exact Start recovery works only in the still-open original round, before its original deadline.
+
+Clear history uses a revision check, ends this week's opportunity, deletes learning history, family exposures, badges and recovery receipts, and retains only profile/week/spent/prune timestamps for 35 days. The confirmation explains both retention and future repeats. Account deletion cascades this guard. A stale erasure cannot delete new history. Retention repair never removes an unexpired guard.
+
+Serialize settings, account, attempt and content mutations; capture server clock after locks. Refuse Start if the full selected duration cannot fit before the next UTC week. Platform pause permanently ends active rounds; already committed results remain readable. Legacy issued rounds become closed history, completed results and historical Sport Learner names remain, and previous issued families are backfilled.
+
+The admin desk pages all 100 version slots, 50 per page, independently from 50-row audit pages, and shows full totals and effective expiry. New drafts require an explicit new/existing family decision; approval requires source notes. No generated draft is sent directly to users. Data/Safety/Support review these operations before the timed participant screen begins.

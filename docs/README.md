@@ -21,6 +21,8 @@ order, then dip into the folders as you need them.
 | [CONVENTIONS.md](engineering/CONVENTIONS.md) | Folder rules, file naming, where code goes, the comment standard (§5). |
 | [INNOVATION_AND_HANDOFF.md](engineering/INNOVATION_AND_HANDOFF.md) | Test new solutions, retain decisions and evidence, and prepare understandable engineering/legal/investor handoffs. |
 | [SCHEMA.md](engineering/SCHEMA.md) | Every table, RPC, policy and storage bucket. Checked by `pnpm docs:check`. |
+| [Timed trivia plan](engineering/design/TIMED_TRIVIA_IMPLEMENTATION_PLAN.md) | Approved 30/90-second server/admin/player work and local verification. |
+| [QUIZ-02](agents/QUIZ-02.md) | New timed trivia enrollment and actual readiness; QUIZ-01 remains historical. |
 | [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md) | The engineering readiness plan: readiness phases R1–R4, from dev-only to a separate production environment. |
 | [ENVIRONMENTS_AND_HOSTING.md](engineering/ENVIRONMENTS_AND_HOSTING.md) | Dev / staging / prod, stay on Supabase or move to AWS / Azure (options, cost, exit drill), and the merge-to-deploy pipeline (phases E0–E3). |
 | [HOSTING_DECISION_BRIEF.md](engineering/HOSTING_DECISION_BRIEF.md) | Prior engineering recommendations plus the owner's $50/month follow-up (§10): phased costs, Supabase/AWS/Azure/own-server options, video workload, operating effort and a prepared Claude review. Prices unverified. |

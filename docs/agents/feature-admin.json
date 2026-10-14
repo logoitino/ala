@@ -536,5 +536,41 @@
         "app": null
       }
     }
+    ,{
+      "id": "QUIZ-02",
+      "title": "Optional timed sports trivia with private participation badges",
+      "owner": "POLLS",
+      "status": "planned",
+      "plannedAt": "2026-10-14T16:15:21Z",
+      "exemption": null,
+      "source": {
+        "description": "Owner-approved 30/90 second reviewed trivia, default-off invitations, unseen issued families, original-view capability and exact mutation receipts. New private preference/exposure/receipt/35-day quota contracts; old untimed attempts historical. Plan docs/engineering/design/TIMED_TRIVIA_IMPLEMENTATION_PLAN.md.",
+        "paths": ["supabase/migrations/20261014150000_timed_sport_trivia.sql", "packages/shared-types/timedSportQuiz.ts", "apps/mobile/src/frontend/lib/sportQuiz.ts"]
+      },
+      "admin": {
+        "route": "/admin/sport-quiz",
+        "actions": ["Review source/family/version facts; page full question bank and audit separately; pause/enable testing; void/correct content; prune bounded expired recovery/quota records with reason."],
+        "paths": ["apps/mobile/app/(admin)/admin/sport-quiz.tsx", "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx", "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizBank.tsx"]
+      },
+      "report": {
+        "route": "/admin/sport-quiz",
+        "metrics": ["Full bank/family/topic totals with 50-row inventory and separate 50-row audit paging; effective active/expired and persisted terminal counts; aggregate private badge/preference/quota/receipt totals. Data/Safety/SUPPORT review unknown reads, retention, correction and stop coverage. No individual child answers or duration profiling in Growth."],
+        "paths": ["apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx"]
+      },
+      "disable": {
+        "strategy": "Default paused/testing-only/empty cohort; pause terminalizes active rounds permanently and denies new starts/answer commits. Own committed receipt/history, Off and End remain authorized. Missing migration/invalid v2 unavailable; no automatic prompt or question fallback. Retention preserves unexpired35-day minimal quota.",
+        "paths": ["supabase/migrations/20261014150000_timed_sport_trivia.sql"]
+      },
+      "access": {
+        "roles": ["admin", "eligible enrolled tester"],
+        "deniedBehavior": "Canonical JWT plus expected profile on every participant mutation; known-age restrictions remain. No direct private table/helper access. Prompt only exact original Start capability while active; snapshot/history/receipt prompt-free. Owner End no secret; cancelled Start/erasure cannot revive quota. Actor replay checks grants/identity/expiry/retry/closure/family/legacy boundaries.",
+        "paths": ["supabase/migrations/20261014150000_timed_sport_trivia.sql", "scripts/replay/timed-trivia-replay.mjs"]
+      },
+      "app": {
+        "route": "/sport-quiz",
+        "paths": ["apps/mobile/app/sport-quiz.tsx", "apps/mobile/src/frontend/components/SportQuiz/SportQuizScreen.tsx", "apps/mobile/src/frontend/hooks/useSportQuiz.ts", "apps/mobile/src/frontend/hooks/useTimedSportQuizRound.ts"]
+      },
+      "readiness": {"admin": null, "app": null}
+    }
   ]
 }
