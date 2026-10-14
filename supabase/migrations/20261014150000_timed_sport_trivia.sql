@@ -25,7 +25,7 @@ alter table public.sport_quiz_audit drop constraint sport_quiz_audit_action_chec
 alter table public.sport_quiz_audit add constraint sport_quiz_audit_action_check check(action in
   ('settings','question_create','question_edit','question_approve','question_archive','question_void','start','answer','skip','end','retention'));
 
-create table public.sport_quiz_preferences (
+create table if not exists public.sport_quiz_preferences (
  profile_id uuid primary key references public.profiles(id) on delete cascade,
  invitation_mode text not null default 'off' check(invitation_mode in ('off','weekly')),
  topic_mode text not null default 'sports' check(topic_mode in ('sports','mix')),
@@ -33,18 +33,18 @@ create table public.sport_quiz_preferences (
  version bigint not null default 0 check(version>=0), history_version bigint not null default 0 check(history_version>=0),
  last_invited_week date, updated_at timestamptz not null default now()
 );
-create table public.sport_quiz_exposures (
+create table if not exists public.sport_quiz_exposures (
  profile_id uuid not null references public.profiles(id) on delete cascade,
  question_key uuid not null, question_id uuid not null references public.sport_quiz_questions(id), first_issued_at timestamptz not null,
  primary key(profile_id,question_key)
 );
-create table public.sport_quiz_week_guards (
+create table if not exists public.sport_quiz_week_guards (
  profile_id uuid not null references public.profiles(id) on delete cascade,
  week_start date not null check(extract(isodow from week_start)=1), spent_at timestamptz not null,
  prune_after timestamptz not null, primary key(profile_id,week_start),
  check(prune_after=spent_at+interval '35 days')
 );
-create table public.sport_quiz_requests (
+create table if not exists public.sport_quiz_requests (
  profile_id uuid not null references public.profiles(id) on delete cascade, request_id uuid not null,
  operation text not null check(operation in ('preferences','invitation','start','answer','end','skip')),
  week_start date not null, payload_digest text check(payload_digest ~ '^[0-9a-f]{64}$'),
