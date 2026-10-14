@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-10-14 · QUIZ-02 participant55123f80 has129focused tests/types0, but rootfull round1 fails4 obsolete HQ fixtures (149suites/1178tests pass); HQ fixtures corrected ae40ecd9 with43focused tests/types0. Independent Task3 review requires3 Important consent/Off/notice fixes; owned round1 underway. Archive header correcteda239d739; map regenerated. Actual admin-ready16:53:17Z preserved; app-ready unset. Pilots paused/empty; no hosted/deployment/spending/merge/push.
+**Last updated:** 2026-10-14 · QUIZ-02 Task3 correction5bb7a2d independently accepted (all3 findings addressed); full round2 passes150 suites/1,210 tests, then fails only one unused test import. Owned import correction and full rerun pending. Actual admin16:53:17Z preserved/app unset; Documentation/VP final handoff pending. Pilots paused/empty; no hosted/spending/merge/push.
 
 **Prior Fan Zone / untimed Sport Quiz implementation (historical full-check evidence; current timed full check pending):** owner approved the family-fun build and added optional weekly quizzes. Actual Fan admin checkpoint is 2026-10-14T13:42:36Z; Quiz is 2026-10-14T06:09:57Z. Fan participant `bcb898c` plus `070a58b` independently passes scoped review (35 focused checks), as does private video `a4f4acd` (13). Shared integration `8179b7b` includes Home, four HQs, profile and real control-map/stop paths; current guardian recovery survives participation dismissal. Independent shared consumer acceptance passes at 8179b7b; full pnpm check passes 148 suites/1,146 assertions and all guards; independent whole-branch and selected local Fan app-ready pass; actual Documentation/VP scope reviews pass and final status continuation is retained. Per-user growth and joint Legal/Dev/capacity plans retain the October 20 packet. No live measures or launch readiness are inferred.
 
@@ -274,6 +274,10 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- 2026-10-14 · Independent scoped Task3 fix review876e2336 accepts all3 corrections and participant Data/Privacy/Safety/SUPPORT, with no new Important/Critical findings. Root full round2 passes150/150suites and1,210/1,210tests; later code:unused fails only unused waitFor test import. Original consumer owns import-only repair; complete full rerun and whole-phase/Documentation/VP/app gates remain pending. Five archived untimed wrappers now have actual Data retirement acceptance.
+
+- 2026-10-14 · Owned Task3 correction5bb7a2d across5paths passes9suites165tests/mobile/sharedtypes0: pre-Start intent invalidated on all leaving boundaries; known refusals/authoritative Refresh allow new Off while exact unknown retry is preserved; visible server issuance/delivery/lost-week notice beforeStart. SDK/round/Fan/admin/shared/SQL unchanged. Root verified all5hashes/regeneratedmap0rules; scoped re-review and finalfull/app/Documentation/VP pending.
 
 - 2026-10-14 · Root fullcheck round1 exits1 with only4stale actualHQ quiz fixtures,149/150suites and1178/1182tests; Growth owns v2 fixture/opt-in migration while preservingHQduties/Fan guardians. Archive missing required ARCHIVED header fixeda239d739 without changing historical excerpt. Independent Task3 probes reproduce queued consent Start after blur, stale preference pending blocking Off and incomplete beforeStart delay/lost-response disclosure; formalreview/scoped fixes pending. No app-ready or full pass claimed.
 

@@ -112,7 +112,7 @@ expect(rpc).toHaveBeenLastCalledWith('quiz_admin_snapshot', {
 
 **Interfaces produced:** Account `useSportQuiz` owns sanitized snapshot/preferences/Skip/paged history/CAS erasure only. `useTimedSportQuizRound` owns prompt, capability, pending exact Start/answer, original deadline and calm terminal receipt. Route/screen remains `/sport-quiz`. Every read/write is identity/source-generation guarded.
 
-- [ ] Write failing hook tests for late Start after blur/background/identity change and original-deadline retry; screen tests for 30/90 before reveal, optional notice/manual start and equal right/wrong badge.
+- [x] Write failing hook tests for late Start after blur/background/identity change and original-deadline retry; screen tests for 30/90 before reveal, optional notice/manual start and equal right/wrong badge.
 
 ```ts
 act(() => round.current.leave('background'));
@@ -123,8 +123,8 @@ expect(endTimedSportQuiz).toHaveBeenCalledWith(expect.objectContaining({
 }));
 ```
 
-- [ ] Run focused hook/screen/FamilyFun tests and retain red evidence.
-- [ ] Generate 32 cryptographically secure bytes per Start using Expo57 getRandomValues (getRandomBytes has a development Math.random fallback); fail closed when unavailable; retain exact UUID/input until resolved while original view active. Leave synchronously clears token/prompt and invalidates generation; best-effort End by Start UUID closes late issuance. Never use new-account identity for old calls. Back/Home usable while requests pending. Timer uses returned server deadline and elapsed monotonic time; no client acceptance guarantee. A lost answer retries only its same option/UUID.
+- [x] Run focused hook/screen/FamilyFun tests and retain red evidence.
+- [x] Generate 32 cryptographically secure bytes per Start using Expo57 getRandomValues (getRandomBytes has a development Math.random fallback); fail closed when unavailable; retain exact UUID/input until resolved while original view active. Leave synchronously clears token/prompt and invalidates generation; best-effort End by Start UUID closes late issuance. Never use new-account identity for old calls. Back/Home usable while requests pending. Timer uses returned server deadline and elapsed monotonic time; no client acceptance guarantee. A lost answer retries only its same option/UUID.
 
 ```ts
 const secret = Array.from(Crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('');
@@ -133,9 +133,9 @@ const deadlineRemaining = Math.max(0, Date.parse(receipt.expires_at) - Date.pars
 // Decrease deadlineRemaining by monotonic elapsed time; SQL owns answer acceptance.
 ```
 
-- [ ] Preparation shows explicit notice, 30/90 choice, sports/topic pool and Start. Manual-only works while invitations off. Save Off suppresses invitations locally immediately, confirmed/unconfirmed states honest. Once-weekly claim only settled Home/HQ, no push or timed popup. Skip consumes this week explicitly; Not now does not consume question/quota. Preserve FanDiscovery body and private guardian queue/errors.
-- [ ] Show private terminal history/badges and correction; explicit confirmation “Clear history and end this week” explains retained preferences/notices/revision,35-day quota and future repeats. Erasure unknown-response path refreshes/reviews/reconfirms; never retries with a fresh CAS revision automatically. Expired/interrupted rounds are calm; no public failure/streak penalty. Old active summary offers End without prompt/recovery. Retire obsolete untimed runtime wrappers/types only where superseded, with ownership record.
-- [ ] Run focused player/SDK/admin/shared tests and both TypeScript checks; independent task review; commit owned paths. Root records same-turn docs/map and actual evidence.
+- [x] Preparation shows explicit notice, 30/90 choice, sports/topic pool and Start. Manual-only works while invitations off. Save Off suppresses invitations locally immediately, confirmed/unconfirmed states honest. Once-weekly claim only settled Home/HQ, no push or timed popup. Skip consumes this week explicitly; Not now does not consume question/quota. Preserve FanDiscovery body and private guardian queue/errors.
+- [x] Show private terminal history/badges and correction; explicit confirmation “Clear history and end this week” explains retained preferences/notices/revision,35-day quota and future repeats. Erasure unknown-response path refreshes/reviews/reconfirms; never retries with a fresh CAS revision automatically. Expired/interrupted rounds are calm; no public failure/streak penalty. Old active summary offers End without prompt/recovery. Retire obsolete untimed runtime wrappers/types only where superseded, with ownership record.
+- [x] Run focused player/SDK/admin/shared tests and both TypeScript checks; independent task review; commit owned paths. Root records same-turn docs/map and actual evidence.
 
 ### Task 4: Complete local verification, ownership and handoff
 

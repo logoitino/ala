@@ -350,7 +350,7 @@
   "buckets": {
     "reels": {
       "owner": "UPLOAD",
-      "purpose": "Public Highlight videos (reels/<uid>/\u2026) and photo-story photos (<uid>/stories/\u2026)."
+      "purpose": "Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…)."
     },
     "game_highlights": {
       "owner": "UPLOAD",
@@ -1582,7 +1582,7 @@
       "kind": "export",
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
       "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
-      "approved": "Owner-approved local QUIZ-02 implementation plan, POLLS/Data retirement scope, 2026-10-14; independent participant Data source review pending."
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
     },
     {
       "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
@@ -1590,7 +1590,7 @@
       "kind": "export",
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
       "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
-      "approved": "Owner-approved local QUIZ-02 implementation plan, POLLS/Data retirement scope, 2026-10-14; independent participant Data source review pending."
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
     },
     {
       "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
@@ -1598,7 +1598,7 @@
       "kind": "export",
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
       "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
-      "approved": "Owner-approved local QUIZ-02 implementation plan, POLLS/Data retirement scope, 2026-10-14; independent participant Data source review pending."
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
     },
     {
       "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
@@ -1606,7 +1606,7 @@
       "kind": "export",
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
       "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
-      "approved": "Owner-approved local QUIZ-02 implementation plan, POLLS/Data retirement scope, 2026-10-14; independent participant Data source review pending."
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
     },
     {
       "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
@@ -1614,7 +1614,7 @@
       "kind": "export",
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
       "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
-      "approved": "Owner-approved local QUIZ-02 implementation plan, POLLS/Data retirement scope, 2026-10-14; independent participant Data source review pending."
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
     }
   ],
   "unusedLocalsBaseline": [

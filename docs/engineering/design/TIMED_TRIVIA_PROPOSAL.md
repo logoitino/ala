@@ -1,14 +1,14 @@
 # Timed trivia proposal
 
-**Status:** owner approved the design by asking to continue on 2026-10-14: explicit Start, 30 seconds or 90 seconds chosen before reveal, optional invitations and the reviewed bank. QUIZ-02 implements this replacement; prior QUIZ-01 evidence remains historical. Timed source and its new admin checkpoint are pending at enrollment. Local implementation is authorized; hosted SQL and launch are separate decisions.
+**Status:** owner approved the design by asking to continue on 2026-10-14: explicit Start, 30 seconds or 90 seconds chosen before reveal, optional invitations and the reviewed bank. QUIZ-02 implements this replacement; prior QUIZ-01 evidence remains historical. Backend/admin are independently accepted with an actual selected admin-ready checkpoint before participant source. Participant scoped review passes; current full/whole-phase/app-ready and final handoff gates are tracked in QUIZ-02. Local implementation is authorized; hosted SQL and launch are separate decisions.
 
-[Current source ledger](../../agents/QUIZ-01.md) · [Earlier quiz design](SPORT_POP_QUIZ_DESIGN.md) · [Family activities](../../product/FAMILY_FUN_PLAYBOOK.md).
+[Current source ledger](../../agents/QUIZ-02.md) · [Earlier quiz design](SPORT_POP_QUIZ_DESIGN.md) · [Family activities](../../product/FAMILY_FUN_PLAYBOOK.md).
 
 ## 1. Recommended experience
 
 Everyone with an eligible account can enjoy trivia without athlete, school or Stripe verification. Existing account age restrictions apply; this does not extend under-13 access. Invitations start **off**. A clear optional setting offers manual-only trivia or one in-app invitation per UTC week, with invitations Off always reachable. Manual participation requires the same preparation notice and explicit Start; default-off invitations do not silently assign questions. No push notification permission is implied.
 
-Sports-only is the default, covering all supported sports. Users can optionally add a reviewed mix of science, geography and fun general knowledge; at least four of every five scheduled topic opportunities remain sports when sufficient unseen content exists. No automatic topic substitution when the chosen pool is exhausted. This mix is a product proposal, not an inference about a student's interests.
+Sports-only is the default, covering all supported sports. Users can optionally add a reviewed mix of science, geography and fun general knowledge; at least four of every five scheduled topic opportunities remain sports when sufficient unseen content exists. No automatic topic substitution when the chosen pool is exhausted. This approved mix uses a fixed schedule without inferring a student's interests.
 
 A settled Home/HQ card says **Ready for trivia?** Seeing it or tapping Not now reveals no question and starts no clock. Inside preparation, users choose **30 seconds** or **90 seconds** before Start. Everyone can choose either without explaining why. Equal rewards; no speed ranking. Do not describe 90 seconds as universally accessible before screen-reader and device review.
 
@@ -36,9 +36,9 @@ A baked client bank is useful later for distinct private offline practice, but s
 
 Use the existing stable question_key as an initial question-family identifier: one approved version per family, reviewed paraphrases and corrections attached to that family. At the first authoritative prompt issuance, atomically record account, family, immutable question version and server time. Every issued family counts as seen, including expired, abandoned or void rounds. An invitation alone does not count. Unique account/family history and an account lock prevent concurrent duplicate assignment; a text hash alone cannot detect rewordings.
 
-If simultaneous translations or variants are later needed, define a shared family_id and explicit editorial grouping before that extension. Current source does not provide semantic grouping or history exclusion. Erasing history can permit repeats for the same surviving account; deleting/recreating an account can also reset history. Disclose that limitation and review whether any separately justified minimal exposure record may lawfully remain. Do not promise permanent no-repeat for a human across accounts or override erasure to protect a game mechanic.
+If simultaneous translations or variants are later needed, define a shared family_id and explicit editorial grouping before that extension. Timed source uses reviewed manual question-key families and account exposure exclusion; automatic semantic grouping and simultaneous family variants remain unbuilt. Erasing history can permit repeats for the same surviving account; deleting/recreating an account can also reset history. Disclose that limitation and review whether any separately justified minimal exposure record may lawfully remain. Do not promise permanent no-repeat for a human across accounts or override erasure to protect a game mechanic.
 
-The current 100-version cap includes archived/void questions. Before changing it, build complete paged admin inventory, totals, unseen-pool availability by topic and correction handling. Preserve historical versions. An exhausted pool says **You have seen the available questions. Check later or turn invitations off.** and issues no repeat. No fallback to unchecked or stale bundled content.
+The current 100-version cap includes archived/void questions. The timed implementation provides complete paged admin inventory, totals, unseen-pool availability by topic and correction handling; increasing the cap needs a new capacity/review decision. Preserve historical versions. An exhausted pool says **You have seen the available questions. Check later or turn invitations off.** and issues no repeat. No fallback to unchecked or stale bundled content.
 
 ## 4. Authority and recovery
 
