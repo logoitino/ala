@@ -24,6 +24,7 @@ type Scope = {
     foreground: boolean;
     generation: number;
     start: TimedQuizStartInput | null;
+    observedAttempt: Pick<NonNullable<TimedQuizSnapshot['attempt']>, 'id' | 'week_start' | 'status'> | null;
     startAt: number;
     deadline: number;
     live: TimedQuizLive | null;
@@ -46,11 +47,15 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
     const latest = useRef(input);
     latest.current = input;
     const sourceKey = input.identityKey ? JSON.stringify([input.identityKey,input.snapshot?.week_start ?? null]) : null;
-    const make = (): Scope => ({ key: sourceKey, profile: input.profileId, active: true, foreground: (AppState.currentState === 'active' || AppState.currentState == null) && !(Platform.OS === 'web' && typeof document !== 'undefined' && document.visibilityState !== 'visible'), generation: 0, start: null, startAt: 0, deadline: 0, live: null, answer: null, busy: null, error: null, result: null, ended: false, endSent: false, erased: false });
+    const make = (): Scope => ({ key: sourceKey, profile: input.profileId, active: true, foreground: (AppState.currentState === 'active' || AppState.currentState == null) && !(Platform.OS === 'web' && typeof document !== 'undefined' && document.visibilityState !== 'visible'), generation: 0, start: null, observedAttempt: null, startAt: 0, deadline: 0, live: null, answer: null, busy: null, error: null, result: null, ended: false, endSent: false, erased: false });
     const holder = useRef<Scope>(make());
     if (holder.current.key !== sourceKey || holder.current.profile !== input.profileId)
         holder.current = make();
     const scope = holder.current;
+    // Only this scope observes its current own summary. An empty departing scope cannot
+    // borrow a newly established account/week's attempt through the latest-input ref.
+    const observed = input.snapshot?.profile_id === scope.profile && input.snapshot.attempt?.week_start === input.snapshot.week_start ? input.snapshot.attempt : null;
+    scope.observedAttempt = observed ? { id: observed.id, week_start: observed.week_start, status: observed.status } : null;
     const [, draw] = useState(0);
     const valid = useCallback(() => holder.current === scope && scope.active && scope.key !== null && scope.profile !== null, [scope]);
     const publish = useCallback(() => { if (valid())
@@ -59,7 +64,7 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
         scope.start = { ...scope.start, session_secret: '' }; scope.ended = true; scope.busy = null; scope.error = null; ++scope.generation; }, [scope]);
     const leave = useCallback((reason: TimedQuizEndInput['reason'] = 'user_end') => {
         const original = scope.start;
-        const own = latest.current.snapshot?.profile_id === scope.profile ? latest.current.snapshot?.attempt : null;
+        const own = scope.observedAttempt;
         const attempt = scope.live?.attemptId ?? (own?.status === 'issued' ? own.id : null);
         const week = original?.expected_week ?? own?.week_start;
         if (!original && !attempt) {

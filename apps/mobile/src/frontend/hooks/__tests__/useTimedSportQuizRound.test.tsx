@@ -30,3 +30,34 @@ it('web hidden before Start denies issuance and hidden during round closes witho
 it('exact lost-Start retry preserves UUID/secret and consumes only elapsed time against the original deadline',async()=>{jest.useFakeTimers();let tries=0;mockClient.handler=async(fn,args)=>{if(fn==='quiz_start'){if(++tries===1)throw Error('lost');return{...quizStart(String(args.p_request_id)),server_now:'2026-10-14T17:00:05.000Z'};}return quizReceipt('end',String(args.p_request_id),'ended');};const r=await renderHook(()=>useTimedSportQuizRound(base));await begin(r);await act(async()=>{jest.advanceTimersByTime(5000);await r.result.current.retryStart();});const calls=mockClient.calls.filter(c=>c.fn==='quiz_start');expect(calls[1].args).toEqual(calls[0].args);expect(r.result.current.remainingSeconds).toBe(25);await act(async()=>{jest.advanceTimersByTime(26000);});expect(r.result.current.live).toBeNull();});
 it('a newly returned server week closes old state and permits only a new explicit manual Start',async()=>{let props=base;const r=await renderHook(()=>useTimedSportQuizRound(props));await begin(r);await act(async()=>{r.result.current.leave('user_end');});props={...base,snapshot:{...quizSnapshot,week_start:'2026-10-19',week_end:'2026-10-26'}};mockClient.handler=async(fn,args)=>fn==='quiz_start'?{...quizStart(String(args.p_request_id)),week_start:'2026-10-19',attempt:{...quizStart().attempt!,week_start:'2026-10-19'}}:quizReceipt('end',String(args.p_request_id),'ended');await r.rerender({});expect(r.result.current.live).toBeNull();expect(mockClient.calls.filter(c=>c.fn==='quiz_start')).toHaveLength(1);await begin(r);expect(mockClient.calls.filter(c=>c.fn==='quiz_start')).toHaveLength(2);});
 it('history erasure invalidates a pending answer receipt without resurrecting deleted learning',async()=>{const r=await renderHook(()=>useTimedSportQuizRound(base));await begin(r);const pending=delayed<ReturnType<typeof quizCompletion>>();mockClient.handler=async()=>pending.promise;let answer!:Promise<unknown>;await act(async()=>{answer=r.result.current.answer(0);});await act(async()=>{r.result.current.discardForHistoryErase();});expect(r.result.current.live).toBeNull();await act(async()=>{pending.resolve(quizCompletion(String(mockClient.calls.find(c=>c.fn==='quiz_answer')!.args.p_request_id)));await answer;});expect(r.result.current.result).toBeNull();expect(r.result.current.pendingAnswer).toBeNull();expect(mockClient.calls.some(c=>c.fn==='quiz_end')).toBe(false);});
+
+it('ordinary initial null-to-issued read does not End; explicit owner End remains exact and secret-free',async()=>{
+ let snapshot:typeof quizSnapshot|null=null;
+ const r=await renderHook(()=>useTimedSportQuizRound({...base,snapshot}));expect(mockClient.calls).toEqual([]);
+ snapshot={...quizSnapshot,week_spent:true,attempt:quizStart().attempt};await r.rerender({});
+ expect(mockClient.calls).toEqual([]);expect(r.result.current.live).toBeNull();expect(mockSecure).not.toHaveBeenCalled();
+ await act(async()=>{r.result.current.leave('user_end');});
+ expect(mockClient.calls).toHaveLength(1);expect(mockClient.calls[0]).toMatchObject({fn:'quiz_end',args:{p_attempt_id:'attempt-a',p_start_request_id:null,p_expected_profile_id:'profile-a',p_expected_week:'2026-10-12',p_reason:'user_end'}});
+ expect(mockClient.calls[0].args).not.toHaveProperty('p_session_secret');expect(mockClient.calls.some(c=>c.fn==='quiz_start')).toBe(false);
+});
+it.each([false,true])('read-only week replacement cannot borrow its new issued attempt (old issued=%s)',async oldIssued=>{
+ let snapshot={...quizSnapshot,week_spent:oldIssued,attempt:oldIssued?quizStart().attempt:null};
+ const r=await renderHook(()=>useTimedSportQuizRound({...base,snapshot}));expect(mockClient.calls).toEqual([]);
+ snapshot={...quizSnapshot,week_start:'2026-10-19',week_end:'2026-10-26',week_spent:true,attempt:{...quizStart().attempt!,id:'attempt-b',week_start:'2026-10-19'}};await r.rerender({});
+ const departures=mockClient.calls.filter(c=>c.fn==='quiz_end');expect(departures).toHaveLength(oldIssued?1:0);
+ if(oldIssued)expect(departures[0].args).toMatchObject({p_attempt_id:'attempt-a',p_start_request_id:null,p_expected_profile_id:'profile-a',p_expected_week:'2026-10-12'});
+ expect(r.result.current.live).toBeNull();expect(mockClient.calls.some(c=>c.fn==='quiz_start')).toBe(false);
+ await act(async()=>{r.result.current.leave('user_end');});
+ const ends=mockClient.calls.filter(c=>c.fn==='quiz_end');expect(ends).toHaveLength(oldIssued?2:1);expect(ends[ends.length-1].args).toMatchObject({p_attempt_id:'attempt-b',p_start_request_id:null,p_expected_profile_id:'profile-a',p_expected_week:'2026-10-19'});
+});
+it.each([{boundary:'identity',pending:true},{boundary:'week',pending:true},{boundary:'identity',pending:false},{boundary:'week',pending:false},{boundary:'unmount',pending:true},{boundary:'unmount',pending:false}])('true $boundary departure closes original captured Start (pending=$pending)',async({boundary,pending:held})=>{
+ const pending=delayed<ReturnType<typeof quizStart>>();let props=base;
+ mockClient.handler=async(fn,args)=>fn==='quiz_start'?(held?pending.promise:quizStart(String(args.p_request_id))):quizReceipt('end',String(args.p_request_id),'cancelled');
+ const r=await renderHook(()=>useTimedSportQuizRound(props));let work!:Promise<unknown>;await act(async()=>{work=r.result.current.start('sport',null,30);if(!held)await work;});
+ const original=mockClient.calls.find(c=>c.fn==='quiz_start')!.args;
+ props=boundary==='identity'?{...base,identityKey:'auth-b/profile-b',profileId:'profile-b',snapshot:{...quizSnapshot,profile_id:'profile-b',week_spent:true,attempt:{...quizStart().attempt!,id:'attempt-new-account'}}}:{...base,snapshot:{...quizSnapshot,week_start:'2026-10-19',week_end:'2026-10-26',week_spent:true,attempt:{...quizStart().attempt!,id:'attempt-new-week',week_start:'2026-10-19'}}};
+ if(boundary==='unmount')await r.unmount();else await r.rerender({});const ends=mockClient.calls.filter(c=>c.fn==='quiz_end');expect(ends).toHaveLength(1);
+ expect(ends[0].args).toMatchObject({p_attempt_id:null,p_start_request_id:original.p_request_id,p_expected_profile_id:'profile-a',p_expected_week:'2026-10-12'});expect(ends[0].args).not.toHaveProperty('p_session_secret');
+ if(held)await act(async()=>{pending.resolve(quizStart(String(original.p_request_id)));await work;});
+ if(boundary==='unmount'){const fresh=await renderHook(()=>useTimedSportQuizRound({...base,snapshot:null}));expect(fresh.result.current.live).toBeNull();}else expect(r.result.current.live).toBeNull();expect(mockClient.calls.filter(c=>c.fn==='quiz_start')).toHaveLength(1);expect(mockSecure).toHaveBeenCalledTimes(1);
+});
