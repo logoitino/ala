@@ -30,14 +30,18 @@ type Scope = {
     pending: Pending | null;
     suppressed: boolean;
     preferenceUncertain: boolean;
+    preferenceNeedsReview: boolean;
+    offRequested: boolean;
     erasureUncertain: boolean;
 };
+// Exact server exception names are definite transactional refusals; transport/adapter failures remain uncertain.
+const preferenceRefusals = new Set(['quiz_preferences_stale', 'quiz_preferences_invalid', 'quiz_request_conflict', 'quiz_request_limit', 'quiz_paused', 'quiz_not_enrolled', 'quiz_unavailable', 'quiz_ineligible', 'quiz_identity_changed']);
 /** @purpose Captured identity and source sequences prevent delayed reads/writes from publishing to another account. */
 export function useSportQuiz() {
     const auth = useAuth();
     const profileId = !auth.loading && !auth.isGuest && auth.user?.id && auth.profile?.id && auth.profile.user_id === auth.user.id && !auth.profile.age_blocked_at ? auth.profile.id : null;
     const identityKey = profileId ? JSON.stringify([auth.user!.id, profileId]) : null;
-    const make = (): Scope => ({ key: identityKey, profile: profileId, active: false, read: 0, historyRead: 0, snapshot: null, history: null, loading: false, historyLoading: false, error: null, historyError: null, busy: null, pending: null, suppressed: false, preferenceUncertain: false, erasureUncertain: false });
+    const make = (): Scope => ({ key: identityKey, profile: profileId, active: false, read: 0, historyRead: 0, snapshot: null, history: null, loading: false, historyLoading: false, error: null, historyError: null, busy: null, pending: null, suppressed: false, preferenceUncertain: false, preferenceNeedsReview: false, offRequested: false, erasureUncertain: false });
     const holder = useRef(make());
     if (holder.current.key !== identityKey)
         holder.current = make();
@@ -46,7 +50,7 @@ export function useSportQuiz() {
     const current = useCallback(() => holder.current === scope && scope.active && scope.key !== null, [scope]);
     const publish = useCallback(() => { if (current())
         draw(n => n + 1); }, [current]);
-    const read = useCallback(async () => { if (!current())
+    const read = useCallback(async (reconcilePreferences = false) => { if (!current())
         return; const sequence = ++scope.read; scope.loading = true; publish(); try {
         const snapshot = await fetchTimedSportQuiz();
         if (!current() || sequence !== scope.read)
@@ -61,8 +65,15 @@ export function useSportQuiz() {
         scope.snapshot = snapshot;
         scope.error = null;
         scope.erasureUncertain = false;
-        if (!scope.preferenceUncertain)
-            scope.suppressed = snapshot.preferences.invitation_mode === 'off';
+        // A known refusal can be released after an explicit authoritative review. An unknown
+        // write keeps its exact CAS request unless a newer version makes that old write obsolete.
+        if (reconcilePreferences && snapshot.profile_id === scope.profile && scope.busy !== 'preferences' &&
+            (scope.preferenceNeedsReview || (scope.pending?.kind === 'preferences' && snapshot.preferences.version > scope.pending.version))) {
+            scope.pending = null;
+            scope.preferenceNeedsReview = false;
+            scope.preferenceUncertain = false;
+        }
+        scope.suppressed = scope.offRequested || snapshot.preferences.invitation_mode === 'off';
     }
     catch {
         if (current() && sequence === scope.read)
@@ -98,7 +109,7 @@ export function useSportQuiz() {
             publish();
         }
     } }, [current, scope, publish]);
-    const refresh = useCallback(async () => { const hadHistory = scope.history !== null || scope.erasureUncertain; await read(); if (current() && hadHistory)
+    const refresh = useCallback(async () => { const hadHistory = scope.history !== null || scope.erasureUncertain; await read(true); if (current() && hadHistory)
         await loadHistory(); }, [read, current, scope, loadHistory]);
     useEffect(() => { scope.active = true; if (identityKey)
         void read(); return () => { scope.active = false; ++scope.read; ++scope.historyRead; scope.pending = null; }; }, [scope, identityKey, read]);
@@ -112,16 +123,21 @@ export function useSportQuiz() {
         scope.pending = null;
         if (pending.kind === 'preferences') {
             scope.preferenceUncertain = false;
-            scope.suppressed = pending.payload?.invitation_mode === 'off';
+            scope.preferenceNeedsReview = false;
+            scope.offRequested = pending.payload?.invitation_mode === 'off';
+            scope.suppressed = scope.offRequested;
         }
         await read();
         return current() ? receipt : null;
     }
-    catch {
+    catch (error) {
         if (current()) {
-            if (pending.kind === 'preferences')
-                scope.preferenceUncertain = true;
-            scope.error = pending.kind === 'skip' ? 'Skip was not confirmed. Refresh to check this week.' : pending.kind === 'preferences' ? 'Your choices were not confirmed. Refresh to check them or retry the same choices.' : 'The weekly invitation was not confirmed. Refresh to check availability.';
+            const refused = pending.kind === 'preferences' && error instanceof Error && preferenceRefusals.has(error.message.trim());
+            if (pending.kind === 'preferences') {
+                scope.preferenceUncertain = !refused;
+                scope.preferenceNeedsReview = refused;
+            }
+            scope.error = refused ? 'Your choices were refused. Refresh and review current choices before trying again.' : pending.kind === 'skip' ? 'Skip was not confirmed. Refresh to check this week.' : pending.kind === 'preferences' ? 'Your choices were not confirmed. Refresh to check them or retry the same choices.' : 'The weekly invitation was not confirmed. Refresh to check availability.';
             publish();
         }
         return null;
@@ -132,23 +148,35 @@ export function useSportQuiz() {
             publish();
         }
     } }, [current, scope, publish, read]);
-    const savePreferences = useCallback(async (payload: TimedQuizPreferencesInput) => { if (!current() || scope.busy || !scope.snapshot)
-        return null; if (payload.invitation_mode === 'off') {
-        scope.suppressed = true;
-        publish();
-    } let pending = scope.pending; if (pending && (pending.kind !== 'preferences' || JSON.stringify(pending.payload) !== JSON.stringify(payload))) {
-        scope.error = 'Refresh and review the unconfirmed choices before choosing different settings.';
-        publish();
-        return null;
-    } if (!pending) {
-        try {
-            pending = { kind: 'preferences', id: randomUUID(), week: scope.snapshot.week_start, version: scope.snapshot.preferences.version, payload: { ...payload } };
-            scope.pending = pending;
+    const savePreferences = useCallback(async (payload: TimedQuizPreferencesInput) => {
+        if (!current() || !scope.snapshot) return null;
+        if (payload.invitation_mode === 'off') {
+            scope.offRequested = true;
+            scope.suppressed = true;
+            publish();
         }
-        catch {
+        if (scope.busy) return null;
+        if (scope.loading || scope.preferenceNeedsReview) {
+            scope.error = 'Refresh and review current choices before choosing different settings.';
+            publish();
             return null;
         }
-    } const exact = pending; return run(exact, () => saveTimedSportQuizPreferences(exact.payload!, exact.version, exact.id, scope.profile!)); }, [current, scope, publish, run]);
+        let pending = scope.pending;
+        if (pending && (pending.kind !== 'preferences' || JSON.stringify(pending.payload) !== JSON.stringify(payload))) {
+            scope.error = 'Refresh and review the unconfirmed choices before choosing different settings.';
+            publish();
+            return null;
+        }
+        if (!pending) {
+            try {
+                pending = { kind: 'preferences', id: randomUUID(), week: scope.snapshot.week_start, version: scope.snapshot.preferences.version, payload: { ...payload } };
+                scope.pending = pending;
+            }
+            catch { return null; }
+        }
+        const exact = pending;
+        return run(exact, () => saveTimedSportQuizPreferences(exact.payload!, exact.version, exact.id, scope.profile!));
+    }, [current, scope, publish, run]);
     const claimInvitation = useCallback(async () => { const s = scope.snapshot; if (!current() || scope.busy || scope.loading || scope.error || scope.suppressed || !s || s.availability !== 'ready' || s.week_spent || s.preferences.invitation_mode !== 'weekly' || s.preferences.notice_version !== TIMED_QUIZ_NOTICE_VERSION || s.preferences.last_invited_week === s.week_start)
         return null; if (scope.pending && scope.pending.kind !== 'invitation')
         return null; try {

@@ -19,6 +19,7 @@ export function SportQuizPreparation({ snapshot, busy, onStart }: {
   <Text accessibilityRole="header">Ready for one small question?</Text>
   <Text>Optional testing activity. Start uses this UTC week’s opportunity. Right or wrong, completing earns the same private Trivia Explorer badge. No money, Aura, voting or school points.</Text>
   <Text>Leaving this page, hiding the app or reaching the deadline closes the round. You can always leave. The server decides whether an answer arrived in time.</Text>
+  <Text>The clock starts when the server issues the question. Delivery uses part of your 30 or 90 seconds. A lost response may still use this week’s opportunity.</Text>
   <Text>Choose more time whenever you want; no reason is required.</Text>
   <QuizButton label="30 seconds" quiet disabled={busy} onPress={() => setDuration(30)}/><QuizButton label="90 seconds · more time" quiet disabled={busy} onPress={() => setDuration(90)}/>
   <Text>{`Selected duration: ${duration} seconds`}</Text>

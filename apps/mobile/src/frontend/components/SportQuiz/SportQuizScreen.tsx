@@ -1,8 +1,8 @@
 /** QUIZ-02 optional preparation, foreground timed round and own terminal history.
  * @sideEffects Explicit account/round SDK actions and usable Back/account Home; no automatic Start or secret persistence.
  */
-import { useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, Platform, ScrollView, Text, View } from 'react-native';
 import { useIsFocused, useRouter, type Href } from 'expo-router';
 import { ScreenShell } from '@/components/ScreenShell';
 import { useAuth } from '@/context/AuthContext';
@@ -14,6 +14,8 @@ import { QuizButton } from './QuizButton';
 import { SportQuizPreparation } from './SportQuizPreparation';
 import { SportQuizPreferences } from './SportQuizPreferences';
 import { SportQuizHistory } from './SportQuizHistory';
+type PreparationIntent = { topic: TimedQuizTopic; sport: string | null; duration: 30 | 90; key: string; generation: number };
+const isForeground = () => (AppState.currentState === 'active' || AppState.currentState == null) && !(Platform.OS === 'web' && typeof document !== 'undefined' && document.visibilityState !== 'visible');
 /** @purpose Remount preparation/round with canonical identity, while navigation remains available during every state. */
 export function SportQuizScreen() { const quiz = useSportQuiz(); return <ScreenShell edges={['top', 'bottom', 'left', 'right']}><SportQuizContent key={quiz.identityKey ?? 'unavailable'} quiz={quiz}/></ScreenShell>; }
 function SportQuizContent({ quiz }: {
@@ -26,30 +28,63 @@ function SportQuizContent({ quiz }: {
     const round = useTimedSportQuizRound({ identityKey: quiz.identityKey, profileId: quiz.profileId, snapshot: quiz.snapshot, focused, onChanged: changed });
     const s = quiz.snapshot;
     const busy = !!quiz.busy || !!round.busy;
-    const [intent, setIntent] = useState<{
-        topic: TimedQuizTopic;
-        sport: string | null;
-        duration: 30 | 90;
-    } | null>(null);
+    const sourceKey = JSON.stringify([quiz.identityKey, s?.week_start ?? null]);
+    const preparation = useRef({ key: sourceKey, generation: 0, active: true, focused, foreground: isForeground() });
+    // Invalidate synchronously: returning before a notice response must not revive the earlier choice.
+    if (preparation.current.key !== sourceKey || (preparation.current.focused && !focused))
+        ++preparation.current.generation;
+    preparation.current.key = sourceKey;
+    preparation.current.focused = focused;
+    const [intent, setIntent] = useState<PreparationIntent | null>(null);
+    const invalidatePreparation = useCallback(() => { ++preparation.current.generation; setIntent(null); }, []);
+    const validIntent = useCallback((choice: PreparationIntent) => {
+        const p = preparation.current;
+        return p.active && p.focused && p.foreground && isForeground() && choice.key === p.key && choice.generation === p.generation;
+    }, []);
+    useEffect(() => {
+        preparation.current.active = true;
+        const subscription = AppState.addEventListener('change', state => {
+            preparation.current.foreground = state === 'active';
+            if (!preparation.current.foreground) invalidatePreparation();
+        });
+        const visibility = () => {
+            preparation.current.foreground = isForeground();
+            if (!preparation.current.foreground) invalidatePreparation();
+        };
+        if (Platform.OS === 'web' && typeof document !== 'undefined') document.addEventListener('visibilitychange', visibility);
+        return () => {
+            preparation.current.active = false;
+            ++preparation.current.generation;
+            subscription.remove();
+            if (Platform.OS === 'web' && typeof document !== 'undefined') document.removeEventListener('visibilitychange', visibility);
+        };
+    }, [invalidatePreparation]);
     useEffect(() => { if (quiz.identityKey && focused && quiz.snapshot)
         void quiz.loadHistory(); }, [quiz.identityKey, focused, quiz.snapshot?.history_version, quiz.loadHistory]);
-    useEffect(() => { if (intent && focused && quiz.snapshot?.preferences.notice_version === TIMED_QUIZ_NOTICE_VERSION) {
-        setIntent(null);
-        void round.start(intent.topic, intent.sport, intent.duration);
-    } }, [intent, focused, quiz.snapshot?.preferences.notice_version, round.start]);
-    const home = () => { round.leave('left_page'); router.replace(ROLE_HOME[auth.role] as Href); };
-    const back = () => { round.leave('left_page'); if (router.canGoBack())
+    useEffect(() => {
+        if (!intent) return;
+        if (!validIntent(intent)) { setIntent(null); return; }
+        if (quiz.snapshot?.preferences.notice_version === TIMED_QUIZ_NOTICE_VERSION) {
+            setIntent(null);
+            void round.start(intent.topic, intent.sport, intent.duration);
+        }
+    }, [intent, focused, sourceKey, quiz.snapshot?.preferences.notice_version, round.start, validIntent]);
+    const home = () => { invalidatePreparation(); round.leave('left_page'); router.replace(ROLE_HOME[auth.role] as Href); };
+    const back = () => { invalidatePreparation(); round.leave('left_page'); if (router.canGoBack())
         router.back();
     else
         router.replace(ROLE_HOME[auth.role] as Href); };
-    const start = async (topic: TimedQuizTopic, sport: string | null, duration: 30 | 90) => { if (!s)
-        return; if (s.preferences.notice_version !== TIMED_QUIZ_NOTICE_VERSION) {
-        const receipt = await quiz.savePreferences({ invitation_mode: s.preferences.invitation_mode, topic_mode: s.preferences.topic_mode, notice_version: TIMED_QUIZ_NOTICE_VERSION });
-        if (!receipt)
+    const start = async (topic: TimedQuizTopic, sport: string | null, duration: 30 | 90) => {
+        if (!s) return;
+        const choice = { topic, sport, duration, key: sourceKey, generation: preparation.current.generation };
+        if (!validIntent(choice)) return;
+        if (s.preferences.notice_version !== TIMED_QUIZ_NOTICE_VERSION) {
+            const receipt = await quiz.savePreferences({ invitation_mode: s.preferences.invitation_mode, topic_mode: s.preferences.topic_mode, notice_version: TIMED_QUIZ_NOTICE_VERSION });
+            if (receipt && validIntent(choice)) setIntent(choice);
             return;
-        setIntent({ topic, sport, duration });
-        return;
-    } await round.start(topic, sport, duration); };
+        }
+        await round.start(topic, sport, duration);
+    };
     return <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
  <View style={{ flexDirection: 'row', gap: 12 }}><QuizButton label="Back" quiet onPress={back}/><QuizButton label="Account Home" quiet onPress={home}/></View>
  <Text accessibilityRole="header" style={{ fontSize: 28 }}>Sport Pop Quiz</Text><Text>Optional timed trivia · Testing only</Text>
