@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import {  type SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Browser-safe Supabase helpers only — no `next/headers` import here. `getSupabaseServerClient` (the
@@ -19,20 +19,6 @@ export function getSupabaseBrowserClient(): SupabaseClient | null {
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
   if (!url || !anon) return null;
   return createBrowserClient(url, anon);
-}
-
-/**
- * @purpose Service-free anon client for contexts with no session (kept for callers that explicitly want the
- *   bare public client, e.g. pre-login env checks). Prefer `getSupabaseServerClient` (`lib/supabase.server.ts`)
- *   for Server Component data loaders.
- */
-export function getSupabaseAnonClient(): SupabaseClient | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  if (!url || !anon) return null;
-  return createClient(url, anon, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 }
 
 export function isAdminPortalConfigured(): boolean {

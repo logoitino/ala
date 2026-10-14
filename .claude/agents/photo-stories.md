@@ -26,8 +26,8 @@ These are navigation/ownership hints, not claims that hosted resources exist. Re
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** UX-05b: build `lib/photoStories.ts` to the design contract with UPLOAD — 1–10 photos, reorder, descriptions ≤ 200, nothing published on partial failure, retry keeps the draft, Photos hidden when the RPC/columns are missing; unit tests for `movePhoto`, availability fallback and the RPC payload.
-- **Next (prepare; release gates still apply):** Real-device orientation-after-stripping and picker checks with DEVICE_QA; edit/reorder an existing story through `setStoryPhotos` once the migration is applied by an authorized owner.
+- **Now (Wave 0, local/internal test):** Maintain the locally implemented UX-05b upload/data flow with UPLOAD — 1–10 photos, reorder before publishing, descriptions ≤ 200, nothing published on partial failure, retry keeps the draft, Photos hidden when the RPC/columns are missing. Existing unit tests cover `movePhoto`, availability fallback and the RPC payload; current verification gaps are in WORK_QUEUE `UX-05e`.
+- **Next (prepare; release gates still apply):** Real-device orientation-after-stripping and picker checks with DEVICE_QA. The current `setStoryPhotos` / `set_reel_photos` contract is publish-once: it accepts an unpublished story or a retry, and rejects a published story. Editing or reordering a published story requires a future approved API and migration with rights, tag and ownership review; applying the existing migration does not enable editing.
 - **Later (gated):** Vault photo stories after the private bucket (W0-06); mixed video + photo stories, filters and per-photo athlete tags stay out of v1.
 
 ## Execute and report
@@ -43,3 +43,7 @@ None. Coordinate with `UPLOAD` and `PLAYBACK` (peers under `HIGHLIGHTS`) and int
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

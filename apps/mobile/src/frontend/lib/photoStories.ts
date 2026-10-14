@@ -21,6 +21,7 @@ import {
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { insertReelRow, uploadStoryPhoto } from '@/services/MediaUploadService';
 import type { Reel } from '@/types/database';
+import { isMissingFunction, isMissingRelation } from '@/lib/dbErrors';
 
 /**
  * A publish attempt failed after the story's reel row existed. `reelId` lets the caller retry on the same
@@ -66,15 +67,6 @@ function errorMatches(error: PostgrestErrorLike, pattern: RegExp): boolean {
   return pattern.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
-/** The view or table is not deployed yet (Postgres 42P01, PostgREST PGRST205 / schema cache). */
-function missingRelation(error: PostgrestErrorLike): boolean {
-  return errorMatches(error, /42P01|PGRST205|PGRST200|does not exist|could not find the table|schema cache/i);
-}
-
-/** The RPC is not deployed yet (PGRST202 / 42883). */
-function missingRpc(error: PostgrestErrorLike): boolean {
-  return errorMatches(error, /PGRST202|42883|could not find the function|schema cache/i);
-}
 
 /** The request never reached PostgREST (offline, DNS, timeout): worth re-checking on the next open. */
 function transportFailure(error: PostgrestErrorLike): boolean {
@@ -149,7 +141,7 @@ export async function fetchStoryPhotos(reelIds: string[]): Promise<Record<string
     .in('reel_id', ids)
     .order('position', { ascending: true });
   if (error) {
-    if (missingRelation(error)) return {};
+    if (isMissingRelation(error)) return {};
     throw new Error('Photos could not load. Check your connection and try again.');
   }
   const byReel: Record<string, StoryPhoto[]> = {};
@@ -202,7 +194,7 @@ export async function setStoryPhotos(
       const published = await publishedPhotoCount(reelId);
       if (published > 0) return published;
     }
-    throw new Error(missingRpc(error) ? 'Photo stories are not available yet.' : error.message || 'Could not save the photos.');
+    throw new Error(isMissingFunction(error) ? 'Photo stories are not available yet.' : error.message || 'Could not save the photos.');
   }
   const count = typeof data === 'number' ? data : Number(data);
   if (!Number.isInteger(count) || count < 1 || count > PHOTO_STORY_MAX_PHOTOS) {
@@ -233,7 +225,7 @@ async function probePhotoStories(): Promise<{ available: boolean; definitive: bo
     const rpc = await db.rpc('set_reel_photos', { p_reel_id: PROBE_REEL_ID, p_photos: [] });
     if (rpc.error) {
       if (transportFailure(rpc.error)) return { available: false, definitive: false };
-      if (missingRpc(rpc.error)) return { available: false, definitive: true };
+      if (isMissingFunction(rpc.error)) return { available: false, definitive: true };
       // An error with no code and no message cannot prove the function exists.
       if (!rpc.error.code && !rpc.error.message?.trim()) return { available: false, definitive: true };
     }

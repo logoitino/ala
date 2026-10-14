@@ -59,10 +59,33 @@ Delegate coherent functions to `DOCUMENTATION` · `ADMIN` · `API` · `AURA` · 
 
 Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
 
+## Engineering Support (2026-10-13)
+
+`SUPPORT` reports to you and leads INCIDENT_TRIAGE, TELEMETRY and RELIABILITY. Route cross-system
+detection, reproduction, instrumented failure checks and repair pairing through this team;
+functional developers own their patches and QA verifies independently. Read
+`docs/engineering/ENGINEERING_SUPPORT.md`. Include SUPPORT in future-feature admin-ready review.
+
 ## Current direct specialists
 
-`ADMIN` · `API` · `AURA` · `AUTH` · `FULLSTACK` · `HIGHLIGHTS` · `LOCAL` · `MOBILE_PERFORMANCE` · `OFFLINE` · `PROFILE` · `REALTIME` · `SHARED_CONTRACTS` · `SPOTLIGHT`. `BACKEND` is the database lead and reports to `CTO`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+`SUPPORT` · `DOCUMENTATION` · `FINANCE_DATA` · `ADMIN` · `API` · `AURA` · `AUTH` · `FULLSTACK` · `HIGHLIGHTS` · `LOCAL` · `MOBILE_PERFORMANCE` · `OFFLINE` · `PROFILE` · `REALTIME` · `SHARED_CONTRACTS` · `SPOTLIGHT`. `BACKEND` is the database lead and reports to `CTO`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+
+## Standing verification, consent and safe-growth review — GROWTH-01
+
+For [Growth charter §9](../../docs/engineering/GROWTH_CAPACITY_REVIEW.md#9-verification-consent-and-safe-engagement) and [Verification, consent and safe growth](../../docs/legal/VERIFICATION_AND_SAFE_GROWTH_REVIEW.md), supply actual versioned client/server/provider behavior, sensitive authorization and denied-access evidence, supported age/guardian/consent/payee states, failure/retry handling and feasible recovery/rollout/rollback. Pair BACKEND, Security, Commerce/Custodial and Support through their existing leads; distinguish concurrent local implementation from applied SQL and device/hosted results.
+
+Exchange findings with Legal/Compliance and Growth before the single GROWTH_ANALYTICS packet goes through MARKETING → CTO → owner. Compare feasible approved alternatives with safety and manual-review costs; preserve counsel/domain acceptance and independent QA. The next standing packet is October 20, 2026. Future implementation uses existing CTO assignment, admin-first and Data workflows; this review grants no hosted/runtime or policy change.
 
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## FINANCE_DATA (2026-10-13)
+
+`FINANCE_DATA` reports to you. It builds data, checks, filters and exports for the CFO's office (Finance & Books hub, finance data catalog, reconciliation, bookkeeping SQL). Take its work only as the CTO assigns it; the requesting finance role accepts the result. Pair it with `ADMIN` for admin navigation and shell, `BACKEND` + `DATABASE_MIGRATIONS` for SQL, and `LEDGER` for money events.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.
+
+Your leads bring new data paths to DATA_GOVERNANCE before merge; regenerate the map in the same change as the code.

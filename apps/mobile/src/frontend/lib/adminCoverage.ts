@@ -5,7 +5,7 @@
  */
 
 import type { AdminNavHref } from '@/lib/admin';
-import { getRuntimeFlag, type AppRuntimeConfig, type AppRuntimeFlagPath } from '@/lib/runtime';
+import {   type AppRuntimeFlagPath } from '@/lib/runtime';
 
 export type CoverageSurface =
   | 'home'
@@ -193,11 +193,3 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'sponsor_sideline', label: 'Place sideline board', hint: 'sponsor_ads', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/boosters', flag: 'layouts.sponsorHq', telemetry: 'sponsor_sideline' },
   { id: 'sponsor_rivalry', label: 'Publish rivalry banner', hint: 'sponsor_ads', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/boosters', flag: 'layouts.sponsorHq', telemetry: 'sponsor_rivalry' },
 ];
-
-/**
- * @purpose Count live vs paused fan controls for Overview and Coverage.
- */
-export function coverageHealth(live: AppRuntimeConfig): { total: number; liveCount: number; paused: number } {
-  const paused = COVERAGE_CONTROLS.filter((item) => item.flag && !getRuntimeFlag(live, item.flag)).length;
-  return { total: COVERAGE_CONTROLS.length, liveCount: COVERAGE_CONTROLS.length - paused, paused };
-}

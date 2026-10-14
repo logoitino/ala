@@ -56,7 +56,7 @@ function parseRows(rows: unknown): Sponsorship[] {
 }
 
 /**
- * @purpose Upload a booster logo to Storage `avatars` under `sponsors/`.
+ * @purpose Upload a booster logo to Storage `avatars` under `sponsors/{user id}/`.
  * `game_highlights` only allows video MIME types, and a React Native Blob is `text/plain`.
  * @param localUri Image picker URI.
  * @returns Public URL, or the original URI when Storage is missing.
@@ -69,7 +69,9 @@ export async function uploadSponsorLogo(localUri: string): Promise<string> {
     const contentType = imageContentType(localUri);
     const ext = contentType === 'image/png' ? 'png' : contentType === 'image/webp' ? 'webp' : 'jpg';
     const body = await bytesFromUri(localUri);
-    const path = `sponsors/${Date.now()}.${ext}`;
+    // Own folder: Storage only lets a user overwrite files under sponsors/{their id}/ (20261013230000).
+    const { data: auth } = await supabase.auth.getUser();
+    const path = auth.user?.id ? `sponsors/${auth.user.id}/${Date.now()}.${ext}` : `sponsors/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from(AVATARS_BUCKET).upload(path, body, {
       contentType,
       upsert: true,

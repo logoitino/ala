@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main, dev ]
 
+# Least privilege for every job (ENVIRONMENTS_AND_HOSTING §4): checks read the repository and nothing else.
+permissions:
+  contents: read
+
 jobs:
   build-and-check:
     runs-on: ubuntu-latest
@@ -71,11 +75,45 @@ jobs:
       - name: Every source file has a header comment (docs/engineering/CONVENTIONS.md §5)
         run: pnpm comments:check
 
+      - name: Data map (every table, function and export owned and connected)
+        run: pnpm data:map:check
+
+      - name: No unused imports, variables or private helpers (CODE_HYGIENE)
+        run: pnpm code:unused
+
+      # The canonical schema must rebuild from nothing and keep its access rules (ENVIRONMENTS_AND_HOSTING §4).
+      # PGlite (Postgres compiled to WebAssembly) is pinned by hash; it is not a repo dependency.
+      - name: Database rebuilds from scratch and keeps its access rules (schema and migration replays)
+        run: |
+          curl -fsSL -o /tmp/pglite.tgz https://registry.npmjs.org/@electric-sql/pglite/-/pglite-0.5.9.tgz
+          echo "1a841344c67fa38277b0c5b898b0ed0c518d3a6d71cb9a07fa21c300b5a5977b84458e8e1780529cbd6dec5647d8c970f913dc78306514981269e70eef773810  /tmp/pglite.tgz" | sha512sum -c -
+          mkdir -p /tmp/pglite && tar -xzf /tmp/pglite.tgz -C /tmp/pglite
+          node scripts/replay/schema-replay.mjs /tmp/pglite/package/dist
+          node scripts/replay/books01-ledger-replay.mjs /tmp/pglite/package/dist supabase/migrations/20261012210000_bookkeeping_ledger.sql
+          node scripts/replay/data01-closures-replay.mjs /tmp/pglite/package/dist supabase/migrations/20261013120000_data_governance_closures.sql
+          node scripts/replay/support-replay.mjs /tmp/pglite/package/dist
+
+      - name: Engineering Support detection catalog and scanner regression checks
+        run: pnpm detection:test && pnpm detection:check
+
+      - name: Source recovery integrity and isolated restore regression checks
+        run: pnpm recovery:test
+
+      - name: Future feature admin contract gates
+        run: pnpm feature-admin:test && pnpm feature-admin:check
+
       - name: Specialist roster agrees with agent files and hierarchy
         run: pnpm agents:check
 
       - name: Run mobile unit tests
         run: pnpm --filter @tapuai/mobile test -- --ci
 
+      - name: Run separate Next admin library regression tests
+        working-directory: apps/admin-portal
+        run: node --import ./lib/analytics-resolver.mjs --test lib/*.test.ts
+
       - name: Check for Leaked Backend Keys (Security Bot)
         run: pnpm security:client-keys
+
+      - name: No Social Security numbers in code (SSNs go to Stripe only)
+        run: pnpm security:no-ssn

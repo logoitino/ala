@@ -42,6 +42,7 @@ import { setPlayerVaultLocked } from '@/lib/vault';
 import { fetchRecentTips } from '@/lib/finance';
 import { FOCAL } from '@/theme/motion';
 import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
+import { PrivacySettingsSheet } from '@/components/Profile/PrivacySettingsSheet';
 
 const FAN_SELF_PREFIX = 'fan-self';
 
@@ -69,6 +70,7 @@ export default function MyHubTab() {
   const [legalOpen, setLegalOpen] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [flipOpen, setFlipOpen] = useState(false);
   const [vaultLockBusy, setVaultLockBusy] = useState(false);
@@ -457,7 +459,8 @@ export default function MyHubTab() {
       <RoleSwitcherModal visible={roleSheetOpen} onClose={() => setRoleSheetOpen(false)} />
       <LegalModal visible={legalOpen} onClose={() => setLegalOpen(false)} />
       <VerifyAthleteModal visible={verifyOpen} onClose={() => setVerifyOpen(false)} />
-      <EditProfileModal visible={editProfileOpen} onClose={() => setEditProfileOpen(false)} />
+      <EditProfileModal visible={editProfileOpen} onClose={() => setEditProfileOpen(false)} onOpenPrivacy={() => setPrivacyOpen(true)} />
+      <PrivacySettingsSheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
       <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />
     </TabScreen>
   );

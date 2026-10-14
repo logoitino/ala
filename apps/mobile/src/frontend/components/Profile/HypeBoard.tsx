@@ -7,7 +7,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
-import { PLAY_REACTIONS, type PlayReactionId } from '@/data/players';
+import {  type PlayReactionId } from '@/data/players';
 import { formatCompactCount, type PlayerHype } from '@/lib/hype';
 
 type HypeBoardProps = {

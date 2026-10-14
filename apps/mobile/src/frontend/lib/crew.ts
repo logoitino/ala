@@ -1,12 +1,15 @@
 /**
  * The Crew: follow an athlete, see Crew and Squad counts, and whether the follow is mutual ("Teammates").
- * @sideEffects `get_crew_graph` and `toggle_crew_follow` RPCs.
+ * Crew alerts (DATA-01-F2): the queue `set_reel_flash_unlock` fills is read on Activity and cleared by the fan.
+ * @sideEffects `get_crew_graph` and `toggle_crew_follow` RPCs; `crew_push_queue` SELECT (own rows); `clear_my_crew_alerts` RPC.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { FLASH_UNLOCK_HOURS } from '@/data/exclusive';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isMissingFunction } from '@/lib/dbErrors';
+import { untypedRpc } from '@/lib/rpc';
 
 export type CrewGraph = {
   crew_count: number;
@@ -186,4 +189,32 @@ export async function setReelFlashUnlock(reelId: string): Promise<FlashUnlockRes
     .eq('id', reelId);
   if (updateError) throw updateError;
   return { flash_unlock_until: fallbackUntil, notified_count: 0 };
+}
+
+export type CrewAlert = { id: string; title: string; body: string; reelId: string | null; athleteId: string | null; createdAt: string };
+
+/**
+ * @purpose The signed-in fan's Crew alerts (Flash unlocks from athletes they follow), newest first.
+ *   RLS returns only the caller's rows; a guest or a missing table returns an empty list.
+ * @sideEffects `crew_push_queue` SELECT.
+ */
+export async function fetchMyCrewAlerts(limit = 20): Promise<CrewAlert[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.from('crew_push_queue').select('id, title, body, reel_id, athlete_id, created_at').order('created_at', { ascending: false }).limit(limit);
+  if (error || !Array.isArray(data)) return [];
+  return (data as { id: string; title: string | null; body: string | null; reel_id: string | null; athlete_id: string | null; created_at: string }[]).map((row) => ({
+    id: row.id, title: row.title ?? '', body: row.body ?? '', reelId: row.reel_id, athleteId: row.athlete_id, createdAt: row.created_at,
+  }));
+}
+
+/**
+ * @purpose Clear every Crew alert for the signed-in fan, so the queue never grows without end.
+ * @returns How many alerts were cleared.
+ * @sideEffects `clear_my_crew_alerts` RPC.
+ */
+export async function clearMyCrewAlerts(): Promise<number> {
+  if (!isSupabaseConfigured) return 0;
+  const { data, error } = await untypedRpc<number | null>('clear_my_crew_alerts');
+  if (error) throw new Error(isMissingFunction(error) ? 'Clearing alerts is not switched on yet.' : error.message || 'Could not clear alerts.');
+  return Number(data) || 0;
 }

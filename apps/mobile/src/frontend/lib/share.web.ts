@@ -7,9 +7,10 @@ import * as Clipboard from 'expo-clipboard';
 
 import { formatGiftUrl, normalizeAthleteHandle, shareQrSubtitle } from '@/data/share';
 import { handleFromName } from '@/lib/aura';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 import type { GiftQrTarget } from '@/lib/share.types';
+import { getPublicProfiles } from '@/lib/privacy';
 
 export type { GiftQrTarget } from '@/lib/share.types';
 
@@ -54,11 +55,8 @@ export async function lookupPlayerByHandle(
 ): Promise<{ playerId: string | null; name: string; username: string } | null> {
   const handle = normalizeAthleteHandle(rawHandle);
   if (!isSupabaseConfigured) return { playerId: null, name: handle, username: handle };
-  const { data } = await supabase
-    .from('profiles')
-    .select('player_id, full_name, username')
-    .ilike('username', handle)
-    .maybeSingle();
+  // An exact-handle lookup that applies privacy (PRIV-01); name and username stay public.
+  const data = (await getPublicProfiles({ handle }))[0] ?? null;
   if (!data) return { playerId: null, name: handle, username: handle };
   return {
     playerId: typeof data.player_id === 'string' ? data.player_id : null,

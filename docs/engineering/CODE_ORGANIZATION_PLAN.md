@@ -79,6 +79,10 @@ production database is only safe once the schema can be rebuilt from migrations.
 
 ### R3 — production environment
 
+Hosting options (stay on Supabase, self-host on AWS / Azure, or managed cloud services), the environment table
+and the merge-to-deploy pipeline are in [ENVIRONMENTS_AND_HOSTING.md](ENVIRONMENTS_AND_HOSTING.md) (2026-10-13);
+its phases E0–E3 implement R2's CI replay and the R3 checklist below.
+
 The table describes the **target**, not the current deployment. Development and staging
 projects exist, but `app.json` is still static, automatic database deployment is not configured,
 production is not created and side-by-side installation is not verified. All R3 checkboxes

@@ -19,6 +19,9 @@ import {
   setVerificationStatus,
   type AdminPerson,
 } from '@/lib/adminCatalog';
+import { PrivacyReport, PrivacySafetyPanel } from '@/components/Admin/PrivacySafetyPanel';
+import { useAdminAction } from '@/hooks/useAdminAction';
+import { revokeVerification } from '@/lib/adminControls';
 import type { VerificationRequest } from '@/types/database';
 
 type PeopleFilter = 'all' | 'admin' | 'unverified' | 'verified' | 'fans';
@@ -32,10 +35,10 @@ export function PeopleTool() {
   const [queue, setQueue] = useState<VerificationRequest[]>([]);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<PeopleFilter>('all');
+  // One person's Privacy & safety panel open at a time (PRIV-01).
+  const [privacyOpen, setPrivacyOpen] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -75,19 +78,9 @@ export function PeopleTool() {
     });
   }, [filter, people, query]);
 
-  const act = async (id: string, work: () => Promise<void>, ok: string) => {
-    setMessage(null);
-    setBusyId(id);
-    try {
-      await work();
-      setMessage(ok);
-      await refresh();
-    } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : 'Could not update this person.');
-    } finally {
-      setBusyId(null);
-    }
-  };
+  const { busy: busyId, message, run } = useAdminAction(refresh);
+  const act = (id: string, work: () => Promise<void>, ok: string) =>
+    run(id, async () => { await work(); return ok; }, 'Could not update this person.');
 
   /**
    * @purpose Compliance kill switch (LEGAL_BRIEFING.md §8 item 5): honor a written direction from a
@@ -137,6 +130,25 @@ export function PeopleTool() {
     );
   };
 
+  /**
+   * Revoke through the verification ladder (DATA-01 F4): clears the badge, the athlete link and the ladder
+   * status with a note, which a plain Unverify does not. A database without the RPC says so instead.
+   */
+  const confirmRevoke = (person: AdminPerson) => {
+    Alert.alert(
+      'Revoke verification and unlink?',
+      `${person.full_name} loses the verified badge AND the link to their athlete roster row. Verify alone will not restore the link; they would claim their athlete again. Use this for a wrong or fake claim.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Revoke and unlink',
+          style: 'destructive',
+          onPress: () => void act(person.id, () => revokeVerification(person.id, 'Revoked from the People desk'), 'Verification revoked and athlete unlinked.'),
+        },
+      ],
+    );
+  };
+
   const confirmAdmin = (person: AdminPerson) => {
     const next = !person.is_admin;
     Alert.alert(
@@ -169,7 +181,8 @@ export function PeopleTool() {
         text={`${fanCount} fan profiles · ${fansWeek} Soft-Wall signups in 7d. Guests browse without a row until they hit Donate / Crew / gear goals.`}
         tone="ok"
       />
-      <AdminNotice text={message} />
+      <AdminNotice text={message?.text ?? null} tone={message?.tone} />
+      <PrivacyReport />
       {pending.length > 0 ? (
         pending.map((row) => (
           <AdminRow key={row.id} title={row.full_name} meta={`Verification · ${row.notes || 'Pending'}`}>
@@ -229,6 +242,7 @@ export function PeopleTool() {
               disabled={busyId === person.id}
               onPress={() => confirmVerified(person)}
             />
+            {person.is_verified ? <AdminBtn label={busyId === person.id ? '…' : 'Revoke and unlink'} kind="danger" disabled={busyId === person.id} onPress={() => confirmRevoke(person)} /> : null}
             <AdminBtn
               label={busyId === person.id ? '…' : person.is_admin ? 'Revoke admin' : 'Grant admin'}
               kind={person.is_admin ? 'danger' : 'primary'}
@@ -241,6 +255,11 @@ export function PeopleTool() {
               disabled={busyId === person.id}
               onPress={() => confirmFreeze(person)}
             />
+            <AdminBtn
+              label={privacyOpen === person.id ? 'Hide privacy' : 'Privacy & safety'}
+              onPress={() => setPrivacyOpen(privacyOpen === person.id ? null : person.id)}
+            />
+            {privacyOpen === person.id ? <PrivacySafetyPanel key={person.id} profileId={person.id} name={person.full_name} /> : null}
           </AdminRow>
         ))
       )}

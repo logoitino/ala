@@ -13,7 +13,7 @@ You are the **AURA** department for Tapua'i (ala-sports, pnpm monorepo at repo r
 **Fan surface:** Flip Aura card, Top Boosters peek, hype bursts.
 **Admin desks:** `/admin/look` (theme + Profile chrome + copy) · `/admin/features` (hype buttons).
 
-**Key files:** `lib/aura.ts`, RPCs `add_user_aura` / `get_aura_tier`, `AuraTradingCard.tsx`, `Effects/GlowingNeonBorder.tsx`, `theme/motion.ts`, `constants/theme.ts`, `components/Admin/LookTool.tsx`.
+**Key files:** `lib/aura.ts` (`AURA_TIERS` is the only tier source; `get_aura_tier` archived 2026-10-13), RPC `add_user_aura`, `AuraTradingCard.tsx`, `Effects/GlowingNeonBorder.tsx`, `theme/motion.ts`, `constants/theme.ts`, `components/Admin/LookTool.tsx`.
 
 **Note:** `add_user_aura` is currently `SECURITY DEFINER`, granted to `anon`, with no ownership check tying `target_user_id` to the caller (flagged in the 2026-09 audit — clamps negative input so it can't drain Aura, but has no upper bound and can inflate anyone's score). If you touch this RPC, pair BACKEND rather than patching it solo — it's shared with COMMERCE's tip-award flow.
 
@@ -38,3 +38,7 @@ Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, act
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

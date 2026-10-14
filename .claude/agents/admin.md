@@ -45,4 +45,33 @@ Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, act
 
 ## Documentation handoff
 
+## Main admin integration — ADM-02 (2026-10-12)
+
+The owner selected the report design shown at local `:3033` and authorized one full
+admin experience. Expo `/admin` is the main portal: report tabs and Analytics/Departments
+plus every existing editing desk. Own integration, routes, navigation, `AdminShell`,
+`AdminChrome`, `lib/adminReports.ts` and `hooks/useAdminReports.ts`. PORTAL owns universal
+report presentation; SHARED_CONTRACTS owns platform-neutral report models. ANALYST and
+COMMERCE review their measures and ledger meaning. The Next client stays read-only.
+Follow [ADM-02](../../docs/agents/ADM-02.md) for current execution claims and evidence.
+No model pins change; owner-authorized Codex outside sessions are recorded separately.
+
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## Future feature handling
+
+Follow [FEATURE_ADMIN_WORKFLOW](../../docs/engineering/FEATURE_ADMIN_WORKFLOW.md) for
+every new capability: enroll before app implementation, review the source/admin/report/
+access/repair contracts, build and verify operational handling, then pass the selected
+admin-ready gate before app work. Preserve the earlier evidence and pass app-ready after
+app verification. Use existing desks/reports and the explicit presentation-only exemption
+when applicable. The registry gate only validates enrolled metadata/files/evidence; leads
+check enrollment and actual behavior. Existing release/SQL/model rules still apply.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.
+
+### Implemented DETECT-02 responsibility
+
+Owns `/admin/support` and Support components/adapter/hook. Four tabs share the main report format and preserve source availability, original review evidence and independent protected approval.

@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 
@@ -114,45 +113,4 @@ export function useAthleteSubscription(playerId: string | undefined) {
   }, [playerId, user?.id]);
 
   return { subscribed, grant, loading, refresh };
-}
-
-/**
- * @purpose Whether the signed-in fan holds any active exclusive pass (Subscriber Crest on Profile).
- * @returns `true` when `subscriptions` has an active row for the current user, else local cache.
- * @sideEffects `subscriptions` select; AsyncStorage `tapuai.exclusiveSub` fallback.
- */
-export function useHasSubscriberPass() {
-  const { user } = useAuth();
-  const [active, setActive] = useState(false);
-
-  const refresh = useCallback(async () => {
-    try {
-      if (user?.id && isSupabaseConfigured) {
-        const { data, error } = await supabase
-          .from('subscriptions')
-          .select('id')
-          .eq('subscriber_id', user.id)
-          .eq('status', 'active')
-          .limit(1);
-
-        if (!error && data && data.length > 0) {
-          setActive(true);
-          return;
-        }
-      }
-
-      const local = await AsyncStorage.getItem('tapuai.exclusiveSub');
-      setActive(local === '1');
-    } catch {
-      setActive(false);
-    }
-  }, [user?.id]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void refresh();
-    }, [refresh]),
-  );
-
-  return active;
 }

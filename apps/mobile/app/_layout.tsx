@@ -1,6 +1,6 @@
 /**
  * Root layout, the first thing the app renders: mounts every provider (runtime config, auth, soft wall,
- * celebration, upload sheet, Stripe) and the root navigation Stack. Status-bar colour follows the runtime theme.
+ * celebration, upload sheet, Stripe) and the root navigation Stack. Status-bar colour follows the runtime theme. Opt-in support observation preserves platform error handling.
  */
 
 import 'react-native-gesture-handler';
@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { SupportRuntimeObserver } from '@/components/Common/SupportRuntimeObserver';
 import { AuraToast } from '@/components/AuraToast';
 import { BackedCelebration } from '@/components/BackedCelebration';
 import { StudioPreviewBar } from '@/components/Admin/StudioPreviewBar';
@@ -33,6 +34,7 @@ function RuntimeApp() {
   const light = isLightCanvas(live.theme.background);
   return (
     <>
+      <SupportRuntimeObserver />
       <StatusBar style={light ? 'dark' : 'light'} />
       <View style={[styles.root, { backgroundColor: live.theme.background }]}>
         <Stack

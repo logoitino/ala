@@ -5,7 +5,10 @@
   "main": "index.ts",
   "types": "index.ts",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./admin": "./admin/index.ts",
+    "./admin/*": "./admin/*.ts",
+    "./admin/supportTopology.json": "./admin/supportTopology.json"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

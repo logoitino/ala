@@ -12,7 +12,7 @@ replaces the GoFundMe link families pass around today. Built as a **pnpm monorep
 
 | Path | What lives there |
 | --- | --- |
-| [`apps/mobile/`](apps/mobile) | Expo Router app (SDK 57): fan tabs, role HQs, operator console, and the Expo `/admin` control plane where every admin write happens. |
+| [`apps/mobile/`](apps/mobile) | Expo Router app (SDK 57): fan tabs, role HQs, operator console, and main `/admin` with reports, analytics and all administration controls. |
 | [`apps/admin-portal/`](apps/admin-portal) | Next.js oversight desk on port 3001. **Read-only by design.** |
 | [`packages/shared-types/`](packages/shared-types) | `@tapuai/shared-types`, TypeScript shapes shared by both apps. |
 | [`supabase/`](supabase) | Database SQL, timestamped [`migrations/`](supabase/migrations), and Edge Functions (Stripe checkout, Connect, webhook). |

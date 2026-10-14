@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { SchoolStaffPanel } from '@/components/Admin/SchoolStaffPanel';
 import { Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 
@@ -168,6 +169,7 @@ export function SchoolsTool() {
         {form.id ? <AdminBtn label="Clear form" onPress={() => setForm(empty)} /> : null}
         <AdminNotice text={message} />
       </AdminPanel>
+      {form.id ? <SchoolStaffPanel key={form.id} schoolId={form.id} schoolName={form.name || 'School'} /> : null}
       <AdminField label="Search" value={query} onChangeText={setQuery} placeholder="School, mascot, city" />
       {visible.length === 0 ? (
         <AdminEmpty text="No schools match this filter." />

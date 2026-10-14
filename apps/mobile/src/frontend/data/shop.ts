@@ -158,6 +158,3 @@ export function dripAuraForOrder(item: DripItem, quantity: number): number {
 export function dripMaxQty(item: DripItem): number {
   return Math.max(1, Math.round(item.inventory));
 }
-
-/** @deprecated Use `DRIP_ITEMS`. Kept so older shop imports keep compiling during the rename. */
-export const SHOP_ITEMS = DRIP_ITEMS;

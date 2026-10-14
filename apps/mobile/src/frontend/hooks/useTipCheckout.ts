@@ -17,13 +17,15 @@ import { exclusiveUnlockToast } from '@/data/exclusive';
 import { platformTipCentsFor } from '@/data/malo';
 import { displayValue, getTipCharge, auraPointsForTip } from '@/data/players';
 import { addUserAura, emitPlayerAura, emitProfileAura } from '@/lib/aura';
-import { resolveTipOrigin, type TipEntry, type TipOrigin } from '@/lib/finance';
+import { paymentIntentIdFromSecret, resolveTipOrigin, type TipEntry, type TipOrigin } from '@/lib/finance';
 import { createPaymentIntent, incrementBackerCount } from '@/lib/payments';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { NATIVE_STRIPE_UNAVAILABLE_MESSAGE, useStripe } from '@/lib/stripe';
+import { supportSignals } from '@/services/SupportSignalManager';
 import { telemetry } from '@/services/TelemetryManager';
 import type { Player } from '@/types/database';
 import { walletPayOptions } from '@/lib/walletPay';
+import { isMissingColumn } from '@/lib/dbErrors';
 
 export const MALO_DROPPED_KEY = 'tapuai.maloDroppedCount';
 
@@ -84,7 +86,7 @@ function applyAuraAward(
 /**
  * @purpose Native Stripe PaymentSheet for Mālo, exclusive subscribe, Drip, or booster sponsorships. Mālo grants Aura to the tipper and the athlete.
  * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may tip a reel.
- * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a donation (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
+ * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a donation (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`, `cover_fee_cents`, `stripe_payment_intent_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
  */
 export function useTipCheckout() {
   const { user, refreshProfile } = useAuth();
@@ -144,6 +146,7 @@ export function useTipCheckout() {
         telemetry.trackCheckoutLatency('init_sheet', Date.now() - initStartedAt);
 
         if (initError) {
+          supportSignals.capture({ feature: 'donation', code: 'payment_failed' });
           Alert.alert('Couldn’t start PaymentSheet', initError.message);
           return;
         }
@@ -152,7 +155,8 @@ export function useTipCheckout() {
         const { error: presentError } = await presentPaymentSheet();
         telemetry.trackCheckoutLatency('present_sheet', Date.now() - presentStartedAt);
         if (presentError) {
-          if (presentError.code === 'Canceled') return;
+          if (presentError.code === 'Canceled') { supportSignals.capture({ feature: 'donation', code: 'user_cancelled' }); return; }
+          supportSignals.capture({ feature: 'donation', code: 'payment_failed' });
           Alert.alert('Payment failed', presentError.message);
           return;
         }
@@ -188,7 +192,27 @@ export function useTipCheckout() {
             platform_tip_cents: platformTipCents,
             rally_id: rallyId ?? null,
           };
-          let { error: tipError } = await supabase.from('tips').insert(ledger);
+          // BOOKS-01: the covered card fee and the PaymentIntent id let the books match Stripe deposits.
+          const bookkeeping = {
+            cover_fee_cents: Math.max(0, donationChargeCents - Math.round(tipAmount * 100)),
+            stripe_payment_intent_id: paymentIntentIdFromSecret(clientSecret),
+          };
+          let { error: tipError } = await supabase.from('tips').insert({ ...ledger, ...bookkeeping });
+          // Before the bookkeeping migration those two columns are missing. Drop only them, so the
+          // channel, Rally and tip-to-Tapua'i columns are not lost to the broader retry below.
+          // Only a missing-column error (PostgREST PGRST204 / Postgres 42703) qualifies; a CHECK violation on these
+          // columns is a real problem and must not silently drop the fee and payment id.
+          const missingBooksColumn = isMissingColumn(tipError) && /cover_fee_cents|stripe_payment_intent_id/i.test(tipError?.message ?? '');
+          // A CHECK rejection of only these two fields must not cost the donation its record: keep the donation,
+          // and log a visible issue so Finance sees the fee or payment id was refused (Health report, Reconcile).
+          const rejectedBooksField = tipError?.code === '23514' && /tips_cover_fee_cents_check|tips_stripe_payment_intent_id_check/i.test(tipError?.message ?? '');
+          if (tipError && (missingBooksColumn || rejectedBooksField)) {
+            if (rejectedBooksField) {
+              telemetry.trackIssue('checkout.bookkeeping_fields_rejected', 'donate');
+              supportSignals.capture({ feature: 'donation', code: 'data_invalid' });
+            }
+            ({ error: tipError } = await supabase.from('tips').insert(ledger));
+          }
           const missingChannel =
             tipError?.code === '42703' ||
             /origin|entry|wishlist_item_id|source_label|platform_tip_cents|rally_id/i.test(tipError?.message ?? '');
@@ -203,6 +227,7 @@ export function useTipCheckout() {
             tipError = retry.error;
           }
           if (tipError) {
+            supportSignals.capture({ feature: 'donation', code: 'data_invalid' });
             tipInsertSucceeded = false;
             Alert.alert(
               'Donation not recorded',
@@ -255,6 +280,7 @@ export function useTipCheckout() {
         Alert.alert(paymentSucceeded ? 'Payment received — follow-up needed' : 'Payment failed',
           paymentSucceeded ? 'Your payment went through, but we could not finish updating your donation. Contact support before paying again.' : message);
         telemetry.trackIssue('checkout');
+        supportSignals.capture({ feature: 'donation', code: paymentSucceeded ? 'data_invalid' : 'payment_failed' });
       } finally {
         setBusy(false);
       }

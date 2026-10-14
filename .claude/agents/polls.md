@@ -33,6 +33,20 @@ Take one task ID from `docs/agents/WORK_QUEUE.md` when available. State acceptan
 
 Return: task ID; files changed; behavior and reason; checks actually run with results; evidence and remaining risks; hosted resources not verified; next owner/task; disposition **complete**, **needs integration**, or **blocked on <specific dependency>**. A checklist prepared, test unrun, or hosted migration unwitnessed is never a passed gate.
 
+## Family-fun standing packet — brainstorming follow-up
+
+With LOCAL/Product/Growth/LEADERBOARDS/Backend/Security/QA, report actual cheer-vote and admin lifecycle behavior: guest/device-local checks and retries lack a trusted participant ledger/idempotency; server closure and hidden-poll fallback need verification/repair. Existing counts cannot establish unique eligible people, a fair school winner or reliable pause. Refine the owner-selected free fan-ballot award separately from existing preset cheers. Staff checks eligibility/rights/safety; the entry with the most valid ballots wins, without a staff-preferred winner. No appearance contest, paid votes or spend/view/follower/stat weight.
+
+Before any fan-ballot award or trusted scored competition, propose one free ballot per eligible account/award window, lawful eligibility/deduplication, risk-proportionate abuse/rate limits, durable idempotency, closed windows/freeze/server pause and published ballot-change/tie/ineligible-correction/appeal rules with source evidence and loaded review costs. No blanket Stripe KYC; one account is not proof of a unique person. Coordinate frozen opt-in school cohorts and small-cell protections with LEADERBOARDS/School Partners/Privacy. Send gaps/options to the October 20, 2026 Growth packet; the next deliverable is focused brainstorming, not a new poll/award or implementation.
+
+Coordinate eligible per-entry public candidate permission/private acknowledgment and comparable candidate discovery with Product/Privacy/Highlights. Similar school nomination opportunities do not eliminate fanbase/network advantage. Existing guest/device counts cannot determine the new winner.
+
+Publish invalid-ballot handling and appeal/recount; investigate provenance before disqualifying an entrant targeted by malicious outside votes. Protect safety reasons and voter identities. Tie options must be disclosed before opening; proposed co-recognition preserves fan preference without staff substitution.
+
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

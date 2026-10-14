@@ -1,7 +1,10 @@
 /**
- * Wrapper for non-tab screens (role HQs, admin desks): safe-area edges plus the runtime background colour.
+ * Wrapper for non-tab screens (role HQs, admin desks): safe-area edges plus the runtime background colour. Feature containment keeps adjacent navigation usable.
  */
 
+import { usePathname } from 'expo-router';
+import { FeatureBoundary } from '@/components/Common/FeatureBoundary';
+import { supportFeatureForPath } from '@/services/supportRuntime';
 import { type ReactNode } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,10 +25,11 @@ export function ScreenShell({
   edges = ['bottom', 'left', 'right'],
 }: ScreenShellProps) {
   const { live } = useAppRuntime();
+  const pathname = usePathname();
   return (
     <SafeAreaView edges={edges} style={[styles.root, { backgroundColor: live.theme.background }, style]}>
       {isLightCanvas(live.theme.background) ? <MenuBackdrop /> : null}
-      {children}
+      <FeatureBoundary feature={supportFeatureForPath(pathname)} resetKey={pathname}>{children}</FeatureBoundary>
     </SafeAreaView>
   );
 }

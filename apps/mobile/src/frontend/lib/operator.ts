@@ -86,7 +86,9 @@ export async function saveOperatorCheckIn(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   if (!isSupabaseConfigured) return { ok: false, message: 'The operator database is not configured.' };
   try {
-    const { error } = await supabase.from('operator_checkins').insert({ latitude, longitude });
+    // About 1 km is all anyone reads, so exact GPS never leaves the phone; the database rounds again anyway.
+    const coarse = (value: number) => Math.round(value * 100) / 100;
+    const { error } = await supabase.from('operator_checkins').insert({ latitude: coarse(latitude), longitude: coarse(longitude) });
     if (error) return { ok: false, message: error.message || 'Could not save this field check-in.' };
     return { ok: true };
   } catch {
@@ -104,12 +106,6 @@ export type OperatorAction = {
   eventType: string;
   points: number;
 };
-
-export const OPERATOR_SCORE_STEPS = [
-  { points: 1, label: '+1', hint: 'Try' },
-  { points: 3, label: '+3', hint: 'Field Goal' },
-  { points: 6, label: '+6', hint: 'Touchdown' },
-] as const;
 
 export type OperatorCallout = {
   id: string;
@@ -222,17 +218,6 @@ export async function sendGameEventBroadcast(
     void supabase.removeChannel(channel);
   }
 }
-
-export const OPERATOR_CALLOUT_TYPES = OPERATOR_CALLOUTS.map((item) => item.eventType);
-
-export const OPERATOR_ACTIONS: OperatorAction[] = [
-  { id: 'td', label: 'Touchdown +6', eventType: 'Touchdown', points: 6 },
-  { id: 'fg', label: 'Field Goal +3', eventType: 'Field Goal', points: 3 },
-  { id: 'xp', label: 'Extra Point +1', eventType: 'Extra Point', points: 1 },
-  { id: 'safety', label: '+2 Safety / Conv', eventType: 'Safety', points: 2 },
-  { id: 'tackle', label: 'Big Tackle', eventType: 'Tackle', points: 0 },
-  { id: 'int', label: 'Interception', eventType: 'Interception', points: 0 },
-];
 
 const CLAIM_PREFIX = 'tapuai.operatorClaim.';
 
@@ -427,10 +412,6 @@ export async function persistOperatorClock(
   }
   if (error) throw new Error(error.message);
   return (data as Game | null) ?? { ...game, ...patch, clock: patch.clock ?? game.clock };
-}
-
-export function isOperatorCallout(eventType: string): boolean {
-  return OPERATOR_CALLOUT_TYPES.includes(eventType);
 }
 
 /**

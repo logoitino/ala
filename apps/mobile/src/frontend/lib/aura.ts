@@ -2,9 +2,6 @@ import type { Player } from '@/types/database';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { FOCAL } from '@/theme/motion';
 
-/** Default light collectible face when a tier wash is not yet resolved. */
-export const AURA_CARD_FACE = FOCAL.mistJade;
-
 export type AuraTier = {
   tier: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   min: number;

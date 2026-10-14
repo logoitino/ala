@@ -34,6 +34,24 @@ Take one task ID from `docs/agents/WORK_QUEUE.md` when available. State acceptan
 
 Return: task ID; files changed; behavior and reason; checks actually run with results; evidence and remaining risks; hosted resources not verified; next owner/task; disposition **complete**, **needs integration**, or **blocked on <specific dependency>**. A checklist prepared, test unrun, or hosted migration unwitnessed is never a passed gate.
 
+## Standing growth plans by user segment — GROWTH-01
+
+Supply the casual-uploader/repeat-filmer evidence for [User growth plans](../../docs/product/USER_GROWTH_PLANS.md) and [Growth charter §10](../../docs/engineering/GROWTH_CAPACITY_REVIEW.md#10-growth-plans-for-every-user-type) to GROWTH_ANALYTICS. Show first useful contribution, repeat eligible originals, cross-user coverage and accepted outcome/source gaps with action/privacy safeguards, manipulation/reversal/appeal risks, support/service cost and next owner/decision. Ordinary fans can contribute without a professional filmer role or donating.
+
+Explain current eligibility precisely: pending/unconfirmed, removed, own-athlete and self-award cases do not imply available Props/Aura; distinguish unread/error from empty stats. Uploader identity alone does not prove camera authorship: review honest posted-by/filmed-by attribution and public alias/recognition permission with Content Rights/Voice/Legal/Privacy. Proposed untagged recognition, reward reversals, later tagging and creator discovery need separate assignment/admin-first/domain acceptance; no new rewards or cash are implemented here. Exchange findings before the October 20 packet; 30/60/90 stages start from authorization and cash/later-wave gates remain.
+
+## Family-fun standing packet — brainstorming follow-up
+
+With HIGHLIGHTS/Product/Growth, refine owner-selected fan-ballot Fan of Game/Week recognition and proposed awesome-fan badges for eligible overlapping fan account holders. Staff checks published eligibility/rights/safety and offers appeals; the entry with the most valid free ballots wins. Define free entry, positive conduct/creativity/inclusion guidance, bounded windows, direct newcomers, tie/no-selection/correction rules and opt-in candidate visibility; no staff-preferred winner. No purchases, views/hype, followers, athlete statistics or prior awards add ballot points in any period. Preserve actual Props/Aura eligibility, pending/error states and truthful posted-by versus filmed-by credit; generic fan awards/badges are not implemented or automatically eligible for current filmer Aura.
+
+The owner wants both noncash recognition and money, in separate paths. Service/posting are voluntary before/after either; no service obligation, generic fan wallet, promised cash per upload or athlete-donation share is created. Future licensing/sponsored work/paid service/prizes require scoped Finance/Legal/Minor Safety/contract/tax review. Send permissions, manipulation/reversal risks, manual-review cost and next decisions to the October 20, 2026 single Growth packet; propose only, without enrollment or implementation.
+
+Public candidate permission is separate from whole-profile publicity; declining it preserves private acknowledgment, not an alternate winner. Coordinate fair discovery and similar school nomination opportunities while acknowledging network advantage. POLLS/LEADERBOARDS propose one eligible-account ballot/window, reliable tallies and proportionate abuse checks; no blanket Stripe KYC or claim of verified unique people.
+
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

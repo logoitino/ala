@@ -1,8 +1,298 @@
 # Changelog
 
+## 2026-10-13 — Refine the family-fun journey
+
+At the owner's request, FAMILY_FUN_PLAYBOOK §12 proposes one weekly Fan Zone entry point,
+private fan contribution/review/status, accessible newcomer acknowledgment versus awards,
+group/creator credit, selection alternatives, optional service/support and cooperative school
+recaps. Owner chooses fan voting selects the winner; revised direction assigns staff entry
+eligibility/rights/safety review and valid free ballots, with proposed server windows/retries,
+ties/corrections, candidate permissions and honest network-advantage limits. Growth charter/
+per-user plans/team duties reflect the choice; actual Product/Growth/Safety/Documentation
+review and local checks are recorded in GROWTH-01. This remains brainstorming, with no app
+implementation, new enrollment, public award, voting, service campaign or payment change.
+
+## 2026-10-13 — Family fun and fan recognition brainstorming
+
+Owner clarifies any eligible account holder can submit fun fan videos, with Fan of the
+Game/Week/Month/Year and awesome-fan badges, and confirms separate noncash recognition and
+money paths with voluntary service. New FAMILY_FUN_PLAYBOOK proposes free fan moments,
+athlete/family stories, service, recaps, fair school participation and newcomer-friendly
+reviewed recognition. Actual Codex Growth/Legal/source reviews exchanged findings; charter
+§11 and per-user plans integrate the concept into the one Growth packet. Existing polls
+and athlete Spotlight do not establish a safe/fair generic fan-award workflow. No new app
+feature, public contest, badge, prize, service campaign or earning model is implemented by
+this brainstorming work. Actual coordination/documentation/check results are in GROWTH-01.
+
+## 2026-10-14 — Minor accounts: age, guardian consent and supervision (MINOR-01)
+
+Sign-up asks for birth month and year instead of a 13+ checkbox; an under-13 date creates nothing (neutral message,
+24-hour pause on the device), and an under-13 entry later closes the account. Teens start private and take friend
+requests only from other teens. A teen can invite a parent or guardian with a one-time code; the adult signs a consent
+form (draft for counsel, marked testing only) and the link counts once the teen confirms. The guardian sees the teen's
+settings, safety counts (never who their friends are) and changes, and — for under-16s only — approves or declines going
+public or taking friend requests from anyone. The teen sees exactly what the guardian sees, and either can unlink or
+block. Consent unlocks a public profile and, from the guardian on record for the family account, payouts. Admin People
+desk: minor accounts report, case file, birth-month correction and link ending (with reasons), retention.
+Replaces the PRIV-01 guardian lock. Also: blocking someone who had tagged you now works, and a declined tag no longer
+names who declined. Migration `20261014110000_minor_accounts.sql` written, not applied.
+
+## 2026-10-13 — Fan/filmer mitigation and growth plans by user type
+
+Owner follow-up expands Growth's one-packet duties to every overlapping user segment, including
+non-donating fans and casual uploaders. Actual Codex Engineering/Legal/Growth reviews exchanged
+source findings: fan videos already allow Tag later without athlete/payee/pro-filmer status;
+photos retain athlete selection, and retag/recovery/media permission/share/donation-handoff/
+recognition gaps need explicit decisions. New product USER_GROWTH_PLANS contains per-segment
+value/acquisition/activation/repeat/contribution/outcomes, mitigation owners, staged 30/60/90
+day proposals and support/cost/safety acceptance. Growth charter §10 establishes plan cards
+and next Oct20 packet. Existing role/workflow coordination and actual checks are recorded in
+docs/agents/GROWTH-01.md. No app feature, campaign/outreach, cash incentive, hosted change or
+financial release is implemented by this planning work. Fresh full pnpm check exits 0:
+126 mobile suites/905 tests,191 doc destinations,106 roles and three registered features.
+Counts include concurrent MINOR integration; this plan changes no app source/tests. Hosted,
+media/device/provider, counsel and financial release gates remain separate.
+
+## 2026-10-13 — Verification, consent and safe growth review
+
+Actual outside-session Codex Legal, Growth and Dev reviews exchanged recommendations on
+guardians, Stripe, school athletes, public exposure, consent and engagement. New source
+review/decision packet documents observed local gaps, proposed verification tiers, notices,
+resumption/review safeguards, safety plus growth metrics and five owner decisions. Growth
+charter §9 establishes the standing joint checkpoint under the existing one-packet routing.
+Product policy, relationship-proof, payee/fees/held-money and launch decisions require the
+recorded counsel/domain and owner dispositions. External current policies could not be read;
+platform examples are explicitly unverified. MINOR-01 changed concurrently; report labels
+source observations and ongoing integration. Actual coordination/Documentation execution,
+checks and next owners are recorded in docs/agents/GROWTH-01.md. Full pnpm check failed at
+mobile typecheck (28 ongoing integration diagnostics); separate schema-doc check failed. Local
+doc destinations and 106-role alignment passed. This review adds no runtime controls, applied
+migrations, live money or release approval.
+
+## 2026-10-13 — Video scalability recommendation review
+
+Actual Codex media/reliability and cost/operations functions reviewed video hosting within
+GROWTH-01/SCALE-02. Hosting brief §11 recommends Mux as the provisional first technical
+experiment, with Bunny Stream and Cloudflare Stream in the initial equal-workload/full-cost
+comparison. Current prices/free eligibility/traffic/capacity remain unverified; no vendor is
+selected or established cheapest. Proposed video allocation fits inside infrastructure $50,
+separate from existing AI spending; no spending/cancellation/provider action performed.
+Source-backed upload/access/deletion/web-player gaps become admin-first/domain/QA/recovery
+acceptance work; existing media remains during a staged, authorized rollout. FPA current
+baseline, TEAMS shortlist and queue next owners synchronized; reporting/model pins intact.
+Actual tests/reviews/gates and released claims are recorded in the GROWTH-01 video follow-up.
+Independent Documentation accepted; existing focused unit checks passed three suites/48 tests
+and root full `pnpm check` passed 118 suites/867 tests, 186 doc destinations and 106 roles.
+Reviewed source/role/installed-SDK hashes match. Counts include concurrent shared-tree work;
+the video review changed no application source or tests.
+No runtime/schema/collector/new UI, hosted migration, real content export or rollout built.
+
+## 2026-10-13 — Owner-reported expense baseline
+
+Finance operations §6.1 records approximately $200/month AI, currently Free Supabase and
+undecided video hosting from the owner's reply. Existing $50/month infrastructure ceiling
+is separate from AI. Known reported recurring subtotal is $200/month; a fully used allowance
+would give $250/month/$3,000 annual AI-plus-infrastructure planning cost before other expenses.
+Invoices, provider limits, video cost and available cash remain unverified/unknown. Growth and
+hosting plans link this source; no journal entry, provider purchase, cancellation or migration.
+Independent Documentation accepted the baseline and arithmetic; full `pnpm check` passed
+118 suites/861 tests, 186 Markdown destinations and 106 agents. Private actual receipts:
+`.smoke/support/finance-cost-baseline-review.md`, `finance-cost-baseline-check.log` and
+`finance-cost-baseline-closeout.json` in the same directory.
+
+## 2026-10-13 — GROWTH-01 accountable growth and service review team
+
+Owner asked for one agent/team to measure app growth and success, recommend service options
+when credible numbers warrant a review, and submit decisions to CTO/owner. Reused
+GROWTH_ANALYTICS as accountable Growth and Capacity Review lead through MARKETING; ANALYST,
+COST_OPERATIONS, RELIABILITY, Data and Finance supply domain evidence and independent review.
+Established metric/source/target/quality contracts, per-service review thresholds, standing
+weekly/monthly/event review duties, provider selection baselines, a single decision packet
+and the first actual measurement-gap assessment. Current operating stage is internal test;
+MAU/cohort retention, current invoices/limits and production headroom remain unmeasured here.
+
+Reuses Analytics/Audience, Health/Support and Finance & Books rather than duplicating their
+metrics. Initial budget remains $50/month; 40/50 budget and 70/85% verified quota thresholds
+prompt diagnosis/recommendations. MAU checkpoints are proposed planning inputs, not accepted
+success targets or guaranteed capacity. Owner approves spend/vendor/migration; resulting
+implementation needs admin-first/Data/Finance/Security/QA gates. No collector, new admin UI,
+background scheduler, external tracker or hosted change was built in this operating setup.
+Actual coordination/documentation/full-gate evidence and claim release: docs/agents/GROWTH-01.md.
+Documentation accepted the charter and team assignment; all 106 role/reporting/model pins
+remain intact. Regenerated existing Team flow metadata and passed `pnpm check` (118 app
+suites/861 tests, 186 Markdown destinations, 106 roles). Next standing packet: October 20;
+live collection and source/target gaps remain assigned in the queue.
+
+## 2026-10-13 — Hosting budget and expansion options follow-up
+
+Owner selected an initial infrastructure ceiling of $50/month. Extended the existing
+HOSTING_DECISION_BRIEF (§10) with managed Supabase, own hardware/VPS, AWS/Azure managed stacks
+and other PostgreSQL options; proposed inexpensive dev/staging, gated production/recovery
+budgets, measured video/operating costs and an optional synthetic exit trial after R2.
+Linked the environment plan and docs index. This is a recommendation, with no host chosen,
+new spending, provisioning, data movement or service implementation.
+
+Fresh Claude review could not start: its launcher failed macOS sandbox_apply with exit 71,
+including the escalation attempt. Prepared a concrete read-only follow-up request; prior
+panel recommendations remain attributed historical context. Official-page bodies were blocked
+by input filtering, so prices/quotas/SLA references remain unverified planning assumptions.
+Documentation accepted the new proposal; quote-completeness feedback incorporated. Full
+`pnpm check` passed (118 app suites /861 tests, 184 Markdown destinations, 106 roles).
+Actual receipts and pending owners are recorded in the brief's follow-up handoff.
+
+## 2026-10-13 — HEALTH-01 task evaluation and bounded health repairs
+
+- Evaluated 62 current task IDs, all queue sections, specialist backlog and owner decisions;
+  reconciled nine ranked lanes and next owners. Existing local completions stay scoped to
+  their evidence; hosted/device/finance/counsel/recovery requirements remain open.
+- Repaired the existing TelemetryManager: 120 total queued/unresolved rows, batch 15,
+  10-second caller timeout, safe loss/status counters and no replay of an attempted uncertain
+  INSERT. Ignored aborts retain capacity; disposed singleton cannot spawn more stalled work.
+- Improved the QA desk with independent digest/device reads, one actual pending read per source,
+  stale/unmounted guards, accurate Clear/Unsave labels and unconfirmed write notices.
+  Local sampled delivery/loss/history does not imply fleet health or duplicate Health analysis.
+- Valid failure-before regressions, final logger 21/21 and QA 11/11, and independent reviews
+  support local acceptance. Fresh retained scan passed 117 suites/859 app tests and Next 86/86;
+  documentation, 106-role alignment and generated data/Team flow checks passed.
+- Root reviewed/tested the concurrent SQL repair without authoring or applying it. Frozen
+  current canonical replay 35/35 and all five exact cap boundaries/client vs trusted contexts
+  passed. Real tip INSERT/UPDATE state was checked; sponsorship/shop coverage is constraint
+  expression coverage. Earlier NULL-passing probe and a corrected RLS test assumption are
+  retained separately from current-source proof; hosted JWT/charge/transfer are unverified.
+- Actual Documentation and VP coordination receipts, source hashes and remaining owners are
+  in `docs/agents/HEALTH-01.md`. No hosted application, deployment, live money, scheduler or commit.
+
+## 2026-10-13 — COORD-01 documentation and team coordination
+
+Actual outside-session Codex Documentation and VP Operations passes completed locally and were
+reviewed/integrated by root. Corrected stale assignments, completed admin/Support/finance/data
+priorities, shared helper/source references and recovery evidence; retained historical records
+and hosted/device/counsel/owner gaps. Added required handoff receipts with actual executor,
+checked/changed paths, dated results, open issues and next owner. Reconciled all 106 reporting
+roles without changing leads/model pins; regenerated main-admin Team flow ownership and master
+data map. Fresh `pnpm check` passed after those updates: 115 suites /827 tests, 181 Markdown
+destinations, 106 roles and 2 feature contracts. Evidence/claim release: `docs/agents/COORD-01.md`.
+Duties are task-triggered; no unattended scheduler or continuously running worker is configured.
+No hosted application, deployment, live-money action or commit.
+
+## Historical STATE header captured 2026-10-13 before COORD-01
+
+This is a historical checkpoint snapshot, not the current task or failure status. Current status is in `docs/STATE.md`; earlier details are retained here when its header was made concise.
+
+**Last updated:** 2026-10-13 · STANDARD-01 innovation and outside-handoff standard documented: observed/potential struggles, bounded experiments and decision evidence, shared module contracts, engineer/legal/investor reading paths; existing agent and admin-first workflows linked, outside walkthroughs not performed · DETECT-02 main-admin Engineering Support built locally: four-tab desk, generated team/source diagram, restricted signals and protected false-positive reviews, transactional change audit, cybersecurity THREAT_DETECTION role (106 roles), bounded source capsules and isolated restore; admin-ready gate and 12 responsive/3 behavior browser checks passed; 144 SQL replay and 10 recovery checks pass; app-ready and full local gate passed (115 suites/827 tests, Next 86/86), hosted migration not applied · Archive naming rule (`.archived`, enforced), 12 missing-function checks merged into `lib/dbErrors.ts`, `useAdminAction` for admin desks, operator check-ins 30 days automatic and rounded at write (PRIVACY_ENGINEERING; replay 46/46) · Data governance closure pass + QA follow-up: 62 dead entries archived in two passes (owner approved), every dead-data finding closed with real readers/writers/admin controls, operator GPS table reads revoked, `pnpm code:unused` guard, buckets and feature switches in the data map, closures migration replayed 40/40 (not applied); `pnpm check` 103 suites / 700 tests · Engineering Support under Dev (existing SUPPORT, INCIDENT_TRIAGE, TELEMETRY, RELIABILITY; 105 agents), 14-sensor coverage map, retained local detection scan and six assigned runtime gaps; 10 scanner tests and review pass, latest full scan flags concurrent unfinished admin controls · Data Governance team (DATA_GOVERNANCE as the data control point, DATA_LINEAGE, CODE_HYGIENE; 105 agents) and the master data map with `pnpm data:map:check` in CI; 4 dead-data findings routed, 47 archive proposals awaiting the owner · Office of the CFO (10 finance/tax roles, 102 agents) and the Finance & Books hub (eight tabs, finance data catalog, reconciliation) built locally; bookkeeping migration revised after security/accounting/QA review and replayed 72/72 on Postgres, not applied · PLAY-01 browsing error repair in progress; CSS direct/worker probes pass, web-play promise fix and local-media verification underway · Admin data consolidation accepted locally: 18 Manage entries, all 24 saved routes, 64 measures and 13 Health checks retained; future-feature admin-first workflow integrated (611 app tests + 13 workflow tests, 60 responsive/geometry checks, 19 interactions; hosted/device checks pending) · Books desk (BOOKS-01) built locally at `/admin/books`: double-entry journal from the money tables, money held for families as a liability, tax-year pack, QuickBooks/general-ledger CSV export; bookkeeping migration written, not applied · Manage desks data ownership and compact directory accepted locally: 544 tests, ten browser checks and eight responsive reads · Main admin navigation polish accepted locally: desk search/browsing, report shortcuts, Home refresh and SVG warning fix; 535 tests, 29 responsive reads, 11 browser checks and iOS/Android HBC exports pass · ADM-02 main admin combined locally at :8081/admin: selected :3033 design, twelve reports and all 23 desks; 89 suites / 529 tests, Next build and iOS/Android exports pass; hosted/device checks pending · Local Expo launch recovered: native quarantine cleared, fresh web/iOS bundles and browser shell verified (78 suites / 443 tests); original historical loader error not reproduced · ADM-01 fix waves 1–3, readable event labels and the owner-chosen report format on every admin portal page are in place locally (uncommitted); `pnpm check` and portal tests 80/80 pass, and the final browser review is accepted (VISUAL_QA ACCEPT, ACCESSIBILITY PASS). The owner commits and merges. · All admin desks now follow Home’s report format; desktop/phone layouts, enlarged text, mouse controls and focus are verified locally. · The admin portal header now scrolls with the page to address hidden keyboard focus (ADM-01 follow-up; local keyboard focus verified, full portal re-review done and accepted: VISUAL_QA ACCEPT, ACCESSIBILITY PASS, 2026-10-12). · Every admin portal page now draws its numbers as charts with a written summary and a Data table. A missing number shows “—”, not $0.00. · A chosen cheer stays a white button with a colored edge, so it does not blend into the poll bar. The upload menu sits centered with Next under the choices. The Highlight bar is Home, search, and Local. · Analytics is eight dashboards and a measure catalog at `/analytics`, owned by `ANALYST`. · A video Highlight can post with Tag later and one permission line. Choosing an athlete no longer plays the clip inside the sheet. Donate stays off until an athlete is tagged. Photo stories still need an athlete. The night preview does not include this. · A downward swipe on a popup’s top bar closes it on a phone, and a finished upload drops the clip preview before the sheet closes. · The admin portal home is a measured dashboard, and the tabs are Home, Trends, Audience, Revenue, Health, and Product. · Swiping open the Highlight owner card no longer crashes the browser. · Popup menus close with a downward swipe. The admin portal Operations page tabs are Where, Buttons, Errors, and Menus. · The admin portal Departments page shows Billing, Marketing, Support, API, and IT on one read-only screen. `PORTAL` reports to `ADMIN`. · The preview server now has the confirmed test account `demo@tapuai.app`. Sign-in is Apple, Google, email, and password. The 13+ confirmation is only on Create an account. · Preview queued 2026-10-11 night. Android `5cca4a55-cfc3-4c58-9346-34b9e0433b27` and iOS `c5255651-06e3-4f46-9861-5a47ad1b434a`. They include the popup swipe and the upload black-screen fix. iOS still installs only on the one registered iPad. The evening builds `04244951` and `12d017d4` do not. · Guests can watch a shared Highlight and two more swipes, then the account sheet. Upload asks for an account before the composer. The test account stays on that sheet until a production build. · Redirect `alasports://auth/callback` is saved. Google sign-in stays in the sheet because the Google provider is still off. · A profile card edge and the next-tier line wear the earned Aura color. The Aura card control is filled with that same color. · One-time Exclusive is bought from the Vault tab and a locked Highlight. The profile row under the card is Donate and Share. · Profile counts sit inside the athlete card like a social profile: Seki, Riding, and Crew. Join is an icon under the Crew number. The story pills under the card are gone. Jev chose that three-count row (probability 0.70, confidence 0.40, 527 input tokens). · Seki and Flex now tell a story on a Highlight and on a profile. A play that makes the Seki pill says so, and “You called it” when you gave that Seki. Flex says you are riding with the athlete. Aura stays a count and a tier. No SQL applied. · Latest local app uploaded to EAS preview. Android `196a7acf-b18f-4af0-a4c8-85d7e9ab6afc` and iOS `9dad0fa8-1902-448f-82e7-03a9b4a869b5` are queued. They include the scoreboard and hype-glow fixes. The iOS profile still has one iPad. · Selected Seki, Aura, and Flex glow is painted behind the circle so the rail no longer clips it. Local Open flags shows the report reason and whether an athlete or guardian reported the clip. Strikes and appeals are unbuilt. The hosted database was not queried. · Jev walked the lib, data, and hook helpers. No replacement cleared confidence 0.90. QA accepted the mobile suite: 74 suites, 416 tests. Compliance gaps routed in `docs/legal/LEGAL_BRIEFING.md`. iOS preview `af6a7e72` installs on the registered iPad only. Android preview `6febe2bb` still in progress · Department plans: where each team is, and what public still requires · 2026-10-08 · Hierarchy grouped by reporting lead (90 agents) · VP of Operations (`VP_OPERATIONS`) keeps roles, protocols, and priorities current under the CTO · CTO assigns app fixes; leads report to `CTO` (90 agents) · Owner peek card redesigned (light Daylight card, 2 x 2 stats, equal-width Donate / Join Crew) · 2026-10-07 · Highlights prefetch the next and previous photo story · Photo stories in Highlights built locally (UX-05; SQL unapplied) · "Donate. Elevate. Celebrate." in four placements · Game Play → Game Day label · MCP servers (Playwright, Expo, Canva, Supabase dev) · 87 agents · Compact sports profiles (60 suites / 311 tests) / direct Goals and Team navigation; sport-matched Stats/Aura, missing data unreported; public sport migration prepared, unapplied · Sports UI browser verification and fixes (UX-03): 55 suites / 261 tests; identity/accessibility and narrow large-text fixes; native verification pending · Readiness R1 organization audited: web builds and 50 suites / 242 tests pass; CI Node 24 and persistent docs/credential guards; R2–R4 next actions clarified · Stripe secret moved out of `.env.local` (Edge Functions hold it); native-module quarantine cleared · Compact donation/menu integration verified locally (UX-02; 50 suites / 242 tests) · Compact staged video upload complete locally (UX-01) · 83 callable agents with functional ownership and CI registry validation · Specialist work queue in WORK_QUEUE.md · Guest route data boundaries reduced to 6 routes / 12 calls · Account-tag write/confirmation fixes prepared; SQL remains unapplied · Staging/build readiness and custodial DOB inventory corrected from local evidence · Wave 0 test mode; device and hosted SQL verification remain pending.
+
+## 2026-10-13 — Innovation and outside handoff standard (STANDARD-01)
+
+- Added a repeatable problem → bounded experiment → evidence → adopt/revise/stop workflow, including potential struggles and failed-experiment learning, in the existing task/design/incident records.
+- Connected shared interface/naming/decision/diagram requirements to the existing agent, Support and admin-first feature workflows.
+- Added audience reading paths and version/environment/owner/evidence requirements for outside engineers, legal reviewers and investors, with approved document scope and explicit readiness/gaps.
+- Corrected stale duplicated department model labels in expert-standard prose; actual role pins and model table stay the reference. No runtime, schema, financial rule or legal conclusion changed.
+- Local validation and documentation review pass: full gate 115 suites /827 tests, 180 Markdown destinations, 106-role consistency and 2 registered feature contracts. No outside-company walkthrough was performed.
+
+## 2026-10-14 — Profile privacy, friends, blocking and tag approval
+
+- Profiles can be public or private (new accounts start private), and people choose who sees their photo, bio, school, social links, stats, Aura, Crew lists and friends list: everyone, friends or only them. A private athlete's name, approved-tagged Highlights, Donate, Rally and gear goals and Join Crew stay public.
+- Two-way friends with requests, blocking (the blocked person isn't told), hide from search, and a guardian lock that keeps a minor's settings strict.
+- Tags wait for the tagged athlete's approval; an approved tag and a pending one look different, a pending tag doesn't name the athlete to strangers, and Spotlight and leaderboards credit a clip's earlier engagement once it's approved.
+- Admins see privacy counts (never who) on the People desk and can reset someone to private defaults. Database changes are written and tested, not applied.
+
+## 2026-10-13 — Engineering Support: detection and repair under Dev
+
+- Reused SUPPORT under ENGINEERING with INCIDENT_TRIAGE, TELEMETRY and RELIABILITY; moved the last two from Operations and synchronized the 105-role roster. QA and finance/security/data ownership remain independent.
+- Added a 14-sensor coverage catalog, six assigned gaps, incident/recovery template and detection/repair review in the admin-first feature workflow.
+- Added `pnpm detection:scan`: runs the local quality gate and separate Next tests, retains bounded redacted check logs and interrupted/completed checkpoints, and reports failed/timed-out/skipped checks and missing runtime coverage. CI now includes detection tests/catalog, future-feature gates and separate Next tests. Nothing was deployed.
+- Scanner tests/re-review pass 10/10; fixed timeout descendant cleanup, quoted-JSON secret redaction and stale hierarchy representations. Retained scans caught test/metadata cleanup mismatches and then verified recovery. Latest scan passes 681 app tests and 86 Next tests but flags 11 new admin-control exports awaiting callers in concurrent work; the global gate remains red. See DETECT-01.
+
+## 2026-10-13 — Nothing left hanging: archive pass and data fixes
+
+- Unused functions, components and constants (and the tests that covered them) moved to `archive/dead-code-2026-10-13/` in two passes, 62 entries in total; nothing was deleted. A new `pnpm code:unused` check fails on any new unused import or variable.
+- Admins can now enter athlete career stats and game logs (Athletes desk), set custodial terms, manage school crests and the staff who confirm athletes (Schools desk), and see operator check-ins with location rounded to about 1 km plus a 90-day purge that takes two taps (Live games desk). Exact check-in locations are no longer readable from the table at all. Branding fields start from the school's current values, so saving one colour keeps the others. On the People desk, Unverify only removes the badge; a separate, warned "Revoke and unlink" goes through the verification ladder.
+- Fans see Crew alerts on Activity and can clear them.
+- The Look desk "Actions on top" switch now works (Donate / Share move under the profile tabs).
+- Families now see what is recorded for their family account (after Tapua'i's share) and what fans donated, instead of the donated total shown as received. Other users can no longer overwrite someone's profile photo, and people can delete their own old photos (database change written, not applied).
+- Production store builds no longer offer the demo test sign-in (the build profiles never told the app it was production). A plan for dev, staging and production environments, and for staying on Supabase versus moving to AWS or Azure, is in docs/engineering/ENVIRONMENTS_AND_HOSTING.md.
+- Security fix (written, not applied): a full rebuild of the database schema showed that anyone with the public app key could write revenue rows into the books, raise donation totals and Aura, and change sport settings. A new migration closes every one; apply it first on staging.
+- Operator check-ins are kept only to about 1 km (rounded on the phone and in the database), timed by the server, and deleted automatically after 30 days (privacy decision); the Live games purge can clear them sooner.
+- Archived files are named `<name>.archived.<ext>` so they never look like live code, and the data map check enforces it. Twelve copies of the "not switched on yet" check became one, and the admin desks share one way to run a save.
+- The data map also checks Storage buckets and feature switches; every item is owned and connected. The supporting migration is written and replayed, not applied.
+
+## 2026-10-13 — Data governance: one map of where every piece of data lives
+
+- A Data Governance team now exists. `DATA_GOVERNANCE` is the data control point and reports to the CTO; `DATA_LINEAGE` keeps the master data map and `CODE_HYGIENE` handles dead code. Every agent definition names the control point.
+- `docs/engineering/DATA_MAP.md` is generated from the schema and the code. For every table and view it gives the owner, purpose, what writes it, what reads it, database functions, triggers and the screens that reach it; it also lists every database function's callers. `pnpm check` and CI fail when anything is unowned, write-only, never written, never called, or an unused export nobody has decided on.
+- First findings: stats tables nothing writes, Crew notifications never sent, operator GPS never read, two admin functions with no control, and one unused function. 47 unused exports are proposed for archive and wait for the owner's approval; nothing was deleted.
+
+## 2026-10-13 — Finance & Books: the Office of the CFO and its hub
+
+- A Finance and Accounting team now exists in the agent roster: a CFO reporting to the owner, a Controller with a Bookkeeper and Internal Controls, a Tax lead (owns every tax area) with Information Returns and Sales Tax, Treasury, and Financial Planning. A Finance Data engineer in Engineering builds their data. How work flows: `docs/company/FINANCE_OPERATIONS.md`.
+- `/admin/books` is now **Finance & Books** with eight tabs: Overview, Transactions (filter and export exactly what you see), Statements, Taxes (tax pack, readiness, federal deadlines), Reconcile (every donation, tip, card fee, Vault sale, booster and Drip order matched to the books), Data (every money column and who owns it), Record & close (including refunds of a whole charge), and Export. A **Finance** lens shows only the money desks.
+- Nothing is exported or closed while any source is unread or the books do not balance. Athlete names and family-typed titles never leave the admin app.
+- The bookkeeping migration was hardened after security and accounting review and replays 72/72 on Postgres. It is still not applied.
+
+## 2026-10-13 — browser Highlight playback repair
+
+- Interrupted browser play requests are handled inside Expo Video rather than escaping
+  as uncaught errors. A versioned pnpm patch preserves immediate pause intent and
+  ignores stale queued events and old-source failures.
+- Highlight replacement waits for current-source readiness and focus. Failed clips
+  show **This Highlight couldn't play.** with **Retry**; loading, failed and paused
+  clips contribute no watched time. Sound changes can retry a refused start once
+  without restarting a clip already playing. Photo stories retain their image player.
+- Current Lightning CSS direct and Metro worker transforms pass. No native binding
+  reinstall or quarantine removal was needed in this pass. Invalid hosted media can
+  still fail; Retry does not repair its contents. [PLAY-01](docs/agents/PLAY-01.md)
+  records reproduction, patch installation, final gates and remaining hosted/device checks.
+
+## 2026-10-12 — admin data consolidation
+
+Related editors share App setup and Highlights & review workspaces; saved routes remain
+reachable. Payouts clarifies Money, Coverage joins Product, and QA/Lab stop repeating
+financial/health dashboards. Analytics selects a complete board; Trends retains comparisons;
+Revenue stream views and Profile settings are consolidated. Health restores operational
+triage with unknown/error states. Moderation keeps full evidence on narrow screens.
+Future feature agents register and verify admin handling before building app experiences;
+registered lifecycle checks join the project gate. Manage now has 18 entries with all 24
+saved routes preserved, including Books and two compatibility redirects. Local acceptance:
+611 app tests, 13 workflow tests, 86 compatible Next tests, 56 responsive reads and 19 browser
+interaction checks passed. Hosted data and native-device acceptance remain pending.
+
+
 All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file current when landing features.
 
 ## 2026-10-12
+
+### Books: Tapua'i's bookkeeping in the main admin
+
+- New Commerce desk **Books** (`/admin/books`): profit and loss, money held for families (a liability, not income) with a per-athlete subledger, trial balance, journal, and a tax-year pack for the CPA (gross receipts, quarterly net with estimated-tax dates, pass-through money for 1099-K reconciliation, payees to review, Drip sales by month).
+- Lists what a bookkeeper would question, worst first, and refuses QuickBooks exports while the books do not balance or the read was incomplete.
+- Exports a QuickBooks Online journal CSV (daily summary with no athlete names), a general ledger CSV, the chart of accounts and the tax pack. On a phone they open in the share sheet.
+- Record Stripe fees, expenses, Stripe payouts to the bank and owner money, void by reversal, and close a month. These need migration `20261012210000_bookkeeping_ledger.sql`, written and not applied.
+- Donations now also record the card fee a donor covered and the Stripe payment id, once that migration is applied. Guide: [BOOKKEEPING.md](docs/engineering/design/BOOKKEEPING.md).
+
+### Manage desks: one place for each task
+
+- Manage desks opens on request and closes when a desk is chosen. View and Group filters replace repeated headings; QA and Lab appear once in Tools.
+- Money focuses on queueing and reviewing disbursements. Existing confirmation and status controls remain; Revenue holds the ledger, stream splits and donation history.
+- The old Reports address opens Analytics, avoiding a second dashboard with the same metrics. All saved desk addresses remain supported; 22 editing/utility desks appear in Manage desks.
+- Local verification and remaining follow-ups: [MAIN_ADMIN_PORTAL](docs/engineering/design/MAIN_ADMIN_PORTAL.md).
+
+### Main admin: find desks and navigate reports
+
+- Manage desks can browse groups while keeping the current report open. Desk links show their existing descriptions in open divider rows.
+- Search finds editing desks by name, group or description within the chosen lens. It includes QA/Lab utilities, reports the number found, and explains how to recover from an empty search.
+- Longer reports have “In this report” shortcuts. They scroll and focus the current report’s section, including Analytics’ full measure and list catalogs.
+- Home includes Refresh report. Refresh is disabled while loading and when report access is unavailable.
+- Revenue rings use a compatible SVG rotation, removing the invalid DOM property banner on web.
+- Verification and unchanged hosted/device follow-ups: [MAIN_ADMIN_PORTAL](docs/engineering/design/MAIN_ADMIN_PORTAL.md).
+
+
+### One main admin application
+
+- Expo `/admin` combines the owner-selected `localhost:3033` report design with all 23 existing editing and utility desks. Home, Trends, Audience, Revenue, Health, Product, Analytics and Departments share its scrolling header and open report layout.
+- Product includes Features, Profile, Sign-in and People oversight. Manage desks keeps the role lenses, nested trails, drafts, confirmations and explicit Publish controls.
+- Expo and the compatible Next reporting client share platform-neutral report models. Missing values, source errors, donation bands, partial ledger reads and Wave 0 payment notes remain visible.
+- Charts include complete Data values. Home retains donation counts, weekly comparisons, View Trends and the community support summary. Admin entry uses its own sign-in controls and no longer opens the first-visit fan welcome.
+- Local verification and remaining hosted/device checks are recorded in [ADM-02](docs/agents/ADM-02.md). No SQL, role grants, publication or deployment was performed.
 
 ### Admin portal: readable labels and steadier numbers
 
@@ -1185,3 +1475,27 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   no longer plays on un-vote. Hype counts that land mid-flight are adopted once it settles.
   `state-doc-guard.sh` ignores mode-bit-only changes. **Not verified on a device** — tests and
   typecheck only. Guard still checks the whole working tree, not just this session.
+
+
+Final phone review also caught and fixed Lab editor/feedback overlap. Column editors
+now keep their natural height; desktop keeps equal columns. The direct geometry
+regression and full gate pass. Evidence: ADMIN_DATA_CONSOLIDATION / MAIN_ADMIN_PORTAL
+and `.smoke/main-admin/consolidate-lab-layout-final.json`.
+
+
+Final local total: **60 responsive/geometry checks** (56 broad reads + four Lab
+sibling-geometry checks), **19 interactions**, and **32 stable reviewed source hashes**.
+Ordinary sample Home is restored with its heading at y=162 and no test iframe. Aggregate
+evidence: `.smoke/main-admin/consolidate-acceptance.json`; reviewed captures are in
+MAIN_ADMIN_PORTAL. This acceptance covers local source and fixtures.
+
+## 2026-10-13 — Engineering Support main-admin tool (DETECT-02)
+
+Added the Issues/Team flow/Change history/Recovery desk, actual generated source ownership,
+protected false-positive review, restricted server-attributed signals, atomic selected-source audit,
+cybersecurity role and dependency-locked source capsules with verified isolated restores.
+Local implementation and review; hosted migration/application and release switching remain gated.
+
+App/runtime observation, feature containment, one safe Highlights read retry and distinct donation
+failure/cancellation reporting are wired after the admin-ready checkpoint. The local gate passes
+115 suites /827 tests and Next 86/86; SQL replay passes 144/144. Activation remains pending.

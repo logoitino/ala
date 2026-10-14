@@ -1,4 +1,9 @@
-/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+/**
+ * One-time age card. With the minor-accounts update (MINOR-01) it asks for birth month and year: required for an account
+ * made after the update (Apple / Google skip the sign-up form), skippable (asked again every three days) for an older account.
+ * An under-13 entry closes the account and signs out with the neutral line. Without the update it keeps the 13+ checkbox.
+ * Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
+ */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text } from 'react-native';
@@ -6,28 +11,33 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
+import { BirthMonthField, type BirthDraft } from '@/components/Auth/BirthMonthField';
 import { LegalAckToggle } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
+import { AGE_GATE_REFUSAL, birthInputError, pauseAgeGate } from '@/lib/minors';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
 const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
 
 /**
- * @purpose One-time COPPA age gate for accounts created via Apple / Google, which skip the Soft-Wall
- * sign-up form entirely (that form collects the same confirmation as a checkbox before submit).
- * @remarks Shown only when `useAuth().needsAgeConfirmation` is true — a brand-new account's very
- * first sign-in with no confirmation on file yet. Never appears for a returning user, and does not
- * block or sign out any existing account that has `age_confirmed_13_plus = null`.
- * @sideEffects `AuthContext.confirmAge13Plus` → `profiles` UPDATE.
+ * @purpose One-time age card (birth month and year with MINOR-01; the 13+ checkbox on older databases) for accounts
+ * created via Apple / Google, which skip the Soft-Wall sign-up form, and the optional ask for older accounts.
+ * @remarks `birthPrompt` 'required' only for accounts made after MINOR-01 with no age yet; an older account gets
+ * 'optional' with Not now, asked again every three days until an age is added (never blocked or signed out for skipping). Without MINOR-01, the 13+ card shows only on a
+ * brand-new account's first sign-in, as before.
+ * @sideEffects `AuthContext.recordBirthMonth` → `set_my_birth_month`, or `confirmAge13Plus` → `profiles` UPDATE.
  */
 export function AgeConfirmModal() {
   const insets = useSafeAreaInsets();
   const frame = useSheetFrame();
-  const { needsAgeConfirmation, confirmAge13Plus } = useAuth();
+  const { needsAgeConfirmation, confirmAge13Plus, birthPrompt, recordBirthMonth, dismissBirthPrompt } = useAuth();
   const [checked, setChecked] = useState(false);
+  const [birth, setBirth] = useState<BirthDraft>({ year: null, month: null });
+  const visible = birthPrompt !== null || needsAgeConfirmation;
+  const asksBirth = birthPrompt !== null;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Centered-card scale-in (not a slide-up sheet) — same intro spring SpotlightModal uses for
@@ -36,7 +46,7 @@ export function AgeConfirmModal() {
   const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
-    if (needsAgeConfirmation) {
+    if (visible) {
       intro.value = 0.92;
       intro.value = withSpring(1, SPRING_CARD);
       backdropOpacity.value = withTiming(1, { duration: 200 });
@@ -44,13 +54,29 @@ export function AgeConfirmModal() {
       intro.value = 0.92;
       backdropOpacity.value = 0;
     }
-  }, [backdropOpacity, intro, needsAgeConfirmation]);
+  }, [backdropOpacity, intro, visible]);
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [{ scale: intro.value }],
     opacity: 0.55 + intro.value * 0.45,
   }));
   const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
+
+  const birthProblem = birthInputError(birth.year, birth.month);
+  const onSaveBirth = async () => {
+    if (birthProblem || busy || !birth.year || !birth.month) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const outcome = await recordBirthMonth(birth.year, birth.month);
+      if (outcome === 'blocked') await pauseAgeGate();
+      setBirth({ year: null, month: null });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "That didn't go through — check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const onConfirm = async () => {
     if (!checked || busy) return;
@@ -72,7 +98,7 @@ export function AgeConfirmModal() {
     <Modal
       animationType="none"
       transparent
-      visible={needsAgeConfirmation}
+      visible={visible}
       onRequestClose={() => undefined}
     >
       <Animated.View
@@ -90,21 +116,49 @@ export function AgeConfirmModal() {
         <Animated.View style={[styles.card, frame.card, cardStyle]}>
           <MenuBackdrop accent="jade" />
           <Text style={styles.kicker}>Tapua&apos;i</Text>
-          <Text style={styles.title}>Quick confirmation</Text>
-          <Text style={styles.body}>
-            Before you continue, we need to confirm your age. Tapua&apos;i is not for kids under 13.
-          </Text>
-          <LegalAckToggle checked={checked} onCheckedChange={setChecked} label={AGE_GATE_LABEL} />
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          <AnimatedButton
-            accessibilityLabel="Confirm and continue"
-            disabled={!checked || busy}
-            haptic="medium"
-            onPress={() => void onConfirm()}
-            contentStyle={[styles.cta, (!checked || busy) && styles.ctaOff]}
-          >
-            <Text style={styles.ctaLabel}>Confirm & Continue</Text>
-          </AnimatedButton>
+          <Text style={styles.title}>{asksBirth ? 'One quick question' : 'Quick confirmation'}</Text>
+          {asksBirth ? (
+            <>
+              <Text style={styles.body}>
+                {birthPrompt === 'required'
+                  ? 'Add your birth month and year to finish setting up your account.'
+                  : 'Add your birth month and year so your account gets the right safety settings.'}
+              </Text>
+              <BirthMonthField value={birth} onChange={setBirth} disabled={busy} />
+              {error ? <Text style={styles.error}>{error === AGE_GATE_REFUSAL ? AGE_GATE_REFUSAL : error}</Text> : null}
+              <AnimatedButton
+                accessibilityLabel="Save birth month and year"
+                disabled={Boolean(birthProblem) || busy}
+                haptic="medium"
+                onPress={() => void onSaveBirth()}
+                contentStyle={[styles.cta, (Boolean(birthProblem) || busy) && styles.ctaOff]}
+              >
+                <Text style={styles.ctaLabel}>Continue</Text>
+              </AnimatedButton>
+              {birthPrompt === 'optional' ? (
+                <AnimatedButton accessibilityLabel="Not now" haptic="selection" onPress={dismissBirthPrompt} contentStyle={styles.later}>
+                  <Text style={styles.laterLabel}>Not now</Text>
+                </AnimatedButton>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <Text style={styles.body}>
+                Before you continue, we need to confirm your age. Tapua&apos;i is not for kids under 13.
+              </Text>
+              <LegalAckToggle checked={checked} onCheckedChange={setChecked} label={AGE_GATE_LABEL} />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              <AnimatedButton
+                accessibilityLabel="Confirm and continue"
+                disabled={!checked || busy}
+                haptic="medium"
+                onPress={() => void onConfirm()}
+                contentStyle={[styles.cta, (!checked || busy) && styles.ctaOff]}
+              >
+                <Text style={styles.ctaLabel}>Confirm & Continue</Text>
+              </AnimatedButton>
+            </>
+          )}
         </Animated.View>
       </Animated.View>
     </Modal>
@@ -162,5 +216,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '800',
+  },
+  later: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  laterLabel: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

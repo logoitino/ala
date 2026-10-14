@@ -19,6 +19,14 @@ not. Keep §4 to ~15 entries, newest first; older history belongs in `CHANGELOG.
 
 **Synchronization specialist:** Dispatch `DOCUMENTATION` for changes spanning teams or user journeys. Each feature owner supplies changed files/APIs and actual verification evidence. The update agent synchronizes affected documents and definitions; preserve generated fact blocks and approved legal conclusions.
 
+**Execution receipt:** The lead records the actual Documentation executor/session, affected
+files, check result/date, remaining gaps and next owner in the existing task tracker. Assign
+`VP_OPERATIONS` when roles, protocols or priorities change and retain its reconciliation receipt.
+Root integrates shared status and releases claims after checks. A required correction still
+open means the handoff is not complete. Available role files do not start background workers;
+name the actual outside-session runtime when one performs the function. Current checkpoint:
+`docs/agents/COORD-01.md`.
+
 ## 1. Comments: every file has a header; JSDoc on hooks, API calls, and complex components
 
 Every source file under `apps/mobile/app` and `apps/mobile/src` starts with a short header comment (what it is,

@@ -26,12 +26,13 @@ import { useCrew } from '@/hooks/useCrew';
 import { auraBadgeLabel, auraTierForPoints, resolveAuraPoints } from '@/lib/aura';
 import { formatCompactCount } from '@/lib/hype';
 import { formatTipDollars } from '@/lib/reels';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { fetchPlayerVerification } from '@/lib/verification';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
 import type { UsageSurface } from '@/hooks/useSurfaceUsage';
 import type { ProfilePublic } from '@/types/database';
+import { getPublicProfiles } from '@/lib/privacy';
 
 /** Fan who posted the clip. `handle` is null when the account has no username; the name is shown instead. */
 type Poster = { name: string; handle: string | null; avatarUrl: string | null };
@@ -154,15 +155,10 @@ export function ReelOwnerPeek({
       return;
     }
     let live = true;
-    void supabase
-      .from('profiles_public')
-      .select('username')
-      .eq('player_id', player.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!live) return;
-        setHandle(cleanHandle((data as Pick<ProfilePublic, 'username'> | null)?.username));
-      });
+    void getPublicProfiles({ playerIds: [player.id] }).then((rows) => {
+      if (!live) return;
+      setHandle(cleanHandle(rows[0]?.username));
+    });
     return () => {
       live = false;
     };
@@ -172,15 +168,10 @@ export function ReelOwnerPeek({
     const uploader = clip.uploadedBy?.trim();
     if (!open || !uploader || !isSupabaseConfigured) return;
     let live = true;
-    void supabase
-      .from('profiles_public')
-      .select('id, player_id, username, full_name, avatar_url')
-      // reels.uploaded_by is profiles.id, not the auth user id.
-      .eq('id', uploader)
-      .maybeSingle()
-      .then(({ data }) => {
+    // reels.uploaded_by is profiles.id, not the auth user id. The lookup applies the uploader's privacy (PRIV-01).
+    void getPublicProfiles({ profileIds: [uploader] }).then((rows) => {
         if (!live) return;
-        const row = data as Pick<ProfilePublic, 'id' | 'player_id' | 'username' | 'full_name' | 'avatar_url'> | null;
+        const row = (rows[0] ?? null) as Pick<ProfilePublic, 'id' | 'player_id' | 'username' | 'full_name' | 'avatar_url'> | null;
         if (!row || (player?.id && row.player_id === player.id)) {
           setPoster(null);
           return;

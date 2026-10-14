@@ -11,12 +11,12 @@ type AdminLensContextValue = {
 const AdminLensContext = createContext<AdminLensContextValue | null>(null);
 
 function asLens(value: string | null): AdminLens {
-  if (value === 'marketing' || value === 'owner' || value === 'engineer' || value === 'all') return value;
+  if (value === 'marketing' || value === 'owner' || value === 'engineer' || value === 'finance' || value === 'all') return value;
   return 'all';
 }
 
 /**
- * @purpose Persist Marketing / Owner / Engineer / All desks filter for the admin sidebar.
+ * @purpose Persist Marketing / Owner / Engineer / Finance / All desks filter for the admin sidebar.
  * @sideEffects AsyncStorage `tapuai.adminLens`.
  */
 export function AdminLensProvider({ children }: { children: ReactNode }) {

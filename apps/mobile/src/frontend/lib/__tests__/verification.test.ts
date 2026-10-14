@@ -8,7 +8,6 @@ jest.mock('@/lib/supabase', () => ({
 import {
   claimAthlete,
   fetchMyVerification,
-  fetchPlayerVerified,
   parseMyVerification,
   redeemTeamCode,
   requestAthleteVerification,
@@ -68,13 +67,6 @@ describe('verification ladder client', () => {
     await expect(startSchoolCheck()).rejects.toThrow('Add your school first.');
   });
 
-  it('treats an unknown verification check as held', async () => {
-    mockRpc.mockResolvedValueOnce({ data: true, error: null });
-    await expect(fetchPlayerVerified('p1')).resolves.toBe(true);
-    mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'boom' } });
-    await expect(fetchPlayerVerified('p1')).resolves.toBe(false);
-    await expect(fetchPlayerVerified(null)).resolves.toBe(false);
-  });
 });
 
 describe('school confirmation client', () => {

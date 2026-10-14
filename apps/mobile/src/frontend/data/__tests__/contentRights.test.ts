@@ -3,7 +3,6 @@ import { REEL_CATEGORY_GAME, REEL_CATEGORY_SERVE, REEL_CATEGORY_TRAIN } from '@/
 import {
   athleteOrGuardianReported,
   queueReasonLabel,
-  reportHidesNow,
   rightsChecksFor,
   rightsReady,
   UPLOAD_RIGHTS_CHECKS,
@@ -40,13 +39,6 @@ describe('content rights', () => {
     expect(rightsReady(photos, REEL_CATEGORY_GAME)).toBe(false);
   });
 
-  it('hides immediately for music, logos, fake footage, impersonation, or the athlete', () => {
-    expect(reportHidesNow('rights', false)).toBe(true);
-    expect(reportHidesNow('fake_footage', false)).toBe(true);
-    expect(reportHidesNow('impersonation', false)).toBe(true);
-    expect(reportHidesNow('other', false)).toBe(false);
-    expect(reportHidesNow('other', true)).toBe(true);
-  });
 });
 
 describe('queueReasonLabel', () => {

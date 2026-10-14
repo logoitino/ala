@@ -13,9 +13,7 @@ import { Platform, TurboModuleRegistry } from 'react-native';
 import { RIGHTS_VERSION } from '@/data/contentRights';
 import {
   HIGHLIGHT_MAX_MS,
-  HIGHLIGHT_OPTIMIZING,
-  HIGHLIGHT_TOO_LONG,
-} from '@/data/media';
+  HIGHLIGHT_OPTIMIZING } from '@/data/media';
 import { parseReelCategory, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Database, Reel } from '@/types/database';
@@ -626,14 +624,3 @@ export async function uploadAvatar(uri: string, onProgress?: CompressProgress): 
   onProgress?.(1);
   return publicUrl;
 }
-
-export const MediaUploadService = {
-  compressHighlight,
-  uploadHighlight,
-  uploadStoryPhoto,
-  stripJpegMetadata,
-  uploadAvatar,
-  isHighlightTooLong,
-  assetDurationMs,
-  HIGHLIGHT_TOO_LONG,
-};

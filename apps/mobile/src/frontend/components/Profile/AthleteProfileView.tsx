@@ -71,6 +71,7 @@ import type { ReelHype } from '@/lib/reels';
 import { isVaultSealed } from '@/lib/vault';
 import { fetchWishlistItems } from '@/lib/wishlist';
 import { FOCAL } from '@/theme/motion';
+import { ProfileFriendActions } from '@/components/Profile/ProfileFriendActions';
 
 export type AthleteProfileTab = 'highlights' | 'stats' | 'goals' | 'vault' | 'team' | 'manage';
 
@@ -375,6 +376,21 @@ export function AthleteProfileView({
     </View>
   ) : null;
 
+  const quickActions = (
+    <>
+      <View style={styles.quickActions}>
+        {fanSupport}
+        <AnimatedButton accessibilityLabel={SHARE_FUND_CTA} haptic="selection"
+          onPress={() => setShareOpen(true)} contentStyle={styles.shareHit}>
+          <Ionicons name="share-outline" size={17} color={FOCAL.jadeInk} />
+          <Text style={styles.shareLabel}>Share</Text>
+        </AnimatedButton>
+      </View>
+      {/* Someone else's profile: friend / block and the private-profile note (PRIV-01). */}
+      {!ownerTools ? <ProfileFriendActions playerId={player.id} /> : null}
+    </>
+  );
+
   return (
     <View style={styles.root}>
       {onBack || headerRight ? (
@@ -425,14 +441,7 @@ export function AthleteProfileView({
           />
         }
       />
-      <View style={styles.quickActions}>
-        {fanSupport}
-        <AnimatedButton accessibilityLabel={SHARE_FUND_CTA} haptic="selection"
-          onPress={() => setShareOpen(true)} contentStyle={styles.shareHit}>
-          <Ionicons name="share-outline" size={17} color={FOCAL.jadeInk} />
-          <Text style={styles.shareLabel}>Share</Text>
-        </AnimatedButton>
-      </View>
+      {live.profile.actionsOnTop ? null : quickActions}
       {/* Brand line (BRAND-01) only where this athlete can actually be donated to; plain text, not a heading. */}
       {showDonateTagline ? <Text style={styles.donateTagline}>{TAGLINE_HEADLINE}</Text> : null}
       <View accessibilityRole="tablist" accessibilityLabel="Athlete profile sections" style={styles.sectionNav}>
@@ -448,6 +457,8 @@ export function AthleteProfileView({
           </Text>
         </AnimatedButton>)}
       </View>
+      {/* Look desk "Actions on top" (profile.actionsOnTop): parks Donate / Share under the section tabs. */}
+      {live.profile.actionsOnTop ? quickActions : null}
 
       {tab === 'highlights' ? (
         <View style={styles.highlightsPane}>

@@ -37,6 +37,18 @@ Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, act
 
 **Guest game access:** own `apps/mobile/src/frontend/lib/guestGames.ts` typed claim/check-in/roster clients. Keep route data access behind this lib, preserve internal demo allowances explicitly, and pair API/OPERATOR/SESSION_SECURITY for actual authorization.
 
+## Family-fun standing packet — brainstorming follow-up
+
+With POLLS/DISCOVERY, SCHOOL_PARTNERS, Product/Growth and Safety, compare free local themes/curated recaps with later opt-in friendly school competition. Confirm school/mark/subject permission, safe event/location disclosure, accessible contribution alternatives and staff capacity. Ordinary fans/friends/families have useful activity without donating, professional filming or public recognition; voluntary service does not authorize adult-minor meetups or paid work.
+
+POLLS supplies actual guest/device/retry/closure gaps; LEADERBOARDS supplies proposed frozen opt-in denominators, comparable-size groups, capped contributions, small-cell protection, correction and abuse safeguards. Current cheers and athlete Spotlight do not prove fair school scoring or generic fan awards. Keep money, free fan-ballot recognition and later scored competition separate; exchange findings for the October 20, 2026 single Growth packet and focused brainstorming decision. No competition, campaign, enrollment or implementation is authorized by this duty.
+
+The owner chose fan voting: staff checks eligibility/rights/safety; the entry with the most valid free ballots wins the award, without a staff-preferred winner. With School Partners, offer similar nomination opportunities and newcomer discovery, but disclose fanbase/network advantage. One eligible-account ballot/window is not proof of unique people; POLLS/LEADERBOARDS propose proportionate abuse and trusted server limits/closure/tie/correction. Entry publicity need not expose the whole profile; declined exposure preserves private acknowledgment. No blanket Stripe KYC for ordinary voting.
+
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

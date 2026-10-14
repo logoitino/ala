@@ -675,13 +675,6 @@ export function applyRuntimePath(config: AppRuntimeConfig, path: string, value: 
   return next;
 }
 
-export function getRuntimePathValue(config: AppRuntimeConfig, path: string): unknown {
-  const [group, key] = path.split('.') as [string, string];
-  if (!group || !key) return undefined;
-  const bag = (config as unknown as Record<string, Record<string, unknown>>)[group];
-  return bag ? bag[key] : undefined;
-}
-
 const RUNTIME_ROOT_KEYS = ['tabs', 'buttons', 'layouts', 'theme', 'profile', 'highlights', 'copy', 'catalog'] as const;
 
 function assertKnownObjectKeys(record: Record<string, unknown>, allowed: string[], label: string) {

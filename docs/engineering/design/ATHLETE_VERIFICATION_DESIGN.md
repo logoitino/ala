@@ -92,7 +92,9 @@ athletic directors will do if it takes one minute.
 Layers that help with any of the options:
 
 - **The guardian's Stripe identity check.** When a parent sets up payouts, Stripe verifies the
-  adult's identity (free KYC). A fake parent cannot pass it.
+  adult's identity (free KYC). That proves a real adult is who they say they are; it does **not**
+  prove they are the athlete's parent (corrected 2026-10-14 by the verification panel — relationship
+  evidence is a separate step, see `docs/engineering/design/PAYEE_VERIFICATION_PLAN.md`).
 - **Guardian confirms the kid** in Parent HQ, and the athlete confirms the guardian. Two people
   lying is much harder.
 - **Duplicate and anomaly checks:** the same device or payout bank on several athletes, or a

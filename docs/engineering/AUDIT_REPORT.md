@@ -10,6 +10,96 @@
 
 ---
 
+## PLAY-01 — browser playback errors — 2026-10-13
+
+**Scope:** the owner's Lightning CSS and aborted/unsuitable-media screenshots.
+Owner-authorized Codex outside sessions implemented and independently reviewed the
+repair under ENGINEERING/HIGHLIGHTS/PLAYBACK responsibility; registry pins remain.
+
+- Actual browser prepatch reproduction uses a valid local VP8 WebM with the installed
+  Expo player: rapid replace/pause produced three unhandled AbortErrors. An invalid
+  HTML fixture emitted media error 4 and unhandled NotSupportedError.
+- A versioned Expo Video 57.0.5 web patch owns every explicit DOM play promise,
+  preserves immediate play/pause intent and rejects stale source/follower events.
+  Expected abort/autoplay refusal is nonfatal; true source failures remain error events.
+- Reels serialize replacement, correlate source/readiness for native orderings, and
+  count only eligible actual playback events. Failures render a 44-point Retry above
+  the gesture layer; an explicit sound action can retry a refused start once. Photo
+  stories retain their independent player. Issue telemetry carries a fixed code only.
+- RED/GREEN regressions cover the actual installed SDK and rendered ReelCard;
+  final focused run: 3 suites / 38 tests. Final `pnpm check`: **98 suites / 646 tests**,
+  13 workflow tests, both typechecks and every guard. `git diff --check` passes.
+- Current Lightning CSS binding/signature and direct/fresh Metro-worker global/module
+  CSS transforms pass. No binding reinstall or quarantine removal was needed. Fresh
+  main Metro served web (1946 modules) and server (2312 modules) bundles on :8081.
+- Patch metadata passes pnpm's frozen-lockfile check. The stale prior-user package
+  store prevented an automatic in-place pnpm install, so the tracked patch was applied
+  narrowly to the installed SDK; no unrelated module directory was rebuilt. A complete
+  clean install was not exercised.
+
+- Final-source iOS/Android exports pass with unchanged source hashes: 2827/2909
+  modules, Hermes v98, 8,687,500/8,876,689-byte bytecode. Android's disk-cache warning
+  recovered automatically. Commands/logs/checksums are retained in the task record.
+
+Browser postpatch evidence is still being collected in
+[PLAY-01](../agents/PLAY-01.md). Native device/decoder and VoiceOver/TalkBack checks
+remain pending. Existing hosted legacy media emits error 4; its current MIME/codec
+were not probed after automatic approval review blocked that separate request. Retry
+does not repair the object. No hosted object repair, SQL, role grant, build publication or
+dependency version change.
+
+## ADM-02 — desk/report data consolidation — 2026-10-12
+
+**Local acceptance:** 18 Manage entries retain all 24 saved routes, including concurrent
+Books and the Reports/Coverage redirects. Thirteen reports retain all 64 known measures
+plus future scalars, four series, seven unique comparisons, thirteen operational checks,
+129 control mappings, complete Revenue/privacy/reconciliation and department/API detail.
+App setup / Highlights & review share workspace tabs; Lab/QA avoid secondary dashboards.
+Future agents enroll an admin/source/report/disable/access/app contract and pass the admin
+checkpoint before app implementation. The registry validates declared local records;
+enrollment/order/evidence review remains a lead duty and is not release certification.
+
+Fresh gates: 96 suites / 611 app tests, 13 workflow tests and all guards; Next 86 tests.
+Browser: 56 responsive reads and 19 interactions passed. Pointer targeting was corrected
+in the harness, with a trusted direct Profile click confirming 33 mapped controls. Existing
+physical Data Enter/Home/End limitations remain. Source reviewers found no preservation
+blocker. Full ownership, captures and local evidence:
+[ADMIN_DATA_CONSOLIDATION](design/ADMIN_DATA_CONSOLIDATION.md) /
+[MAIN_ADMIN_PORTAL](design/MAIN_ADMIN_PORTAL.md). Hosted data/reconciliation, Books acceptance
+and native-device interaction remain pending. No hosted writes, SQL, publication or deployment.
+
+## ADM-02 — main Expo admin integration — 2026-10-12
+
+**Scope:** the owner's selected `localhost:3033` report design combined with all
+existing Expo administration. Owner-authorized Codex outside sessions implemented
+and reviewed the work; registry model pins and reporting lines were preserved.
+
+- Main Expo `/admin` includes twelve reporting views and all 23 existing editor/
+  utility routes. The selected Home hero, charts, measure catalog, eight Analytics
+  boards, four Health lenses, ledger warnings and Product oversight are present.
+  Next remains a compatible reporting client using the same pure models.
+- Authenticated adapters preserve missing/zero/empty, source errors and bounded
+  donation fallback. Tests cover account revocation, races and old refresh callbacks.
+  Existing sign-in, drafts, Publish locks and confirmations remain in their owners.
+- Browser review found and fixed real Expo Slot array-style crashes, fan welcome
+  over admin, native SVG props in web DOM, clipped enlarged amounts and missing
+  web expanded state. Real installed Slot/web-SVG regressions protect the fixes.
+- Final repo gate: **89 suites / 529 tests**, all typechecks and guards. Next model
+  tests: **86 passed**; optimized build passed. Actual mobile iOS/Android exports
+  passed with Hermes bytecode 98. [ADM-02 evidence](../agents/ADM-02.md) records logs,
+  artifact sizes and the later web-only expanded-state correction.
+- All twelve report pages were inspected at 1440px and 320px; four report types at
+  768px. Final Home/Revenue at 320px with doubled CSS text had no page overflow,
+  clipped money or chart error banner. Enlarged web figures may wrap. Synthetic
+  data ran on an isolated localhost backend and separate Metro cache.
+- Physical Health arrows and native Data Space activation passed with visible
+  unobscured focus. Synthetic Home/End passed selection/focus. Browser Bridge did
+  not verify physical Home/End or native Data Enter; those limitations are retained.
+
+**Acceptance:** complete locally. Hosted admin-role/data/write checks and installed
+device interaction remain pending in [TESTER_SCRIPT.md](TESTER_SCRIPT.md). No SQL,
+admin grants, publication, real-money action, commit, merge or deployment occurred.
+
 ## ENV-01 — local Expo launch recovery — 2026-10-12
 
 **Scope:** the owner's Lightning CSS launch-error screenshots. Codex outside-session
@@ -493,3 +583,16 @@ Realtime teardown:
 - [ ] Drip Buy Now (Expo Go): PaymentSheet, `add_user_aura` dollars×10, success haptic, **Drip secured ⚡** toast.
 - [ ] Local hub: Live Matches / School Polls / Top Boosters pills; cheer vote springs the bar, **+1 Vote ⚡**, `cast_cheer_vote`; booster card peek.
 - [ ] Operator: PIN `1234` claims a game; +1/+3/+6 and Start Clock hit `update_game_score`; **⚡ Big Play** Broadcasts to the focused Reel (`⚡ BIG PLAY: Westlake Thunder!`).
+
+
+Final phone review also caught and fixed Lab editor/feedback overlap. Column editors
+now keep their natural height; desktop keeps equal columns. The direct geometry
+regression and full gate pass. Evidence: ADMIN_DATA_CONSOLIDATION / MAIN_ADMIN_PORTAL
+and `.smoke/main-admin/consolidate-lab-layout-final.json`.
+
+
+Final local total: **60 responsive/geometry checks** (56 broad reads + four Lab
+sibling-geometry checks), **19 interactions**, and **32 stable reviewed source hashes**.
+Ordinary sample Home is restored with its heading at y=162 and no test iframe. Aggregate
+evidence: `.smoke/main-admin/consolidate-acceptance.json`; reviewed captures are in
+MAIN_ADMIN_PORTAL. This acceptance covers local source and fixtures.

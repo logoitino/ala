@@ -4,7 +4,6 @@
  * is not deployed. Checkout itself lives in `hooks/useTipCheckout` and `lib/stripeIntent.ts`.
  */
 
-import { createPaymentIntent } from '@/lib/stripe';
 import { supabase } from '@/lib/supabase';
 import type { Player } from '@/types/database';
 

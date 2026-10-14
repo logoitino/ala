@@ -30,6 +30,7 @@ function parseRow(row: Record<string, unknown>): ReceivedMalo | null {
     reel_id: reel || null,
     wishlist_item_id: item || null,
     fan_name: asText(row.fan_name, 'Fan'),
+    family_cents: row.family_cents == null ? null : asCents(row.family_cents),
   };
 }
 
@@ -78,5 +79,9 @@ export function useReceivedMalo(playerId: string | null | undefined) {
   );
 
   const totalCents = rows.reduce((sum, row) => sum + row.amount_cents, 0);
-  return { rows, totalCents, loading, error, refresh };
+  // Known only when every row carries the books' family share (the database has 20261013231000).
+  const familyCents = rows.length > 0 && rows.every((row) => row.family_cents != null)
+    ? rows.reduce((sum, row) => sum + (row.family_cents ?? 0), 0)
+    : null;
+  return { rows, totalCents, familyCents, loading, error, refresh };
 }

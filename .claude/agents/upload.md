@@ -27,7 +27,7 @@ These are navigation/ownership hints, not claims that hosted resources exist. Re
 
 ## Now / Next / Later
 
-- **Now (Wave 0, local/internal test):** UX-05b photo upload slice with PHOTO_STORIES: Media step `Video | Photos` switch (Photos hidden when unavailable), multi-select up to 10 with `exif: false`, `stripJpegMetadata` + `uploadStoryPhoto` in MediaUploadService, Move earlier/later/Remove (44-point, labelled), photo rights wording, Vault hidden for photos, `Uploading photo 2 of 5`, nothing published on partial failure. Keep UX-01: Build UX-01 compact staged clip/details/review composer with DESIGN; keep navigation/footer visible, drafts on Back, athlete/caption/rights validation and accurate publish errors. Verify image bytes to avatars and graceful missing account-tag SQL.
+- **Now (Wave 0, local/internal test):** UX-05b photo upload slice with PHOTO_STORIES: Media step `Video | Photos` switch (Photos hidden when unavailable), multi-select up to 10 with `exif: false`, `stripJpegMetadata` + `uploadStoryPhoto` in MediaUploadService, Move earlier/later/Remove (44-point, labelled), photo rights wording, Vault hidden for photos, `Uploading photo 2 of 5`, no completed photo-story listing on partial failure (uploaded public bytes/orphans remain a gap). Keep UX-01: Build UX-01 compact staged clip/details/review composer with DESIGN; keep navigation/footer visible, drafts on Back, format-specific required fields and rights validation (supported videos allow Tag later) and accurate publish errors. Verify image bytes to avatars and graceful missing account-tag SQL.
 - **Next (prepare; release gates still apply):** Prepare private reel_vault provisioning and tag migration checks with BACKEND.
 - **Later (gated):** Add approved host upload integration only after vendor selection.
 
@@ -43,6 +43,20 @@ Delegate account consent/RPC/max-three validation to `ACCOUNT_TAGS`; retain uplo
 
 `ACCOUNT_TAGS`. Peer for photo stories: `PHOTO_STORIES` (owns `lib/photoStories.ts`; you own the composer and MediaUploadService changes). Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
 
+## Standing growth plans by user segment — GROWTH-01
+
+Supply actual guest/fan/casual-uploader/repeat-filmer capability and failure evidence for [User growth plans](../../docs/product/USER_GROWTH_PLANS.md) and [Growth charter §10](../../docs/engineering/GROWTH_CAPACITY_REVIEW.md#10-growth-plans-for-every-user-type). Signed-in fans' supported video Tag later path does not require an athlete claim, payee setup or professional filmer role; photo-story athlete requirements differ. Preserve format-specific required fields, rights checks and drafts. Separate public upload/publication, attribution/tag confirmation and reward eligibility; a pending tag is not a safe-publication hold.
+
+Document unsupported later tagging, share destinations, public-byte/orphan cleanup, rights-version compatibility retry and uncertain-upload recovery with Upload/Storage/Backend/Security/Support/QA. Proposed private staging/publish transition, durable operation IDs/status, retagging, owner/subject removal and new recognition remain proposals until assigned and verified. Pair age/publication permission for young fans and identifiable subjects with Legal/Privacy/Minor Safety/Content Rights. Send first-action/repeat outcomes, supported/pending/error states, support/service costs and next owners to Growth before the October 20 packet. 30/60/90 stages start from authorization; public/money/later-wave gates remain.
+
+## Family-fun standing packet — brainstorming follow-up
+
+Supply actual ordinary-account video, photo, tag/credit, rights and audience behavior for proposed Fan Moment/family stories/optional service reflections. Permitted casual videos need no athlete/payee/pro-filmer status; photos still have different athlete requirements. Eligible action/age and each identifiable subject's publication permission are separate from account creation, award entry or family money consent. Do not route service photos through unrelated athlete tags or infer filming from uploader identity.
+
+With HIGHLIGHTS/STORAGE/Backend/Security/Privacy/Support/QA, describe proposed restricted review, upload-status recovery, safe location/beneficiary metadata, publish authorization, effective pause/close and owner/subject media removal against current public-byte/retry gaps. Record review/support capacity and loaded cost; optional service/posting never gates access, rewards or money release. Free fan entries, new badges/awards, school competition and paid work are brainstorming proposals. Exchange source evidence before the October 20, 2026 Growth packet; no submission/award workflow is enrolled or built here.
+
+For the owner-selected fan-vote award, staff checks published eligibility/rights/safety; eligible public entries compete by valid free ballots, without a staff-preferred winner. Require separate per-entry public candidate and subject permissions, without making the whole profile public; preserve private acknowledgment when exposure is declined. Coordinate restricted pending media/status and withdrawal/correction with POLLS/LEADERBOARDS trusted window/tally rules; ordinary permitted entry/voting needs no blanket Stripe KYC. No ballot workflow is implemented.
+
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
@@ -50,3 +64,7 @@ Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Sup
 ## UX-02 presentation integration
 
 Use shared MenuChrome progress/accent APIs for Video / Details / Review. Keep fixed navigation, searchable selections, rights checks and upload lock. DESIGN owns visual tokens; DOCUMENTATION owns team/API/tester synchronization and DEVICE_QA owns actual device fit.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

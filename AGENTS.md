@@ -12,7 +12,7 @@
 
 Read the exact versioned docs at [https://docs.expo.dev/versions/v57.0.0/](https://docs.expo.dev/versions/v57.0.0/) before writing any code.
 
-Docs layout (2026-10-07): entry points at `docs/` ([README](docs/README.md) index · STATE · [ONBOARDING](docs/ONBOARDING.md) · [GLOSSARY](docs/GLOSSARY.md) code names ↔ product words); `docs/engineering/` (with `design/`), `docs/product/`, `docs/legal/`, `docs/company/`, `docs/agents/`. New docs go in the matching folder and get a row in `docs/README.md`. Readiness plan R1–R4 (dev → production): [CODE_ORGANIZATION_PLAN.md](docs/engineering/CODE_ORGANIZATION_PLAN.md). Run `pnpm check` before finishing; it includes local documentation destinations (`docs:links`) and client credential markers (`security:client-keys`). Local setup and CI use Node 24.
+Docs layout (2026-10-07): entry points at `docs/` ([README](docs/README.md) index · STATE · [ONBOARDING](docs/ONBOARDING.md) · [GLOSSARY](docs/GLOSSARY.md) code names ↔ product words); `docs/engineering/` (with `design/`), `docs/product/`, `docs/legal/`, `docs/company/`, `docs/agents/`. New docs go in the matching folder and get a row in `docs/README.md`. Readiness plan R1–R4 (dev → production): [CODE_ORGANIZATION_PLAN.md](docs/engineering/CODE_ORGANIZATION_PLAN.md). Run `pnpm check` before finishing; it includes local documentation destinations (`docs:links`), client credential markers (`security:client-keys`) and the master data map (`data:map:check`). **Data control point:** `DATA_GOVERNANCE` reviews every new or changed table, column, view, database function, export or Storage path; record it in `docs/engineering/data-ownership.json` and regenerate `docs/engineering/DATA_MAP.md` (`node scripts/data-map.mjs`) in the same change ([DATA_GOVERNANCE.md](docs/engineering/DATA_GOVERNANCE.md)). Never delete what looks dead; archive with the owner's approval. Local setup and CI use Node 24.
 
 Engineer onboarding: [docs/engineering/CONVENTIONS.md](docs/engineering/CONVENTIONS.md) (naming + placement) · [SYSTEM_OVERVIEW.md](docs/engineering/SYSTEM_OVERVIEW.md) · [docs/engineering/ARCHITECTURE.md](docs/engineering/ARCHITECTURE.md) · [docs/ONBOARDING.md](docs/ONBOARDING.md) · [docs/engineering/SCHEMA.md](docs/engineering/SCHEMA.md) · [docs/agents/TEAMS.md](docs/agents/TEAMS.md) (department call sheet) · [docs/product/VOICE.md](docs/product/VOICE.md) (donation language) · [docs/engineering/CONVENTIONS.md](docs/engineering/CONVENTIONS.md) §5 (**comment every file you touch** — header on every file, *why* not *what* inline; CI runs `pnpm comments:check`)
 
@@ -26,15 +26,15 @@ This repo is a **pnpm monorepo**.
 | `@tapuai/admin-portal` | `apps/admin-portal/` — Next web admin, **read-only oversight** (Home / Trends / Audience / Revenue / Health / Product, plus Analytics and Departments; inline-SVG charts in `components/charts/`; the report format — wide header, underline tabs, open panels — is the default look on every page, owner decision 2026-10-12); every write — Features/Look flags, Games, Drip, Catalogs, everything — happens only in Expo `/admin`, which this portal reads from (including `app_runtime_config`) |
 | `@tapuai/shared-types` | `packages/shared-types/` — Profile / ActionStats / Spotlight / Soft-Wall + Profile chrome / RPC shapes |
 
-Root keeps `supabase/`, `docs/`, `scripts/`, `archive/`, `AGENTS.md`, `CLAUDE.md`. The old Expo playground is in `archive/my-app/` (reference only, outside the workspace; see `archive/README.md`). The root `app.json` (`{"expo": {}}`) is intentional; the real app config is `apps/mobile/app.json`.
+Root keeps `supabase/`, `docs/`, `scripts/`, `patches/`, `archive/`, `AGENTS.md`, `CLAUDE.md`. Versioned dependency fixes belong in `patches/` and the root pnpm manifest/lockfile; do not rely on an untracked `node_modules` edit. The old Expo playground is in `archive/my-app/` (reference only, outside the workspace; see `archive/README.md`). The root `app.json` (`{"expo": {}}`) is intentional; the real app config is `apps/mobile/app.json`.
 
 ### Directory Hierarchy Rules (`apps/mobile/`)
 
-- `apps/mobile/app/` → **Expo Router only.** Layouts (`_layout.tsx`), tab routes `(tabs)` (`index` Home / Highlights ⚡ with a Home pill, a search control, and a **Local** pill that navigates rather than filters (All and Seki are off the bar for now); `activity` Activity — the fan-bar slot Local used to hold; `local` nested stack (`index` + `game/[id]`) still routable but **not** a bar item; `spotlight`, `drip`, `profile`, hidden `user/[id]` + `athlete/[id]` redirect + `receipts`; `/shop` redirects), role groups (`(admin)/admin` production control plane: Marketing / Owner / Engineer / All lens; pinned Home plus Operations (games / sports / polls / boosters / publish) / Content / Commerce / Audience / Growth (reports / feedback / coverage) / System (features / look / catalogs / studio; lab / qa are hidden deep links); Back / Home trail on every desk), the fan/role groups `(athlete)` / `(booster)` / `(fan)` / `(guest)` / `(parent)` / `(sponsor)`, the `operator/` console (`index`, `[gameId]`, `console/[gameId]`, `scorer`), `auth/callback`, `gift/[handle]`, `school-confirm` (school AD/coach confirmation form, `?t=` link token), `stripe-connect`, and `+api.ts` server routes.
-- `apps/mobile/src/frontend/components/` → Reusable UI, grouped **by consuming feature**; see [docs/engineering/CONVENTIONS.md](docs/engineering/CONVENTIONS.md) §2 for the placement rule. Subfolders: `Admin/`, `Auth/`, `Common/`, `Custodial/`, `Drip/`, `Effects/`, `Feedback/`, `Filmers/`, `Legal/`, `Local/`, `Onboarding/`, `Operator/`, `Profile/`, `Rally/`, `Reels/`, `Spotlight/`, `Thanks/`, `UI/`, `Verification/`. Flat is reserved for genuinely cross-cutting pieces (`ScreenShell`, `ScreenHeading`, `TabScreen`, `RuntimePaused`, `TipSheetModal`, `AuraToast`, `BackedCelebration`, `DashboardPanel`, `TipCheckout`, `PlayCard`, `TipButton`, `FeeCheckbox`) — anything with a single consumer belongs in that consumer's subfolder.
+- `apps/mobile/app/` → **Expo Router only.** Layouts (`_layout.tsx`), tab routes `(tabs)` (`index` Home / Highlights ⚡ with a Home pill, a search control, and a **Local** pill that navigates rather than filters (All and Seki are off the bar for now); `activity` Activity — the fan-bar slot Local used to hold; `local` nested stack (`index` + `game/[id]`) still routable but **not** a bar item; `spotlight`, `drip`, `profile`, hidden `user/[id]` + `athlete/[id]` redirect + `receipts`; `/shop` redirects), role groups (`(admin)/admin` production control plane: Marketing / Owner / Engineer / All lens; pinned Home plus Operations (games / sports / polls / boosters / publish) / Content (Highlights & review joins moderation) / Commerce / Audience / Growth (feedback; saved reports links open Analytics) / System (App setup joins features / look / catalogs / lab; QA / Studio share Tools; Coverage opens Product Control map); Back / Home trail on every desk), the fan/role groups `(athlete)` / `(booster)` / `(fan)` / `(guest)` / `(parent)` / `(sponsor)`, the `operator/` console (`index`, `[gameId]`, `console/[gameId]`, `scorer`), `auth/callback`, `gift/[handle]`, `school-confirm` (school AD/coach confirmation form, `?t=` link token), `stripe-connect`, and `+api.ts` server routes.
+- `apps/mobile/src/frontend/components/` → Reusable UI, grouped **by consuming feature**; see [docs/engineering/CONVENTIONS.md](docs/engineering/CONVENTIONS.md) §2 for the placement rule. Subfolders: `Activity/`, `Admin/`, `Auth/`, `Common/`, `Custodial/`, `Drip/`, `Effects/`, `Feedback/`, `Filmers/`, `Legal/`, `Local/`, `Onboarding/`, `Operator/`, `Profile/`, `Rally/`, `Reels/`, `Spotlight/`, `Thanks/`, `UI/`, `Verification/`. Flat is reserved for genuinely cross-cutting pieces (`ScreenShell`, `ScreenHeading`, `TabScreen`, `RuntimePaused`, `TipSheetModal`, `AuraToast`, `BackedCelebration`, `DashboardPanel`, `TipCheckout`, `PlayCard`, `TipButton`, `FeeCheckbox`) — anything with a single consumer belongs in that consumer's subfolder.
 - `apps/mobile/src/frontend/context/` → React context (`AuthContext`, `SoftWallContext`, `CelebrationContext`, `RoleGate`, `UploadSheetContext`, `AppRuntimeContext`, `AdminLensContext`). There is **no** `GameContext`. Auth helpers live in `lib/auth.ts` (guest markers, Apple / Google / Magic Link). Soft wall UI: `components/Auth/SoftWallModal`, first-open `components/Onboarding/WelcomeOverlay`.
-- `apps/mobile/src/frontend/hooks/` → Data hooks (`useLiveScores`, `useLiveGame`, `useGameEventBroadcast`, `useTipCheckout`, `useStripeConnect`, `useLegalAck`, `useAthleteSubscription`, `useRoster`, `useReels`, `useSavedReel`, `useAuraBoosters`, `useCheerPoll`, `useFanTipHistory`, `useReceivedMalo`, `useSponsorships`, `useLocalSearch`, `useTeamSearch`, `useAthleteStats`, `useActiveSpotlight`, `useSpotlightBoard`, `usePendingPlayerTags`, `useCrew`, `useAdminDashboard`, `useDripCatalog`, `useSurfaceUsage`, `useSportConfigs`, `useSheetFrame` (also exports `SHEET_BLUR_INTENSITY`), `useActivityFeed`, `useCustodial`, `useLeaderboards`, `useReelViewTracker`, `useMyVerification`, `useSchoolBadge`, `useFilmerStats`, `useRally`, `useDonationThanks`, `useStoryPhotos`). There is **no** `useLiveFeed` / `useStripePayment`.
-- `apps/mobile/src/frontend/lib/` → Client SDKs (`supabase.ts`, `stripe.native.ts` / `stripe.web.ts`, `aura.ts`, `reels.ts`, `reelVotes.ts`, `athleteStats.ts`, `teams.ts`, `roster.ts`, `guestGames.ts`, `vault.ts`, `spotlight.ts`, `tags.ts`, `crew.ts`, `finance.ts`, `legal.ts`, `verification.ts`, `share.ts`, `admin.ts`, `adminCoverage.ts`, `runtime.ts`, `feedback.ts`, `wishlist.ts`, `sports.ts`, `socialLinks.ts`, `custodial.ts`, `leaderboards.ts`, `walletPay.ts`, `schoolConfirm.ts`, `payoutGate.ts`, `schoolBadge.ts`, `filmers.ts`, `rallies.ts`, `donationThanks.ts`, `photoStories.ts`, `boosterPortal.ts`, `sponsorAds.ts`).
+- `apps/mobile/src/frontend/hooks/` → Data hooks (`useLiveScores`, `useLiveGame`, `useGameEventBroadcast`, `useTipCheckout`, `useStripeConnect`, `useLegalAck`, `useAthleteSubscription`, `useRoster`, `useReels`, `useSavedReel`, `useAuraBoosters`, `useCheerPoll`, `useFanTipHistory`, `useReceivedMalo`, `useSponsorships`, `useLocalSearch`, `useTeamSearch`, `useAthleteStats`, `useActiveSpotlight`, `useSpotlightBoard`, `usePendingPlayerTags`, `useCrew`, `useAdminDashboard`, `useDripCatalog`, `useSurfaceUsage`, `useSportConfigs`, `useSheetFrame` (also exports `SHEET_BLUR_INTENSITY`), `useActivityFeed`, `useCustodial`, `useLeaderboards`, `useReelViewTracker`, `useMyVerification`, `useSchoolBadge`, `useFilmerStats`, `useRally`, `useDonationThanks`, `useStoryPhotos`, `useBooks`, `useAdminAction` (one busy / single-tap / notice runner for admin writes)). There is **no** `useLiveFeed` / `useStripePayment`.
+- `apps/mobile/src/frontend/lib/` → Client SDKs (`supabase.ts`, `stripe.native.ts` / `stripe.web.ts`, `aura.ts`, `reels.ts`, `reelVotes.ts`, `athleteStats.ts`, `teams.ts`, `roster.ts`, `guestGames.ts`, `vault.ts`, `spotlight.ts`, `tags.ts`, `crew.ts`, `finance.ts`, `legal.ts`, `verification.ts`, `share.ts`, `admin.ts`, `adminCoverage.ts`, `runtime.ts`, `feedback.ts`, `wishlist.ts`, `sports.ts`, `socialLinks.ts`, `custodial.ts`, `leaderboards.ts`, `walletPay.ts`, `schoolConfirm.ts`, `payoutGate.ts`, `schoolBadge.ts`, `filmers.ts`, `rallies.ts`, `donationThanks.ts`, `photoStories.ts`, `boosterPortal.ts`, `sponsorAds.ts`, `bookkeeping.ts`, `csvExport.ts` / `csvExport.web.ts`, `adminControls.ts`, `rpc.ts` (`callRpc` / `untypedRpc`: the one bound way to call a database function), `privacy.ts` (PRIV-01 privacy, friends, blocks), `minors.ts` (MINOR-01 age, guardian link, consent, supervision), `payeeVerification.ts` (VERIFY-02 admin payee checks and two-admin override), `redact.ts` (strips SSN-shaped text from telemetry), `dbErrors.ts` (the one "migration not applied yet" check: `isMissingFunction` / `isMissingColumn` / `isMissingRelation` — use it, do not write another)).
 - `apps/mobile/src/frontend/theme/` → Motion tokens (`motion.ts`: `SPRING_CARD` / `SPRING_BOUNCE` / `SPRING_FLIP`, Island Daylight `FOCAL` + `TAB_ACCENTS` — Home jade / Local cyan / Activity violet / Spotlight gold / Drip ember / Profile violet plus `mist*` washes; `hypeFx.ts` Seki / Aura / Flex burst colors).
 - `apps/mobile/src/frontend/services/` → Process-wide clients (`TelemetryManager` singleton → `telemetry_logs`; `OfflineQueue` singleton → AsyncStorage + NetInfo flush of Aura / cheer / bookmark / report; `MediaUploadService` → `react-native-compressor` + Storage `reels` / `avatars`).
 - `apps/mobile/src/backend/api/` → Stripe handlers imported by `apps/mobile/app/api/*+api.ts` (`createPaymentIntent.ts`, `createPayout.ts`, `createStripeAccount.ts`, `session.ts`).
@@ -48,13 +48,39 @@ Path aliases (mobile): `@/*` → `apps/mobile/src/frontend/*`, `@backend/*` → 
 ### Tech Stack & Guardrails
 
 1. **Frontend:** React Native (Expo Router SDK 57), TypeScript, StyleSheet + `apps/mobile/src/frontend/constants/theme.ts` (Daylight default; focal hexes from `apps/mobile/src/frontend/theme/motion.ts`). Skia glow via `@shopify/react-native-skia` (`Effects/GlowingNeonBorder`). **Not NativeWind/Tailwind** in mobile. Admin portal stub uses Tailwind.
-2. **Video:** `expo-video` only. Do not use `expo-av` for the reel player (it is still in `package.json` but must not be wired). Do not set `useCaching: true`.
+2. **Video:** `expo-video` only. Do not use `expo-av` for the reel player (it is still in `package.json` but must not be wired). Do not set `useCaching: true`. PLAY-01 patches 57.0.5's web play promises and pause intent; pnpm applies the versioned patch during install. Review/remove or port it when upgrading Expo Video; app try/catch cannot catch a discarded DOM play promise. See [PLAY-01](docs/agents/PLAY-01.md).
 3. **Backend & Realtime:** Supabase PostgreSQL, Auth, Realtime WebSockets, Storage buckets `game_highlights`, `reels`, `avatars`.
 4. **Payments:** Stripe PaymentSheet (`@stripe/stripe-react-native`) + Expo API routes. Connect Express Account Links are minted only by Edge Function `create-stripe-account` with the session JWT (`sk_` never in `apps/mobile/src/frontend/`). Native vs web PaymentSheet is split by Metro platform files.
 5. **Environment:** Mobile client keys must start with `EXPO_PUBLIC_` in `apps/mobile/.env.local`. Admin portal uses `NEXT_PUBLIC_*` in `apps/admin-portal/.env.local`. Never `aladb.env` or secrets under `src/frontend/`.
 6. **Product copy:** money is always **Donate / donation** (owner, 2026-09-29) — never Mālo-as-money, tip, backing, Chip In or fund (the one exception is the optional **tip for Tapua'i** at checkout, and that line must name Tapua'i); the donate sheet discloses the 90 / 10 split; athletes thank donors with presets only; "Mālo!" is only a thank-you. Rules: [docs/product/VOICE.md](docs/product/VOICE.md); CI runs `pnpm copy:check`; call the `VOICE` agent for copy reviews. Also **Seki** / **Highlights ⚡**. Persistence still uses `tips` / `reels` / `useTipCheckout` / `malo*`.
 7. **Package manager:** `pnpm` at the repo root (`pnpm-workspace.yaml`). Day-to-day: `pnpm install`, `pnpm mobile`, `pnpm admin`.
 
+
+### Future features: admin handling before app implementation
+
+Every future feature agent/session must follow [FEATURE_ADMIN_WORKFLOW](docs/engineering/FEATURE_ADMIN_WORKFLOW.md).
+Enroll the feature in `docs/agents/feature-admin.json` with the linked template before app implementation.
+The responsible lead assigns one owner, reuses existing admin desks/reports, and reviews source,
+actions, reporting, access/privacy, disable/repair behavior and actual verification evidence.
+Build and verify the admin handling first; pass `pnpm feature-admin:check --feature ID --require admin-ready`
+before starting the app experience. Preserve that checkpoint, build/verify the app, then pass
+`pnpm feature-admin:check --feature ID --require app-ready` before completed-feature handoff.
+Presentation-only work uses the documented reason/reviewer/evidence exemption. Ordinary repairs
+follow the existing fix process unless they introduce a capability or operational responsibility.
+The gate validates registered metadata, local files and evidence; it cannot infer omitted features,
+authenticate work order, apply migrations or certify hosted/device/release readiness. Lead review
+must check enrollment and the actual evidence. `pnpm check` includes its tests and registry validation.
+
+### Engineering Support: detection and repair
+
+`SUPPORT` reports to `ENGINEERING`; INCIDENT_TRIAGE, TELEMETRY and RELIABILITY report to SUPPORT.
+Read [ENGINEERING_SUPPORT](docs/engineering/ENGINEERING_SUPPORT.md). Every feature/fix owner pairs
+with this team on error signals, safe logs, reproduction and repair/regression evidence.
+Run `pnpm detection:scan` for retained local gate + Next-test results; missing sensors and skipped
+checks remain explicit. Register new sensors or gaps in `docs/engineering/detection-sensors.json`;
+SUPPORT reviews detection/repair coverage within report/disable contracts before admin-ready.
+The team assists domain developers; independent QA and finance/security/data authority remain.
+Definitions do not start background agents or hosted monitors.
 
 ### Specialist dispatch and ownership
 
@@ -79,3 +105,80 @@ coverage and exceptions are tracked in `docs/engineering/MENU_STYLE_MAP.md`; pre
 Donate composition stays in `TipSheetModal` / `TipCheckout`: Amount → Options → Review inside
 one popup, fixed navigation, final reviewed action only starts payment. Preserve quote/recipient,
 No tip defaults, rights/held notices and checkout locks. Generic menu chrome stays in `UI/MenuChrome.tsx`.
+
+### Main-admin support, security and recovery contract
+
+`/admin/support` joins Engineering Support and cybersecurity with the feature developer.
+Use fixed-code observations, preserve client/trusted source separation and original occurrences,
+retain independent protected review and server actor/time. Register owned data/roles so the
+Team flow diagram regenerates from the master map. Add bounded detection and repair evidence
+to every future feature's admin-first contract; a missing sensor is explicit, never healthy.
+`pnpm recovery:package --verify-code` creates a private source package and manifest;
+`pnpm recovery:verify PACKAGE` verifies integrity; `pnpm recovery:restore PACKAGE` creates
+a separate preview. Packages exclude recognized credentials/runtime paths and accept only
+reviewed source formats; ambiguous data formats fail closed. Locked dependencies and
+schema/migration hashes travel with source. QA/Recovery must check deployed compatibility
+and rehearse an approved database backup before release; restoring source does not restore data.
+
+### Innovation and outside handoff
+
+Follow [INNOVATION_AND_HANDOFF](docs/engineering/INNOVATION_AND_HANDOFF.md) for new work.
+Record observed struggles or explicit potential failures, a baseline, alternatives, a bounded
+experiment, success/stop criteria and actual results in the existing task/design/incident record.
+The lead records adopt/revise/stop decisions and the domain reviews. Successful approaches use
+the shared naming/interface/documentation standards and the existing admin-first workflow.
+Handoffs provide versioned source/data-flow/ownership evidence and clear reading paths for
+engineers, legal reviewers and investors, scoped to their authorized access. Label proposals,
+local implementation, hosted/device verification and gaps. Lead review checks meaning; these
+documentation requirements are not automatically enforced by the feature metadata validator.
+
+### Growth, capacity and service recommendations
+
+`GROWTH_ANALYTICS` is the accountable agent for the Growth and Capacity Review working group.
+Read [GROWTH_CAPACITY_REVIEW](docs/engineering/GROWTH_CAPACITY_REVIEW.md). One packet joins
+existing Analytics/Audience measurements, Health/Support evidence and Books/provider costs,
+with ANALYST, COST_OPERATIONS, RELIABILITY, Data and Finance review. The routing stays
+GROWTH_ANALYTICS → MARKETING → CTO → owner. Weekly/monthly and confirmed-threshold reviews
+are standing assignments; record actual execution and missing/stale evidence. Each packet
+compares observations, accepted targets, verified service quotas and loaded options per service.
+Account counts/tab events are not MAU; unknown capacity/cost never means healthy or cheap.
+A threshold triggers diagnosis/recommendation, not an automatic purchase, plan/host change,
+data migration, financial action or release. CTO recommends; owner decides; domain/QA gates
+and the admin-first workflow apply to any resulting implementation. No background collector
+or unattended agent is established by a role definition. Actual setup: [GROWTH-01](docs/agents/GROWTH-01.md).
+
+The Growth packet includes the standing Legal/Growth/Engineering verification, consent and
+safe-engagement checkpoint in charter §9. Classify mandatory rules and company choices,
+exchange findings, compare lawful alternatives with growth/support costs, and record domain
+reviews, CTO recommendation and owner decisions before implementation. The initial source
+review is [VERIFICATION_AND_SAFE_GROWTH_REVIEW](docs/legal/VERIFICATION_AND_SAFE_GROWTH_REVIEW.md).
+
+Growth charter §10 and [USER_GROWTH_PLANS](docs/product/USER_GROWTH_PLANS.md) require a plan
+for each user segment, including non-donating fans and casual uploaders/filmers. Record useful
+first actions, repeat loops, capability/source gaps, action-based safeguards, accepted metrics,
+support/service costs and next decisions in the one Growth packet. Segments overlap; do not
+sum them into unique users or force athlete/payee setup on unrelated permitted fan actions.
+
+Charter §11 and [FAMILY_FUN_PLAYBOOK](docs/product/FAMILY_FUN_PLAYBOOK.md) cover the owner's
+fan-video recognition, family activities, optional service and separate badge/Aura/money
+paths. Bring fun/return ideas, fair newcomer inclusion, actual content/control gaps, review
+capacity and permissions to the same joint packet. These remain brainstorming proposals;
+new fan awards, badges, school scoring and paid creator work require their focused design,
+admin-first and domain decisions before implementation or launch.
+Latest owner choice: fans' valid free ballots select the fan award winner; staff review
+eligibility/rights/safety and enforce published correction rules. Playbook §12 refines the
+weekly entry/review/vote/recap journey. Keep private acknowledgment distinct from consented
+public candidates; current poll counters do not implement this voting capability.
+
+### Documentation and team coordination must execute
+
+For each feature/fix handoff, the lead assigns DOCUMENTATION the affected documentation and
+actual owner evidence. For role, protocol or priority changes, assign VP_OPERATIONS the roster,
+reporting and plan reconciliation in the same turn. Record actual executor/session, changed or
+checked files, check date/result, unresolved gaps and next owner in the existing task tracker.
+Root integrates shared STATE/CHANGELOG/queue updates and releases claims after verification.
+Do not close a handoff while its required documentation or coordination correction is open.
+An authorized outside session can perform the function and must name its actual runtime;
+repository model pins remain governed by their role files. CI checks structure and drift; a
+role definition, dispatch or passing CI does not prove semantic review or continuous activity.
+See [COORD-01](docs/agents/COORD-01.md) for actual assignments and the current checkpoint.

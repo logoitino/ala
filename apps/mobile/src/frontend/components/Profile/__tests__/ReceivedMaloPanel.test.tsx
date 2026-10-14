@@ -7,7 +7,8 @@ const mockThank = jest.fn(async () => ({ ok: true as const }));
 const mockToast = jest.fn();
 const mockRefresh = jest.fn(async () => undefined);
 let mockLoadError: string | null = null;
-let mockRows = [
+type MockRow = { id: string; fan_name: string; amount_cents: number; family_cents?: number | null; origin: string; entry: string; source_label: string | null };
+let mockRows: MockRow[] = [
   { id: 't1', fan_name: 'Sina', amount_cents: 500, origin: 'rally', entry: 'in_app', source_label: 'New cleats' },
   { id: 't2', fan_name: 'Tavita', amount_cents: 1000, origin: 'profile', entry: 'in_app', source_label: null },
 ];
@@ -16,6 +17,9 @@ jest.mock('@/hooks/useReceivedMalo', () => ({
   useReceivedMalo: () => ({
     loading: false,
     totalCents: mockRows.reduce((sum, row) => sum + row.amount_cents, 0),
+    familyCents: mockRows.length && mockRows.every((row) => row.family_cents != null)
+      ? mockRows.reduce((sum, row) => sum + (row.family_cents ?? 0), 0)
+      : null,
     rows: mockRows,
     error: mockLoadError,
     refresh: mockRefresh,
@@ -73,9 +77,31 @@ describe('ReceivedMaloPanel say thanks', () => {
     mockRows = [];
     mockLoadError = 'Could not find the function public.get_received_malo';
     await render(<ReceivedMaloPanel playerId="p1" />);
-    expect(screen.getByText('$0.00 from fans')).toBeTruthy();
+    expect(screen.getByText('$0.00 donated')).toBeTruthy();
     expect(screen.getByText(/No donations yet/)).toBeTruthy();
     expect(screen.queryByText(/Could not load donations/)).toBeNull();
     expect(screen.queryByText('Retry')).toBeNull();
+  });
+});
+
+describe('ReceivedMaloPanel family share', () => {
+  it('leads with what reached the family account, not the donated total', async () => {
+    mockRows = [
+      { id: 't1', fan_name: 'Sina', amount_cents: 500, family_cents: 450, origin: 'rally', entry: 'in_app', source_label: 'New cleats' },
+      { id: 't2', fan_name: 'Tavita', amount_cents: 1000, family_cents: 900, origin: 'profile', entry: 'in_app', source_label: null },
+    ];
+    await render(<ReceivedMaloPanel playerId="p1" />);
+    expect(screen.getByText('$13.50 recorded for your family account so far')).toBeTruthy();
+    expect(screen.getByText("Fans donated $15.00. Tapua'i kept $1.50 to run the app, including card processing.")).toBeTruthy();
+    expect(screen.getByText('$4.50 for your family account')).toBeTruthy();
+    expect(screen.getByText('$10.00')).toBeTruthy();
+  });
+
+  it('says the split instead of guessing when the database has no family share yet', async () => {
+    mockRows = [{ id: 't1', fan_name: 'Sina', amount_cents: 500, origin: 'rally', entry: 'in_app', source_label: 'New cleats' }];
+    await render(<ReceivedMaloPanel playerId="p1" />);
+    expect(screen.getByText('$5.00 donated')).toBeTruthy();
+    expect(screen.getByText("90% of each donation is recorded for the family account. Tapua'i keeps 10% to run the app, including card processing.")).toBeTruthy();
+    expect(screen.queryByText(/for your family account/)).toBeNull();
   });
 });

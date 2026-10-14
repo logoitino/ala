@@ -32,6 +32,7 @@ import Reanimated, {
 
 import { ReelActionOverlay } from '@/components/Reels/ReelActionOverlay';
 import { PhotoStoryMedia } from '@/components/Reels/PhotoStoryMedia';
+import { createReelPlaybackController } from '@/components/Reels/reelPlayback';
 import { FilmerSheet } from '@/components/Filmers/FilmerSheet';
 import { ReelMoreSheet } from '@/components/Reels/ReelMoreSheet';
 import { ReportContentModal } from '@/components/Reels/ReportContentModal';
@@ -193,6 +194,7 @@ function ReelCardImpl({
   // True only while the video is really playing on screen; the view counter adds up this time.
   const [playing, setPlaying] = useState(false);
   const [durationSec, setDurationSec] = useState<number | null>(null);
+  const [videoFailure, setVideoFailure] = useState<{ clipId: string; retry: () => void } | null>(null);
   const photoStory = isPhotoStory(clip);
   // Keyed by clip so a recycled card never shows the previous story's description.
   const [storyNoteFor, setStoryNoteFor] = useState<{ clipId: string; note: string | null }>({ clipId: '', note: null });
@@ -561,6 +563,10 @@ function ReelCardImpl({
     setTimeout(() => setLoopFlash(false), 1400);
   }, []);
 
+  const onPlaybackFailure = useCallback((failedClip: string, retry: (() => void) | null) => {
+    setVideoFailure(retry ? { clipId: failedClip, retry } : null);
+  }, []);
+
   const onStoryReady = useCallback(() => setStoryLoadedId(clip.id), [clip.id]);
 
   const onStoryPhoto = useCallback(
@@ -604,6 +610,7 @@ function ReelCardImpl({
             locked={locked}
             muted={muted}
             onPlaybackChange={onPlaybackChange}
+            onPlaybackFailure={onPlaybackFailure}
             onLoopEnd={onLoopEnd}
           />
         )}
@@ -616,6 +623,15 @@ function ReelCardImpl({
       )}
 
       <View pointerEvents="none" style={styles.scrim} />
+      {!photoStory && isFocused && !locked && videoFailure?.clipId === clip.id ? (
+        // Above the full-screen mute gesture: a failed source must have a reachable recovery action.
+        <View style={styles.playbackFailure} accessibilityLiveRegion="polite">
+          <Text style={styles.playbackFailureText}>This Highlight couldn't play.</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Retry this Highlight" onPress={videoFailure.retry} style={styles.playbackRetry}>
+            <Text style={styles.playbackRetryText}>Retry</Text>
+          </Pressable>
+        </View>
+      ) : null}
       {locked ? (
         <BlurView
           intensity={80}
@@ -823,6 +839,8 @@ type ReelVideoLayerProps = {
   muted: boolean;
   /** Real playback state for the view counter, with the clip length once known. */
   onPlaybackChange: (playing: boolean, durationSec: number | null) => void;
+  /** Recovery is rendered above the card's tap gesture, so Retry remains reachable. */
+  onPlaybackFailure: (clipId: string, retry: (() => void) | null) => void;
   /** Clip reached its end while focused ("Full replay" flash). */
   onLoopEnd: () => void;
 };
@@ -832,144 +850,111 @@ type ReelVideoLayerProps = {
  *   lock, TTFF and stall telemetry. Split out of `ReelCardImpl` so a photo story never creates a player.
  * @sideEffects expo-video player; `TelemetryManager` first-frame and stall events.
  */
-function ReelVideoLayer({ clipId, videoUrl, active, focused, locked, muted, onPlaybackChange, onLoopEnd }: ReelVideoLayerProps) {
-  // Starts empty, not at `videoUrl`: the player is created with no source (below), so the first
-  // activation must load it. Seeding this with the URL made the load effect skip a card's first clip.
+function ReelVideoLayer({ clipId, videoUrl, active, focused, locked, muted, onPlaybackChange, onPlaybackFailure, onLoopEnd }: ReelVideoLayerProps) {
   const loadedUriRef = useRef('');
-  const isFocusedRef = useRef(focused);
-  const lockedRef = useRef(locked);
-  const mutedRef = useRef(muted);
-  const clipIdRef = useRef(clipId);
+  const latest = useRef({ clipId, videoUrl, active, focused, locked, muted, onPlaybackChange, onPlaybackFailure, onLoopEnd });
+  latest.current = { clipId, videoUrl, active, focused, locked, muted, onPlaybackChange, onPlaybackFailure, onLoopEnd };
   const loadStartedAtRef = useRef<number | null>(null);
   const firstFrameLoggedRef = useRef(false);
   const stallStartedAtRef = useRef<number | null>(null);
   const appPausedRef = useRef(false);
-  isFocusedRef.current = focused;
-  lockedRef.current = locked;
-  mutedRef.current = muted;
-  clipIdRef.current = clipId;
+  const lastMutedRef = useRef(muted);
+  const controllerRef = useRef<ReturnType<typeof createReelPlaybackController> | null>(null);
 
-  // 2026-09 fix: this used to pass the clip URL here directly, which makes `expo-video` start
-  // loading/probing that URL the instant the component mounts — regardless of `active`. The Home
-  // feed's FlatList mounts up to 10 cards on first render (RN's `initialNumToRender` default, not
-  // overridden below), so every one of those 10 clips' videos — several pointing at now-dead
-  // `commondatastorage.googleapis.com` sample URLs mixed into the seeded demo feed — started loading
-  // concurrently on a single Home mount. On a real device this pegged the main thread hard enough to
-  // make the whole app unresponsive with no error surfaced (confirmed via a wall of AVFoundation
-  // "Failed to load available audio/subtitle tracks" warnings for every one of those 10 clips, right
-  // where a real freeze reproduced). Starting from `null` and only loading the real source once this
-  // card is `active` (below) means an off-screen mounted card never touches the network or the native
-  // video decoder at all.
-  const videoPlayer = useVideoPlayer(null, (instance) => {
-    instance.loop = true;
-    instance.muted = true;
-  });
-
-  useEffect(() => {
+  // A mounted offscreen card starts with no source, preserving the no-decoder/no-network boundary.
+  const videoPlayer = useVideoPlayer(null, (instance) => { instance.loop = true; instance.muted = true; });
+  const resetLoad = useCallback(() => {
     loadStartedAtRef.current = Date.now();
     firstFrameLoggedRef.current = false;
     stallStartedAtRef.current = null;
-  }, [clipId, videoUrl]);
+    latest.current.onPlaybackFailure(latest.current.clipId, null);
+  }, []);
+
+  useEffect(() => {
+    loadedUriRef.current = '';
+    const controller = createReelPlaybackController({
+      player: videoPlayer,
+      native: Platform.OS !== 'web',
+      currentUri: () => latest.current.videoUrl,
+      canPlay: () => latest.current.active && latest.current.focused && !latest.current.locked,
+      onPlaybackChange: (playing, duration) => latest.current.onPlaybackChange(playing, duration),
+      onReady: () => {
+        if (loadStartedAtRef.current != null && !firstFrameLoggedRef.current) {
+          telemetry.track({ event_type: 'video_first_frame', video_id: latest.current.clipId, duration_ms: Date.now() - loadStartedAtRef.current });
+          firstFrameLoggedRef.current = true;
+        }
+        if (stallStartedAtRef.current != null) {
+          telemetry.trackVideoStall(latest.current.clipId, Date.now() - stallStartedAtRef.current);
+          stallStartedAtRef.current = null;
+        }
+      },
+      onError: () => {
+        stallStartedAtRef.current = null;
+        // Stable issue code only: media URLs and browser error messages never enter telemetry.
+        telemetry.trackIssue('video.playback.failed');
+        latest.current.onPlaybackFailure(latest.current.clipId, () => {
+          const current = latest.current;
+          if (!current.active || !current.focused || current.locked || !current.videoUrl) return;
+          resetLoad();
+          void controller.load(current.videoUrl);
+        });
+      },
+    });
+    controllerRef.current = controller;
+    return () => { controller.dispose(); controllerRef.current = null; };
+  }, [videoPlayer, resetLoad]);
 
   useEffect(() => {
     if (!active || !videoUrl || loadedUriRef.current === videoUrl) return;
     loadedUriRef.current = videoUrl;
-    loadStartedAtRef.current = Date.now();
-    firstFrameLoggedRef.current = false;
-    stallStartedAtRef.current = null;
-    void videoPlayer.replaceAsync(videoUrl);
-  }, [active, videoUrl, videoPlayer]);
+    resetLoad();
+    void controllerRef.current?.load(videoUrl);
+  }, [active, videoUrl, videoPlayer, resetLoad]);
 
   useEffect(() => {
     videoPlayer.loop = true;
     videoPlayer.muted = muted;
-    if (focused && !locked) {
+    const muteChanged = lastMutedRef.current !== muted;
+    lastMutedRef.current = muted;
+    if (active && focused && !locked) {
       appPausedRef.current = false;
-      videoPlayer.play();
-      return;
+      if (muteChanged) controllerRef.current?.retryPlay();
+      else controllerRef.current?.requestPlay();
+    } else {
+      appPausedRef.current = true;
+      stallStartedAtRef.current = null;
+      controllerRef.current?.pause();
     }
-    appPausedRef.current = true;
-    stallStartedAtRef.current = null;
-    videoPlayer.pause();
-  }, [focused, locked, muted, videoPlayer]);
+  }, [active, focused, locked, muted, videoUrl, videoPlayer]);
 
-  useEventListener(videoPlayer, 'statusChange', ({ status, oldStatus }) => {
-    if (status === 'loading') {
-      if (loadStartedAtRef.current == null) loadStartedAtRef.current = Date.now();
-      if (
-        firstFrameLoggedRef.current &&
-        oldStatus === 'readyToPlay' &&
-        isFocusedRef.current &&
-        !lockedRef.current &&
-        !appPausedRef.current &&
-        stallStartedAtRef.current == null
-      ) {
-        stallStartedAtRef.current = Date.now();
-      }
-    }
-
-    if (status === 'readyToPlay') {
-      if (loadStartedAtRef.current != null && !firstFrameLoggedRef.current) {
-        telemetry.track({
-          event_type: 'video_first_frame',
-          video_id: clipIdRef.current,
-          duration_ms: Date.now() - loadStartedAtRef.current,
-        });
-        firstFrameLoggedRef.current = true;
-      }
-      if (stallStartedAtRef.current != null) {
-        telemetry.trackVideoStall(clipIdRef.current, Date.now() - stallStartedAtRef.current);
-        stallStartedAtRef.current = null;
-      }
-      if (isFocusedRef.current && !lockedRef.current) {
-        videoPlayer.loop = true;
-        videoPlayer.muted = mutedRef.current;
-        videoPlayer.play();
-      }
-    }
+  useEventListener(videoPlayer, 'sourceChange', ({ source }) => {
+    const uri = typeof source === 'string' ? source : source && typeof source === 'object' ? source.uri ?? null : null;
+    controllerRef.current?.sourceChanged(uri);
   });
-
-  useEventListener(videoPlayer, 'playingChange', ({ isPlaying, oldIsPlaying }) => {
-    onPlaybackChange(isPlaying, isPlaying ? videoPlayer.duration : null);
-    if (
-      oldIsPlaying &&
-      !isPlaying &&
-      firstFrameLoggedRef.current &&
-      isFocusedRef.current &&
-      !lockedRef.current &&
-      !appPausedRef.current &&
-      stallStartedAtRef.current == null
-    ) {
+  useEventListener(videoPlayer, 'sourceLoad', ({ videoSource }) => {
+    const uri = typeof videoSource === 'string' ? videoSource : videoSource && typeof videoSource === 'object' ? videoSource.uri ?? null : null;
+    controllerRef.current?.sourceLoaded(uri);
+  });
+  useEventListener(videoPlayer, 'statusChange', ({ status, oldStatus, error }) => {
+    if (status === 'loading' && controllerRef.current?.isCurrentReady() && firstFrameLoggedRef.current && oldStatus === 'readyToPlay' && latest.current.active && latest.current.focused && !latest.current.locked && !appPausedRef.current && stallStartedAtRef.current == null) {
       stallStartedAtRef.current = Date.now();
-      return;
     }
+    controllerRef.current?.statusChanged(status, error);
+  });
+  useEventListener(videoPlayer, 'playingChange', ({ isPlaying, oldIsPlaying }) => {
+    controllerRef.current?.playingChanged(isPlaying);
+    if (!controllerRef.current?.isCurrentReady() || !latest.current.active || !latest.current.focused || latest.current.locked || appPausedRef.current) return;
+    if (oldIsPlaying && !isPlaying && firstFrameLoggedRef.current && stallStartedAtRef.current == null) stallStartedAtRef.current = Date.now();
     if (isPlaying && stallStartedAtRef.current != null) {
-      telemetry.trackVideoStall(clipIdRef.current, Date.now() - stallStartedAtRef.current);
+      telemetry.trackVideoStall(latest.current.clipId, Date.now() - stallStartedAtRef.current);
       stallStartedAtRef.current = null;
     }
   });
-
   useEventListener(videoPlayer, 'playToEnd', () => {
-    if (!isFocusedRef.current) return;
-    onLoopEnd();
+    if (controllerRef.current?.isCurrentReady() && latest.current.active && latest.current.focused && !latest.current.locked) latest.current.onLoopEnd();
   });
 
-  // Unmount (clip became a photo story, or the card left the window): the card must not keep
-  // counting view time from this player's last "playing" event.
-  useEffect(() => () => onPlaybackChange(false, null), [onPlaybackChange]);
-
-  return (
-    <VideoView
-      player={videoPlayer}
-      style={styles.videoFill}
-      contentFit="cover"
-      nativeControls={false}
-      surfaceType="textureView"
-      allowsVideoFrameAnalysis={false}
-      allowsPictureInPicture={false}
-      playsInline
-    />
-  );
+  return <VideoView player={videoPlayer} style={styles.videoFill} contentFit="cover" nativeControls={false} surfaceType="textureView" allowsVideoFrameAnalysis={false} allowsPictureInPicture={false} playsInline />;
 }
 
 const BANNER_HOLD_MS = 3000;
@@ -1044,6 +1029,14 @@ const styles = StyleSheet.create({
   hitLayer: {
     ...StyleSheet.absoluteFill,
   },
+  playbackFailure: {
+    position: 'absolute', top: '35%', left: 24, right: 24, zIndex: 9,
+    alignItems: 'center', gap: 12, padding: 20, borderRadius: radii.lg,
+    backgroundColor: colors.videoScrimSoft,
+  },
+  playbackFailureText: { color: colors.onVideo, fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  playbackRetry: { minWidth: 88, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, borderRadius: 22, backgroundColor: palette.jadeInk },
+  playbackRetryText: { color: colors.onAccent, fontSize: 15, fontWeight: '800' },
   lockBlur: {
     ...StyleSheet.absoluteFill,
     overflow: 'hidden',

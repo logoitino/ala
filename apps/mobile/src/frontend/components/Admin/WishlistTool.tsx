@@ -253,7 +253,7 @@ export function WishlistTool() {
       )}
 
       <Text style={styles.note}>
-        Gear-goal donations run through the same checkout, so every one also lands on the Money desk ledger.
+        Gear-goal donations run through the same checkout, so every one also lands on the Revenue report.
       </Text>
     </AdminPage>
   );

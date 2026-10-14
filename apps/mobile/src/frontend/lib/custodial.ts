@@ -1,4 +1,6 @@
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { ATHLETE_SHARE_PERCENT, PLATFORM_SHARE_PERCENT } from '@/data/malo';
+import { isMissingFunction } from '@/lib/dbErrors';
 
 /**
  * Custodial money rules (owner decision 2026-09-29, `docs/engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md` §7):
@@ -35,6 +37,8 @@ export type CustodialSummary = {
   handoverDate: string | null;
   athleteControls: boolean;
   receivedCents: number;
+  /** The family account's share of `receivedCents`, from the books; null until 20261013231000 is applied. */
+  familyCents: number | null;
   requests: CustodialWithdrawal[];
 };
 
@@ -45,11 +49,6 @@ export type CustodialLoad =
   | { state: 'error'; message: string };
 
 const STATUSES: WithdrawalStatus[] = ['pending_athlete', 'approved', 'declined', 'cancelled', 'paid'];
-
-export function isMissingRpc(error: { code?: string; message?: string } | null | undefined): boolean {
-  if (!error) return false;
-  return /could not find the function|schema cache|42883|PGRST202/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
-}
 
 function text(value: unknown, fallback = ''): string {
   return typeof value === 'string' && value.trim() ? value.trim() : fallback;
@@ -97,6 +96,7 @@ export function parseCustodialSummary(raw: unknown): CustodialSummary | null {
     handoverDate: text(r.handover_date) || null,
     athleteControls: r.athlete_controls === true,
     receivedCents: cents(r.received_cents),
+    familyCents: r.family_cents == null ? null : cents(r.family_cents),
     requests: Array.isArray(r.requests)
       ? r.requests.map(parseWithdrawal).filter((w): w is CustodialWithdrawal => Boolean(w))
       : [],
@@ -164,6 +164,38 @@ export function athleteMoneyNotice(summary: CustodialSummary): string {
   return `Every donation is held for you in ${summary.guardianName}'s custodial account${until}. They can't withdraw any of it without your OK in the app.`;
 }
 
+/**
+ * @purpose The money line for a family: what fans donated and what is recorded for the family account (after
+ *   Tapua'i's share). "Recorded", not "received" or "held": payouts are not live and withdrawals are not subtracted
+ *   (VOICE + LEGAL review 2026-10-13). The amount Tapua'i kept is stated from the books, so it always matches the
+ *   numbers even if the split changes. Without the family share (older database) it states the split, never a guess.
+ * @param donatedCents What fans donated in total.
+ * @param familyCents The family account's share from the books, or null when the database has not been updated.
+ * @param format Money formatter for the screen.
+ */
+export function receivedLines(
+  donatedCents: number,
+  familyCents: number | null,
+  format: (cents: number) => string,
+): { headline: string; detail: string } {
+  if (familyCents == null) {
+    return {
+      headline: `${format(donatedCents)} donated`,
+      detail: PLATFORM_SHARE_PERCENT === 0
+        ? 'All of each donation is recorded for the family account.'
+        : `${ATHLETE_SHARE_PERCENT}% of each donation is recorded for the family account. Tapua'i keeps ${PLATFORM_SHARE_PERCENT}% to run the app, including card processing.`,
+    };
+  }
+  const kept = Math.max(0, donatedCents - familyCents);
+  return {
+    headline: `${format(familyCents)} recorded for your family account so far`,
+    detail: kept === 0
+      ? `Fans donated ${format(donatedCents)}. All of it is recorded for your family account.`
+      : `Fans donated ${format(donatedCents)}. Tapua'i kept ${format(kept)} to run the app, including card processing.`,
+  };
+}
+
+
 const STATUS_LABELS: Record<WithdrawalStatus, string> = {
   pending_athlete: 'Waiting on the athlete',
   approved: 'Approved — not paid out yet',
@@ -204,7 +236,7 @@ export async function setParentPlayerConsent(playerId: string, approved: boolean
 export async function fetchCustodialSummary(playerId: string | null | undefined): Promise<CustodialLoad> {
   if (!playerId || !isSupabaseConfigured) return { state: 'ok', summary: null };
   const { data, error } = await supabase.rpc('get_custodial_summary', { target_player_id: playerId });
-  if (isMissingRpc(error)) return { state: 'unavailable' };
+  if (isMissingFunction(error)) return { state: 'unavailable' };
   if (error) return { state: 'error', message: error.message || 'Could not load the account.' };
   return { state: 'ok', summary: parseCustodialSummary(data) };
 }
@@ -219,7 +251,7 @@ async function call(fn: CustodialRpc, args: Record<string, unknown>): Promise<vo
   // Each exported wrapper below pins the exact argument names for its RPC.
   const { error } = await supabase.rpc(fn, args as never);
   if (error) {
-    throw new Error(isMissingRpc(error) ? 'This part of the app is not switched on yet.' : error.message);
+    throw new Error(isMissingFunction(error) ? 'This part of the app is not switched on yet.' : error.message);
   }
 }
 

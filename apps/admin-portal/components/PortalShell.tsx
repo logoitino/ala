@@ -325,24 +325,6 @@ export function Badge({ tone, children }: { tone: 'ok' | 'warn' | 'neutral' | 'd
   return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${cls}`}>{children}</span>;
 }
 
-/** @purpose Inline bar for a leaderboard row, sized relative to the group's max value — no chart library needed. */
-export function BarRow({ label, value, max, formatted }: { label: string; value: number; max: number; formatted: string }) {
-  const pct = max > 0 ? Math.max(4, Math.round((value / max) * 100)) : 0;
-  return (
-    <div className="flex min-w-0 items-center gap-3 border-b border-[var(--border)] py-3">
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-sm font-bold">{label}</span>
-          <span className="shrink-0 text-sm font-extrabold">{formatted}</span>
-        </div>
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
-          <div className="h-full rounded-full bg-[var(--jade)]" style={{ width: `${pct}%` }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }

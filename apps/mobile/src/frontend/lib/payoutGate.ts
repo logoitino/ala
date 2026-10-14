@@ -5,10 +5,7 @@
  */
 
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-
-function rpcMissing(message: string | undefined): boolean {
-  return /could not find the function|schema cache|42883|PGRST202/i.test(message ?? '');
-}
+import { isMissingFunction } from '@/lib/dbErrors';
 
 function asText(raw: unknown): string | null {
   return typeof raw === 'string' && raw.trim() ? raw.trim() : null;
@@ -19,7 +16,7 @@ function asCount(raw: unknown): number {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
 }
 
-export type PayoutHoldReason = 'disputed' | 'no_claim' | 'needs_payout_setup';
+export type PayoutHoldReason = 'disputed' | 'no_claim' | 'needs_payout_setup' | 'needs_guardian_consent' | 'needs_birth_month' | 'needs_payee_verification';
 
 /** The signed-in athlete's own payout gate (design §9). */
 export type MyPayoutStatus = {
@@ -39,7 +36,8 @@ export function parseMyPayoutStatus(raw: unknown): MyPayoutStatus | null {
   const row = raw as Record<string, unknown>;
   const path = row.path === 'school' || row.path === 'identity' ? row.path : null;
   const reason =
-    row.reason === 'disputed' || row.reason === 'no_claim' || row.reason === 'needs_payout_setup' ? row.reason : null;
+    row.reason === 'disputed' || row.reason === 'no_claim' || row.reason === 'needs_payout_setup'
+    || row.reason === 'needs_guardian_consent' || row.reason === 'needs_birth_month' || row.reason === 'needs_payee_verification' ? row.reason : null;
   const cap = typeof row.cap_cents === 'number' && row.cap_cents > 0 ? row.cap_cents : null;
   return { allowed: row.allowed === true, path, capCents: cap, reason, vouches: asCount(row.vouches) };
 }
@@ -125,7 +123,7 @@ export async function vouchForTeammate(requestId: string): Promise<number> {
   if (!isSupabaseConfigured) throw new Error('Vouching needs the live app.');
   const { data, error } = await supabase.rpc('vouch_for_teammate', { target_request_id: requestId });
   if (error) {
-    if (rpcMissing(error.message)) throw new Error('Vouching is not switched on yet.');
+    if (isMissingFunction(error)) throw new Error('Vouching is not switched on yet.');
     throw new Error(error.message);
   }
   return asCount(data);

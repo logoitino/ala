@@ -218,8 +218,6 @@ export function TopAuraBoosters({ hideTitle = false }: TopAuraBoostersProps) {
   );
 }
 
-const TICK = 14;
-
 const styles = StyleSheet.create({
   section: {
     gap: 10,

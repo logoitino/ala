@@ -268,20 +268,3 @@ export const HIGHLIGHT_CLIPS: HighlightClip[] = [
     videoUrl: '',
   },
 ];
-
-export function taggedReelsForAthlete(athleteName: string, school?: string): HighlightClip[] {
-  const name = athleteName.trim().toLowerCase();
-  const catalog = HIGHLIGHT_CLIPS;
-  const tagged = catalog.filter((clip) => clip.athleteName.toLowerCase() === name);
-  if (tagged.length >= 6) return tagged;
-
-  const schoolNeedle = (school ?? '').trim().toLowerCase();
-  const schoolmates = catalog.filter(
-    (clip) =>
-      clip.athleteName.toLowerCase() !== name &&
-      Boolean(schoolNeedle) &&
-      clip.school.toLowerCase().includes(schoolNeedle),
-  );
-
-  return [...tagged, ...schoolmates];
-}

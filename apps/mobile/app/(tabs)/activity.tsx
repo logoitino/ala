@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { CrewAlertsCard } from '@/components/Activity/CrewAlertsCard';
 import { AthleteMoneyCard } from '@/components/Custodial/AthleteMoneyCard';
 import { AthleteVerificationCard } from '@/components/Verification/AthleteVerificationCard';
 import { TeammateVouchCard } from '@/components/Verification/TeammateVouchCard';
@@ -20,6 +21,7 @@ import { useActivityFeed, type ActivityItem, type ActivityKind } from '@/hooks/u
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { userProfileHref } from '@/lib/navigation';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { FriendRequestsCard } from '@/components/Activity/FriendRequestsCard';
 
 const ACCENT = TAB_ACCENTS.activity;
 
@@ -161,6 +163,8 @@ export default function ActivityTab() {
 
         {user ? <AthleteVerificationCard isAthlete={isAthlete} /> : null}
         {user ? <TeammateVouchCard /> : null}
+        {user ? <FriendRequestsCard /> : null}
+        {user ? <CrewAlertsCard /> : null}
         <AthleteMoneyCard playerId={profile?.player_id} />
 
         {loading && items.length === 0 ? (

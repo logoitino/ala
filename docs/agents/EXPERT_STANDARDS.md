@@ -1,10 +1,20 @@
 # Expert standards
 
-**Date:** 2026-10-09. **Trained:** 2026-10-09, each department lead on its connected model. **Kept by:** `VP_OPERATIONS`. **Assigned by:** `CTO`.
+**Original research notes:** 2026-10-09; the recorded training attribution belongs to that historical pass. **Kept by:** `VP_OPERATIONS`. **Assigned by:** `CTO`. Current task execution is recorded in its own ledger, including [COORD-01](COORD-01.md); this document does not certify that a pinned specialist ran.
 
 Each agent reads the standard for its department before it edits. The connected model is in that agent's file (`model` and `force-default-model: true`). Cursor's subagent docs are the mechanism: [Subagents](https://cursor.com/docs/subagents). `.claude/agents/` is a supported project location. A parent Task call does not override the file when `force-default-model` is set. If the plan blocks the model, Cursor falls back; the agent says which model actually ran.
 
 These standards are operating bars. They are not a launch approval, a security sign-off, or legal advice. Counsel still writes Terms, the Privacy Policy, and parental consent.
+
+## Innovation and evidence handoff (2026-10-13)
+
+Every department follows [INNOVATION_AND_HANDOFF](../engineering/INNOVATION_AND_HANDOFF.md).
+Use the existing task/design/incident record for problem, observed/hypothesized baseline,
+options, bounded experiment, success/stop criteria, actual results and adopt/revise/stop decision.
+Apply shared interfaces and naming; keep diagrams and comments understandable to new reviewers.
+Handoffs name source version, environment, owner, evidence and gaps; engineer/legal/investor
+summaries use the same source evidence with authorized audience access. Domain authority and
+model pins remain governed by the existing operating model.
 
 Running an agent spends Cursor usage, not the app's Wave 0 vendor budget. Grok and Composer draw from the Cursor Models pool. Claude, GPT, and Gemini draw from the Other Models pool at the rates on [Models & Pricing](https://cursor.com/docs/models-and-pricing). Published cost-per-task figures below are from [Cursor's cost page](https://cursor.com/cost-savings) (2026-10-09). They are not a bill for this repo.
 
@@ -16,7 +26,7 @@ The 2026-10-09 research pass used other models. Those pins were removed the same
 
 ## Dev
 
-Lead: `ENGINEERING` on `grok-4.7-medium`. Read the [Expo SDK 57 reference](https://docs.expo.dev/versions/v57.0.0/) before a new API. SDK 57.0.0 is React Native 0.86. Routes stay file-based under `apps/mobile/app` ([Expo Router](https://docs.expo.dev/versions/v57.0.0/sdk/router/)).
+Lead: `ENGINEERING`. Read the [Expo SDK 57 reference](https://docs.expo.dev/versions/v57.0.0/) before a new API. SDK 57.0.0 is React Native 0.86. Routes stay file-based under `apps/mobile/app` ([Expo Router](https://docs.expo.dev/versions/v57.0.0/sdk/router/)).
 
 Reel playback is [expo-video](https://docs.expo.dev/versions/v57.0.0/sdk/video/): `useVideoPlayer` and `VideoView`. The hook disposes the player on unmount. `createVideoPlayer` does not; call `release()`. Change the source with `replaceAsync`. Do not wire `expo-av` for the reel player. Do not set `useCaching: true`.
 
@@ -24,7 +34,7 @@ Prefetch only the immediate previous and next photo story. A missing photo colum
 
 ## Database
 
-Lead: `BACKEND` on `claude-fable-5-1-thinking-high`. Migrations are append-only. Canonical SQL is `apps/mobile/src/backend/db/schema.sql`. A written file is not applied SQL. Do not apply SQL unless the owner asks. Development is `ulfapgtabidorgwfjvwz` (the CLI stays linked here). Staging is `tucioqipfejqqqtuakdi`.
+Lead: `BACKEND`. Migrations are append-only. Canonical SQL is `apps/mobile/src/backend/db/schema.sql`. A written file is not applied SQL. Do not apply SQL unless the owner asks. Development is `ulfapgtabidorgwfjvwz` (the CLI stays linked here). Staging is `tucioqipfejqqqtuakdi`.
 
 [Supabase migrations](https://supabase.com/docs/guides/deployment/database-migrations): one change per timestamped file, applied in filename order. `supabase_migrations.schema_migrations` is what each database has applied, and that table is separate from git. Mark a file that was applied by hand with `supabase migration repair --status applied <timestamp>`.
 
@@ -32,7 +42,7 @@ Lead: `BACKEND` on `claude-fable-5-1-thinking-high`. Migrations are append-only.
 
 ## Security
 
-Lead: `SECURITY` on `claude-fable-5-1-thinking-high`. [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security): enable RLS on exposed tables. Adding a policy does not remove existing grants; revoke, then grant back only what the app uses. Name `anon` or `authenticated` on the policy. Do not read `user_metadata` for a role.
+Lead: `SECURITY`. [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security): enable RLS on exposed tables. Adding a policy does not remove existing grants; revoke, then grant back only what the app uses. Name `anon` or `authenticated` on the policy. Do not read `user_metadata` for a role.
 
 A `SECURITY DEFINER` function on Supabase runs as `postgres`, which bypasses RLS ([database functions](https://supabase.com/docs/guides/database/functions)). New or replaced functions use `set search_path = ''` and schema-qualified names. The canonical schema still pins many functions to `public`; that is fixed, and it is not the form the docs recommend. `revoke execute` from `public` and `anon`, then grant only the role that should call it. This repo has no `private` schema, so a helper in `public` is reachable through the Data API. A local reading of SQL is not a hosted denial test.
 
@@ -40,27 +50,43 @@ Storage policies live on `storage.objects` and name `bucket_id` ([storage access
 
 ## IT infrastructure
 
-Lead: `OPERATIONS` on `grok-4.7-medium`. [EAS Build](https://docs.expo.dev/build/introduction/) makes the installable binary. Do not start a new iOS preview until a second device is registered. The 2026-10-01 preview binaries do not contain later JavaScript. [EAS Update](https://docs.expo.dev/eas-update/introduction/) can ship JavaScript and images only when `expo-updates` is already in the binary and the runtime version matches.
+Lead: `OPERATIONS`. [EAS Build](https://docs.expo.dev/build/introduction/) makes the installable binary. Do not start a new iOS preview until a second device is registered. The 2026-10-01 preview binaries do not contain later JavaScript. [EAS Update](https://docs.expo.dev/eas-update/introduction/) can ship JavaScript and images only when `expo-updates` is already in the binary and the runtime version matches.
 
 A Wave 0 preview build, applying SQL, and a `4242` donation are $0 until Expo's free build quota runs out or a free Supabase project pauses (then Pro is about $25/mo). Apple Developer $99/yr is already enrolled. Do not start Wave 1. Staging commands need both `--linked` and project ref `tucioqipfejqqqtuakdi`. Do not link the CLI away from development.
 
 ## Design
 
-Lead: `DESIGN` on `composer-2.5-fast`. Native hit targets are at least 44×44 pt. That number is Apple's Buttons guidance and `MENU_METRICS.touchTarget` in `apps/mobile/src/frontend/constants/theme.ts`. [WCAG 2.2 success criterion 2.5.8](https://www.w3.org/TR/WCAG22/#target-size-minimum) is 24×24 CSS pixels. The 44×44 CSS pixel bar is success criterion 2.5.5, Level AAA. Do not cite 2.5.8 as 44.
+Lead: `DESIGN`. Native hit targets are at least 44×44 pt. That number is Apple's Buttons guidance and `MENU_METRICS.touchTarget` in `apps/mobile/src/frontend/constants/theme.ts`. [WCAG 2.2 success criterion 2.5.8](https://www.w3.org/TR/WCAG22/#target-size-minimum) is 24×24 CSS pixels. The 44×44 CSS pixel bar is success criterion 2.5.5, Level AAA. Do not cite 2.5.8 as 44.
 
 Daylight color and springs live in `apps/mobile/src/frontend/theme/motion.ts`. Honor Reduce Motion. Every screen has a loading, empty, and error state. Set `accessibilityLabel` and `accessibilityRole`. `ACCESSIBILITY` audits. `MOTION` changes tokens.
 
 ## Finance
 
-Lead: `COMMERCE` on `claude-opus-5-5-medium`. Stripe test mode only. The server creates the PaymentIntent. The app receives a client secret, never a secret key.
+Lead: `COMMERCE`. Stripe test mode only. The server creates the PaymentIntent. The app receives a client secret, never a secret key.
 
 Checked 2026-10-09: the donation PaymentIntent in this repo has no `transfer_data`, `application_fee_amount`, or `on_behalf_of`. It is a charge on the platform account. [Destination charges](https://docs.stripe.com/connect/destination-charges?platform=react-native) are the planned shape, not the code that runs. Under that shape, Stripe fees, refunds, and chargebacks come from the platform balance. Stripe calls the platform the business of record when `on_behalf_of` is omitted.
 
 Fulfill from the webhook, not from the client callback alone. Verify the signature. Make the handler idempotent ([webhooks](https://docs.stripe.com/webhooks)). Do not turn webhook crediting on while `useTipCheckout` still inserts `tips`. The donate sheet says Donate / donation, shows 90 / 10, and starts the optional tip for Tapua'i at No tip. Payouts stay blocked.
 
+## Finance and Accounting
+
+Lead: `CFO` (reports to the owner). Accounting: `CONTROLLER`, `BOOKKEEPER`, `INTERNAL_CONTROLS`. Taxes: `TAX`, `INFO_RETURNS`, `SALES_TAX`. Also `TREASURY` and `FPA`. Data is built by `FINANCE_DATA` in Engineering. Operating document: [FINANCE_OPERATIONS.md](../company/FINANCE_OPERATIONS.md); rules: [BOOKKEEPING.md](../engineering/design/BOOKKEEPING.md).
+
+Double-entry: every journal entry balances, amounts are integer cents, days are UTC, and nothing is edited in place (void by reversal). Money held for families, athletes and operators is a liability, never income. Only Tapua'i's shares are income. A row that does not add up goes to Suspense and is flagged; it is never forced to fit. A source that cannot be read is "unread", never zero.
+
+Completeness is proved, not assumed: every money column is in the finance data catalog (`financeData.test.ts` fails otherwise) and the Reconcile tab matches every source row to the revenue log. A closed month carries its totals; any later change is a Stop item.
+
+Taxes belong to `TAX`. Figures are prepared for the owner's CPA, who decides; this team does not give tax advice, file, or contact the IRS or a state. The 1099 review line is $2,000 for payments from 2026 (confirm each January). Tax IDs are never collected without PRIVACY_ENGINEERING, LEGAL and the owner. Exports keep athlete names out (pseudonymous reference; none in the QuickBooks daily file) and defuse spreadsheet formulas. A migration counts as verified only after a Postgres replay (`scripts/replay/books01-ledger-replay.mjs`), and it is applied only by the owner.
+
+## Data Governance
+
+Lead: `DATA_GOVERNANCE` (reports to the CTO; the data control point). Specialists: `DATA_LINEAGE`, `CODE_HYGIENE`. Handbook: [DATA_GOVERNANCE.md](../engineering/DATA_GOVERNANCE.md).
+
+Every table, view, database function and export has an owner, a writer, a reader and a purpose, recorded in `docs/engineering/data-ownership.json` and generated into `docs/engineering/DATA_MAP.md`. A missing writer or reader is investigated against the code before an exception is written, and the exception says why in words a new engineer understands. A generator change is never allowed to turn a real gap green: re-verify against the code. Nothing is deleted; archiving needs the owner. Personal data stays PRIVACY_ENGINEERING's call and money columns FINANCE_DATA's; this team checks that their maps and the master map agree.
+
 ## Legal and Compliance
 
-Leads: `LEGAL` on `claude-fable-5-1-thinking-high`, `COMPLIANCE` on `claude-opus-5-5-medium`. This team does not draft legal text and does not pick which store rule applies.
+Leads: `LEGAL`, `COMPLIANCE`; current model pins are in their role files and the connected-model table. This team does not draft legal text and does not pick which store rule applies.
 
 **In the product:** 13+ confirmation, Terms / NIL acknowledgement, the 90 / 10 line on the donate review, Stripe test mode, payouts blocked. **Counsel still produces:** Terms, a Privacy Policy, parental consent, and the athlete agreement. Export and deletion are not built. Whether a store or a statute requires them is counsel's call. Apple's account-deletion page is the checklist item to track, not a conclusion written here: [offering account deletion](https://developer.apple.com/support/offering-account-deletion-in-your-app/).
 
@@ -68,23 +94,23 @@ Pages opened, not applied: [FTC children's privacy](https://www.ftc.gov/business
 
 ## Brand
 
-Lead: `VOICE` on `claude-sonnet-5-thinking-high`. The owner-approved lines, exact, are "Donate. Elevate. Celebrate." and "Support their journey. Elevate their opportunities. Celebrate their story." Use the constants in `data/malo.ts`. Placements are the four rows in [VOICE.md](../product/VOICE.md): first open, donate sheet Amount page, athlete profile when that athlete can be donated to, and public docs plus the draft store listing.
+Lead: `VOICE`. The owner-approved lines, exact, are "Donate. Elevate. Celebrate." and "Support their journey. Elevate their opportunities. Celebrate their story." Use the constants in `data/malo.ts`. Placements are the four rows in [VOICE.md](../product/VOICE.md): first open, donate sheet Amount page, athlete profile when that athlete can be donated to, and public docs plus the draft store listing.
 
 Money words are Donate / donation. "Mālo!" is only a thank-you. The optional tip line names Tapua'i. "Elevate" is support, never recruiting, a scholarship, or a roster spot. Code names stay `tips`, `useTipCheckout`, and `malo*`. VOICE.md is the source. If this section disagrees, fix VOICE.md first.
 
 ## Trust and Safety
 
-Lead: `TRUST_SAFETY` on `claude-sonnet-5-thinking-high`. Reports exist. A human review queue, strikes, and appeals do not. Age confirmation is 13+. Upload confirmations and photo-story rights rows stay. Do not contact a family or a school.
+Lead: `TRUST_SAFETY`. Reports exist. A human review queue, strikes, and appeals do not. Age confirmation is 13+. Upload confirmations and photo-story rights rows stay. Do not contact a family or a school.
 
 Apple's guideline 1.2, read 2026-10-09 on the [Review Guidelines](https://developer.apple.com/app-store/review/guidelines/) page, lists a filter, a report path, a way to block an abusive user, and published contact information. This app has reports. A block control and a published contact are not in the product. Naming that gap is not a decision that 1.2 binds this app. Counsel and the owner decide that.
 
 ## Partnerships
 
-Lead: `PARTNERSHIPS` on `gpt-5.6-sol-medium`. Portals in the app are not outreach and not proof of a partnership. No school, booster, sponsor, athlete, or family is contacted. School confirmation tokens and roster CSV imports stay inside the written rules. School names and marks do not imply permission. Association or district permission is an owner and counsel decision. This team does not sign, activate ads, or move money.
+Lead: `PARTNERSHIPS`. Portals in the app are not outreach and not proof of a partnership. No school, booster, sponsor, athlete, or family is contacted. School confirmation tokens and roster CSV imports stay inside the written rules. School names and marks do not imply permission. Association or district permission is an owner and counsel decision. This team does not sign, activate ads, or move money.
 
 ## Quality
 
-Lead: `QA` on `claude-opus-5-5-medium`. A Jest pass is not a device pass and not a browser pass. Name the command, the counts, and the date.
+Lead: `QA`. A Jest pass is not a device pass and not a browser pass. Name the command, the counts, and the date.
 
 2026-10-09, from `apps/mobile`: `jest --watchman=false photoStories reelsPhotoStories useStoryPhotos ReelCard.photoStory PhotoStoryMedia ReelOwnerPeek`. Result: 6 suites, 60 tests, all passed. That replaces the earlier 5 suites / 55 tests, which did not name the sixth file.
 
@@ -92,17 +118,17 @@ Playwright evidence goes in `docs/engineering/AUDIT_REPORT.md`. [Playwright emul
 
 ## Product
 
-Lead: `PRODUCT` on `gpt-5.6-sol-medium`. Scope is the CTO's assignment. An acceptance line names the starting state, the action, the result, and the evidence: local test, browser, device, hosted SQL, or counsel. One does not stand in for another.
+Lead: `PRODUCT`. Scope is the CTO's assignment. An acceptance line names the starting state, the action, the result, and the evidence: local test, browser, device, hosted SQL, or counsel. One does not stand in for another.
 
 Wave 0 is the test wave. Public release is not started. The owner decision list is STATE §6, copied into [DEPARTMENT_PLANS.md](DEPARTMENT_PLANS.md): telemetry identity, video host, one credit path, parent as payee, scorer fee, 1-on-1 later, pathway savings, how money reaches families, the App Store fee question, the held-gift cap, and the fan signature later.
 
 ## Marketing
 
-Lead: `MARKETING` on `gpt-5.6-sol-medium`. No external campaign. The line is "Donate. Elevate. Celebrate." Family stories need written consent. The store listing is a draft and needs `LEGAL` before anyone submits it. Apple's product-page guidance, opened 2026-10-09: [product page](https://developer.apple.com/app-store/product-page/) and [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/).
+Lead: `MARKETING`. No external campaign. The line is "Donate. Elevate. Celebrate." Family stories need written consent. The store listing is a draft and needs `LEGAL` before anyone submits it. Apple's product-page guidance, opened 2026-10-09: [product page](https://developer.apple.com/app-store/product-page/) and [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/).
 
-## Support
+## Engineering support
 
-Lead: `SUPPORT` on `claude-sonnet-5-thinking-high`. Intake is `docs/engineering/TESTER_SCRIPT.md` and the in-app suggestion. No one outside the test is contacted. A report that touches a charge, a payout, or a sign-in goes to Finance and Security. Severity language can follow [Google's incident chapter](https://sre.google/sre-book/managing-incidents/). No help-desk vendor is assumed.
+Lead: `SUPPORT`, reporting to `ENGINEERING`; specialists INCIDENT_TRIAGE, TELEMETRY and RELIABILITY. Read [ENGINEERING_SUPPORT.md](../engineering/ENGINEERING_SUPPORT.md). Build safe sensors and root-cause fixes with domain developers; preserve independent QA. Logs are bounded, minimal and access-controlled. Failed, missing, stale, skipped and unread signals never mean healthy. Close only with regression and observed recovery evidence; local fixes awaiting deployment remain hosted recovery pending. Finance/security/privacy/data owners retain their review authority. No continuously running worker or external help desk is assumed.
 
 ## Connected models
 
@@ -121,21 +147,27 @@ Lead: `SUPPORT` on `claude-sonnet-5-thinking-high`. Intake is `docs/engineering/
 | `AUTH` | `grok-4.7-medium` | Engineering |
 | `BACKEND` | `grok-4.7-medium` | Database |
 | `BILLING` | `grok-4.7-medium` | Finance |
+| `BOOKKEEPER` | `grok-4.7-medium` | Finance and Accounting |
 | `BRAND` | `grok-4.7-medium` | Marketing |
 | `CATALOGS` | `grok-4.7-medium` | Engineering |
+| `CFO` | `grok-4.7-medium` | Finance and Accounting |
 | `CHECKOUT` | `grok-4.7-medium` | Finance |
 | `CI` | `grok-4.7-medium` | IT infrastructure |
+| `CODE_HYGIENE` | `grok-4.7-medium` | Data Governance |
 | `COMMERCE` | `grok-4.7-medium` | Finance |
 | `COMPLIANCE` | `grok-4.7-medium` | Legal and Compliance |
 | `CONNECT` | `grok-4.7-medium` | Finance |
 | `CONTENT_RIGHTS` | `grok-4.7-medium` | Legal and Compliance |
+| `CONTROLLER` | `grok-4.7-medium` | Finance and Accounting |
 | `COST_OPERATIONS` | `grok-4.7-medium` | IT infrastructure |
 | `CREW` | `grok-4.7-medium` | Engineering |
 | `CTO` | `grok-4.7-medium` | Office of the CTO |
 | `CUSTODIAL` | `grok-4.7-medium` | Finance |
 | `DATABASE_MIGRATIONS` | `grok-4.7-medium` | Database |
-| `DESIGN_TOOLING` | `grok-4.7-medium` | Design |
+| `DATA_GOVERNANCE` | `grok-4.7-medium` | Data Governance |
+| `DATA_LINEAGE` | `grok-4.7-medium` | Data Governance |
 | `DESIGN` | `grok-4.7-medium` | Design |
+| `DESIGN_TOOLING` | `grok-4.7-medium` | Design |
 | `DEVICE_QA` | `grok-4.7-medium` | Quality |
 | `DISCOVERY` | `grok-4.7-medium` | Engineering |
 | `DOCUMENTATION` | `grok-4.7-medium` | Engineering |
@@ -143,10 +175,14 @@ Lead: `SUPPORT` on `claude-sonnet-5-thinking-high`. Intake is `docs/engineering/
 | `DRIP` | `grok-4.7-medium` | Finance |
 | `ENGINEERING` | `grok-4.7-medium` | Engineering |
 | `FILMER_REWARDS` | `grok-4.7-medium` | Engineering |
+| `FINANCE_DATA` | `grok-4.7-medium` | Engineering |
+| `FPA` | `grok-4.7-medium` | Finance and Accounting |
 | `FULLSTACK` | `grok-4.7-medium` | Engineering |
 | `GROWTH_ANALYTICS` | `grok-4.7-medium` | Marketing |
 | `HIGHLIGHTS` | `grok-4.7-medium` | Engineering |
-| `INCIDENT_TRIAGE` | `grok-4.7-medium` | Support |
+| `INCIDENT_TRIAGE` | `grok-4.7-medium` | Engineering support |
+| `INFO_RETURNS` | `grok-4.7-medium` | Finance and Accounting |
+| `INTERNAL_CONTROLS` | `grok-4.7-medium` | Finance and Accounting |
 | `LEADERBOARDS` | `grok-4.7-medium` | Engineering |
 | `LEDGER` | `grok-4.7-medium` | Finance |
 | `LEGAL` | `grok-4.7-medium` | Legal and Compliance |
@@ -177,12 +213,13 @@ Lead: `SUPPORT` on `claude-sonnet-5-thinking-high`. Intake is `docs/engineering/
 | `RECOVERY` | `grok-4.7-medium` | IT infrastructure |
 | `REFUNDS` | `grok-4.7-medium` | Finance |
 | `RELEASE` | `grok-4.7-medium` | IT infrastructure |
-| `RELIABILITY` | `grok-4.7-medium` | IT infrastructure |
+| `RELIABILITY` | `grok-4.7-medium` | Engineering support |
 | `RESEARCH` | `grok-4.7-medium` | Product |
 | `RLS_SECURITY` | `grok-4.7-medium` | Security |
 | `ROLE_HQ` | `grok-4.7-medium` | Partnerships |
 | `ROSTERS` | `grok-4.7-medium` | Engineering |
 | `RUNTIME_CONFIG` | `grok-4.7-medium` | Engineering |
+| `SALES_TAX` | `grok-4.7-medium` | Finance and Accounting |
 | `SCHOOL_PARTNERS` | `grok-4.7-medium` | Partnerships |
 | `SECURITY` | `grok-4.7-medium` | Security |
 | `SESSION_SECURITY` | `grok-4.7-medium` | Security |
@@ -191,9 +228,11 @@ Lead: `SUPPORT` on `claude-sonnet-5-thinking-high`. Intake is `docs/engineering/
 | `SPONSOR_ADS` | `grok-4.7-medium` | Partnerships |
 | `SPOTLIGHT` | `grok-4.7-medium` | Engineering |
 | `STORAGE` | `grok-4.7-medium` | Database |
-| `SUPPORT` | `grok-4.7-medium` | Support |
-| `TELEMETRY` | `grok-4.7-medium` | IT infrastructure |
+| `SUPPORT` | `grok-4.7-medium` | Engineering support |
+| `TAX` | `grok-4.7-medium` | Finance and Accounting |
+| `TELEMETRY` | `grok-4.7-medium` | Engineering support |
 | `TEST_AUTOMATION` | `grok-4.7-medium` | Quality |
+| `TREASURY` | `grok-4.7-medium` | Finance and Accounting |
 | `TRUST_SAFETY` | `grok-4.7-medium` | Trust and Safety |
 | `UPLOAD` | `grok-4.7-medium` | Engineering |
 | `VAULT` | `grok-4.7-medium` | Engineering |
@@ -201,4 +240,9 @@ Lead: `SUPPORT` on `claude-sonnet-5-thinking-high`. Intake is `docs/engineering/
 | `VOICE` | `grok-4.7-medium` | Brand |
 | `VP_OPERATIONS` | `grok-4.7-medium` | Office of the CTO |
 | `WISHLIST` | `grok-4.7-medium` | Finance |
-<!-- /model-assignments -->
+## Cybersecurity detection (DETECT-02)
+
+THREAT_DETECTION on `grok-4.7-medium` reports to SECURITY. Review evidence provenance and
+false positives before classifying attacks; require independent protected dispositions.
+Append-only server-attributed audits and isolated verified restores support Dev. Never
+auto-repair money/access/publish/destructive changes, erase evidence or downgrade old SQL.

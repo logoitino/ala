@@ -1,6 +1,6 @@
 import { isAuraUuid } from '@/lib/aura';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import type { RallyCostKind, RallyRow, RallyStatus } from '@/types/database';
+import type { RallyCostKind,  RallyStatus } from '@/types/database';
 
 /**
  * Rally goals (ROADMAP M2, owner 2026-09-29): a family names a real sports cost — season fees, gear,
@@ -127,11 +127,6 @@ export function rallyStatusLine(rally: Pick<Rally, 'status' | 'endsOn'>, now = n
   if (days == null) return 'Open';
   if (days === 0) return 'Last day';
   return `${days} ${days === 1 ? 'day' : 'days'} left`;
-}
-
-/** Share text for the gift link / QR. */
-export function rallyShareMessage(athleteName: string, rally: Pick<Rally, 'title' | 'raisedCents' | 'targetCents'>): string {
-  return `Help ${athleteName.trim() || 'this athlete'} with "${rally.title}" — ${rallyProgress({ ...rally, donationCount: 0 }).amountLine} so far. Watch the highlights and donate on Tapua'i.`;
 }
 
 export type RallyDraft = {

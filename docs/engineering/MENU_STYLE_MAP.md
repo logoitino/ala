@@ -136,3 +136,34 @@ Home’s accepted format now supplies the frame, font hierarchy, navigation and 
 | Charts, KPI values, meters, ledgers and department status | Open dividers; full summaries, source disclosures, Data rows, missing-state words and legal ledger notes retained. Enlarged text may wrap labels and values. |
 
 Local evidence and remaining browser-tool coverage limits: [COMMUNITY_DASHBOARD_QA.md](design/COMMUNITY_DASHBOARD_QA.md).
+
+## Main Expo admin — ADM-02 (2026-10-12)
+
+The owner selected the report format at `http://localhost:3033/` for the main portal.
+Expo `/admin` now integrates that reporting experience with its existing editing desks.
+Status and fresh evidence: [ADM-02.md](../agents/ADM-02.md).
+
+| Coverage | Ownership and presentation |
+| --- | --- |
+| Home, Trends, Audience, Revenue, Health, Product, Analytics, Departments | `AdminShell` gates access; `AdminReportHeader` sits inside the page scroll owner. `components/Admin/Reports/` supplies the open report design and universal SVG figures. |
+| Product Features, Profile, Sign-in, People, Control map | Oversight views link to the owning editing desks; nested trails identify the current page. |
+| All existing Operations/Content/Commerce/Audience/Growth/System desks | Existing controls use `AdminPage` and `AdminChrome` in the selected report palette; immediate edits, drafts, confirmations and explicit Publish remain owned by their tools. |
+| QA, Studio and Lab | QA/Studio appear once in Tools; Lab is in the four-tab App setup workspace and searchable by its original name. QA owns incident/queue actions; Lab owns validated draft/feedback actions. Period-wide analysis is in Health/Product. |
+| Report values and chart Data | Shared parsers preserve missing/empty/zero and source errors. Summaries and full values accompany charts. |
+| Manage desk discovery | Groups browse without leaving the report. Search matches existing names, descriptions and groups inside the chosen lens, including QA/Studio and App setup members. Desk rows use open dividers and retain their original editor routes. View/Group filters avoid repeated menu headings; selecting a desk closes the directory, including the current desk. |
+| Long report navigation and refresh | “In this report” shortcuts focus the current scroll owner's sections. Analytics includes both catalogs. Every report, including Home, exposes Refresh and disables it during a read or unavailable access. |
+| Financial editing and report ownership | Payouts (`/admin/money`) contains the existing disbursement queue/status controls and links to Revenue/Catalogs. Ledger totals, stream splits, transactions, origins and donation history render in Revenue. Books owns the separate accounting journal, liabilities, closes and exports. |
+| Legacy Reports route | `/admin/reports` opens Analytics. It remains resolvable for saved links and is excluded from every editing lens; 18 merged entries remain in Manage desks, covering all 24 saved routes including Books and Reports/Coverage redirects. |
+
+### Current consolidation coverage
+
+| Surface | Complete information and space use |
+| --- | --- |
+| App setup / Highlights & review | Workspace tabs preserve original editors. Search supports workspace/member labels. Existing lenses filter discovery, with no authorization change. |
+| Analytics / Trends / Revenue / Departments | One complete selected board, collapsed global catalogs, unique comparisons and a combined stream chart. All 64 measures plus future numeric keys, four series, distinct windows, full Data/privacy/reconciliation/API details remain. |
+| Product Profile / Control map | Six settings once with meanings. Complete control registry and handoffs; shared telemetry readings appear once with surface names, top-eight/partial warnings and unknown missing values. |
+| Health | Thirteen nullable operational checks and corrective links; passing checks open on request. Exact low-stock count and normalized runtime state match editor contracts. |
+| Moderation / Lab | Complete labeled evidence on phones; wide moderation table and two-column Lab when text fits. Phone/tablet Lab columns keep natural, nonshrinking heights; sibling positions are checked as well as width. Approved readable inks replace pale status text. |
+| Future app features | Mandatory enrolled admin-first contract/checkpoints; reuse existing desks/reports. [Workflow](FEATURE_ADMIN_WORKFLOW.md) defines the reviewed presentation-only exemption and gate limitations. |
+
+Source/verification inventory: [ADMIN_DATA_CONSOLIDATION](design/ADMIN_DATA_CONSOLIDATION.md).

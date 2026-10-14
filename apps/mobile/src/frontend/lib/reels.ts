@@ -4,6 +4,7 @@
  * resolution (including Vault signing), deep links, and the "Filmed by" credit. Also pure helpers for the owner-peek drag.
  * Photo stories (PHOTO_STORIES_DESIGN.md) come through the same feed rows with `media_type = 'photo_story'`; their
  * photos are fetched separately (`lib/photoStories.ts`, `hooks/useStoryPhotos.ts`).
+ * Network/auth feed failures stop legacy fallback queries; opted-in safe reads recover at most once.
  * Screens call this, not Supabase. Uploading a clip is `services/MediaUploadService` plus `UploadVideoModal`.
  * @sideEffects `reels`, `reel_hype_votes` and related RPCs; AsyncStorage for local hides and the peek hint.
  */
@@ -15,11 +16,10 @@ import type { ReportReasonId } from '@/data/contentRights';
 import { parseReelCategory, type HighlightClip, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
 import type { PlayReactionId } from '@/data/players';
 import { storyPhotoPublicUrl } from '@/lib/photoStories';
+import { supportSignals } from '@/services/SupportSignalManager';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { REEL_VAULT_BUCKET, REEL_VAULT_PREFIX, uploadHighlight } from '@/services/MediaUploadService';
 import type { Player, Reel, ReelWithPlayer } from '@/types/database';
-
-export const HIGHLIGHTS_BUCKET = 'game_highlights';
 
 export type UploadSekiPlayInput = {
   uri: string;
@@ -335,7 +335,16 @@ async function selectReels(columns: string, playerId?: string) {
   // the view nulls `video_url` for Vault/Exclusive/Flash-Unlock clips the caller isn't entitled to
   // instead of trusting the `is_vault_only`/`is_exclusive` filters below to double as access control.
   const ordered = supabase.from('reels_feed').select(columns).order('created_at', { ascending: false });
-  return playerId ? ordered.eq('player_id', playerId) : ordered;
+  // One explicit recovery policy owns retries. Network/auth failures must not cascade through legacy columns.
+  const result = await (playerId ? ordered.eq('player_id', playerId) : ordered).retry(false);
+  if (result.error && ([0,401,403,408,429,502,503,504].includes(result.status) || ['NETWORK_ERROR','ETIMEDOUT','ECONNRESET','42501'].includes(result.error.code))) {
+    // PostgREST flattens fetch aborts into a status-zero message. Preserve cancellation so recovery never restarts it.
+    const aborted = result.status === 0 && /^AbortError:/.test(result.error.message);
+    throw Object.assign(new Error(result.error.message), {
+      name: aborted ? 'AbortError' : 'Error', code: result.error.code, status: result.status,
+    });
+  }
+  return result;
 }
 
 function rowsFromQuery<T>(data: unknown): T[] {
@@ -444,7 +453,7 @@ async function queryReels(playerId?: string): Promise<ReelWithPlayer[]> {
 
 export async function fetchReels(): Promise<ReelWithPlayer[]> {
   if (!isSupabaseConfigured) return [];
-  return queryReels();
+  return supportSignals.runWithRecovery({ feature: 'highlights', category: 'data', operation: 'read' }, () => queryReels());
 }
 
 export async function fetchReelsForPlayer(playerId: string): Promise<ReelWithPlayer[]> {

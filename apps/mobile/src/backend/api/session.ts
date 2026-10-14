@@ -1,9 +1,12 @@
 /**
  * Shared auth gate for the Expo API routes: read the Bearer token and resolve the user from the Supabase JWT with the
  * anon key (no Stripe calls happen before this passes). Used by the PaymentIntent, Connect and payout handlers.
+ * Verified provider failures emit bounded safe support codes when server capture is configured;
+ * missing sign-in is expected, and support delivery cannot change the auth outcome.
  */
 
 import { createClient, type User } from '@supabase/supabase-js';
+import { captureVerifiedAuthFailure } from '../services/supportCapture';
 
 export type AuthedRequest =
   | { ok: true; jwt: string; user: User; supabaseUrl: string; anonKey: string }
@@ -49,8 +52,17 @@ export async function requireAuthedUser(
   const authClient = createClient(supabaseUrl, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: authData, error: authError } = await authClient.auth.getUser(jwt);
+  let authResult: Awaited<ReturnType<typeof authClient.auth.getUser>>;
+  try {
+    authResult = await authClient.auth.getUser(jwt);
+  } catch (error) {
+    // Keep the provider's original outcome even if support capture is itself unavailable.
+    await captureVerifiedAuthFailure(error, supabaseUrl).catch(() => undefined);
+    throw error;
+  }
+  const { data: authData, error: authError } = authResult;
   if (authError || !authData.user) {
+    await captureVerifiedAuthFailure(authError, supabaseUrl).catch(() => undefined);
     return { ok: false, status: 401, message: 'Invalid or expired session.' };
   }
 

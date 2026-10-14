@@ -132,8 +132,3 @@ export const DEV_PERSONAS: DevPersona[] = [
 export function isDevMode(): boolean {
   return typeof __DEV__ !== 'undefined' && __DEV__;
 }
-
-export function personaByHandle(handle: DevPersonaId | null): DevPersona | null {
-  if (!handle) return null;
-  return DEV_PERSONAS.find((persona) => persona.handle === handle) ?? null;
-}

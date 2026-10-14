@@ -94,3 +94,18 @@ describe('ReelActionOverlay hype chips', () => {
     expect(screen.queryByText('#0 · Point guard')).toBeNull();
   });
 });
+
+describe('tag state chip (PRIV-01)', () => {
+  const hype = { seki_count: 0, aura_count: 0, flex_count: 0, total_tips_cents: 0 };
+  it('tells an approved tag from a pending one, and shows nothing without a state', async () => {
+    const view = await render(<ReelActionOverlay athleteName="Sione" tagState="approved" auraColor="#00E676" auraLabel="Rising" hype={hype} />);
+    expect(screen.getByText('✓ Tagged')).toBeTruthy();
+    expect(screen.getByLabelText('Sione approved this tag')).toBeTruthy();
+    await view.rerender(<ReelActionOverlay athleteName="Sione" tagState="pending" auraColor="#00E676" auraLabel="Rising" hype={hype} />);
+    expect(screen.getByText('Tag pending')).toBeTruthy();
+    expect(screen.getByLabelText('Tag waiting for the athlete to approve')).toBeTruthy();
+    await view.rerender(<ReelActionOverlay athleteName="Sione" auraColor="#00E676" auraLabel="Rising" hype={hype} />);
+    expect(screen.queryByText('Tag pending')).toBeNull();
+    expect(screen.queryByText('✓ Tagged')).toBeNull();
+  });
+});

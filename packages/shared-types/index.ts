@@ -77,14 +77,6 @@ export type SpotlightAward = {
   shot_by?: string | null;
 };
 
-/** `get_aura_tier(points)` JSON payload. */
-export type GetAuraTierRpc = {
-  tier: number;
-  title: string;
-  min_points: number;
-  color: string;
-};
-
 /** `cast_cheer_vote` return payload. */
 export type CastCheerVoteRpc = {
   home_votes: number;
@@ -104,10 +96,6 @@ export type FanTipHistoryRpc = {
 };
 
 export type TapuaiRpcMap = {
-  get_aura_tier: {
-    Args: { points: number };
-    Returns: GetAuraTierRpc;
-  };
   cast_cheer_vote: {
     Args: {
       poll_slug: string;

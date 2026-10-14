@@ -72,8 +72,6 @@ export const SPORT_MEASURABLE_KEYS: { id: SportMeasurableKey; label: string; lab
   { id: 'verticalJump', label: 'Vertical Jump' },
 ];
 
-export const DEFAULT_PERIOD_SECONDS = 12 * 60;
-
 const ALL_MEASURABLES: SportMeasurableKey[] = ['height', 'weight', 'fortyYard', 'verticalJump'];
 
 function statFields(scoring: string, volume: string, games = 'Games Played'): SportStatField[] {
@@ -457,8 +455,4 @@ export function visibleMeasurables(config: SportConfig): SportMeasurable[] {
 export function statLabelFor(config: SportConfig, source: SportStatSource, fallback: string): string {
   const field = config.statFields.find((row) => row.source === source);
   return field?.label?.trim() || fallback;
-}
-
-export function sportBadge(config: SportConfig): string {
-  return `${config.emoji} ${config.sport}`.trim();
 }

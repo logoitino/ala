@@ -50,3 +50,11 @@ Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, act
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## Working with the Office of the CFO (2026-10-13)
+
+You stay under the CTO for payments engineering. The `CFO` owns how money is recorded and taxed: any change to splits, `company_revenue_logs`, posting rules, payouts or tax-relevant wording needs CFO acceptance and `CONTROLLER` review, and `INTERNAL_CONTROLS` checks the finance data catalog and Reconcile tab still cover it. `FINANCE_DATA` builds the books' data layer; coordinate shared files (`lib/finance.ts`, `useTipCheckout.ts`) through `docs/agents/BOOKS-01.md`.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

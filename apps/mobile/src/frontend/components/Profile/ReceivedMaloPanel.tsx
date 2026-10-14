@@ -9,6 +9,7 @@ import { useDonationsToThank } from '@/hooks/useDonationThanks';
 import { useReceivedMalo } from '@/hooks/useReceivedMalo';
 import { thanksText, type ThanksKey } from '@/lib/donationThanks';
 import { tipChannelLabel } from '@/lib/finance';
+import { receivedLines } from '@/lib/custodial';
 
 /**
  * @purpose Private list (athlete's own profile, and Parent HQ) of each donation received and where it
@@ -19,12 +20,14 @@ import { tipChannelLabel } from '@/lib/finance';
  *   `thank_donation`. A failed or missing ledger shows $0 and "No donations yet", not a connection error.
  */
 export function ReceivedMaloPanel({ playerId }: { playerId: string }) {
-  const { rows, totalCents, loading } = useReceivedMalo(playerId);
+  const { rows, totalCents, familyCents, loading } = useReceivedMalo(playerId);
   const { rows: thanksRows, thank } = useDonationsToThank(playerId);
   const celebration = useOptionalCelebration();
   const [picking, setPicking] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const dollars = `$${(totalCents / 100).toFixed(2)}`;
+  const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  // The headline is what reaches the family account, not the donated total (which is more).
+  const received = receivedLines(totalCents, familyCents, money);
   const thanksByTip = useMemo(() => new Map(thanksRows.map((row) => [row.tipId, row])), [thanksRows]);
   const toThank = thanksRows.filter((row) => !row.thankedKey).length;
 
@@ -37,9 +40,10 @@ export function ReceivedMaloPanel({ playerId }: { playerId: string }) {
   };
 
   return (
-    <View style={styles.card} accessibilityRole="summary" accessibilityLabel={`Support received, ${dollars}`}>
+    <View style={styles.card} accessibilityRole="summary" accessibilityLabel={`Support received, ${received.headline}`}>
       <Text style={styles.kicker}>Support received</Text>
-      <Text style={styles.total}>{loading ? 'Loading gifts…' : `${dollars} from fans`}</Text>
+      <Text style={styles.total}>{loading ? 'Loading gifts…' : received.headline}</Text>
+      {!loading && rows.length > 0 ? <Text style={styles.meta}>{received.detail}</Text> : null}
       <Text style={styles.lede}>
         Each donation shows who sent it and where it started: a Highlight, a Rally, a QR link, a gear goal or your profile.
         Saying thanks keeps people cheering you on.
@@ -63,7 +67,10 @@ export function ReceivedMaloPanel({ playerId }: { playerId: string }) {
                 <Text style={styles.name}>{row.fan_name}</Text>
                 <Text style={styles.meta}>{tipChannelLabel(row.origin, row.entry, row.source_label)}</Text>
               </View>
-              <Text style={styles.amount}>${(row.amount_cents / 100).toFixed(2)}</Text>
+              <View style={styles.amounts}>
+                <Text style={styles.amount}>{money(row.amount_cents)}</Text>
+                {row.family_cents != null ? <Text style={styles.meta}>{money(row.family_cents)} for your family account</Text> : null}
+              </View>
             </View>
             {thanks && sent ? <Text style={styles.thanked}>Thanked ✓ “{sent}”</Text> : null}
             {thanks && !sent && picking !== row.id ? (
@@ -87,6 +94,9 @@ export function ReceivedMaloPanel({ playerId }: { playerId: string }) {
 }
 
 const styles = StyleSheet.create({
+  amounts: {
+    alignItems: 'flex-end',
+  },
   card: {
     gap: 8,
     marginTop: 12,

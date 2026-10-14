@@ -12,6 +12,8 @@ import {
   type VerificationStatus,
 } from '@/data/verification';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isMissingFunction } from '@/lib/dbErrors';
+import { getPublicProfiles } from '@/lib/privacy';
 
 export type RedeemTeamCodeResult = {
   ok: boolean;
@@ -21,11 +23,6 @@ export type RedeemTeamCodeResult = {
   sport?: string | null;
   already?: boolean;
 };
-
-function rpcMissing(message: string | undefined): boolean {
-  const text = message ?? '';
-  return /could not find the function|schema cache|42883|PGRST202/i.test(text);
-}
 
 function asStatus(raw: unknown): VerificationStatus {
   return resolveVerificationStatus({
@@ -129,7 +126,7 @@ export async function claimAthlete(playerId: string | null, notes?: string): Pro
     request_notes: notes?.trim() || null,
   });
   if (error) {
-    if (rpcMissing(error.message)) return false;
+    if (isMissingFunction(error)) return false;
     throw new Error(friendlyVerifyError(error.message));
   }
   return true;
@@ -174,7 +171,7 @@ export async function fetchMyVerification(): Promise<MyVerification | null> {
   if (!isSupabaseConfigured) return null;
   const { data, error } = await supabase.rpc('get_my_verification');
   if (error) {
-    if (rpcMissing(error.message)) return null;
+    if (isMissingFunction(error)) return null;
     throw new Error(error.message);
   }
   return parseMyVerification(data);
@@ -201,19 +198,6 @@ export async function startSchoolCheck(): Promise<SchoolCheckCode> {
 }
 
 /**
- * @purpose Whether the athlete's school has confirmed them (the public badge). For "is money held?"
- *   use `fetchPayoutAllowed` in `lib/payoutGate.ts` — since 2026-09-29 the two can differ.
- * @returns true only when a school-confirmed account is linked to the `players` row. Unknown → false.
- * @sideEffects `athlete_is_varsity_verified` RPC.
- */
-export async function fetchPlayerVerified(playerId: string | null | undefined): Promise<boolean> {
-  if (!playerId || !isSupabaseConfigured) return false;
-  const { data, error } = await supabase.rpc('athlete_is_varsity_verified', { target_player_id: playerId });
-  if (error) return false;
-  return data === true;
-}
-
-/**
  * @purpose Load the claimed-profile Varsity state for a public athlete sheet (`players.id`).
  * @sideEffects `profiles` SELECT by `player_id`, then a name match. Only a `player_id` link — which
  *   only school confirmation creates — can show "verified" or the account's avatar. A name match
@@ -231,31 +215,25 @@ export async function fetchPlayerVerification(
   const empty = { status: 'unverified' as const, schoolClaimed: false, schoolId: null, avatarUrl: null };
   if (!playerId || !isSupabaseConfigured) return empty;
   const columns = 'is_verified, verification_status, school_id, player_id, full_name, avatar_url';
-  const { data: byPlayer } = await supabase.from('profiles').select(columns).eq('player_id', playerId).maybeSingle();
+  // profiles_public applies the athlete's privacy (photo and school follow their audience; badges stay public).
+  // Databases without PRIV-01 lack its columns, and their profiles table is still readable, so fall back there.
+  const viaLookup = (await getPublicProfiles({ playerIds: [playerId] }))[0] ?? null;
+  // Databases without PRIV-01 return the old view, which lacks these columns, and their profiles table is still readable.
+  const byPlayer = viaLookup && viaLookup.verification_status === undefined
+    ? (await supabase.from('profiles').select(columns).eq('player_id', playerId).maybeSingle()).data
+    : viaLookup;
   if (byPlayer) {
     return {
       status: resolveVerificationStatus(byPlayer),
-      schoolClaimed: Boolean(byPlayer.school_id),
+      schoolClaimed: Boolean((byPlayer as { school_confirmed?: boolean }).school_confirmed ?? byPlayer.school_id),
       schoolId: typeof byPlayer.school_id === 'string' ? byPlayer.school_id : null,
       avatarUrl:
         typeof byPlayer.avatar_url === 'string' && byPlayer.avatar_url.trim() ? byPlayer.avatar_url.trim() : null,
     };
   }
-  if (!playerName?.trim()) return empty;
-  const { data: byName } = await supabase
-    .from('profiles')
-    .select(columns)
-    .ilike('full_name', playerName.trim())
-    .limit(1)
-    .maybeSingle();
-  if (!byName) return empty;
-  const claimed = resolveVerificationStatus(byName);
-  return {
-    status: claimed === 'unverified' ? 'unverified' : 'pending',
-    schoolClaimed: Boolean(byName.school_id),
-    schoolId: typeof byName.school_id === 'string' ? byName.school_id : null,
-    avatarUrl: null,
-  };
+  // No name-matching fallback: two people can share a name, and it read strangers' rows (PRIV-01 review).
+  void playerName;
+  return empty;
 }
 
 function friendlyVerifyError(message: string): string {

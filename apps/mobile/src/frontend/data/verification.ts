@@ -37,6 +37,17 @@ export function payoutUnlockedCopy(capCents: number | null, vouches: number): st
 /** Athlete on Activity when the family still has to pass the Stripe identity check. */
 export const PAYOUT_SETUP_COPY =
   'To get paid without waiting on your school, a parent sets up payouts in Parent HQ (Stripe checks their ID — it takes a few minutes).';
+
+/** MINOR-01: an athlete aged 13–17 — payouts need the donations consent of the guardian on record for the family account. */
+export const PAYOUT_GUARDIAN_CONSENT_COPY =
+  'Payouts wait until your parent or guardian on record for your family account signs the consent. Invite them from Profile → Privacy.';
+
+/** VERIFY-02: the payee has not finished Stripe's identity and tax check (and, for a guardian, the school's parent confirmation). */
+export const PAYOUT_PAYEE_VERIFICATION_COPY =
+  'Payouts wait until the person being paid finishes Stripe\'s identity check (Stripe asks for their Social Security number; Tapua\'i never sees it). A parent or guardian also needs your school to confirm they are your parent on record.';
+
+/** MINOR-01: no birth month and year on the athlete's account yet. */
+export const PAYOUT_BIRTH_MONTH_COPY = 'Add your birth month and year in Profile → Privacy so payouts can be set up.';
 /** Check marks are reserved for the school badge; names cannot use them (`profiles_name_no_check_marks`). */
 export const RESERVED_BADGE_MARKS = /[✓✔☑✅]/;
 export const RESERVED_BADGE_MARKS_ERROR = 'Check marks are reserved for school-confirmed athletes. Remove them from your name.';

@@ -4,6 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { APP_RUNTIME_FLAG_GROUPS } from '@tapuai/shared-types';
 
 import { buildOperations, featureLabel, formatOperationsValue, type OperationsInput } from './operations.ts';
 
@@ -36,8 +37,9 @@ test('a portal failure leads the errors tab', () => {
   assert.equal(errors?.details[0]?.label, 'Portal');
 });
 
-test('menus count what is on', () => {
-  const menus = buildOperations(base).find((lens) => lens.id === 'menus');
+test('menus count what is on when every published flag is returned', () => {
+  const published = Object.fromEntries(APP_RUNTIME_FLAG_GROUPS.map(group => [group.id, Object.fromEntries(group.flags.map(flag => [flag.path.split('.')[1], flag.path !== 'tabs.drip']))]));
+  const menus = buildOperations({ ...base, published }).find((lens) => lens.id === 'menus');
   assert.match(menus?.summary ?? '', /menus are on/);
   assert.ok((menus?.details.length ?? 0) > 4);
 });
@@ -81,8 +83,9 @@ test('unread menu flags are missing, not all on', () => {
   assert.match(menus?.summary ?? '', /not read/);
   const read = buildOperations(base).find((lens) => lens.id === 'menus');
   const fanBar = read?.splits.find((split) => split.id === 'tabs');
-  assert.equal(fanBar?.off, 1);
-  assert.equal((fanBar?.on ?? 0) + (fanBar?.off ?? 0) > 1, true);
+  assert.equal(fanBar?.off, null);
+  assert.equal(fanBar?.on, null);
+  assert.equal(read?.details.find(row => row.label.endsWith('Home'))?.value, 'On');
 });
 
 test('stalls carry the bad accent and fewer-is-better direction', () => {

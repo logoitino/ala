@@ -12,39 +12,6 @@ export type ExclusivePost = {
   blurb: string;
 };
 
-export const EXCLUSIVE_POSTS: ExclusivePost[] = [
-  {
-    id: 'ex-1',
-    kind: 'workout',
-    title: 'Film-room footwork',
-    blurb: '10-minute ladder, release drills, and pocket reset.',
-  },
-  {
-    id: 'ex-2',
-    kind: 'pregame',
-    title: 'Pregame walk-up',
-    blurb: 'Headphones on, stadium empty, same stretch every Friday.',
-  },
-  {
-    id: 'ex-3',
-    kind: 'qna',
-    title: 'Fan Q&A: Friday nerves',
-    blurb: 'Answering locker-room questions from the hub.',
-  },
-  {
-    id: 'ex-4',
-    kind: 'workout',
-    title: 'Track start & burst',
-    blurb: 'Three reps of 10-yard bursts between series.',
-  },
-];
-
-export const EXCLUSIVE_KIND_LABEL: Record<ExclusivePost['kind'], string> = {
-  workout: 'Workout clip',
-  pregame: 'Pregame routine',
-  qna: 'Fan Q&A',
-};
-
 export const EXCLUSIVE_MONTHLY_DOLLARS = 4.99;
 export const EXCLUSIVE_AURA_GRANT = 100;
 
@@ -76,12 +43,10 @@ export function exclusiveUnlockToast(aura = EXCLUSIVE_AURA_GRANT): string {
   return `Exclusive clips unlocked ⚡ +${aura} Aura Points earned!`;
 }
 
-export const EXCLUSIVE_SUBSCRIBE_LABEL = exclusiveSubscribeLabel();
-export const EXCLUSIVE_UNLOCK_TOAST = exclusiveUnlockToast();
 export const EXCLUSIVE_REQUEST_TOAST = 'Request sent to athlete! ⚡';
-export const EXCLUSIVE_VAULT_CALLOUT = exclusiveVaultCallout();
+
 export const VAULT_BADGE_LABEL = 'One-time Exclusive 🔒';
-export const VAULT_UNLOCK_LABEL = vaultUnlockLabel();
+
 export const VAULT_MOVE_TO_VAULT = 'Move to one-time Exclusive access 🔒';
 export const VAULT_MOVE_TO_PUBLIC = 'Move to Free Public Feed 🌐';
 /** Athlete master switch: seal the Vault so fans need one-time Exclusive access. */

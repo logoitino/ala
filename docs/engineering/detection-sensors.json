@@ -1,0 +1,244 @@
+{
+  "_comment": "Declared local detection coverage, not live sensor health. Engineering Support owns follow-up; source owners and independent QA retain their authority.",
+  "version": 1,
+  "sensors": [
+    {
+      "id": "compile-and-regression",
+      "area": "tooling",
+      "owner": "CI",
+      "status": "implemented",
+      "detects": "TypeScript syntax/contracts, app regressions, docs/copy/boundary/credential violations through pnpm check; separate Next library tests through detection:scan.",
+      "evidence": [
+        "package.json",
+        ".github/workflows/ci-checks.yml",
+        "scripts/detection.mjs"
+      ],
+      "limitation": "Only executes when invoked or CI runs; tests cover declared scenarios, not every behavior.",
+      "next": "RELIABILITY retains failures; INCIDENT_TRIAGE routes a reproducible failing check to its code owner."
+    },
+    {
+      "id": "app-performance",
+      "area": "app",
+      "owner": "TELEMETRY",
+      "status": "partial",
+      "detects": "Video stalls, first frames, checkout latency and Realtime reconnects via telemetry_logs.",
+      "evidence": [
+        "apps/mobile/src/frontend/services/TelemetryManager.ts",
+        "apps/mobile/src/frontend/hooks/useGameEventBroadcast.ts"
+      ],
+      "limitation": "Events are sampled and in memory; deployed delivery, retention and alert routing have not been verified.",
+      "next": "TELEMETRY with PRIVACY_ENGINEERING and BACKEND proves event delivery and defines bounded retention."
+    },
+    {
+      "id": "app-crash-capture",
+      "area": "app",
+      "owner": "RELIABILITY",
+      "status": "partial",
+      "detects": "Opt-in auth-scoped passive web error/rejection and native fatal observation plus fixed feature render boundaries; original handling preserved.",
+      "evidence": [
+        "apps/mobile/src/frontend/services/supportRuntime.ts",
+        "apps/mobile/src/frontend/components/Common/SupportRuntimeObserver.tsx",
+        "apps/mobile/src/frontend/components/Common/FeatureBoundary.tsx"
+      ],
+      "limitation": "In-memory capture can be lost when the process terminates; no durable native crash store/hosted intake verified. Guest capture disabled; migration and env activation needed.",
+      "next": "RELIABILITY proves durable crash intake and hosted delivery; keep this gap until evidence exists."
+    },
+    {
+      "id": "offline-recovery",
+      "area": "app",
+      "owner": "OFFLINE",
+      "status": "partial",
+      "detects": "Failed/retried queued actions and device queue state.",
+      "evidence": [
+        "apps/mobile/src/frontend/services/OfflineQueue.ts",
+        "apps/mobile/src/frontend/components/Admin/QaTool.tsx"
+      ],
+      "limitation": "QA queue controls inspect the current device; they are not a fleet-wide queue monitor.",
+      "next": "Pair RELIABILITY with OFFLINE to verify bounded retry and surface failed replay without duplicating writes."
+    },
+    {
+      "id": "admin-health",
+      "area": "admin",
+      "owner": "ADMIN",
+      "status": "partial",
+      "detects": "Operational thresholds, stalled/reconnecting media, slow checkout, UI issues and unavailable sources.",
+      "evidence": [
+        "apps/mobile/src/frontend/components/Admin/Reports/reportHealthChecks.ts",
+        "apps/mobile/src/frontend/components/Admin/Reports/AdminReportHealth.tsx",
+        "apps/admin-portal/lib/operations.ts"
+      ],
+      "limitation": "Admin reports are read on demand; thresholds are rules, not uptime guarantees or automatic paging.",
+      "next": "RELIABILITY + ADMIN verify empty versus unread states and link each failure to one corrective owner."
+    },
+    {
+      "id": "admin-read-failures",
+      "area": "admin",
+      "owner": "ADMIN",
+      "status": "partial",
+      "detects": "Support snapshot rejects partial/malformed/future/duplicate records; UI shows unknown and suppresses counts, scoped by admin identity.",
+      "evidence": [
+        "apps/mobile/src/frontend/lib/engineeringSupport.ts",
+        "apps/mobile/src/frontend/hooks/useEngineeringSupport.ts",
+        "apps/mobile/src/frontend/components/Admin/Support/SupportScreen.tsx"
+      ],
+      "limitation": "Only declared admin readers; no hosted blanket source audit.",
+      "next": "SUPPORT pairs source owners with admin read/error contracts."
+    },
+    {
+      "id": "backend-failure-alerts",
+      "area": "backend",
+      "owner": "RELIABILITY",
+      "status": "partial",
+      "detects": "Verified auth provider failure captures fixed auth_invalid/auth_expired/auth_unavailable codes with server-derived identity/time; main-admin reviews distinct expected/suspicious failures.",
+      "evidence": [
+        "apps/mobile/src/backend/services/supportCapture.ts",
+        "apps/mobile/src/backend/api/session.ts",
+        "supabase/migrations/20261013190000_engineering_support.sql"
+      ],
+      "limitation": "No anonymous missing-bearer capture, blanket API monitor or scheduled threat alerting; local SQL replay only, migration unapplied.",
+      "next": "THREAT_DETECTION + SESSION_SECURITY validate deployed delivery and broader server/payment observation without raw payloads."
+    },
+    {
+      "id": "telemetry-delivery-health",
+      "area": "backend",
+      "owner": "TELEMETRY",
+      "status": "partial",
+      "detects": "Process-local readonly TelemetryManager.getHealth snapshot, sampled by QA on refresh: admitted/delivered/dropped/uncertain counts, queued plus active reservation bounded to120rows, batch15, caller timeout10s and fixed missing/denied/failed/uncertain/disposed status. SDK retries disabled; attempted failed/uncertain INSERT rows never replay. QA digest/offline reads settle independently with one actual pending read per fixed source across refresh/focus/remount/development reload;10s UI timeout retains its reservation until real settlement, no response cache/reuse, stale/unmounted guards. Pending repair writes retain locks until actual settlement without timeout replay.",
+      "evidence": [
+        "apps/mobile/src/frontend/services/TelemetryManager.ts",
+        "apps/mobile/src/frontend/services/__tests__/TelemetryManager.test.ts",
+        "apps/mobile/src/frontend/components/Admin/QaTool.tsx",
+        "apps/mobile/src/frontend/components/Admin/__tests__/QaTool.test.tsx",
+        "docs/agents/HEALTH-01.md",
+        "docs/engineering/ENGINEERING_SUPPORT.md"
+      ],
+      "limitation": "Verified locally2026-10-13:telemetry1suite21tests, QA1suite11tests; exact QA follow-up independently accepted2026-10-14T00:54:59Z. Full-gate evidence is in HEALTH-01. Snapshot resets only with fresh process/test instance; getInstance never replaces a disposed singleton. Uncertainty is a subset of loss; unresolved transport/read reservations or writes can remain pending until real settlement. Row count does not cap raw payload bytes or sanitize existing events. No hosted delivery/retention/fleet alerts, native focus acceptance or durable crash guarantee; a quiet feed never means healthy.",
+      "next": "DETECT-01-G3 / HEALTH-01: TELEMETRY + RELIABILITY + BACKEND verify actual hosted ingestion/retention and failure recovery with PRIVACY_ENGINEERING review; ADMIN + QA/DEVICE_QA verify installed-device behavior and later queue/report changes."
+    },
+    {
+      "id": "books-and-source-reconciliation",
+      "area": "finance",
+      "owner": "INTERNAL_CONTROLS",
+      "status": "partial",
+      "detects": "Source-to-revenue-log gaps, unread sources, unbalanced/Suspense entries, negative held funds and changed closed months.",
+      "evidence": [
+        "packages/shared-types/admin/financeChecks.ts",
+        "packages/shared-types/admin/bookkeeping.ts",
+        "apps/mobile/src/frontend/components/Admin/Books/BooksReconcileTab.tsx",
+        "apps/mobile/src/frontend/lib/__tests__/financeData.test.ts"
+      ],
+      "limitation": "Local checks/admin reads; BOOKS migration remains unapplied. Matching rows does not prove Stripe settlement or bank reconciliation.",
+      "next": "FINANCE_DATA implements approved repairs; CONTROLLER/CFO accept accounting treatment; QA verifies independently."
+    },
+    {
+      "id": "stripe-settlement-alerts",
+      "area": "finance",
+      "owner": "RECONCILIATION",
+      "status": "gap",
+      "detects": "Needed: missed/duplicate verified Stripe events and Stripe-to-bank/ledger settlement discrepancies.",
+      "evidence": [
+        ".claude/agents/reconciliation.md",
+        "docs/company/FINANCE_OPERATIONS.md",
+        "docs/engineering/design/BOOKKEEPING.md"
+      ],
+      "limitation": "No verified automated settlement alert pipeline; client tips insert debt remains. Do not add webhook crediting alongside it.",
+      "next": "DETECT-01-G4: RECONCILIATION + LEDGER + BACKEND + FINANCE_DATA + INTERNAL_CONTROLS design one credit path and settlement checks; CFO accepts."
+    },
+    {
+      "id": "data-lineage-and-dead-code",
+      "area": "data",
+      "owner": "DATA_GOVERNANCE",
+      "status": "implemented",
+      "detects": "Unowned/disconnected tables, functions and exports, with code hygiene findings routed for review.",
+      "evidence": [
+        "scripts/data-map.mjs",
+        "docs/engineering/data-ownership.json",
+        "docs/engineering/DATA_MAP.md"
+      ],
+      "limitation": "Static relationships are not proof of data accuracy, live freshness or safe deletion.",
+      "next": "INCIDENT_TRIAGE links the existing DATA-01 findings; governance owns disposition and owner-approved archives."
+    },
+    {
+      "id": "failed-controls",
+      "area": "ui",
+      "owner": "TELEMETRY",
+      "status": "partial",
+      "detects": "Feature render failures, reported bugs and donation payment/record failures have distinct fixed codes; expected cancellation/expiry do not imply attack.",
+      "evidence": [
+        "apps/mobile/src/frontend/components/Common/FeatureBoundary.tsx",
+        "apps/mobile/src/frontend/components/Feedback/SuggestionSheet.tsx",
+        "apps/mobile/src/frontend/hooks/useTipCheckout.ts"
+      ],
+      "limitation": "Not every individual control instrumented; clients remain untrusted and default capture disabled until activation.",
+      "next": "Feature owners register additional fixed signal scopes; independent QA verifies coverage."
+    },
+    {
+      "id": "responsive-visual-regression",
+      "area": "ui",
+      "owner": "VISUAL_QA",
+      "status": "partial",
+      "detects": "Local Support browser checks four tabs at1440/390/320 with no overflow/clipped controls and protected/unknown-source interactions.",
+      "evidence": [
+        "docs/engineering/evidence/DETECT-02-admin.md",
+        "apps/mobile/src/frontend/components/Admin/Support/SupportScreen.tsx"
+      ],
+      "limitation": "Synthetic local source/harness, no scheduled all-feature visual crawl or native device certification.",
+      "next": "VISUAL_QA expands regressions across feature changes; retain evidence."
+    },
+    {
+      "id": "family-feedback",
+      "area": "user-reports",
+      "owner": "INCIDENT_TRIAGE",
+      "status": "partial",
+      "detects": "In-app bug/suggestion intake and admin feedback triage.",
+      "evidence": [
+        "apps/mobile/src/frontend/components/Feedback/SuggestionSheet.tsx",
+        "apps/mobile/src/frontend/lib/feedback.ts",
+        "apps/mobile/src/frontend/components/Admin/LabTool.tsx",
+        "docs/engineering/TESTER_SCRIPT.md"
+      ],
+      "limitation": "No automatic merge with crash/server/finance incidents or guaranteed external response service.",
+      "next": "DETECT-01-G6: INCIDENT_TRIAGE + SUPPORT + ADMIN link duplicates using sanitized issue fingerprints; preserve each reporter's evidence and existing feedback source."
+    },
+    {
+      "id": "support-signal-delivery",
+      "area": "app",
+      "owner": "TELEMETRY",
+      "status": "partial",
+      "detects": "Queue/rate/timeout bounds and explicit disabled/missing/permission/failed delivery state; auth token pinned outside signal fields.",
+      "evidence": [
+        "apps/mobile/src/frontend/services/SupportSignalManager.ts"
+      ],
+      "limitation": "In-memory authenticated client capture, no guaranteed delivery or durable crash persistence; env/migration activation pending.",
+      "next": "TELEMETRY verifies actual hosted ingestion and retention; never certify from local status."
+    },
+    {
+      "id": "security-change-audit",
+      "area": "admin",
+      "owner": "THREAT_DETECTION",
+      "status": "partial",
+      "detects": "Atomic selected admin/financial source change audit with server actor/role/time, changed field names and per-entity hash chains; protected reviews retain evidence.",
+      "evidence": [
+        "supabase/migrations/20261013190000_engineering_support.sql",
+        "scripts/replay/support-replay.mjs",
+        "apps/mobile/src/frontend/components/Admin/Support/SupportAuditTab.tsx"
+      ],
+      "limitation": "16selectedtables, local replay only; DB privileged operators can alter/recompute unsigned chains; not a blanket intrusion monitor.",
+      "next": "SECURITY + DATA_GOVERNANCE approve hosted activation, retention and external integrity anchoring."
+    },
+    {
+      "id": "source-recovery-capsules",
+      "area": "tooling",
+      "owner": "RECOVERY",
+      "status": "implemented",
+      "detects": "Source/lock/migration/provenance integrity and path/size violations; restores into a private isolated preview.",
+      "evidence": [
+        "scripts/recovery-capsule.mjs",
+        "scripts/__tests__/recovery-capsule.test.mjs",
+        "docs/engineering/RECOVERY_RUNBOOK.md"
+      ],
+      "limitation": "Unsigned source capsules exclude reviewed credential/runtime paths and reject ambiguous data; no database backup or hosted compatibility certification.",
+      "next": "RECOVERY/RELEASE rehearse approved DB backup and compatible old code before owner-approved cutover."
+    }
+  ]
+}

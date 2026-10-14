@@ -36,6 +36,13 @@ jest.mock('react-native-reanimated', () => {
 jest.mock('@/lib/supabase', () => ({
   isSupabaseConfigured: true,
   supabase: {
+    // Other people's profiles come through get_public_profiles (PRIV-01): by athlete id or by uploader profile id.
+    rpc: async (name: string, args: { player_ids?: string[] | null; profile_ids?: string[] | null }) => ({
+      data: name === 'get_public_profiles'
+        ? [...(args.player_ids ?? []).map((id) => mockProfiles[`player_id:${id}`]), ...(args.profile_ids ?? []).map((id) => mockProfiles[`id:${id}`])].filter(Boolean)
+        : null,
+      error: null,
+    }),
     from: () => ({
       select: () => ({
         // `column` is `player_id` for the athlete's own account and `id` for the uploader lookup.

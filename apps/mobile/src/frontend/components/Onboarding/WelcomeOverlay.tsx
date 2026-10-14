@@ -1,6 +1,10 @@
-/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+/**
+ * First fan visit introduces the donation mission using shared Daylight chrome.
+ * Admin routes keep their own entry flow and leave the fan welcome unseen for a later fan visit.
+ */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +22,7 @@ import { FOCAL } from '@/theme/motion';
  * @sideEffects AsyncStorage `tapuai.onboardingSeen`.
  */
 export function WelcomeOverlay() {
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const frame = useSheetFrame();
   const [visible, setVisible] = useState(false);
@@ -41,8 +46,11 @@ export function WelcomeOverlay() {
     await AsyncStorage.setItem(ONBOARDING_SEEN_KEY, '1');
   };
 
+  // Admin visits must not obscure controls or consume the welcome reserved for the fan app.
+  const adminRoute = pathname === '/admin' || pathname.startsWith('/admin/');
+
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={() => void dismiss()}>
+    <Modal animationType="fade" transparent visible={visible && !adminRoute} onRequestClose={() => void dismiss()}>
       <View
         style={[
           styles.backdrop,

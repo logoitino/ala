@@ -1,8 +1,9 @@
-import { AdminOverview } from '@/components/Admin/AdminOverview';
-
 /**
- * @purpose `/admin` overview — live metrics and shortcuts into every production editor.
+ * Main admin Home combines the selected Community Impact report with editing desks.
+ * Data and interactions stay in the report UI behind the existing admin shell gate.
  */
+import { AdminReportScreen } from '@/components/Admin/Reports/AdminReportScreen';
+
 export default function AdminHomeScreen() {
-  return <AdminOverview />;
+  return <AdminReportScreen page="home" />;
 }

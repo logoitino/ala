@@ -10,7 +10,7 @@ import {
   emptyAthleteStats,
   inferAthleteSport,
   isDemoAthleteId,
-  type AthleteGameLogRow,
+  mapGameLogs,
   type AthleteStatsBundle,
 } from '@/data/athleteStats';
 import type { AthleteCareerStat, AthleteGameLog, Player } from '@/types/database';
@@ -28,20 +28,6 @@ function asPlayer(row: Player | null | undefined, fallbackId: string): Player {
     school_name: '',
     backer_count: 0,
   };
-}
-
-function mapLogs(rows: AthleteGameLog[] | null | undefined): AthleteGameLogRow[] {
-  return (rows ?? [])
-    .slice()
-    .sort((left, right) => Date.parse(right.played_on) - Date.parse(left.played_on))
-    .map((row) => ({
-      id: row.id,
-      playedOn: row.played_on,
-      opponentSchool: row.opponent_school,
-      statLine: row.stat_line,
-      scoringValue: row.scoring_value,
-      volumeValue: row.volume_value,
-    }));
 }
 
 /**
@@ -81,7 +67,7 @@ export async function fetchAthleteStats(
   const matchingCareer = Boolean(storedCareer?.sport.trim()
     && inferAthleteSport(null, storedCareer.sport).toLowerCase() === sport.toLowerCase());
   const careerRow = matchingCareer ? storedCareer : null;
-  const logs = matchingCareer && !logResult.error ? mapLogs(logResult.data as AthleteGameLog[] | null) : [];
+  const logs = matchingCareer && !logResult.error ? mapGameLogs(logResult.data as AthleteGameLog[] | null) : [];
   const empty = emptyAthleteStats(nextPlayer, sport);
   const columns = careerColumnsForSport(sport);
   const career = careerRow

@@ -1,12 +1,12 @@
-import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+/** Device-local repair tools keep independent sources readable and expose sampled telemetry delivery/loss. */
+import { useCallback, useRef, useState } from 'react';
+import { StyleSheet, Text } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 
 import {
   AdminBtn,
   AdminDeskLink,
   AdminEmpty,
-  AdminMetrics,
   AdminNotice,
   AdminPage,
   AdminPanel,
@@ -19,169 +19,197 @@ import {
   fetchAdminTelemetryDigest,
   type AdminTelemetryDigest,
 } from '@/lib/admin';
-import { fetchAdminOpsInbox, type AdminOpsInbox } from '@/lib/adminCatalog';
 import { offlineQueue, type OfflineQueuedAction } from '@/services/OfflineQueue';
+import { telemetry, type TelemetryHealthSnapshot } from '@/services/TelemetryManager';
 
-const EMPTY_TELEM: AdminTelemetryDigest = {
-  stalls: 0,
-  reconnects: 0,
-  firstFrames: 0,
-  checkouts: 0,
-  avgCheckoutMs: 0,
-  recent: [],
+const READ_TIMEOUT_MS = 10_000;
+const deliveryText: Record<TelemetryHealthSnapshot['phase'], string> = {
+  unknown: 'No delivery has been confirmed in this session.',
+  sending: 'A telemetry batch is being sent.',
+  delivered: 'The latest telemetry batch was confirmed.',
+  not_configured: 'Telemetry is not configured on this device.',
+  migration_missing: 'Telemetry storage is not available.',
+  permission_denied: 'Telemetry delivery was denied.',
+  delivery_failed: 'Telemetry delivery failed.',
+  delivery_uncertain: 'The latest telemetry write could not be confirmed.',
+  disposed: 'The telemetry logger is stopped.',
 };
+const failureText: Record<NonNullable<TelemetryHealthSnapshot['lastFailure']>, string> = {
+  not_configured: 'Delivery is not configured', migration_missing: 'Telemetry storage is unavailable',
+  permission_denied: 'Delivery was denied', delivery_failed: 'Delivery failed',
+  transport_error: 'Write outcome was uncertain', timeout: 'Delivery timed out',
+  queue_full: 'The event buffer was full', disposed: 'The logger was stopped',
+};
+type ReadSource = 'telemetry' | 'queue';
+type ReadSlot = { pending: boolean };
+const readBag = globalThis as typeof globalThis & { __tapuaiQaReadSlots?: Record<ReadSource, ReadSlot> };
+// Reserve actual reads across focus, remount and development reloads; no response data is cached here.
+const readSlots = readBag.__tapuaiQaReadSlots ??= { telemetry: { pending: false }, queue: { pending: false } };
 
-const EMPTY_INBOX: AdminOpsInbox = {
-  flags: 0,
-  pendingVerify: 0,
-  pendingTags: 0,
-  liveGames: 0,
-  parkedGames: 0,
-  hiddenDrip: 0,
-  lowStock: 0,
-  queuedPayouts: 0,
-  newFeedback: 0,
-  items: [],
-};
+/** A stalled source cannot leave refresh permanently busy; later responses are rejected by its generation. */
+async function readWithTimeout<T>(read: () => Promise<T>, message: string, source: ReadSource): Promise<T> {
+  const slot = readSlots[source];
+  if (slot.pending) throw new Error(`A previous ${source === 'telemetry' ? 'client event' : 'device queue'} read is still pending. Refresh once it finishes.`);
+  slot.pending = true;
+  // Timeout releases the caller, not the underlying read. Never accumulate stalled work or
+  // reuse a previous actor's response in another refresh; that caller's generation owns it.
+  const work = Promise.resolve().then(read).finally(() => { slot.pending = false; });
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      work,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(message)), READ_TIMEOUT_MS);
+        (timer as unknown as { unref?: () => void }).unref?.();
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+// A development hot reload can retain the older singleton until a full app reload.
+const sampleDelivery = () => ({
+  value: typeof telemetry.getHealth === 'function' ? telemetry.getHealth() : null,
+  sampledAt: new Date().toISOString(),
+});
 
 function queueLabel(row: OfflineQueuedAction): string {
   if (row.type === 'aura_hype') return `Aura ${row.kind} · ${row.reelId.slice(0, 8)}`;
+  if (row.type === 'hype_clear') return `Clear ${row.kind} · ${row.reelId.slice(0, 8)}`;
   if (row.type === 'cheer_vote') return `Cheer ${row.side} · ${row.slug}`;
-  if (row.type === 'bookmark') return `Save clip · ${row.reelId.slice(0, 8)}`;
+  if (row.type === 'bookmark') return `${row.saved ? 'Save' : 'Unsave'} clip · ${row.reelId.slice(0, 8)}`;
   return `Report · ${row.reelId.slice(0, 8)}`;
 }
 
 /**
- * @purpose Polish desk: 24h stalls, offline queue, empty production surfaces, copy checklist.
- * @sideEffects `telemetry_logs` SELECT/DELETE; OfflineQueue snapshot / flush / discard; `fetchAdminOpsInbox`.
+ * @purpose Repair tools: device-local queued taps and bounded telemetry incident actions; analysis belongs to Health.
+ * @sideEffects `telemetry_logs` SELECT/DELETE; OfflineQueue snapshot / flush / discard; local health snapshot.
  */
 export function QaTool() {
-  const router = useRouter();
-  const [telem, setTelem] = useState<AdminTelemetryDigest>(EMPTY_TELEM);
-  const [inbox, setInbox] = useState<AdminOpsInbox>(EMPTY_INBOX);
+  const [telem, setTelem] = useState<AdminTelemetryDigest | null>(null);
   const [queue, setQueue] = useState<OfflineQueuedAction[]>([]);
+  const [queueRead, setQueueRead] = useState(false);
+  const [queueLoading, setQueueLoading] = useState(true);
+  const [telemLoading, setTelemLoading] = useState(true);
+  const [queueError, setQueueError] = useState<string | null>(null);
+  const [telemError, setTelemError] = useState<string | null>(null);
+  const [delivery, setDelivery] = useState(sampleDelivery);
+  const [incidentBusy, setIncidentBusy] = useState<string | null>(null);
   const [online, setOnline] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const active = useRef(false);
+  const generation = useRef(0);
+  const queueAction = useRef(false);
+  const incidentAction = useRef<string | null>(null);
+
+  const current = useCallback((run: number) => active.current && generation.current === run, []);
 
   const refresh = useCallback(async () => {
+    if (!active.current) return;
+    const run = ++generation.current;
     setLoading(true);
-    setError(null);
-    try {
-      const [nextTelem, nextInbox, nextQueue] = await Promise.all([
-        fetchAdminTelemetryDigest(),
-        fetchAdminOpsInbox(),
-        offlineQueue.snapshot(),
-      ]);
-      setTelem(nextTelem);
-      setInbox(nextInbox);
-      setQueue(nextQueue);
-      setOnline(offlineQueue.getIsConnected());
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not load QA.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    setError(null); setMessage(null); setTelem(null); setQueue([]); setQueueRead(false);
+    setQueueLoading(true); setTelemLoading(true); setQueueError(null); setTelemError(null);
+    setOnline(offlineQueue.getIsConnected()); setDelivery(sampleDelivery());
+    // Commit each result when it arrives: an unavailable server must not hide readable device state.
+    await Promise.allSettled([
+      readWithTimeout(fetchAdminTelemetryDigest, 'Client events could not be read within 10 seconds.', 'telemetry')
+        .then(next => { if (current(run)) { setTelem(next); setTelemError(next.error ?? null); } })
+        .catch(caught => { if (current(run)) setTelemError(caught instanceof Error ? caught.message : 'Could not read client events.'); })
+        .finally(() => { if (current(run)) setTelemLoading(false); }),
+      readWithTimeout(() => offlineQueue.snapshot(), 'The device queue could not be read within 10 seconds.', 'queue')
+        .then(next => { if (current(run)) { setQueue(next); setQueueRead(true); } })
+        .catch(caught => { if (current(run)) setQueueError(caught instanceof Error ? caught.message : 'Could not read the device queue.'); })
+        .finally(() => { if (current(run)) setQueueLoading(false); }),
+    ]);
+    if (current(run)) setLoading(false);
+  }, [current]);
 
   useFocusEffect(
     useCallback(() => {
+      active.current = true;
       void refresh();
+      return () => { active.current = false; generation.current++; };
     }, [refresh]),
   );
 
   const flushQueue = async () => {
+    if (queueAction.current || !queueRead || !queue.length) return;
+    queueAction.current = true;
+    const run = generation.current;
     setBusy(true);
     setMessage(null);
     try {
       await offlineQueue.flush();
-      setQueue(await offlineQueue.snapshot());
-      setMessage('Offline queue flushed.');
+      if (!current(run)) return;
+      const next = await readWithTimeout(() => offlineQueue.snapshot(), 'The device queue could not be read after replay.', 'queue');
+      if (!current(run)) return;
+      setQueue(next); setOnline(offlineQueue.getIsConnected()); setDelivery(sampleDelivery());
+      setMessage(`Replay checked: ${next.length} ${next.length === 1 ? 'action remains' : 'actions remain'} on this device.`);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not flush the queue.');
+      if (current(run)) setError(caught instanceof Error ? caught.message : 'Could not check queue replay.');
     } finally {
-      setBusy(false);
+      queueAction.current = false;
+      if (active.current) setBusy(false);
     }
   };
 
   const discardQueue = async () => {
+    if (queueAction.current || !queueRead || !queue.length) return;
+    queueAction.current = true;
+    const run = generation.current;
     setBusy(true);
     setMessage(null);
     try {
       await offlineQueue.discardAll();
+      if (!current(run)) return;
       setQueue([]);
       setMessage('Offline queue cleared on this device.');
-    } finally {
-      setBusy(false);
+    } catch (caught) { if (current(run)) setError(caught instanceof Error ? caught.message : 'Could not discard the queue.'); } finally {
+      queueAction.current = false;
+      if (active.current) setBusy(false);
     }
   };
-
-  const checks = [
-    {
-      ok: inbox.liveGames > 0,
-      label: inbox.liveGames > 0 ? `${inbox.liveGames} live match${inbox.liveGames === 1 ? '' : 'es'} on Local` : 'Local board is empty',
-      href: '/admin/publish' as const,
-    },
-    {
-      ok: inbox.flags === 0,
-      label: inbox.flags === 0 ? 'No open Highlight flags' : `${inbox.flags} open flags`,
-      href: '/admin/moderation' as const,
-    },
-    {
-      ok: inbox.lowStock === 0,
-      label: inbox.lowStock === 0 ? 'Drip stock looks healthy' : `${inbox.lowStock} SKUs under 8 units`,
-      href: '/admin/drip' as const,
-    },
-    {
-      ok: inbox.queuedPayouts === 0,
-      label: inbox.queuedPayouts === 0 ? 'No queued payouts' : `${inbox.queuedPayouts} disbursements waiting`,
-      href: '/admin/money' as const,
-    },
-    {
-      ok: telem.stalls === 0,
-      label: telem.stalls === 0 ? 'No Highlight stalls in 24h' : `${telem.stalls} video stalls in 24h`,
-      href: '/admin/qa' as const,
-    },
-  ];
 
   return (
     <AdminPage
       title="QA"
-      lede="Polish what fans feel: stalls, empty Local, low Drip, stuck offline taps. Then open the surface and walk it."
+      lede="Repair client incidents and queued actions on this device. Health owns the complete operational assessment."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
     >
-      <AdminMetrics
-        items={[
-          { label: 'Stalls 24h', value: telem.stalls },
-          { label: 'Reconnects', value: telem.reconnects },
-          { label: 'Donate ms', value: telem.avgCheckoutMs || '—' },
-          { label: 'Offline', value: queue.length },
-        ]}
-      />
-
-      <AdminSectionTitle>Production health</AdminSectionTitle>
-      {checks.map((item) => (
-        <AdminRow key={item.label} title={item.label} meta={item.ok ? 'Ready' : 'Needs a pass'}>
-          {item.ok ? null : <AdminBtn label="Fix" kind="primary" onPress={() => router.push(item.href)} />}
-        </AdminRow>
-      ))}
+      <AdminPanel title="Telemetry delivery · this device">
+        {!delivery.value ? <AdminEmpty text="Reload the app to load telemetry delivery monitoring." /> : <>
+        <Text style={styles.body}>{deliveryText[delivery.value.phase]}</Text>
+        <Text style={styles.body}>Sampled on refresh at {delivery.sampledAt.replace('T', ' ').slice(0, 19)} UTC. These counters describe this process, not every user's device.</Text>
+        <AdminRow title="Buffered events" meta={`${delivery.value.queued} queued · ${delivery.value.inFlight} pending transport · ${delivery.value.capacity} event limit`} />
+        <AdminRow title="Confirmed events" meta={String(delivery.value.delivered)} />
+        <AdminRow title="Discarded or unconfirmed events" meta={`${delivery.value.dropped} total · ${delivery.value.uncertain} uncertain`} />
+        <Text style={styles.body}>Uncertain writes are included in the discarded count and are not replayed. A pending transport may already be counted as uncertain.</Text>
+        {delivery.value.lastDeliveredAt && <AdminRow title="Last confirmed delivery" meta={`${delivery.value.lastDeliveredAt.replace('T', ' ').slice(0, 19)} UTC`} />}
+        {delivery.value.lastFailure && <AdminRow title="Last recorded delivery issue" meta={`${failureText[delivery.value.lastFailure]}${delivery.value.lastFailureAt ? ` · ${delivery.value.lastFailureAt.replace('T', ' ').slice(0, 19)} UTC` : ''}`} />}
+        </>}
+      </AdminPanel>
 
       <AdminPanel title="Offline queue">
         <Text style={styles.body}>
-          {online === false ? 'This device looks offline.' : 'This device looks online.'} Aura, cheer, save, and report
+          {online == null ? 'Connection status is not known.' : online === false ? 'This device looks offline.' : 'This device looks online.'} Aura, cheer, save, and report
           tap replay from here when the network comes back.
         </Text>
-        {queue.length === 0 ? (
+        <AdminNotice text={queueError} tone="danger" />
+        {busy && <AdminNotice text="A queue action is pending. Its result has not been confirmed; it will not be repeated from this desk." tone="warn" />}
+        {!queueRead ? <AdminEmpty text={queueLoading ? "Reading this device’s queue…" : "The device queue could not be read."} /> : queue.length === 0 ? (
           <AdminEmpty text="Nothing queued on this device." />
         ) : (
           queue.map((row) => <AdminRow key={row.id} title={queueLabel(row)} meta={row.created_at} />)
         )}
-        <AdminBtn label={busy ? 'Working…' : 'Flush now'} kind="primary" disabled={busy || queue.length === 0} onPress={() => void flushQueue()} />
-        <AdminBtn label="Discard queue" kind="danger" disabled={busy || queue.length === 0} onPress={() => void discardQueue()} />
+        <AdminBtn label={busy ? 'Working…' : 'Flush now'} kind="primary" disabled={busy || !queueRead || queue.length === 0} onPress={() => void flushQueue()} />
+        <AdminBtn label="Discard queue" kind="danger" disabled={busy || !queueRead || queue.length === 0} onPress={() => void discardQueue()} />
         <AdminNotice text={message} />
       </AdminPanel>
 
@@ -193,14 +221,11 @@ export function QaTool() {
         label="Studio"
       />
 
-      <AdminPanel title="Copy checklist">
-        <Text style={styles.body}>Home / Local / Profile say Donate, Seki, and Highlights ⚡ — never the retired money words or like / Reels in the UI (docs/product/VOICE.md, pnpm copy:check).</Text>
-        <Text style={styles.body}>Fan bar is Home · Local · + · Spotlight · Drip · Profile. No Dev role chips. No extra Admin tab.</Text>
-        <Text style={styles.body}>Operator PIN and scorekeeper stay on `/operator`. Publish scores from Live games or the operator console.</Text>
-      </AdminPanel>
-
-      <AdminSectionTitle>Telemetry (24h)</AdminSectionTitle>
-      {telem.recent.length === 0 ? (
+      <AdminSectionTitle>Recent telemetry · 24h</AdminSectionTitle>
+      <Text style={styles.body}>Showing the newest 24 of up to 80 client events read. Period-wide counts and thresholds are in Health.</Text>
+      <AdminNotice text={telemError} tone="danger" />
+      {incidentBusy && <AdminNotice text="Incident dismissal is pending. Its result has not been confirmed." tone="warn" />}
+      {!telem || telemError ? <AdminEmpty text={telemLoading ? "Reading client events…" : "Client events are not in this read."} /> : telem.recent.length === 0 ? (
         <AdminEmpty text="No client events in the last day." />
       ) : (
         telem.recent.slice(0, 24).map((row) => (
@@ -212,9 +237,17 @@ export function QaTool() {
               .join(' · ')}
           >
             <AdminBtn
-              label="Dismiss"
+              label={incidentBusy === row.id ? 'Dismissing…' : 'Dismiss'}
+              disabled={incidentBusy != null}
               onPress={() => {
-                void dismissTelemetryIncident(row.id).then(() => refresh());
+                if (incidentAction.current != null) return;
+                const run = generation.current;
+                incidentAction.current = row.id;
+                setIncidentBusy(row.id);
+                void dismissTelemetryIncident(row.id)
+                  .then(() => { if (current(run)) return refresh(); })
+                  .catch(caught => { if (current(run)) setError(caught instanceof Error ? caught.message : 'Could not dismiss incident.'); })
+                  .finally(() => { incidentAction.current = null; if (active.current) setIncidentBusy(null); });
               }}
             />
           </AdminRow>

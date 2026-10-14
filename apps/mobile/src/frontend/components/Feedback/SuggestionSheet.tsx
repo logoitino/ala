@@ -2,7 +2,7 @@
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useState } from 'react';
-import { Alert, Modal, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Modal,  StyleSheet, Text, TextInput, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
@@ -17,6 +17,8 @@ import {
   type AppFeedbackKind,
   type AppFeedbackSurface,
 } from '@/lib/feedback';
+import { supportSignals } from '@/services/SupportSignalManager';
+import { supportFeatureForPath } from '@/services/supportRuntime';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
@@ -69,7 +71,10 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
     setBusy(true);
     try {
       await submitAppFeedback(body, kind, place);
-      if (kind === 'bug') telemetry.trackIssue('suggestion_bug', place);
+      if (kind === 'bug') {
+        telemetry.trackIssue('suggestion_bug', place);
+        supportSignals.capture({ feature: supportFeatureForPath(place === 'home' ? '/' : `/${place}`), code: 'user_report' });
+      }
       else telemetry.trackFeature('suggestion', place);
       setBody('');
       dismiss();

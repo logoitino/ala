@@ -112,25 +112,17 @@ export async function submitAppFeedback(
  * @purpose Load the admin feedback inbox (new first).
  * @sideEffects `get_app_feedback`.
  */
-export async function fetchAppFeedback(): Promise<AppFeedback[]> {
-  if (!isSupabaseConfigured) return [];
+export async function fetchAppFeedback({ strict = false }: { strict?: boolean } = {}): Promise<AppFeedback[]> {
+  if (!isSupabaseConfigured) {
+    if (strict) throw new Error('Supabase is not configured.');
+    return [];
+  }
   const { data, error } = await supabase.rpc('get_app_feedback');
-  if (error || !Array.isArray(data)) return [];
+  if (error || !Array.isArray(data)) {
+    if (strict) throw new Error(error?.message ?? 'The feedback list returned no data.');
+    return [];
+  }
   return data.map(parseAppFeedback).filter((row): row is AppFeedback => Boolean(row));
-}
-
-/**
- * @purpose Count open suggestions for Overview.
- * @sideEffects `app_feedback` count where status is new.
- */
-export async function countNewAppFeedback(): Promise<number> {
-  if (!isSupabaseConfigured) return 0;
-  const { count, error } = await supabase
-    .from('app_feedback')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'new');
-  if (error) return 0;
-  return count ?? 0;
 }
 
 /**

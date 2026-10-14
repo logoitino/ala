@@ -1,7 +1,8 @@
 /**
- * Data and navigation helpers for the Expo /admin shell: which sidebar groups each lens (Marketing / Owner / Engineer /
- * All) shows, which desk the current path belongs to, and the admin reads and actions behind the desks (Spotlight awards,
+ * Data and navigation helpers for Expo /admin: main reports, complete desk trails, and editor groups each lens
+ * (Marketing / Owner / Engineer / All) shows, plus the admin reads and actions behind the desks (Spotlight awards,
  * flagged-clip moderation, platform metrics, telemetry digest, reports and health checks).
+ * Editing groups exclude the legacy Reports dashboard so top-level reporting has one navigation owner.
  * @sideEffects Reads and writes through the shared Supabase client; admin role enforced by RLS.
  */
 
@@ -18,6 +19,7 @@ export type AdminNavHref =
   | '/admin/look'
   | '/admin/catalog'
   | '/admin/qa'
+  | '/admin/support'
   | '/admin/lab'
   | '/admin/feedback'
   | '/admin/coverage'
@@ -33,16 +35,32 @@ export type AdminNavHref =
   | '/admin/wishlist'
   | '/admin/boosters'
   | '/admin/money'
+  | '/admin/books'
   | '/admin/polls'
-  | '/admin/reports';
+  | '/admin/reports'
+  | '/admin/trends'
+  | '/admin/audience'
+  | '/admin/revenue'
+  | '/admin/health'
+  | '/admin/product'
+  | '/admin/analytics'
+  | '/admin/departments'
+  | '/admin/product/features'
+  | '/admin/product/profile'
+  | '/admin/product/sign-in'
+  | '/admin/product/people'
+  | '/admin/product/coverage';
 
 export type AdminNavItem = {
   href: AdminNavHref;
   label: string;
   hint: string;
+  /** Search terms retain the old editor names after their menu entries are merged. */
+  searchTerms?: string;
+  members?: AdminNavItem[];
 };
 
-export type AdminNavGroupId = 'operations' | 'content' | 'commerce' | 'audience' | 'growth' | 'system';
+export type AdminNavGroupId = 'operations' | 'content' | 'commerce' | 'audience' | 'growth' | 'system' | 'reports';
 
 export type AdminNavGroup = {
   id: AdminNavGroupId;
@@ -60,7 +78,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: '/admin/sports', label: 'Sports', hint: 'Scoring, periods, stats per sport' },
       { href: '/admin/polls', label: 'Polls', hint: 'School cheer matchups' },
       { href: '/admin/boosters', label: 'Boosters', hint: 'Local sponsorships' },
-      { href: '/admin/publish', label: 'Publish', hint: 'Go-live queue' },
+      { href: '/admin/publish', label: 'Publish queue', hint: 'Content readiness and go-live queue' },
     ],
   },
   {
@@ -78,7 +96,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { href: '/admin/drip', label: 'Drip', hint: 'Marketplace catalog' },
       { href: '/admin/wishlist', label: 'Locker Room', hint: 'Gear goals fans donate to' },
-      { href: '/admin/money', label: 'Money', hint: 'Revenue, donations, disbursements' },
+      { href: '/admin/money', label: 'Payouts', hint: 'Queue and review disbursements', searchTerms: 'Money' },
+      { href: '/admin/books', label: 'Finance & Books', hint: 'Accounting, taxes, reconciliation and QuickBooks export', searchTerms: 'Books bookkeeping accounting tax QuickBooks reconcile' },
     ],
   },
   {
@@ -94,7 +113,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: 'growth',
     label: 'Growth',
     items: [
-      { href: '/admin/reports', label: 'Reports', hint: 'Tab time, taps, issues, money' },
       { href: '/admin/feedback', label: 'Feedback', hint: 'Fan suggestions to ship' },
       { href: '/admin/coverage', label: 'Coverage', hint: 'Every fan control + Soft-Wall' },
     ],
@@ -103,6 +121,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: 'system',
     label: 'System',
     items: [
+      { href: '/admin/support', label: 'Engineering Support', hint: 'Issues, team flow, change history and recovery', searchTerms: 'Support security cybersecurity sensors errors audit backup versions' },
       { href: '/admin/features', label: 'Features', hint: 'Tabs, Soft-Wall, boards' },
       { href: '/admin/look', label: 'Look', hint: 'Daylight colors, copy, profile, Highlights rail' },
       { href: '/admin/catalog', label: 'Catalogs', hint: 'Donations, exclusive, chips, tiers' },
@@ -115,7 +134,68 @@ export const ADMIN_HOME: AdminNavItem = { href: '/admin', label: 'Home', hint: '
 
 export const ADMIN_NAV: AdminNavItem[] = [ADMIN_HOME, ...ADMIN_NAV_GROUPS.flatMap((group) => group.items)];
 
-export type AdminLens = 'marketing' | 'owner' | 'engineer' | 'all';
+/** Reports use distinct paths so existing Money, People and Features editors retain their actions. */
+export const ADMIN_REPORT_NAV: AdminNavItem[] = [
+  ADMIN_HOME,
+  { href: '/admin/trends', label: 'Trends', hint: 'Recorded changes over the last seven days' },
+  { href: '/admin/audience', label: 'Audience', hint: 'Profiles, athletes, schools and clips' },
+  { href: '/admin/revenue', label: 'Revenue', hint: 'Donations and recorded ledger rows' },
+  { href: '/admin/health', label: 'Health', hint: 'Operational checks, attention and issues' },
+  { href: '/admin/product', label: 'Product', hint: 'Published product status' },
+];
+
+export const ADMIN_REPORT_UTILITIES: AdminNavItem[] = [
+  { href: '/admin/analytics', label: 'Analytics', hint: 'Dashboards and every measured source' },
+  { href: '/admin/departments', label: 'Departments', hint: 'Billing, Marketing, Support, API and IT' },
+];
+
+export const ADMIN_PRODUCT_NAV: AdminNavItem[] = [
+  { href: '/admin/product', label: 'Overview', hint: 'Published menu status' },
+  { href: '/admin/product/features', label: 'Features', hint: 'Published features and draft status' },
+  { href: '/admin/product/profile', label: 'Profile', hint: 'Profile hierarchy and chrome' },
+  { href: '/admin/product/sign-in', label: 'Sign-in', hint: 'Browse-first gates and providers' },
+  { href: '/admin/product/people', label: 'People', hint: 'Recent profiles' },
+  { href: '/admin/product/coverage', label: 'Control map', hint: 'Every fan control, source and owner' },
+];
+
+/** QA and Lab have one place in the Tools group and in search. */
+export const ADMIN_TOOL_UTILITIES: AdminNavItem[] = [
+  { href: '/admin/qa', label: 'QA', hint: 'Telemetry and offline queue controls' },
+  { href: '/admin/lab', label: 'Lab', hint: 'Validated runtime drafts' },
+];
+
+/** Related editors share navigation; original route labels and draft owners stay intact. */
+export const ADMIN_WORKSPACES = [
+  { label: 'App setup', hint: 'Features, Look, Catalogs and validated JSON drafts', items: [
+    ...ADMIN_NAV_GROUPS.flatMap(group => group.items).filter(item => ['/admin/features', '/admin/look', '/admin/catalog'].includes(item.href)),
+    ADMIN_TOOL_UTILITIES.find(item => item.href === '/admin/lab')!,
+  ] },
+  { label: 'Highlights & review', hint: 'Clip editing, Vault, flags and takedowns', items:
+    ADMIN_NAV_GROUPS.flatMap(group => group.items).filter(item => ['/admin/highlights', '/admin/moderation'].includes(item.href)) },
+];
+
+export function adminWorkspaceForPath(pathname: string) {
+  return ADMIN_WORKSPACES.find(workspace => workspace.items.some(item => isAdminNavActive(item.href, pathname))) ?? null;
+}
+
+/** Studio and device repair are utilities; Lab is part of App setup. */
+export const ADMIN_MANAGE_UTILITIES = [ADMIN_TOOL_UTILITIES[0], ADMIN_NAV_GROUPS.flatMap(group => group.items).find(item => item.href === '/admin/studio')!];
+
+/** Keep saved Reports links resolvable while the route opens the canonical Analytics view. */
+const ADMIN_LEGACY_REPORT_DESK: AdminNavItem = { href: '/admin/reports', label: 'Reports', hint: 'Opens Analytics' };
+
+/** Resolve every route independently of a lens or whether its link is currently expanded. */
+export const ADMIN_DESK_DIRECTORY: AdminNavItem[] = [
+  ...ADMIN_NAV, ADMIN_LEGACY_REPORT_DESK, ...ADMIN_TOOL_UTILITIES, ...ADMIN_REPORT_NAV.slice(1), ...ADMIN_REPORT_UTILITIES,
+  ...ADMIN_PRODUCT_NAV.slice(1),
+];
+
+const ADMIN_REPORT_GROUP: AdminNavGroup = {
+  id: 'reports', label: 'Reports',
+  items: [ADMIN_LEGACY_REPORT_DESK, ...ADMIN_REPORT_NAV.slice(1), ...ADMIN_REPORT_UTILITIES, ...ADMIN_PRODUCT_NAV.slice(1)],
+};
+
+export type AdminLens = 'marketing' | 'owner' | 'engineer' | 'finance' | 'all';
 
 export const ADMIN_LENS_KEY = 'tapuai.adminLens';
 
@@ -124,10 +204,13 @@ export const ADMIN_LENSES: { id: AdminLens; label: string; hint: string }[] = [
   { id: 'marketing', label: 'Marketing', hint: 'Look, copy, campaign chrome' },
   { id: 'owner', label: 'Owner', hint: 'Numbers, people, Spotlight' },
   { id: 'engineer', label: 'Engineer', hint: 'Flags, catalogs, feedback' },
+  // BOOKS-02: the CFO's teams (accounting, tax, treasury) see only the money desks.
+  { id: 'finance', label: 'Finance', hint: 'Books, payouts, prices and money desks' },
 ];
 
 const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
   marketing: [
+    '/admin/lab',
     '/admin/look',
     '/admin/features',
     '/admin/catalog',
@@ -141,17 +224,30 @@ const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
     '/admin/coverage',
   ],
   owner: [
+    '/admin/support',
+    '/admin/lab',
     '/admin/money',
+    '/admin/books',
     '/admin/catalog',
     '/admin/wishlist',
-    '/admin/reports',
     '/admin/people',
     '/admin/spotlight',
     '/admin/coverage',
     '/admin/athletes',
     '/admin/sports',
   ],
+  finance: [
+    '/admin/support',
+    '/admin/books',
+    '/admin/money',
+    '/admin/boosters',
+    '/admin/drip',
+    '/admin/wishlist',
+    '/admin/catalog',
+  ],
   engineer: [
+    '/admin/support',
+    '/admin/lab',
     '/admin/features',
     '/admin/catalog',
     '/admin/publish',
@@ -160,7 +256,6 @@ const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
     '/admin/highlights',
     '/admin/coverage',
     '/admin/sports',
-    '/admin/reports',
   ],
 };
 
@@ -168,19 +263,32 @@ const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
  * @purpose Filter sidebar groups for Marketing / Owner / Engineer without hiding All desks.
  */
 export function navGroupsForLens(lens: AdminLens): AdminNavGroup[] {
-  if (lens === 'all') return ADMIN_NAV_GROUPS;
-  const allowed = new Set(LENS_HREFS[lens]);
+  const allowed = lens === 'all' ? null : new Set(LENS_HREFS[lens]);
   return ADMIN_NAV_GROUPS.map((group) => ({
     ...group,
-    items: group.items.filter((item) => allowed.has(item.href)),
+    items: group.items.filter(item => !['/admin/coverage', '/admin/studio'].includes(item.href))
+      .filter(item => !allowed || allowed.has(item.href))
+      .flatMap(item => {
+        const workspace = adminWorkspaceForPath(item.href);
+        if (!workspace) return [item];
+        const members = workspace.items.filter(member => !allowed || allowed.has(member.href));
+        if (item.href !== members[0]?.href) return [];
+        return [{ ...item, label: workspace.label, hint: workspace.hint, members, searchTerms: members.map(member => `${member.label} ${member.hint}`).join(' ') }];
+      }),
   })).filter((group) => group.items.length > 0);
 }
 
-export function overviewLedeForLens(lens: AdminLens): string {
-  if (lens === 'marketing') return 'Look, copy, and campaign chrome. Draft until Publish to app.';
-  if (lens === 'owner') return 'Gross, net, payouts, health, and who needs a decision.';
-  if (lens === 'engineer') return 'Flags, catalogs, coverage, and fan suggestions waiting to become a patch.';
-  return 'Home for the control plane. Inbox first, then every desk that ships the fan app.';
+/** Editors retain decision context, while these reports own full-period analysis. */
+export function adminAnalysisForPath(pathname: string): AdminNavItem[] {
+  const path = adminTrailForPath(pathname).desk.href;
+  const report = (href: AdminNavHref, label: string): AdminNavItem => ({ href, label, hint: '' });
+  if (['/admin/money', '/admin/drip', '/admin/wishlist', '/admin/boosters'].includes(path)) return [report('/admin/revenue', 'Revenue report'), report('/admin/books', 'Finance & Books')];
+  if (path === '/admin/books') return [report('/admin/revenue', 'Revenue report')];
+  if (['/admin/athletes', '/admin/schools', '/admin/people'].includes(path)) return [report('/admin/audience', 'Audience report'), report('/admin/product/people', 'Account analysis')];
+  if (['/admin/features', '/admin/look', '/admin/catalog', '/admin/lab'].includes(path)) return [report('/admin/product', 'Published product'), report('/admin/product/coverage', 'Control map')];
+  if (['/admin/qa', '/admin/feedback', '/admin/moderation', '/admin/support'].includes(path)) return [report('/admin/health', 'Health report')];
+  if (['/admin/games', '/admin/sports', '/admin/polls', '/admin/publish', '/admin/highlights', '/admin/spotlight'].includes(path)) return [report('/admin/analytics', 'Full analytics')];
+  return [];
 }
 
 const FAN_HREF_BY_DESK: Partial<Record<AdminNavHref, string>> = {
@@ -197,6 +305,7 @@ const FAN_HREF_BY_DESK: Partial<Record<AdminNavHref, string>> = {
   '/admin/drip': '/drip',
   '/admin/wishlist': '/profile',
   '/admin/money': '/receipts',
+  '/admin/books': '/receipts',
   '/admin/athletes': '/profile',
   '/admin/moderation': '/',
   '/admin/feedback': '/',
@@ -207,10 +316,22 @@ const FAN_HREF_BY_DESK: Partial<Record<AdminNavHref, string>> = {
   '/admin/studio': '/',
   '/admin/coverage': '/',
   '/admin/qa': '/',
+  '/admin/support': '/',
+  '/admin/trends': '/',
+  '/admin/audience': '/profile',
+  '/admin/revenue': '/receipts',
+  '/admin/health': '/',
+  '/admin/product': '/',
+  '/admin/analytics': '/',
+  '/admin/departments': '/',
+  '/admin/product/features': '/',
+  '/admin/product/profile': '/profile',
+  '/admin/product/sign-in': '/',
+  '/admin/product/people': '/profile',
 };
 
 /**
- * @purpose Resolve sidebar group + fan surface for the current `/admin` path so Back / Home / Open in app always have a target.
+ * @purpose Resolve the most specific report or tool, including QA/Lab and Product child reports, for Back / Home / Open in app.
  */
 export function adminTrailForPath(pathname: string): {
   isHome: boolean;
@@ -220,8 +341,12 @@ export function adminTrailForPath(pathname: string): {
 } {
   const path = pathname.replace(/\/$/, '') || '/admin';
   const isHome = path === '/admin';
-  const desk = ADMIN_NAV.find((item) => isAdminNavActive(item.href, path)) ?? ADMIN_HOME;
-  const group = ADMIN_NAV_GROUPS.find((item) => item.items.some((entry) => entry.href === desk.href)) ?? null;
+  // Parent reports match their children; the longest match retains the child's name and fan target.
+  const desk = ADMIN_DESK_DIRECTORY.reduce<AdminNavItem | null>((best, item) =>
+    isAdminNavActive(item.href, path) && (!best || item.href.length > best.href.length) ? item : best, null) ?? ADMIN_HOME;
+  const group = [...ADMIN_NAV_GROUPS, ADMIN_REPORT_GROUP].find((item) => item.items.some((entry) => entry.href === desk.href))
+    ?? (ADMIN_TOOL_UTILITIES.some((item) => item.href === desk.href) ? ADMIN_NAV_GROUPS.find((item) => item.id === 'system') : null)
+    ?? null;
   return {
     isHome,
     group,
@@ -728,6 +853,7 @@ export type AdminTelemetryRow = {
 };
 
 export type AdminTelemetryDigest = {
+  error?: string | null;
   stalls: number;
   reconnects: number;
   firstFrames: number;
@@ -761,7 +887,7 @@ export async function fetchAdminTelemetryDigest(): Promise<AdminTelemetryDigest>
     avgCheckoutMs: 0,
     recent: [],
   };
-  if (!isSupabaseConfigured) return empty;
+  if (!isSupabaseConfigured) return { ...empty, error: 'Supabase is not configured.' };
 
   const since = new Date(Date.now() - 24 * 3_600_000).toISOString();
   const { data, error } = await supabase
@@ -770,7 +896,7 @@ export async function fetchAdminTelemetryDigest(): Promise<AdminTelemetryDigest>
     .gte('created_at', since)
     .order('created_at', { ascending: false })
     .limit(80);
-  if (error || !Array.isArray(data)) return empty;
+  if (error || !Array.isArray(data)) return { ...empty, error: error?.message ?? 'The incident list returned no data.' };
 
   let stalls = 0;
   let reconnects = 0;
@@ -801,6 +927,7 @@ export async function fetchAdminTelemetryDigest(): Promise<AdminTelemetryDigest>
 
   return {
     stalls,
+    error: null,
     reconnects,
     firstFrames,
     checkouts,
@@ -861,233 +988,3 @@ export type AdminHealthCheck = {
   detail: string;
   href?: AdminNavHref;
 };
-
-function asSection(raw: unknown): AdminReportSection {
-  if (!raw || typeof raw !== 'object') return {};
-  const next: AdminReportSection = {};
-  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
-    next[key] = asInt(value);
-  }
-  return next;
-}
-
-function asLeaders(raw: unknown): AdminReportLeader[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((row) => {
-      if (!row || typeof row !== 'object') return null;
-      const item = row as Record<string, unknown>;
-      const label = asText(item.label);
-      if (!label) return null;
-      return { label, value: asInt(item.value) };
-    })
-    .filter((row): row is AdminReportLeader => row !== null);
-}
-
-function parseLeaders(raw: unknown): AdminReportLeaders {
-  const bag = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
-  return {
-    malo: asLeaders(bag.malo),
-    hype: asLeaders(bag.hype),
-    schools: asLeaders(bag.schools),
-  };
-}
-
-function parseSeries(raw: unknown): AdminReportSeries {
-  const bag = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
-  return {
-    clips: asLeaders(bag.clips).map((row) => ({ day: row.label, value: row.value })),
-    malo: asLeaders(bag.malo).map((row) => ({ day: row.label, value: row.value })),
-    stalls: asLeaders(bag.stalls).map((row) => ({ day: row.label, value: row.value })),
-    dwell: asLeaders(bag.dwell).map((row) => ({ day: row.label, value: row.value })),
-  };
-}
-
-const EMPTY_REPORTS: AdminReports = {
-  generatedAt: null,
-  engagement: {},
-  money: {},
-  content: {},
-  audience: {},
-  live: {},
-  reliability: {},
-  usage: {},
-  tabs: [],
-  features: [],
-  issues: [],
-  scroll: [],
-  leaders: { malo: [], hype: [], schools: [] },
-  series: { clips: [], malo: [], stalls: [], dwell: [] },
-};
-
-/**
- * @purpose Platform reports for usage, Mālo, content mix, audience, live ops, reliability, and leaders.
- * @sideEffects `get_admin_reports` RPC.
- */
-export async function fetchAdminReports(): Promise<AdminReports> {
-  if (!isSupabaseConfigured) return EMPTY_REPORTS;
-  const { data, error } = await supabase.rpc('get_admin_reports');
-  if (error || !data || typeof data !== 'object') return EMPTY_REPORTS;
-  const row = data as Record<string, unknown>;
-  return {
-    generatedAt: asText(row.generated_at) || null,
-    engagement: asSection(row.engagement),
-    money: asSection(row.money),
-    content: asSection(row.content),
-    audience: asSection(row.audience),
-    live: asSection(row.live),
-    reliability: asSection(row.reliability),
-    usage: asSection(row.usage),
-    tabs: asLeaders(row.tabs),
-    features: asLeaders(row.features),
-    issues: asLeaders(row.issues),
-    scroll: asLeaders(row.scroll),
-    leaders: parseLeaders(row.leaders),
-    series: parseSeries(row.series),
-  };
-}
-
-function band(value: number, warnAt: number, failAt: number): AdminHealthStatus {
-  if (value >= failAt) return 'fail';
-  if (value >= warnAt) return 'warn';
-  return 'ok';
-}
-
-/**
- * @purpose Pass / warn / fail checks across feed, money, content, live ops, usage, and shipping.
- */
-export function buildAdminHealth(
-  reports: AdminReports,
-  extras: { dirty: boolean; pendingCount: number; lowStock: number },
-): AdminHealthCheck[] {
-  const stalls = reports.reliability.stalls_24h ?? 0;
-  const reconnects = reports.reliability.reconnects_24h ?? 0;
-  const checkout = reports.reliability.avg_checkout_ms_24h ?? 0;
-  const flags = reports.content.flagged ?? 0;
-  const payouts = reports.money.queued_payouts ?? 0;
-  const verify = reports.audience.pending_verify ?? 0;
-  const liveGames = reports.live.live_games ?? 0;
-  const drip = reports.live.drip_skus ?? 0;
-  const clips24 = reports.engagement.clips_24h ?? 0;
-  const spotlight = reports.content.spotlight_live ?? 0;
-  const sessions = reports.usage.sessions_24h ?? 0;
-  const issues = reports.usage.issues_24h ?? 0;
-
-  const checks: AdminHealthCheck[] = [
-    {
-      id: 'stalls',
-      label: 'Video stalls',
-      category: 'Reliability',
-      status: band(stalls, 1, 5),
-      detail: stalls === 0 ? 'No stalls in 24h.' : `${stalls} stall${stalls === 1 ? '' : 's'} in 24h.`,
-      href: '/admin/qa',
-    },
-    {
-      id: 'reconnects',
-      label: 'Realtime reconnects',
-      category: 'Reliability',
-      status: band(reconnects, 1, 10),
-      detail: reconnects === 0 ? 'Sockets are quiet.' : `${reconnects} reconnect${reconnects === 1 ? '' : 's'} in 24h.`,
-      href: '/admin/qa',
-    },
-    {
-      id: 'checkout',
-      label: 'Donation checkout',
-      category: 'Money',
-      status: checkout >= 8000 ? 'fail' : checkout >= 3000 ? 'warn' : 'ok',
-      detail: checkout === 0 ? 'No checkout samples in 24h.' : `Avg ${checkout} ms in 24h.`,
-      href: '/admin/money',
-    },
-    {
-      id: 'flags',
-      label: 'Open flags',
-      category: 'Content',
-      status: band(flags, 1, 8),
-      detail: flags === 0 ? 'Moderation queue is clear.' : `${flags} flagged clip${flags === 1 ? '' : 's'}.`,
-      href: '/admin/moderation',
-    },
-    {
-      id: 'payouts',
-      label: 'Queued payouts',
-      category: 'Money',
-      status: payouts > 0 ? 'warn' : 'ok',
-      detail: payouts === 0 ? 'No disbursements waiting.' : `${payouts} queued for mark-paid.`,
-      href: '/admin/money',
-    },
-    {
-      id: 'verify',
-      label: 'Verify queue',
-      category: 'Audience',
-      status: verify > 0 ? 'warn' : 'ok',
-      detail: verify === 0 ? 'No pending athlete verifies.' : `${verify} waiting on People.`,
-      href: '/admin/people',
-    },
-    {
-      id: 'live',
-      label: 'Live board',
-      category: 'Live ops',
-      status: liveGames === 0 ? 'warn' : 'ok',
-      detail: liveGames === 0 ? 'No live games on Local.' : `${liveGames} match${liveGames === 1 ? '' : 'es'} live.`,
-      href: '/admin/games',
-    },
-    {
-      id: 'drip',
-      label: 'Drip rack',
-      category: 'Live ops',
-      status: drip === 0 || extras.lowStock > 0 ? 'warn' : 'ok',
-      detail:
-        drip === 0
-          ? 'No active Drip SKUs.'
-          : extras.lowStock > 0
-            ? `${extras.lowStock} low-stock item${extras.lowStock === 1 ? '' : 's'}.`
-            : `${drip} SKUs on the rack.`,
-      href: '/admin/drip',
-    },
-    {
-      id: 'uploads',
-      label: 'Uploads (24h)',
-      category: 'Engagement',
-      status: clips24 === 0 ? 'warn' : 'ok',
-      detail: clips24 === 0 ? 'No new clips in 24h.' : `${clips24} clip${clips24 === 1 ? '' : 's'} uploaded.`,
-      href: '/admin/highlights',
-    },
-    {
-      id: 'spotlight',
-      label: 'Spotlight window',
-      category: 'Content',
-      status: spotlight === 0 ? 'warn' : 'ok',
-      detail: spotlight === 0 ? 'No live Player of the Week.' : `${spotlight} award${spotlight === 1 ? '' : 's'} in window.`,
-      href: '/admin/spotlight',
-    },
-    {
-      id: 'chrome',
-      label: 'Unpublished look',
-      category: 'Ship',
-      status: extras.dirty ? 'warn' : 'ok',
-      detail: extras.dirty
-        ? `${extras.pendingCount} draft change${extras.pendingCount === 1 ? '' : 's'} wait on Publish to app.`
-        : 'Fan chrome matches the last publish.',
-      href: '/admin/features',
-    },
-    {
-      id: 'sessions',
-      label: 'Tab sessions',
-      category: 'Usage',
-      status: sessions === 0 ? 'warn' : 'ok',
-      detail: sessions === 0 ? 'No tab dwell in 24h yet.' : `${sessions} session${sessions === 1 ? '' : 's'} in 24h.`,
-      href: '/admin/reports',
-    },
-    {
-      id: 'ui-issues',
-      label: 'Control issues',
-      category: 'Usage',
-      status: band(issues, 3, 12),
-      detail:
-        issues === 0
-          ? 'No failed controls in 24h.'
-          : `${issues} issue${issues === 1 ? '' : 's'} on buttons and tabs in 24h.`,
-      href: '/admin/feedback',
-    },
-  ];
-  return checks;
-}

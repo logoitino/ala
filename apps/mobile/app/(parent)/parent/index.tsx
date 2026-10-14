@@ -1,6 +1,6 @@
 /**
  * Parent HQ: for a guardian, the linked athletes, consent for each (`setParentPlayerConsent`), the custodial
- * money card and the Rally card. Failures show Retry rather than an empty list.
+ * money card, the Rally card and teen supervision (MINOR-01). Failures show Retry rather than an empty list.
  */
 
 import { useMemo, useState } from 'react';
@@ -16,7 +16,7 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { EmptyState } from '@/components/UI/EmptyState';
-import { colors, radii } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { telemetry } from '@/services/TelemetryManager';
@@ -25,6 +25,7 @@ import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useRoster } from '@/hooks/useRoster';
 import { setParentPlayerConsent } from '@/lib/custodial';
+import { GuardianSupervisionPanel } from '@/components/Custodial/GuardianSupervisionPanel';
 
 export default function ParentHomeScreen() {
   const { live } = useAppRuntime();
@@ -137,6 +138,8 @@ export default function ParentHomeScreen() {
             }) : null}
           </View>
         </DashboardPanel>
+        {/* MINOR-01: supervision, approvals and the signed consent (replaces the PRIV-01 privacy lock card). */}
+        <GuardianSupervisionPanel />
         {!rosterError ? players.map((player) => (
           <View key={player.id} style={styles.athlete}>
             {/* Rally goal (start / approve / close / thank) and donations to say thanks for. */}

@@ -20,9 +20,9 @@ describe('saveOperatorCheckIn', () => {
     });
   });
 
-  it('writes the measured coordinates', async () => {
+  it('writes the location rounded to about 1 km, never the exact GPS (PRIVACY_ENGINEERING 2026-10-13)', async () => {
     mockInsert.mockResolvedValue({ error: null });
-    await expect(saveOperatorCheckIn(40.123, -111.456)).resolves.toEqual({ ok: true });
-    expect(mockInsert).toHaveBeenCalledWith({ latitude: 40.123, longitude: -111.456 });
+    await expect(saveOperatorCheckIn(40.760780, -111.891045)).resolves.toEqual({ ok: true });
+    expect(mockInsert).toHaveBeenCalledWith({ latitude: 40.76, longitude: -111.89 });
   });
 });

@@ -1,7 +1,8 @@
 # Photo stories in Highlights ⚡ — design and build contract
 
-**Status:** approved by the owner 2026-10-07; build in progress (WORK_QUEUE `UX-05`). Migration
-not applied anywhere until DATABASE_MIGRATIONS and RLS_SECURITY sign off.
+**Status:** approved by the owner 2026-10-07; implemented locally (WORK_QUEUE `UX-05a–d`).
+Browser and device verification remain open in `UX-05e`. The migration is not applied anywhere;
+DATABASE_MIGRATIONS and RLS_SECURITY review and owner authorization precede hosted application.
 
 ## Why
 
@@ -38,7 +39,8 @@ promise recruiting, scholarships or exposure outcomes (LEGAL row added with this
    the database; the reel row itself is inserted exactly like a video (same policy, triggers, rights
    attestation, tag status).
 3. **Location and camera metadata are removed before upload.** Photos of minors must never carry
-   GPS. JPEG metadata segments are stripped in JavaScript after re-encoding; see Privacy.
+   GPS. Original JPEG metadata segments are stripped in JavaScript; a minimal orientation-only APP1
+   is restored when needed to describe rotated pixels. See Privacy for the local byte tests and device gap.
 4. **A view** is 3 seconds on screen (`VIEW_PLAY_MS`), the same threshold as playback for clips.
 5. **Graceful before the SQL exists:** the feed treats missing columns as video; the upload sheet
    hides the Photos option when the RPC is missing (same pattern as Rally / account tags).
@@ -117,7 +119,7 @@ export async function photoStoriesAvailable(): Promise<boolean>; // false when R
 export function movePhoto<T>(list: T[], from: number, to: number): T[]; // pure reorder helper
 
 // services/MediaUploadService.ts (UPLOAD)
-export function stripJpegMetadata(bytes: Uint8Array): Uint8Array; // drops APP1..APP15 except APP14 (Adobe colour); keeps APP0, image data
+export function stripJpegMetadata(bytes: Uint8Array): Uint8Array; // drops original APP1–APP13, APP15, COM and trailing bytes; keeps APP0, APP14, image data; restores orientation-only APP1 when needed
 export async function uploadStoryPhoto(uri: string, storyKey: string, position: number):
   Promise<{ imageUrl: string; width?: number; height?: number }>; // Storage reels/{uid}/stories/{storyKey}/{position}-{ts}.jpg
 
@@ -152,9 +154,12 @@ caller's own folder by the separate migration `20261007231000_reels_storage_owne
 
 ## Privacy and safety
 
-- Metadata: picker `exif: false` and re-encode, then `stripJpegMetadata` on the bytes before upload;
-  unit tests prove GPS/EXIF/XMP segments are removed and image data is intact. Orientation after
-  stripping must be checked on real iOS and Android devices (DEVICE_QA gate).
+- Metadata: picker `exif: false`; native compression re-encodes when available, then `stripJpegMetadata`
+  cleans the JPEG bytes before upload. Original EXIF/GPS, camera and XMP metadata is removed; when EXIF
+  Orientation is not 1, the cleaner writes a minimal APP1 containing only that orientation tag. Existing
+  `MediaUploadService.test.ts` byte cases cover removal, image data and orientation-only output. A file
+  that cannot be parsed as a well-formed JPEG is refused. Actual orientation and location removal on
+  real iOS and Android devices remain unverified (DEVICE_QA gate).
 - Photos often include other people's children. Rights confirmation covers "permission from the
   people in them"; reports use the existing reasons; the minor-safety rules in LEGAL_BRIEFING apply.
 - Bucket `reels` is public (STATE §5): anyone with a URL can view. Acceptable for public stories in

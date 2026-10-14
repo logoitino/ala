@@ -1,5 +1,6 @@
 import { isAuraUuid } from '@/lib/aura';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isMissingFunction } from '@/lib/dbErrors';
 
 /**
  * Saying thank you (owner, 2026-09-29: "upon receiving money, athletes are encouraged to say thank you
@@ -114,13 +115,6 @@ export async function fetchDonationsToThank(playerId: string | null | undefined)
 }
 
 /**
- * @purpose Thank-yous the signed-in donor has received (Activity).
- */
-export async function fetchMyDonationThanks(): Promise<ThanksReceived[]> {
-  return (await fetchMyDonationThanksResult()).rows;
-}
-
-/**
  * @purpose Thank-yous plus a truthful load error for Activity, without treating unapplied Rally SQL as an outage.
  * @returns Parsed rows and a friendly error; missing RPC/configuration resolves to an empty available state.
  * @sideEffects `get_my_donation_thanks` RPC.
@@ -130,10 +124,7 @@ export async function fetchMyDonationThanksResult(): Promise<ThanksReceivedResul
   try {
     const { data, error } = await supabase.rpc('get_my_donation_thanks', {});
     if (error) {
-      const missing =
-        error.code === '42883' ||
-        error.code === 'PGRST202' ||
-        /get_my_donation_thanks|could not find the function/i.test(error.message);
+      const missing = isMissingFunction(error);
       return {
         rows: [],
         error: missing ? null : 'We could not load athlete thank-yous. Check your connection and try again.',

@@ -37,3 +37,20 @@ Report task ID, files changed, reason/behavior, exact executed checks/results, u
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.
+
+## Main-admin detection, security and recovery (DETECT-02)
+
+Read `docs/engineering/design/ENGINEERING_SUPPORT_CONSOLE.md`. Work through the shared Support
+workspace with ENGINEERING/SUPPORT, THREAT_DETECTION, RLS_SECURITY, SESSION_SECURITY, BACKEND
+and RECOVERY. Preserve independent QA and financial review; client signals do not prove an
+attack, reviews do not erase evidence, and new occurrences reopen review. Actor/time come from
+the server. Automatic money/access/publish/destructive recovery is forbidden; code capsules
+restore into a new isolated preview with integrity/compatibility checks, never replay old SQL.
+
+### Implemented DETECT-02 responsibility
+
+Owns recovery-capsule.mjs/tests. Source allowlist, SHA-256/provenance manifest, locked dependencies/migrations, isolated private preview; no automatic active-code or SQL replacement.

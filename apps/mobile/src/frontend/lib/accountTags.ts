@@ -7,16 +7,11 @@
  */
 
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isMissingFunction } from '@/lib/dbErrors';
 
 export type AccountTagHit = { id: string; label: string };
 export type ReelAccountTag = AccountTagHit & { profileId: string; status: string };
 export type MyAccountTag = { id: string; reelId: string; reelTitle: string; label: string; status: string };
-
-function missingRpc(error: { code?: string; message?: string } | null): boolean {
-  if (!error) return false;
-  return error.code === 'PGRST202' || error.code === '42883'
-    || /could not find the function/i.test(error.message ?? '');
-}
 
 function labelOf(row: Record<string, unknown> | null): string {
   const label = row && typeof row.label === 'string' ? row.label.trim() : '';
@@ -60,7 +55,7 @@ export async function attachAccountTags(reelId: string, profileIds: string[]): P
     profile_ids: ids,
   });
   if (error) {
-    if (missingRpc(error)) return 0;
+    if (isMissingFunction(error)) return 0;
     throw new Error('Could not save the account mentions.');
   }
   if (typeof data !== 'number' || !Number.isInteger(data) || data < 0 || data > ids.length) {

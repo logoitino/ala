@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
-import { PAYOUT_SETUP_COPY, VERIFY_HELD_COPY, payoutUnlockedCopy } from '@/data/verification';
+import { PAYOUT_BIRTH_MONTH_COPY, PAYOUT_GUARDIAN_CONSENT_COPY, PAYOUT_PAYEE_VERIFICATION_COPY, PAYOUT_SETUP_COPY, VERIFY_HELD_COPY, payoutUnlockedCopy } from '@/data/verification';
 import { useMyVerification } from '@/hooks/useMyVerification';
 import type { MyPayoutStatus } from '@/lib/payoutGate';
 import type { MyVerification, SchoolCheckCode } from '@/lib/verification';
@@ -94,6 +94,9 @@ export function AthleteVerificationCardView({
           {state === 'pending' && payout?.reason === 'needs_payout_setup' ? (
             <Text style={styles.body}>{PAYOUT_SETUP_COPY}</Text>
           ) : null}
+          {payout?.reason === 'needs_guardian_consent' ? <Text style={styles.body}>{PAYOUT_GUARDIAN_CONSENT_COPY}</Text> : null}
+          {payout?.reason === 'needs_birth_month' ? <Text style={styles.body}>{PAYOUT_BIRTH_MONTH_COPY}</Text> : null}
+          {payout?.reason === 'needs_payee_verification' ? <Text style={styles.body}>{PAYOUT_PAYEE_VERIFICATION_COPY}</Text> : null}
         </>
       )}
 

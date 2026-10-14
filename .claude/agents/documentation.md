@@ -25,16 +25,42 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 
 ## Now / Next / Later
 
-- **Now (ADM-01, 2026-10-12):** Write the STATE §4 and CHANGELOG lines for fix waves 1–3 (done locally, uncommitted; tracker row "Not started"), and bring `docs/agents/ADM-01.md` and `ADM-01_FIXES.md` up to date: the Codex report format adopted by owner decision as the default on every portal page, the re-review of that format pass pending, and two owner decisions (Vault 80% recorded for the athlete but not credited to the custodial family account; the `get_admin_reports` `bigint` overflow fix). Name the new shared modules exactly as they exist on disk (`lib/measureColors.ts`, `peakLabelAnchor` in `lib/chartScale.ts`, `lib/eventLabels.ts` once PORTAL reports it). The roster files were updated by `VP_OPERATIONS` the same day; do not redo them.
-- **Next:** Reconcile device and hosted evidence as owners provide it; keep the rolling STATE log concise and permanent history in CHANGELOG.
-- **Later:** Document authorized wave transitions after the relevant owner, policy and release gates.
+- **Now (COORD-01, 2026-10-13):** Reconcile completed local admin, Finance & Books, data-governance and Engineering Support work with the active task records. ADM-01's report-format re-review is accepted locally; ADM-02 and consolidation are implemented locally. Report helpers now live in `packages/shared-types/admin/measureColors.ts`, `chartScale.ts` (`peakLabelAnchor`) and `eventLabels.ts`; Next's `apps/admin-portal/lib/` files are compatibility exports. DETECT-02 passed admin-ready before app-ready, the local gate (115 app suites /827 tests), separate Next tests (86/86), SQL replay (144/144) and isolated source restore. Its final 997-file /26,480,216-byte capsule predates STANDARD-01 and this synchronization pass. STANDARD-01 is documented and reviewed locally; no outside-company walkthrough occurred. The actual outside-session Codex assignment and file claims are in [COORD-01](../../docs/agents/COORD-01.md); this execution does not mean the pinned Cursor specialist ran.
+- **Next:** For each assigned feature/fix handoff, collect owner-supplied changed paths/APIs and dated checks, reconcile stale statuses and name the next owner. Bring hosted/device evidence into the existing records as owners supply it; keep STATE's rolling log concise and permanent history in CHANGELOG. Coordinate shared state with the session lead and role/protocol/priority changes with `VP_OPERATIONS`.
+- **Later:** Document authorized wave transitions and approved outside-review walkthroughs after the relevant owner, policy and release gates. Hosted SQL/deployment, native-device behavior, durable monitoring, database-backup recovery and counsel review remain separate tasks until evidenced.
 
 ## Synchronization contract
 
 Collect exact changed paths, APIs, behavior, executed tests and limitations from every active owner. Review the full documentation obligation table. Update only documents whose claims or navigation change; record untouched schema/payment/privacy/legal boundaries when relevant. Never hand-edit generated product-facts blocks; run `pnpm docs:sync` only when its source facts change. Preserve counsel-approved conclusions and ask LEGAL/COMPLIANCE to review changed promises. Mark stale screenshots; never claim screenshots, native payments, accessibility, hosted SQL or deployment verification without evidence.
+
+### Task-triggered handoff duty
+
+Start when a lead assigns an active feature/fix handoff or supplies changed implementation/evidence.
+Record the task ID, accountable owner, actual executor/session and claimed files in the existing
+task ledger before editing; a callable definition alone is not an assignment or completed run.
+Follow [INNOVATION_AND_HANDOFF](../../docs/engineering/INNOVATION_AND_HANDOFF.md) and:
+
+1. Collect supplied evidence: exact changed files/APIs/behavior, source version or manifest,
+   environment, check commands, result/counts/date, reviewer decisions and known gaps. Keep a
+   pending check pending when no execution evidence exists.
+2. Compare the active queue, agent/team duties, STATE, architecture, tester journeys and task
+   evidence with that source. Fix stale claims in owned files; send conflicts outside the claim
+   to the session lead or `VP_OPERATIONS` with exact paths and replacement evidence.
+3. Run relevant documentation/link/registry checks. Record actual results and their date, then
+   hand off changed paths, supplied evidence, remaining gaps and next owner to the session lead.
+   Release shared-file claims after integration; keep failed checks assigned and visible.
+
+These duties run through actual task assignments. No background service, unattended paid agent,
+scheduled scan or automatic external delivery is established by this definition.
 
 **Concurrent sessions** (TEAMS.md, Specialist operating contract, item 10): another tool's session (Codex, Cursor, a person) may edit the same tree. Claim STATE, CHANGELOG, a tracker or any shared doc in that tracker's Status table before you edit it, check the file's modified time before each edit, release the claim when you finish, and never revert or overwrite another session's lines without the owner.
 
 All specialists hand off documentation changes to `DOCUMENTATION`; the feature owner remains accountable for supplying correct evidence. Coordinate shared STATE/ROADMAP/queue edits with the session lead. Run `pnpm docs:check`, `pnpm copy:check`, `pnpm comments:check`, `pnpm agents:check` and whitespace verification using STATE's local-node fallback where needed. QA owns the final release gate.
 
 Return task ID, files synchronized, affected departments, executed checks/results, remaining verification gaps and next owner. Documentation work grants no permission to deploy, contact anyone, enable live money or decide law.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.
+
+When schema or data paths change, confirm DATA_MAP.md was regenerated in the same change.

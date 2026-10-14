@@ -10,6 +10,7 @@ import { TAGLINE_HEADLINE } from '@/data/malo';
 import type { Player, Profile } from '@/types/database';
 
 let mockProfile: Profile;
+let mockActionsOnTop = false;
 
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ profile: mockProfile }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({
@@ -17,7 +18,7 @@ jest.mock('@/context/AppRuntimeContext', () => ({
     const { DEFAULT_APP_RUNTIME } = jest.requireActual('@/lib/runtime');
     return { live: {
       ...DEFAULT_APP_RUNTIME,
-      profile: { ...DEFAULT_APP_RUNTIME.profile, showCard: false, showCrew: false, statsFirst: false },
+      profile: { ...DEFAULT_APP_RUNTIME.profile, showCard: false, showCrew: false, statsFirst: false, actionsOnTop: mockActionsOnTop },
     } };
   },
 }));
@@ -177,5 +178,30 @@ describe('AthleteProfileView donate tagline', () => {
     await render(<AthleteProfileView player={player} name="Community Fan" role="fan" clips={[]} stats={stats}
       auraPoints={0} onDropMalo={jest.fn()} />);
     expect(screen.queryByText(TAGLINE_HEADLINE)).toBeNull();
+  });
+});
+
+describe('Look desk "Actions on top" (profile.actionsOnTop, DATA-01 F7)', () => {
+  const order = () => {
+    const tree = JSON.stringify(screen.toJSON());
+    return { share: tree.indexOf('"Share"'), tabs: tree.indexOf('Athlete profile sections') };
+  };
+  beforeEach(() => {
+    mockProfile = { id: 'viewer-profile', user_id: 'viewer-user', full_name: 'Viewer', role: 'fan', is_verified: false, player_id: null };
+  });
+  afterEach(() => { mockActionsOnTop = false; });
+
+  it('keeps Donate / Share under the athlete card when off (shipping)', async () => {
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]} stats={stats} auraPoints={0} />);
+    const { share, tabs } = order();
+    expect(share).toBeGreaterThan(-1);
+    expect(share).toBeLessThan(tabs);
+  });
+
+  it('parks Donate / Share under the section tabs when on', async () => {
+    mockActionsOnTop = true;
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]} stats={stats} auraPoints={0} />);
+    const { share, tabs } = order();
+    expect(share).toBeGreaterThan(tabs);
   });
 });

@@ -196,6 +196,14 @@ export class OfflineQueue {
     });
   }
 
+  /** @purpose Release the network and app-state listeners (tests and hot reload); queued actions stay saved. */
+  dispose(): void {
+    this.netUnsub?.();
+    this.netUnsub = null;
+    this.appSub?.remove();
+    this.appSub = null;
+  }
+
   static getInstance(): OfflineQueue {
     const bag = globalThis as typeof globalThis & Record<string, OfflineQueue | undefined>;
     const existing = bag[GLOBAL_KEY];
