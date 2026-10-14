@@ -1,5 +1,5 @@
 /** QUIZ-02 actual ephemeral round hook; external crypto/lifecycle and RPC transport use synthetic actors. */
-import {act,renderHook,waitFor} from '@testing-library/react-native';
+import {act,renderHook} from '@testing-library/react-native';
 import {AppState,Platform,type AppStateStatus} from 'react-native';
 import {useTimedSportQuizRound} from '../useTimedSportQuizRound';
 import {quizSnapshot,quizStart,quizReceipt,quizCompletion} from '@/lib/__fixtures__/timedSportQuizFixtures';
