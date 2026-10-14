@@ -4,6 +4,12 @@ import Parent from '../../../../../app/(parent)/parent';
 import Booster from '../../../../../app/(booster)/booster';
 import Sponsor from '../../../../../app/(sponsor)/sponsor';
 import Operator from '../../../../../app/operator';
+import { fanSnapshotFixture, FUN_IDS } from '@/lib/__tests__/fanZoneFixtures';
+import type { FanZoneSnapshot } from '@shared/fanZone';
+const emptyFan: FanZoneSnapshot = { ok: true, campaign: null, candidates: [], results: [], entry: null, ballot: null, guardian_queue: [], reflections: [], story: null, eligible: false, can_participate: false };
+let mockFan = emptyFan;
+const mockReads: string[] = [];
+jest.mock('@/services/MediaUploadService', () => ({ bytesFromUri: jest.fn(), compressHighlight: jest.fn() }));
 const mockPush = jest.fn();
 let mockRole = 'parent';
 jest.mock('expo-router', () => ({ Stack: { Screen: () => null }, useRouter: () => ({ push: mockPush }), useIsFocused: () => true }));
@@ -24,7 +30,7 @@ jest.mock('@/lib/sponsorAds', () => ({ fetchSponsorAds: async () => ({ ads: [], 
 jest.mock('@/lib/operator', () => ({ OPERATOR_TEST_PIN: '0000', fetchOperatorGames: async () => ({ games: [{ id: 'game', home_team: 'Home', away_team: 'Away', venue: 'Venue' }], error: null }) }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn() } }));
 jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: {
-  rpc: async () => ({ data: { availability: 'ready', testing_only: true, week_start: '2026-10-12', week_end: '2026-10-19', status: 'available', sports: ['Basketball'], attempt: null, badges: [], corrections: [] }, error: null }),
+  rpc: async (fn: string) => { mockReads.push(fn); return ({ data: fn === 'fun_snapshot' ? mockFan : { availability: 'ready', testing_only: true, week_start: '2026-10-12', week_end: '2026-10-19', status: 'available', sports: ['Basketball'], attempt: null, badges: [], corrections: [] }, error: null }); },
   channel: () => { const c = { on: () => c, subscribe: () => c }; return c; }, removeChannel: jest.fn(),
 } }));
 it.each([
@@ -40,4 +46,20 @@ it.each([
     expect(screen.getByText('Existing guardian supervision')).toBeTruthy();
     expect(screen.getByText('Existing tag queue')).toBeTruthy();
   }
+});
+
+beforeEach(() => { mockFan = emptyFan; mockReads.length = 0; mockPush.mockClear(); });
+it.each([
+  ['parent', Parent, 'Linked student-athletes'], ['booster', Booster, 'CSV bulk roster upload'],
+  ['sponsor', Sponsor, 'Digital stadium ad manager'], ['operator', Operator, 'Operator PIN'],
+] as const)('%s actual HQ exposes campaign-context Fan discovery while preserving its work', async (role, Route, existing) => {
+  mockRole = role; const s = fanSnapshotFixture();
+  mockFan = { ...s, entry: null, candidates: [] };
+  if (role === 'parent') mockFan = { ...mockFan, campaign: { ...s.campaign!, status: 'paused' }, can_participate: false, guardian_queue: [s.entry!] };
+  await render(<Route />);
+  await fireEvent.press(await screen.findByRole('button', { name: role === 'parent' ? 'Review fan permissions' : 'Open Fan Zone' }));
+  expect(mockPush).toHaveBeenCalledWith(`/fan-zone?campaign=${FUN_IDS.campaign}${role === 'parent' ? '&section=permissions' : ''}`);
+  expect(screen.getByText(existing)).toBeTruthy();
+  expect(mockReads.every(fn => ['fun_snapshot', 'quiz_snapshot'].includes(fn))).toBe(true);
+  if (role === 'parent') expect(screen.getByText('Existing guardian supervision')).toBeTruthy();
 });

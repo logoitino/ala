@@ -1,6 +1,16 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import HighlightsTab from '../index';
+import { FUN_IDS } from '@/lib/__tests__/fanZoneFixtures';
+let mockRealDiscovery = false;
+const mockDiscoveryReads: string[] = [];
+jest.mock('@/services/MediaUploadService', () => ({ bytesFromUri: jest.fn(), compressHighlight: jest.fn() }));
+jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: { rpc: async (fn: string) => {
+  mockDiscoveryReads.push(fn);
+  const s = jest.requireActual('@/lib/__tests__/fanZoneFixtures').fanSnapshotFixture();
+  return { data: fn === 'fun_snapshot' ? { ...s, campaign: { ...s.campaign!, status: 'paused' }, entry: null, candidates: [], can_participate: false, guardian_queue: [s.entry] }
+    : { availability: 'paused', testing_only: true, week_start: '2026-10-12', week_end: '2026-10-19', status: 'unavailable', sports: [], attempt: null, badges: [], corrections: [] }, error: null };
+} } }));
 
 /**
  * Covers the two Highlights jump defects found in the 2026-09-25 audit:
@@ -36,6 +46,7 @@ jest.mock('@/components/Local/RivalryWeekBanner', () => ({ RivalryWeekBanner: ()
 jest.mock('@/components/Rally/RallyMeter', () => ({ RallyMeter: () => null }));
 jest.mock('@/components/Onboarding/SlangGuideBanner', () => ({ SlangGuideBanner: () => null }));
 jest.mock('@/components/FamilyFun/FamilyFunDiscovery', () => ({ FamilyFunDiscovery: () => {
+  if (mockRealDiscovery) { const Actual = jest.requireActual('@/components/FamilyFun/FamilyFunDiscovery').FamilyFunDiscovery; return <Actual />; }
   const { Text } = require('react-native');
   return <Text>Optional quiz discovery</Text>;
 } }));
@@ -113,7 +124,7 @@ jest.mock('@/components/Spotlight/SpotlightModal', () => {
   };
 });
 
-const mockAuth = { user: null, profile: null, loading: false };
+let mockAuth: { user: { id: string } | null; profile: { id: string; user_id: string } | null; loading: boolean; isGuest: boolean } = { user: null, profile: null, loading: false, isGuest: true };
 const mockSoftWall = { requireAuth: jest.fn() };
 const mockUploadSheet = { subscribeUploaded: () => () => undefined };
 const mockRuntime = {
@@ -192,6 +203,7 @@ async function mountTab() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockRealDiscovery = false; mockAuth = { user: null, profile: null, loading: false, isGuest: true }; mockDiscoveryReads.length = 0;
   mockSpotlight.award = null;
   mockSpotlight.visible = false;
   mockSpotlight.dismiss = jest.fn(async () => undefined);
@@ -244,4 +256,19 @@ describe('Spotlight Watch Full Highlight from the Highlights tab', () => {
     await waitFor(() => expect(mockPush).toHaveBeenCalled());
     expect(String(mockPush.mock.calls[0][0])).toContain(playerId);
   });
+});
+
+it('actual Home keeps private Fan review inside measured chrome and preserves search/feed', async () => {
+  mockRealDiscovery = true; mockAuth = { user: { id: 'auth-a' }, profile: { id: 'profile-a', user_id: 'auth-a' }, loading: false, isGuest: false };
+  await mountTab();
+  const review = await screen.findByRole('button', { name: 'Review fan permissions' });
+  let host: typeof screen.root | null = review;
+  while (host && typeof host.props.onLayout !== 'function') host = host.parent;
+  expect(host).not.toBeNull();
+  await fireEvent(host!, 'layout', { nativeEvent: { layout: { width: 390, height: 300 } } });
+  expect(screen.getAllByText('peek:312').length).toBeGreaterThan(0);
+  await fireEvent.press(review);
+  expect(mockPush).toHaveBeenCalledWith(`/fan-zone?campaign=${FUN_IDS.campaign}&section=permissions`);
+  expect(searchToggle()).toBeTruthy(); expect(pill('Home')).toBeTruthy();
+  expect(mockDiscoveryReads.every(fn => ['fun_snapshot', 'quiz_snapshot'].includes(fn))).toBe(true);
 });

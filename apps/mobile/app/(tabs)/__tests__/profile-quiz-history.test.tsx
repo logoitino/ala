@@ -44,11 +44,13 @@ it.each(['fan', 'athlete', 'parent', 'operator', 'booster', 'sponsor', 'admin'])
   expect(mockPush).toHaveBeenCalledWith('/sport-quiz');
   expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Account Capability' })).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'Fan Zone' })).toBeNull();
+  await fireEvent.press(screen.getByRole('button', { name: 'Fan Zone' }));
+  expect(mockPush).toHaveBeenCalledWith('/fan-zone');
 });
 it('does not give guest accounts a private history shortcut', async () => {
   mockGuest = true;
   await render(<Profile />); await fireEvent.press(screen.getByRole('button', { name: 'Open account settings' }));
   expect(screen.queryByRole('button', { name: 'Sport Quiz & private history' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Fan Zone' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
 });

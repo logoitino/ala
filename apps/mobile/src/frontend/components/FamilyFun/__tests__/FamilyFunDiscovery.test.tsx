@@ -5,6 +5,8 @@ import { FamilyFunDiscovery } from '../FamilyFunDiscovery';
 import type { QuizSnapshot } from '@shared/sportQuiz';
 let mockAuth = { user: { id: 'auth-a' }, profile: { id: 'profile-a', user_id: 'auth-a', age_blocked_at: null as string | null }, role: 'fan', isGuest: false, loading: false };
 let mockFocused = true;
+const mockFanRefresh = jest.fn();
+jest.mock('@/hooks/useFanZone', () => ({ useFanZone: () => ({ snapshot: null, loading: false, error: null, busy: null, identityKey: null, refresh: mockFanRefresh }) }));
 const mockPush = jest.fn();
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => mockAuth }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }), useIsFocused: () => mockFocused }));

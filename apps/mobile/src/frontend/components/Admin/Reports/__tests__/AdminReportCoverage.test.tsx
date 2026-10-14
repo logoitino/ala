@@ -57,3 +57,14 @@ it('exposes Sport Quiz controls through their actual desk without inventing publ
   expect(screen.getAllByText('No telemetry key registered')).toHaveLength(rows.length);
   expect(screen.queryByText(/0 taps/)).toBeNull();
 });
+
+it('exposes Fan Zone controls with real campaign stop and private case authority, without fabricated switches or taps', async () => {
+  await render(<AdminReportCoverage data={emptyAdminReportData()} />);
+  await fireEvent.press(screen.getByRole('tab', { name: 'Fan Zone' }));
+  const rows = COVERAGE_CONTROLS.filter(row => row.surface === 'fan-zone');
+  expect(screen.getAllByRole('link', { name: /^Manage / })).toHaveLength(rows.length);
+  expect(screen.getAllByText(/fan_zone_campaigns status\/testing-only pilot admission/)).toHaveLength(rows.length);
+  expect(screen.getAllByText('No telemetry key registered')).toHaveLength(rows.length);
+  expect(screen.getByText(/Tracked all-revision actual media\/provider\/index\/access removal/)).toBeTruthy();
+  expect(screen.queryByText(/0 taps|Published: On|Published: Off/)).toBeNull();
+});

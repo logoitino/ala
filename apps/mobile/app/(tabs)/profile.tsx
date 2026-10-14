@@ -273,6 +273,12 @@ export default function MyHubTab() {
         onPress: () => router.push('/sport-quiz' as Href),
       });
       items.push({
+        id: 'fan-zone',
+        label: 'Fan Zone',
+        hint: 'Optional fan activities · campaign access and private review checked on the page',
+        onPress: () => router.push('/fan-zone' as Href),
+      });
+      items.push({
         id: 'edit-profile',
         label: 'Edit Profile',
         hint: 'Bio, social links, and what other users can see',

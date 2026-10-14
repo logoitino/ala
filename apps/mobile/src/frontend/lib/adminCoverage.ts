@@ -21,7 +21,8 @@ export type CoverageSurface =
   | 'booster'
   | 'sponsor'
   | 'auth'
-  | 'sport-quiz';
+  | 'sport-quiz'
+  | 'fan-zone';
 
 export type CoverageControl = {
   id: string;
@@ -51,12 +52,63 @@ export const COVERAGE_SURFACES: { id: CoverageSurface; label: string }[] = [
   { id: 'booster', label: 'Booster HQ' },
   { id: 'sponsor', label: 'Sponsor HQ' },
   { id: 'sport-quiz', label: 'Sport Quiz' },
+  { id: 'fan-zone', label: 'Fan Zone' },
+];
+
+/** @purpose Map existing FUN-01 controls to campaign stop, exact permission and tracked case/removal authority. No passive sensor is invented. */
+const fanDiscoverySurfaces: { surface: CoverageSurface; href: string }[] = [
+  { surface: 'home', href: '/' }, { surface: 'parent', href: '/parent' }, { surface: 'operator', href: '/operator' },
+  { surface: 'booster', href: '/booster' }, { surface: 'sponsor', href: '/sponsor' },
+];
+const fanStop = 'fan_zone_campaigns status/testing-only pilot admission is the stop authority';
+const fanDiscoveryActions = [
+  ['open', 'Open Fan Zone', 'Read-only root navigation preserves selected canonical campaign; no automatic entry or ballot'],
+  ['dismiss', 'Not now for Fan Zone', 'Local participation presentation only; never hides nonempty private guardian queue; identity and returned campaign period; no persisted server action'],
+  ['refresh', 'Refresh Fan Zone discovery', 'Read-only independent source recovery; unavailable is not a healthy zero'],
+  ['permissions', 'Review fan permissions', 'Private selected campaign queue, not a global inbox; independent of participation; exact fan_zone_consents'],
+  ['entry', 'My fan entry', 'Own server-authorized private entry and recovery even when paused or unenrolled'],
+  ['recap', 'View fan recap', 'Only authorized finalized results without pending recount; no invented badge or winner'],
+] as const;
+const fanPageActions = [
+  ['back', 'Back', 'Previous route or current account Home fallback'], ['home', 'Account Home', 'Current role Home, always usable'],
+  ['refresh', 'Refresh Fan Zone', 'Read-only snapshot and permission review reset'], ['signin', 'Sign in to join Fan Zone', 'Account route; server age/action capability remains authoritative'],
+  ['paths', 'Join the fun / Meet an athlete / Serve together', 'Local path choice; no automatic mutation'],
+  ['picker', 'Choose / replace MP4 video', 'Explicit system picker; no upload before action'],
+  ['draft', 'Fan alias / caption / rights attestation', 'Local draft fields; not public permission'],
+  ['upload', 'Upload private entry', 'Server-reserved bounded MP4 and private fan_zone_entries revision'],
+  ['retryUpload', 'Retry private upload', 'Same reserved private revision recovery'], ['replaceUpload', 'Replace failed private draft', 'Explicit failed draft replacement'],
+  ['video', 'Open / close exact private video', 'Authenticated revocable producer; first-frame readiness tied to identity/revision/digest/scope'],
+  ['vote', 'Vote for candidate', 'Free replaceable per-account/window fan_zone_ballots; no spend/view weights'],
+  ['retryVote', 'Retry original ballot', 'Same request and candidate; no offline queue'],
+  ['scope', 'Confirm reviewed caption and exact permission scope', 'Local confirmation resets on stale review; not a permission grant'],
+  ['permission', 'Grant permission / Assent to exact revision', 'Exact active link/revision/digest/alias/audience fan_zone_consents'],
+  ['revoke', 'Revoke my exact permission', 'Server permission revocation and actual serving/access enforcement'],
+  ['submit', 'Submit private entry for review', 'Published eligibility/rights/safety review; staff does not select vote winner'],
+  ['withdraw', 'Withdraw my entry', 'Withdrawal and tracked actual media/index/access removal'],
+  ['story', 'Watch / close curated athlete story', 'Only explicitly selected authorized free story; unavailable does not substitute'],
+  ['profile', 'Athlete profile & Donate', 'Existing profile/financial flow; optional and never adds votes'],
+  ['serve', 'Optional private service reflection choices', 'Preset nonidentifying fan_zone_reflections; no cash, badge or access condition'],
+  ['deleteReflection', 'Delete private reflection', 'Own authorized private reflection removal'],
+  ['concern', 'Send concern / entry and details fields', 'Blocked-owner-capable private fan_zone_cases intake; restricted details'],
+  ['appeal', 'Appeal entry review', 'Tracked case and review correction; protect safety reasons'],
+  ['removal', 'Request media removal', 'Tracked all-revision actual media/provider/index/access removal'],
+  ['continueRemoval', 'Continue tracked removal', 'Receipt-based incomplete removal recovery; no premature completion claim'],
+  ['receipt', 'Check concern status / receipt ID and secret', 'Private case receipt, no fabricated completion'],
+  ['safety', 'Read Minor Safety information', 'Policy information; fan_zone_cases and configured support handle intake'],
+] as const;
+const fanControls: CoverageControl[] = [
+  ...fanDiscoverySurfaces.flatMap(({ surface, href }) => fanDiscoveryActions.map(([action, label, hint]) => ({
+    id: `fun.${surface}.${action}`, label: `${label} · ${surface}`, hint: `${hint}; ${fanStop}`, surface, fanHref: href, adminHref: '/admin/fan-zone' as const,
+  }))),
+  { id: 'fun.profile.open', label: 'Fan Zone', hint: `Generic root /fan-zone link; access checked on page, no all-campaign inbox/history claim; ${fanStop}`, surface: 'profile', fanHref: '/profile', adminHref: '/admin/fan-zone' },
+  ...fanPageActions.map(([action, label, hint]) => ({ id: `fun.page.${action}`, label, hint: `${hint}; ${fanStop}`, surface: 'fan-zone' as const, fanHref: '/fan-zone', adminHref: '/admin/fan-zone' as const })),
 ];
 
 /**
  * @purpose Production map: every fan-visible control has an admin desk, an optional runtime flag, and a telemetry id.
  */
 export const COVERAGE_CONTROLS: CoverageControl[] = [
+  ...fanControls,
   { id: 'quiz.home.open', label: 'Open / Resume quiz · home', hint: 'Root /sport-quiz; navigation does not assign a question; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'home', fanHref: '/', adminHref: '/admin/sport-quiz' },
   { id: 'quiz.home.dismiss', label: 'Not now (local presentation) · home', hint: 'Local auth + canonical profile + returned week; does not save Skip; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'home', fanHref: '/', adminHref: '/admin/sport-quiz' },
   { id: 'quiz.home.skip', label: 'Skip this week · home', hint: 'Only server-confirmed skipped state is saved; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'home', fanHref: '/', adminHref: '/admin/sport-quiz' },
