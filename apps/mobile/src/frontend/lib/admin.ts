@@ -37,6 +37,8 @@ export type AdminNavHref =
   | '/admin/money'
   | '/admin/books'
   | '/admin/polls'
+  | '/admin/sport-quiz'
+  | '/admin/fan-zone'
   | '/admin/reports'
   | '/admin/trends'
   | '/admin/audience'
@@ -77,6 +79,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: '/admin/games', label: 'Live games', hint: 'Local match board' },
       { href: '/admin/sports', label: 'Sports', hint: 'Scoring, periods, stats per sport' },
       { href: '/admin/polls', label: 'Polls', hint: 'School cheer matchups' },
+      { href: '/admin/sport-quiz', label: 'Sport Pop Quiz', hint: 'Weekly learning bank, private badges and testing controls' },
+      { href: '/admin/fan-zone', label: 'Fan Zone', hint: 'Testing campaigns, private entry review, free ballots and tracked removal' },
       { href: '/admin/boosters', label: 'Boosters', hint: 'Local sponsorships' },
       { href: '/admin/publish', label: 'Publish queue', hint: 'Content readiness and go-live queue' },
     ],
@@ -210,6 +214,8 @@ export const ADMIN_LENSES: { id: AdminLens; label: string; hint: string }[] = [
 
 const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
   marketing: [
+    '/admin/sport-quiz',
+    '/admin/fan-zone',
     '/admin/lab',
     '/admin/look',
     '/admin/features',
@@ -224,6 +230,8 @@ const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
     '/admin/coverage',
   ],
   owner: [
+    '/admin/sport-quiz',
+    '/admin/fan-zone',
     '/admin/support',
     '/admin/lab',
     '/admin/money',
@@ -246,6 +254,8 @@ const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
     '/admin/catalog',
   ],
   engineer: [
+    '/admin/sport-quiz',
+    '/admin/fan-zone',
     '/admin/support',
     '/admin/lab',
     '/admin/features',
@@ -287,7 +297,7 @@ export function adminAnalysisForPath(pathname: string): AdminNavItem[] {
   if (['/admin/athletes', '/admin/schools', '/admin/people'].includes(path)) return [report('/admin/audience', 'Audience report'), report('/admin/product/people', 'Account analysis')];
   if (['/admin/features', '/admin/look', '/admin/catalog', '/admin/lab'].includes(path)) return [report('/admin/product', 'Published product'), report('/admin/product/coverage', 'Control map')];
   if (['/admin/qa', '/admin/feedback', '/admin/moderation', '/admin/support'].includes(path)) return [report('/admin/health', 'Health report')];
-  if (['/admin/games', '/admin/sports', '/admin/polls', '/admin/publish', '/admin/highlights', '/admin/spotlight'].includes(path)) return [report('/admin/analytics', 'Full analytics')];
+  if (['/admin/fan-zone', '/admin/sport-quiz', '/admin/games', '/admin/sports', '/admin/polls', '/admin/publish', '/admin/highlights', '/admin/spotlight'].includes(path)) return [report('/admin/analytics', 'Full analytics')];
   return [];
 }
 
@@ -299,6 +309,8 @@ const FAN_HREF_BY_DESK: Partial<Record<AdminNavHref, string>> = {
   '/admin/games': '/local',
   '/admin/sports': '/operator',
   '/admin/polls': '/local',
+  '/admin/sport-quiz': '/sport-quiz',
+  '/admin/fan-zone': '/fan-zone',
   '/admin/boosters': '/local',
   '/admin/publish': '/local',
   '/admin/spotlight': '/spotlight',
