@@ -12,7 +12,7 @@ MINOR_SAFETY, PRIVACY_ENGINEERING, RLS_SECURITY, DATA_GOVERNANCE, SUPPORT, indep
 | --- | --- |
 | Planned enrollment | Before source; isolated codex/fan-zone checkout. |
 | Admin-first | Corrected sourceac509948;34/34 actor checks,2suites30tests; root105/105 canonical/14nav/3map tests. Independent scoped and local Data/Safety/SUPPORT reviews PASS; evidence in QUIZ-01-admin.md. |
-| App / final checks | Participant23/23local tests and independent PASS; shared Home/four HQ/profile discovery44/44local tests/typecheck at96e4c3d, independent consumer review PASS including copy9d0e9d8; root full check passes148 suites/1,146 assertions and all guards for earlier untimed source. Revised timed design/admin/app work remains pending. |
+| App / final checks | Participant23/23local tests and independent PASS; shared Home/four HQ/profile discovery44/44local tests/typecheck at96e4c3d, independent consumer review PASS including copy9d0e9d8; root full check passes148 suites/1,146 assertions and all guards for earlier untimed source. Current owner-approved timed source/evidence is tracked separately in QUIZ-02; this row records historical untimed checks. |
 | Documentation / VP coordination | Required actual receipts at handoff. |
 
 Experiment: existing account week has no sport-learning loop. Compare optional learning prompt

@@ -1,0 +1,45 @@
+# QUIZ-02 local participant verification
+
+Local timed participant source and the full project check pass. Final independent whole-phase and Documentation/VP handoff reviews are underway; the selected app-ready checkpoint is not yet recorded. This record does not enable a pilot.
+
+[Approved design](../design/TIMED_TRIVIA_PROPOSAL.md) · [Implementation plan](../design/TIMED_TRIVIA_IMPLEMENTATION_PLAN.md) · [Actual admin checkpoint](QUIZ-02-admin.md) · [Current owner record](../../agents/QUIZ-02.md).
+
+## Implemented account experience
+
+Eligible accounts use the existing `/sport-quiz` page from Home, their role HQ or profile. Invitations default off; manual play remains available, with an optional weekly Ready for trivia card. Not now reveals no question and consumes no round; explicit Skip closes the UTC week. Fan discovery and its private guardian review shortcut are preserved.
+
+Preparation offers sports-only by default, optional reviewed fun topics, and 30 or90 seconds chosen before Start. Either duration is available to everyone without a disability reason or speed ranking. An unchecked acknowledgment explains saved preferences, issued-question history, private learning results, leaving, the server-issued deadline, network delivery time and possible loss of that week's chance if the Start response is lost. Content comes from a reviewed server bank; no live generator, vendor or new dependency is used.
+
+Only the original mounted round holds the active prompt and256-bit secure capability. Every participant mutation captures its expected canonical account; source generations reject stale results. Leaving the page/app, web hiding, account/week change and teardown invalidate pre-notice intent and clear the live question before best-effort End. Return does not resume it. Missed lifecycle events still expire at the server deadline; these controls do not establish perfect anti-cheating or device certification.
+
+Each issued editorial question family is excluded until account history erasure, including abandoned, expired or void rounds. An exhausted selected pool yields no repeat or unchecked fallback. There is one started opportunity per account/UTC week. Exact retry uses the same request/body/option and original deadline; a previously committed answer can recover its terminal result without another reward. Right and wrong committed answers receive the same private Trivia Explorer acknowledgment and explanation. Old Sport Learner badges stay historical. No cash, Aura, paid vote, school score or donation advantage is added.
+
+Invitations Off suppresses offers locally immediately and reports confirmed versus uncertain persistence honestly. Known server refusals require explicit successful authoritative Refresh before a new reviewed write; unknown outcomes preserve their exact retry request unless a newer reviewed monotonic preference revision makes it obsolete. Failed/unchanged reads do not hide uncertainty. Off and End round remain separate controls.
+
+Private terminal history and correction labels are paged. Clear history and end this week requires explicit review/confirmation, removes learning attempts/exposures/badges/requests and own participant audit associations, and retains disclosed preferences/notice/revision plus a minimal35-day account/week quota. Editorial/admin audit stays immutable and participant associations are redacted from its export. A stale CAS cannot erase new learning. Unknown erasure requires Refresh, review and reconfirmation, with no automatic deletion at a new revision. History erasure can permit future repeats. Account deletion cascades the minimal guard.
+
+## Actual evidence and attribution
+
+| Scope | Observed result |
+| --- | --- |
+| Admin-first ordering | QUIZ-02 enrolled16:15:21Z; actual admin record16:53:17Z and selected admin-ready exit0 at03bc1b7 preceded timed Task3 dispatch. Prior six features' readiness records are preserved. |
+| Backend and SDK/admin source | Independent Task1/2 fix reviews PASS: material-history CAS, unchanged canonical reapplication preserving timed state, and strict private SDK projections. Worker SDK/admin3suites77tests and typecheck0 are attributed to their reports. |
+| Participant source | Initial55123f80, archive headera239d739, actual HQ fixtureae40ecd9, five-path correction5bb7a2d and test-import-only4a1a1f9. Worker final9suites165tests/mobile+shared types0; meaningful failing probes and red cases retained. |
+| Participant independent review | task3-fix1-review.md SHA256876e23362c66409da64eb1d535df2f399ac5f9c7ebafebd220e5007c42e46108: all3 Important findings addressed; specification/quality and local Data/Privacy/Safety/SUPPORT PASS, no new Important/Critical finding. |
+| Import-only review | task3-integration-import-fix-review.md SHA256b5101eb1f4b458bd696d043ff698f2e8384b84ae352810e93fbb01f61d31b21b: exact unused waitFor removal; acceptance preserved. Worker18roundtests and unused check0. |
+| Root canonical replay |105/105, unchanged whole canonical SQL twice;83tables368physicalfunctions182policies. Canonical SHA25662ff4e50bea046045ad39d06a276605cdd38b6220b139b3325bc50dc5e2f7171. |
+| Root other actor replays | Fan154/154, explicitly historical Quiz34/34 and timed50/50, all exit0 on cached PGlite/Postgres18.6; exact commands/log hashes are in admin evidence. |
+| Root full project check | pnpm check EXIT0, round3:150mobile suites/1,210tests, bothmobile/Next typechecks;13feature-admin,6SQL-map,10recovery and10detection tests; every docs/copy/boundary/comments/feature/map/unused/detection/roles/client-key/SSN guard passes. |
+| Current governance |83tables,3views,5buckets,38switches,331mapped functions,20prior triaged exports, every item owned/connected;106role definitions/pins retained.19declared sensors include16explicit partial/gap declarations; hosted monitoring is not verified. |
+
+Root full log `.smoke/support/quiz02-root-full-check-round3.log` SHA2567e49bbe76f8e270c06a4306d168f0dc31b02443c0f81356e727a5996952628c5. Earlier failed round1 (four old HQ fixtures) and round2 (unused import after all tests passed) remain retained. No runtime source changed after the successful full check. Five obsolete wrappers are preserved outside runtime with actual independent Data retirement acceptance; temporary timed export triages are removed. Original FanDiscovery body SHA256e7f6f90b6ad03778b219ca0736f9238c243a6b7f12c63e965ccacf37b2350fd0 remains byte-identical.
+
+Immutable final21commit review package34b540361b96e3357cf604f0fc274eeb03aab217→dfc1194aa0f771d6548b765ccc56a5d85fa7e5b3 has660663bytes and SHA256af82e6eac6c2601f2fefac02ea104f0ab41065d69c50785f02cfa2f2db3fe68a. The reviewer, Documentation and VP continuation receipts will record their actual verdicts separately. Private reports/ledger remain in `.superpowers/sdd/TIMED_TRIVIA_IMPLEMENTATION_PLAN/`.
+
+## Growth and next owners
+
+[Per-user plans](../../product/USER_GROWTH_PLANS.md) and [family playbook §§14–15](../../product/FAMILY_FUN_PLAYBOOK.md) give fans, filmers, families, friends, athletes, school supporters and donors voluntary learning/story/activity return paths. The October20 joint Growth/Legal/Dev/capacity packet reviews aggregate opt-ins, starts/completions, returns, interruptions, exhausted content and editorial/database costs through Growth → Marketing → CTO → owner. There is no measured live uplift or new individual child-answer/timing profiling. Month/Year awards, public badges, school scoring and new earning paths remain separate proposals.
+
+## Release boundaries
+
+Defaults remain paused/testing-only/empty cohort. SQL is written, not applied. No browser/native/screen-reader testing, hosted execution, counsel approval or staffing is claimed. Legal/Privacy must review processing basis, child/guardian requirements, regions/ages and notices/retention; Content must supply reviewed seed facts; Dev/Support must verify real devices, hosting/authorized actors, correction/recovery and approved database compatibility/backup.90seconds is a longer option, not certified universally accessible. The app cannot detect every interruption, second device or external help. No spending, merge, push or deployment occurred; isolated branch/worktree and both plan ledgers are retained.

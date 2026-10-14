@@ -481,7 +481,7 @@ complete or invented engagement uplift. Wrong facts can be voided with a private
 
 Source progress and actual local gates live in [QUIZ-01](../agents/QUIZ-01.md) and the
 [quiz design](../engineering/design/SPORT_POP_QUIZ_DESIGN.md). This section describes the
-earlier approved untimed source. The latest timed-trivia proposal below supersedes the product recommendation; it is not implemented. The local quiz and first Game/Week Fan Zone source are built; their
+earlier approved untimed source. The approved timed-trivia source below now supersedes the untimed product recommendation. The local quiz and first Game/Week Fan Zone source are built; their
 actual checks and pending final acceptance are in the feature ledgers. Hosted deployment,
 approved seed facts, Month/Year awards, school scoring and new money rewards remain separate.
 
@@ -497,8 +497,9 @@ events and outside assistance cannot be fully detected. Calls and interruptions 
 [Timed trivia proposal](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) records invitation
 wording, question-family history, server deadlines, lost-response handling and the joint
 Legal/Data/Dev/Growth decision. [QUIZ-02](../agents/QUIZ-02.md) is enrolled before timed source.
-The approved implementation proceeds through new verified admin handling before app changes;
-prior untimed evidence remains historical. Hosted enablement is separate.
+The timed implementation passed its selected admin-ready gate before participant changes.
+Participant scoped review and root full150suites/1,210tests/all guards pass; final handoff
+remains in QUIZ-02. Prior untimed evidence is historical. Hosted enablement is separate.
 
 ## 15. Welcoming fans through learning and small activities
 
