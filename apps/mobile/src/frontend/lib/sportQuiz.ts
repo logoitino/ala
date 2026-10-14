@@ -1,0 +1,65 @@
+/**
+ * QUIZ-01 bound client adapter. Server owns weekly assignment, tester eligibility and private badge issuance.
+ * Missing/malformed sources throw; this module never supplies a fallback question or invented counts.
+ * @sideEffects Authenticated database RPCs via the shared callRpc binding; no telemetry, storage or payment calls.
+ */
+import { callRpc } from '@/lib/rpc';
+import type {
+  QuizAdminSnapshot, QuizQuestionAction, QuizQuestionPayload, QuizQuestionReceipt,
+  QuizSettingsInput, QuizSettingsReceipt, QuizSnapshot,
+} from '@shared/sportQuiz';
+export type * from '@shared/sportQuiz';
+
+const unavailable = () => new Error('Sport Pop Quiz data is unavailable. Refresh or contact Support.');
+const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
+const strings = (value: unknown): value is string[] => Array.isArray(value) && value.every(x => typeof x === 'string');
+const countKeys = ['questions_draft','questions_approved','questions_archived','questions_void','week_issued','week_completed','week_skipped','week_void','badges_issued','badges_void'];
+
+/** @purpose Reject malformed/private-contract violations instead of rendering a pretend quiz. */
+function snapshot(value: unknown): QuizSnapshot {
+  if (!object(value) || value.testing_only !== true || !['ready','paused','not_enrolled','ineligible'].includes(String(value.availability))
+    || !['available','unavailable','issued','completed','skipped','void'].includes(String(value.status))
+    || typeof value.week_start !== 'string' || typeof value.week_end !== 'string' || !strings(value.sports)
+    || !Array.isArray(value.badges) || !Array.isArray(value.corrections)
+    || value.badges.some(b => !object(b) || b.visibility !== 'private' || b.label !== 'Sport Learner')) throw unavailable();
+  if (value.attempt !== null) {
+    if (!object(value.attempt) || typeof value.attempt.id !== 'string') throw unavailable();
+    const a = value.attempt;
+    if (a.result !== null && (a.status !== 'completed' || !object(a.result) || typeof a.result.explanation !== 'string')) throw unavailable();
+    if (a.question !== null && (!object(a.question) || !strings(a.question.options) || a.question.options.length !== 4
+      || 'correct_option' in a.question || 'explanation' in a.question)) throw unavailable();
+  }
+  return value as unknown as QuizSnapshot;
+}
+
+/** @purpose Own-scoped week, prompt, completion and private badge state. */
+export async function fetchSportQuiz(): Promise<QuizSnapshot> { return snapshot(await callRpc('quiz_snapshot')); }
+/** @purpose Start once per UTC account week; the server reuses an existing assignment or skip. */
+export async function startSportQuiz(sport: string): Promise<QuizSnapshot> { return snapshot(await callRpc('quiz_start', { p_sport: sport })); }
+/** @purpose Preserve exact answer/request identity; caller retains this request across uncertain success retries. */
+export async function answerSportQuiz(attemptId: string, option: number, requestId: string): Promise<QuizSnapshot> {
+  return snapshot(await callRpc('quiz_answer', { p_attempt_id: attemptId, p_option: option, p_request_id: requestId }));
+}
+/** @purpose Dismiss this UTC week without losing existing badges or another app capability. */
+export async function skipSportQuiz(): Promise<QuizSnapshot> { return snapshot(await callRpc('quiz_skip')); }
+
+/** @purpose Full bounded admin bank/counts and audit cursor, with no participant answer/identity list. */
+export async function fetchSportQuizAdmin(before: string | null = null): Promise<QuizAdminSnapshot> {
+  const value = await callRpc<unknown>('quiz_admin_snapshot', { p_before: before });
+  if (!object(value) || !object(value.settings) || value.settings.testing_only !== true || typeof value.settings.enabled !== 'boolean'
+    || !strings(value.settings.pilot_accounts) || value.settings.pilot_accounts.length > 100
+    || !Array.isArray(value.questions) || value.questions.length > 100 || !Array.isArray(value.audit) || value.audit.length > 50
+    || !object(value.counts) || !countKeys.every(key => {
+      const n = (value.counts as Record<string, unknown>)[key];
+      return typeof n === 'number' && Number.isSafeInteger(n) && n >= 0;
+    })) throw unavailable();
+  return value as unknown as QuizAdminSnapshot;
+}
+/** @purpose Restrict local testing to explicit canonical profile IDs; server refuses production mode and empty enable. */
+export async function saveSportQuizSettings(payload: QuizSettingsInput, reason: string): Promise<QuizSettingsReceipt> {
+  return callRpc<QuizSettingsReceipt>('quiz_admin_settings', { p_payload: payload, p_reason: reason });
+}
+/** @purpose Draft/create new version, fact approval, archive or irreversible correction/void with authoritative audit. */
+export async function saveSportQuizQuestion(id: string | null, action: QuizQuestionAction, payload: QuizQuestionPayload): Promise<QuizQuestionReceipt> {
+  return callRpc<QuizQuestionReceipt>('quiz_admin_question', { p_id: id, p_action: action, p_payload: payload });
+}
