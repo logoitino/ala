@@ -8,7 +8,8 @@
     ".": "./index.ts",
     "./admin": "./admin/index.ts",
     "./admin/*": "./admin/*.ts",
-    "./admin/supportTopology.json": "./admin/supportTopology.json"
+    "./admin/supportTopology.json": "./admin/supportTopology.json",
+    "./fan-zone": "./fanZone.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
