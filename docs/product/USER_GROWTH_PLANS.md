@@ -250,7 +250,7 @@ The Sport Quiz rows above describe earlier untimed source. The owner approved
 [optional timed trivia](../engineering/design/TIMED_TRIVIA_PROPOSAL.md): default-off weekly
 invitations, sports-first topics and30/90 seconds available to everyone. [QUIZ-02](../agents/QUIZ-02.md)
 backend/admin has independent acceptance and actual local admin-ready16:53:17Z plus selected
-gate exit0 before participant work. Timed participant scoped review and root full150suites/1,210tests/all guards pass; final handoff/app-ready remains pending.
+gate exit0 before participant work. Timed participant and final independent source review plus root full150suites/1,219tests/all guards pass. Selected local app-ready passes after admin; final Documentation/VP continuation remains pending.
 [Family playbook §§14–15](FAMILY_FUN_PLAYBOOK.md) supplies per-account voluntary learning/story/
 activity return plans for the October20 joint Growth/Legal/Dev/capacity packet; no live uplift
 or additional rewards are inferred.

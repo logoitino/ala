@@ -540,7 +540,7 @@
       "id": "QUIZ-02",
       "title": "Optional timed sports trivia with private participation badges",
       "owner": "POLLS",
-      "status": "admin-ready",
+      "status": "app-ready",
       "plannedAt": "2026-10-14T16:15:21Z",
       "exemption": null,
       "source": {
@@ -608,7 +608,16 @@
             }
           ]
         },
-        "app": null
+        "app": {
+          "date": "2026-10-14T18:23:47Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-02-app.md",
+              "command": "pnpm check",
+              "result": "Root exit0: 150 mobile suites/1,219 tests, both app typechecks and all guards; unchanged canonical105/Fan154/historical34/timed50 actors. Independent whole-phase plus final scoped source/specification/quality/Data/Privacy/Safety/SUPPORT PASS at53a6104. Local source only; no hosted, device, counsel or launch certification."
+            }
+          ]
+        }
       }
     }
   ]

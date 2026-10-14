@@ -532,21 +532,35 @@ unperformed, with authorized audience and owner sharing decisions still required
 
 ## Current FUN-01 / QUIZ-01 / QUIZ-02 implementation handoff — 2026-10-14
 
-Owner authorized the recommended local build and added weekly Sport Pop Quiz. Earlier
-brainstorming sections remain dated history. Current source and actual evidence are in
-[FUN-01](FUN-01.md), historical [QUIZ-01](QUIZ-01.md) and current [QUIZ-02](QUIZ-02.md), in the isolated codex/fan-zone checkout.
-Corrected Fan admin has actual admin-ready at 2026-10-14T13:42:36Z and Quiz at 2026-10-14T06:09:57Z, both before participant source. Fan caller correction 070a58b independently passes specification/quality and local Data/Safety/SUPPORT with 35 focused tests; separate private video has 13. Quiz participant/discovery reviews pass with 23 and 44 focused tests. Shared Fan integration 8179b7b preserves private guardian recovery independently of participation dismissal; final affected checks pass 53 tests plus one coverage test and mobile typecheck. Shared Fan consumer review independently passes at 8179b7b; full check passes 148 suites/1,146 assertions and all guards; independent whole-branch/Data/Safety/SUPPORT and actual Documentation/VP scope reviews PASS; selected local Fan app-ready passes at metadata date 2026-10-14T14:49:04Z, after admin. Final status continuation is retained. Owner approved optional30/90-second timed trivia. [QUIZ-02](QUIZ-02.md) backend/admin source and independent Data/Privacy/Safety/SUPPORT acceptance pass; root canonical105/Fan154/historical34/timed50 exit0. New local admin checkpoint2026-10-14T16:53:17Z and selected admin-ready gate exit0 precede Task3 participant source. Timed participant scoped acceptance and current root full150suites/1,210tests/all guards pass; whole-phase/Documentation/VP/app-ready handoff remains pending. Prior Quiz evidence above is historical. [Approved timed design](../engineering/design/TIMED_TRIVIA_PROPOSAL.md).
+Current local source and evidence are in [FUN-01](FUN-01.md), historical
+[QUIZ-01](QUIZ-01.md) and current [QUIZ-02](QUIZ-02.md), on isolated codex/fan-zone.
+Earlier brainstorming and untimed checks remain dated history. Fan Zone retains its
+actual admin checkpoint2026-10-14T13:42:36Z and local app checkpoint14:49:04Z.
+Untimed QUIZ-01 retains admin06:09:57Z and unset app readiness; its source is historical.
 
-POLLS with ADMIN/UPLOAD/BACKEND owns operational source; Content/VOICE verifies sport facts
-and contextual wording. Data/Safety/SUPPORT independently checks ownership, privacy,
-corrections, removal and stop controls before expansion; QA reviews visible behavior and
-actual gates. PRODUCT/RESEARCH and Growth include casual fans, filmers, athletes, families,
-friends, guardians and optional personal learning by donor/booster/sponsor/staff/operator
-accounts, without institutional privileges. Private historical Sport Learner and new Trivia Explorer completion badges are
-separate from Aura, earnings, public ranking, fan ballots and voluntary service.
+Owner-approved optional timed trivia offers30/90 seconds, default-off/manual/weekly
+participation, reviewed unseen families and equal private Trivia Explorer badges.
+QUIZ-02's actual admin checkpoint16:53:17Z and selected admin-ready exit0 preceded
+participant source. The final correction53a6104 and combined independent source,
+specification/quality/Data/Privacy/Safety/SUPPORT review pass. Root full round4 passes
+150 suites/1,219tests, both app types and all guards; unchanged canonical105/Fan154/
+historical34/timed50 actor replays pass. Selected local app-ready passes at recorded
+2026-10-14T18:23:47Z, after the preserved admin date. Documentation current semantic
+review passes; final Documentation/VP continuation is pending.
 
-GROWTH_ANALYTICS gathers the October20 evidence packet: optional engagement/return,
-onboarding friction, corrections/support burden and operational capacity; unknown real
-measurements stay unknown. DOCUMENTATION/VP_OPERATIONS records actual executors, source
-checks and next owners. Wider audience, hosted release, money/service expansion and counsel
-decisions retain their existing gates; no new spending, scheduler or external outreach.
+POLLS with ADMIN/UPLOAD/BACKEND owns operations; Content/VOICE reviews facts and family
+grouping. Data/Privacy, Safety/Legal and SUPPORT review actor access, notices, history,
+corrections, removal, stopping and safe recovery. QA owns actual behavior and release
+evidence. Existing Fan discovery and its private guardian shortcut remain preserved.
+Historical Sport Learner and new private Trivia Explorer acknowledgments are separate
+from Aura, earnings, public rankings, fan ballots and voluntary service.
+
+Growth includes fans, filmers, athletes, families, friends, guardians and personal use
+by donors, boosters, sponsors, staff and operators without institutional privilege.
+GROWTH_ANALYTICS gathers the October20 packet: opt-in/return and onboarding friction,
+interruptions, corrections/support burden, exhausted content and operational costs.
+Real baselines remain unknown; recommendations route through Growth → Marketing → CTO
+→ owner. DOCUMENTATION/VP_OPERATIONS records actual executors, evidence and next owners.
+Defaults remain paused/testing-only/empty cohort. Hosted/device/accessibility, reviewed
+seed facts, counsel/age-region/retention, staffing and owner release are separate gates.
+No money/service expansion, spending, scheduler or external outreach is authorized here.

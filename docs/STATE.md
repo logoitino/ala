@@ -1,6 +1,6 @@
 # STATE — read this first
 
-**Last updated:** 2026-10-14 · Root full round3 exits0:150 suites/1,210tests, both app typechecks and all guards. Participant source and scoped Data/Privacy/Safety/SUPPORT review PASS; final whole-phase, Documentation/VP and selected app-ready remain pending. Actual admin16:53:17Z preserved. Pilots paused/empty; no hosted/spending/merge/push.
+**Last updated:** 2026-10-14 · Timed trivia source53a6104 passes final independent review; FINAL-I1 is addressed. Root full check passes150 suites/1,219 tests and all guards. Selected local QUIZ-02 app-ready passes at recorded date18:23:47Z, after admin16:53:17Z. Final Documentation/VP continuation is pending. Pilots remain paused/empty; no hosted SQL, spending, merge or push.
 
 **Prior Fan Zone / untimed Sport Quiz implementation (historical full-check evidence; current QUIZ-02 full check passes150suites/1,210tests):** owner approved the family-fun build and added optional weekly quizzes. Actual Fan admin checkpoint is 2026-10-14T13:42:36Z; Quiz is 2026-10-14T06:09:57Z. Fan participant `bcb898c` plus `070a58b` independently passes scoped review (35 focused checks), as does private video `a4f4acd` (13). Shared integration `8179b7b` includes Home, four HQs, profile and real control-map/stop paths; current guardian recovery survives participation dismissal. Independent shared consumer acceptance passes at 8179b7b; full pnpm check passes 148 suites/1,146 assertions and all guards; independent whole-branch and selected local Fan app-ready pass; actual Documentation/VP scope reviews pass and final status continuation is retained. Per-user growth and joint Legal/Dev/capacity plans retain the October 20 packet. No live measures or launch readiness are inferred.
 
@@ -274,6 +274,10 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- 2026-10-14 · Final scope correction53a6104 changes only the round hook/test: initial reads cannot borrow a newly loaded attempt, explicit End and original pending/live departure remain intact. Independent scoped reviewa4acbde9 addresses FINAL-I1 and accepts combined whole-phase source/specification/quality/Data/Privacy/Safety/SUPPORT, with no open Important/Critical findings. Root full round4 exits0:150 suites/1,219tests, both app types and all guards. Actual selected QUIZ-02 app-ready exits0 at metadata18:23:47Z after preserved admin16:53:17Z. Documentation/VP final continuation remains pending; isolated branch and both ledgers are retained.
+
+- 2026-10-14 · Final independent source review confirms FINAL-I1 via actual focused synthetic probe: mounting with snapshot=null then receiving ordinary issued-status snapshot sends unintended quiz_end identity_change despite no departure/Start/End. Expected0/observed1, exit1. Final receipt/complete findings and one combined original-consumer correction wave pending; full150/1210 remains test evidence, final app acceptance unset.
 
 - 2026-10-14 · Root full round3 exits0 after reviewed import-only4a1a1f9:150suites/1,210tests, bothmobile/Next types,13feature/6map/10recovery/10detectiontests and every guard. Map83tables/3views/331functions/20baseline exports;106roles;19sensors with16explicitpartial/gaps. Earlier failed logs retained. Immutable21commit timed package34b5403..dfc1194 dispatched for final independent review; source frozen. Selected app-ready/Documentation/VP pending.
 

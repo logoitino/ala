@@ -54,6 +54,6 @@ Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Sup
 
 ## Current authorized FUN-01 / QUIZ-01 / QUIZ-02 handoff — 2026-10-14
 
-Maintain FUN-01 free ballot/consent-linked source; implement owner-approved QUIZ-02 optional30/90-second private timed learning with ADMIN/BACKEND. QUIZ-01 is preserved historical untimed evidence. Actual QUIZ-02 local admin-ready16:53:17Z and selected gate exit0 precede participant integration. Preserve expected actor/profile authority, private capabilities/deadlines, exact recovery, family history, Off/End, material-history CAS, pause and audited corrections; no hosted or money authority.
+Maintain FUN-01 free ballot/consent-linked source; maintain locally accepted QUIZ-02 optional30/90-second private timed learning with ADMIN/BACKEND. QUIZ-01 is preserved historical untimed evidence. Actual QUIZ-02 local admin-ready16:53:17Z and selected gate exit0 precede participant integration. Preserve expected actor/profile authority, private capabilities/deadlines, exact recovery, family history, Off/End, material-history CAS, pause and audited corrections; no hosted or money authority.
 
 Source status, actual checks and next owners: docs/agents/FUN-01.md, QUIZ-01.md and QUIZ-02.md. The earlier brainstorming packet is historical; local source is authorized, hosted/counsel/money release is not implied. Growth retains the October20 evidence checkpoint; report actual runtime as outside-session Codex when applicable.
