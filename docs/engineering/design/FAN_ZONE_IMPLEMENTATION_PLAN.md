@@ -85,7 +85,7 @@ commit window for owned files only.
 - [x] Reconcile all new tables/functions/storage/source/export ownership, migration dependencies, support sensor gaps, entry controls and readable module map.
 - [x] Complete independent broad code/Safety/Data review, correct concrete failures and run covered checks.
 - [x] Run pnpm check, local SQL replay, selected Fan app-ready and source checks. Preserve Quiz historical admin checkpoint; revised timed Quiz app gate remains pending separately. Record actual outputs and untested hosted/device/policy paths.
-- [ ] Preserve final evidence and update STATE/CHANGELOG/task progress. Keep build in isolated checkout for concrete review; no merge/push/deployment.
+- [x] Preserve final local Fan evidence and update STATE/CHANGELOG/task progress. Actual final Documentation/VP continuation reviews pass. Keep build in isolated checkout for review; no merge/push/deployment. Revised timed Quiz design/admin/app work remains separately pending owner review.
 
 ### Task 6: Sport Pop Quiz operational backend/admin
 
