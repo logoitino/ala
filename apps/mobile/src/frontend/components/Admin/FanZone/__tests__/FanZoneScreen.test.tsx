@@ -76,21 +76,38 @@ it('requires proven invalidity before invalidation and shows recount feedback', 
 it.each(['Escalate case','Resolve case'])('records bounded reason and visible %s feedback', async label => {
  await openDesk(); await fireEvent.press(screen.getByLabelText(`Review case ${FUN_IDS.case}`)); await reason(); await fireEvent.press(screen.getByLabelText(label)); expect(await screen.findByText(/Case (escalated|resolved)/)).toBeTruthy();
 });
-it('pages cases independently from audit without discarding complete entry/ballot data', async () => {
- mockBank.cases=Array.from({length:50},(_,i)=>({...fanAdminFixture().cases[0],id:`50000000-0000-0000-0000-${String(i+1).padStart(12,'0')}`}));
- mockBank.audit=Array.from({length:50},(_,i)=>({...fanAdminFixture().audit[0],id:`60000000-0000-0000-0000-${String(i+1).padStart(12,'0')}`}));
- mockBank.case_next_cursor='2026-10-13T06:00:00Z'; mockBank.audit_next_cursor='2026-10-12T06:00:00Z'; mockBank.counts.cases=51;mockBank.counts.open_cases=51; mockBank.counts.audit=51;
+it('pages 51 tied rows independently by exact timestamp and row ID without discarding complete data', async () => {
+ mockBank.cases=Array.from({length:50},(_,i)=>({...fanAdminFixture().cases[0],id:`50000000-0000-0000-0000-${String(51-i).padStart(12,'0')}`}));
+ mockBank.audit=Array.from({length:50},(_,i)=>({...fanAdminFixture().audit[0],id:`60000000-0000-0000-0000-${String(51-i).padStart(12,'0')}`}));
+ const caseCursor=JSON.stringify({v:1,campaign:FUN_IDS.campaign,cases:{at:mockBank.cases[49].created_at,id:mockBank.cases[49].id}}),auditCursor=JSON.stringify({v:1,campaign:FUN_IDS.campaign,audit:{at:mockBank.audit[49].created_at,id:mockBank.audit[49].id}});
+ mockBank.case_next_cursor=caseCursor; mockBank.audit_next_cursor=auditCursor; mockBank.counts.cases=51;mockBank.counts.open_cases=51; mockBank.counts.audit=51;
  await openDesk(); await fireEvent.press(screen.getByLabelText('Data'));
- const extra={...fanAdminFixture().cases[0],id:'50000000-0000-0000-0000-000000000051',details:'Earlier concern',created_at:'2026-10-12T05:00:00Z'};
+ const extra={...fanAdminFixture().cases[0],id:'50000000-0000-0000-0000-000000000001',details:'Earlier concern'};
  mockTransport.mockResolvedValueOnce({ data:{...mockBank,cases:[extra],case_next_cursor:null,audit:[],audit_next_cursor:null},error:null });
  await fireEvent.press(screen.getByLabelText('Load earlier cases')); expect(await screen.findByText(/Earlier concern/)).toBeTruthy();
- expect(mockTransport).toHaveBeenLastCalledWith('fun_admin_snapshot',{p_campaign_id:FUN_IDS.campaign,p_before:'2026-10-13T06:00:00Z'});
+ expect(mockTransport).toHaveBeenLastCalledWith('fun_admin_snapshot',{p_campaign_id:FUN_IDS.campaign,p_before:caseCursor});
  expect(screen.getByLabelText('Load earlier audit')).not.toBeDisabled(); expect(screen.getByText(/1 of 1 entries/)).toBeTruthy();
- const earlierAudit={...fanAdminFixture().audit[0],id:'60000000-0000-0000-0000-000000000051',action:'earlier_audit',created_at:'2026-10-11T05:00:00Z'};
+ const earlierAudit={...fanAdminFixture().audit[0],id:'60000000-0000-0000-0000-000000000001',action:'earlier_audit'};
  mockTransport.mockResolvedValueOnce({data:{...mockBank,cases:[],case_next_cursor:null,audit:[earlierAudit],audit_next_cursor:null},error:null});
  await fireEvent.press(screen.getByLabelText('Load earlier audit'));expect(await screen.findByText(/earlier_audit/)).toBeTruthy();
- expect(mockTransport).toHaveBeenLastCalledWith('fun_admin_snapshot',{p_campaign_id:FUN_IDS.campaign,p_before:'2026-10-12T06:00:00Z'});
+ expect(mockTransport).toHaveBeenLastCalledWith('fun_admin_snapshot',{p_campaign_id:FUN_IDS.campaign,p_before:auditCursor});
  expect(screen.getByText(/51 loaded of 51 cases.*51 loaded of 51 audit/)).toBeTruthy();
+});
+it('retains the reviewed scope on stale acceptance, refreshes and requires selection of the new revision',async()=>{
+ mockBank.entries[0].status='submitted';mockBank.counts.entry_statuses={submitted:1};mockBank.ballots[0].valid=false;mockBank.counts.valid_ballots=0;
+ await openDesk();await selectEntry();await reason();const oldScope={...mockBank.entries[0].consent_scope};
+ const changed=fanAdminFixture();changed.entries[0].revision=3;changed.entries[0].digest='b'.repeat(64);changed.entries[0].consent_scope={...changed.entries[0].consent_scope,revision:3,digest:'b'.repeat(64)};changed.entries[0].status='submitted';changed.counts.entry_statuses={submitted:1};changed.ballots[0].valid=false;changed.counts.valid_ballots=0;
+ mockTransport.mockImplementation(async(fn:string)=>fn==='fun_admin_entry'?{data:null,error:{message:'FUN_REVIEW_SCOPE_STALE'}}:{data:changed,error:null});
+ await fireEvent.press(screen.getByLabelText('Accept entry'));
+ expect(mockTransport).toHaveBeenCalledWith('fun_admin_entry',{p_entry_id:FUN_IDS.entry,p_action:'accept',p_reason:'Verified exact testing evidence.',p_expected_scope:oldScope});
+ expect(await screen.findByText('This entry changed. Refresh and review the current revision before deciding.')).toBeTruthy();
+ expect(await screen.findByText('Select an entry before reviewing private video or taking corrective action.')).toBeTruthy();expect(screen.queryByLabelText('Accept entry')).toBeNull();
+ await selectEntry();expect(screen.getByLabelText('Accept entry')).toBeDisabled();
+});
+it('labels emergency suspension explicitly and sends null scope without accepting a replacement',async()=>{
+ await openDesk();await selectEntry();await reason();await fireEvent.press(screen.getByLabelText('Emergency suspend current entry'));
+ expect(mockTransport).toHaveBeenCalledWith('fun_admin_entry',{p_entry_id:FUN_IDS.entry,p_action:'suspend',p_reason:'Verified exact testing evidence.',p_expected_scope:null});
+ expect(await screen.findByText('Current entry suspended for an emergency safety hold.')).toBeTruthy();
 });
 it('creates a staff tracked deletion then removes every present revision and requires completion', async () => {
  mockBank.entries[0].status='withdrawn'; mockBank.counts.entry_statuses={withdrawn:1}; await openDesk(); await selectEntry(); await reason();
@@ -134,7 +151,7 @@ it.each([
  await openDesk();await fireEvent.press(screen.getByLabelText(label));expect(await screen.findByText(notice)).toBeTruthy();expect(mockTransport).toHaveBeenCalledWith('fun_admin_campaign',{p_id:FUN_IDS.campaign,p_action:action,p_payload:{}});
 });
 it('does not let the loaded case page withhold an existing server-authorized removal', async()=>{
- mockBank.cases=Array.from({length:50},(_,i)=>({...fanAdminFixture().cases[0],id:`50000000-0000-0000-0000-${String(i+1).padStart(12,'0')}`}));mockBank.counts.cases=51;mockBank.counts.open_cases=51;mockBank.case_next_cursor='2026-10-13T00:00:00Z';await openDesk();await selectEntry();
+ mockBank.cases=Array.from({length:50},(_,i)=>({...fanAdminFixture().cases[0],id:`50000000-0000-0000-0000-${String(i+1).padStart(12,'0')}`}));mockBank.counts.cases=51;mockBank.counts.open_cases=51;mockBank.case_next_cursor=JSON.stringify({v:1,campaign:FUN_IDS.campaign,cases:{at:mockBank.cases[49].created_at,id:mockBank.cases[49].id}});await openDesk();await selectEntry();
  // The deletion case exists on an older page. The media API still authorizes its exact tracked entry.
  api.mockResolvedValueOnce(fanRemovalFixture(1,false)).mockResolvedValueOnce(fanRemovalFixture(2,true));
  await fireEvent.press(screen.getByLabelText('Remove all stored revisions'));expect(await screen.findByText('All stored revisions removed; server completion confirmed.')).toBeTruthy();

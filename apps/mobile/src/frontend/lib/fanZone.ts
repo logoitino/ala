@@ -18,6 +18,8 @@ const messages: Record<string, string> = {
     FUN_ACCOUNT_INELIGIBLE: 'This account cannot use Fan Zone. Check age/account status or contact Support.',
     FUN_ADMIN_REQUIRED: 'An eligible admin account is required.',
     FUN_PERMISSION_SCOPE_STALE: 'Permission scope changed. Refresh and review the exact revision again.',
+    FUN_REVIEW_SCOPE_STALE: 'This entry changed. Refresh and review the current revision before deciding.',
+    FUN_CURSOR_INVALID: 'This page is unavailable. Refresh the selected campaign before loading earlier records.',
     FUN_BALLOT_VERSION_STALE: 'Your ballot changed. Refresh before replacing it.',
     FUN_REQUEST_REUSED: 'This request differs from its original ballot. Refresh before voting again.',
     FUN_CASE_RATE_LIMIT: 'The concern queue limit was reached. Use the configured support contact or Help/Safety.',
@@ -27,6 +29,7 @@ const messages: Record<string, string> = {
     FUN_MEDIA_UNAVAILABLE: 'Fan video service is unavailable. Removal has not been confirmed.',
 };
 const knownCodes = new Set([
+    'FUN_REVIEW_SCOPE_STALE', 'FUN_CURSOR_INVALID',
     'FUN_ACCOUNT_INELIGIBLE', 'FUN_ADMIN_REQUIRED', 'FUN_CAMPAIGN_UNAVAILABLE', 'FUN_TESTING_OPEN_DENIED', 'FUN_STATE_INVALID', 'FUN_RULES_IMMUTABLE', 'FUN_VOTING_NOT_ENDED', 'FUN_ACTION_INVALID', 'FUN_ENTRY_UNAVAILABLE', 'FUN_ENTRY_WINDOW_CLOSED', 'FUN_ENTRY_CAP', 'FUN_VERIFIED_RIGHTS_REQUIRED', 'FUN_PERMISSION_UNAVAILABLE', 'FUN_PERMISSION_SCOPE_STALE', 'FUN_BALLOT_INVALID', 'FUN_REQUEST_REUSED', 'FUN_VOTE_WINDOW_CLOSED', 'FUN_BALLOT_RATE_LIMIT', 'FUN_CANDIDATE_UNAVAILABLE', 'FUN_BALLOT_VERSION_STALE', 'FUN_BALLOT_INVALIDATED', 'FUN_REASON_REQUIRED', 'FUN_BALLOT_UNAVAILABLE', 'FUN_MEDIA_UNAVAILABLE', 'FUN_REMOVAL_NOT_REQUESTED', 'FUN_MEDIA_INVALID', 'FUN_CASE_UNAVAILABLE', 'FUN_CASE_RATE_LIMIT', 'FUN_DELETION_ALREADY_REQUESTED', 'FUN_CASE_INVALID', 'FUN_ACTUAL_REMOVAL_REQUIRED', 'FUN_REFLECTION_INVALID', 'FUN_REFLECTION_CAP', 'FUN_REFLECTION_UNAVAILABLE',
 ]);
 /** @purpose Fixed safe user text plus typed diagnostic code; raw backend messages never leave this adapter. */
@@ -45,6 +48,17 @@ const nullable = (v: unknown, check: (x: unknown) => boolean) => v === null || c
 const bool = (v: unknown): v is boolean => typeof v === 'boolean';
 const one = (v: unknown, values: readonly string[]) => typeof v === 'string' && values.includes(v);
 const onlyKeys = (v: Row, keys: readonly string[]) => Object.keys(v).every(key => keys.includes(key));
+/** @purpose Validate opaque cursor structure while retaining server precision; never normalize it through Date. */
+function pageCursor(v: unknown, campaignId: unknown, stream?: 'cases' | 'audit'): boolean {
+    if (!text(v, 1, 2000)) return false;
+    try {
+        const c: unknown = JSON.parse(v);
+        if (!object(c) || c.v !== 1 || !uuid(c.campaign) || c.campaign !== campaignId || !onlyKeys(c, ['v', 'campaign', 'cases', 'audit'])
+            || (!('cases' in c) && !('audit' in c)) || (stream && (!Object.hasOwn(c, stream) || Object.hasOwn(c, stream === 'cases' ? 'audit' : 'cases')))) return false;
+        return ['cases', 'audit'].every(key => !Object.hasOwn(c, key) || (object(c[key]) && onlyKeys(c[key], ['at', 'id']) && uuid(c[key].id)
+            && typeof c[key].at === 'string' && /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,6})?(Z|[+-][0-9]{2}:[0-9]{2})$/.test(c[key].at) && timestamp(c[key].at)));
+    } catch { return false; }
+}
 const array = (v: unknown, check: (x: unknown) => boolean, max = Infinity): v is unknown[] => Array.isArray(v) && v.length <= max && v.every(check);
 const entryStates = ['draft', 'submitted', 'accepted', 'changes', 'rejected', 'suspended', 'withdrawn'];
 const digest = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{64}$/.test(v);
@@ -87,8 +101,11 @@ function audit(v: unknown): boolean {
 function adminSnapshot(v: Row): boolean {
     if (!array(v.campaigns, x => campaign(x, true), 100) || !nullable(v.campaign, x => campaign(x, true)) || !array(v.entries, entry, 100)
         || !array(v.ballots, x => ballot(x, true), 100) || !array(v.cases, x => caseRow(x, true), 50) || !array(v.audit, audit, 50)
-        || !['next_cursor', 'case_next_cursor', 'audit_next_cursor'].every(k => nullable(v[k], timestamp)) || !object(v.counts))
+        || !object(v.counts))
         return false;
+    const campaignId = object(v.campaign) ? v.campaign.id : null;
+    if (!nullable(v.next_cursor, x => pageCursor(x, campaignId)) || !nullable(v.case_next_cursor, x => pageCursor(x, campaignId, 'cases'))
+        || !nullable(v.audit_next_cursor, x => pageCursor(x, campaignId, 'audit'))) return false;
     const counts = v.counts;
     if (!['entries', 'ballots', 'valid_ballots', 'cases', 'open_cases', 'audit'].every(k => integer(counts[k])) || !object(counts.entry_statuses))
         return false;
@@ -144,7 +161,9 @@ function boundReceipt(fn: ClientRpc, args: Row, value: unknown): boolean {
         case 'fun_entry': return !!e && e.campaign_id === args.p_campaign_id && (!args.p_entry_id || e.id === args.p_entry_id);
         case 'fun_permission': return !!e && e.id === args.p_entry_id && e.revision === args.p_revision && object(args.p_expected_scope) && object(e.consent_scope)
             && Object.entries(args.p_expected_scope).every(([k, v]) => (e.consent_scope as Row)[k] === v);
-        case 'fun_admin_entry': return e?.id === args.p_entry_id;
+        case 'fun_admin_entry': return e?.id === args.p_entry_id && (args.p_action === 'suspend' && args.p_expected_scope === null
+            || object(args.p_expected_scope) && object(e?.consent_scope) && Object.keys(e.consent_scope).length === Object.keys(args.p_expected_scope).length
+                && Object.entries(args.p_expected_scope).every(([k, v]) => (e.consent_scope as Row)[k] === v));
         case 'fun_vote': return value.request_id === args.p_request_id && b?.campaign_id === args.p_campaign_id && b?.entry_id === args.p_entry_id && b?.version === Number(args.p_expected_version) + 1;
         case 'fun_admin_ballot': return b?.id === args.p_ballot_id;
         case 'fun_case': return c?.entry_id === args.p_entry_id && c?.kind === args.p_kind;

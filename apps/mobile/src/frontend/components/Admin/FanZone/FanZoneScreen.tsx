@@ -68,8 +68,23 @@ function FanZoneDesk() {
     const campaignAction = (id: string | null, action: FanZoneCampaignAction, payload: FanZoneCampaignPayload) => {
         void run(action, async () => { const receipt = await fanZoneRpc('fun_admin_campaign', { p_id: id, p_action: action, p_payload: payload }); selectedCampaign.current = receipt.campaign.id; await load(receipt.campaign.id); return campaignNotices[action]; });
     };
-    const review = (action: FanZoneReviewAction) => { if (!entry)
-        return; void run(action, async () => { await fanZoneRpc('fun_admin_entry', { p_entry_id: entry.id, p_action: action, p_reason: reason }); setReason(''); await load(); return 'Entry review saved. Public exposure still requires exact current permission.'; }); };
+    const review = (action: FanZoneReviewAction, emergency = false) => {
+        if (!entry) return;
+        // Retain the rendered scope across the asynchronous write; refreshing cannot substitute an unseen revision.
+        const reviewed = entry;
+        void run(action, async () => {
+            try {
+                await fanZoneRpc('fun_admin_entry', { p_entry_id: reviewed.id, p_action: action, p_reason: reason, p_expected_scope: emergency ? null : reviewed.consent_scope });
+            } catch (caught) {
+                if (caught instanceof FanZoneError && caught.code === 'FUN_REVIEW_SCOPE_STALE') {
+                    setEntryId(null); setReason(''); await load();
+                }
+                throw caught;
+            }
+            setReason(''); await load();
+            return emergency ? 'Current entry suspended for an emergency safety hold.' : 'Entry review saved. Public exposure still requires exact current permission.';
+        });
+    };
     const invalidate = () => { if (!ballot || !proven || !hasReason)
         return; void run('invalidate', async () => { await fanZoneRpc('fun_admin_ballot', { p_ballot_id: ballot.id, p_reason: reason }); setReason(''); setProven(false); await load(); return 'Ballot invalidated with a reason. Review and recount valid ballots after the deadline.'; }); };
     const handleCase = (action: 'resolve' | 'escalate') => { if (!caseRow)
@@ -166,11 +181,13 @@ function FanZoneDesk() {
         <AdminBtn label="Request changes" disabled={disabled || !hasReason || entry.status === 'withdrawn'} onPress={() => review('changes')}/>
         <AdminBtn label="Reject entry" kind="danger" disabled={disabled || !hasReason || entry.status === 'withdrawn'} onPress={() => review('reject')}/>
         <AdminBtn label="Suspend entry" kind="danger" disabled={disabled || !hasReason || entry.status === 'withdrawn'} onPress={() => review('suspend')}/>
+        <AdminBtn label="Emergency suspend current entry" kind="danger" disabled={disabled || !hasReason || entry.status === 'withdrawn'} onPress={() => review('suspend', true)}/>
         <AdminBtn label="Request tracked deletion" kind="danger" disabled={disabled || !hasReason || !!hasDeletion} onPress={requestDeletion}/>
         {/* A tracked deletion may be outside the loaded case page; the API checks its existence on every revision. */}
         <AdminBtn label="Remove all stored revisions" kind="danger" disabled={disabled} onPress={removeAll}/>
        </View><AdminNotice text={removal} tone={removal?.includes('server completion confirmed') ? 'ok' : 'warn'}/>
        <Text>Staff may initiate tracked deletion even for an owner whose account is blocked/closed. Removal requires a tracked deletion in the server, including an older paged case. Server authorization and actual object absence decide completion.</Text>
+       <Text>Normal review is bound to this exact revision, media and caption. Emergency suspension stops the current entry even if it changed; it cannot accept or publish a replacement.</Text>
       </> : <Text>Select an entry before reviewing private video or taking corrective action.</Text>}
      </AdminPanel>
      <AdminPanel title="Proven ballot correction">

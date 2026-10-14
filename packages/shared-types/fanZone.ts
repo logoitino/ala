@@ -6,6 +6,8 @@ export type FanZoneCampaignAction = 'create' | 'configure' | 'open' | 'pause' | 
 export type FanZoneEntryAction = 'reserve' | 'edit' | 'submit' | 'withdraw';
 export type FanZonePermissionAction = 'assent' | 'grant' | 'revoke';
 export type FanZoneReviewAction = 'accept' | 'changes' | 'reject' | 'suspend';
+/** Opaque server-issued JSON cursor; preserve the exact SQL timestamp and row ID without Date conversion. */
+export type FanZonePageCursor = string;
 export type FanZoneCaseKind = 'report' | 'appeal' | 'deletion';
 export type FanZoneCaseAction = 'resolve' | 'escalate';
 export type FanZoneReflectionIdea = 'encourage' | 'help_at_home' | 'serve_together' | 'thank_someone';
@@ -148,9 +150,9 @@ export interface FanZoneAdminSnapshot {
   cases: FanZoneAdminCase[];
   audit: FanZoneAudit[];
   counts: { entries: number; ballots: number; valid_ballots: number; cases: number; open_cases: number; audit: number; entry_statuses: Partial<Record<FanZoneEntryStatus, number>> };
-  next_cursor: string | null;
-  case_next_cursor: string | null;
-  audit_next_cursor: string | null;
+  next_cursor: FanZonePageCursor | null;
+  case_next_cursor: FanZonePageCursor | null;
+  audit_next_cursor: FanZonePageCursor | null;
 }
 export interface FanZoneMediaAccess {
   ok: true;
@@ -171,12 +173,13 @@ export interface FanZoneRemovalReceipt { ok: true; entry_id: string; revision: n
 /** Argument names are exactly the PostgREST RPC binding; consent scope must be passed untouched from the current private DTO. */
 export interface FanZoneRpcMap {
   fun_snapshot: { args: { p_campaign_id?: string | null }; result: FanZoneSnapshot };
-  fun_admin_snapshot: { args: { p_campaign_id?: string | null; p_before?: string | null }; result: FanZoneAdminSnapshot };
+  fun_admin_snapshot: { args: { p_campaign_id?: string | null; p_before?: FanZonePageCursor | null }; result: FanZoneAdminSnapshot };
   fun_admin_campaign: { args: { p_id: string | null; p_action: FanZoneCampaignAction; p_payload: FanZoneCampaignPayload }; result: FanZoneCampaignReceipt };
   fun_entry: { args: { p_campaign_id: string; p_entry_id: string | null; p_action: FanZoneEntryAction; p_payload: FanZoneEntryPayload }; result: FanZoneEntryReceipt };
   fun_permission: { args: { p_entry_id: string; p_revision: number; p_action: FanZonePermissionAction; p_expected_scope: FanZoneConsentScope }; result: FanZoneEntryReceipt };
   fun_vote: { args: { p_campaign_id: string; p_entry_id: string; p_request_id: string; p_expected_version: number }; result: FanZoneBallotReceipt };
-  fun_admin_entry: { args: { p_entry_id: string; p_action: FanZoneReviewAction; p_reason: string }; result: FanZoneEntryReceipt };
+  /** Exact scope for normal review; null is reserved for explicit emergency suspension of the current entry. */
+  fun_admin_entry: { args: { p_entry_id: string; p_action: FanZoneReviewAction; p_reason: string; p_expected_scope: FanZoneConsentScope | null }; result: FanZoneEntryReceipt };
   fun_admin_ballot: { args: { p_ballot_id: string; p_reason: string }; result: { ok: true; ballot: Omit<FanZoneAdminBallot, 'valid'> } };
   fun_case: { args: { p_entry_id: string; p_kind: FanZoneCaseKind; p_details: string; p_secret: string }; result: FanZoneCaseReceipt };
   fun_case_status: { args: { p_case_id: string; p_secret: string }; result: FanZoneCaseReceipt };

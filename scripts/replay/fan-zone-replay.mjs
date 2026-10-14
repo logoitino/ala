@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 const dist = process.argv[2] || '/tmp/books01-pg/pkg/package/dist';
+const migrationPath = process.argv[3] || 'supabase/migrations/20261014130000_fan_zone.sql';
 const { PGlite } = await import(pathToFileURL(path.join(dist, 'index.js')).href);
 const { pgcrypto } = await import(pathToFileURL(path.join(dist, 'contrib/pgcrypto.js')).href);
 process.on('uncaughtException',e=>{console.error('REPLAY ERROR',e.message,e.where||'');process.exit(1);});
@@ -38,7 +39,13 @@ const SUPABASE_STUBS = String.raw`
 
 
 await db.exec(SUPABASE_STUBS);
-await db.exec(fs.readFileSync('apps/mobile/src/backend/db/schema.sql','utf8'));
+const migrationSql = fs.readFileSync(migrationPath,'utf8');
+const canonicalSql = fs.readFileSync('apps/mobile/src/backend/db/schema.sql','utf8');
+const workingMigration = fs.readFileSync('supabase/migrations/20261014130000_fan_zone.sql','utf8');
+// A supplied immutable red baseline must also replace a subsequently mirrored canonical Fan block.
+await db.exec(canonicalSql.replace(workingMigration, () => migrationSql));
+// Root integrates canonical SQL separately; exercise this worker's exact pending migration over that baseline.
+await db.exec(migrationSql);
 const tests=[];
 const check=(name, ok)=>{tests.push({name,ok});console.log(`${ok?'PASS':'FAIL'} ${name}`);};
 const q=async(sql)=>(await db.query(sql)).rows;
@@ -55,6 +62,8 @@ const act=async(who,sql)=>{try{await db.exec(`set role ${who==='guest'?'anon':wh
 const deny=async(name,who,sql,pattern=/FUN_|permission denied|row-level security|duplicate/i)=>{try{await act(who,sql);check(name,false);}catch(e){check(name,pattern.test(e.message));}};
 const call=async(who,fn,args)=>act(who,`select public.${fn}(${args}) as r`);
 const lit=x=>`'${JSON.stringify(x).replaceAll("'","''")}'::jsonb`;
+const scopeReviewSupported=(await q("select to_regprocedure('public.fun_admin_entry(uuid,text,text,jsonb)') is not null ok"))[0].ok;
+const reviewEntry=(e,reason)=>call('admin','fun_admin_entry',`'${e.id}','accept','${reason}'${scopeReviewSupported?','+lit(e.consent_scope):''}`);
 const payload={title:'Replay',theme:'Family fun',period:'week',entry_opens_at:new Date(Date.now()-3600000).toISOString(),entry_closes_at:new Date(Date.now()+3600000).toISOString(),vote_opens_at:new Date(Date.now()-3600000).toISOString(),vote_closes_at:new Date(Date.now()+7200000).toISOString(),rules:'Testing rules: free votes, shared ties',support_contact:'testing@example.invalid',pilot_accounts:['admin','adult','other','teen','guardian'].map(k=>profiles[k])};
 await deny('default-off campaign cannot open without approved testers','admin',`select public.fun_admin_campaign((public.fun_admin_campaign(null,'create',${lit({...payload,pilot_accounts:[]})})->'campaign'->>'id')::uuid,'open','{}')`);
 const campaign=await call('admin','fun_admin_campaign',`null,'create',${lit(payload)}`);const c=campaign.campaign.id;
@@ -79,8 +88,8 @@ for(const [who,v]of Object.entries(entries)){
  try {const receipt=await call(who,'fun_media_access',`'${e.id}',${e.revision},'verify'`);check(who+' can retry its own verified draft authorization',receipt.digest==='a'.repeat(64)&&receipt.bytes===1024&&receipt.duration_ms===1000);}catch(e){check(who+' can retry its own verified draft authorization',false);}
  await deny('another viewer cannot verify '+who+' verified draft',who==='adult'?'other':'adult',`select public.fun_media_access('${e.id}',${e.revision},'verify')`);
  await deny('service cannot upsert '+who+' verified draft','server',`update storage.objects set metadata='{}' where bucket_id='fan_zone' and name='${e.path}' returning id as r`,/FUN_STORAGE_IMMUTABLE/);
- await call(who,'fun_entry',`'${c}','${e.id}','submit','{}'`);
- await call('admin','fun_admin_entry',`'${e.id}','accept','Rights reviewed for pilot'`);
+ const submitted=(await call(who,'fun_entry',`'${c}','${e.id}','submit','{}'`)).entry;
+ await reviewEntry(submitted,'Rights reviewed for pilot');
 }
 for(const who of Object.keys(entries)) entries[who].entry=(await call(who,'fun_snapshot',`'${c}'`)).entry;
 const A=entries.adult.entry,T=entries.teen.entry,O=entries.other.entry;
@@ -185,7 +194,7 @@ check('expired ballot receipts are actually prunable',prune.deleted_requests>=1&
 await db.exec(`insert into public.fan_zone_audit(campaign_id,action) select '${c}','paging_probe' from generate_series(1,60)`);
 const firstPage=await call('admin','fun_admin_snapshot',`'${c}',null`);
 let auditRows=[...firstPage.audit],page=firstPage;while(page.audit_next_cursor){page=await call('admin','fun_admin_snapshot',`'${c}','${page.audit_next_cursor}'`);auditRows.push(...page.audit);}
-check('timestamp cursor retains every audit event inserted in one transaction',new Set(auditRows.map(x=>x.id)).size===firstPage.counts.audit);
+check('cursor retains every audit event inserted in one transaction',new Set(auditRows.map(x=>x.id)).size===firstPage.counts.audit);
 const auditRewrite=await db.exec(`delete from public.fan_zone_audit where action='paging_probe'`).then(()=>false,e=>/FUN_RECORD_IMMUTABLE/.test(e.message));check('audit events cannot be deleted',auditRewrite);
 for(let i=0;i<5;i++) await call('guest','fun_case',`'${A.id}','report','Pilot safety concern ${i}',gen_random_uuid()`);
 const unblockedRemoval=await call('adult','fun_case',`'${A.id}','deletion','Remove despite saturated public reports',gen_random_uuid()`);
@@ -198,7 +207,7 @@ bindingEntry=(await call('teen','fun_entry',`'${bindingCampaign}','${bindingEntr
 await act('teen',`insert into storage.objects(bucket_id,name,owner) values('fan_zone','${bindingEntry.path}','${ids.teen}')`);
 await call('server','fun_verify_media',`'${bindingEntry.id}',${bindingEntry.revision},'${'b'.repeat(64)}',1024,1000`);
 bindingEntry=(await call('teen','fun_entry',`'${bindingCampaign}','${bindingEntry.id}','submit','{}'`)).entry;
-await call('admin','fun_admin_entry',`'${bindingEntry.id}','accept','Exact testing media reviewed'`);
+await reviewEntry(bindingEntry,'Exact testing media reviewed');
 const secondLink=(await q(`insert into public.guardian_links(minor_id,guardian_id,source,confirmed_at) values('${profiles.teen}','${profiles.guardian2}','invite',now()) returning id`))[0].id;
 await permit('teen',bindingEntry,'assent');
 const firstBinding=(await permit('guardian',bindingEntry,'grant')).entry.guardian_consent_id;
@@ -262,5 +271,47 @@ if(staffDeletion){
 }
 await deny('service cannot overwrite a verified immutable object','server',`update storage.objects set metadata='{}' where bucket_id='fan_zone' and name='${A.path}' returning id as r`,/FUN_STORAGE_IMMUTABLE/);
 await deny('late service insert cannot recreate an object after completed removal','server',`insert into storage.objects(bucket_id,name,owner) values('fan_zone','${O.path}','${ids.other}')`,/FUN_STORAGE_IMMUTABLE/);
-await db.exec(fs.readFileSync('supabase/migrations/20261014130000_fan_zone.sql','utf8'));check('Fan Zone migration replays idempotently',true);
+// Normal inserts have unique monotone timestamps. Recovery/import fixtures deliberately bypass those guards.
+const reviewCampaign=(await call('admin','fun_admin_campaign',`null,'create',${lit(payload)}`)).campaign.id;
+await call('admin','fun_admin_campaign',`'${reviewCampaign}','open','{}'`);
+let reviewed=(await call('adult','fun_entry',`'${reviewCampaign}',null,'reserve','{}'`)).entry;
+const prepareReview=async()=>{
+ reviewed=(await call('adult','fun_entry',`'${reviewCampaign}','${reviewed.id}','edit',${lit({alias:'Exact fan',caption:'Review this revision',rights_confirmed:true})}`)).entry;
+ await act('adult',`insert into storage.objects(bucket_id,name,owner) values('fan_zone','${reviewed.path}','${ids.adult}')`);
+ await call('server','fun_verify_media',`'${reviewed.id}',${reviewed.revision},'${'c'.repeat(64)}',1024,1000`);
+ reviewed=(await call('adult','fun_entry',`'${reviewCampaign}','${reviewed.id}','submit','{}'`)).entry;
+};
+await prepareReview();const retainedReview={...reviewed};await prepareReview();
+const scopeReviewAvailable=(await q("select to_regprocedure('public.fun_admin_entry(uuid,text,text,jsonb)') is not null ok"))[0].ok;
+const reviewArgs=(e,action)=>`'${e.id}','${action}','Exact reviewed media decision'${scopeReviewAvailable?','+lit(e.consent_scope):''}`;
+await deny('stale staff acceptance cannot approve an unseen replacement revision','admin',`select public.fun_admin_entry(${reviewArgs(retainedReview,'accept')})`,/FUN_REVIEW_SCOPE_STALE/);
+check('stale decision leaves replacement submitted',(await call('admin','fun_snapshot',`'${reviewCampaign}'`)).entry===null&&(await q(`select status from public.fan_zone_entries where id='${reviewed.id}'`))[0].status==='submitted');
+if((await q(`select status from public.fan_zone_entries where id='${reviewed.id}'`))[0].status==='submitted') await call('admin','fun_admin_entry',reviewArgs(reviewed,'accept'));
+check('current exact staff review accepts its matching revision',(await q(`select status from public.fan_zone_entries where id='${reviewed.id}'`))[0].status==='accepted');
+if(scopeReviewAvailable){
+ await deny('exact digest mismatch cannot authorize staff acceptance','admin',`select public.fun_admin_entry('${reviewed.id}','accept','Review mismatched media digest',${lit({...reviewed.consent_scope,digest:'d'.repeat(64)})})`,/FUN_REVIEW_SCOPE_STALE/);
+ await deny('non-admin cannot use the new exact-scope review endpoint','adult',`select public.fun_admin_entry(${reviewArgs(reviewed,'accept')})`,/FUN_ADMIN_REQUIRED/);
+ await deny('null scope cannot authorize normal acceptance','admin',`select public.fun_admin_entry('${reviewed.id}','accept','Reason for missing scope',null)`);
+ await call('admin','fun_admin_entry',`'${reviewed.id}','suspend','Emergency current-entry safety hold',null`);
+ check('explicit emergency suspension remains available',(await q(`select status from public.fan_zone_entries where id='${reviewed.id}'`))[0].status==='suspended');
+}
+check('legacy staff review signature is removed',(await q("select to_regprocedure('public.fun_admin_entry(uuid,text,text)') is null ok"))[0].ok);
+check('legacy timestamp paging signature is removed',(await q("select to_regprocedure('public.fun_admin_snapshot(uuid,timestamptz)') is null ok"))[0].ok);
+await db.exec(`alter table public.fan_zone_cases disable trigger fan_zone_case_time;alter table public.fan_zone_audit disable trigger fan_zone_audit_time;drop index public.fan_zone_case_timestamp;drop index public.fan_zone_audit_timestamp;
+ insert into public.fan_zone_cases(id,entry_id,revision,path,kind,details,secret_hash,created_at) select ('81000000-0000-0000-0000-'||lpad(i::text,12,'0'))::uuid,'${reviewed.id}',${reviewed.revision},'${reviewed.path}','report','Legacy equal timestamp fixture',encode(public.digest('tie-'||i::text,'sha256'),'hex'),'2029-01-01T00:00:00.123456Z' from generate_series(1,51) i;
+ insert into public.fan_zone_audit(id,campaign_id,action,created_at) select ('82000000-0000-0000-0000-'||lpad(i::text,12,'0'))::uuid,'${reviewCampaign}','legacy_tie','2029-01-01T00:00:00.123456Z' from generate_series(1,51) i;`);
+const tiedFirst=await call('admin','fun_admin_snapshot',`'${reviewCampaign}',null`);
+const tiedCases=await call('admin','fun_admin_snapshot',`'${reviewCampaign}','${tiedFirst.case_next_cursor}'`);
+const tiedAudit=await call('admin','fun_admin_snapshot',`'${reviewCampaign}','${tiedFirst.audit_next_cursor}'`);
+check('composite case cursor includes the 51st same-timestamp recovery row',new Set([...tiedFirst.cases,...tiedCases.cases].map(x=>x.id)).size===51);
+check('composite audit cursor includes the 51st same-timestamp recovery row',new Set([...tiedFirst.audit,...tiedAudit.audit].filter(x=>x.action==='legacy_tie').map(x=>x.id)).size===51);
+check('case paging leaves audit stream at its first page',JSON.stringify(tiedCases.audit)===JSON.stringify(tiedFirst.audit));
+check('audit paging leaves case stream at its first page',JSON.stringify(tiedAudit.cases)===JSON.stringify(tiedFirst.cases));
+try{const cursor=JSON.parse(tiedFirst.case_next_cursor);check('opaque cursor preserves exact SQL microsecond timestamp and last row identity',cursor.v===1&&cursor.campaign===reviewCampaign&&cursor.cases.id===tiedFirst.cases[49].id&&cursor.cases.at.includes('.123456'));}catch{check('opaque cursor preserves exact SQL microsecond timestamp and last row identity',false);}
+if(scopeReviewAvailable){
+ for(const cursor of ['2029-01-01',JSON.stringify({v:2,campaign:reviewCampaign,cases:{at:'2029-01-01',id:reviewed.id}}),JSON.stringify({v:1,campaign:c,cases:{at:'2029-01-01',id:reviewed.id}}),JSON.stringify({v:1,campaign:reviewCampaign,cases:{at:'invalid',id:reviewed.id}}),JSON.stringify({v:1,campaign:reviewCampaign,cases:{at:'2029-01-01',id:'bad'}})])await deny('malformed or foreign composite cursor denied','admin',`select public.fun_admin_snapshot('${reviewCampaign}','${cursor}')`,/FUN_CURSOR_INVALID/);
+}
+// Remove privileged fixtures before restoring normal timestamp guards and rerunning the migration.
+await db.exec(`delete from public.fan_zone_cases where details='Legacy equal timestamp fixture';alter table public.fan_zone_audit disable trigger fan_zone_audit_immutable;delete from public.fan_zone_audit where action='legacy_tie';alter table public.fan_zone_audit enable trigger fan_zone_audit_immutable;alter table public.fan_zone_cases enable trigger fan_zone_case_time;alter table public.fan_zone_audit enable trigger fan_zone_audit_time;`);
+await db.exec(migrationSql);check('Fan Zone migration replays idempotently',true);
 console.log(`\n${tests.filter(t=>t.ok).length}/${tests.length} Fan Zone actor checks passed`);await db.close();process.exit(tests.every(t=>t.ok)?0:1);

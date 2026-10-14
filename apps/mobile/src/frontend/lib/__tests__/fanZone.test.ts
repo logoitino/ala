@@ -10,8 +10,9 @@ jest.mock('@/lib/fanZoneMedia', () => ({ removeFanZoneMedia: jest.fn() }));
 import { removeFanZoneMedia } from '@/lib/fanZoneMedia';
 beforeEach(() => { jest.clearAllMocks(); mockTransport.mockResolvedValue({ data: fanAdminFixture(), error: null }); });
 it('uses the bound RPC and exact independent paging arguments', async () => {
- await expect(fetchFanZoneAdmin(FUN_IDS.campaign, '2026-10-13T00:00:00Z')).resolves.toEqual(fanAdminFixture());
- expect(mockTransport).toHaveBeenCalledWith('fun_admin_snapshot', { p_campaign_id: FUN_IDS.campaign, p_before: '2026-10-13T00:00:00Z' });
+ const cursor=JSON.stringify({v:1,campaign:FUN_IDS.campaign,cases:{at:'2026-10-13T00:00:00Z',id:FUN_IDS.case}});
+ await expect(fetchFanZoneAdmin(FUN_IDS.campaign, cursor)).resolves.toEqual(fanAdminFixture());
+ expect(mockTransport).toHaveBeenCalledWith('fun_admin_snapshot', { p_campaign_id: FUN_IDS.campaign, p_before: cursor });
 });
 it.each(['FUN_PERMISSION_SCOPE_STALE', 'FUN_CASE_RATE_LIMIT', 'FUN_DELETION_ALREADY_REQUESTED', 'FUN_BALLOT_VERSION_STALE'])('returns a fixed typed safe error for %s', async code => {
  mockTransport.mockResolvedValue({ data: null, error: { code: 'P0001', message: code } });
@@ -72,4 +73,22 @@ it('rejects an unrelated ballot request receipt and never calls service-only or 
 it('matches both raw persisted reason length and SQL ASCII-space trim',()=>{
  expect(fanZoneReasonValid('😀'.repeat(500))).toBe(true);expect(fanZoneReasonValid(' '+'a'.repeat(500))).toBe(false);
  expect(fanZoneReasonValid('\t'.repeat(5))).toBe(true);expect(fanZoneReasonValid('  four  ')).toBe(false);
+});
+it('preserves composite stream cursors including SQL microseconds and rejects malformed or foreign cursors', async()=>{
+ const cursor=JSON.stringify({v:1,campaign:FUN_IDS.campaign,cases:{at:'2026-10-14T06:00:00.123456+00:00',id:FUN_IDS.case}});
+ const data=fanAdminFixture();data.case_next_cursor=cursor;data.next_cursor=cursor;
+ mockTransport.mockResolvedValue({data,error:null});await expect(fetchFanZoneAdmin(FUN_IDS.campaign,cursor)).resolves.toEqual(data);
+ expect(mockTransport).toHaveBeenLastCalledWith('fun_admin_snapshot',{p_campaign_id:FUN_IDS.campaign,p_before:cursor});
+ for(const invalid of ['2026-10-14T06:00:00Z',JSON.stringify({v:2,campaign:FUN_IDS.campaign,cases:{at:'2026-10-14T06:00:00Z',id:FUN_IDS.case}}),JSON.stringify({v:1,campaign:FUN_IDS.owner,cases:{at:'2026-10-14T06:00:00Z',id:FUN_IDS.case}}),JSON.stringify({v:1,campaign:FUN_IDS.campaign,cases:{at:'bad',id:FUN_IDS.case}})]){
+  mockTransport.mockResolvedValueOnce({data:{...data,case_next_cursor:invalid},error:null});await expect(fetchFanZoneAdmin()).rejects.toMatchObject({code:'FUN_INVALID_RESPONSE'});
+ }
+});
+it('binds normal staff review to the retained exact scope and requires explicit emergency suspension', async()=>{
+ const entry=fanAdminFixture().entries[0], args={p_entry_id:entry.id,p_action:'accept' as const,p_reason:'Exact revision reviewed',p_expected_scope:entry.consent_scope};
+ mockTransport.mockResolvedValueOnce({data:{ok:true,entry},error:null});await expect(fanZoneRpc('fun_admin_entry',args)).resolves.toMatchObject({entry});
+ expect(mockTransport).toHaveBeenLastCalledWith('fun_admin_entry',args);
+ const changed={...entry,revision:3,digest:'b'.repeat(64),consent_scope:{...entry.consent_scope,revision:3,digest:'b'.repeat(64)}};
+ mockTransport.mockResolvedValueOnce({data:{ok:true,entry:changed},error:null});await expect(fanZoneRpc('fun_admin_entry',args)).rejects.toMatchObject({code:'FUN_INVALID_RESPONSE'});
+ mockTransport.mockResolvedValueOnce({data:{ok:true,entry:changed},error:null});await expect(fanZoneRpc('fun_admin_entry',{...args,p_action:'suspend',p_expected_scope:null})).resolves.toMatchObject({entry:changed});
+ mockTransport.mockResolvedValueOnce({data:null,error:{message:'FUN_REVIEW_SCOPE_STALE'}});await expect(fanZoneRpc('fun_admin_entry',args)).rejects.toMatchObject({code:'FUN_REVIEW_SCOPE_STALE',message:'This entry changed. Refresh and review the current revision before deciding.'});
 });
