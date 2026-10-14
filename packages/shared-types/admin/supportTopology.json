@@ -3650,21 +3650,32 @@
       "name": "sport_quiz_attempts",
       "kind": "table",
       "owner": "POLLS",
-      "purpose": "One own-scoped random approved question assignment/skip/completion per account UTC week; exact request retry.",
+      "purpose": "Own private timed30/90-second immutable question/result lifecycle per account UTC week; legacy untimed history remains historical. Active capability hash never exported.",
       "writers": [],
       "readers": [],
       "sqlWriters": [
         "quiz_admin_question",
+        "quiz_admin_settings",
         "quiz_answer",
+        "quiz_end",
+        "quiz_expire",
         "quiz_skip",
         "quiz_start"
       ],
       "sqlReaders": [
         "quiz_admin_snapshot",
         "quiz_answer",
-        "quiz_snapshot"
+        "quiz_end",
+        "quiz_history",
+        "quiz_result_dto",
+        "quiz_skip",
+        "quiz_snapshot",
+        "quiz_start",
+        "quiz_summary"
       ],
-      "removers": [],
+      "removers": [
+        "quiz_erase_history"
+      ],
       "triggers": [],
       "screens": [
         "/",
@@ -3680,20 +3691,24 @@
       "name": "sport_quiz_audit",
       "kind": "table",
       "owner": "RLS_SECURITY",
-      "purpose": "Append-only authoritative quiz settings/content/correction history; participant answers/identities omitted from admin count export.",
+      "purpose": "Authoritative quiz settings/content/correction history remains immutable. Own participant learning associations are erased only under protected history-erasure context; admin export redacts participant actor/question/attempt links and never exports answers.",
       "writers": [],
       "readers": [],
       "sqlWriters": [
         "quiz_admin_question",
+        "quiz_admin_retention",
         "quiz_admin_settings",
         "quiz_answer",
+        "quiz_end",
         "quiz_skip",
         "quiz_start"
       ],
       "sqlReaders": [
         "quiz_admin_snapshot"
       ],
-      "removers": [],
+      "removers": [
+        "quiz_erase_history"
+      ],
       "triggers": [
         "quiz_audit_guard → quiz_guard_audit",
         "quiz_audit_truncate_guard → quiz_guard_audit"
@@ -3712,7 +3727,7 @@
       "name": "sport_quiz_badges",
       "kind": "table",
       "owner": "AURA",
-      "purpose": "Private noncash Sport Learner weekly completion acknowledgments; no Aura wallet, voting or payment value; erroneous content corrections.",
+      "purpose": "Private noncash Trivia Explorer weekly completion, equal right/wrong; historical Sport Learner preserved. No Aura wallet, vote/payment value; erroneous content corrections.",
       "writers": [],
       "readers": [],
       "sqlWriters": [
@@ -3721,7 +3736,69 @@
       ],
       "sqlReaders": [
         "quiz_admin_snapshot",
+        "quiz_erase_history",
+        "quiz_history",
         "quiz_snapshot"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/",
+        "/admin/sport-quiz",
+        "/booster",
+        "/operator",
+        "/parent",
+        "/sponsor",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_exposures",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "Unique own account/question-family issuance history including ended/expired/void rounds; avoids repeats while retained. Removed by explicit learning-history erasure.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_start"
+      ],
+      "sqlReaders": [
+        "quiz_admin_snapshot",
+        "quiz_fun_available",
+        "quiz_snapshot"
+      ],
+      "removers": [
+        "quiz_erase_history"
+      ],
+      "triggers": [],
+      "screens": [
+        "/",
+        "/admin/sport-quiz",
+        "/booster",
+        "/operator",
+        "/parent",
+        "/sponsor",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_preferences",
+      "kind": "table",
+      "owner": "PROFILE",
+      "purpose": "Optional default-off weekly invitations, sports/mix choice, versioned notice acceptance, once-weekly invitation claim and CAS history revision. No inferred interests or disability reason.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_erase_history",
+        "quiz_invitation",
+        "quiz_preferences"
+      ],
+      "sqlReaders": [
+        "quiz_admin_snapshot",
+        "quiz_invitation",
+        "quiz_preferences",
+        "quiz_preferences_dto",
+        "quiz_start"
       ],
       "removers": [],
       "triggers": [],
@@ -3749,6 +3826,9 @@
         "quiz_admin_question",
         "quiz_admin_snapshot",
         "quiz_answer",
+        "quiz_fun_available",
+        "quiz_question_dto",
+        "quiz_result_dto",
         "quiz_snapshot",
         "quiz_start"
       ],
@@ -3756,6 +3836,41 @@
       "triggers": [
         "quiz_question_guard → quiz_guard_question"
       ],
+      "screens": [
+        "/",
+        "/admin/sport-quiz",
+        "/booster",
+        "/operator",
+        "/parent",
+        "/sponsor",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_requests",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "Private bounded caller/request/normalized-input exact mutation recovery and cancelled Start fence; no plaintext secret/prompt. Erasable learning receipts with expected-week protection.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_save_request"
+      ],
+      "sqlReaders": [
+        "quiz_admin_snapshot",
+        "quiz_answer",
+        "quiz_end",
+        "quiz_invitation",
+        "quiz_preferences",
+        "quiz_receipt_dto",
+        "quiz_skip",
+        "quiz_start"
+      ],
+      "removers": [
+        "quiz_admin_retention",
+        "quiz_erase_history"
+      ],
+      "triggers": [],
       "screens": [
         "/",
         "/admin/sport-quiz",
@@ -3778,11 +3893,46 @@
       ],
       "sqlReaders": [
         "quiz_admin_question",
+        "quiz_admin_retention",
         "quiz_admin_snapshot",
+        "quiz_lock",
         "quiz_require_testing",
-        "quiz_snapshot"
+        "quiz_snapshot",
+        "quiz_start"
       ],
       "removers": [],
+      "triggers": [],
+      "screens": [
+        "/",
+        "/admin/sport-quiz",
+        "/booster",
+        "/operator",
+        "/parent",
+        "/sponsor",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_week_guards",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "Minimal profile/week/spent/prune quota record for35days, disclosed after learning-history erasure; no question/answer/receipt/token. Account deletion cascades; retention never removes unexpired guard.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_spend"
+      ],
+      "sqlReaders": [
+        "quiz_admin_snapshot",
+        "quiz_end",
+        "quiz_erase_history",
+        "quiz_skip",
+        "quiz_snapshot",
+        "quiz_start"
+      ],
+      "removers": [
+        "quiz_admin_retention"
+      ],
       "triggers": [],
       "screens": [
         "/",
@@ -7929,11 +8079,13 @@
       "name": "profile_age_band",
       "owner": "PROFILE",
       "callers": [
+        "sql:RLS policy",
         "sql:accept_guardian_invite",
         "sql:admin_minor_overview",
         "sql:admin_minor_report",
         "sql:admin_set_birth_month",
         "sql:apply_teen_defaults",
+        "sql:check constraint",
         "sql:create_guardian_invite",
         "sql:enforce_minor_consent",
         "sql:fun_eligible",
@@ -8023,9 +8175,9 @@
       "owner": "AUTH",
       "callers": [
         "sql:quiz_admin_actor",
-        "sql:quiz_answer",
-        "sql:quiz_skip",
-        "sql:quiz_start"
+        "sql:quiz_expected_actor",
+        "sql:quiz_history",
+        "sql:quiz_receipt"
       ],
       "manual": "Internal canonical account/knownage/closed check; no client-supplied participant identity.",
       "writes": [],
@@ -8035,9 +8187,8 @@
       "name": "quiz_admin_actor",
       "owner": "ADMIN",
       "callers": [
-        "sql:quiz_admin_question",
-        "sql:quiz_admin_settings",
-        "sql:quiz_admin_snapshot"
+        "sql:quiz_admin_snapshot",
+        "sql:quiz_expected_actor"
       ],
       "manual": "Internal protected quiz content/settings admin guard.",
       "writes": [],
@@ -8062,6 +8213,20 @@
       ]
     },
     {
+      "name": "quiz_admin_retention",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Reasoned bounded expired receipt/quota pruning with actual removal totals; no unexpired quota deletion or hidden learning erasure.",
+      "writes": [
+        "sport_quiz_audit"
+      ],
+      "reads": [
+        "sport_quiz_settings"
+      ]
+    },
+    {
       "name": "quiz_admin_settings",
       "owner": "ADMIN",
       "callers": [
@@ -8069,6 +8234,7 @@
       ],
       "manual": "Admin default-paused testing audience/settings change with authoritative rationale.",
       "writes": [
+        "sport_quiz_attempts",
         "sport_quiz_audit",
         "sport_quiz_settings"
       ],
@@ -8082,14 +8248,18 @@
       "callers": [
         "apps/mobile/src/frontend/lib/sportQuiz.ts"
       ],
-      "manual": "Complete <=100 question-version bank, defined current-week counts and bigint-paged audit; no participant answer list.",
+      "manual": "Complete100-slot bank through50-row opaque question paging, independent50-row bigint audit, full topic/lifecycle totals and effective expiry; no individual answer/token list.",
       "writes": [],
       "reads": [
         "sport_quiz_attempts",
         "sport_quiz_audit",
         "sport_quiz_badges",
+        "sport_quiz_exposures",
+        "sport_quiz_preferences",
         "sport_quiz_questions",
-        "sport_quiz_settings"
+        "sport_quiz_requests",
+        "sport_quiz_settings",
+        "sport_quiz_week_guards"
       ]
     },
     {
@@ -8098,7 +8268,7 @@
       "callers": [
         "apps/mobile/src/frontend/lib/sportQuiz.ts"
       ],
-      "manual": "Owned current unvoided question completion with exact option/request retry and one private noncash badge; no proficiency/earnings claim.",
+      "manual": "Canonical expected-profile/token-bound predeadline answer commit with exact option/request recovery; equal private noncash badge, no proficiency/earnings claim.",
       "writes": [
         "sport_quiz_attempts",
         "sport_quiz_audit",
@@ -8106,8 +8276,124 @@
       ],
       "reads": [
         "sport_quiz_attempts",
+        "sport_quiz_questions",
+        "sport_quiz_requests"
+      ]
+    },
+    {
+      "name": "quiz_cursor",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_snapshot",
+        "sql:quiz_history"
+      ],
+      "manual": "Internal bounded exact version/stream/timestamp/ID cursor validation for full inventory/history paging.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_digest",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_invitation",
+        "sql:quiz_preferences",
+        "sql:quiz_skip",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal normalized request input SHA binding, never plaintext token persistence.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_end",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Owned secret-free terminal closure by exactly one attempt or Start UUID; cancellation-beforeStart fence, fixed reason and exact expected-week/profile/request.",
+      "writes": [
+        "sport_quiz_attempts",
+        "sport_quiz_audit"
+      ],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_requests",
+        "sport_quiz_week_guards"
+      ]
+    },
+    {
+      "name": "quiz_erase_history",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Owned history CAS erasure terminalizes current/pending round, removes learning/exposures/badges/receipts/own participant audit associations, increments retained revision and preserves preferences/notices/disclosed35-day minimal quota. Editorial audit remains immutable.",
+      "writes": [
+        "sport_quiz_preferences"
+      ],
+      "reads": [
+        "sport_quiz_badges",
+        "sport_quiz_week_guards"
+      ]
+    },
+    {
+      "name": "quiz_expected_actor",
+      "owner": "AUTH",
+      "callers": [
+        "sql:quiz_admin_question",
+        "sql:quiz_admin_retention",
+        "sql:quiz_admin_settings",
+        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_erase_history",
+        "sql:quiz_invitation",
+        "sql:quiz_preferences",
+        "sql:quiz_skip",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal canonical current JWT equality with expected participant/admin ID and known-age/current authorization.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_expire",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_answer",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal persisted terminal expiry under lifecycle lock; ordinary snapshots stay read-only.",
+      "writes": [
+        "sport_quiz_attempts"
+      ],
+      "reads": []
+    },
+    {
+      "name": "quiz_fun_available",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_snapshot",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal reviewed unseen optional-topic availability; no silent sports/fun substitution when exhausted.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_exposures",
         "sport_quiz_questions"
       ]
+    },
+    {
+      "name": "quiz_fun_slot",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_snapshot",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal deterministic account/UTC-week4sports/1optional fun scheduling; no inferred interest or extra tracking counter.",
+      "writes": [],
+      "reads": []
     },
     {
       "name": "quiz_guard_audit",
@@ -8131,10 +8417,58 @@
       "reads": []
     },
     {
+      "name": "quiz_history",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Own paged immutable terminal learning history/private badges/corrections; no active prompt or institutional answer export.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_badges"
+      ]
+    },
+    {
+      "name": "quiz_invitation",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Owned opt-in once-per-UTC-week quiet invitation claim and exact receipt; reveals no question or deadline.",
+      "writes": [
+        "sport_quiz_preferences"
+      ],
+      "reads": [
+        "sport_quiz_preferences",
+        "sport_quiz_requests"
+      ]
+    },
+    {
+      "name": "quiz_lock",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_erase_history",
+        "sql:quiz_invitation",
+        "sql:quiz_preferences",
+        "sql:quiz_skip",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal settings/account serialization before lifecycle mutations and clock capture.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_settings"
+      ]
+    },
+    {
       "name": "quiz_normalize_options",
       "owner": "POLLS",
       "callers": [
+        "sql:quiz_admin_snapshot",
         "sql:quiz_answer",
+        "sql:quiz_fun_available",
         "sql:quiz_guard_question",
         "sql:quiz_snapshot",
         "sql:quiz_start"
@@ -8144,10 +8478,83 @@
       "reads": []
     },
     {
+      "name": "quiz_preferences",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Canonical expected-profile/CAS/request-bound optional invitation/topic/notice settings. Off affects invitation scheduling, not manual play or active round.",
+      "writes": [
+        "sport_quiz_preferences"
+      ],
+      "reads": [
+        "sport_quiz_preferences",
+        "sport_quiz_requests"
+      ]
+    },
+    {
+      "name": "quiz_preferences_dto",
+      "owner": "PROFILE",
+      "callers": [
+        "sql:quiz_fun_slot",
+        "sql:quiz_history",
+        "sql:quiz_preferences",
+        "sql:quiz_snapshot"
+      ],
+      "manual": "Internal own preference/notice/history-revision defaults and retained projection.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_preferences"
+      ]
+    },
+    {
+      "name": "quiz_question_dto",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_history",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal immutable content projection for original authorized Start or own terminal learning only.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_receipt",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "Own minimal mutation recovery or committed terminal result; never active prompt/capability.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_receipt_dto",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_invitation",
+        "sql:quiz_preferences",
+        "sql:quiz_receipt",
+        "sql:quiz_skip",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal minimal owned exact receipt/terminal learning projection, never active question/token.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_requests"
+      ]
+    },
+    {
       "name": "quiz_require_testing",
       "owner": "RLS_SECURITY",
       "callers": [
         "sql:quiz_answer",
+        "sql:quiz_invitation",
+        "sql:quiz_preferences",
         "sql:quiz_skip",
         "sql:quiz_start"
       ],
@@ -8158,35 +8565,85 @@
       ]
     },
     {
+      "name": "quiz_result_dto",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_history",
+        "sql:quiz_receipt_dto",
+        "sql:quiz_save_request"
+      ],
+      "manual": "Internal own terminal answer/explanation projection without active correct-answer leakage.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_save_request",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_invitation",
+        "sql:quiz_preferences",
+        "sql:quiz_skip",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal bounded caller/request/input exact receipt persistence and cancellation fencing.",
+      "writes": [
+        "sport_quiz_requests"
+      ],
+      "reads": []
+    },
+    {
       "name": "quiz_skip",
       "owner": "POLLS",
       "callers": [
         "apps/mobile/src/frontend/lib/sportQuiz.ts"
       ],
-      "manual": "Own current UTC-week dismissal without reward/penalty or capability loss.",
+      "manual": "Explicit owned expected-week quota closure without prompt or reward; exact request retry. Invitation dismissal alone does not call it.",
       "writes": [
         "sport_quiz_attempts",
         "sport_quiz_audit"
       ],
-      "reads": []
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_requests",
+        "sport_quiz_week_guards"
+      ]
     },
     {
       "name": "quiz_snapshot",
       "owner": "POLLS",
       "callers": [
-        "apps/mobile/src/frontend/lib/sportQuiz.ts",
-        "sql:quiz_answer",
-        "sql:quiz_skip",
-        "sql:quiz_start"
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
       ],
-      "manual": "Own week/prompt/question/status/explanation/private badges and corrections; answer withheld until own completion.",
+      "manual": "Read-only sanitized own v2 availability/preferences/week/attempt summary/pools/history revision at one server instant; never active prompt.",
       "writes": [],
       "reads": [
         "sport_quiz_attempts",
         "sport_quiz_badges",
+        "sport_quiz_exposures",
         "sport_quiz_questions",
-        "sport_quiz_settings"
+        "sport_quiz_settings",
+        "sport_quiz_week_guards"
       ]
+    },
+    {
+      "name": "quiz_spend",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_end",
+        "sql:quiz_erase_history",
+        "sql:quiz_skip",
+        "sql:quiz_start"
+      ],
+      "manual": "Internal atomic disclosed35-day minimal weekly quota enforcement.",
+      "writes": [
+        "sport_quiz_week_guards"
+      ],
+      "reads": []
     },
     {
       "name": "quiz_start",
@@ -8194,26 +8651,58 @@
       "callers": [
         "apps/mobile/src/frontend/lib/sportQuiz.ts"
       ],
-      "manual": "Atomic random approved sport question once per canonical account/UTCweek; refresh/sport changes reuse assignment.",
+      "manual": "Atomic unseen reviewed family and30/90 deadline under account/settings locks; exact request/profile/week/notice/token-bound original-view recovery only before expiry.",
       "writes": [
         "sport_quiz_attempts",
-        "sport_quiz_audit"
+        "sport_quiz_audit",
+        "sport_quiz_exposures"
       ],
       "reads": [
-        "sport_quiz_questions"
+        "sport_quiz_attempts",
+        "sport_quiz_preferences",
+        "sport_quiz_questions",
+        "sport_quiz_requests",
+        "sport_quiz_settings",
+        "sport_quiz_week_guards"
+      ]
+    },
+    {
+      "name": "quiz_summary",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_history",
+        "sql:quiz_receipt_dto",
+        "sql:quiz_save_request",
+        "sql:quiz_snapshot"
+      ],
+      "manual": "Internal active-prompt-free attempt metadata and effective expiry at one server instant.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts"
       ]
     },
     {
       "name": "quiz_week",
       "owner": "POLLS",
+      "callers": [],
+      "manual": "Internal authoritative UTC Monday start for one weekly assignment/badge.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_week_at",
+      "owner": "POLLS",
       "callers": [
         "sql:quiz_admin_snapshot",
-        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_erase_history",
+        "sql:quiz_invitation",
+        "sql:quiz_preferences",
         "sql:quiz_skip",
         "sql:quiz_snapshot",
         "sql:quiz_start"
       ],
-      "manual": "Internal authoritative UTC Monday start for one weekly assignment/badge.",
+      "manual": "Internal UTC week from explicit server instant, captured after locks for mutations.",
       "writes": [],
       "reads": []
     },

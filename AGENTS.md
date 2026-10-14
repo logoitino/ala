@@ -193,8 +193,8 @@ See [COORD-01](docs/agents/COORD-01.md) for actual assignments and the current c
 | Fan client and correction desk | frontend `lib/fanZone.ts`, `components/Admin/FanZone/`, `/admin/fan-zone`; ADMIN mounts behind AdminShell, SDK excludes service-only commits. |
 | Synthetic Fan SDK test inputs | frontend `lib/__fixtures__/fanZoneFixtures.ts`; shared DTO fixtures used by tests, excluded from Jest suite discovery and the product export graph; no runtime account data. |
 | Account fan journey | root `/fan-zone`, frontend `components/FanZone/` and `hooks/useFanZone.ts`; participant source follows its actual admin-ready gate. |
-| Weekly private sport learning | quiz migration, shared `sportQuiz.ts`, frontend `lib/sportQuiz.ts`, Admin/SportQuiz tool and `/admin/sport-quiz`; POLLS with Content/VOICE fact review, AURA owns noncash badge data. |
-| Quiz account journey | root `/sport-quiz`, frontend `components/SportQuiz/` and `hooks/useSportQuiz.ts`; dismissible invitation, weekly server assignment, explanation/private badges, local Not now and honest persisted Skip. |
+| Weekly private trivia authority | new QUIZ-02 timed migration, shared `timedSportQuiz.ts` with reusable earlier `sportQuiz.ts`, frontend `lib/sportQuiz.ts`, Admin/SportQuiz tool and paged `SportQuizBank.tsx`; POLLS with Content/VOICE fact review, AURA owns noncash private badges. Prior QUIZ-01 source/checkpoint is historical. |
+| Quiz account journey | root `/sport-quiz`, frontend `components/SportQuiz/` and `hooks/useSportQuiz.ts`; QUIZ-02 participant replacement waits for its new actual admin-ready. Planned separate `useTimedSportQuizRound.ts` owns ephemeral prompt/capability; account hook owns sanitized status/preferences/history only. |
 | Shared activity discovery | frontend `components/FamilyFun/FamilyFunDiscovery.tsx`, Home measured chrome, four role HQs and profile activity links; per-source errors remain independent, private guardian discovery is distinct from participation. |
 
 Root account routes stay outside the fan-only `(tabs)` role gate so eligible enrolled parent,
@@ -204,3 +204,12 @@ not applied. `FUN-01.md`/`QUIZ-01.md` and feature-admin.json preserve actual loc
 Data/Safety/SUPPORT reviews operational privacy, corrections/stop and source maps;
 DOCUMENTATION/VP_OPERATIONS records actual execution and per-user Growth handoff.
 Private Sport Learner acknowledgments do not credit Aura, cash, ballots or school rankings.
+
+QUIZ-02's approved design/plan lives in `docs/engineering/design/TIMED_TRIVIA_*`; source and
+actual checkpoints live in `docs/agents/QUIZ-02.md`. The admin desk owns complete50-row question
+and independent50-row audit paging, fact/family/source review, effective expiry, pause/correction
+and35-day quota/receipt retention. Expected canonical participant/admin actor prevents delayed
+cross-account writes. Ordinary reads are active-prompt-free; original Start alone has the live
+question,30/90deadline and memory-only256-bit capability. Clear history retains disclosed
+preferences/notice/revision and minimal35-day quota, removes learning/participant audit links,
+and requires Refresh/reconfirm after unknown CAS outcome. No hosted enablement follows local tests.

@@ -681,6 +681,14 @@
     "quiz_expire": {
       "owner": "POLLS",
       "use": "Internal persisted terminal expiry under lifecycle lock; ordinary snapshots stay read-only."
+    },
+    "quiz_fun_slot": {
+      "owner": "POLLS",
+      "use": "Internal deterministic account/UTC-week4sports/1optional fun scheduling; no inferred interest or extra tracking counter."
+    },
+    "quiz_fun_available": {
+      "owner": "POLLS",
+      "use": "Internal reviewed unseen optional-topic availability; no silent sports/fun substitution when exhausted."
     }
   },
   "exceptions": {
@@ -702,6 +710,83 @@
     }
   },
   "exportsTriage": [
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "fetchSportQuizAdmin",
+      "decision": "keep",
+      "reason": "QUIZ-02 replaces the historical admin export; preserve until Task3 owned archive after actual admin gate, then remove this entry.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "fetchTimedSportQuiz",
+      "decision": "keep",
+      "reason": "QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "saveTimedSportQuizPreferences",
+      "decision": "keep",
+      "reason": "QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "claimTimedSportQuizInvitation",
+      "decision": "keep",
+      "reason": "QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "startTimedSportQuiz",
+      "decision": "keep",
+      "reason": "QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "answerTimedSportQuiz",
+      "decision": "keep",
+      "reason": "QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "endTimedSportQuiz",
+      "decision": "keep",
+      "reason": "QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "skipTimedSportQuiz",
+      "decision": "keep",
+      "reason": "QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "fetchTimedSportQuizReceipt",
+      "decision": "keep",
+      "reason": "QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "fetchTimedSportQuizHistory",
+      "decision": "keep",
+      "reason": "QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "eraseTimedSportQuizHistory",
+      "decision": "keep",
+      "reason": "QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed.",
+      "status": "kept"
+    },
     {
       "file": "apps/mobile/src/backend/services/payouts.ts",
       "name": "disburseAthleteFunds",

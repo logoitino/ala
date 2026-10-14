@@ -7,14 +7,14 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 
 | Measure | Count |
 | --- | --- |
-| Tables | 79 |
+| Tables | 83 |
 | Views | 3 |
 | Storage buckets | 5 |
 | Feature switches read by the fan app | 38 of 38 |
-| Database functions | 308 (58 used by hand, 29 trigger functions) |
-| Tables reached by at least one screen or server route | 81 of 82 |
+| Database functions | 330 (80 used by hand, 29 trigger functions) |
+| Tables reached by at least one screen or server route | 85 of 86 |
 | Code files that read or write the database | 81 |
-| Exported symbols nothing imports | 20 (0 proposed for archive, 20 kept on purpose) |
+| Exported symbols nothing imports | 31 (0 proposed for archive, 31 kept on purpose) |
 | Rule failures | 0 |
 
 ## Owners
@@ -44,11 +44,11 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `PARTNERSHIPS` | `sponsorships` | 0 |
 | `PHOTO_STORIES` | `reel_photos`, `reel_photos_feed` | 0 |
 | `PLAYBACK` | `reel_views` | 0 |
-| `POLLS` | `cheer_polls`, `fan_zone_ballots`, `fan_zone_campaigns`, `fan_zone_reflections`, `fan_zone_requests`, `sport_quiz_attempts`, `sport_quiz_questions`, `sport_quiz_settings` | 17 |
-| `PROFILE` | `friend_request_log`, `friendships`, `guardian_approval_requests`, `guardian_invite_attempts`, `guardian_invites`, `guardian_links`, `profiles`, `supervision_events`, `user_blocks`, `profiles_public` | 72 |
+| `POLLS` | `cheer_polls`, `fan_zone_ballots`, `fan_zone_campaigns`, `fan_zone_reflections`, `fan_zone_requests`, `sport_quiz_attempts`, `sport_quiz_exposures`, `sport_quiz_questions`, `sport_quiz_requests`, `sport_quiz_settings`, `sport_quiz_week_guards` | 31 |
+| `PROFILE` | `friend_request_log`, `friendships`, `guardian_approval_requests`, `guardian_invite_attempts`, `guardian_invites`, `guardian_links`, `profiles`, `sport_quiz_preferences`, `supervision_events`, `user_blocks`, `profiles_public` | 76 |
 | `RALLY` | `rallies` | 7 |
 | `RECOVERY` | `support_releases` | 1 |
-| `RLS_SECURITY` | `fan_zone_audit`, `sport_quiz_audit` | 11 |
+| `RLS_SECURITY` | `fan_zone_audit`, `sport_quiz_audit` | 13 |
 | `ROSTERS` | `players` | 20 |
 | `RUNTIME_CONFIG` | `app_runtime_config` | 4 |
 | `SCHOOL_PARTNERS` | `schools_and_teams` | 2 |
@@ -582,27 +582,46 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `sport_quiz_attempts`
 
-**Owner:** `POLLS` · One own-scoped random approved question assignment/skip/completion per account UTC week; exact request retry.
+**Owner:** `POLLS` · Own private timed30/90-second immutable question/result lifecycle per account UTC week; legacy untimed history remains historical. Active capability hash never exported.
 
-- Written by: —; database functions: `quiz_admin_question`, `quiz_answer`, `quiz_skip`, `quiz_start`
-- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_answer`, `quiz_snapshot`
+- Written by: —; database functions: `quiz_admin_question`, `quiz_admin_settings`, `quiz_answer`, `quiz_end`, `quiz_expire`, `quiz_skip` +1 more
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_answer`, `quiz_end`, `quiz_history`, `quiz_result_dto`, `quiz_skip` +3 more
+- Removed by: `quiz_erase_history`
 - Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_audit`
 
-**Owner:** `RLS_SECURITY` · Append-only authoritative quiz settings/content/correction history; participant answers/identities omitted from admin count export.
+**Owner:** `RLS_SECURITY` · Authoritative quiz settings/content/correction history remains immutable. Own participant learning associations are erased only under protected history-erasure context; admin export redacts participant actor/question/attempt links and never exports answers.
 
-- Written by: —; database functions: `quiz_admin_question`, `quiz_admin_settings`, `quiz_answer`, `quiz_skip`, `quiz_start`
+- Written by: —; database functions: `quiz_admin_question`, `quiz_admin_retention`, `quiz_admin_settings`, `quiz_answer`, `quiz_end`, `quiz_skip` +1 more
 - Read by: —; database functions: `quiz_admin_snapshot`
+- Removed by: `quiz_erase_history`
 - Triggers: `quiz_audit_guard → quiz_guard_audit`, `quiz_audit_truncate_guard → quiz_guard_audit`
 - Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_badges`
 
-**Owner:** `AURA` · Private noncash Sport Learner weekly completion acknowledgments; no Aura wallet, voting or payment value; erroneous content corrections.
+**Owner:** `AURA` · Private noncash Trivia Explorer weekly completion, equal right/wrong; historical Sport Learner preserved. No Aura wallet, vote/payment value; erroneous content corrections.
 
 - Written by: —; database functions: `quiz_admin_question`, `quiz_answer`
-- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_snapshot`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_erase_history`, `quiz_history`, `quiz_snapshot`
+- Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
+
+### `sport_quiz_exposures`
+
+**Owner:** `POLLS` · Unique own account/question-family issuance history including ended/expired/void rounds; avoids repeats while retained. Removed by explicit learning-history erasure.
+
+- Written by: —; database functions: `quiz_start`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_fun_available`, `quiz_snapshot`
+- Removed by: `quiz_erase_history`
+- Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
+
+### `sport_quiz_preferences`
+
+**Owner:** `PROFILE` · Optional default-off weekly invitations, sports/mix choice, versioned notice acceptance, once-weekly invitation claim and CAS history revision. No inferred interests or disability reason.
+
+- Written by: —; database functions: `quiz_erase_history`, `quiz_invitation`, `quiz_preferences`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_invitation`, `quiz_preferences`, `quiz_preferences_dto`, `quiz_start`
 - Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_questions`
@@ -610,8 +629,17 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `POLLS` · Human-reviewed sport question versions, draft/approved/archive/void state and stable issued answer/explanation.
 
 - Written by: —; database functions: `quiz_admin_question`
-- Read by: —; database functions: `quiz_admin_question`, `quiz_admin_snapshot`, `quiz_answer`, `quiz_snapshot`, `quiz_start`
+- Read by: —; database functions: `quiz_admin_question`, `quiz_admin_snapshot`, `quiz_answer`, `quiz_fun_available`, `quiz_question_dto`, `quiz_result_dto` +2 more
 - Triggers: `quiz_question_guard → quiz_guard_question`
+- Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
+
+### `sport_quiz_requests`
+
+**Owner:** `POLLS` · Private bounded caller/request/normalized-input exact mutation recovery and cancelled Start fence; no plaintext secret/prompt. Erasable learning receipts with expected-week protection.
+
+- Written by: —; database functions: `quiz_save_request`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_answer`, `quiz_end`, `quiz_invitation`, `quiz_preferences`, `quiz_receipt_dto` +2 more
+- Removed by: `quiz_admin_retention`, `quiz_erase_history`
 - Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_settings`
@@ -619,7 +647,16 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `POLLS` · Default-paused/testing-only quiz switch with approved canonical-profile tester allowlist.
 
 - Written by: —; database functions: `quiz_admin_settings`
-- Read by: —; database functions: `quiz_admin_question`, `quiz_admin_snapshot`, `quiz_require_testing`, `quiz_snapshot`
+- Read by: —; database functions: `quiz_admin_question`, `quiz_admin_retention`, `quiz_admin_snapshot`, `quiz_lock`, `quiz_require_testing`, `quiz_snapshot` +1 more
+- Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
+
+### `sport_quiz_week_guards`
+
+**Owner:** `POLLS` · Minimal profile/week/spent/prune quota record for35days, disclosed after learning-history erasure; no question/answer/receipt/token. Account deletion cascades; retention never removes unexpired guard.
+
+- Written by: —; database functions: `quiz_spend`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_end`, `quiz_erase_history`, `quiz_skip`, `quiz_snapshot`, `quiz_start`
+- Removed by: `quiz_admin_retention`
 - Screens: `/`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `spotlight_awards`
@@ -1041,7 +1078,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `preview_guardian_invite` | `PROFILE` | `@/lib/minors.ts` | — | `guardian_invites`, `profiles` |
 | `privacy_default_audience` | `BACKEND` | `sql:admin_reset_privacy`, `sql:apply_privacy_settings`, `sql:audience_allows` +2 more | — | — |
 | `privacy_settings_json` | `PROFILE` | `sql:admin_get_privacy`, `sql:apply_privacy_settings`, `sql:get_my_privacy` +2 more | — | `profiles` |
-| `profile_age_band` | `PROFILE` | `sql:accept_guardian_invite`, `sql:admin_minor_overview`, `sql:admin_minor_report` +23 more | — | `profiles` |
+| `profile_age_band` | `PROFILE` | `sql:RLS policy`, `sql:accept_guardian_invite`, `sql:admin_minor_overview` +25 more | — | `profiles` |
 | `profile_item_visible` | `PROFILE` | `sql:athlete_stats_visible`, `sql:get_aura_board`, `sql:get_leaderboards` +3 more | — | `profiles` |
 | `profiles_apply_new_account_rules` | `BACKEND` | `trigger:profiles_new_account_rules on profiles` | — | — |
 | `publish_app_runtime` | `RUNTIME_CONFIG` | `@/lib/runtime.ts` | `app_runtime_config` | — |
@@ -1049,17 +1086,39 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `quiz_actor` | `AUTH` | By hand: Internal canonical account/knownage/closed check; no client-supplied participant identity. | — | — |
 | `quiz_admin_actor` | `ADMIN` | By hand: Internal protected quiz content/settings admin guard. | — | — |
 | `quiz_admin_question` | `POLLS` | By hand: Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` +1 more | `sport_quiz_questions`, `sport_quiz_settings` |
-| `quiz_admin_settings` | `ADMIN` | By hand: Admin default-paused testing audience/settings change with authoritative rationale. | `sport_quiz_audit`, `sport_quiz_settings` | `profiles` |
-| `quiz_admin_snapshot` | `ADMIN` | By hand: Complete <=100 question-version bank, defined current-week counts and bigint-paged audit; no participant answer list. | — | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` +2 more |
-| `quiz_answer` | `POLLS` | By hand: Owned current unvoided question completion with exact option/request retry and one private noncash badge; no proficiency/earnings claim. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` | `sport_quiz_attempts`, `sport_quiz_questions` |
+| `quiz_admin_retention` | `ADMIN` | By hand: Reasoned bounded expired receipt/quota pruning with actual removal totals; no unexpired quota deletion or hidden learning erasure. | `sport_quiz_audit` | `sport_quiz_settings` |
+| `quiz_admin_settings` | `ADMIN` | By hand: Admin default-paused testing audience/settings change with authoritative rationale. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_settings` | `profiles` |
+| `quiz_admin_snapshot` | `ADMIN` | By hand: Complete100-slot bank through50-row opaque question paging, independent50-row bigint audit, full topic/lifecycle totals and effective expiry; no individual answer/token list. | — | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` +6 more |
+| `quiz_answer` | `POLLS` | By hand: Canonical expected-profile/token-bound predeadline answer commit with exact option/request recovery; equal private noncash badge, no proficiency/earnings claim. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` | `sport_quiz_attempts`, `sport_quiz_questions`, `sport_quiz_requests` |
+| `quiz_cursor` | `POLLS` | By hand: Internal bounded exact version/stream/timestamp/ID cursor validation for full inventory/history paging. | — | — |
+| `quiz_digest` | `RLS_SECURITY` | By hand: Internal normalized request input SHA binding, never plaintext token persistence. | — | — |
+| `quiz_end` | `POLLS` | By hand: Owned secret-free terminal closure by exactly one attempt or Start UUID; cancellation-beforeStart fence, fixed reason and exact expected-week/profile/request. | `sport_quiz_attempts`, `sport_quiz_audit` | `sport_quiz_attempts`, `sport_quiz_requests`, `sport_quiz_week_guards` |
+| `quiz_erase_history` | `PROFILE` | By hand: Owned history CAS erasure terminalizes current/pending round, removes learning/exposures/badges/receipts/own participant audit associations, increments retained revision and preserves preferences/notices/disclosed35-day minimal quota. Editorial audit remains immutable. | `sport_quiz_preferences` | `sport_quiz_badges`, `sport_quiz_week_guards` |
+| `quiz_expected_actor` | `AUTH` | By hand: Internal canonical current JWT equality with expected participant/admin ID and known-age/current authorization. | — | — |
+| `quiz_expire` | `POLLS` | By hand: Internal persisted terminal expiry under lifecycle lock; ordinary snapshots stay read-only. | `sport_quiz_attempts` | — |
+| `quiz_fun_available` | `POLLS` | By hand: Internal reviewed unseen optional-topic availability; no silent sports/fun substitution when exhausted. | — | `sport_quiz_exposures`, `sport_quiz_questions` |
+| `quiz_fun_slot` | `POLLS` | By hand: Internal deterministic account/UTC-week4sports/1optional fun scheduling; no inferred interest or extra tracking counter. | — | — |
 | `quiz_guard_audit` | `RLS_SECURITY` | By hand: Trigger keeps trusted quiz audit immutable; allowed FK nulling on identity deletion. | — | — |
 | `quiz_guard_question` | `POLLS` | By hand: Trigger freezes issued question wording/answers; edits become new reviewed versions. | — | — |
+| `quiz_history` | `PROFILE` | By hand: Own paged immutable terminal learning history/private badges/corrections; no active prompt or institutional answer export. | — | `sport_quiz_attempts`, `sport_quiz_badges` |
+| `quiz_invitation` | `POLLS` | By hand: Owned opt-in once-per-UTC-week quiet invitation claim and exact receipt; reveals no question or deadline. | `sport_quiz_preferences` | `sport_quiz_preferences`, `sport_quiz_requests` |
+| `quiz_lock` | `RLS_SECURITY` | By hand: Internal settings/account serialization before lifecycle mutations and clock capture. | — | `sport_quiz_settings` |
 | `quiz_normalize_options` | `POLLS` | By hand: Protected Unicode/ECMAScript-whitespace option canonicalization for new content/approval/assignment; malformed legacy question rows stay admin-correctable and cannot issue or complete. | — | — |
+| `quiz_preferences` | `PROFILE` | By hand: Canonical expected-profile/CAS/request-bound optional invitation/topic/notice settings. Off affects invitation scheduling, not manual play or active round. | `sport_quiz_preferences` | `sport_quiz_preferences`, `sport_quiz_requests` |
+| `quiz_preferences_dto` | `PROFILE` | By hand: Internal own preference/notice/history-revision defaults and retained projection. | — | `sport_quiz_preferences` |
+| `quiz_question_dto` | `POLLS` | By hand: Internal immutable content projection for original authorized Start or own terminal learning only. | — | `sport_quiz_questions` |
+| `quiz_receipt` | `POLLS` | By hand: Own minimal mutation recovery or committed terminal result; never active prompt/capability. | — | — |
+| `quiz_receipt_dto` | `POLLS` | By hand: Internal minimal owned exact receipt/terminal learning projection, never active question/token. | — | `sport_quiz_requests` |
 | `quiz_require_testing` | `RLS_SECURITY` | By hand: Internal default-paused/tester allowlist/production-refusal guard for quiz participation. | — | `sport_quiz_settings` |
-| `quiz_skip` | `POLLS` | By hand: Own current UTC-week dismissal without reward/penalty or capability loss. | `sport_quiz_attempts`, `sport_quiz_audit` | — |
-| `quiz_snapshot` | `POLLS` | By hand: Own week/prompt/question/status/explanation/private badges and corrections; answer withheld until own completion. | — | `sport_quiz_attempts`, `sport_quiz_badges`, `sport_quiz_questions` +1 more |
-| `quiz_start` | `POLLS` | By hand: Atomic random approved sport question once per canonical account/UTCweek; refresh/sport changes reuse assignment. | `sport_quiz_attempts`, `sport_quiz_audit` | `sport_quiz_questions` |
+| `quiz_result_dto` | `POLLS` | By hand: Internal own terminal answer/explanation projection without active correct-answer leakage. | — | `sport_quiz_attempts`, `sport_quiz_questions` |
+| `quiz_save_request` | `POLLS` | By hand: Internal bounded caller/request/input exact receipt persistence and cancellation fencing. | `sport_quiz_requests` | — |
+| `quiz_skip` | `POLLS` | By hand: Explicit owned expected-week quota closure without prompt or reward; exact request retry. Invitation dismissal alone does not call it. | `sport_quiz_attempts`, `sport_quiz_audit` | `sport_quiz_attempts`, `sport_quiz_requests`, `sport_quiz_week_guards` |
+| `quiz_snapshot` | `POLLS` | By hand: Read-only sanitized own v2 availability/preferences/week/attempt summary/pools/history revision at one server instant; never active prompt. | — | `sport_quiz_attempts`, `sport_quiz_badges`, `sport_quiz_exposures` +3 more |
+| `quiz_spend` | `POLLS` | By hand: Internal atomic disclosed35-day minimal weekly quota enforcement. | `sport_quiz_week_guards` | — |
+| `quiz_start` | `POLLS` | By hand: Atomic unseen reviewed family and30/90 deadline under account/settings locks; exact request/profile/week/notice/token-bound original-view recovery only before expiry. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_exposures` | `sport_quiz_attempts`, `sport_quiz_preferences`, `sport_quiz_questions` +3 more |
+| `quiz_summary` | `POLLS` | By hand: Internal active-prompt-free attempt metadata and effective expiry at one server instant. | — | `sport_quiz_attempts` |
 | `quiz_week` | `POLLS` | By hand: Internal authoritative UTC Monday start for one weekly assignment/badge. | — | — |
+| `quiz_week_at` | `POLLS` | By hand: Internal UTC week from explicit server instant, captured after locks for mutations. | — | — |
 | `rally_manager_role` | `ROSTERS` | `sql:RLS policy`, `sql:approve_rally`, `sql:close_rally` +5 more | — | `players`, `profiles` |
 | `record_company_revenue` | `LEDGER` | `sql:check constraint`, `sql:company_revenue_after_source_insert` | `company_revenue_logs` | — |
 | `record_guardian_consent` | `CUSTODIAL` | `sql:accept_guardian_invite`, `sql:sign_guardian_consent` | `guardian_consents` | `guardian_links` |
@@ -1154,6 +1213,17 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | `@/lib/payouts.ts` | `requestPayout` | keep | Wave 1 payout request (payouts are blocked by decision). |
 | `@/lib/photoStories.ts` | `resetPhotoStoriesProbe` | keep | Test hook. |
 | `@/lib/runtime.ts` | `discardAppRuntimeDraft` | keep | "Discard draft" action not yet wired into Publish; RUNTIME_CONFIG to wire or archive. |
+| `@/lib/sportQuiz.ts` | `fetchSportQuizAdmin` | keep | QUIZ-02 replaces the historical admin export; preserve until Task3 owned archive after actual admin gate, then remove this entry. |
+| `@/lib/sportQuiz.ts` | `fetchTimedSportQuiz` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
+| `@/lib/sportQuiz.ts` | `saveTimedSportQuizPreferences` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
+| `@/lib/sportQuiz.ts` | `claimTimedSportQuizInvitation` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
+| `@/lib/sportQuiz.ts` | `startTimedSportQuiz` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
+| `@/lib/sportQuiz.ts` | `answerTimedSportQuiz` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
+| `@/lib/sportQuiz.ts` | `endTimedSportQuiz` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
+| `@/lib/sportQuiz.ts` | `skipTimedSportQuiz` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
+| `@/lib/sportQuiz.ts` | `fetchTimedSportQuizReceipt` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
+| `@/lib/sportQuiz.ts` | `fetchTimedSportQuizHistory` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
+| `@/lib/sportQuiz.ts` | `eraseTimedSportQuizHistory` | keep | QUIZ-02 Task3 participant consumer is planned after actual admin-ready; retained SDK boundary for that authorized task, remove this entry when consumed. |
 | `@/services/MediaUploadService.ts` | `stripJpegMetadata` | keep | Tested wrapper over parseJpeg/buildCleanJpeg; its byte-rule tests prove the GPS/EXIF stripping uploadStoryPhoto performs (privacy). |
 | `shared/admin/analytics.ts` | `knownSources` | keep | Used by the analytics catalog test to prove no chart reads an invented measure. |
 | `shared/admin/financeCatalog.ts` | `catalogCoverage` | keep | Used by the finance data catalog coverage test. |

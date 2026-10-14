@@ -1612,6 +1612,8 @@ checkpoints remain historical. Upgrade resets admission to paused/testing-only/e
 | `quiz_save_request` | Internal bounded caller/request receipt insertion and original outcome. |
 | `quiz_spend` | Internal atomic35-day minimal weekly quota. |
 | `quiz_expire` | Internal persisted terminal expiry under lifecycle lock, no snapshot writes. |
+| `quiz_fun_slot` | Internal deterministic account/UTC-week4sports/1optional fun slots without inferred-interest tracking. |
+| `quiz_fun_available` | Internal reviewed unseen optional-topic availability without fallback or repeat. |
 | `quiz_preferences` | Participant expected-profile/CAS/request preference/notice write; Off separate from End. |
 | `quiz_invitation` | Participant optional once-weekly quiet card claim; no prompt/deadline or draw. |
 | `quiz_history` | Own terminal learning/badge/correction pages; no active prompt or other child's history. |
