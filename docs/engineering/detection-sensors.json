@@ -262,14 +262,15 @@
       "area": "app",
       "owner": "SUPPORT",
       "status": "partial",
-      "detects": "Locally invoked real-actor weekly assignment/skip/request/badge/void replay and typed adapter/admin tests detect quiz state/content failures; quiz unavailable is distinct from a zero count.",
+      "detects": "Locally invoked current timed actor replay plus explicitly historical untimed replay and strict SDK/admin tests detect deadline/family/retry/closure/erasure/identity/content failures; unknown reads differ from zero. These source tests are not hosted monitors.",
       "evidence": [
         "scripts/replay/sport-quiz-replay.mjs",
+        "scripts/replay/timed-trivia-replay.mjs",
         "apps/mobile/src/frontend/lib/__tests__/sportQuiz.test.ts",
         "apps/mobile/src/frontend/components/Admin/SportQuiz/__tests__/SportQuizTool.test.tsx"
       ],
-      "limitation": "No hosted retention/abuse/content-review-backlog delivery or passive new Growth tracking; fact approval and device/accessibility gates pending.",
-      "next": "POLLS/Content/VOICE with SUPPORT and Privacy verifies sport facts, corrections/skip/explanation/badge lifecycle and actual completion/return/support burden after approved pilot."
+      "limitation": "No hosted lifecycle/retention/rate/content-review-backlog delivery or passive new Growth tracking; real native/web interruption and accessibility review, counsel notices and active cohort remain pending.",
+      "next": "POLLS/Content/VOICE with SUPPORT and Privacy verifies timed facts, original deadline/recovery/End/Off/erasure/correction and aggregate optional completion/return/support burden before widening an approved cohort."
     }
   ]
 }

@@ -8,7 +8,7 @@
 | Stage | Status |
 | --- | --- |
 | Enrollment | Planned at 2026-10-14T16:15:21Z before new source; isolated codex/fan-zone. |
-| Timed backend / admin | Pending implementation and independent source/Data/Safety/SUPPORT review. |
+| Timed backend / admin | Source in progress; strict SDK/admin3suites50tests and mobile types pass. Timed actor proof/source acceptance pending final commit/review. Independent preflight spec/Data/Safety/SUPPORT PASS with3clarifications addressed; this is not admin-ready. |
 | Timed participant | Starts only after new actual QUIZ-02 admin-ready exit 0. |
 | Final / Documentation / VP | Pending actual source, actor/full tests and coordination receipts. |
 

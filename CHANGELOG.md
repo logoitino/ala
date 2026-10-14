@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-14 — Approved timed trivia admin development
+
+The owner approved optional sports-first30/90-second learning. QUIZ-02 was enrolled before
+source. The new admin desk supports complete paged facts/family review, effective expiry,
+pause, correction and bounded retention; strict SDK/admin checks pass50tests and mobile
+types. Timed actor source is being finalized and independently reviewed. Player changes
+wait for a new verified admin checkpoint. Both pilots stay paused/empty; no hosted rollout.
+
 ## 2026-10-14 — Fan local source acceptance
 
 Independent133-path source/coherence/Data/Safety/SUPPORT review passes, with actual
