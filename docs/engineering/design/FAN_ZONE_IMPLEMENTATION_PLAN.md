@@ -43,11 +43,11 @@ Workers do not spawn reviewers. Commit only owned files; report exact tests/resu
 **Owned files:** new frontend `lib/fanZone.ts`, admin `components/Admin/FanZone/` files/tests, `app/(admin)/admin/fan-zone.tsx`, existing `lib/admin.ts` navigation entries and relevant adminNavigation test changes.
 **Interfaces:** Consumes Task 1 DTO/RPCs; produces bound typed SDK used by Task 4. Supports Task 2 API verification/removal without client service key. Root owns coverage map additions after desk exists.
 
-- [ ] Write failing SDK exact-binding and admin visible unavailable/actions/status tests.
-- [ ] Build admin-only campaign configuration/operation, entry review/consent status, valid ballot/result/case/removal controls and complete bounded Data view with source status and Analytics/Health/Support links.
-- [ ] Use AdminShell, AdminChrome and single-flight action handling. Check errors/empty selection/paused state; counts are not fictitious healthy data.
-- [ ] Test gate/navigation/real SDK calls and visible review feedback; run typecheck and commit owned files.
-- [ ] Root runs independent admin/Data/Safety/SUPPORT review, generates governance docs and preserves admin-ready evidence/gate before fan work.
+- [x] Write failing SDK exact-binding and admin visible unavailable/actions/status tests.
+- [x] Build admin-only campaign configuration/operation, entry review/consent status, valid ballot/result/case/removal controls and complete bounded Data view with source status and Analytics/Health/Support links.
+- [x] Use AdminShell, AdminChrome and single-flight action handling. Check errors/empty selection/paused state; counts are not fictitious healthy data.
+- [x] Test gate/navigation/real SDK calls and visible review feedback; run typecheck and commit owned files.
+- [x] Root runs independent admin/Data/Safety/SUPPORT review, generates governance docs and preserves admin-ready evidence/gate before fan work.
 
 ### Task 4: Fan discovery, private entry, guardian consent and free ballot journey
 
@@ -98,9 +98,9 @@ commit window for owned files only.
 ### Task 7: Sport Pop Quiz fan card/view
 
 **Owned files:** new SportQuiz components/tests, hook/tests, route. Root serializes Home discovery/card integration.
-- [ ] After QUIZ-01 admin-ready, build dismissible Home learning invitation, sport choice, weekly question/answer/explanation, private badge collection and skip.
-- [ ] Test visible unavailable/skip/incorrect/correct/completed/retry and no money/vote influence; no push or interrupting modal.
-- [ ] Independent review and final gates/docs integrated with Task 5 after both features.
+- [x] After QUIZ-01 admin-ready, build dismissible Home learning invitation, sport choice, weekly question/answer/explanation, private badge collection and skip.
+- [x] Test visible unavailable/skip/incorrect/correct/completed/retry and no money/vote influence; no push or interrupting modal.
+- [x] Independent review and final gates/docs integrated with Task 5 after both features.
 
 
 ### Task 8: Shared discovery and control-map integration
@@ -113,3 +113,13 @@ commit window for owned files only.
 - [ ] Add authenticated profile menu links for quiz/private badges and Fan Zone, direct root paths. Existing account/role/payments/roster actions preserved.
 - [ ] Map every new visible control to the actual admin desk; no fabricated runtime flag or passive telemetry. SQL campaign/settings are the authoritative stop controls.
 - [ ] Meaningful consumer tests for role discovery, eligibility/private history/guardian queue, local dismissal versus failed/durable Skip, focus/week refresh and source absence. Run typecheck/relevant tests and self-review; commit only owned paths in root's serialized window, independent review before final gates.
+
+## Recorded work order and current checkpoint
+
+Quiz admin-ready was recorded at 2026-10-14T06:09:57Z before Task7 source. Fan admin-ready
+was recorded at 2026-10-14T13:42:36Z before Task4 source. These are actual selected CLI gates
+and retained independent operational reviews, not inferred timestamps. Task7 and Task8 Quiz
+consumer reviews pass; Task4 video producer review passes. Task4 caller recovery review/fix
+and Task8 Fan extension remain open. Task5 final combined checks, app-ready and actual
+Documentation/VP receipts are required before local completion. Public feature ledgers and
+engineering/evidence preserve the latest state; private SDD reports preserve detailed hashes.

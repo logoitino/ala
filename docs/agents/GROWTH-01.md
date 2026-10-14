@@ -593,8 +593,10 @@ Actual source work is in the isolated codex/fan-zone checkout. Current status an
 are tracked in [FUN-01](FUN-01.md) and [QUIZ-01](QUIZ-01.md); historical refinement receipts
 above describe the earlier recommendation-only pass. Fan backend/media and corrected quiz admin source have scoped independent PASS reviews.
 QUIZ-01 local Data/Safety/SUPPORT acceptance and actual admin-ready gate passed
-2026-10-14T06:09:57Z before quiz participant source began. Fan admin source is building;
-Fan participant source still awaits its admin-ready gate. Final UI/full checks remain pending.
+2026-10-14T06:09:57Z before quiz participant source began. Fan admin correction has independent
+Data/Safety/SUPPORT acceptance and actual admin-ready at 2026-10-14T13:42:36Z before fan source.
+Quiz participant/shared discovery reviews pass. Fan caller recovery correction, shared discovery,
+final full checks and actual Documentation/VP handoff remain pending.
 
 The playbook §13 adds an untimed learning path for fans, filmers, athletes, families, friends
 and guardians: one optional question, explanation, private completion badge and Skip.

@@ -14,7 +14,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Database functions | 308 (58 used by hand, 29 trigger functions) |
 | Tables reached by at least one screen or server route | 81 of 82 |
 | Code files that read or write the database | 81 |
-| Exported symbols nothing imports | 22 (0 proposed for archive, 22 kept on purpose) |
+| Exported symbols nothing imports | 20 (0 proposed for archive, 20 kept on purpose) |
 | Rule failures | 0 |
 
 ## Owners
@@ -79,7 +79,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/runtime.ts`; database functions: `patch_app_runtime_draft`, `publish_app_runtime`
 - Read by: `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `@/lib/adminReports.ts`, `@/lib/runtime.ts`; database functions: `friend_requests_enabled`, `guardian_links_enabled`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +55 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
 
 ### `athlete_birthdates`
 
@@ -189,7 +189,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `fun_audit`
 - Read by: —; database functions: `fun_admin_snapshot`, `fun_complete_removal`, `fun_entry_json`, `fun_media_access`, `fun_page_time`
 - Triggers: `fan_zone_audit_time → fun_page_time`, `fan_zone_audit_immutable → fun_immutable_record`
-- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`
+- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone`
 
 ### `fan_zone_ballots`
 
@@ -197,7 +197,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `fun_admin_ballot`, `fun_vote`
 - Read by: —; database functions: `fun_admin_campaign`, `fun_admin_snapshot`, `fun_signature`, `fun_snapshot`
-- Screens: `/admin/fan-zone`
+- Screens: `/admin/fan-zone`, `/fan-zone`
 
 ### `fan_zone_campaigns`
 
@@ -205,7 +205,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `fun_admin_ballot`, `fun_admin_campaign`, `fun_admin_entry`, `fun_complete_removal`, `fun_entry`, `fun_permission`
 - Read by: —; database functions: `fan_zone_private.upload_allowed`, `fun_admin_case`, `fun_admin_snapshot`, `fun_case`, `fun_media_access`, `fun_pilot` +5 more
-- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`
+- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone`
 
 ### `fan_zone_cases`
 
@@ -214,7 +214,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `fun_admin_case`, `fun_case`, `fun_complete_removal`
 - Read by: —; database functions: `fun_admin_snapshot`, `fun_case_status`, `fun_media_access`, `fun_page_time`, `fun_storage_guard`
 - Triggers: `fan_zone_case_time → fun_page_time`
-- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`
+- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone`
 
 ### `fan_zone_consents`
 
@@ -223,7 +223,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `fun_permission`
 - Read by: —; database functions: `fun_guardian_grant_valid`, `fun_permission_valid`
 - Triggers: `fan_zone_consent_immutable → fun_immutable_record`
-- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`
+- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone`
 
 ### `fan_zone_entries`
 
@@ -231,7 +231,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `fun_admin_entry`, `fun_complete_removal`, `fun_entry`, `fun_permission`, `fun_verify_media`
 - Read by: —; database functions: `fan_zone_private.upload_allowed`, `fun_admin_campaign`, `fun_admin_case`, `fun_admin_snapshot`, `fun_case`, `fun_media_access` +4 more
-- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`
+- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone`
 
 ### `fan_zone_reflections`
 
@@ -240,7 +240,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `fun_reflection`
 - Read by: —; database functions: `fun_snapshot`
 - Removed by: `fun_reflection`
-- Screens: `/admin/fan-zone`
+- Screens: `/admin/fan-zone`, `/fan-zone`
 
 ### `fan_zone_requests`
 
@@ -249,7 +249,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `fun_vote`
 - Read by: —; database functions: —
 - Removed by: `fun_prune_receipts`
-- Screens: `/admin/fan-zone`
+- Screens: `/admin/fan-zone`, `/fan-zone`
 - Exception: noReader — fun_vote actually selects caller/request retry receipts while also writing them; the map classifies this mixed function as a writer. Raw retry signatures are intentionally not exported to admin/fan reports.
 
 ### `filmer_props`
@@ -308,7 +308,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `cancel_my_approval_request`, `enforce_minor_consent`, `guardian_decide_approval`, `set_my_privacy`
 - Read by: —; database functions: `admin_minor_report`, `guardian_decide_approval`, `guardian_list_minors`, `minor_status_json`
 - Removed by: `admin_purge_minor_records`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +45 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +46 more
 
 ### `guardian_consents`
 
@@ -317,7 +317,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `close_guardian_link`, `record_guardian_consent`, `revoke_guardian_consent`
 - Read by: —; database functions: `admin_minor_overview`, `guardian_list_minors`, `minor_has_consent`, `minor_status_json`
 - Triggers: `guardian_consents_append_only → guard_consent_records`, `guardian_consents_no_truncate → guard_consent_truncate`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +45 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +46 more
 
 ### `guardian_invite_attempts`
 
@@ -344,7 +344,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `accept_guardian_invite`, `close_guardian_link`, `respond_guardian_link`, `sign_guardian_consent`
 - Read by: —; database functions: `admin_end_guardian_link`, `admin_minor_overview`, `admin_minor_report`, `close_guardian_link`, `close_under_13_account`, `end_guardian_link` +15 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +48 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +49 more
 
 ### `ledger_accounts`
 
@@ -431,7 +431,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/lib/adminCatalog.ts`, `@/lib/boosterPortal.ts`, `@/lib/hype.ts`, `@/lib/payments.ts`, `@/lib/vault.ts`; database functions: `add_user_aura`, `admin_approve_player_consent`, `admin_set_player_guardian`, `increment_backer_count`, `increment_player_hype`, `parent_set_player_consent` +1 more
 - Read by: `apps/mobile/app/operator/[gameId].tsx`, `apps/mobile/app/operator/scorer.tsx`, `@/hooks/useLocalSearch.ts`, `@/hooks/useRoster.ts`, `@/lib/admin.ts`, `@/lib/athleteStats.ts` +4 more; database functions: `admin_add_athlete_game_log`, `admin_payee_overview`, `admin_record_payee_check`, `admin_upsert_athlete_career_stats`, `athlete_payout_status`, `can_confirm_player_tag` +27 more
 - Triggers: `players_payee_supersede → payee_changes_supersede`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +55 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
 
 ### `profiles`
 
@@ -440,7 +440,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `apps/mobile/src/backend/api/createStripeAccount.ts`, `@/context/AuthContext.tsx`, `@/lib/adminCatalog.ts`, `@/lib/auth.ts`, `@/lib/legal.ts`, `@/lib/teams.ts` +2 more; database functions: `add_user_aura`, `add_user_role`, `admin_decide_payout_override`, `admin_decide_verification`, `admin_revoke_verification`, `admin_set_birth_month` +11 more
 - Read by: `portal/lib/authz.ts`, `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `apps/mobile/src/backend/api/createPayout.ts`, `apps/mobile/src/backend/api/createStripeAccount.ts`, `@/context/AuthContext.tsx` +10 more; database functions: `admin_add_school_confirmer`, `admin_list_age_blocked`, `admin_minor_overview`, `admin_minor_report`, `admin_payee_overview`, `admin_privacy_report` +97 more
 - Triggers: `guard_profiles_admin_escalation → guard_profiles_admin_escalation`, `guard_profiles_verification → guard_profiles_verification`, `profiles_privacy_guard → guard_profiles_privacy`, `profiles_new_account_rules → profiles_apply_new_account_rules`, `profiles_age_guard → guard_profiles_age`, `profiles_payout_flags_guard → guard_payout_flags` +1 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +69 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +70 more
 
 ### `rallies`
 
@@ -510,7 +510,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/lib/adminCatalog.ts`, `@/lib/crew.ts`, `@/lib/photoStories.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `block_user`, `clear_reel_hype`, `close_under_13_account`, `confirm_reel_player_tag`, `increment_reel_hype`, `increment_reel_tips` +6 more
 - Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/photoStories.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `athlete_highlight_views`, `can_read_reel_vault`, `clear_reel_hype`, `confirm_reel_player_tag`, `filmer_stats`, `fun_snapshot` +24 more
 - Triggers: `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_filmer_rewards → reels_filmer_rewards`, `reels_reset_photo_count → reels_reset_photo_count`, `reels_apply_tag_defaults → reels_apply_tag_defaults`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +53 more
 
 ### `saved_reels`
 
@@ -535,7 +535,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/adminCatalog.ts`; database functions: `admin_set_school_branding`, `set_malo_freeze`
 - Read by: `@/lib/adminCatalog.ts`, `@/lib/adminControls.ts`, `@/lib/teams.ts`; database functions: `athlete_school_badge`, `can_confirm_player_tag`, `get_active_spotlight_award`, `get_admin_reports`, `get_my_verification`, `get_school_confirmation_queue` +4 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +57 more
 
 ### `shop_orders`
 
@@ -662,7 +662,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `log_supervision_event`
 - Read by: —; database functions: `supervision_json`
 - Removed by: `admin_purge_minor_records`, `log_supervision_event`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +45 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +46 more
 
 ### `support_audit_events`
 
@@ -694,7 +694,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `insert_support_signal`
 - Read by: —; database functions: `get_engineering_support_snapshot`, `record_support_review`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +51 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
 
 ### `telemetry_logs`
 
@@ -703,7 +703,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/services/TelemetryManager.ts`, `supabase/functions/stripe-webhook/index.ts`; database functions: —
 - Read by: `@/lib/admin.ts`; database functions: `get_admin_platform_metrics`, `get_admin_reports`
 - Removed by: `@/lib/admin.ts`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +53 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +54 more
 
 ### `tips`
 
@@ -722,7 +722,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `admin_get_privacy`, `admin_privacy_report`, `is_blocked_between`, `list_my_blocks`, `supervision_json`, `view:profiles_public`
 - Removed by: `unblock_user`
 - Triggers: `user_blocks_end_links → user_blocks_end_guardian_links`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +49 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +50 more
 
 ### `verification_requests`
 
@@ -730,7 +730,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/boosterPortal.ts`; database functions: `admin_decide_verification`, `admin_revoke_verification`, `claim_athlete`, `redeem_team_code`, `school_confirm_athlete`, `start_school_check`
 - Read by: `@/lib/adminCatalog.ts`, `@/lib/boosterPortal.ts`; database functions: `admin_decide_verification`, `athlete_payout_status`, `athlete_profile_for_player`, `athlete_school_badge`, `claim_athlete`, `get_admin_reports` +8 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +53 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +54 more
 
 ### `wishlist_items`
 
@@ -746,7 +746,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: —
 - Read by: `@/lib/privacy.ts`; database functions: `get_public_profiles`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +46 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +47 more
 
 ### `reel_photos_feed` (view)
 
@@ -768,11 +768,11 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 | Bucket | Owner | Purpose | Uploaded by | Read by | Screens |
 | --- | --- | --- | --- | --- | --- |
-| `avatars` | `PROFILE` | Profile pictures and booster/sponsor logos. | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +48 more |
-| `fan_zone` | `UPLOAD` | Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal. | `apps/mobile/src/backend/api/fanZoneMedia.ts` | `apps/mobile/src/backend/services/fanZoneMedia.ts` | `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api` |
-| `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +48 more |
-| `reel_vault` | `VAULT` | Private Vault clips, read only through short-lived signed URLs. | `@/services/MediaUploadService.ts` | `@/lib/reels.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +48 more |
-| `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). | `@/services/MediaUploadService.ts` | `@/lib/photoStories.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +48 more |
+| `avatars` | `PROFILE` | Profile pictures and booster/sponsor logos. | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
+| `fan_zone` | `UPLOAD` | Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal. | `apps/mobile/src/backend/api/fanZoneMedia.ts`, `@/hooks/useFanZone.ts` | `apps/mobile/src/backend/services/fanZoneMedia.ts` | `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone` |
+| `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
+| `reel_vault` | `VAULT` | Private Vault clips, read only through short-lived signed URLs. | `@/services/MediaUploadService.ts` | `@/lib/reels.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
+| `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). | `@/services/MediaUploadService.ts` | `@/lib/photoStories.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
 
 ## Feature switches
 
@@ -1150,8 +1150,6 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | `@/data/highlights.ts` | `HIGHLIGHT_FEED_SEKI` | keep | Feed switch parked while Seki is off the Highlight bar (owner, 2026-10-11). |
 | `@/hooks/useStoryPhotos.ts` | `resetStoryPhotoCache` | keep | Test hook (clears the story cache between tests). |
 | `@/lib/adminCatalog.ts` | `setShopProductActive` | keep | Drip desk action for when Drip turns on (Wave 1). |
-| `@/lib/fanZone.ts` | `fetchFanZone` | keep | Enrolled FUN-01 fan snapshot consumer waits for independent admin-ready gate; remove this temporary entry when Task4 connects the hook. |
-| `@/lib/fanZoneMedia.ts` | `verifyFanZoneUpload` | keep | Admin-first operational boundary and planned fan consumer in enrolled FUN-01/QUIZ-01; root must remove temporary unused entry when app stage wires it. |
 | `@/lib/leaderboards.ts` | `resetReelViewSessionForTests` | keep | Test hook. |
 | `@/lib/payouts.ts` | `requestPayout` | keep | Wave 1 payout request (payouts are blocked by decision). |
 | `@/lib/photoStories.ts` | `resetPhotoStoriesProbe` | keep | Test hook. |

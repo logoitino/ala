@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-14 — Fan participant source and private review control
+
+Fan Zone now has local private submission, exact-scope teen/guardian review, free ballot recovery,
+optional athlete stories/service, concern receipts and tracked removal. Participant checks pass
+29 tests; the separate uncached authorized video review control passes 13 and independent producer
+review. Full caller review requires stale-permission refresh/reset correction before shared Home
+and account discovery. The weekly quiz is already connected and independently reviewed.
+Data map validates all new consumed exports; final full gates and Documentation/VP remain pending.
+
 ## 2026-10-14 — Fan admin gate passes before participant source
 
 Exact displayed scope now binds normal review; explicit emergency suspension is separate. Composite per-stream cursors preserve recovery ties. The 154 actor, 45 SDK/admin and 105 root canonical checks pass; actual independent technical/operational acceptance and selected admin-ready gate precede Fan participant source. Quiz shared discovery independently passes. Local source only; full gates pending.

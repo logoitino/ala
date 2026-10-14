@@ -245,11 +245,14 @@
       "area": "app",
       "owner": "SUPPORT",
       "status": "partial",
-      "detects": "Locally invoked real-actor SQL/RLS replay and API/client parser tests detect private-scope/revision/deadline/ballot/removal failures; UI displays fixed-code unavailable/permission notices. No raw tokens/media/aliases in new error responses.",
+      "detects": "Locally invoked real-actor SQL/RLS replay, API/client tests and participant hook/screen/video tests detect private scope/revision/deadline/ballot/removal and account recovery failures. UI uses fixed safe unavailable/permission notices. These are invoked source checks, not hosted monitors; no raw tokens/media/aliases enter new error responses.",
       "evidence": [
         "scripts/replay/fan-zone-replay.mjs",
         "apps/mobile/src/backend/api/__tests__/fanZoneMedia.test.ts",
-        "apps/mobile/src/frontend/lib/__tests__/fanZoneMedia.test.ts"
+        "apps/mobile/src/frontend/lib/__tests__/fanZoneMedia.test.ts",
+        "apps/mobile/src/frontend/hooks/__tests__/useFanZone.test.tsx",
+        "apps/mobile/src/frontend/components/FanZone/__tests__/FanZoneScreen.test.tsx",
+        "apps/mobile/src/frontend/components/FanZone/__tests__/FanZoneVideo.test.tsx"
       ],
       "limitation": "No hosted replay/API/device/storage/rate/backlog/removal delivery sensors, passive per-control telemetry or alert routing verified. API full bounded-object range delivery cost remains unknown.",
       "next": "SUPPORT with UPLOAD/POLLS/RLS_SECURITY/Privacy verifies hosted unauthorized reads/removal/actor logs and accepted moderation/abuse/cost thresholds before widening test audience."

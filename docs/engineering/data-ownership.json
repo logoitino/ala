@@ -745,20 +745,6 @@
       "decision": "keep",
       "reason": "The exact signed text; guardianConsent.test.ts hashes it and pins it to the migration's guardian_consent_form_sha256 (MINOR-01).",
       "status": "kept"
-    },
-    {
-      "file": "apps/mobile/src/frontend/lib/fanZoneMedia.ts",
-      "name": "verifyFanZoneUpload",
-      "decision": "keep",
-      "reason": "Admin-first operational boundary and planned fan consumer in enrolled FUN-01/QUIZ-01; root must remove temporary unused entry when app stage wires it.",
-      "status": "kept"
-    },
-    {
-      "file": "apps/mobile/src/frontend/lib/fanZone.ts",
-      "name": "fetchFanZone",
-      "decision": "keep",
-      "reason": "Enrolled FUN-01 fan snapshot consumer waits for independent admin-ready gate; remove this temporary entry when Task4 connects the hook.",
-      "status": "kept"
     }
   ],
   "archived": [

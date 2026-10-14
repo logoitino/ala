@@ -1081,6 +1081,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/gift/[handle]",
         "/local",
@@ -1550,7 +1551,8 @@
         "/admin/fan-zone",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
-        "/api/fan-zone-upload+api"
+        "/api/fan-zone-upload+api",
+        "/fan-zone"
       ]
     },
     {
@@ -1573,7 +1575,8 @@
       "removers": [],
       "triggers": [],
       "screens": [
-        "/admin/fan-zone"
+        "/admin/fan-zone",
+        "/fan-zone"
       ]
     },
     {
@@ -1610,7 +1613,8 @@
         "/admin/fan-zone",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
-        "/api/fan-zone-upload+api"
+        "/api/fan-zone-upload+api",
+        "/fan-zone"
       ]
     },
     {
@@ -1640,7 +1644,8 @@
         "/admin/fan-zone",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
-        "/api/fan-zone-upload+api"
+        "/api/fan-zone-upload+api",
+        "/fan-zone"
       ]
     },
     {
@@ -1665,7 +1670,8 @@
         "/admin/fan-zone",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
-        "/api/fan-zone-upload+api"
+        "/api/fan-zone-upload+api",
+        "/fan-zone"
       ]
     },
     {
@@ -1700,7 +1706,8 @@
         "/admin/fan-zone",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
-        "/api/fan-zone-upload+api"
+        "/api/fan-zone-upload+api",
+        "/fan-zone"
       ]
     },
     {
@@ -1721,7 +1728,8 @@
       ],
       "triggers": [],
       "screens": [
-        "/admin/fan-zone"
+        "/admin/fan-zone",
+        "/fan-zone"
       ]
     },
     {
@@ -1740,7 +1748,8 @@
       ],
       "triggers": [],
       "screens": [
-        "/admin/fan-zone"
+        "/admin/fan-zone",
+        "/fan-zone"
       ]
     },
     {
@@ -2013,6 +2022,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -2094,6 +2104,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -2240,6 +2251,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -2561,6 +2573,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -2803,6 +2816,7 @@
         "/auth/callback",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/gift/[handle]",
         "/local",
@@ -3203,6 +3217,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -3378,6 +3393,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -4017,6 +4033,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -4150,6 +4167,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/gift/[handle]",
         "/local",
@@ -4233,6 +4251,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/gift/[handle]",
         "/local",
@@ -4405,6 +4424,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/gift/[handle]",
         "/local",
@@ -4502,6 +4522,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -4608,6 +4629,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/gift/[handle]",
         "/local",
@@ -9215,6 +9237,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -9233,7 +9256,8 @@
       "owner": "UPLOAD",
       "purpose": "Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal.",
       "writers": [
-        "apps/mobile/src/backend/api/fanZoneMedia.ts"
+        "apps/mobile/src/backend/api/fanZoneMedia.ts",
+        "apps/mobile/src/frontend/hooks/useFanZone.ts"
       ],
       "readers": [
         "apps/mobile/src/backend/services/fanZoneMedia.ts"
@@ -9241,7 +9265,8 @@
       "screens": [
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
-        "/api/fan-zone-upload+api"
+        "/api/fan-zone-upload+api",
+        "/fan-zone"
       ]
     },
     {
@@ -9298,6 +9323,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -9366,6 +9392,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
@@ -9434,6 +9461,7 @@
         "/athlete",
         "/booster",
         "/drip",
+        "/fan-zone",
         "/game/[id]",
         "/local",
         "/local/game/[id]",
