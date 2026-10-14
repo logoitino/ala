@@ -320,15 +320,31 @@
     },
     "sport_quiz_attempts": {
       "owner": "POLLS",
-      "purpose": "One own-scoped random approved question assignment/skip/completion per account UTC week; exact request retry."
+      "purpose": "Own private timed30/90-second immutable question/result lifecycle per account UTC week; legacy untimed history remains historical. Active capability hash never exported."
     },
     "sport_quiz_badges": {
       "owner": "AURA",
-      "purpose": "Private noncash Sport Learner weekly completion acknowledgments; no Aura wallet, voting or payment value; erroneous content corrections."
+      "purpose": "Private noncash Trivia Explorer weekly completion, equal right/wrong; historical Sport Learner preserved. No Aura wallet, vote/payment value; erroneous content corrections."
     },
     "sport_quiz_audit": {
       "owner": "RLS_SECURITY",
       "purpose": "Append-only authoritative quiz settings/content/correction history; participant answers/identities omitted from admin count export."
+    },
+    "sport_quiz_preferences": {
+      "owner": "PROFILE",
+      "purpose": "Optional default-off weekly invitations, sports/mix choice, versioned notice acceptance, once-weekly invitation claim and CAS history revision. No inferred interests or disability reason."
+    },
+    "sport_quiz_exposures": {
+      "owner": "POLLS",
+      "purpose": "Unique own account/question-family issuance history including ended/expired/void rounds; avoids repeats while retained. Removed by explicit learning-history erasure."
+    },
+    "sport_quiz_week_guards": {
+      "owner": "POLLS",
+      "purpose": "Minimal profile/week/spent/prune quota record for35days, disclosed after learning-history erasure; no question/answer/receipt/token. Account deletion cascades; retention never removes unexpired guard."
+    },
+    "sport_quiz_requests": {
+      "owner": "POLLS",
+      "purpose": "Private bounded caller/request/normalized-input exact mutation recovery and cancelled Start fence; no plaintext secret/prompt. Erasable learning receipts with expected-week protection."
     }
   },
   "buckets": {
@@ -548,19 +564,19 @@
     },
     "quiz_snapshot": {
       "owner": "POLLS",
-      "use": "Own week/prompt/question/status/explanation/private badges and corrections; answer withheld until own completion."
+      "use": "Read-only sanitized own v2 availability/preferences/week/attempt summary/pools/history revision at one server instant; never active prompt."
     },
     "quiz_start": {
       "owner": "POLLS",
-      "use": "Atomic random approved sport question once per canonical account/UTCweek; refresh/sport changes reuse assignment."
+      "use": "Atomic unseen reviewed family and30/90 deadline under account/settings locks; exact request/profile/week/notice/token-bound original-view recovery only before expiry."
     },
     "quiz_answer": {
       "owner": "POLLS",
-      "use": "Owned current unvoided question completion with exact option/request retry and one private noncash badge; no proficiency/earnings claim."
+      "use": "Canonical expected-profile/token-bound predeadline answer commit with exact option/request recovery; equal private noncash badge, no proficiency/earnings claim."
     },
     "quiz_skip": {
       "owner": "POLLS",
-      "use": "Own current UTC-week dismissal without reward/penalty or capability loss."
+      "use": "Explicit owned expected-week quota closure without prompt or reward; exact request retry. Invitation dismissal alone does not call it."
     },
     "quiz_admin_settings": {
       "owner": "ADMIN",
@@ -572,7 +588,35 @@
     },
     "quiz_admin_snapshot": {
       "owner": "ADMIN",
-      "use": "Complete <=100 question-version bank, defined current-week counts and bigint-paged audit; no participant answer list."
+      "use": "Complete100-slot bank through50-row opaque question paging, independent50-row bigint audit, full topic/lifecycle totals and effective expiry; no individual answer/token list."
+    },
+    "quiz_preferences": {
+      "owner": "PROFILE",
+      "use": "Canonical expected-profile/CAS/request-bound optional invitation/topic/notice settings. Off affects invitation scheduling, not manual play or active round."
+    },
+    "quiz_invitation": {
+      "owner": "POLLS",
+      "use": "Owned opt-in once-per-UTC-week quiet invitation claim and exact receipt; reveals no question or deadline."
+    },
+    "quiz_end": {
+      "owner": "POLLS",
+      "use": "Owned secret-free terminal closure by exactly one attempt or Start UUID; cancellation-beforeStart fence, fixed reason and exact expected-week/profile/request."
+    },
+    "quiz_receipt": {
+      "owner": "POLLS",
+      "use": "Own minimal mutation recovery or committed terminal result; never active prompt/capability."
+    },
+    "quiz_history": {
+      "owner": "PROFILE",
+      "use": "Own paged immutable terminal learning history/private badges/corrections; no active prompt or institutional answer export."
+    },
+    "quiz_erase_history": {
+      "owner": "PROFILE",
+      "use": "Owned history CAS erasure terminalizes current/pending round, removes learning/exposures/badges/receipts, increments revision and preserves disclosed35-day minimal quota."
+    },
+    "quiz_admin_retention": {
+      "owner": "ADMIN",
+      "use": "Reasoned bounded expired receipt/quota pruning with actual removal totals; no unexpired quota deletion or hidden learning erasure."
     },
     "fun_storage_guard": {
       "owner": "RLS_SECURITY",

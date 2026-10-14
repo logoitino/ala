@@ -606,13 +606,14 @@ ability, enrollment friction and support burden at the same decision checkpoint.
 October20 Growth review retains expansion proposals, real measures and an owner decision.
 No new scheduler, outreach, payment, growth tracking or hosted rollout occurs in this local build.
 
-## Timed trivia joint proposal
+## Timed trivia approved local implementation
 
-Owner selected 30 seconds and a longer accessible option. Actual Growth architecture review
-recommends a reviewed server bank, optional offline drafts, proposed 90 seconds, default-off
+Owner approved 30/90 seconds and continuing local work. Actual Growth architecture review
+supports a reviewed server bank, optional offline drafts, default-off
 manual/weekly invitations, sports-first optional fun topics, family exposure history and server
 expiry. The root read and SHA256-verified the private proposal receipt.
-[Public decision draft](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) records choices and
-current source gaps. New timed controls are unimplemented and require design/admin-first
-review. The October 20 packet includes opt-in friction, interruption fairness, fresh-content
+[Approved design](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) records choices and
+boundaries. [QUIZ-02](QUIZ-02.md) is enrolled before source, with verified new admin handling
+before participant work. Playbook §15 adds per-account learning/story/activity return ideas.
+The October 20 packet includes opt-in friction, interruption fairness, fresh-content
 capacity, review burden and accepted aggregate measures; no target or uplift is invented.

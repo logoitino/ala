@@ -22,13 +22,10 @@ skip/unavailable checks pass. Stop wider enablement if content review or correct
 Release remains paused/testing-only: sport facts/terms/retention review, hosted SQL/access/security,
 device/accessibility checks, staffing and owner release pending. No hosted changes authorized.
 
-## Latest owner steering — design pending
+## Latest owner steering — superseded by QUIZ-02
 
-The owner now requests sports-first timed trivia with broader optional topics, leaving closes
-the round, no repeated questions and participation choice; 30 seconds plus a longer option is
-confirmed. [Timed trivia proposal](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) recommends
-90 seconds, explicit opt-in and a reviewed server bank. Current source remains untimed; it has
-no opt-in preference, expiry, abandonment or account family-exposure ledger. Prior admin/source
-reviews cover that earlier contract only. Keep app readiness unset for the revised experience;
-owner design review, updated admin handling and a new actual admin-ready checkpoint precede
-timed participant work. Hosted enablement remains unapproved.
+The owner approved sports-first timed trivia with optional fun topics, 30/90 seconds,
+leaving closes the round, no-repeat history and optional weekly invitations. [QUIZ-02](QUIZ-02.md)
+owns the new capability and checkpoint. This record preserves earlier untimed source/reviews;
+its app readiness remains unset. New timed admin-ready precedes participant implementation.
+Hosted enablement remains unapproved.

@@ -488,13 +488,42 @@ approved seed facts, Month/Year awards, school scoring and new money rewards rem
 
 ## 14. Sports-first timed trivia refinement
 
-Owner chose 30 seconds with a longer accessible option, after a Ready invitation and explicit
-Start. Recommend 90 seconds available to everyone, default-off manual/weekly participation,
+Owner approved 30 seconds or 90 seconds available to everyone, after a Ready invitation and explicit
+Start. Use default-off manual/weekly participation,
 reviewed sports questions with an optional fun-topic mix, account no-repeat history and private
 participation badges including wrong answers. Leaving closes the round locally; missed lifecycle
 events and outside assistance cannot be fully detected. Calls and interruptions get no penalty.
 
 [Timed trivia proposal](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) records invitation
 wording, question-family history, server deadlines, lost-response handling and the joint
-Legal/Data/Dev/Growth decision. Current Quiz source is untimed and does not implement these
-controls. The new design needs owner review and new verified admin handling before app changes.
+Legal/Data/Dev/Growth decision. [QUIZ-02](../agents/QUIZ-02.md) is enrolled before timed source.
+The approved implementation proceeds through new verified admin handling before app changes;
+prior untimed evidence remains historical. Hosted enablement is separate.
+
+## 15. Welcoming fans through learning and small activities
+
+Connect the existing Fan Zone and approved trivia through a simple invitation: learn a rule,
+enjoy the game, celebrate someone, and return when you want. Trivia stays private and optional;
+no badge or donation is required to upload a permitted video or cheer. The ideas below are
+growth experiments for the October 20 packet, not new implemented scoring or notifications.
+
+| Account path | First enjoyable step | Reason to return / decision to evaluate |
+| --- | --- | --- |
+| New or casual fan | Manual trivia, then watch one approved game-day story | A fresh weekly question and free Fan Zone vote; evaluate optional return without repeated prompts. |
+| Family or friend | Read an athlete's approved story; discuss a trivia explanation after the round | “What did we learn?” game-night conversation, optional cheering or existing Donate; no child answer disclosure. |
+| Filmer | Capture one respectful fan moment with rights/subject permission | A weekly creativity theme and reviewed submission feedback; track review capacity and safe repeat contributions. |
+| Athlete | Learn a rule from another sport and share an approved milestone | A story about effort, team support or goals; no need to publish private hardships or compete for donations. |
+| School supporter | Free voting and inclusive game-day theme | Proposed school spirit showcase with newcomer entry; marks/official affiliation permission and ballot integrity precede expansion. |
+| Guardian | Review the exact entry permission and family story | Easy private review/withdrawal; measure unresolved permission requests and handling time alongside participation. |
+| Donor or community member | Enjoy a story and choose optional support through existing Donate | A preset thank-you or voluntary private service reflection; no service/payment obligation or paid vote advantage. |
+
+Suggested themes: **Best welcome**, **Kindest sideline moment**, **Creative team colors**,
+**Learn another sport**, and **Community helper**. Recognition requires its own approved
+rules and permissions; trivia completion does not automatically award a public fan title.
+Voluntary service may be a private preset reflection; public posts and actual monetary earning
+have separate consent/payee rules. Keep families free to enjoy the app without paying or posting.
+
+Content supplies reviewed fresh questions/stories; Dev reports failed starts, interruptions and
+pool exhaustion; Support reports correction/permission backlog; Legal/Privacy reviews notices,
+subjects and child access; Growth compares optional return with those costs. The same decision
+packet chooses adopt/revise/stop and a named owner, with unknown live baselines stated plainly.

@@ -19,7 +19,8 @@
 - 30/90 seconds selected before explicit Start. No reason for choosing longer timing. No popup that starts a timer without Start.
 - All participant mutations include `p_expected_profile_id uuid`; reject a JWT/profile mismatch before writing. Known-age/account restrictions remain.
 - Every issued family counts as seen until history erasure; no automatic topic substitution. Account/week serialization and unique family exposure enforce this.
-- Prompt capability is 32 random bytes encoded as 64 hex characters; hash only in SQL, plaintext memory only. No prompt on snapshot/history/receipt, no queued offline answers.
+- Prompt capability is 32 random bytes encoded as 64 hex characters; hash only in SQL, plaintext memory only. No ACTIVE prompt on ordinary snapshot/history/quiz_receipt; own terminal learning may show question/result/explanation. Active prompt only on authorized original Start. No queued offline answers.
+- Admin settings/question/retention mutations require `p_expected_actor_id uuid` equal to the initiating canonical admin and current authorized JWT. Erasure retains disclosed preferences/notices/monotonic revision and minimal35-day quota; it uses CAS rather than UUID receipts, with Refresh/reconfirm after unknown response.
 - Root owns canonical schema append, registry, generated map and project documentation. Backend owns migration/types/replays. Consumer owner owns SDK/admin, then participant UI only after actual QUIZ-02 admin-ready.
 - Independent Data/Safety/Support, source, Documentation and VP reviews use actual source/evidence; role definitions are not proof of deployed teams or counsel.
 
@@ -49,9 +50,9 @@ quiz_receipt(p_request_id uuid)
 quiz_history(p_before text default null)
 quiz_erase_history(p_expected_history_version bigint,p_expected_profile_id uuid)
 quiz_admin_snapshot(p_question_cursor text default null,p_audit_before bigint default null)
-quiz_admin_settings(p_payload jsonb,p_reason text)
-quiz_admin_question(p_id uuid,p_action text,p_payload jsonb)
-quiz_admin_retention(p_reason text)
+quiz_admin_settings(p_payload jsonb,p_reason text,p_expected_actor_id uuid)
+quiz_admin_question(p_id uuid,p_action text,p_payload jsonb,p_expected_actor_id uuid)
+quiz_admin_retention(p_reason text,p_expected_actor_id uuid)
 ```
 
 - [ ] Write the new runnable actor replay against historical canonical schema; first assertion calls missing timed RPC and fails red. Preserve the old 34-case replay as historical evidence rather than reapplying old functions after the new canonical schema.
@@ -79,7 +80,7 @@ create table public.sport_quiz_week_guards (
 -- Ordinary reads use one statement_timestamp() and never mutate expiry.
 ```
 
-- [ ] Implement exact Start/answer/End/Skip/preference/invitation receipts. End accepts exactly one attempt or Start UUID and no secret. A pre-Start End saves cancellation. Erasure CAS inserts this week's minimal guard before deleting requests, terminalizes active/pending round and increments revision; a stale request cannot remove later history.
+- [ ] Implement exact Start/answer/End/Skip/preference/invitation receipts. End accepts exactly one attempt or Start UUID and no secret. A pre-Start End saves cancellation. Erasure CAS inserts this week's minimal guard before deleting requests, terminalizes active/pending round and increments retained monotonic revision; preferences/notice remain. Erasure deliberately has no UUID receipt: stale CAS cannot remove later history, unknown response requires Refresh and review/reconfirm rather than a new automatic deletion.
 - [ ] Migrate issued old attempts to closed legacy history, preserve completed/void labels, backfill old exposures/recent guards; drop superseded untimed overloads so old clients fail closed.
 - [ ] Run real actor cases: canonical IDs; denied actors/grants; no prompt leakage; exact/changed recovery; concurrent draws; seen edited family; deadline and server clock after locks; End before Start; answer vs End/pause/void; effective expiry; Off separate from End; mix schedule; exhaustion; erasure/stale retries/retention; legacy; 51 tied inventory rows plus independent audit paging. Snapshot table row counts must remain unchanged.
 - [ ] Typecheck shared package/mobile, self-review and commit only owned paths. Publish DTO and migration hash to Root. Do not edit canonical or project docs.
@@ -102,7 +103,7 @@ expect(rpc).toHaveBeenLastCalledWith('quiz_admin_snapshot', {
 ```
 
 - [ ] Run focused SDK/admin Jest files and retain red evidence.
-- [ ] Implement strict adapter and gated single-flight admin desk. Load question pages independently of audit; show loaded/full inventory, full totals, effective expiry, cohort/pause and source-missing states. Draft create requires explicit new/existing family; approve requires bounded sources. Pause remains usable despite malformed local cohort edits. Retention report states removed records and preserved unexpired guards; no raw participant answers or token values.
+- [ ] Implement strict adapter and gated single-flight admin desk. All three writes pass captured canonical admin ID; identity generation discards stale reads/results. Load question pages independently of audit; show loaded/full inventory, full totals, effective expiry, cohort/pause and source-missing states. Draft create requires explicit new/existing family; approve requires bounded sources. Pause remains usable despite malformed local cohort edits. Retention report states removed records and preserved unexpired guards; no raw participant answers or token values.
 - [ ] Run focused tests/typecheck; self-review and commit. Independent source plus Data/Safety/Support review must pass. Root appends canonical and same-turn schema/map/sensor/docs, records actual admin evidence/date and runs `pnpm feature-admin:check --feature QUIZ-02 --require admin-ready`. Participant code waits for its actual exit 0.
 
 ### Task 3: Optional player experience and ephemeral round lifecycle
@@ -133,7 +134,7 @@ const deadlineRemaining = Math.max(0, Date.parse(receipt.expires_at) - Date.pars
 ```
 
 - [ ] Preparation shows explicit notice, 30/90 choice, sports/topic pool and Start. Manual-only works while invitations off. Save Off suppresses invitations locally immediately, confirmed/unconfirmed states honest. Once-weekly claim only settled Home/HQ, no push or timed popup. Skip consumes this week explicitly; Not now does not consume question/quota. Preserve FanDiscovery body and private guardian queue/errors.
-- [ ] Show private terminal history/badges and correction; explicit confirmation “Clear history and end this week” explains 35-day quota retention and future repeats. Expired/interrupted rounds are calm; no public failure/streak penalty. Old active summary offers End without prompt/recovery. Retire obsolete untimed runtime wrappers/types only where superseded, with ownership record.
+- [ ] Show private terminal history/badges and correction; explicit confirmation “Clear history and end this week” explains retained preferences/notices/revision,35-day quota and future repeats. Erasure unknown-response path refreshes/reviews/reconfirms; never retries with a fresh CAS revision automatically. Expired/interrupted rounds are calm; no public failure/streak penalty. Old active summary offers End without prompt/recovery. Retire obsolete untimed runtime wrappers/types only where superseded, with ownership record.
 - [ ] Run focused player/SDK/admin/shared tests and both TypeScript checks; independent task review; commit owned paths. Root records same-turn docs/map and actual evidence.
 
 ### Task 4: Complete local verification, ownership and handoff

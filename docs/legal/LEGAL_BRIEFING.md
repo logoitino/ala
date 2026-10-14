@@ -1,5 +1,23 @@
 # Tapua'i — Legal and liability briefing
 
+## Current local timed trivia review — QUIZ-02
+
+The owner approved optional30/90-second sports-first trivia; [QUIZ-02](../agents/QUIZ-02.md)
+records its new admin-first work. Default-off weekly invitations/manual play, private equal
+participation badges and no valuable stakes limit the proposed exposure. Existing known-age
+restrictions remain; athlete/school/Stripe verification is not required for trivia.
+
+Invitation/topic preferences and notice choices are separate from public recognition,
+marketing, school disclosure or payout consent. Clearing learning history preserves disclosed
+preferences/notice/revision and a minimal35-day weekly guard, while removing issued-family
+history/results/badges/receipts; future repeats can occur. Privacy/counsel must review lawful
+basis, age/region scope, notices and retention before hosted use. Native/web interruptions
+and accessibility require real device review; local source/actor tests are not legal approval.
+
+Admin correction/pause/retention and protected source are verified before the participant
+flow. See the [approved design](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) for exact
+boundaries. Current implementation evidence belongs in QUIZ-02, not earlier QUIZ-01 receipts.
+
 **Status:** Internal draft for counsel, investors, and (in excerpt) public affairs.  
 **Date:** 13 September 2026  
 **This is not legal advice.** It is a map of issues a licensed attorney in the relevant states — and, where money moves, payments counsel — must actually opine on. Nothing here is a promise that Tapua'i is lawful to operate with live money.
