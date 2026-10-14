@@ -919,9 +919,9 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `fun_admin_ballot` | `POLLS` | By hand: Admin proven ballot invalidation with reason and recount-required audit. | `fan_zone_ballots`, `fan_zone_campaigns` | — |
 | `fun_admin_campaign` | `POLLS` | By hand: Admin create/configure/testing-open/pause/close/finalize/recount; winners derived from valid free totals. | `fan_zone_campaigns` | `fan_zone_ballots`, `fan_zone_entries` |
 | `fun_admin_case` | `MODERATION` | By hand: Admin case resolve/escalation with reason; completion only server-confirmed deletion. | `fan_zone_cases` | `fan_zone_campaigns`, `fan_zone_entries` |
-| `fun_admin_entry` | `MODERATION` | By hand: Admin eligibility/rights/safety review and suspension with private rationale; no winner selection. | `fan_zone_campaigns`, `fan_zone_entries` | — |
+| `fun_admin_entry` | `MODERATION` | By hand: Admin normal eligibility/rights/safety decisions compare the exact reviewed scope atomically; explicit current-entry emergency suspension with private rationale; no winner selection. | `fan_zone_campaigns`, `fan_zone_entries` | — |
 | `fun_admin_guard` | `ADMIN` | By hand: Internal admin/known-age guard for corrective Fan Zone operations. | — | — |
-| `fun_admin_snapshot` | `ADMIN` | By hand: Complete selected bounded campaign Data with separately paged cases/audit, defined counts and corrective identity scope. | — | `fan_zone_audit`, `fan_zone_ballots`, `fan_zone_campaigns` +2 more |
+| `fun_admin_snapshot` | `ADMIN` | By hand: Complete selected bounded campaign Data with independently paged cases/audit, exact campaign-bound timestamp/ID JSON cursors and defined counts; corrective identity scope. | — | `fan_zone_audit`, `fan_zone_ballots`, `fan_zone_campaigns` +2 more |
 | `fun_audit` | `RLS_SECURITY` | By hand: Internal append-only trusted actor/time corrective event capture. | `fan_zone_audit` | — |
 | `fun_campaign_json` | `POLLS` | By hand: Internal campaign DTO with approved tester identities restricted to admins. | — | — |
 | `fun_candidate` | `MODERATION` | By hand: Internal accepted/currentverified/media-present/permission-valid candidate eligibility predicate. | — | — |

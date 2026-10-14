@@ -464,7 +464,7 @@
     },
     "fun_admin_entry": {
       "owner": "MODERATION",
-      "use": "Admin eligibility/rights/safety review and suspension with private rationale; no winner selection."
+      "use": "Admin normal eligibility/rights/safety decisions compare the exact reviewed scope atomically; explicit current-entry emergency suspension with private rationale; no winner selection."
     },
     "fun_admin_ballot": {
       "owner": "POLLS",
@@ -504,7 +504,7 @@
     },
     "fun_admin_snapshot": {
       "owner": "ADMIN",
-      "use": "Complete selected bounded campaign Data with separately paged cases/audit, defined counts and corrective identity scope."
+      "use": "Complete selected bounded campaign Data with independently paged cases/audit, exact campaign-bound timestamp/ID JSON cursors and defined counts; corrective identity scope."
     },
     "fan_zone_private.upload_allowed": {
       "owner": "RLS_SECURITY",

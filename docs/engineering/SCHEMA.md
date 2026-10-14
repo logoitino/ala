@@ -1545,7 +1545,7 @@ Default-off, approved account testing only; no hosted SQL applied. [Fan Zone des
 | `fun_entry` | Caller-owned private reserve/edit/verified-submit/withdraw with immutable revision paths and server entry window. |
 | `fun_permission` | Exact expected-scope assent/linked guardian grant/revoke; edit/stale form/link ending invalidates publication. |
 | `fun_vote` | Atomic one free ballot/account/window; version CAS, caller/request/args retry binding, no-self vote and capped mutations. |
-| `fun_admin_entry` | Admin eligibility/rights/safety review and suspension with private rationale; no winner selection. |
+| `fun_admin_entry` | Admin normal decisions compare exact reviewed scope atomically; explicit current-entry emergency suspension with rationale; no winner selection. |
 | `fun_admin_ballot` | Admin proven ballot invalidation with reason and recount-required audit. |
 | `fun_media_access` | Caller-scoped exact revision read/verify/remove authorization before server private storage access. |
 | `fun_verify_media` | Service-only sanitized digest/bytes/duration commit to still-authorized immutable draft; no client media assertion. |
@@ -1555,7 +1555,7 @@ Default-off, approved account testing only; no hosted SQL applied. [Fan Zone des
 | `fun_admin_case` | Admin case resolve/escalation with reason; completion only server-confirmed deletion. |
 | `fun_reflection` | Own private voluntary preset service receipt create/delete, separate from badges/money. |
 | `fun_snapshot` | Own/guardian plus enrolled-pilot campaign/candidate/result/story; eligible is known age, can_participate is own tester capability; private guardian queue independent. |
-| `fun_admin_snapshot` | Complete selected bounded campaign Data with separately paged cases/audit, defined counts and corrective identity scope. |
+| `fun_admin_snapshot` | Complete selected bounded campaign Data with independently paged cases/audit, campaign-bound timestamp/ID JSON cursors and defined counts; corrective identity scope. |
 | `fan_zone_private.upload_allowed` | Private-schema Storage INSERT policy helper; schema usage denied to API roles, only policy-bound execute; owner editable reserved path/window and no existing object. |
 | `fun_page_time` | Insert trigger ensures timestamp-page ordering without same-transaction skipped case/audit rows. |
 | `fun_immutable_record` | Trigger protects exact consent/audit receipts against mutation/truncate; identity nulling handled for deletion. |
@@ -1581,3 +1581,5 @@ Default-off, approved account testing only; no hosted SQL applied. [Fan Zone des
 `fan_zone_entries.guardian_consent_id` is a nullable private FK to the relied-on exact consent receipt. First valid grant stays pinned; older other grants cannot replace it automatically. A fresh explicit replacement does not let the earlier actor’s stale revoke disable the replacement.
 
 | `quiz_normalize_options` | Protected option whitespace canonicalization; legacy invalid options remain visible for audited admin correction, deny assignment/completion. |
+
+Fan admin correction changes unapplied RPC signatures together: `fun_admin_entry(uuid,text,text,jsonb)` requires exact displayed scope for normal decisions; null scope is explicit emergency Suspend only. `fun_admin_snapshot(uuid,text)` accepts version1 campaign-bound JSON cursors with independent case/audit timestamp/ID markers. Old signatures are explicitly dropped and only new signatures granted. Existing timestamp insert guards remain; tied recovery/import rows also page completely.

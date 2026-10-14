@@ -167,3 +167,14 @@ Status and fresh evidence: [ADM-02.md](../agents/ADM-02.md).
 | Future app features | Mandatory enrolled admin-first contract/checkpoints; reuse existing desks/reports. [Workflow](FEATURE_ADMIN_WORKFLOW.md) defines the reviewed presentation-only exemption and gate limitations. |
 
 Source/verification inventory: [ADMIN_DATA_CONSOLIDATION](design/ADMIN_DATA_CONSOLIDATION.md).
+
+## Weekly family activities — local source integration
+
+Sport Quiz uses a root account route with ScreenShell, explicit Back and account Home;
+the root Stack suppresses its duplicate native header. The optional invitation lives inside
+Home measured chrome and existing parent/booster/sponsor/operator HQ scroll content.
+Profile keeps a private quiz history link for signed-in account roles. Local dismissal and
+server Skip have distinct wording; failed actions keep a notice and Refresh.
+Fan Zone discovery is still gated on its independent admin and participant acceptance.
+No new bottom tab, forced modal, push permission or money control accompanies these activities.
+Device sizing, keyboard/screen-reader and full layout redirects remain release verification.

@@ -3611,7 +3611,12 @@
       "removers": [],
       "triggers": [],
       "screens": [
+        "/",
         "/admin/sport-quiz",
+        "/booster",
+        "/operator",
+        "/parent",
+        "/sponsor",
         "/sport-quiz"
       ]
     },
@@ -3638,7 +3643,12 @@
         "quiz_audit_truncate_guard → quiz_guard_audit"
       ],
       "screens": [
+        "/",
         "/admin/sport-quiz",
+        "/booster",
+        "/operator",
+        "/parent",
+        "/sponsor",
         "/sport-quiz"
       ]
     },
@@ -3660,7 +3670,12 @@
       "removers": [],
       "triggers": [],
       "screens": [
+        "/",
         "/admin/sport-quiz",
+        "/booster",
+        "/operator",
+        "/parent",
+        "/sponsor",
         "/sport-quiz"
       ]
     },
@@ -3686,7 +3701,12 @@
         "quiz_question_guard → quiz_guard_question"
       ],
       "screens": [
+        "/",
         "/admin/sport-quiz",
+        "/booster",
+        "/operator",
+        "/parent",
+        "/sponsor",
         "/sport-quiz"
       ]
     },
@@ -3709,7 +3729,12 @@
       "removers": [],
       "triggers": [],
       "screens": [
+        "/",
         "/admin/sport-quiz",
+        "/booster",
+        "/operator",
+        "/parent",
+        "/sponsor",
         "/sport-quiz"
       ]
     },
@@ -6042,7 +6067,7 @@
       "callers": [
         "apps/mobile/src/frontend/lib/fanZone.ts"
       ],
-      "manual": "Admin eligibility/rights/safety review and suspension with private rationale; no winner selection.",
+      "manual": "Admin normal eligibility/rights/safety decisions compare the exact reviewed scope atomically; explicit current-entry emergency suspension with private rationale; no winner selection.",
       "writes": [
         "fan_zone_campaigns",
         "fan_zone_entries"
@@ -6070,7 +6095,7 @@
       "callers": [
         "apps/mobile/src/frontend/lib/fanZone.ts"
       ],
-      "manual": "Complete selected bounded campaign Data with separately paged cases/audit, defined counts and corrective identity scope.",
+      "manual": "Complete selected bounded campaign Data with independently paged cases/audit, exact campaign-bound timestamp/ID JSON cursors and defined counts; corrective identity scope.",
       "writes": [],
       "reads": [
         "fan_zone_audit",
@@ -6383,6 +6408,7 @@
       "name": "fun_scope",
       "owner": "MINOR_SAFETY",
       "callers": [
+        "sql:fun_admin_entry",
         "sql:fun_entry_json",
         "sql:fun_guardian_grant_valid",
         "sql:fun_permission",

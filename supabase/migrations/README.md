@@ -117,7 +117,7 @@ when switching source versions. Canonical schema contains the same support secti
 
 | Migration | Dependency / handling | Applied |
 | --- | --- | --- |
-| `20261014130000_fan_zone.sql` | After `20261014120000_payee_verification.sql`/MINOR-01; private bucket, exact entry consent, versioned free ballots, reporting/removal. Default draft/empty approved tester audience, production refusal. Local actor replay only; no deployment/scheduler. | No. |
+| `20261014130000_fan_zone.sql` | After `20261014120000_payee_verification.sql`/MINOR-01; private bucket, exact entry consent, versioned free ballots, reporting/removal. Default draft/empty approved tester audience, production refusal. Local actor replay only; no deployment/scheduler. Normal admin review uses exact-scope CAS; snapshot uses versioned composite cursor. Old RPC signatures explicitly dropped before new grants. | No. |
 | `20261014140000_sport_pop_quiz.sql` | After FUN-01; private weekly question/badge and corrected-content handling. Default paused/empty tester audience; all seed questions draft awaiting fact review. | No. |
 
 Owner approves actual SQL/release. See [Fan Zone design](../../docs/engineering/design/FAN_ZONE_DESIGN.md) and [Quiz design](../../docs/engineering/design/SPORT_POP_QUIZ_DESIGN.md). Rollback headers require reviewed retention/access handling; do not delete records or restore old SQL automatically.

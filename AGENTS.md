@@ -194,6 +194,7 @@ See [COORD-01](docs/agents/COORD-01.md) for actual assignments and the current c
 | Account fan journey | root `/fan-zone`, frontend `components/FanZone/` and `hooks/useFanZone.ts`; participant source follows its actual admin-ready gate. |
 | Weekly private sport learning | quiz migration, shared `sportQuiz.ts`, frontend `lib/sportQuiz.ts`, Admin/SportQuiz tool and `/admin/sport-quiz`; POLLS with Content/VOICE fact review, AURA owns noncash badge data. |
 | Quiz account journey | root `/sport-quiz`, frontend `components/SportQuiz/` and `hooks/useSportQuiz.ts`; dismissible invitation, weekly server assignment, explanation/private badges, local Not now and honest persisted Skip. |
+| Shared activity discovery | frontend `components/FamilyFun/FamilyFunDiscovery.tsx`, Home measured chrome, four role HQs and profile activity links; per-source errors remain independent, private guardian discovery is distinct from participation. |
 
 Root account routes stay outside the fan-only `(tabs)` role gate so eligible enrolled parent,
 operator, booster, sponsor and other account roles can participate. No new bottom tabs.

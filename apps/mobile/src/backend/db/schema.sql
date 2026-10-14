@@ -18635,13 +18635,17 @@ begin
  return receipt;
 end $$;
 
-create or replace function public.fun_admin_entry(p_entry_id uuid,p_action text,p_reason text) returns jsonb language plpgsql security definer set search_path='' as $$
+-- Remove the unpublished old overload before restoring narrow API grants.
+drop function if exists public.fun_admin_entry(uuid,text,text);
+create or replace function public.fun_admin_entry(p_entry_id uuid,p_action text,p_reason text,p_expected_scope jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
 declare me uuid:=public.fun_admin_guard(); e public.fan_zone_entries; c public.fan_zone_campaigns; target text;
 begin
  select c0.* into c from public.fan_zone_campaigns c0 join public.fan_zone_entries e0 on e0.campaign_id=c0.id where e0.id=p_entry_id for update of c0;
  select * into e from public.fan_zone_entries where id=p_entry_id for update;
  if not found then raise exception 'FUN_ENTRY_UNAVAILABLE'; end if;
  if p_reason is null or char_length(trim(p_reason)) not between 5 and 500 then raise exception 'FUN_REASON_REQUIRED'; end if;
+ -- Normal review applies only to the exact media/copy seen; explicit emergency suspension stops the current entry.
+ if p_expected_scope is distinct from public.fun_scope(e) and not (p_action='suspend' and p_expected_scope is null) then raise exception 'FUN_REVIEW_SCOPE_STALE'; end if;
  target:=case p_action when 'accept' then 'accepted' when 'changes' then 'changes' when 'reject' then 'rejected' when 'suspend' then 'suspended' end;
  if target is null or e.status='withdrawn' or (target='accepted' and (e.status not in ('submitted','suspended') or not e.verified or not e.rights_confirmed or e.removed_at is not null)) then raise exception 'FUN_STATE_INVALID'; end if;
  update public.fan_zone_entries set status=target,reason=p_reason,updated_at=now() where id=e.id returning * into e;
@@ -18805,20 +18809,42 @@ begin
  return jsonb_build_object('ok',true,'campaign',public.fun_campaign_json(c)||jsonb_build_object('results',results,'recount_required',c.recount_required or (c.result_signature is not null and c.result_signature<>public.fun_signature(c.id))),
  'candidates',candidates,'results',results,'entry',own,'ballot',ballot,'guardian_queue',queue,'reflections',reflections,'story',story,'eligible',public.fun_eligible(me),'can_participate',public.fun_pilot(c.id,me));
 end $$;
-create or replace function public.fun_admin_snapshot(p_campaign_id uuid default null,p_before timestamptz default null) returns jsonb language plpgsql stable security definer set search_path='' as $$
-declare me uuid:=public.fun_admin_guard(); c public.fan_zone_campaigns; campaigns jsonb; entries jsonb; cases jsonb; audit jsonb; ballots jsonb; counts jsonb; cursor timestamptz;
+drop function if exists public.fun_admin_snapshot(uuid,timestamptz);
+create or replace function public.fun_admin_snapshot(p_campaign_id uuid default null,p_before text default null) returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare me uuid:=public.fun_admin_guard(); c public.fan_zone_campaigns; campaigns jsonb; entries jsonb; cases jsonb; audit jsonb; ballots jsonb; counts jsonb;
+ cursor jsonb; marker jsonb; case_at timestamptz; case_id uuid; audit_at timestamptz; audit_id uuid; case_next jsonb; audit_next jsonb; combined jsonb;
 begin
  select coalesce(jsonb_agg(to_jsonb(x)-'result_signature' order by x.created_at desc),'[]') into campaigns from (select * from public.fan_zone_campaigns order by created_at desc limit 100) x;
  select * into c from public.fan_zone_campaigns where p_campaign_id is null or id=p_campaign_id order by created_at desc,id desc limit 1;
+ -- Independent composite markers also preserve imported rows with identical timestamps.
+ if p_before is not null then
+  begin
+   if char_length(p_before)>2000 then raise exception 'FUN_CURSOR_INVALID'; end if;
+   cursor:=p_before::jsonb;
+   if jsonb_typeof(cursor)<>'object' or cursor->'v' is distinct from '1'::jsonb or jsonb_typeof(cursor->'campaign') is distinct from 'string'
+    or cursor->>'campaign' is distinct from c.id::text or not (cursor ? 'cases' or cursor ? 'audit')
+    or exists(select 1 from jsonb_object_keys(cursor) k where k not in ('v','campaign','cases','audit')) then raise exception 'FUN_CURSOR_INVALID'; end if;
+   for marker in select value from jsonb_each(cursor) where key in ('cases','audit') loop
+    if jsonb_typeof(marker)<>'object' or jsonb_typeof(marker->'at') is distinct from 'string' or jsonb_typeof(marker->'id') is distinct from 'string'
+     or exists(select 1 from jsonb_object_keys(marker) k where k not in ('at','id'))
+     or (marker->>'at') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,6})?(Z|[+-][0-9]{2}:[0-9]{2})$'
+     or (marker->>'id') !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' then raise exception 'FUN_CURSOR_INVALID'; end if;
+   end loop;
+   case_at:=(cursor->'cases'->>'at')::timestamptz;case_id:=(cursor->'cases'->>'id')::uuid;
+   audit_at:=(cursor->'audit'->>'at')::timestamptz;audit_id:=(cursor->'audit'->>'id')::uuid;
+  exception when others then raise exception 'FUN_CURSOR_INVALID'; end;
+ end if;
  select coalesce(jsonb_agg(public.fun_entry_json(e)||jsonb_build_object('media_revisions',coalesce((select jsonb_agg(jsonb_build_object('revision',(a.detail->>'revision')::int,'path',a.detail->>'path','present',exists(select 1 from storage.objects o where o.bucket_id='fan_zone' and o.name=a.detail->>'path')) order by a.created_at) from public.fan_zone_audit a where a.subject_id=e.id and a.action='entry_revision'),'[]'::jsonb)) order by e.created_at),'[]') into entries from public.fan_zone_entries e where e.campaign_id=c.id;
- select coalesce(jsonb_agg(to_jsonb(x)-'secret_hash' order by x.created_at desc),'[]') into cases from (select k.* from public.fan_zone_cases k join public.fan_zone_entries e on e.id=k.entry_id where e.campaign_id=c.id and (p_before is null or k.created_at<p_before) order by k.created_at desc,k.id desc limit 50) x;
- select coalesce(jsonb_agg(to_jsonb(x) order by x.created_at desc),'[]') into audit from (select * from public.fan_zone_audit where campaign_id=c.id and (p_before is null or created_at<p_before) order by created_at desc,id desc limit 50) x;
+ select coalesce(jsonb_agg(to_jsonb(x)-'secret_hash' order by x.created_at desc,x.id desc),'[]') into cases from (select k.* from public.fan_zone_cases k join public.fan_zone_entries e on e.id=k.entry_id where e.campaign_id=c.id and (case_at is null or (k.created_at,k.id)<(case_at,case_id)) order by k.created_at desc,k.id desc limit 50) x;
+ select coalesce(jsonb_agg(to_jsonb(x) order by x.created_at desc,x.id desc),'[]') into audit from (select * from public.fan_zone_audit where campaign_id=c.id and (audit_at is null or (created_at,id)<(audit_at,audit_id)) order by created_at desc,id desc limit 50) x;
  select coalesce(jsonb_agg(to_jsonb(b)||jsonb_build_object('valid',b.invalidated_at is null and public.fun_pilot(c.id,b.voter_id) and public.fun_candidate(e) and b.voter_id<>e.owner_id and not public.is_blocked_between(b.voter_id,e.owner_id)) order by b.created_at),'[]') into ballots from public.fan_zone_ballots b join public.fan_zone_entries e on e.id=b.entry_id where b.campaign_id=c.id;
  select jsonb_build_object('entries',(select count(*) from public.fan_zone_entries where campaign_id=c.id),'ballots',(select count(*) from public.fan_zone_ballots where campaign_id=c.id),'valid_ballots',(select count(*) from public.fan_zone_ballots b join public.fan_zone_entries e on e.id=b.entry_id where b.campaign_id=c.id and b.invalidated_at is null and public.fun_pilot(c.id,b.voter_id) and public.fun_candidate(e) and b.voter_id<>e.owner_id and not public.is_blocked_between(b.voter_id,e.owner_id)),
  'cases',(select count(*) from public.fan_zone_cases k join public.fan_zone_entries e on e.id=k.entry_id where e.campaign_id=c.id),'open_cases',(select count(*) from public.fan_zone_cases k join public.fan_zone_entries e on e.id=k.entry_id where e.campaign_id=c.id and k.status in ('open','escalated')),'audit',(select count(*) from public.fan_zone_audit where campaign_id=c.id),
  'entry_statuses',coalesce((select jsonb_object_agg(status,n) from (select status,count(*) n from public.fan_zone_entries where campaign_id=c.id group by status) x),'{}'::jsonb)) into counts;
- select min(t) into cursor from (select min((x->>'created_at')::timestamptz) t from jsonb_array_elements(cases) x union all select min((x->>'created_at')::timestamptz) from jsonb_array_elements(audit) x) x;
- return jsonb_build_object('ok',true,'campaigns',campaigns,'campaign',case when c.id is not null then to_jsonb(c)-'result_signature' end,'entries',entries,'ballots',ballots,'cases',cases,'audit',audit,'counts',counts,'next_cursor',case when jsonb_array_length(cases)=50 or jsonb_array_length(audit)=50 then cursor end,'case_next_cursor',case when jsonb_array_length(cases)=50 then (cases->49->>'created_at') end,'audit_next_cursor',case when jsonb_array_length(audit)=50 then (audit->49->>'created_at') end);
+ if jsonb_array_length(cases)=50 then case_next:=jsonb_build_object('v',1,'campaign',c.id,'cases',jsonb_build_object('at',cases->49->>'created_at','id',cases->49->>'id')); end if;
+ if jsonb_array_length(audit)=50 then audit_next:=jsonb_build_object('v',1,'campaign',c.id,'audit',jsonb_build_object('at',audit->49->>'created_at','id',audit->49->>'id')); end if;
+ if case_next is not null or audit_next is not null then combined:=coalesce(case_next,'{}')||coalesce(audit_next,'{}'); end if;
+ return jsonb_build_object('ok',true,'campaigns',campaigns,'campaign',case when c.id is not null then to_jsonb(c)-'result_signature' end,'entries',entries,'ballots',ballots,'cases',cases,'audit',audit,'counts',counts,'next_cursor',combined::text,'case_next_cursor',case_next::text,'audit_next_cursor',audit_next::text);
 end $$;
 
 -- Storage checks use an unexposed namespace: callers can execute the policy, but cannot resolve/call its helper.
@@ -18909,7 +18935,7 @@ do $$ declare f record; begin
  end loop;
 end $$;
 grant execute on function public.fun_snapshot(uuid),public.fun_case(uuid,text,text,uuid),public.fun_case_status(uuid,uuid) to anon,authenticated;
-grant execute on function public.fun_admin_snapshot(uuid,timestamptz),public.fun_admin_campaign(uuid,text,jsonb),public.fun_entry(uuid,uuid,text,jsonb),public.fun_permission(uuid,integer,text,jsonb),public.fun_vote(uuid,uuid,uuid,integer),public.fun_admin_entry(uuid,text,text),public.fun_admin_ballot(uuid,text),public.fun_admin_case(uuid,text,text),public.fun_reflection(uuid,uuid,text,text),public.fun_media_access(uuid,integer,text) to authenticated;
+grant execute on function public.fun_admin_snapshot(uuid,text),public.fun_admin_campaign(uuid,text,jsonb),public.fun_entry(uuid,uuid,text,jsonb),public.fun_permission(uuid,integer,text,jsonb),public.fun_vote(uuid,uuid,uuid,integer),public.fun_admin_entry(uuid,text,text,jsonb),public.fun_admin_ballot(uuid,text),public.fun_admin_case(uuid,text,text),public.fun_reflection(uuid,uuid,text,text),public.fun_media_access(uuid,integer,text) to authenticated;
 grant execute on function public.fun_prune_receipts() to service_role;
 grant execute on function public.fun_verify_media(uuid,integer,text,integer,integer),public.fun_complete_removal(uuid,integer) to service_role;
 

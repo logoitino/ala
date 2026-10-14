@@ -60,7 +60,22 @@ Workers do not spawn reviewers. Commit only owned files; report exact tests/resu
 - [ ] Render current authorized stories/results, optional private service receipts and distinct withdrawal/removal/case status. Guest browsing remains read-only and joining uses existing account flow.
 - [ ] Run focused UI/hook/API tests/typecheck; commit owned files; independent task review before final completion.
 
-### Task 5: Data, documentation, coordination and final verification
+#### Task4 contract clarifications from producer and discovery preparation
+
+Source starts only after root records the actual Fan admin gate. Shared discovery remains Task8-owned.
+The stable hook exposes snapshot/null, loading, error, busy and readonly refresh, with identity/read epochs.
+The root route validates optional canonical campaign ID; permissions section is presentation only.
+Guardians revoke exact permission or request removal; owner withdrawal is a different action.
+Actual video readiness, caption and exact scope review precede consent. Uncertain ballots retain exact
+request/candidate/version and require an authoritative current-ballot read after the receipt.
+Private uploads use reserved paths/compression/byte verification, without public upload fallback.
+Help & Safety contains real concern/status controls and selectable authorized configured contact;
+policy information receives no report. Guest missing contact and a staffed public fallback remain explicit.
+All tracked revisions must be absent before showing completed removal. Optional service stays private
+and has no money, Aura, voting or public badge effect. Preserve concurrent work and request a serialized
+commit window for owned files only.
+
+## Task 5: Data, documentation, coordination and final verification
 
 **Owned files:** root integrates governed data-ownership/DATA_MAP/SCHEMA/migration README, detection sensors and adminCoverage. DOCUMENTATION reviews affected feature/product/legal/growth docs; VP_OPERATIONS reconciles existing roles/queue/plan tasks with actual executors, preserving model pins.
 **Interfaces:** Consumes prior task reports/commits and exact tests; no invented hosted/legal readiness.
