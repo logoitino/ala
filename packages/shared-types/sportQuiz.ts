@@ -12,6 +12,8 @@ export type QuizResult = {
 };
 export type QuizAttempt = {
   id: string; week_start: string; sport: string | null; status: QuizAttemptStatus; question: QuizQuestion | null; result: QuizResult | null;
+  /** Issued legacy content can be unavailable pending audited correction; no invented void status/time. */
+  unavailable_reason?: string | null;
 };
 export type SportLearnerBadge = {
   id: string; attempt_id: string; week_start: string; label: 'Sport Learner'; visibility: 'private'; issued_at: string;

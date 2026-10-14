@@ -14,11 +14,24 @@ const unavailable = () => new Error('Sport Pop Quiz data is unavailable. Refresh
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 const strings = (value: unknown): value is string[] => Array.isArray(value) && value.every(x => typeof x === 'string');
 const countKeys = ['questions_draft','questions_approved','questions_archived','questions_void','week_issued','week_completed','week_skipped','week_void','badges_issued','badges_void'];
-const text = (value: unknown, min = 1, max = Infinity): value is string => typeof value === 'string' && value.trim().length >= min && value.trim().length <= max;
+// Stored non-option SQL text uses ASCII-space btrim and Unicode character counts, including legacy rows.
+const text = (value: unknown, min = 1, max = Infinity): value is string => typeof value === 'string'
+  && Array.from(value.replace(/^ +| +$/g, '')).length >= min && Array.from(value.replace(/^ +| +$/g, '')).length <= max;
 const nullableText = (value: unknown): value is string | null => value === null || text(value);
 const timestamp = (value: unknown): value is string => typeof value === 'string' && Number.isFinite(Date.parse(value));
 const date = (value: unknown): value is string => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && timestamp(value);
 const cursor = (value: unknown): value is string => typeof value === 'string' && /^[1-9]\d*$/.test(value);
+
+/** @purpose Match server option canonicalization; semantic legacy defects stay readable for safe repair. */
+export function sportQuizOptionsIssue(options: string[]): string | null {
+  const normalized = options.map(option => option.trim()); // Same explicit ECMAScript whitespace set as quiz_normalize_options.
+  return options.length !== 4 || normalized.some(option => Array.from(option).length < 1 || Array.from(option).length > 100)
+    || new Set(normalized).size !== 4 ? 'Invalid answer choices. Archive or void this version, or create a corrected draft; do not approve it.' : null;
+}
+/** @purpose Authoring bounds use the same Unicode counts/ASCII text bounds and canonical option rules as SQL. */
+export function sportQuizContentValid(content: { sport: string; prompt: string; options: string[]; explanation: string }): boolean {
+  return text(content.sport,2,80) && text(content.prompt,10,280) && text(content.explanation,10,500) && !sportQuizOptionsIssue(content.options);
+}
 
 function questionReceipt(value: unknown): value is QuizQuestionReceipt & Record<string, unknown> {
   return object(value) && text(value.id) && text(value.question_key)
@@ -34,7 +47,6 @@ function settingsReceipt(value: unknown): value is QuizSettingsReceipt & Record<
 function adminQuestion(value: unknown): value is QuizAdminQuestion {
   return object(value) && questionReceipt(value) && text(value.sport, 2, 80) && text(value.prompt, 10, 280)
     && strings(value.options) && value.options.length === 4 && value.options.every(option => text(option, 1, 100))
-    && new Set(value.options.map(option => option.trim())).size === 4
     && typeof value.correct_option === 'number' && Number.isInteger(value.correct_option) && value.correct_option >= 0 && value.correct_option <= 3
     && text(value.explanation, 10, 500) && text(value.reason, 10, 500) && timestamp(value.created_at) && nullableText(value.created_by)
     && (value.reviewed_at === null || timestamp(value.reviewed_at)) && nullableText(value.reviewed_by);
@@ -55,6 +67,7 @@ function snapshot(value: unknown): QuizSnapshot {
   if (value.attempt !== null) {
     if (!object(value.attempt) || typeof value.attempt.id !== 'string') throw unavailable();
     const a = value.attempt;
+    if (a.unavailable_reason !== undefined && !nullableText(a.unavailable_reason)) throw unavailable();
     if (a.result !== null && (a.status !== 'completed' || !object(a.result) || typeof a.result.explanation !== 'string')) throw unavailable();
     if (a.question !== null && (!object(a.question) || !strings(a.question.options) || a.question.options.length !== 4
       || 'correct_option' in a.question || 'explanation' in a.question)) throw unavailable();

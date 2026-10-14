@@ -11,7 +11,7 @@ jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ dirty:
 jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: false, supabase: {} }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }));
 jest.mock('expo-router', () => ({ Link: ({ children }: { children: React.ReactNode }) => children, usePathname: () => '/admin/sport-quiz', useRouter: () => ({ push: jest.fn() }) }));
-jest.mock('@/lib/sportQuiz', () => ({ fetchSportQuizAdmin: jest.fn(), saveSportQuizSettings: jest.fn(), saveSportQuizQuestion: jest.fn() }));
+jest.mock('@/lib/sportQuiz', () => ({ ...jest.requireActual('@/lib/sportQuiz'),fetchSportQuizAdmin: jest.fn(), saveSportQuizSettings: jest.fn(), saveSportQuizQuestion: jest.fn() }));
 const api = jest.mocked(quiz);
 const bank = {
   generated_at: '2026-10-14T05:00:00Z', week_start: '2026-10-12', week_end: '2026-10-19',
@@ -78,4 +78,17 @@ it('pauses with the authoritative list even after a tester has closed, without r
   expect(api.saveSportQuizSettings).toHaveBeenCalledWith({ enabled:false,pilot_accounts:staleTesters },'Pause after tester safety closure.');
   expect(await screen.findByText('Paused for local testing.')).toBeTruthy();
   expect(screen.getByText(/Paused.*testing only/i)).toBeTruthy();
+});
+it('shows malformed legacy options and keeps Pause/archive/void available while approval is blocked', async () => {
+  api.fetchSportQuizAdmin.mockResolvedValue({ ...bank,questions:[{ ...bank.questions[0],options:['3','3\t','7','2'] }] });
+  await render(<SportQuizTool />); await screen.findByText('Question bank');
+  await fireEvent.press(screen.getByLabelText('Select American football question version 1'));
+  await fireEvent.changeText(screen.getByLabelText('Review or correction reason'),'Void duplicate pilot choices; preserve original bytes.');
+  expect(screen.getByText(/Invalid answer choices/)).toBeTruthy();
+  expect(screen.getByLabelText('Approve question')).toBeDisabled();
+  expect(screen.getByLabelText('Pause quiz')).not.toBeDisabled();
+  expect(screen.getByLabelText('Archive question')).not.toBeDisabled();
+  expect(screen.getByLabelText('Void erroneous question and badges')).not.toBeDisabled();
+  await fireEvent.press(screen.getByLabelText('Void erroneous question and badges'));
+  expect(api.saveSportQuizQuestion).toHaveBeenCalledWith('q1','void',{ reason:'Void duplicate pilot choices; preserve original bytes.' });
 });

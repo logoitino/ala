@@ -111,19 +111,39 @@ begin
 end;
 $$;
 
+-- Options use ECMAScript trim whitespace and Unicode codepoint lengths, matching the desk.
+-- Other stored text retains the table's ASCII-space btrim/char_length contract for legacy rows.
+create or replace function public.quiz_normalize_options(p_options jsonb)
+returns jsonb language plpgsql immutable set search_path = '' as $$
+declare item jsonb; normalized jsonb := '[]'; option_text text;
+begin
+  if jsonb_typeof(p_options) is distinct from 'array' then return null; end if;
+  if jsonb_array_length(p_options) <> 4 then return null; end if;
+  for item in select value from jsonb_array_elements(p_options) loop
+    if jsonb_typeof(item) <> 'string' then return null; end if;
+    option_text := btrim(item #>> '{}',U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF');
+    if char_length(option_text) not between 1 and 100 then return null; end if;
+    normalized := normalized || jsonb_build_array(option_text);
+  end loop;
+  if (select count(distinct value) from jsonb_array_elements(normalized)) <> 4 then return null; end if;
+  return normalized;
+end;
+$$;
+
 create or replace function public.quiz_guard_question()
 returns trigger language plpgsql set search_path = '' as $$
-declare item jsonb;
+declare normalized jsonb;
 begin
   if tg_op = 'UPDATE' and (new.question_key,new.version,new.sport,new.prompt,new.options,new.correct_option,new.explanation,new.created_at)
     is distinct from (old.question_key,old.version,old.sport,old.prompt,old.options,old.correct_option,old.explanation,old.created_at) then
     raise exception 'quiz_immutable: edit creates a new draft version';
   end if;
   if tg_op = 'UPDATE' and old.status = 'void' and new.status <> 'void' then raise exception 'quiz_void_final'; end if;
-  for item in select value from jsonb_array_elements(new.options) loop
-    if jsonb_typeof(item) <> 'string' or char_length(btrim(item #>> '{}')) not between 1 and 100 then raise exception 'quiz_options_invalid'; end if;
-  end loop;
-  if (select count(distinct value) from jsonb_array_elements(new.options)) <> 4 then raise exception 'quiz_options_distinct'; end if;
+  normalized := public.quiz_normalize_options(new.options);
+  -- Legacy malformed bytes remain inspectable and immutable; archive/void must still permit audited repair.
+  if normalized is null and tg_op = 'UPDATE' and new.status in ('archived','void') then return new; end if;
+  if normalized is null then raise exception 'quiz_options_invalid'; end if;
+  if tg_op = 'INSERT' then new.options := normalized; end if;
   return new;
 end;
 $$;
@@ -165,7 +185,10 @@ begin
     select * into a from public.sport_quiz_attempts where profile_id = me and week_start = public.quiz_week();
     if a.id is not null then
       select * into q from public.sport_quiz_questions where id = a.question_id;
+      if a.status = 'issued' and (q.id is null or public.quiz_normalize_options(q.options) is null) and availability = 'ready' then availability := 'unavailable'; end if;
       attempt := jsonb_build_object('id',a.id,'week_start',a.week_start,'sport',q.sport,'status',a.status,
+        'unavailable_reason',case when a.status = 'issued' and (q.id is null or public.quiz_normalize_options(q.options) is null)
+          then 'This question is unavailable while its answer choices are corrected.' else null end,
         'question',case when q.id is not null and a.status <> 'void' and (availability = 'ready' or a.status = 'completed') then
           jsonb_build_object('id',q.id,'question_key',q.question_key,'version',q.version,'sport',q.sport,'prompt',q.prompt,'options',q.options) else null end,
         'result',case when a.status = 'completed' then jsonb_build_object('option',a.answered_option,'correct_option',q.correct_option,
@@ -178,7 +201,7 @@ begin
       into corrections from public.sport_quiz_attempts x where x.profile_id = me and x.status = 'void';
   end if;
   if availability = 'ready' then
-    select coalesce(jsonb_agg(x.sport order by x.sport),'[]') into sports from (select distinct sport from public.sport_quiz_questions where status = 'approved') x;
+    select coalesce(jsonb_agg(x.sport order by x.sport),'[]') into sports from (select distinct sport from public.sport_quiz_questions where status = 'approved' and public.quiz_normalize_options(options) is not null) x;
     -- An empty approved pool cannot offer a new question. Already-issued versions remain stable and answerable.
     if jsonb_array_length(sports) = 0 and a.id is null then availability := 'unavailable'; end if;
   end if;
@@ -196,7 +219,8 @@ begin
   -- Serializes start/skip for this canonical profile across sport changes and request retries.
   perform pg_advisory_xact_lock(hashtextextended('sport-quiz:' || me::text,0));
   if exists(select 1 from public.sport_quiz_attempts where profile_id = me and week_start = public.quiz_week()) then return public.quiz_snapshot(); end if;
-  select id into qid from public.sport_quiz_questions where status = 'approved' and sport = btrim(p_sport) order by random() limit 1 for share;
+  select id into qid from public.sport_quiz_questions where status = 'approved' and sport = btrim(p_sport)
+    and public.quiz_normalize_options(options) is not null order by random() limit 1 for share;
   if qid is null then raise exception 'quiz_no_question'; end if;
   insert into public.sport_quiz_attempts(profile_id,week_start,question_id,status) values(me,public.quiz_week(),qid,'issued') returning id into aid;
   insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id) values(me,'start',qid,aid);
@@ -220,6 +244,7 @@ begin
     raise exception 'quiz_answer_already_committed';
   end if;
   if a.status <> 'issued' then raise exception 'quiz_attempt_not_issued'; end if;
+  if q.id is null or public.quiz_normalize_options(q.options) is null then raise exception 'quiz_question_unavailable: answer choices need correction'; end if;
   if exists(select 1 from public.sport_quiz_attempts where request_id = p_request_id) then raise exception 'quiz_request_reused'; end if;
   update public.sport_quiz_attempts set status = 'completed',answered_option = p_option,request_id = p_request_id,completed_at = now() where id = a.id;
   insert into public.sport_quiz_badges(profile_id,attempt_id,week_start) values(me,a.id,a.week_start);
@@ -349,7 +374,7 @@ begin
     execute format('create policy "Closed accounts" on public.%I as restrictive for all to authenticated using (public.caller_not_age_blocked()) with check (public.caller_not_age_blocked())',tab);
   end loop;
   revoke all on sequence public.sport_quiz_audit_id_seq from public,anon,authenticated,service_role;
-  foreach fn in array array['public.quiz_week()','public.quiz_actor()','public.quiz_admin_actor()','public.quiz_require_testing(uuid)','public.quiz_guard_question()','public.quiz_guard_audit()',
+  foreach fn in array array['public.quiz_week()','public.quiz_actor()','public.quiz_admin_actor()','public.quiz_require_testing(uuid)','public.quiz_normalize_options(jsonb)','public.quiz_guard_question()','public.quiz_guard_audit()',
     'public.quiz_snapshot()','public.quiz_start(text)','public.quiz_answer(uuid,integer,uuid)','public.quiz_skip()',
     'public.quiz_admin_snapshot(bigint)','public.quiz_admin_question(uuid,text,jsonb)','public.quiz_admin_settings(jsonb,text)'] loop
     execute format('revoke all on function %s from public,anon,authenticated,service_role',fn);

@@ -93,3 +93,17 @@ it('refuses malformed mutation receipts instead of allowing the desk to report s
   mockClient.response = { enabled:false,testing_only:false,pilot_accounts:[] };
   await expect(saveSportQuizSettings({ enabled:false,pilot_accounts:[] },'Pause local testing.')).rejects.toThrow(/unavailable/i);
 });
+it.each([' ','\t','\u00a0'])('keeps legacy semantic duplicate rows available for safe admin correction: %j', async suffix => {
+  mockClient.response = { ...validAdmin,questions:[{ ...validQuestion,options:['3',`3${suffix}`,'7','2'] }] };
+  expect((await fetchSportQuizAdmin()).questions[0].options).toEqual(['3',`3${suffix}`,'7','2']);
+});
+it('accepts all SQL-supported Unicode codepoint bounds rather than UTF-16 length', async () => {
+  mockClient.response = { ...validAdmin,questions:[{ ...validQuestion,sport:'🏀'.repeat(41),prompt:'🏀'.repeat(141),explanation:'🏀'.repeat(251),reason:'🏀'.repeat(251),
+    options:['🏀'.repeat(51),'6','7','2'] }] };
+  expect(await fetchSportQuizAdmin()).toEqual(mockClient.response);
+});
+it('accepts SQL-supported minimum text with tabs without stripping source bytes', async () => {
+  mockClient.response = { ...validAdmin,settings:{ ...validAdmin.settings,reason:'123456789\t' },
+    questions:[{ ...validQuestion,sport:'1\t',prompt:'123456789\t',explanation:'123456789\t',reason:'123456789\t' }] };
+  expect(await fetchSportQuizAdmin()).toEqual(mockClient.response);
+});

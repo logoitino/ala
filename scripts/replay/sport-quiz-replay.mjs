@@ -21,7 +21,7 @@ await db.exec(bootstrap);
 await db.exec(fs.readFileSync(schemaPath, 'utf8'));
 if (fs.existsSync(migrationPath)) await db.exec(fs.readFileSync(migrationPath, 'utf8'));
 
-const ids = Object.fromEntries(['admin', 'fan', 'teen', 'other', 'unknown', 'closed'].map((key, i) => [key, `00000000-0000-0000-0000-${String(i + 1).padStart(12, '0')}`]));
+const ids = Object.fromEntries(['admin', 'fan', 'teen', 'other', 'unknown', 'closed', 'legacy'].map((key, i) => [key, `00000000-0000-0000-0000-${String(i + 1).padStart(12, '0')}`]));
 const year = Number((await db.query('select extract(year from current_date)::int as y')).rows[0].y);
 for (const [key, id] of Object.entries(ids)) {
   const meta = key === 'unknown' ? {} : { birth_year: year - (key === 'teen' ? 15 : 30), birth_month: 1 };
@@ -75,12 +75,57 @@ await test('direct table reads/writes and private helpers are denied', async () 
     await assert.rejects(() => actor('fan', `delete from public.sport_quiz_${table}`), /permission denied/);
   }
   await denied('fan', 'public.quiz_actor()');
+  await denied('fan', `public.quiz_normalize_options('["3","6","7","2"]'::jsonb)`);
 });
 await test('enable requires a nonempty bounded canonical tester list', async () => {
   await assert.rejects(() => settings(true, []), /quiz_/);
   await assert.rejects(() => settings(true, [ids.fan]), /quiz_/);
   await assert.rejects(() => settings(true, Array(101).fill(profiles.fan)), /quiz_/);
   await assert.rejects(() => admin('public.quiz_admin_settings($1::jsonb,$2)', [JSON.stringify({ enabled: false, pilot_accounts: [], testing_only: false }), 'Not allowed to launch.']), /quiz_/);
+});
+for (const suffix of [' ','\t','\u00a0']) await test(`raw RPC refuses duplicate options after canonical whitespace ${JSON.stringify(suffix)}`, async () => {
+  await assert.rejects(() => question(null,'create',{ ...questionPayload,options:['3',`3${suffix}`,'7','2'] }),/quiz_options_/);
+});
+await test('raw RPC canonicalizes whitespace without using UTF-16 bounds for valid Unicode content', async () => {
+  const payload = { ...questionPayload,sport:'🏀'.repeat(41),prompt:'🏀'.repeat(141),explanation:'🏀'.repeat(251),reason:'🏀'.repeat(251),
+    options:[` ${'🏀'.repeat(51)}\u00a0`,'\t6\n','7','2'] };
+  const q = await question(null,'create',payload);
+  const stored = (await admin('public.quiz_admin_snapshot()')).questions.find(row => row.id === q.id);
+  assert.deepEqual(stored.options,['🏀'.repeat(51),'6','7','2']);
+  for (const field of ['sport','prompt','explanation','reason']) assert.equal(stored[field],payload[field]);
+});
+await test('raw RPC stored minimum text with tabs retains the SQL ASCII-space bounds', async () => {
+  const payload = { ...questionPayload,sport:'1\t',prompt:'123456789\t',explanation:'123456789\t',reason:'123456789\t' };
+  const q = await question(null,'create',payload);
+  const stored = (await admin('public.quiz_admin_snapshot()')).questions.find(row => row.id === q.id);
+  for (const field of ['sport','prompt','explanation','reason']) assert.equal(stored[field],payload[field]);
+});
+await test('legacy malformed options remain visible for audited repair but cannot issue or complete', async () => {
+  await db.exec('alter table public.sport_quiz_questions disable trigger quiz_question_guard');
+  let legacy;
+  try {
+    legacy = (await db.query(`insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,status,reason)
+      values(gen_random_uuid(),1,'Legacy sport','Legacy question before validation fix','["3","3\\t","7","2"]',0,'Legacy factual explanation.','approved','Legacy pilot question before normalization fix.') returning id`)).rows[0];
+  } finally { await db.exec('alter table public.sport_quiz_questions enable trigger quiz_question_guard'); }
+  await settings(true,[profiles.legacy]);
+  const empty = await snapshot('legacy'); assert.equal(empty.status,'unavailable'); assert.deepEqual(empty.sports,[]);
+  await assert.rejects(() => rpc('legacy',"public.quiz_start('Legacy sport')"),/quiz_no_question/);
+  const issued = (await db.query("insert into public.sport_quiz_attempts(profile_id,week_start,question_id,status) values($1,public.quiz_week(),$2,'issued') returning id",[profiles.legacy,legacy.id])).rows[0];
+  const waiting = await snapshot('legacy'); assert.equal(waiting.availability,'unavailable'); assert.equal(waiting.attempt.status,'issued');
+  assert.equal(waiting.attempt.question,null); assert.match(waiting.attempt.unavailable_reason,/answer choices.*correct/i);
+  await assert.rejects(() => rpc('legacy','public.quiz_answer($1,0,gen_random_uuid())',[issued.id]),/quiz_question_unavailable/);
+  assert.equal((await db.query('select count(*)::int as n from public.sport_quiz_badges where attempt_id=$1',[issued.id])).rows[0].n,0);
+  await db.exec('alter table public.sport_quiz_questions disable trigger quiz_question_guard');
+  try { await db.query("update public.sport_quiz_questions set status='draft' where id=$1",[legacy.id]); }
+  finally { await db.exec('alter table public.sport_quiz_questions enable trigger quiz_question_guard'); }
+  await assert.rejects(() => question(legacy.id,'approve',{ reason:'Cannot approve malformed answer choices.' }),/quiz_options_invalid/);
+  await question(legacy.id,'archive',{ reason:'Archive malformed pilot answer choices pending correction.' });
+  await question(legacy.id,'void',{ reason:'Void malformed legacy answer choices with private correction.' });
+  const repaired = await snapshot('legacy'); assert.equal(repaired.attempt.status,'void'); assert.equal(repaired.corrections.length,1);
+  const bank = await admin('public.quiz_admin_snapshot()'); const row = bank.questions.find(q => q.id === legacy.id);
+  assert.deepEqual(row.options,['3','3\t','7','2']); assert.equal(row.status,'void');
+  assert.ok(bank.audit.some(a => a.question_id === legacy.id && a.action === 'question_void' && a.actor_id === profiles.admin));
+  await settings(false);
 });
 let q1;
 await test('draft content has no available sport until explicit approval', async () => {
@@ -178,7 +223,7 @@ await test('audit is server attributed append-only and cursor paging loses no ro
   assert.equal(new Set([...first.audit, ...second.audit].map(x => x.id)).size, first.audit.length + second.audit.length);
 });
 await test('week boundary prevents old answers and permits one new assignment', async () => {
-  const draft = (await admin('public.quiz_admin_snapshot()')).questions.find(q => q.status === 'draft');
+  const draft = (await admin('public.quiz_admin_snapshot()')).questions.find(q => q.status === 'draft' && q.question_key === q1.question_key);
   await question(draft.id, 'approve', { reason: 'Verified factual question for local boundary rehearsal.' }); await settings(true);
   await db.exec("update public.sport_quiz_attempts set week_start=week_start-7 where profile_id is not null");
   await denied('fan', 'public.quiz_answer($1, 0, $2)', [attempt.id, request]);

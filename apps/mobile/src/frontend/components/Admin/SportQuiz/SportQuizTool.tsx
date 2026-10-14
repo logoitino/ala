@@ -12,7 +12,7 @@ import {
 import { AdminShell } from '@/components/Admin/AdminShell';
 import { useAdminAction } from '@/hooks/useAdminAction';
 import {
-  fetchSportQuizAdmin, saveSportQuizQuestion, saveSportQuizSettings,
+  fetchSportQuizAdmin, saveSportQuizQuestion, saveSportQuizSettings, sportQuizContentValid, sportQuizOptionsIssue,
   type QuizAdminQuestion, type QuizAdminSnapshot, type QuizQuestionAction,
 } from '@/lib/sportQuiz';
 
@@ -48,11 +48,11 @@ function SportQuizDesk() {
   }, []);
   useEffect(() => { live.current = true; void load(); return () => { live.current = false; }; }, [load]);
   const { busy, message, run } = useAdminAction();
-  const hasReason = reason.trim().length >= 10 && reason.trim().length <= 500;
+  const hasReason = Array.from(reason.trim()).length >= 10 && Array.from(reason.trim()).length <= 500;
   const pilotIds = testers.split(/[\s,]+/).filter(Boolean);
   const validTesters = pilotIds.length <= 100 && pilotIds.every(id => uuid.test(id)) && new Set(pilotIds).size === pilotIds.length;
-  const validForm = form.sport.trim().length >= 2 && form.prompt.trim().length >= 10 && form.explanation.trim().length >= 10
-    && form.options.every(o => o.trim().length > 0) && new Set(form.options.map(o => o.trim())).size === 4 && /^[1-4]$/.test(form.correct);
+  const validForm = sportQuizContentValid(form) && /^[1-4]$/.test(form.correct);
+  const selectedIssue = selected ? sportQuizOptionsIssue(selected.options) : null;
   const choose = (q: QuizAdminQuestion) => {
     setSelected(q); setForm({ sport: q.sport, prompt: q.prompt, options: [...q.options], correct: String(q.correct_option + 1), explanation: q.explanation });
   };
@@ -124,9 +124,10 @@ function SportQuizDesk() {
             <AdminField label="Correct option (1 to 4)" value={form.correct} keyboardType="number-pad" onChangeText={correct => setForm(old => ({ ...old, correct }))} />
             <AdminField label="Explanation" value={form.explanation} onChangeText={explanation => setForm(old => ({ ...old, explanation }))} multiline />
             <Text>Draft examples need human fact approval. Void erroneous issued wording; do not rewrite a person's answer or claim learning proficiency.</Text>
+            {selectedIssue ? <Text>{selectedIssue}</Text> : null}
             <AdminBtn label="Create draft" disabled={!!busy || !hasReason || !validForm || data.questions.length >= 100 || selected !== null} onPress={() => writeQuestion('create')} />
             <AdminBtn label="Create new draft version" disabled={!!busy || !hasReason || !validForm || !selected || data.questions.length >= 100} onPress={() => writeQuestion('edit')} />
-            <AdminBtn label={busy === 'approve' ? 'Working…' : 'Approve question'} kind="primary" disabled={!!busy || !hasReason || selected?.status !== 'draft'} onPress={() => writeQuestion('approve')} />
+            <AdminBtn label={busy === 'approve' ? 'Working…' : 'Approve question'} kind="primary" disabled={!!busy || !hasReason || selected?.status !== 'draft' || !!selectedIssue} onPress={() => writeQuestion('approve')} />
             <AdminBtn label="Archive question" disabled={!!busy || !hasReason || !selected || !['draft','approved'].includes(selected.status)} onPress={() => writeQuestion('archive')} />
             <AdminBtn label="Void erroneous question and badges" kind="danger" disabled={!!busy || !hasReason || !selected || selected.status === 'void'} onPress={() => writeQuestion('void')} />
           </AdminPanel>
@@ -134,6 +135,7 @@ function SportQuizDesk() {
         </> : <>
           {data.questions.map(q => <AdminPanel key={q.id} title={`${q.sport} · version ${q.version} · ${q.status}`}>
             <Text>{q.prompt}</Text>
+            {sportQuizOptionsIssue(q.options) ? <Text>{sportQuizOptionsIssue(q.options)}</Text> : null}
             {q.options.map((option, i) => <Text key={i}>{`${i + 1}. ${option}${q.correct_option === i ? ' · correct' : ''}`}</Text>)}
             <Text>{q.explanation}</Text><Text>{`Reason: ${q.reason}`}</Text>
             <Text>{`Version ID ${q.id} · question key ${q.question_key}`}</Text>
