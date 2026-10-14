@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-14 — Timed trivia decision draft and final source repairs
+
+Owner selected 30 seconds with a longer accessible option. New indexed proposal recommends
+90 seconds, explicit opt-in, sports-first reviewed questions and account exposure history.
+Current Quiz remains untimed; revised app readiness is pending design/admin-first work.
+Fan shared consumer review passes. Byte-identical fixture relocation preserves all real tests;
+full check round2 passes 1,146 assertions before an unused test import stops later guards.
+Import-only repair b7fd0c resolves it; root full rerun exits0 with148 suites/1,146 assertions and all guards. No pilot activation.
+
+## 2026-10-14 — Fan and Quiz shared account activities
+
+Fan Zone now joins the optional Quiz in Home and four role HQs, with generic/private history
+links in profile and explicit root Back/Home navigation. Private guardian review remains
+visible independently of participant dismissal, including paused/unenrolled guardians.
+Fan stale-permission refusal resets video/caption review before authoritative refresh; its
+35 focused tests and independent correction review pass. Shared source 8179b7b passes final
+affected discovery/Home/HQ checks (53), coverage test and typecheck. Final broad/full/app gates
+and Documentation/VP closure remain pending; pilots stay inactive local source.
+
 ## 2026-10-14 — Fan participant source and private review control
 
 Fan Zone now has local private submission, exact-scope teen/guardian review, free ballot recovery,

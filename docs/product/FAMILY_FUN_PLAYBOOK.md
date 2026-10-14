@@ -452,7 +452,7 @@ voting design with the admin contract. Existing charter §11 and team duties alr
 these responsibilities; no new roles, source paths or automatic team activity are introduced.
 
 
-## 13. Weekly Sport Pop Quiz learning path
+## 13. Earlier untimed Sport Pop Quiz source
 
 Owner addition: a simple question about a chosen sport can appear weekly on an account.
 Accepted local build uses a dismissible Home card and an account learning page; no surprise
@@ -481,4 +481,20 @@ complete or invented engagement uplift. Wrong facts can be voided with a private
 
 Source progress and actual local gates live in [QUIZ-01](../agents/QUIZ-01.md) and the
 [quiz design](../engineering/design/SPORT_POP_QUIZ_DESIGN.md). This section describes the
-approved direction; it does not claim hosted deployment, approved seed facts or fan UI completion.
+earlier approved untimed source. The latest timed-trivia proposal below supersedes the product recommendation; it is not implemented. The local quiz and first Game/Week Fan Zone source are built; their
+actual checks and pending final acceptance are in the feature ledgers. Hosted deployment,
+approved seed facts, Month/Year awards, school scoring and new money rewards remain separate.
+
+
+## 14. Sports-first timed trivia refinement
+
+Owner chose 30 seconds with a longer accessible option, after a Ready invitation and explicit
+Start. Recommend 90 seconds available to everyone, default-off manual/weekly participation,
+reviewed sports questions with an optional fun-topic mix, account no-repeat history and private
+participation badges including wrong answers. Leaving closes the round locally; missed lifecycle
+events and outside assistance cannot be fully detected. Calls and interruptions get no penalty.
+
+[Timed trivia proposal](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) records invitation
+wording, question-family history, server deadlines, lost-response handling and the joint
+Legal/Data/Dev/Growth decision. Current Quiz source is untimed and does not implement these
+controls. The new design needs owner review and new verified admin handling before app changes.

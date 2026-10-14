@@ -175,6 +175,10 @@ the root Stack suppresses its duplicate native header. The optional invitation l
 Home measured chrome and existing parent/booster/sponsor/operator HQ scroll content.
 Profile keeps a private quiz history link for signed-in account roles. Local dismissal and
 server Skip have distinct wording; failed actions keep a notice and Refresh.
-Fan Zone discovery is still gated on its independent admin and participant acceptance.
+Fan Zone now shares that discovery space after its actual admin and independent participant
+acceptance. Its card prioritizes selected-campaign private guardian review, own entry, admitted
+open campaign and authorized recap; private guardian recovery is not hidden by participation
+dismissal. Profile has a generic Fan Zone entry, not an all-campaign inbox/history. The Fan root
+Stack header is suppressed; Back/account Home remain explicit. Source errors stay independent.
 No new bottom tab, forced modal, push permission or money control accompanies these activities.
 Device sizing, keyboard/screen-reader and full layout redirects remain release verification.

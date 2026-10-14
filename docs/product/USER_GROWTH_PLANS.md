@@ -206,7 +206,7 @@ remain separate from this planning work.
 ## Weekly learning alongside each account path — QUIZ-01
 
 Owner-authorized local build adds optional sport learning, following the account’s usual
-journey. [Playbook §13](FAMILY_FUN_PLAYBOOK.md#13-weekly-sport-pop-quiz-learning-path)
+journey. [Playbook §13](FAMILY_FUN_PLAYBOOK.md#13-earlier-untimed-sport-pop-quiz-source)
 defines one weekly approved random question, explanation, private Sport Learner completion
 badge, local Not now and persisted Skip when the active quiz can save it. No perfection or
 streak pressure, money/Aura/ballot weight, institutional privilege or compulsory service.
@@ -227,3 +227,26 @@ pause/errors/correction workload. Current source status and actual local gates a
 [QUIZ-01](../agents/QUIZ-01.md). Real completion/return/donation/capacity measures remain
 unknown; no new tracking collector or live experiment is introduced. The October20 joint
 packet brings evidence and feasible options to the owner before expansion.
+
+## Local implementation continuation — FUN-01 / QUIZ-01
+
+The first Game/Week Fan Zone and weekly private learning prototype are built in the isolated
+checkout; actual source/check/review status is in [FUN-01](../agents/FUN-01.md) and
+[QUIZ-01](../agents/QUIZ-01.md). This does not mean every proposed segment experiment or
+future reward is built. Friendly school scoring, Month/Year awards, persistent fan badges,
+creator earnings and expanded service posts retain focused design/domain gates.
+
+The October 20 joint packet uses each segment's permitted first action and return plan, plus
+actual correction/support capacity and provider costs when available. Fan private entry and
+guardian review, free ballots, optional stories/service and Quiz explanations/Skip now have
+local operating controls. Content/Legal/Safety confirms facts, rights, age and terms; Dev/Data/
+Support verifies hosted stop/removal/access and failure recovery; Growth compares lawful
+engagement options and Finance verifies loaded costs. Contributors bring disagreements and
+feasible options to the CTO/owner. Real uplift, review throughput and cost remain unknown;
+no automatic outreach, telemetry collection, spending or hosted pilot starts from these plans.
+
+
+The Sport Quiz rows above describe earlier untimed source. The latest
+[timed trivia proposal](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) recommends optional
+weekly invitations, sports-first topics and 30/90-second participation. It awaits owner design
+review and new admin-first implementation; current source checks do not prove timed readiness.

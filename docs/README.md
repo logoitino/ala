@@ -49,6 +49,7 @@ order, then dip into the folders as you need them.
 | [evidence/FAMILY_FUN_BUILD_DECISIONS.md](engineering/evidence/FAMILY_FUN_BUILD_DECISIONS.md) | Concrete Fan Zone and quiz build decisions, reasons and cost of changing them. |
 | [evidence/QUIZ-01-app.md](engineering/evidence/QUIZ-01-app.md) | Actual local quiz participant/integration checks and remaining final gates. |
 | [evidence/FUN-01-admin.md](engineering/evidence/FUN-01-admin.md) | Local Fan admin source/checks and independent gate recording. |
+| [evidence/FUN-01-app.md](engineering/evidence/FUN-01-app.md) | Fan account journey, actual local source checks, pending final acceptance and release work. |
 | [design/ADMIN_DATA_CONSOLIDATION.md](engineering/design/ADMIN_DATA_CONSOLIDATION.md) | All desk/report data ownership, safe menu merges and analysis preservation evidence. |
 | [design/MAIN_ADMIN_PORTAL.md](engineering/design/MAIN_ADMIN_PORTAL.md) | ADM-02: selected report design and all administration controls in one main Expo portal. |
 | [design/COMMUNITY_DASHBOARD_QA.md](engineering/design/COMMUNITY_DASHBOARD_QA.md) | Community Home and report-format design QA: source/render comparison and local browser checks (screenshots in `design/community-preview/`). |
@@ -147,3 +148,5 @@ with these files.
 | [Sport Pop Quiz design](engineering/design/SPORT_POP_QUIZ_DESIGN.md) | Optional weekly questions, noncash badge and correction contracts. |
 
 | [QUIZ-01 admin evidence](engineering/evidence/QUIZ-01-admin.md) | Local weekly quiz admin source, independent acceptance and actual checks; no hosted release. |
+
+| [Timed trivia proposal](engineering/design/TIMED_TRIVIA_PROPOSAL.md) | Owner-review draft: opt-in, sports-first topics, 30/90 timing, question history and new admin-first requirements. |

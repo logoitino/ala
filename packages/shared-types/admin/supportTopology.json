@@ -1548,11 +1548,16 @@
         "fan_zone_audit_immutable → fun_immutable_record"
       ],
       "screens": [
+        "/",
         "/admin/fan-zone",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
         "/api/fan-zone-upload+api",
-        "/fan-zone"
+        "/booster",
+        "/fan-zone",
+        "/operator",
+        "/parent",
+        "/sponsor"
       ]
     },
     {
@@ -1575,8 +1580,13 @@
       "removers": [],
       "triggers": [],
       "screens": [
+        "/",
         "/admin/fan-zone",
-        "/fan-zone"
+        "/booster",
+        "/fan-zone",
+        "/operator",
+        "/parent",
+        "/sponsor"
       ]
     },
     {
@@ -1610,11 +1620,16 @@
       "removers": [],
       "triggers": [],
       "screens": [
+        "/",
         "/admin/fan-zone",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
         "/api/fan-zone-upload+api",
-        "/fan-zone"
+        "/booster",
+        "/fan-zone",
+        "/operator",
+        "/parent",
+        "/sponsor"
       ]
     },
     {
@@ -1641,11 +1656,16 @@
         "fan_zone_case_time → fun_page_time"
       ],
       "screens": [
+        "/",
         "/admin/fan-zone",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
         "/api/fan-zone-upload+api",
-        "/fan-zone"
+        "/booster",
+        "/fan-zone",
+        "/operator",
+        "/parent",
+        "/sponsor"
       ]
     },
     {
@@ -1667,11 +1687,16 @@
         "fan_zone_consent_immutable → fun_immutable_record"
       ],
       "screens": [
+        "/",
         "/admin/fan-zone",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
         "/api/fan-zone-upload+api",
-        "/fan-zone"
+        "/booster",
+        "/fan-zone",
+        "/operator",
+        "/parent",
+        "/sponsor"
       ]
     },
     {
@@ -1703,11 +1728,16 @@
       "removers": [],
       "triggers": [],
       "screens": [
+        "/",
         "/admin/fan-zone",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
         "/api/fan-zone-upload+api",
-        "/fan-zone"
+        "/booster",
+        "/fan-zone",
+        "/operator",
+        "/parent",
+        "/sponsor"
       ]
     },
     {
@@ -1728,8 +1758,13 @@
       ],
       "triggers": [],
       "screens": [
+        "/",
         "/admin/fan-zone",
-        "/fan-zone"
+        "/booster",
+        "/fan-zone",
+        "/operator",
+        "/parent",
+        "/sponsor"
       ]
     },
     {
@@ -1748,8 +1783,13 @@
       ],
       "triggers": [],
       "screens": [
+        "/",
         "/admin/fan-zone",
-        "/fan-zone"
+        "/booster",
+        "/fan-zone",
+        "/operator",
+        "/parent",
+        "/sponsor"
       ]
     },
     {
@@ -9263,10 +9303,15 @@
         "apps/mobile/src/backend/services/fanZoneMedia.ts"
       ],
       "screens": [
+        "/",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
         "/api/fan-zone-upload+api",
-        "/fan-zone"
+        "/booster",
+        "/fan-zone",
+        "/operator",
+        "/parent",
+        "/sponsor"
       ]
     },
     {

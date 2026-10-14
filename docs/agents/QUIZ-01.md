@@ -1,7 +1,7 @@
-# QUIZ-01 — Weekly Sport Pop Quiz
+# QUIZ-01 — Sport Quiz source and timed trivia refinement
 
 **Owner request:** weekly random simple sport questions, with pop quiz badges, baked into the app.
-**Actual direction:** optional weekly Home card; choose sport; one approved random question;
+**Earlier implemented direction:** optional weekly Home card; choose sport; one approved random question;
 explanation and private noncash completion badge; skip allowed; no payment/vote/Aura effect.
 **Primary owner:** POLLS under ENGINEERING, paired ADMIN/AURA. Reviews: Content/VOICE,
 MINOR_SAFETY, PRIVACY_ENGINEERING, RLS_SECURITY, DATA_GOVERNANCE, SUPPORT, independent QA.
@@ -21,3 +21,14 @@ yet. Adopt local implementation only if negative actor, weekly duplicate, conten
 skip/unavailable checks pass. Stop wider enablement if content review or correction is unreliable.
 Release remains paused/testing-only: sport facts/terms/retention review, hosted SQL/access/security,
 device/accessibility checks, staffing and owner release pending. No hosted changes authorized.
+
+## Latest owner steering — design pending
+
+The owner now requests sports-first timed trivia with broader optional topics, leaving closes
+the round, no repeated questions and participation choice; 30 seconds plus a longer option is
+confirmed. [Timed trivia proposal](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) recommends
+90 seconds, explicit opt-in and a reviewed server bank. Current source remains untimed; it has
+no opt-in preference, expiry, abandonment or account family-exposure ledger. Prior admin/source
+reviews cover that earlier contract only. Keep app readiness unset for the revised experience;
+owner design review, updated admin handling and a new actual admin-ready checkpoint precede
+timed participant work. Hosted enablement remains unapproved.

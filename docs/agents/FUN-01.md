@@ -1,7 +1,7 @@
 # FUN-01 — Fan Zone pilot
 
 **Owner authorization:** the owner approved the recommended family-fun build, including fan submissions and free voting, then added weekly sport quizzes. Both remain part of this task.
-**Source status:** backend/media implemented and corrected in isolated `codex/fan-zone`; scoped independent review passes. Corrected admin gate passed; fan participant source is built and undergoing independent caller review. No hosted deployment or applied migration.
+**Source status:** backend/media implemented and corrected in isolated `codex/fan-zone`; scoped independent review passes. Corrected admin gate passed; fan participant source and correction have independent caller acceptance; shared discovery independently passes consumer specification/quality/Data/Safety/SUPPORT review. No hosted deployment or applied migration.
 **Primary owner:** POLLS under ENGINEERING, paired with ADMIN / UPLOAD / FULLSTACK.
 **Required reviews:** MINOR_SAFETY, PRIVACY_ENGINEERING, RLS_SECURITY, DATA_GOVERNANCE,
 MODERATION, SUPPORT, VOICE, independent QA; DOCUMENTATION and VP_OPERATIONS perform actual handoff.
@@ -23,12 +23,12 @@ completion/repeat/donation/burden baselines are unknown. Growth retains the Oct2
 | Stage | Actual result / next owner |
 | --- | --- |
 | Isolated source snapshot | Branch codex/fan-zone baseline 8ebcf6b; original dirty source preserved; dependencies linked locally with workspace package pointers rebound to this checkout. |
-| Baseline repair | Existing Finance coverage failed on payout_flag_overrides.payouts_enabled (3 tests). Added one catalog control entry; focused financeData 15/15 pass. Full combined check remains pending. No SQL/payee behavior change. |
+| Baseline repair | Existing Finance coverage failed on payout_flag_overrides.payouts_enabled (3 tests). Added one catalog control entry; focused financeData 15/15 pass. Root final full combined check exits0 (148 suites/1,146 assertions and all guards). No SQL/payee behavior change. |
 | Enrollment/design | Planned before Fan Zone source. Actual admin-ready recorded at 2026-10-14T13:42:36Z before participant source. |
 | Backend/media | Fix commit766e0ff:135/135 actors,14/14 API,105/105 canonical; independent spec/quality PASS in task-1-2-round1-review.md (local source correction scope). |
 | Admin | Correction920bc8d passes 154 actor and 45 SDK/admin checks and independent specification/quality/Data/Safety/SUPPORT acceptance. Root canonical replay passes 105 checks; actual selected admin-ready gate passes at 2026-10-14T13:42:36Z. |
-| Fan UI | Task4 source bcb898c: 29 hook/screen tests and mobile typecheck pass; private video a4f4acd: 13 tests and independent producer PASS. Full caller review identified stale-permission refresh/reset recovery; correction and shared discovery remain pending. |
-| Documentation / coordination / final QA | Pending actual executor receipts; root integrates shared docs. |
+| Fan UI | Task4 bcb898c plus 070a58b: 35 hook/screen tests and mobile typecheck pass. Separate video a4f4acd: 13 tests and producer PASS. T4-I1 stale recovery correction independently passes specification/quality and local Data/Safety/SUPPORT; shared discovery 8179b7b is built with 53 final affected checks plus one coverage test and mobile typecheck; independent consumer review PASS at 8179b7b. |
+| Documentation / coordination / final QA | Root full check PASS (148 suites/1,146 assertions, all guards). Whole-branch/Fan app-ready and actual Documentation/VP receipts pending. |
 
 QUIZ-01 separately implements the owner-added weekly sport pop quiz and private noncash learning badge. It does not change the fan-award recap into Aura/cash. [Quiz design](../engineering/design/SPORT_POP_QUIZ_DESIGN.md).
 

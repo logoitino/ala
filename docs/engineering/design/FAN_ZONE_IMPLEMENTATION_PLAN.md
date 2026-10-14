@@ -54,11 +54,11 @@ Workers do not spawn reviewers. Commit only owned files; report exact tests/resu
 **Owned files:** new frontend `components/FanZone/` files/tests, `hooks/useFanZone.ts`/tests, route `app/fan-zone.tsx`; shared Home/profile/HQ discovery is delegated to Task8. Root owns coverage/index/state integration.
 **Interfaces:** Consumes shared DTOs and `lib/fanZone.ts`, Task 2 media API. Existing public free reel and profile navigation supply curated stories; no new payment code.
 
-- [ ] Write failing visible flow tests for private upload/permission/review, guardian exact revision, free ballot retry/refetch, optional reflection/report/withdraw/deletion, in-screen Help & Safety/contact/status and unavailable states.
-- [ ] Build one welcoming Fan Zone screen with three paths, concise testing notices, explicit dates/rules and a preserved upload draft. No mandatory money, athlete tagging or service.
-- [ ] Use private reserved paths; verified MP4 only; exact permission read/review, candidate video playback with headers/no cache, ballot version/request receipt/single-flight and fresh state after retry.
-- [ ] Render current authorized stories/results, optional private service receipts and distinct withdrawal/removal/case status. Guest browsing remains read-only and joining uses existing account flow.
-- [ ] Run focused UI/hook/API tests/typecheck; commit owned files; independent task review before final completion.
+- [x] Write failing visible flow tests for private upload/permission/review, guardian exact revision, free ballot retry/refetch, optional reflection/report/withdraw/deletion, in-screen Help & Safety/contact/status and unavailable states.
+- [x] Build one welcoming Fan Zone screen with three paths, concise testing notices, explicit dates/rules and a preserved upload draft. No mandatory money, athlete tagging or service.
+- [x] Use private reserved paths; verified MP4 only; exact permission read/review, candidate video playback with headers/no cache, ballot version/request receipt/single-flight and fresh state after retry.
+- [x] Render current authorized stories/results, optional private service receipts and distinct withdrawal/removal/case status. Guest browsing remains read-only and joining uses existing account flow.
+- [x] Run focused UI/hook/API tests/typecheck; commit owned files; independent task review before final completion.
 
 #### Task4 contract clarifications from producer and discovery preparation
 
@@ -100,26 +100,33 @@ commit window for owned files only.
 **Owned files:** new SportQuiz components/tests, hook/tests, route. Root serializes Home discovery/card integration.
 - [x] After QUIZ-01 admin-ready, build dismissible Home learning invitation, sport choice, weekly question/answer/explanation, private badge collection and skip.
 - [x] Test visible unavailable/skip/incorrect/correct/completed/retry and no money/vote influence; no push or interrupting modal.
-- [x] Independent review and final gates/docs integrated with Task 5 after both features.
+- [x] Independent participant review passes; final gates/docs are owned and tracked by Task5 below, with revised timed scope separately pending.
 
 
 ### Task 8: Shared discovery and control-map integration
 
 **Ownership delegated by root:** new frontend `components/FamilyFun/FamilyFunDiscovery.tsx` and meaningful tests; root `app/_layout.tsx` navigation registration, existing Home `app/(tabs)/index.tsx`, profile menu in `app/(tabs)/profile.tsx`, role home routes `app/(parent)/parent/index.tsx`, `(booster)/booster/index.tsx`, `(sponsor)/sponsor/index.tsx`, `operator/index.tsx`; `lib/adminCoverage.ts` and relevant existing/new control-map tests. Root retains docs/schema/registry/data map/final gates. Preserve all concurrent source.
 
-- [ ] Quiz integration starts only after Task7 independent review PASS and actual QUIZ admin-ready; reuse its typed hook/invitation. Fan discovery extension starts only after Task4 review PASS and actual FUN admin-ready.
-- [ ] Place dismissible optional invitation inside Home's measured top chrome and role-HQ scroll content; no modal/new bottom tab/payment/upload interruption. Keep root account links accessible to every eligible role, private history and guardian review through appropriate server snapshots.
-- [ ] Refresh reads on return/focus and week changes without assigning automatically; local Not now state scoped to current identity/week, distinct from server-confirmed Skip. Ignore stale identity data and keep unavailable honest.
-- [ ] Add authenticated profile menu links for quiz/private badges and Fan Zone, direct root paths. Existing account/role/payments/roster actions preserved.
-- [ ] Map every new visible control to the actual admin desk; no fabricated runtime flag or passive telemetry. SQL campaign/settings are the authoritative stop controls.
-- [ ] Meaningful consumer tests for role discovery, eligibility/private history/guardian queue, local dismissal versus failed/durable Skip, focus/week refresh and source absence. Run typecheck/relevant tests and self-review; commit only owned paths in root's serialized window, independent review before final gates.
+- [x] Quiz integration starts only after Task7 independent review PASS and actual QUIZ admin-ready; reuse its typed hook/invitation. Fan discovery extension starts only after Task4 review PASS and actual FUN admin-ready.
+- [x] Place dismissible optional invitation inside Home's measured top chrome and role-HQ scroll content; no modal/new bottom tab/payment/upload interruption. Keep root account links accessible to every eligible role, private history and guardian review through appropriate server snapshots.
+- [x] Refresh reads on return/focus and week changes without assigning automatically; Quiz local Not now is scoped to identity/returned week and distinct from server-confirmed Skip; Fan dismissal follows the returned campaign/private revision and never hides current guardian recovery. Ignore stale identity data and keep unavailable honest.
+- [x] Add authenticated profile menu links for quiz/private badges and Fan Zone, direct root paths. Existing account/role/payments/roster actions preserved.
+- [x] Map every new visible control to the actual admin desk; no fabricated runtime flag or passive telemetry. SQL campaign/settings are the authoritative stop controls.
+- [x] Meaningful consumer tests for role discovery, eligibility/private history/guardian queue, local dismissal versus failed/durable Skip, focus/week refresh and source absence. Run typecheck/relevant tests and self-review; commit only owned paths in root's serialized window, independent review before final gates.
+
 
 ## Recorded work order and current checkpoint
 
 Quiz admin-ready was recorded at 2026-10-14T06:09:57Z before Task7 source. Fan admin-ready
 was recorded at 2026-10-14T13:42:36Z before Task4 source. These are actual selected CLI gates
 and retained independent operational reviews, not inferred timestamps. Task7 and Task8 Quiz
-consumer reviews pass; Task4 video producer review passes. Task4 caller recovery review/fix
-and Task8 Fan extension remain open. Task5 final combined checks, app-ready and actual
-Documentation/VP receipts are required before local completion. Public feature ledgers and
+consumer reviews pass; Task4 video producer review passes. Task4 caller recovery correction `070a58b` independently passes specification/quality and
+local Data/Safety/SUPPORT. Task8 Fan extension 8179b7b has independent specification/quality/Data/Safety/SUPPORT PASS; root read/hash verified the receipt. Whole-branch review remains pending. Task5 full pnpm check passes 148 suites/1,146 assertions and all guards; whole-branch/Fan app-ready and actual Documentation/VP receipts remain required before local Fan completion. Revised timed Quiz readiness stays pending. Public feature ledgers and
 engineering/evidence preserve the latest state; private SDD reports preserve detailed hashes.
+
+## New trivia scope
+
+The latest owner request changes the earlier untimed Quiz to timed opt-in trivia.
+[Proposal](TIMED_TRIVIA_PROPOSAL.md) is pending owner design review. Tasks6/7 record completed
+earlier source; they do not implement the new timer, consent or exposure ledger. Quiz app-ready
+stays unset while the revised contract awaits a new admin-first plan/checkpoint.

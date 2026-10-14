@@ -189,7 +189,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `fun_audit`
 - Read by: —; database functions: `fun_admin_snapshot`, `fun_complete_removal`, `fun_entry_json`, `fun_media_access`, `fun_page_time`
 - Triggers: `fan_zone_audit_time → fun_page_time`, `fan_zone_audit_immutable → fun_immutable_record`
-- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone`
+- Screens: `/`, `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
 
 ### `fan_zone_ballots`
 
@@ -197,7 +197,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `fun_admin_ballot`, `fun_vote`
 - Read by: —; database functions: `fun_admin_campaign`, `fun_admin_snapshot`, `fun_signature`, `fun_snapshot`
-- Screens: `/admin/fan-zone`, `/fan-zone`
+- Screens: `/`, `/admin/fan-zone`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
 
 ### `fan_zone_campaigns`
 
@@ -205,7 +205,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `fun_admin_ballot`, `fun_admin_campaign`, `fun_admin_entry`, `fun_complete_removal`, `fun_entry`, `fun_permission`
 - Read by: —; database functions: `fan_zone_private.upload_allowed`, `fun_admin_case`, `fun_admin_snapshot`, `fun_case`, `fun_media_access`, `fun_pilot` +5 more
-- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone`
+- Screens: `/`, `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
 
 ### `fan_zone_cases`
 
@@ -214,7 +214,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `fun_admin_case`, `fun_case`, `fun_complete_removal`
 - Read by: —; database functions: `fun_admin_snapshot`, `fun_case_status`, `fun_media_access`, `fun_page_time`, `fun_storage_guard`
 - Triggers: `fan_zone_case_time → fun_page_time`
-- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone`
+- Screens: `/`, `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
 
 ### `fan_zone_consents`
 
@@ -223,7 +223,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `fun_permission`
 - Read by: —; database functions: `fun_guardian_grant_valid`, `fun_permission_valid`
 - Triggers: `fan_zone_consent_immutable → fun_immutable_record`
-- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone`
+- Screens: `/`, `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
 
 ### `fan_zone_entries`
 
@@ -231,7 +231,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `fun_admin_entry`, `fun_complete_removal`, `fun_entry`, `fun_permission`, `fun_verify_media`
 - Read by: —; database functions: `fan_zone_private.upload_allowed`, `fun_admin_campaign`, `fun_admin_case`, `fun_admin_snapshot`, `fun_case`, `fun_media_access` +4 more
-- Screens: `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone`
+- Screens: `/`, `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
 
 ### `fan_zone_reflections`
 
@@ -240,7 +240,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `fun_reflection`
 - Read by: —; database functions: `fun_snapshot`
 - Removed by: `fun_reflection`
-- Screens: `/admin/fan-zone`, `/fan-zone`
+- Screens: `/`, `/admin/fan-zone`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
 
 ### `fan_zone_requests`
 
@@ -249,7 +249,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `fun_vote`
 - Read by: —; database functions: —
 - Removed by: `fun_prune_receipts`
-- Screens: `/admin/fan-zone`, `/fan-zone`
+- Screens: `/`, `/admin/fan-zone`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
 - Exception: noReader — fun_vote actually selects caller/request retry receipts while also writing them; the map classifies this mixed function as a writer. Raw retry signatures are intentionally not exported to admin/fan reports.
 
 ### `filmer_props`
@@ -769,7 +769,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 | Bucket | Owner | Purpose | Uploaded by | Read by | Screens |
 | --- | --- | --- | --- | --- | --- |
 | `avatars` | `PROFILE` | Profile pictures and booster/sponsor logos. | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
-| `fan_zone` | `UPLOAD` | Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal. | `apps/mobile/src/backend/api/fanZoneMedia.ts`, `@/hooks/useFanZone.ts` | `apps/mobile/src/backend/services/fanZoneMedia.ts` | `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/fan-zone` |
+| `fan_zone` | `UPLOAD` | Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal. | `apps/mobile/src/backend/api/fanZoneMedia.ts`, `@/hooks/useFanZone.ts` | `apps/mobile/src/backend/services/fanZoneMedia.ts` | `/`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone` +3 more |
 | `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
 | `reel_vault` | `VAULT` | Private Vault clips, read only through short-lived signed URLs. | `@/services/MediaUploadService.ts` | `@/lib/reels.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
 | `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). | `@/services/MediaUploadService.ts` | `@/lib/photoStories.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |

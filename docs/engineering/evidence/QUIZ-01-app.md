@@ -1,7 +1,7 @@
 # QUIZ-01 local participant evidence
 
 Source is built in the isolated `codex/fan-zone` checkout. Final combined checks and the
-recorded app-ready gate remain pending. This record does not activate a pilot.
+recorded app-ready gate remain pending for the revised request. This record does not activate a pilot.
 
 [Design](../design/SPORT_POP_QUIZ_DESIGN.md) · [Admin checkpoint](QUIZ-01-admin.md)
 · [Owner ledger](../../agents/QUIZ-01.md).
@@ -36,4 +36,13 @@ is added to this learning path. Existing age/account restrictions and empty paus
 Private reports under `.superpowers/sdd/FAN_ZONE_IMPLEMENTATION_PLAN/` retain exact source/package
 hashes and distinguish reviewer commands from worker test runs. Actual hosted, full layout/device,
 keyboard/screen-reader, content-fact, jurisdiction/terms/retention and staffed operations remain release work.
-The final full `pnpm check` and selected app-ready validation will be added after all required source integration.
+Fan shared integration `8179b7b` preserves the Quiz runtime body, hook, SDK and invitation.
+Its final affected shared discovery/Home/HQ checks pass 53 tests, with a separately passed
+coverage test and mobile typecheck. Independent shared consumer review passes. Root full pnpm check passes 148 suites/1,146 assertions and all guards after fixture/import-only repairs. Whole-branch handoff remains pending; revised timed Quiz app-ready remains unset.
+
+## Revised scope is not implemented
+
+Owner selected 30-second sports-first trivia with a longer accessible option. This evidence
+covers the earlier untimed quiz only; no expiry, explicit participation preference or unseen
+question-family history exists. [Proposal](../design/TIMED_TRIVIA_PROPOSAL.md) awaits design
+review. Do not reuse these results as proof of the timed capability or record its app-ready.

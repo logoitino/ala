@@ -595,8 +595,9 @@ above describe the earlier recommendation-only pass. Fan backend/media and corre
 QUIZ-01 local Data/Safety/SUPPORT acceptance and actual admin-ready gate passed
 2026-10-14T06:09:57Z before quiz participant source began. Fan admin correction has independent
 Data/Safety/SUPPORT acceptance and actual admin-ready at 2026-10-14T13:42:36Z before fan source.
-Quiz participant/shared discovery reviews pass. Fan caller recovery correction, shared discovery,
-final full checks and actual Documentation/VP handoff remain pending.
+Quiz participant/shared discovery reviews pass. Fan caller correction 070a58b independently
+passes specification/quality and local Data/Safety/SUPPORT; shared Fan discovery 8179b7b is built
+with private guardian shortcuts independent of participation dismissal. Shared consumer review independently passes. Root full check passes 148 suites/1,146 assertions and all guards. Whole-branch/app-ready and actual Documentation/VP handoff remain pending.
 
 The playbook §13 adds an untimed learning path for fans, filmers, athletes, families, friends
 and guardians: one optional question, explanation, private completion badge and Skip.
@@ -604,3 +605,14 @@ Legal/Safety, Content, Dev, Support and Growth must communicate fact corrections
 ability, enrollment friction and support burden at the same decision checkpoint. The standing
 October20 Growth review retains expansion proposals, real measures and an owner decision.
 No new scheduler, outreach, payment, growth tracking or hosted rollout occurs in this local build.
+
+## Timed trivia joint proposal
+
+Owner selected 30 seconds and a longer accessible option. Actual Growth architecture review
+recommends a reviewed server bank, optional offline drafts, proposed 90 seconds, default-off
+manual/weekly invitations, sports-first optional fun topics, family exposure history and server
+expiry. The root read and SHA256-verified the private proposal receipt.
+[Public decision draft](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) records choices and
+current source gaps. New timed controls are unimplemented and require design/admin-first
+review. The October 20 packet includes opt-in friction, interruption fairness, fresh-content
+capacity, review burden and accepted aggregate measures; no target or uplift is invented.
