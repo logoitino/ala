@@ -629,6 +629,58 @@
     "quiz_normalize_options": {
       "owner": "POLLS",
       "use": "Protected Unicode/ECMAScript-whitespace option canonicalization for new content/approval/assignment; malformed legacy question rows stay admin-correctable and cannot issue or complete."
+    },
+    "quiz_week_at": {
+      "owner": "POLLS",
+      "use": "Internal UTC week from explicit server instant, captured after locks for mutations."
+    },
+    "quiz_expected_actor": {
+      "owner": "AUTH",
+      "use": "Internal canonical current JWT equality with expected participant/admin ID and known-age/current authorization."
+    },
+    "quiz_cursor": {
+      "owner": "POLLS",
+      "use": "Internal bounded exact version/stream/timestamp/ID cursor validation for full inventory/history paging."
+    },
+    "quiz_lock": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal settings/account serialization before lifecycle mutations and clock capture."
+    },
+    "quiz_preferences_dto": {
+      "owner": "PROFILE",
+      "use": "Internal own preference/notice/history-revision defaults and retained projection."
+    },
+    "quiz_summary": {
+      "owner": "POLLS",
+      "use": "Internal active-prompt-free attempt metadata and effective expiry at one server instant."
+    },
+    "quiz_question_dto": {
+      "owner": "POLLS",
+      "use": "Internal immutable content projection for original authorized Start or own terminal learning only."
+    },
+    "quiz_result_dto": {
+      "owner": "POLLS",
+      "use": "Internal own terminal answer/explanation projection without active correct-answer leakage."
+    },
+    "quiz_digest": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal normalized request input SHA binding, never plaintext token persistence."
+    },
+    "quiz_receipt_dto": {
+      "owner": "POLLS",
+      "use": "Internal minimal owned exact receipt/terminal learning projection, never active question/token."
+    },
+    "quiz_save_request": {
+      "owner": "POLLS",
+      "use": "Internal bounded caller/request/input exact receipt persistence and cancellation fencing."
+    },
+    "quiz_spend": {
+      "owner": "POLLS",
+      "use": "Internal atomic disclosed35-day minimal weekly quota enforcement."
+    },
+    "quiz_expire": {
+      "owner": "POLLS",
+      "use": "Internal persisted terminal expiry under lifecycle lock; ordinary snapshots stay read-only."
     }
   },
   "exceptions": {

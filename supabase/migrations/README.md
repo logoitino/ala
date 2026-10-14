@@ -121,3 +121,14 @@ when switching source versions. Canonical schema contains the same support secti
 | `20261014140000_sport_pop_quiz.sql` | After FUN-01; private weekly question/badge and corrected-content handling. Default paused/empty tester audience; all seed questions draft awaiting fact review. | No. |
 
 Owner approves actual SQL/release. See [Fan Zone design](../../docs/engineering/design/FAN_ZONE_DESIGN.md) and [Quiz design](../../docs/engineering/design/SPORT_POP_QUIZ_DESIGN.md). Rollback headers require reviewed retention/access handling; do not delete records or restore old SQL automatically.
+
+## Timed trivia replacement — QUIZ-02
+
+| File | Purpose | Applied? |
+| --- | --- | --- |
+| `20261014150000_timed_sport_trivia.sql` | After untimed1400: private preferences/exposures/exact recovery/minimal35-day quota,30/90 deadline, original-view capability, secret-free End/cancel, CAS erasure, versioned sources/family review and50-row admin paging. Upgrade resets prior enabled/nonempty cohort to paused/empty; legacy attempts remain historical. | **Local source only; not applied anywhere.** Actual actor/canonical/admin/app evidence in [QUIZ-02](../../docs/agents/QUIZ-02.md). |
+
+Root appends final migration bytes to canonical schema. Revoke old untimed overloads; old clients
+fail closed. Rollback is pause and reviewed forward repair, never automatically restore untimed
+authority or erase learning/quota records. Real hosted compatibility, lifecycle/accessibility and
+counsel notices/retention review remain required before enabling a cohort.

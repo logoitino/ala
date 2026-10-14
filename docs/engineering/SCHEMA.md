@@ -1521,10 +1521,10 @@ Default-off, approved account testing only; no hosted SQL applied. [Fan Zone des
 | `fan_zone_audit` | Immutable server actor/time Fan Zone configuration/review/consent/ballot/result/removal trace; restricted corrective access. |
 | `fan_zone_reflections` | Voluntary private preset service reflection receipts, deletable by owner; no beneficiary detail or payment condition. |
 | `sport_quiz_settings` | Default-paused/testing-only quiz switch with approved canonical-profile tester allowlist. |
-| `sport_quiz_questions` | Human-reviewed sport question versions, draft/approved/archive/void state and stable issued answer/explanation. |
-| `sport_quiz_attempts` | One own-scoped random approved question assignment/skip/completion per account UTC week; exact request retry. |
-| `sport_quiz_badges` | Private noncash Sport Learner weekly completion acknowledgments; no Aura wallet, voting or payment value; erroneous content corrections. |
-| `sport_quiz_audit` | Append-only authoritative quiz settings/content/correction history; participant answers/identities omitted from admin count export. |
+| `sport_quiz_questions` | Human-reviewed immutable family/version, sport or optional fun topic, bounded sources, four choices and explanation; draft/approved/archive/void. |
+| `sport_quiz_attempts` | Own timed30/90-second immutable question/result lifecycle per account UTC week; hash-only active capability; old untimed attempts historical. |
+| `sport_quiz_badges` | Private equal right/wrong Trivia Explorer completion; historical Sport Learner preserved; no Aura wallet, vote/payment value; correction may void. |
+| `sport_quiz_audit` | Immutable editorial/admin correction history; protected erasure removes own participant learning associations; admin export redacts participant actor/question/attempt links. |
 
 | Function | Use (narrow caller/admin/service guard; helpers internal) |
 | --- | --- |
@@ -1583,3 +1583,54 @@ Default-off, approved account testing only; no hosted SQL applied. [Fan Zone des
 | `quiz_normalize_options` | Protected option whitespace canonicalization; legacy invalid options remain visible for audited admin correction, deny assignment/completion. |
 
 Fan admin correction changes unapplied RPC signatures together: `fun_admin_entry(uuid,text,text,jsonb)` requires exact displayed scope for normal decisions; null scope is explicit emergency Suspend only. `fun_admin_snapshot(uuid,text)` accepts version1 campaign-bound JSON cursors with independent case/audit timestamp/ID markers. Old signatures are explicitly dropped and only new signatures granted. Existing timestamp insert guards remain; tied recovery/import rows also page completely.
+
+## QUIZ-02 timed trivia mapping
+
+New migration `20261014150000_timed_sport_trivia.sql` replaces untimed authority; root canonical
+append and actual verification are recorded in [QUIZ-02](../agents/QUIZ-02.md). Prior QUIZ-01
+checkpoints remain historical. Upgrade resets admission to paused/testing-only/empty cohort.
+
+| New private table | Purpose and boundaries |
+| --- | --- |
+| `sport_quiz_preferences` | Default-off invitations, sports/mix, notice, preference CAS, retained monotonic history revision and once-weekly claim. |
+| `sport_quiz_exposures` | Unique account/family first issuance with immutable version; includes ended/expired/void; erased with learning history. |
+| `sport_quiz_week_guards` | Profile/week/spent/prune only,35days; retained after disclosed history erasure, cascades on account deletion. |
+| `sport_quiz_requests` | Private bounded exact request/input recovery/cancelled Start, expected week; no plaintext token/prompt; erasable. |
+
+| New function | Authority/purpose |
+| --- | --- |
+| `quiz_week_at` | Internal UTC Monday from explicit locked/read server instant. |
+| `quiz_expected_actor` | Internal canonical current JWT equality with expected participant/admin ID and current permission. |
+| `quiz_cursor` | Internal exact bounded version/stream/timestamp/ID cursor validation before casts. |
+| `quiz_lock` | Internal settings/account serialization; caller captures clock after acquiring locks. |
+| `quiz_preferences_dto` | Internal own default/retained preference and revision projection. |
+| `quiz_summary` | Internal prompt-free immutable attempt metadata/effective expiry at supplied server instant. |
+| `quiz_question_dto` | Internal immutable content projection; only authorized Start/terminal history can expose it. |
+| `quiz_result_dto` | Internal own terminal result/explanation; no active correct-answer projection. |
+| `quiz_digest` | Internal normalized-input SHA binding without plaintext secret storage. |
+| `quiz_receipt_dto` | Internal minimal exact receipt/terminal result, never active question. |
+| `quiz_save_request` | Internal bounded caller/request receipt insertion and original outcome. |
+| `quiz_spend` | Internal atomic35-day minimal weekly quota. |
+| `quiz_expire` | Internal persisted terminal expiry under lifecycle lock, no snapshot writes. |
+| `quiz_preferences` | Participant expected-profile/CAS/request preference/notice write; Off separate from End. |
+| `quiz_invitation` | Participant optional once-weekly quiet card claim; no prompt/deadline or draw. |
+| `quiz_history` | Own terminal learning/badge/correction pages; no active prompt or other child's history. |
+| `quiz_erase_history` | Own expected-profile/history CAS: ends current/pending week, removes learning/exposures/badges/receipts/participant audit; retains disclosed preference/revision and quota. |
+| `quiz_admin_retention` | Expected-current-admin reasoned bounded expired receipt/quota pruning; preserves unexpired guards. |
+
+Replaced `quiz_snapshot()` is read-only v2 own availability/preferences/pools/week and sanitized
+attempt status, never an active prompt. `quiz_start` binds expected profile/week/notice/topic,
+duration30/90, request UUID and memory-only256-bit token hash. Exact original Start recovery
+keeps the deadline; ordinary receipt/history cannot resume. `quiz_answer` accepts only a valid
+owned active token before the locked deadline; exact committed recovery remains readable.
+`quiz_end` accepts exactly one attempt or Start UUID and no secret, including a cancellation
+fence before delayed Start. `quiz_skip` explicitly closes the expected week; Not now does not.
+
+Admin settings/question/retention writes require captured canonical admin equality, reason and
+current permission. Pause permanently ends active rounds; re-enable cannot resume them. Source
+approval requires explicit family review and source notes; corrections preserve issued versions.
+`quiz_admin_snapshot` pages50 questions and50 audit independently with full totals/effective
+expiry. Helpers/direct private tables are revoked from clients; dropped old untimed overloads
+fail closed. UUID receipts are capped60/account/week with57 ordinary slots and protected answer,
+Off and End slots; exact committed retries precede capacity checks. Erasure uses CAS without a
+UUID receipt; unknown deletion requires Refresh/reconfirm rather than auto-newrevision erase.
