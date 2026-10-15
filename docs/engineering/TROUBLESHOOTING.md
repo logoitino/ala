@@ -198,3 +198,95 @@ the player patch repairs the object. Evidence: [PLAY-01](../agents/PLAY-01.md).
 **Cause:** RLS blocking `games` UPDATE, or not on `/operator/console/[gameId]`.
 
 **Fix:** Demo policies allow `anon` updates (see `schema.sql`). Confirm `EXPO_PUBLIC_SUPABASE_*` and that the claimed game `id` matches. PIN is `OPERATOR_TEST_PIN` in `apps/mobile/src/frontend/lib/operator.ts`.
+
+---
+
+## 11. Trivia rounds and family groups (QUIZ-03)
+
+Migration `20261014160000_trivia_play_together.sql` (not applied anywhere yet). Admin desk: `/admin/sport-quiz`.
+
+- **Lost Next (spinner, then nothing).** Next is safe to retry with the *same* request: the server returns the same
+  question only before its deadline. A new Next request cannot fetch it (`quiz_next_not_ready`). If the question's
+  time ran out, the round waits 2 minutes for Next and then closes; answered questions keep their badge.
+- **"Your round was shorter" / fewer than five questions.** The round only uses questions the account has not seen
+  in that topic or sport, and never repeats. Check the desk's *Bank forecast by sport*; approve more questions there.
+  The admin may also have set fewer questions per round (*Rounds and switches*).
+- **"Round ended" after leaving during an explanation.** Leaving the trivia page, backgrounding the app, switching
+  account or End round ends the whole round, including while an explanation shows. Unissued questions stay unseen;
+  the weekly opportunity is used. A round with at least one answer still counts as completed.
+- **Start refused near the end of the week (`quiz_week_closing`).** The whole round (questions plus Next windows)
+  must finish before the UTC week ends; try 30 seconds or wait for the new week.
+- **"That code didn't work."** The same message covers a wrong, expired or rotated code, a full group (12), a
+  removed member, a block with someone in the group and the teen friend-request rule. Admins can see the exact
+  reason in the audited group case (*Group case* on the desk, with a reason). 10 wrong tries a day, then the
+  account waits; 5 joins a day; at most 3 groups created and 5 belonged to.
+- **Removed from a group.** The member sees the ordinary removal message whether the creator removed them, a block
+  did, or an admin did; they cannot rejoin that group. Blocking someone removes the blocked person from shared groups.
+- **A question was voided.** A correction voids one question in each round, not the whole round. The round (and its
+  badge) is voided only when no answered question remains. History shows the correction reason privately.
+- **Clear history and groups.** Clearing trivia history leaves every group (the oldest member becomes creator, or
+  the group closes), removes every badge and ends this week's opportunity. Join attempts stay for their 35 days, so
+  clearing history does not reset the 10-tries / 5-joins limits. A removal record stays, so a removed member still
+  cannot rejoin.
+- **Removed after an age, setting or friendship change.** Teen rules are re-checked when an account corrects its
+  birth month, a teen changes who can send friend requests, a friendship ends, a guardian link ends, or someone has a
+  birthday (checked when the group page opens or a group round starts). The account that no longer fits gets the
+  ordinary removal message (reason `teen_rule` in the case view); it can rejoin later only if the rules allow. A closed
+  (under-13) account leaves every group and never shows.
+- **Group facts show "—".** Group fact totals appear once 3 members have played this week and are rounded down to 5s,
+  so nobody can work out one member's count.
+- **Image question cannot be approved.** A different admin must record the rights review (marks, EXIF, licence)
+  first, and `trivia.images` must be on.
+- **A guardian asks about a teen's groups.** The guardian view (Parent HQ / supervision) shows only a count of the
+  teen's trivia groups and joined / left events, the same as the teen sees. Support never shares group names, members
+  or pages; a safety concern goes through *Report group* and the admin case view.
+- **Groups switched off.** `trivia.groups` off pauses new groups, joins and group rounds; existing groups stay
+  readable and members can still leave and report.
+
+## 12. Life Playbook and round kinds (QUIZ-04)
+
+Migrations `20261014180000_life_playbook.sql` and `20261014190000_life_playbook_bank.sql` (not applied anywhere yet). Admin
+desk: `/admin/sport-quiz` → *Life Playbook* panels. Before the migration is applied the desk says "not switched on".
+
+- **"Week spent" after playing a group round.** Each week has three separate opportunities: personal, group (one across
+  all groups) and Life. Only one round can be open at a time (`quiz_round_active`); finish or leave it first.
+- **`quiz_end_invalid` from End.** End now takes the round kind (`p_round_kind`); it must match the round being ended.
+- **Group round refused (`quiz_group_too_small`).** A group round needs at least two active members.
+- **A member played but the group page says not played.** Only group rounds count on group pages and for Family
+  Challenger; personal and Life rounds never do.
+- **Life Start refused.** `quiz_life_paused` = `trivia.life` is off; `quiz_life_not_opted_in` = the player has not opted
+  in; `quiz_notice_required` = the Life notice (or the trivia notice) is not accepted; `quiz_no_question` = no unseen
+  question in an open chapter.
+- **A chapter will not open ("needs N more approved questions").** Since the owner simplification (2026-10-15) a
+  chapter opens once it has 5 approved questions (one round). Approve more drafts in that chapter, then open it.
+- **Approval refused.** One admin approves a Life question the same way as sports trivia (no reviewer grant, CPA
+  sign-off, source link or tax year any more). `quiz_life_attestation_required` = tick the education-only attestation
+  in a new version; `quiz_life_copy: …` = the Life copy rules in `supabase/content/life_copy_rules.json` (version 4).
+  Rule names: `non_latin_text` (lookalike letters such as Cyrillic), `advice_you_should`, `brand_name`,
+  `tapuai_money_word`, `nil_eligibility`, `tax_loan_credit` (tax, loan, credit score, APR), `money_figure` (any amount,
+  price, percentage, rate, "k" / "grand" / "million" figure — there is no illustrative exception), `year`,
+  `scam_missing_report_line` (Scam Defense explanations end "Tell a trusted adult and use Report."), `prompt_too_long`
+  (over 120 characters), `explanation_too_long` (over 200). Macrons are ignored when matching ("dōnation" is a money
+  word); spelled-out or glued figures count. Rewrite the item as a simple fact without numbers.
+- **`quiz_rerun_after_quiz04` while applying SQL.** `20261014160000_trivia_play_together.sql` must not be re-run alone
+  after QUIZ-04 (it would replace QUIZ-04 functions). Re-apply `schema.sql` (it re-runs the QUIZ blocks together in one
+  transaction; a failed paste rolls back) or write a forward migration.
+- **`quiz_request_limit`.** Each week has 20 round requests per kind (Start, Next, answer, End) and 111 ordinary saves
+  (preferences, invitation, skip); a flood of saves cannot block a Start. Past a budget only one reserved answer and one
+  End per kind remain. A cancel of a kind the account could not start (Life without access, group without a group)
+  returns `quiz_round_closed` and writes nothing.
+- **Intentional (design §7 item 14).** Clearing history spends all three weekly opportunities and keeps the Life
+  opt-in; Trivia Explorer and Season Learner count Life rounds (personal rounds earn them too).
+- **Level did not drop after a correction.** Levels keep the highest value reached; only clearing history removes them.
+- **A 13+ account without a birth month cannot play sport trivia but can play Life.** By design: `not_given` / `unknown`
+  accounts can play Life (every chapter is 13+); sport and group trivia keep the QUIZ-02 age bands.
+- **Drafts to review counts say "(loaded so far)".** The database does not send `bank_counts` in `quiz_admin_snapshot`
+  yet (the control tower edit of `20261014180000_life_playbook.sql` is not applied), so the filter counts and "drafts in
+  this view" cover only the loaded pages; press *Load more questions to review*. With `bank_counts` they cover the whole
+  bank and the line reads "in the whole bank". Chapter progress always uses the Life read's server counts.
+- **Drafts to review Edit.** One atomic write (`quiz_admin_question` action `edit_replace`): the new version and the
+  archive of the old draft save together or not at all. `quiz_replace_draft_only` = someone approved, archived or voided
+  that draft meanwhile; nothing was saved and the list refreshes. `quiz_life_copy: …` / `quiz_life_attestation_required`
+  = a Life edit must pass the word rules and attestation at save; nothing was saved. On a database without
+  `edit_replace` the desk falls back to two audited steps; if the second fails it says "New version saved, but the
+  earlier draft was not archived" — archive that draft by hand.

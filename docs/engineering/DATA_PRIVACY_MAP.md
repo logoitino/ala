@@ -124,3 +124,32 @@ Written/replayed locally; migrations and media API are not deployed. Approved te
 | Playback/API | Bearer header and authorized bounded video bytes | Server-only service key, no signed/token-query URL, no-store. Browser fetches an owned object URL (released on exit/replacement); native uses headers. Already delivered/saved/buffered bytes cannot be recalled. API origin/deployment/key/ranges/devices/storage/cost/abuse remain release gates. |
 
 Source ownership is in data-ownership.json / generated DATA_MAP, including the private Storage policy helper namespace. Restrictive closed-account policies supplement RPC actor guards. Data export/retention/deletion notices require counsel/user rights scoping before rollout; new collection is not justified by a passing local gate alone.
+
+## QUIZ-03 — trivia play together (written, not applied)
+
+Migration `20261014160000_trivia_play_together.sql`; design [TRIVIA_PLAY_TOGETHER_DESIGN](design/TRIVIA_PLAY_TOGETHER_DESIGN.md) §9. Settings paused, testing-only, empty cohort; `trivia.groups` and `trivia.images` off.
+
+| Path | What is gathered / purpose | Access and lifecycle |
+| --- | --- | --- |
+| Round items | Per question of a weekly round: question version, issue/deadline time, chosen option, status, correction reason | Own history only (closed items); admin sees counts. Erased with learning history; cascades on account deletion. Exposures still record every issued family. |
+| Badges | Trivia Explorer (week), sport explorer (lifetime per sport), Family Challenger (week), Season Learner (quarter); visibility private or groups | Private by default; a member opts a badge in to their own groups' pages. Noncash, no Aura/money/votes. Erased with history; a correction can void. |
+| Season recap | Computed from own rounds; nothing new stored | Own data only. |
+| Groups and members | Preset group name, optional sport theme, owner, member account ids, join time, removal reason | Members see first names (teens first name only), a played-this-week mark and group totals (facts hidden until 3 members played, then rounded to 5s); the creator gets an opaque per-group reference per member for removal, never a profile id. No search, listing, messaging, answers, times or per-member counts. A closed group or a closed (under-13) account shows no members. Teen rules are re-checked after age corrections, setting changes, unfriends, ended guardian links and on reads (birthdays). Leaving deletes the row; creator/block/admin removal keeps a rejoin bar until the group is purged 35 days after closing. A deleted creator hands the group to the oldest member or it dissolves. |
+| Group codes | SHA-256 hash of an 8-character code, 7-day expiry | Plain code shown once to the creator; dies when full, rotates on removal, purged on expiry. |
+| Join attempts | Account, group (if the code matched), outcome, refusal reason (`teen_rule`, `blocked`, `full`, `removed`, `closed`) | Rate limits and the admin case view only; joiner always sees one ordinary refusal. Kept through history erasure (like the week guard) so limits and safety evidence survive; purged after 35 days. |
+| Group-week sets | Five question versions per group per week, drawn without reading member exposures | Never shown as overlap or replacement; purged at week end + 35 days or when the group dissolves on erasure. |
+| Group case log | Reports (fixed reason, reporter account), admin case views with reason, removals, block removals, hand-overs | Admins only, append-only; survives group purge; account deletion nulls the account ids. Retention period for counsel to set (no automatic purge yet). |
+| Guardian supervision | Count of a teen's active trivia groups; joined / left events with no detail | Same for teen and guardian (MINOR-01 summary); no group names, members or pages. Events follow MINOR-01's 365-day rule. |
+| Image questions (schema only) | Media path, licence, source, attribution, alt text, size, no-person / no-marks / EXIF-stripped attestations, second-admin reviewer and time | Admin desk only; approval refused while `trivia.images` is off or until a different admin records the rights review; no bucket or delivery in this build. |
+
+## QUIZ-04 — Life Playbook and personal progress (written, not applied)
+
+Migrations `20261014180000_life_playbook.sql` and `20261014190000_life_playbook_bank.sql`; design [LIFE_PLAYBOOK_DESIGN](design/LIFE_PLAYBOOK_DESIGN.md) §7 as simplified by §8 (owner, 2026-10-15: simple facts, one-admin approval, four 13+ chapters, no money figures). `trivia.life` starts off; settings stay paused, testing-only, empty cohort. Life questions never ask about the player's own money, income, debts, family or taxes, and answers are stored exactly like other trivia (no extra fields, no financial profiling, no segmentation by answers).
+
+| Path | What is gathered / purpose | Access and lifecycle |
+| --- | --- | --- |
+| Life opt-in | `life_opt_in`, Life notice version, opt-in time, CAS version on the account's trivia preferences | Private: only the account's own Life reads return it; the trivia snapshot and admin desk never show it per person (admin sees a count only at 10 or more). Kept through history erasure (it is a setting); account deletion cascades. Not audited. |
+| Round kinds | `round_kind` on rounds, weekly guards and recovery receipts | Same retention as QUIZ-02/03 records; a guard per kind survives erasure for its 35 days. |
+| Levels | Highest level reached per account and per Life chapter, with the time reached | Private to the account; only goes up; removed by history erasure or account deletion. Admin sees level counts with cells under 10 hidden. |
+| Life badges | One `<Chapter> Playbook` badge per chapter at Varsity | Always private; cannot be shown on group pages; erased with history. |
+| Admin Life statistics | Computed on read: per-question answer counts and share choosing the approved answer, players per age band × chapter, level counts | Aggregate only: per-question numbers need ≥ 20 players; any cell under 10 is hidden; no per-user drill-down, no ids. Age band is the account's current band. The removed reviewer grants and CPA sign-offs (2026-10-15) never stored any data: they were dropped before the migration was applied. |

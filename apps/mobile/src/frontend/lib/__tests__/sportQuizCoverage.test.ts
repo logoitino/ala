@@ -1,4 +1,5 @@
-/** Quiz controls map to their actual operational desk without inventing runtime flags or collection. */
+/** Quiz controls map to their actual operational desk without inventing runtime flags or collection.
+ * Trivia control tower (2026-10-15): This week strip, level and Life Playbook rows; the page Skip is "Skip my round this week". */
 import { COVERAGE_CONTROLS, COVERAGE_SURFACES } from '../adminCoverage';
 it('maps shared discovery, private history and participant controls to Sport Quiz settings authority', () => {
   expect(COVERAGE_SURFACES).toContainEqual({ id: 'sport-quiz', label: 'Sport Quiz' });
@@ -8,6 +9,9 @@ it('maps shared discovery, private history and participant controls to Sport Qui
     for (const action of ['open', 'dismiss', 'skip', 'refresh', 'history']) expect(rows.some(row => row.id === `quiz.${surface}.${action}`)).toBe(true);
   }
   for (const action of ['back', 'home', 'refresh', 'sport', 'answer', 'retry', 'skip']) expect(rows.some(row => row.id === `quiz.page.${action}` && row.surface === 'sport-quiz')).toBe(true);
+  for (const action of ['week', 'level', 'life.optin', 'life.chapters', 'life.start', 'life.off', 'groups']) expect(rows.some(row => row.id === `quiz.page.${action}` && row.surface === 'sport-quiz')).toBe(true);
+  expect(rows.find(row => row.id === 'quiz.page.skip')?.label).toBe('Skip my round this week');
+  expect(rows.find(row => row.id === 'quiz.home.skip')?.label).toBe('Skip this week · home');
   for (const row of rows) {
     expect(row.adminHref).toBe('/admin/sport-quiz');
     expect(row.flag).toBeUndefined(); expect(row.telemetry).toBeUndefined();

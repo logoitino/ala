@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-10-15 — Trivia feels like game day
+
+Trivia rounds are now playful: questions pop in, a shot-clock bar counts down, and every right answer gets a sports
+cheer ("Touchdown!", "Nothing but net!", "Ace!") with confetti. A miss gets an encouraging "Good hustle!" and the fact.
+Finishing a round, or reaching a new level, gets its own celebration. On the web there are soft, short sounds; phones give a
+gentle buzz for now. A Sound on / off switch is on the trivia screen, and phones set to reduce motion get calm fades
+instead.
+
+## 2026-10-15 — Life Playbook and never-held-back trivia (QUIZ-04)
+
+Trivia now gives everyone three separate weekly rounds: your own round, one group round, and, if you turn it on, a
+Life Playbook round. Group play never uses up your own round, and your level (Rookie → Varsity → All-Star → Pro → Hall
+of Fame) only goes up. Life Playbook is optional, simple and fun: short true / false and four-choice facts about everyday
+life skills, in sports terms, in four chapters for everyone 13+: Money Huddle, Savings Season, Scam Defense and Smart
+Plays. Questions never give advice, name brands, mention Tapua'i donations, or use money amounts or dates, and scam
+questions always say to tell a trusted adult and use Report. 40 Life drafts are ready, and the sports starter questions
+were simplified too. Nothing is asked before an admin approves it. Migrations written, not applied; trivia stays paused
+for testers.
+
+## 2026-10-14 — Trivia, play together (QUIZ-03)
+
+Trivia now comes as a weekly round of up to five quick questions (still 30 or 90 seconds each, chosen before you start),
+with true / false questions alongside four-choice ones. Athlete profiles offer "Learn {sport} with {name}" so families
+and fans can learn the game their athlete plays. Families and friends can start a private challenge group with a code,
+play the same weekly round, and see who played — never scores, speed or rankings. A private badge shelf and season recap
+show what you have learned. Groups follow the teen safety rules (an adult stranger cannot share a group with a teen), and
+blocking someone removes them. A 60-question starter bank is ready for review; nothing is asked before an admin approves
+it. Migrations written, not applied; trivia stays paused for testers.
+
 ## 2026-10-14 — Optional timed trivia player
 
 Trivia now offers explicit30- or90-second rounds, manual play or optional weekly invitations, reviewed unseen questions, private participation badges and private history controls. Leaving clears the question; interrupted responses recover only permitted committed results. Clear-history explains retained preferences/notices and the35-day weekly quota. Final independent source review accepts the participant corrections, including safe initial status loading. Root150-suite/1,219-test full check, both app types and all guards pass. Selected local app-ready passes after the preserved admin checkpoint; actual final Documentation/VP handoff passes and the pilot remains paused.

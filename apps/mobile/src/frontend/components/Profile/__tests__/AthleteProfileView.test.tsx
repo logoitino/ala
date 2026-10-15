@@ -205,3 +205,28 @@ describe('Look desk "Actions on top" (profile.actionsOnTop, DATA-01 F7)', () => 
     expect(share).toBeGreaterThan(tabs);
   });
 });
+
+/** QUIZ-03: the "Learn {sport} with {name}" card sits on someone else's athlete profile only; never on your own. */
+jest.mock('@/components/SportQuiz/LearnSportCard', () => ({
+  LearnSportCard: ({ sport, athleteName }: { sport: string; athleteName: string }) => {
+    const { Text } = require('react-native');
+    return <Text>{`Learn card: ${sport} / ${athleteName}`}</Text>;
+  },
+}));
+describe('AthleteProfileView Learn your athlete’s sport card', () => {
+  it('passes the athlete’s sport and name to the viewer’s card on another athlete’s profile', async () => {
+    mockProfile = { id: 'fan', user_id: 'fan-user', full_name: 'Fan', role: 'fan', is_verified: false };
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]} stats={stats} auraPoints={0} />);
+    expect(screen.getByText('Learn card: Football / Alex Lee')).toBeTruthy();
+  });
+  it('never shows the card to the athlete on their own profile', async () => {
+    mockProfile = { id: 'owner', user_id: 'owner-user', full_name: player.name, role: 'athlete', is_verified: false, player_id: player.id };
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]} stats={stats} auraPoints={0} />);
+    expect(screen.queryByText(/^Learn card:/)).toBeNull();
+  });
+  it('is not shown on a non-athlete profile', async () => {
+    mockProfile = { id: 'fan', user_id: 'fan-user', full_name: 'Fan', role: 'fan', is_verified: false };
+    await render(<AthleteProfileView player={player} name={player.name} role="fan" clips={[]} stats={stats} auraPoints={0} />);
+    expect(screen.queryByText(/^Learn card:/)).toBeNull();
+  });
+});

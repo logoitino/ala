@@ -46,6 +46,7 @@ order, then dip into the folders as you need them.
 | [DATA_GOVERNANCE.md](engineering/DATA_GOVERNANCE.md) | DATA-01: the data control point, the rule (owner, writer, reader, purpose), how to change data, open findings. |
 | [DATA_MAP.md](engineering/DATA_MAP.md) | Generated master data map: every table, view and database function with owner, writers, readers, triggers and screens; dead-code triage. |
 | [BOOKS01_STAGING_REHEARSAL.md](engineering/BOOKS01_STAGING_REHEARSAL.md) | W0-10: apply the bookkeeping migration on staging, read-only checks, a practice month and a QuickBooks sandbox import. |
+| [TRIVIA_STAGING_APPLY.md](engineering/TRIVIA_STAGING_APPLY.md) | Apply trivia (QUIZ-01 to QUIZ-04) and its prerequisites on staging by hand: 16 files in order, a read-only check after each, rollback notes, then the in-app tester steps. |
 | [design/BOOKKEEPING.md](engineering/design/BOOKKEEPING.md) | BOOKS-01/02: Finance & Books hub, double-entry journal from the money tables, QuickBooks export, monthly routine and tax questions for the CPA. |
 | [FEATURE_ADMIN_WORKFLOW.md](engineering/FEATURE_ADMIN_WORKFLOW.md) | Future features: admin contracts, implementation/evidence before app work, and registered lifecycle gates. |
 | [evidence/FAMILY_FUN_BUILD_DECISIONS.md](engineering/evidence/FAMILY_FUN_BUILD_DECISIONS.md) | Concrete Fan Zone and quiz build decisions, reasons and cost of changing them. |

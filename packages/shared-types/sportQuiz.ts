@@ -2,7 +2,9 @@
 export type QuizAvailability = 'ready' | 'paused' | 'not_enrolled' | 'ineligible' | 'unavailable';
 export type QuizAttemptStatus = 'issued' | 'completed' | 'skipped' | 'void';
 export type QuizQuestionStatus = 'draft' | 'approved' | 'archived' | 'void';
-export type QuizQuestionAction = 'create' | 'edit' | 'approve' | 'archive' | 'void';
+/** review_media (QUIZ-03): a second admin records the image rights review before approval.
+ * edit_replace (QUIZ-04 control tower): one transaction that saves a new draft version and archives the draft it replaces. */
+export type QuizQuestionAction = 'create' | 'edit' | 'edit_replace' | 'approve' | 'archive' | 'void' | 'review_media';
 
 export type QuizQuestion = {
   id: string; question_key: string; version: number; sport: string; prompt: string; options: string[];
@@ -30,7 +32,8 @@ export type QuizSettings = QuizSettingsReceipt & { reason: string; updated_at: s
 export type QuizQuestionPayload = {
   reason: string; sport?: string; prompt?: string; options?: string[]; correct_option?: number; explanation?: string;
 };
-export type QuizQuestionReceipt = { id: string; question_key: string; version: number; status: QuizQuestionStatus };
+/** replaced_id / replaced_status come only with edit_replace: the draft archived in the same transaction. */
+export type QuizQuestionReceipt = { id: string; question_key: string; version: number; status: QuizQuestionStatus; replaced_id?: string; replaced_status?: 'archived' };
 export type QuizAdminQuestion = QuizQuestion & {
   correct_option: number; explanation: string; status: QuizQuestionStatus; reason: string;
   created_at: string; created_by: string | null; reviewed_at: string | null; reviewed_by: string | null;

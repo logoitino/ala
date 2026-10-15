@@ -1,4 +1,6 @@
-/** QUIZ-02 operational desk: gated mounting, unavailable source, human approval, private corrections and single-flight. */
+/** QUIZ-02 operational desk: gated mounting, unavailable source, human approval, private corrections and single-flight; QUIZ-03 rounds/switches and group cases.
+ * Control tower (2026-10-15): the bank opens on Add a question, so tests that select a version open All questions first.
+ * Drafts to review Edit uses the atomic edit_replace, with the two-step edit + archive only on a server without it. */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { SportQuizTool } from '@/components/Admin/SportQuiz/SportQuizTool';
 import * as quiz from '@/lib/sportQuiz';
@@ -13,7 +15,8 @@ jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ dirty:
 jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: false, supabase: {} }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }));
 jest.mock('expo-router', () => ({ Link: ({ children }: { children: React.ReactNode }) => children, usePathname: () => '/admin/sport-quiz', useRouter: () => ({ push: jest.fn() }) }));
-jest.mock('@/lib/sportQuiz', () => ({ ...jest.requireActual('@/lib/sportQuiz'),fetchTimedSportQuizAdmin: jest.fn(), saveSportQuizSettings: jest.fn(), saveSportQuizQuestion: jest.fn(), pruneTimedSportQuizHistory: jest.fn() }));
+jest.mock('@/lib/sportQuiz', () => ({ ...jest.requireActual('@/lib/sportQuiz'),fetchTimedSportQuizAdmin: jest.fn(), saveSportQuizSettings: jest.fn(), saveSportQuizQuestion: jest.fn(), pruneTimedSportQuizHistory: jest.fn(),
+  saveTriviaPlaySettings: jest.fn(), fetchTriviaGroupCase: jest.fn(), removeFromTriviaGroup: jest.fn(), replaceSportQuizDraft: jest.fn() }));
 const api = jest.mocked(quiz);
 const bank = {
   contract_version:2, generated_at: '2026-10-14T05:00:00Z', week_start: '2026-10-12', week_end: '2026-10-19',
@@ -53,7 +56,7 @@ it('shows complete Data bank, paused testing scope and human-approval rationale'
 it('requires selection and rationale, then approves once while a write is in flight', async () => {
   let resolve: (value: quiz.QuizQuestionReceipt) => void = () => {};
   api.saveSportQuizQuestion.mockImplementation(() => new Promise(done => { resolve = done; }));
-  await render(<SportQuizTool />); await screen.findByText('Question bank');
+  await render(<SportQuizTool />); await screen.findByText('Question bank'); await fireEvent.press(screen.getByLabelText('All questions'));
   expect(screen.getByLabelText('Approve question')).toBeDisabled();
   await fireEvent.press(screen.getByLabelText('Select American football question version 1'));
   await fireEvent.changeText(screen.getByLabelText('Review or correction reason'), 'Content owner verified six-point rule.');
@@ -85,7 +88,7 @@ it('pauses with the authoritative list even after a tester has closed, without r
 });
 it('shows malformed legacy options and keeps Pause/archive/void available while approval is blocked', async () => {
   api.fetchTimedSportQuizAdmin.mockResolvedValue({ ...bank,questions:[{ ...bank.questions[0],options:['3','3\t','7','2'] }] });
-  await render(<SportQuizTool />); await screen.findByText('Question bank');
+  await render(<SportQuizTool />); await screen.findByText('Question bank'); await fireEvent.press(screen.getByLabelText('All questions'));
   await fireEvent.press(screen.getByLabelText('Select American football question version 1'));
   await fireEvent.changeText(screen.getByLabelText('Review or correction reason'),'Void duplicate pilot choices; preserve original bytes.');
   expect(screen.getByText(/Invalid answer choices/)).toBeTruthy();
@@ -100,7 +103,7 @@ it('loads the second question page without advancing audit and shows loaded/full
   const q=bank.questions[0];
   api.fetchTimedSportQuizAdmin.mockResolvedValueOnce({...bank,questions:[q],question_total:2,next_question_cursor:'page-2',next_before:'9007199254740993'});
   api.fetchTimedSportQuizAdmin.mockResolvedValueOnce({...bank,questions:[{...q,id:'q2',question_key:'key2',sport:'Basketball'}],question_total:2});
-  await render(<SportQuizTool />); await screen.findByText(/1 of 2 stored versions/);
+  await render(<SportQuizTool />); await screen.findByText('Question bank'); await fireEvent.press(screen.getByLabelText('All questions')); await screen.findByText(/1 of 2 stored versions/);
   await fireEvent.press(screen.getByLabelText('Load more questions'));
   expect(api.fetchTimedSportQuizAdmin).toHaveBeenLastCalledWith({question_cursor:'page-2',audit_before:null});
   expect(await screen.findByText(/2 of 2 stored versions/)).toBeTruthy();
@@ -129,7 +132,7 @@ it('loads audit independently without replacing loaded question pages or their c
 it('does not publish an old actor write receipt or launch its reload after account switch',async()=>{
   let resolve:(value:quiz.QuizQuestionReceipt)=>void=()=>{};
   api.saveSportQuizQuestion.mockImplementationOnce(()=>new Promise(done=>{resolve=done;}));
-  await render(<SportQuizTool/>);await screen.findByText('Question bank');
+  await render(<SportQuizTool/>);await screen.findByText('Question bank');await fireEvent.press(screen.getByLabelText('All questions'));
   await fireEvent.press(screen.getByLabelText('Select American football question version 1'));
   await fireEvent.changeText(screen.getByLabelText('Review or correction reason'),'Facts checked before actor switch.');
   await fireEvent.press(screen.getByLabelText('Approve question'));
@@ -147,6 +150,7 @@ it('marks a failed next question page incomplete without inventing rows or disab
   api.fetchTimedSportQuizAdmin.mockRejectedValueOnce(new Error('Question page unavailable.'));
   await render(<SportQuizTool />); await screen.findByText('Question bank');
   await fireEvent.changeText(screen.getByLabelText('Review or correction reason'),'Pause while inventory is incomplete.');
+  await fireEvent.press(screen.getByLabelText('All questions'));
   await fireEvent.press(screen.getByLabelText('Load more questions'));
   expect(await screen.findByText(/Question page unavailable/)).toBeTruthy();
   expect(screen.getByText(/1 of 2 stored versions/)).toBeTruthy();
@@ -169,4 +173,90 @@ it('clears private source and ignores a delayed prior admin result after identit
   resolve(bank);
   expect(await screen.findByText('New admin source unavailable.')).toBeTruthy();
   expect(screen.queryByText('Question bank')).toBeNull();
+});
+
+const gid = '11111111-1111-4111-8111-111111111111';
+const member = '22222222-2222-4222-8222-222222222222';
+const quiz03 = { ...bank, question_cap:300, active_total:1,
+  settings: { ...bank.settings!, round_size:5, groups_enabled:false, images_enabled:false },
+  forecast: [{ sport:'American football', approved_families:1, players_28d:0, issued_28d:0, pace_per_player_week:0, max_seen:0, weeks_left:null }],
+  groups: { groups_active:1,groups_closed:0,members_active:3,members_removed:0,groups_played_this_week:1,codes_active:1,codes_issued:1,joins_7d:2,refusals_7d:1,wrong_codes_7d:0,reports_7d:1,sets_this_week:1,retained_sets:5,retained_join_attempts:3 },
+  reports: [{ id:'4', group_id:gid, reason_code:'safety' as const, created_at:'2026-10-14T09:00:00Z' }],
+} as quiz.TimedQuizAdminSnapshot;
+const caseFile: quiz.TriviaGroupCase = { contract_version:3, generated_at:'2026-10-14T10:00:00Z', group_id:gid,
+  group:{ name_key:'family', theme_sport:null, status:'active', created_at:'2026-10-13', closed_at:null, close_reason:null, owner_id:member, codes_issued:1, code_active:true },
+  members:[{ profile_id:member, age_band:'adult', status:'active', joined_at:'2026-10-13', removed_at:null, removed_reason:null, is_owner:false }], refusals:[], cases:[] };
+it('QUIZ-03 saves round size and switches with the captured admin and reason, then refreshes', async () => {
+  api.fetchTimedSportQuizAdmin.mockResolvedValue(quiz03);
+  api.saveTriviaPlaySettings.mockResolvedValue({ contract_version:3, round_size:3, groups_enabled:true, images_enabled:false });
+  await render(<SportQuizTool />); await screen.findByText('Rounds and switches');
+  expect(screen.getByText(/0 players and 0 questions in 28 days .* no forecast yet/)).toBeTruthy();
+  expect(screen.getByText('Members in active groups')).toBeTruthy();
+  await fireEvent.press(screen.getByLabelText('3'));
+  await fireEvent.press(screen.getAllByLabelText('On')[0]);
+  expect(screen.getByLabelText('Save round settings and switches')).toBeDisabled();
+  await fireEvent.changeText(screen.getByLabelText('Review or correction reason'), 'Owner approved rounds of three for testers.');
+  await fireEvent.press(screen.getByLabelText('Save round settings and switches'));
+  await waitFor(() => expect(api.saveTriviaPlaySettings).toHaveBeenCalledWith({ round_size:3, groups_enabled:true, images_enabled:false }, 'Owner approved rounds of three for testers.', actor));
+  await waitFor(() => expect(api.fetchTimedSportQuizAdmin).toHaveBeenCalledTimes(2));
+});
+it('QUIZ-03 opens an audited group case from a report and removes a member with the reason', async () => {
+  api.fetchTimedSportQuizAdmin.mockResolvedValue(quiz03);
+  api.fetchTriviaGroupCase.mockResolvedValue(caseFile);
+  api.removeFromTriviaGroup.mockResolvedValue({ contract_version:3, outcome:'removed', group_id:gid, profile_id:member });
+  await render(<SportQuizTool />); await screen.findByText('Group case');
+  await fireEvent.press(screen.getByLabelText(`2026-10-14T09:00:00Z · safety · group ${gid}`));
+  await fireEvent.changeText(screen.getByLabelText('Review or correction reason'), 'Safety report reviewed by the on-call admin.');
+  await fireEvent.press(screen.getByLabelText('Open audited case'));
+  await waitFor(() => expect(api.fetchTriviaGroupCase).toHaveBeenCalledWith(gid, 'Safety report reviewed by the on-call admin.', actor));
+  expect(await screen.findByText(`${member} · adult · active`)).toBeTruthy();
+  await fireEvent.press(screen.getByLabelText(`Remove ${member}`));
+  await waitFor(() => expect(api.removeFromTriviaGroup).toHaveBeenCalledWith(gid, member, 'Safety report reviewed by the on-call admin.', actor));
+  expect(await screen.findByText(/cannot rejoin and the code rotated/)).toBeTruthy();
+});
+
+describe('Drafts to review Edit (control tower)',()=>{
+  const openEdit=async()=>{
+    await render(<SportQuizTool />); await screen.findByText('Question bank');
+    await fireEvent.press(screen.getByLabelText('Drafts to review'));
+    await fireEvent.press(screen.getByLabelText('Edit'));
+    await fireEvent.changeText(screen.getByLabelText('Short explanation'),'A touchdown is worth six points before the try.');
+    await fireEvent.press(screen.getByLabelText('Save new version'));
+  };
+  it('saves the new version and archives the old draft in one atomic write, then refreshes',async()=>{
+    api.replaceSportQuizDraft.mockResolvedValue({id:'q2',question_key:'key1',version:2,status:'draft',replaced_id:'q1',replaced_status:'archived'});
+    await openEdit();
+    expect(await screen.findByText('New version saved for review; the earlier draft was archived in the same step.')).toBeTruthy();
+    expect(api.replaceSportQuizDraft).toHaveBeenCalledTimes(1);
+    expect(api.replaceSportQuizDraft).toHaveBeenCalledWith('q1',expect.objectContaining({family_action:'existing',question_key:'key1',reason:'Content review',explanation:'A touchdown is worth six points before the try.'}),actor);
+    expect(api.saveSportQuizQuestion).not.toHaveBeenCalled();
+    expect(api.fetchTimedSportQuizAdmin).toHaveBeenCalledTimes(2);
+  });
+  it('shows a refusal and never falls back to two steps when the server refuses the edit',async()=>{
+    api.replaceSportQuizDraft.mockRejectedValue(new Error('quiz_life_copy: money_figure'));
+    await openEdit();
+    expect(await screen.findByText('Refused by the Life copy rules: money_figure.')).toBeTruthy();
+    expect(api.saveSportQuizQuestion).not.toHaveBeenCalled();
+  });
+  it('explains a draft that is no longer a draft and refreshes, without a second write',async()=>{
+    api.replaceSportQuizDraft.mockRejectedValue(new Error('quiz_replace_draft_only'));
+    await openEdit();
+    expect(await screen.findByText(/Nothing was saved: this question is no longer a draft/)).toBeTruthy();
+    expect(api.saveSportQuizQuestion).not.toHaveBeenCalled();
+    expect(api.fetchTimedSportQuizAdmin).toHaveBeenCalledTimes(2);
+  });
+  it('falls back to edit then archive on a server without edit_replace, keeping the partial-failure warning',async()=>{
+    api.replaceSportQuizDraft.mockRejectedValue(new Error('quiz_question_action_invalid'));
+    api.saveSportQuizQuestion.mockResolvedValueOnce({id:'q2',question_key:'key1',version:2,status:'draft'}).mockResolvedValueOnce({id:'q1',question_key:'key1',version:1,status:'archived'});
+    await openEdit();
+    expect(await screen.findByText('New version saved for review; the earlier draft was archived.')).toBeTruthy();
+    expect(api.saveSportQuizQuestion.mock.calls.map(c=>[c[0],c[1]])).toEqual([['q1','edit'],['q1','archive']]);
+    expect(api.saveSportQuizQuestion.mock.calls[1][2]).toEqual({reason:'Content review'});
+  });
+  it('the two-step fallback still warns when the archive step fails after the new version saved',async()=>{
+    api.replaceSportQuizDraft.mockRejectedValue(new Error('quiz_question_action_invalid'));
+    api.saveSportQuizQuestion.mockResolvedValueOnce({id:'q2',question_key:'key1',version:2,status:'draft'}).mockRejectedValueOnce(new Error('timeout'));
+    await openEdit();
+    expect(await screen.findByText(/New version saved, but the earlier draft was not archived: timeout\. Archive it in Drafts to review\./)).toBeTruthy();
+  });
 });

@@ -1,0 +1,722 @@
+[
+  {
+    "key": "c1b4c007-d311-497f-899e-dedbeb0a02fe",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "money_huddle",
+    "min_age_band": "13",
+    "sport": "Money Huddle",
+    "prompt": "A budget is a game plan for money: it shows what comes in and where it goes.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! A budget is like a playbook for money. It helps plan spending and saving before the money is gone.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "2606ad8d-fc5d-43e7-bd4b-f4b780894ff5",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "money_huddle",
+    "min_age_band": "13",
+    "sport": "Money Huddle",
+    "prompt": "Food and a safe place to live are needs, not wants.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Needs keep people safe and cared for. Wants are fun extras, like the newest video game.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "de61b5cb-f506-4177-a0b5-fe1e75e38504",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "money_huddle",
+    "min_age_band": "13",
+    "sport": "Money Huddle",
+    "prompt": "A budget is only useful for people with lots of money.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 1,
+    "explanation": "False. A budget helps with any amount. Even a small allowance goes further with a plan.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "fbaa34ed-5d0d-4454-8cbf-770bce7935fe",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "money_huddle",
+    "min_age_band": "13",
+    "sport": "Money Huddle",
+    "prompt": "Comparing prices at a few stores before buying can help get a better deal.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Scouting prices is like scouting the other team. The same item can cost more in some places than others.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "39ece432-dfca-4fe7-88d2-6f7fe2ea1889",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "money_huddle",
+    "min_age_band": "13",
+    "sport": "Money Huddle",
+    "prompt": "A want is something a person cannot live without.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 1,
+    "explanation": "False. That describes a need. A want is nice to have, like a new jersey, but life goes on without it.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "9a04c9a5-c04a-4fe2-8bef-5bd3c2e55630",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "money_huddle",
+    "min_age_band": "13",
+    "sport": "Money Huddle",
+    "prompt": "Which of these is a WANT?",
+    "options": [
+      "Groceries",
+      "A warm coat in winter",
+      "A limited-edition team jersey",
+      "Water at home"
+    ],
+    "correct_option": 2,
+    "explanation": "A limited-edition jersey is fun, but nobody has to have it. Food, warm clothes and water are needs.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "90547488-1fa6-4b1f-b413-9f610ebc435b",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "money_huddle",
+    "min_age_band": "13",
+    "sport": "Money Huddle",
+    "prompt": "Coaches call the play before the snap. Before spending, a smart move is to...",
+    "options": [
+      "Check the budget first",
+      "Spend it all right away",
+      "Buy whatever is on display",
+      "Skip looking at the price"
+    ],
+    "correct_option": 0,
+    "explanation": "Checking the budget first is calling the play before the snap. It keeps spending in line with the plan.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "3fafdd47-d914-4ccd-9940-38b4778e8e8e",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "money_huddle",
+    "min_age_band": "13",
+    "sport": "Money Huddle",
+    "prompt": "Backpacks at different stores look almost the same. What helps pick the better deal?",
+    "options": [
+      "The brightest color",
+      "Comparing price and quality",
+      "The biggest logo",
+      "Whichever is closest"
+    ],
+    "correct_option": 1,
+    "explanation": "Comparing price and quality shows which backpack gives more for the money. Color and logos do not tell the whole story.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "9b532443-97ff-4760-9c77-efb013b9d1fb",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "money_huddle",
+    "min_age_band": "13",
+    "sport": "Money Huddle",
+    "prompt": "An impulse buy is...",
+    "options": [
+      "A purchase planned for weeks",
+      "Money kept for later",
+      "A buy made on the spot without a plan",
+      "A bill paid on time"
+    ],
+    "correct_option": 2,
+    "explanation": "An impulse buy happens in the moment, often because something looks fun. A quick pause helps check if it fits the plan.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "d39ca658-e8c6-4a1b-b6d9-e3e2308685ae",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "money_huddle",
+    "min_age_band": "13",
+    "sport": "Money Huddle",
+    "prompt": "Waiting a day before buying something unplanned is like calling a timeout. What can it help with?",
+    "options": [
+      "Deciding if it is really wanted",
+      "Making the price go up",
+      "Losing the receipt",
+      "Forgetting the budget"
+    ],
+    "correct_option": 0,
+    "explanation": "A timeout gives time to think. After a day, it is easier to tell if something is really wanted or just exciting in the moment.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "4ae74e2f-3950-42fa-bc5b-9f890251b304",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "savings_season",
+    "min_age_band": "13",
+    "sport": "Savings Season",
+    "prompt": "Saving a little at a time can add up to something bigger later.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Small amounts saved regularly add up, like small gains in practice that build over a season.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "b0159a0a-0ddf-4f6d-b210-134e3ccc7112",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "savings_season",
+    "min_age_band": "13",
+    "sport": "Savings Season",
+    "prompt": "A savings account is a place to keep money set aside for later.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! A savings account holds money for goals and surprises. A checking account is the everyday spending account.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "e3de252d-fa57-4d8f-9ed8-ccf2fe753025",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "savings_season",
+    "min_age_band": "13",
+    "sport": "Savings Season",
+    "prompt": "When a bank pays interest on savings, the money in the account can grow.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Interest is extra money a bank pays for keeping savings there, so the balance grows over time.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "379c4a36-1829-49df-970c-75aba4cf37cc",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "savings_season",
+    "min_age_band": "13",
+    "sport": "Savings Season",
+    "prompt": "It is fine to share a card PIN with a friend who promises to keep it secret.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 1,
+    "explanation": "False. A PIN is like a locker combination: it only works if it stays private. If a card is lost, tell a trusted adult right away.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "4f2b92a9-2cb9-46b1-9088-a47f1e3bdde1",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "savings_season",
+    "min_age_band": "13",
+    "sport": "Savings Season",
+    "prompt": "Saving for a goal means the money can never be spent.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 1,
+    "explanation": "False. Saving means setting money aside for later, like new cleats. When the goal is reached, the money can go toward it.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "514c8e3f-e2ef-4425-b5cb-61be1c8f4b05",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "savings_season",
+    "min_age_band": "13",
+    "sport": "Savings Season",
+    "prompt": "A checking account is mostly used for...",
+    "options": [
+      "Hiding money from everyone",
+      "Everyday spending and paying bills",
+      "Winning trophies",
+      "Keeping score in games"
+    ],
+    "correct_option": 1,
+    "explanation": "A checking account is the everyday account for spending and paying bills. Savings accounts are for money set aside.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "e3b5ae33-0319-4dae-8fef-a2819347eada",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "savings_season",
+    "min_age_band": "13",
+    "sport": "Savings Season",
+    "prompt": "Why do people save money?",
+    "options": [
+      "Because spending is not allowed",
+      "To make prices go down",
+      "To be ready for goals and surprises",
+      "To win a trophy"
+    ],
+    "correct_option": 2,
+    "explanation": "Saving gets people ready for goals, like new gear, and for surprises, like a broken phone.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "be440b46-ae9c-4d54-b63a-a1ca7080af30",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "savings_season",
+    "min_age_band": "13",
+    "sport": "Savings Season",
+    "prompt": "Interest on savings is...",
+    "options": [
+      "A fee for opening a door",
+      "A type of sports drink",
+      "A store coupon",
+      "Extra money a bank pays for keeping savings there"
+    ],
+    "correct_option": 3,
+    "explanation": "Interest is what a bank pays for keeping savings with it. It is a simple way savings can grow.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "0cbc1e66-2c12-49bd-a241-8dbe6043cb48",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "savings_season",
+    "min_age_band": "13",
+    "sport": "Savings Season",
+    "prompt": "A bank card goes missing. What is a smart first play?",
+    "options": [
+      "Tell a trusted adult and the bank right away",
+      "Wait a few months",
+      "Post the card number online",
+      "Do nothing"
+    ],
+    "correct_option": 0,
+    "explanation": "Acting fast protects the account. A trusted adult can help contact the bank so the card can be stopped.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "488935b0-3586-4f73-981e-f9169cd821f7",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "savings_season",
+    "min_age_band": "13",
+    "sport": "Savings Season",
+    "prompt": "Saving for a big goal is like training for a season. What helps most?",
+    "options": [
+      "Saving only once",
+      "Setting aside a little regularly",
+      "Spending first and never saving",
+      "Guessing"
+    ],
+    "correct_option": 1,
+    "explanation": "Regular saving is like regular practice. Small, steady steps add up to big results.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "a87f06d6-47ea-4ebc-93ec-3ac283a4c3e9",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "scam_defense",
+    "min_age_band": "13",
+    "sport": "Scam Defense",
+    "prompt": "If an offer sounds too good to be true, it is often a scam.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Big promises for little effort are a classic scam play. Tell a trusted adult and use Report.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "acbc2032-6224-41f6-875e-e2d408221816",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "scam_defense",
+    "min_age_band": "13",
+    "sport": "Scam Defense",
+    "prompt": "Sharing a password with someone who messages first is a safe move.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 1,
+    "explanation": "False. Passwords stay private, even if the message looks friendly or official. Tell a trusted adult and use Report.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "f8078a79-534c-41bc-a665-0adcdef7cbe5",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "scam_defense",
+    "min_age_band": "13",
+    "sport": "Scam Defense",
+    "prompt": "It is okay to send money to someone online who contacts you first and pressures you to hurry.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 1,
+    "explanation": "False. Never send money to someone who contacts you first or pressures you. Tell a trusted adult and use Report.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "a3987147-aef9-40f2-980f-2553ff868019",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "scam_defense",
+    "min_age_band": "13",
+    "sport": "Scam Defense",
+    "prompt": "Using a different strong password for each account helps protect accounts.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! If a password leaks, the other accounts stay safe. Tell a trusted adult and use Report.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "10b25d31-3c92-4130-b7dd-db3c9df2a751",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "scam_defense",
+    "min_age_band": "13",
+    "sport": "Scam Defense",
+    "prompt": "A message that says \"Act now or lose your account!\" is a red flag.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Scammers use panic to rush people. Real companies give time to check. Tell a trusted adult and use Report.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "dd5eb954-373d-41dd-be59-8f48ab5a3c96",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "scam_defense",
+    "min_age_band": "13",
+    "sport": "Scam Defense",
+    "prompt": "Phishing is when a scammer...",
+    "options": [
+      "Goes fishing at the lake",
+      "Pretends to be someone trusted to steal information",
+      "Sends a real thank-you card",
+      "Fixes a phone for free"
+    ],
+    "correct_option": 1,
+    "explanation": "Phishing messages pretend to come from a bank, school or friend to steal passwords or personal info. Tell a trusted adult and use Report.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "00bc1452-5b1d-450a-9b16-cd7a04a52757",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "scam_defense",
+    "min_age_band": "13",
+    "sport": "Scam Defense",
+    "prompt": "A text says a prize is waiting if you click a link and type in your password. Best defense?",
+    "options": [
+      "Click fast",
+      "Reply with the password",
+      "Forward it to friends",
+      "Do not click; delete it"
+    ],
+    "correct_option": 3,
+    "explanation": "Surprise prizes and password requests are scam tricks. Not clicking keeps the defense strong. Tell a trusted adult and use Report.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "c13e6eb8-4324-49af-9391-ca7cf44f776f",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "scam_defense",
+    "min_age_band": "13",
+    "sport": "Scam Defense",
+    "prompt": "Which of these is personal information to keep private?",
+    "options": [
+      "A favorite team",
+      "Passwords and a home address",
+      "The color of a jersey",
+      "Last week's score"
+    ],
+    "correct_option": 1,
+    "explanation": "Passwords and a home address can be used to cause harm. Team colors and scores are fine to share. Tell a trusted adult and use Report.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "d4b45f26-55eb-4b04-b9fb-45a9b1dad67b",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "scam_defense",
+    "min_age_band": "13",
+    "sport": "Scam Defense",
+    "prompt": "Someone a player never met messages first and asks for money to unlock a prize. What is this?",
+    "options": [
+      "A normal prize",
+      "A team bake sale",
+      "A savings plan",
+      "A scam"
+    ],
+    "correct_option": 3,
+    "explanation": "This is a scam. Never send money to someone who contacts you first or pressures you. Tell a trusted adult and use Report.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "f3154360-f8f6-46b7-b327-67544e048874",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "scam_defense",
+    "min_age_band": "13",
+    "sport": "Scam Defense",
+    "prompt": "Scammers often try to rush people. What beats the rush?",
+    "options": [
+      "Pausing to check first",
+      "Answering right away",
+      "Sharing more details",
+      "Sending money fast"
+    ],
+    "correct_option": 0,
+    "explanation": "Slowing down and checking breaks the scammer's game plan. Tell a trusted adult and use Report.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "1dec3cc5-c837-4223-ba92-88dceddd45ba",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "smart_plays",
+    "min_age_band": "13",
+    "sport": "Smart Plays",
+    "prompt": "Reading something all the way through before signing it is a smart play.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Signing means agreeing. Reading first, and asking a trusted adult about anything unclear, avoids surprises.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "4bfb5c98-d2f4-4810-b219-9f7526ecd99e",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "smart_plays",
+    "min_age_band": "13",
+    "sport": "Smart Plays",
+    "prompt": "Asking questions when something is confusing is a sign of weakness.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 1,
+    "explanation": "False. Great players ask their coaches questions. Asking is how people learn and avoid mistakes.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "11f065fe-3849-4c01-bb9f-d2dba544cdbe",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "smart_plays",
+    "min_age_band": "13",
+    "sport": "Smart Plays",
+    "prompt": "Sleeping on a big decision can help a person think it through with a clear head.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Waiting until the next day takes the pressure off and makes it easier to see the whole field.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "306ffe51-cedd-41a1-bc45-49d090c29014",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "smart_plays",
+    "min_age_band": "13",
+    "sport": "Smart Plays",
+    "prompt": "Planning ahead is like studying the playbook before game day.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Knowing the plan before the moment comes makes it easier to make good choices under pressure.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "d299bfb0-8d65-49dc-8a5a-651be8f9e7bf",
+    "question_type": "true_false",
+    "topic_category": "life",
+    "chapter": "smart_plays",
+    "min_age_band": "13",
+    "sport": "Smart Plays",
+    "prompt": "If a deal says \"today only,\" it is always smart to decide right away.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 1,
+    "explanation": "False. Pressure to rush is a reason to slow down. Good choices usually leave time to think and ask questions.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "23a71977-4acb-4ec8-8140-7c60b4b96574",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "smart_plays",
+    "min_age_band": "13",
+    "sport": "Smart Plays",
+    "prompt": "Before a big decision, which move helps most?",
+    "options": [
+      "Guessing quickly",
+      "Gathering facts and asking questions",
+      "Doing what a pop-up ad says",
+      "Ignoring the details"
+    ],
+    "correct_option": 1,
+    "explanation": "Gathering facts and asking questions is like watching game film before the big game. It leads to better calls.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "65b33ed7-b1da-4540-afb2-d8e110073e79",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "smart_plays",
+    "min_age_band": "13",
+    "sport": "Smart Plays",
+    "prompt": "Someone asks a player to sign a form they do not understand. What is the smart play?",
+    "options": [
+      "Sign it fast",
+      "Sign without reading",
+      "Ask questions and read it with a trusted adult",
+      "Hide it"
+    ],
+    "correct_option": 2,
+    "explanation": "A trusted adult can help explain the form. Nobody has to sign something they do not understand.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "e1dd915b-7dd6-4eb4-bfa5-0652de1137e6",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "smart_plays",
+    "min_age_band": "13",
+    "sport": "Smart Plays",
+    "prompt": "A coach makes a game plan before the season. In everyday life, planning ahead helps...",
+    "options": [
+      "Avoid last-minute surprises",
+      "Make every day the same",
+      "Skip all choices",
+      "Lose track of time"
+    ],
+    "correct_option": 0,
+    "explanation": "Planning ahead means fewer surprises, like packing gear the night before a game.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "51eaed61-07a7-45a8-b7e0-fe2681e47352",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "smart_plays",
+    "min_age_band": "13",
+    "sport": "Smart Plays",
+    "prompt": "What does it mean to \"sleep on it\"?",
+    "options": [
+      "Take a nap during class",
+      "Never decide",
+      "Wait until the next day to decide something big",
+      "Decide while very sleepy"
+    ],
+    "correct_option": 2,
+    "explanation": "To sleep on it means waiting until the next day before making a big choice, so it can be made with a fresh mind.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  },
+  {
+    "key": "2bb3208a-795a-4275-9257-2ba10750adab",
+    "question_type": "choice4",
+    "topic_category": "life",
+    "chapter": "smart_plays",
+    "min_age_band": "13",
+    "sport": "Smart Plays",
+    "prompt": "Which is the best example of thinking before acting?",
+    "options": [
+      "Buying the first thing seen",
+      "Agreeing without reading",
+      "Rushing because a timer says so",
+      "Comparing choices before picking"
+    ],
+    "correct_option": 3,
+    "explanation": "Comparing choices before picking is thinking before acting. It is how good players and smart shoppers make their moves.",
+    "source_notes": "Everyday fact; no expert check needed.",
+    "education_only": true
+  }
+]

@@ -1080,6 +1080,7 @@
         "/admin/wishlist",
         "/athlete",
         "/booster",
+        "/dev/trivia-preview",
         "/drip",
         "/fan-zone",
         "/game/[id]",
@@ -1890,14 +1891,18 @@
         "remove_friend",
         "request_friend"
       ],
-      "triggers": [],
+      "triggers": [
+        "quiz_groups_friendship_rules → quiz_groups_on_friendship"
+      ],
       "screens": [
         "/",
         "/activity",
         "/admin/people",
+        "/dev/trivia-preview",
         "/local",
         "/parent",
         "/profile",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]"
       ]
@@ -2236,6 +2241,7 @@
         "minor_has_consent",
         "minor_link_slots_used",
         "minor_status_json",
+        "quiz_teen_accepts",
         "record_guardian_consent",
         "request_friend",
         "respond_guardian_link",
@@ -2243,7 +2249,9 @@
         "user_blocks_end_guardian_links"
       ],
       "removers": [],
-      "triggers": [],
+      "triggers": [
+        "quiz_groups_guardian_rules → quiz_groups_on_guardian_link"
+      ],
       "screens": [
         "/",
         "/activity",
@@ -2290,6 +2298,7 @@
         "/api/fan-zone-upload+api",
         "/athlete",
         "/booster",
+        "/dev/trivia-preview",
         "/drip",
         "/fan-zone",
         "/game/[id]",
@@ -2766,6 +2775,9 @@
         "profile_item_visible",
         "publish_spotlight_award",
         "quiz_admin_settings",
+        "quiz_group_display_name",
+        "quiz_profile_closed",
+        "quiz_teen_accepts",
         "rally_manager_role",
         "record_reel_view",
         "redeem_team_code",
@@ -2803,7 +2815,8 @@
         "profiles_new_account_rules → profiles_apply_new_account_rules",
         "profiles_age_guard → guard_profiles_age",
         "profiles_payout_flags_guard → guard_payout_flags",
-        "profiles_payee_supersede → payee_changes_supersede"
+        "profiles_payee_supersede → payee_changes_supersede",
+        "quiz_groups_profile_rules → quiz_groups_on_profile"
       ],
       "screens": [
         "/",
@@ -2855,6 +2868,7 @@
         "/athlete",
         "/auth/callback",
         "/booster",
+        "/dev/trivia-preview",
         "/drip",
         "/fan-zone",
         "/game/[id]",
@@ -3659,19 +3673,41 @@
         "quiz_answer",
         "quiz_end",
         "quiz_expire",
-        "quiz_skip",
-        "quiz_start"
+        "quiz_next",
+        "quiz_round_begin",
+        "quiz_round_close",
+        "quiz_round_settle",
+        "quiz_skip"
       ],
       "sqlReaders": [
+        "quiz_active_item",
+        "quiz_admin_life_settings",
+        "quiz_admin_life_snapshot",
         "quiz_admin_snapshot",
         "quiz_answer",
+        "quiz_attempt_qualifies",
+        "quiz_audit_is_life",
         "quiz_end",
+        "quiz_facts",
+        "quiz_group_facts",
         "quiz_history",
+        "quiz_life_preferences",
+        "quiz_life_progress",
+        "quiz_life_snapshot",
+        "quiz_next",
+        "quiz_played",
         "quiz_result_dto",
+        "quiz_round_begin",
+        "quiz_round_close",
+        "quiz_round_pick",
+        "quiz_round_settle",
+        "quiz_round_view",
+        "quiz_save_receipt",
+        "quiz_season_recap",
         "quiz_skip",
         "quiz_snapshot",
-        "quiz_start",
-        "quiz_summary"
+        "quiz_summary",
+        "quiz_sync_badges"
       ],
       "removers": [
         "quiz_erase_history"
@@ -3679,12 +3715,16 @@
       "triggers": [],
       "screens": [
         "/",
+        "/admin",
         "/admin/sport-quiz",
         "/booster",
+        "/dev/trivia-preview",
         "/operator",
         "/parent",
+        "/profile",
         "/sponsor",
-        "/sport-quiz"
+        "/sport-quiz",
+        "/user/[id]"
       ]
     },
     {
@@ -3695,16 +3735,20 @@
       "writers": [],
       "readers": [],
       "sqlWriters": [
+        "quiz_admin_life_chapter",
+        "quiz_admin_life_settings",
+        "quiz_admin_play_settings",
         "quiz_admin_question",
         "quiz_admin_retention",
         "quiz_admin_settings",
         "quiz_answer",
         "quiz_end",
-        "quiz_skip",
-        "quiz_start"
+        "quiz_round_begin",
+        "quiz_skip"
       ],
       "sqlReaders": [
-        "quiz_admin_snapshot"
+        "quiz_admin_snapshot",
+        "quiz_audit_is_life"
       ],
       "removers": [
         "quiz_erase_history"
@@ -3715,8 +3759,10 @@
       ],
       "screens": [
         "/",
+        "/admin",
         "/admin/sport-quiz",
         "/booster",
+        "/dev/trivia-preview",
         "/operator",
         "/parent",
         "/sponsor",
@@ -3727,29 +3773,41 @@
       "name": "sport_quiz_badges",
       "kind": "table",
       "owner": "AURA",
-      "purpose": "Private noncash Trivia Explorer weekly completion, equal right/wrong; historical Sport Learner preserved. No Aura wallet, vote/payment value; erroneous content corrections.",
+      "purpose": "Private noncash Trivia Explorer weekly completion, equal right/wrong; historical Sport Learner preserved. No Aura wallet, vote/payment value; erroneous content corrections. QUIZ-03: unique per (profile, label, period); sport explorer (5 facts), Family Challenger (week), Season Learner (10 rounds per quarter); opt-in visibility to own groups.",
       "writers": [],
       "readers": [],
       "sqlWriters": [
         "quiz_admin_question",
-        "quiz_answer"
+        "quiz_badge_visibility",
+        "quiz_sync_badges"
       ],
       "sqlReaders": [
         "quiz_admin_snapshot",
-        "quiz_erase_history",
+        "quiz_badge_shelf",
+        "quiz_badge_visibility",
+        "quiz_group_page_dto",
         "quiz_history",
+        "quiz_season_recap",
         "quiz_snapshot"
       ],
-      "removers": [],
-      "triggers": [],
+      "removers": [
+        "quiz_erase_history"
+      ],
+      "triggers": [
+        "quiz_badge_defaults → quiz_badge_defaults"
+      ],
       "screens": [
         "/",
+        "/admin",
         "/admin/sport-quiz",
         "/booster",
+        "/dev/trivia-preview",
         "/operator",
         "/parent",
+        "/profile",
         "/sponsor",
-        "/sport-quiz"
+        "/sport-quiz",
+        "/user/[id]"
       ]
     },
     {
@@ -3760,12 +3818,17 @@
       "writers": [],
       "readers": [],
       "sqlWriters": [
-        "quiz_start"
+        "quiz_round_issue"
       ],
       "sqlReaders": [
+        "quiz_admin_forecast",
         "quiz_admin_snapshot",
         "quiz_fun_available",
-        "quiz_snapshot"
+        "quiz_life_pool",
+        "quiz_life_progress",
+        "quiz_round_pick",
+        "quiz_snapshot",
+        "quiz_unseen_count"
       ],
       "removers": [
         "quiz_erase_history"
@@ -3773,11 +3836,315 @@
       "triggers": [],
       "screens": [
         "/",
+        "/admin",
+        "/admin/sport-quiz",
+        "/booster",
+        "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/profile",
+        "/sponsor",
+        "/sport-quiz",
+        "/user/[id]"
+      ]
+    },
+    {
+      "name": "sport_quiz_group_cases",
+      "kind": "table",
+      "owner": "MINOR_SAFETY",
+      "purpose": "QUIZ-03 append-only group safety log: reports (fixed reason), audited admin case views, removals, block removals, hand-overs. Survives group purge; FK nulling only on account deletion.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_group_case",
+        "quiz_group_owner_gone"
+      ],
+      "sqlReaders": [
+        "quiz_admin_group_case",
+        "quiz_admin_snapshot",
+        "quiz_group_report"
+      ],
+      "removers": [],
+      "triggers": [
+        "quiz_group_case_guard → quiz_guard_group_case",
+        "quiz_group_case_truncate_guard → quiz_guard_group_case"
+      ],
+      "screens": [
+        "/",
+        "/admin",
+        "/admin/sport-quiz",
+        "/booster",
+        "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/sponsor",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_group_codes",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "QUIZ-03 one SHA-256 hashed 8-character join code per group, 7 days; dies when the group is full, rotates on removal; purged on expiry by retention.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_group_issue_code"
+      ],
+      "sqlReaders": [
+        "quiz_admin_group_case",
+        "quiz_admin_snapshot",
+        "quiz_group_page_dto"
+      ],
+      "removers": [
+        "quiz_admin_group_remove",
+        "quiz_admin_retention",
+        "quiz_group_handover",
+        "quiz_group_issue_code",
+        "quiz_group_join",
+        "quiz_group_mark_removed",
+        "quiz_group_owner_gone"
+      ],
+      "triggers": [],
+      "screens": [
+        "/admin",
+        "/admin/sport-quiz",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_group_join_attempts",
+      "kind": "table",
+      "owner": "RLS_SECURITY",
+      "purpose": "QUIZ-03 join limits (10 wrong tries, 5 joins a day) and private refusal reasons for the admin case view; kept through history erasure so limits and evidence survive; purged after 35 days.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_group_join"
+      ],
+      "sqlReaders": [
+        "quiz_admin_group_case",
+        "quiz_admin_snapshot",
+        "quiz_erase_history"
+      ],
+      "removers": [
+        "quiz_admin_retention"
+      ],
+      "triggers": [],
+      "screens": [
+        "/",
+        "/admin",
         "/admin/sport-quiz",
         "/booster",
         "/operator",
         "/parent",
         "/sponsor",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_group_members",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "QUIZ-03 group membership (max 12, belong to at most 5); removed rows are a rejoin bar (creator, block or admin). Leaving deletes the row.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_group_create",
+        "quiz_group_join",
+        "quiz_group_mark_removed"
+      ],
+      "sqlReaders": [
+        "quiz_admin_group_case",
+        "quiz_admin_group_remove",
+        "quiz_admin_retention",
+        "quiz_admin_snapshot",
+        "quiz_end",
+        "quiz_group_active_count",
+        "quiz_group_handover",
+        "quiz_group_needs_recheck",
+        "quiz_group_owner_gone",
+        "quiz_group_page",
+        "quiz_group_page_dto",
+        "quiz_group_recheck",
+        "quiz_group_recheck_group",
+        "quiz_group_recheck_pair",
+        "quiz_group_refusal",
+        "quiz_group_remove_member",
+        "quiz_group_report",
+        "quiz_groups_mine",
+        "quiz_groups_on_block",
+        "quiz_groups_on_profile",
+        "quiz_round_begin",
+        "quiz_sync_badges",
+        "supervision_json"
+      ],
+      "removers": [
+        "quiz_erase_history",
+        "quiz_group_leave"
+      ],
+      "triggers": [],
+      "screens": [
+        "/",
+        "/admin",
+        "/admin/people",
+        "/admin/sport-quiz",
+        "/booster",
+        "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/profile",
+        "/sponsor",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_group_sets",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "QUIZ-03 shared group-week question set drawn without reading member exposures; purged at week end + 35 days and when a group dissolves on erasure.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_group_ensure_set"
+      ],
+      "sqlReaders": [
+        "quiz_admin_snapshot",
+        "quiz_round_pick"
+      ],
+      "removers": [
+        "quiz_admin_retention",
+        "quiz_erase_history"
+      ],
+      "triggers": [],
+      "screens": [
+        "/admin",
+        "/admin/sport-quiz",
+        "/dev/trivia-preview",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_groups",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "QUIZ-03 family-challenge groups: preset name only, sport theme, current owner (hand-over on creator deletion), status. No search or listing; purged 35 days after closing.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_group_remove",
+        "quiz_erase_history",
+        "quiz_group_create",
+        "quiz_group_handover",
+        "quiz_group_issue_code",
+        "quiz_group_leave",
+        "quiz_group_mark_removed",
+        "quiz_group_set_theme"
+      ],
+      "sqlReaders": [
+        "quiz_admin_group_case",
+        "quiz_admin_group_remove",
+        "quiz_admin_snapshot",
+        "quiz_end",
+        "quiz_group_create",
+        "quiz_group_ensure_set",
+        "quiz_group_join",
+        "quiz_group_leave",
+        "quiz_group_owned",
+        "quiz_group_page",
+        "quiz_group_page_dto",
+        "quiz_group_recheck",
+        "quiz_group_recheck_pair",
+        "quiz_group_refusal",
+        "quiz_group_remove_member",
+        "quiz_group_renew_code",
+        "quiz_group_set_theme",
+        "quiz_groups_mine",
+        "quiz_groups_on_block",
+        "quiz_member_ref",
+        "quiz_round_begin",
+        "quiz_sync_badges",
+        "supervision_json"
+      ],
+      "removers": [
+        "quiz_admin_retention"
+      ],
+      "triggers": [
+        "quiz_group_owner_gone → quiz_group_owner_gone"
+      ],
+      "screens": [
+        "/",
+        "/admin",
+        "/admin/people",
+        "/admin/sport-quiz",
+        "/booster",
+        "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/profile",
+        "/sponsor",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_levels",
+      "kind": "table",
+      "owner": "AURA",
+      "purpose": "QUIZ-04 highest trivia level reached per account (track overall) and per Life chapter; only goes up; removed only by history erasure or account deletion. Private to the account; admin sees level counts with cells under 10 hidden.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_sync_badges"
+      ],
+      "sqlReaders": [
+        "quiz_admin_life_snapshot",
+        "quiz_level",
+        "quiz_life_progress"
+      ],
+      "removers": [
+        "quiz_erase_history"
+      ],
+      "triggers": [
+        "quiz_level_guard → quiz_guard_level",
+        "quiz_level_truncate_guard → quiz_guard_truncate"
+      ],
+      "screens": [
+        "/admin",
+        "/admin/sport-quiz",
+        "/dev/trivia-preview",
+        "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_life_chapters",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "QUIZ-04 Life Playbook chapters (4 seeded closed, all 13+: Money Huddle, Savings Season, Scam Defense, Smart Plays): title, framing, position, admin open switch. Opens only with 5 approved items (one round); owner simplification 2026-10-15 (design §8).",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_life_chapter"
+      ],
+      "sqlReaders": [
+        "quiz_admin_life_snapshot",
+        "quiz_admin_question",
+        "quiz_admin_snapshot",
+        "quiz_guard_question",
+        "quiz_life_chapter_state",
+        "quiz_life_chapters",
+        "quiz_life_pool",
+        "quiz_life_progress",
+        "quiz_life_snapshot",
+        "quiz_sync_badges"
+      ],
+      "removers": [],
+      "triggers": [
+        "quiz_life_chapter_guard → quiz_guard_life_chapter"
+      ],
+      "screens": [
+        "/admin",
+        "/admin/sport-quiz",
+        "/dev/trivia-preview",
         "/sport-quiz"
       ]
     },
@@ -3792,25 +4159,34 @@
         "quiz_bump_history",
         "quiz_erase_history",
         "quiz_invitation",
+        "quiz_life_preferences",
         "quiz_preferences"
       ],
       "sqlReaders": [
+        "quiz_admin_life_snapshot",
         "quiz_admin_snapshot",
         "quiz_invitation",
+        "quiz_life_access",
+        "quiz_life_preferences",
+        "quiz_life_preferences_dto",
         "quiz_preferences",
         "quiz_preferences_dto",
-        "quiz_start"
+        "quiz_round_begin"
       ],
       "removers": [],
       "triggers": [],
       "screens": [
         "/",
+        "/admin",
         "/admin/sport-quiz",
         "/booster",
+        "/dev/trivia-preview",
         "/operator",
         "/parent",
+        "/profile",
         "/sponsor",
-        "/sport-quiz"
+        "/sport-quiz",
+        "/user/[id]"
       ]
     },
     {
@@ -3824,14 +4200,28 @@
         "quiz_admin_question"
       ],
       "sqlReaders": [
+        "quiz_admin_forecast",
+        "quiz_admin_life_snapshot",
         "quiz_admin_question",
         "quiz_admin_snapshot",
         "quiz_answer",
         "quiz_fun_available",
+        "quiz_group_create",
+        "quiz_group_ensure_set",
+        "quiz_group_set_theme",
+        "quiz_life_approved_count",
+        "quiz_life_pool",
+        "quiz_life_progress",
         "quiz_question_dto",
         "quiz_result_dto",
+        "quiz_round_begin",
+        "quiz_round_issue",
+        "quiz_round_items_dto",
+        "quiz_round_pick",
+        "quiz_season_recap",
         "quiz_snapshot",
-        "quiz_start"
+        "quiz_sync_badges",
+        "quiz_unseen_count"
       ],
       "removers": [],
       "triggers": [
@@ -3839,12 +4229,16 @@
       ],
       "screens": [
         "/",
+        "/admin",
         "/admin/sport-quiz",
         "/booster",
+        "/dev/trivia-preview",
         "/operator",
         "/parent",
+        "/profile",
         "/sponsor",
-        "/sport-quiz"
+        "/sport-quiz",
+        "/user/[id]"
       ]
     },
     {
@@ -3855,17 +4249,18 @@
       "writers": [],
       "readers": [],
       "sqlWriters": [
-        "quiz_save_request"
+        "quiz_save_receipt"
       ],
       "sqlReaders": [
         "quiz_admin_snapshot",
         "quiz_answer",
         "quiz_end",
         "quiz_invitation",
+        "quiz_next",
         "quiz_preferences",
         "quiz_receipt_dto",
-        "quiz_skip",
-        "quiz_start"
+        "quiz_round_begin",
+        "quiz_skip"
       ],
       "removers": [
         "quiz_admin_retention",
@@ -3874,12 +4269,64 @@
       "triggers": [],
       "screens": [
         "/",
+        "/admin",
         "/admin/sport-quiz",
         "/booster",
+        "/dev/trivia-preview",
         "/operator",
         "/parent",
         "/sponsor",
         "/sport-quiz"
+      ]
+    },
+    {
+      "name": "sport_quiz_round_items",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "QUIZ-03 per-question items of a weekly round (position 1-5, issued/expires, private answer, status incl. per-item void). Own history only; erased with learning history.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_question",
+        "quiz_answer",
+        "quiz_round_close",
+        "quiz_round_issue",
+        "quiz_round_settle"
+      ],
+      "sqlReaders": [
+        "quiz_active_item",
+        "quiz_admin_life_snapshot",
+        "quiz_admin_snapshot",
+        "quiz_answer",
+        "quiz_attempt_qualifies",
+        "quiz_facts",
+        "quiz_group_facts",
+        "quiz_life_progress",
+        "quiz_next",
+        "quiz_played",
+        "quiz_result_dto",
+        "quiz_round_begin",
+        "quiz_round_items_dto",
+        "quiz_round_settle",
+        "quiz_round_view",
+        "quiz_season_recap",
+        "quiz_snapshot",
+        "quiz_sync_badges"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/",
+        "/admin",
+        "/admin/sport-quiz",
+        "/booster",
+        "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/profile",
+        "/sponsor",
+        "/sport-quiz",
+        "/user/[id]"
       ]
     },
     {
@@ -3890,27 +4337,58 @@
       "writers": [],
       "readers": [],
       "sqlWriters": [
+        "quiz_admin_life_settings",
+        "quiz_admin_play_settings",
         "quiz_admin_settings"
       ],
       "sqlReaders": [
+        "quiz_admin_group_case",
+        "quiz_admin_group_remove",
+        "quiz_admin_life_chapter",
+        "quiz_admin_life_settings",
+        "quiz_admin_life_snapshot",
+        "quiz_admin_play_settings",
         "quiz_admin_question",
         "quiz_admin_retention",
         "quiz_admin_snapshot",
+        "quiz_end",
+        "quiz_erase_history",
+        "quiz_group_create",
+        "quiz_group_join",
+        "quiz_group_leave",
+        "quiz_group_owned",
+        "quiz_group_page",
+        "quiz_group_recheck",
+        "quiz_group_recheck_pair",
+        "quiz_group_renew_code",
+        "quiz_groups_mine",
+        "quiz_groups_on_block",
+        "quiz_guard_question",
+        "quiz_level",
+        "quiz_life_access",
+        "quiz_life_progress",
+        "quiz_life_snapshot",
         "quiz_lock",
+        "quiz_next",
         "quiz_require_testing",
+        "quiz_round_begin",
         "quiz_snapshot",
-        "quiz_start"
+        "quiz_sync_badges"
       ],
       "removers": [],
       "triggers": [],
       "screens": [
         "/",
+        "/admin",
         "/admin/sport-quiz",
         "/booster",
+        "/dev/trivia-preview",
         "/operator",
         "/parent",
+        "/profile",
         "/sponsor",
-        "/sport-quiz"
+        "/sport-quiz",
+        "/user/[id]"
       ]
     },
     {
@@ -3927,9 +4405,10 @@
         "quiz_admin_snapshot",
         "quiz_end",
         "quiz_erase_history",
+        "quiz_life_snapshot",
+        "quiz_round_begin",
         "quiz_skip",
-        "quiz_snapshot",
-        "quiz_start"
+        "quiz_snapshot"
       ],
       "removers": [
         "quiz_admin_retention"
@@ -3937,12 +4416,16 @@
       "triggers": [],
       "screens": [
         "/",
+        "/admin",
         "/admin/sport-quiz",
         "/booster",
+        "/dev/trivia-preview",
         "/operator",
         "/parent",
+        "/profile",
         "/sponsor",
-        "/sport-quiz"
+        "/sport-quiz",
+        "/user/[id]"
       ]
     },
     {
@@ -4223,6 +4706,7 @@
         "/admin/wishlist",
         "/athlete",
         "/booster",
+        "/dev/trivia-preview",
         "/drip",
         "/fan-zone",
         "/game/[id]",
@@ -4357,6 +4841,7 @@
         "/api/create-payout+api",
         "/athlete",
         "/booster",
+        "/dev/trivia-preview",
         "/drip",
         "/fan-zone",
         "/game/[id]",
@@ -4566,7 +5051,8 @@
         "unblock_user"
       ],
       "triggers": [
-        "user_blocks_end_links → user_blocks_end_guardian_links"
+        "user_blocks_end_links → user_blocks_end_guardian_links",
+        "quiz_groups_block → quiz_groups_on_block"
       ],
       "screens": [
         "/",
@@ -5482,6 +5968,7 @@
       "name": "are_friends",
       "owner": "PROFILE",
       "callers": [
+        "sql:quiz_teen_accepts",
         "sql:reels_apply_tag_defaults",
         "sql:viewer_relationship"
       ],
@@ -6194,6 +6681,7 @@
         "sql:guardian_list_minors",
         "sql:minor_status_json",
         "sql:preview_guardian_invite",
+        "sql:quiz_group_display_name",
         "sql:respond_guardian_link",
         "sql:sign_guardian_consent",
         "sql:supervision_json"
@@ -7412,6 +7900,12 @@
         "sql:admin_add_school_confirmer",
         "sql:create_guardian_invite",
         "sql:guardian_invite_for_code",
+        "sql:quiz_answer",
+        "sql:quiz_group_issue_code",
+        "sql:quiz_group_join",
+        "sql:quiz_member_ref",
+        "sql:quiz_next",
+        "sql:quiz_round_begin",
         "sql:school_confirm_athlete",
         "sql:school_confirmer_from_token",
         "sql:start_school_check"
@@ -7523,6 +8017,8 @@
         "sql:fun_vote",
         "sql:guardian_invite_for_code",
         "sql:list_my_friends",
+        "sql:quiz_group_page_dto",
+        "sql:quiz_group_refusal",
         "sql:reels_apply_tag_defaults",
         "sql:request_friend",
         "sql:sign_guardian_consent",
@@ -7582,6 +8078,8 @@
         "sql:minor_payout_hold_reason",
         "sql:payee_for_player",
         "sql:profiles_apply_new_account_rules",
+        "sql:quiz_group_display_name",
+        "sql:quiz_teen_accepts",
         "sql:request_friend",
         "sql:set_my_birth_month",
         "sql:set_my_privacy",
@@ -7705,6 +8203,12 @@
         "sql:create_guardian_invite",
         "sql:enforce_minor_consent",
         "sql:guardian_decide_approval",
+        "sql:quiz_admin_group_remove",
+        "sql:quiz_erase_history",
+        "sql:quiz_group_create",
+        "sql:quiz_group_join",
+        "sql:quiz_group_leave",
+        "sql:quiz_group_mark_removed",
         "sql:record_guardian_consent",
         "sql:respond_guardian_link",
         "sql:revoke_guardian_consent",
@@ -7888,6 +8392,8 @@
         "sql:log_supervision_event",
         "sql:preview_guardian_invite",
         "sql:quiz_actor",
+        "sql:quiz_life_actor",
+        "sql:quiz_life_snapshot",
         "sql:quiz_snapshot",
         "sql:record_guardian_consent",
         "sql:remove_friend",
@@ -8102,8 +8608,17 @@
         "sql:minor_status_json",
         "sql:payee_for_player",
         "sql:quiz_actor",
+        "sql:quiz_admin_group_case",
+        "sql:quiz_admin_life_snapshot",
         "sql:quiz_admin_settings",
+        "sql:quiz_group_display_name",
+        "sql:quiz_life_access",
+        "sql:quiz_life_actor",
+        "sql:quiz_life_snapshot",
+        "sql:quiz_round_begin",
         "sql:quiz_snapshot",
+        "sql:quiz_teen_accepts",
+        "sql:quiz_trivia_band",
         "sql:request_friend",
         "sql:set_my_birth_month",
         "sql:set_my_privacy",
@@ -8172,13 +8687,28 @@
       ]
     },
     {
+      "name": "quiz_active_item",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_next",
+        "sql:quiz_round_begin"
+      ],
+      "manual": "QUIZ-03 internal open item metadata for Start/Next responses.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
       "name": "quiz_actor",
       "owner": "AUTH",
       "callers": [
         "sql:quiz_admin_actor",
         "sql:quiz_expected_actor",
-        "sql:quiz_history",
-        "sql:quiz_receipt"
+        "sql:quiz_group_page",
+        "sql:quiz_groups_mine",
+        "sql:quiz_season_recap"
       ],
       "manual": "Internal canonical account/knownage/closed check; no client-supplied participant identity.",
       "writes": [],
@@ -8188,6 +8718,7 @@
       "name": "quiz_admin_actor",
       "owner": "ADMIN",
       "callers": [
+        "sql:quiz_admin_life_snapshot",
         "sql:quiz_admin_snapshot",
         "sql:quiz_expected_actor"
       ],
@@ -8196,19 +8727,131 @@
       "reads": []
     },
     {
+      "name": "quiz_admin_forecast",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_snapshot"
+      ],
+      "manual": "QUIZ-03 internal per-sport weeks-left forecast for the admin snapshot.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_exposures",
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_admin_group_case",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 admin audited case view: member ids, age bands, refusal reasons, case log; each read logged.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_cases",
+        "sport_quiz_group_codes",
+        "sport_quiz_group_join_attempts",
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_admin_group_remove",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 admin removal of one member or closing a whole group, with a recorded reason.",
+      "writes": [
+        "sport_quiz_groups"
+      ],
+      "reads": [
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_admin_life_chapter",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+      ],
+      "manual": "QUIZ-04 open / close a Life chapter; refused with a plain reason (\"needs N more approved questions\") until 5 approved items.",
+      "writes": [
+        "sport_quiz_audit",
+        "sport_quiz_life_chapters"
+      ],
+      "reads": [
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_admin_life_settings",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+      ],
+      "manual": "QUIZ-04 trivia.life switch and level thresholds with an audited reason; switching off ends open Life rounds.",
+      "writes": [
+        "sport_quiz_audit",
+        "sport_quiz_settings"
+      ],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_admin_life_snapshot",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+      ],
+      "manual": "QUIZ-04 admin Life desk: switch, thresholds, chapters with reasons (open at 5) and aggregate-only statistics (>= 20 responders per question, cells under 10 hidden, no per-user rows).",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_levels",
+        "sport_quiz_life_chapters",
+        "sport_quiz_preferences",
+        "sport_quiz_questions",
+        "sport_quiz_round_items",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_admin_play_settings",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 admin round size (1-5) and trivia.groups / trivia.images switches with an audited reason.",
+      "writes": [
+        "sport_quiz_audit",
+        "sport_quiz_settings"
+      ],
+      "reads": [
+        "sport_quiz_settings"
+      ]
+    },
+    {
       "name": "quiz_admin_question",
       "owner": "POLLS",
       "callers": [
         "apps/mobile/src/frontend/lib/sportQuiz.ts"
       ],
-      "manual": "Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction.",
+      "manual": "Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction; QUIZ-04 edit_replace saves a new draft version and archives the replaced draft in one transaction (review queue Edit).",
       "writes": [
         "sport_quiz_attempts",
         "sport_quiz_audit",
         "sport_quiz_badges",
-        "sport_quiz_questions"
+        "sport_quiz_questions",
+        "sport_quiz_round_items"
       ],
       "reads": [
+        "sport_quiz_life_chapters",
         "sport_quiz_questions",
         "sport_quiz_settings"
       ]
@@ -8224,6 +8867,7 @@
         "sport_quiz_audit"
       ],
       "reads": [
+        "sport_quiz_group_members",
         "sport_quiz_settings"
       ]
     },
@@ -8249,16 +8893,24 @@
       "callers": [
         "apps/mobile/src/frontend/lib/sportQuiz.ts"
       ],
-      "manual": "Complete100-slot bank through50-row opaque question paging, independent50-row bigint audit, full topic/lifecycle totals and effective expiry; no individual answer/token list.",
+      "manual": "Complete100-slot bank through50-row opaque question paging, independent50-row bigint audit, full topic/lifecycle totals and effective expiry; no individual answer/token list. QUIZ-04 bank_counts: whole-bank draft/approved version counts by topic, sport and Life chapter (content counts only).",
       "writes": [],
       "reads": [
         "sport_quiz_attempts",
         "sport_quiz_audit",
         "sport_quiz_badges",
         "sport_quiz_exposures",
+        "sport_quiz_group_cases",
+        "sport_quiz_group_codes",
+        "sport_quiz_group_join_attempts",
+        "sport_quiz_group_members",
+        "sport_quiz_group_sets",
+        "sport_quiz_groups",
+        "sport_quiz_life_chapters",
         "sport_quiz_preferences",
         "sport_quiz_questions",
         "sport_quiz_requests",
+        "sport_quiz_round_items",
         "sport_quiz_settings",
         "sport_quiz_week_guards"
       ]
@@ -8273,12 +8925,75 @@
       "writes": [
         "sport_quiz_attempts",
         "sport_quiz_audit",
-        "sport_quiz_badges"
+        "sport_quiz_round_items"
       ],
       "reads": [
         "sport_quiz_attempts",
         "sport_quiz_questions",
-        "sport_quiz_requests"
+        "sport_quiz_requests",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_attempt_qualifies",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_sync_badges"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_audit_is_life",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_snapshot"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_audit"
+      ]
+    },
+    {
+      "name": "quiz_badge_defaults",
+      "owner": "AURA",
+      "callers": [
+        "trigger:quiz_badge_defaults on sport_quiz_badges"
+      ],
+      "manual": "QUIZ-03 trigger fills kind/period for QUIZ-02 badge inserts.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_badge_shelf",
+      "owner": "AURA",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 own badge shelf (non-void badges with visibility).",
+      "writes": [],
+      "reads": [
+        "sport_quiz_badges"
+      ]
+    },
+    {
+      "name": "quiz_badge_visibility",
+      "owner": "AURA",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 own opt-in of one badge to group pages (private | groups).",
+      "writes": [
+        "sport_quiz_badges"
+      ],
+      "reads": [
+        "sport_quiz_badges"
       ]
     },
     {
@@ -8290,8 +9005,11 @@
         "sql:quiz_answer",
         "sql:quiz_end",
         "sql:quiz_expire",
-        "sql:quiz_skip",
-        "sql:quiz_start"
+        "sql:quiz_next",
+        "sql:quiz_round_begin",
+        "sql:quiz_round_close",
+        "sql:quiz_round_settle",
+        "sql:quiz_skip"
       ],
       "manual": "Protected settings/account-serialized monotonic learning revision on material issuance, terminal, badge/correction/pause changes; exact retries do not bump. Prevents stale erasure deleting new learning.",
       "writes": [
@@ -8317,9 +9035,10 @@
         "sql:quiz_answer",
         "sql:quiz_end",
         "sql:quiz_invitation",
+        "sql:quiz_next",
         "sql:quiz_preferences",
-        "sql:quiz_skip",
-        "sql:quiz_start"
+        "sql:quiz_round_begin",
+        "sql:quiz_skip"
       ],
       "manual": "Internal normalized request input SHA binding, never plaintext token persistence.",
       "writes": [],
@@ -8331,14 +9050,17 @@
       "callers": [
         "apps/mobile/src/frontend/lib/sportQuiz.ts"
       ],
-      "manual": "Owned secret-free terminal closure by exactly one attempt or Start UUID; cancellation-beforeStart fence, fixed reason and exact expected-week/profile/request.",
+      "manual": "QUIZ-04 End takes the round kind: a pending unknown Start is cancelled against that kind's guard only; an attempt must match the kind.",
       "writes": [
         "sport_quiz_attempts",
         "sport_quiz_audit"
       ],
       "reads": [
         "sport_quiz_attempts",
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
         "sport_quiz_requests",
+        "sport_quiz_settings",
         "sport_quiz_week_guards"
       ]
     },
@@ -8348,12 +9070,14 @@
       "callers": [
         "apps/mobile/src/frontend/lib/sportQuiz.ts"
       ],
-      "manual": "Owned history CAS erasure terminalizes current/pending round, removes learning/exposures/badges/receipts/own participant audit associations, increments retained revision and preserves preferences/notices/disclosed35-day minimal quota. Editorial audit remains immutable.",
+      "manual": "Owned history CAS erasure terminalizes current/pending round, removes learning/exposures/badges/receipts/own participant audit associations, increments retained revision and preserves preferences/notices/disclosed35-day minimal quota. Editorial audit remains immutable. QUIZ-03: also leaves groups and removes badges; keeps join attempts until their 35-day prune.",
       "writes": [
+        "sport_quiz_groups",
         "sport_quiz_preferences"
       ],
       "reads": [
-        "sport_quiz_badges",
+        "sport_quiz_group_join_attempts",
+        "sport_quiz_settings",
         "sport_quiz_week_guards"
       ]
     },
@@ -8361,12 +9085,23 @@
       "name": "quiz_expected_actor",
       "owner": "AUTH",
       "callers": [
+        "sql:quiz_admin_group_case",
+        "sql:quiz_admin_group_remove",
+        "sql:quiz_admin_life_chapter",
+        "sql:quiz_admin_life_settings",
+        "sql:quiz_admin_play_settings",
         "sql:quiz_admin_question",
         "sql:quiz_admin_retention",
         "sql:quiz_admin_settings",
-        "sql:quiz_answer",
-        "sql:quiz_end",
-        "sql:quiz_erase_history",
+        "sql:quiz_badge_visibility",
+        "sql:quiz_group_create",
+        "sql:quiz_group_join",
+        "sql:quiz_group_leave",
+        "sql:quiz_group_remove_member",
+        "sql:quiz_group_renew_code",
+        "sql:quiz_group_report",
+        "sql:quiz_group_set_theme",
+        "sql:quiz_group_start",
         "sql:quiz_invitation",
         "sql:quiz_preferences",
         "sql:quiz_skip",
@@ -8381,7 +9116,8 @@
       "owner": "POLLS",
       "callers": [
         "sql:quiz_answer",
-        "sql:quiz_start"
+        "sql:quiz_next",
+        "sql:quiz_round_begin"
       ],
       "manual": "Internal persisted terminal expiry under lifecycle lock; ordinary snapshots stay read-only.",
       "writes": [
@@ -8390,11 +9126,27 @@
       "reads": []
     },
     {
+      "name": "quiz_facts",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_snapshot",
+        "sql:quiz_level",
+        "sql:quiz_season_recap",
+        "sql:quiz_sync_badges"
+      ],
+      "manual": "QUIZ-03 internal facts learned in a week range (rounds + single-question).",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
       "name": "quiz_fun_available",
       "owner": "POLLS",
       "callers": [
-        "sql:quiz_snapshot",
-        "sql:quiz_start"
+        "sql:quiz_round_begin",
+        "sql:quiz_snapshot"
       ],
       "manual": "Internal reviewed unseen optional-topic availability; no silent sports/fun substitution when exhausted.",
       "writes": [],
@@ -8407,12 +9159,450 @@
       "name": "quiz_fun_slot",
       "owner": "POLLS",
       "callers": [
-        "sql:quiz_snapshot",
-        "sql:quiz_start"
+        "sql:quiz_round_begin",
+        "sql:quiz_snapshot"
       ],
       "manual": "Internal deterministic account/UTC-week4sports/1optional fun scheduling; no inferred interest or extra tracking counter.",
       "writes": [],
       "reads": []
+    },
+    {
+      "name": "quiz_group_active_count",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_erase_history",
+        "sql:quiz_group_issue_code",
+        "sql:quiz_group_join",
+        "sql:quiz_group_leave",
+        "sql:quiz_group_mark_removed",
+        "sql:quiz_group_refusal",
+        "sql:quiz_group_renew_code",
+        "sql:quiz_groups_mine",
+        "sql:quiz_round_begin"
+      ],
+      "manual": "QUIZ-03 internal active member count.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members"
+      ]
+    },
+    {
+      "name": "quiz_group_case",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_group_case",
+        "sql:quiz_admin_group_remove",
+        "sql:quiz_group_handover",
+        "sql:quiz_group_mark_removed",
+        "sql:quiz_group_report"
+      ],
+      "manual": "QUIZ-03 internal case-log insert.",
+      "writes": [
+        "sport_quiz_group_cases"
+      ],
+      "reads": []
+    },
+    {
+      "name": "quiz_group_code_new",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_issue_code"
+      ],
+      "manual": "QUIZ-03 internal 8-character code generator.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_group_create",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 create a preset-named group (create <= 3, belong <= 5); code returned once; exact request retry returns the page without a code.",
+      "writes": [
+        "sport_quiz_group_members",
+        "sport_quiz_groups"
+      ],
+      "reads": [
+        "sport_quiz_groups",
+        "sport_quiz_questions",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_group_display_name",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_page_dto"
+      ],
+      "manual": "QUIZ-03 internal first name (teens first name only).",
+      "writes": [],
+      "reads": [
+        "profiles"
+      ]
+    },
+    {
+      "name": "quiz_group_ensure_set",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_round_begin"
+      ],
+      "manual": "QUIZ-03 internal shared set draw without reading exposures (advisory lock per group held by caller).",
+      "writes": [
+        "sport_quiz_group_sets"
+      ],
+      "reads": [
+        "sport_quiz_groups",
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_group_facts",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_page_dto"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_group_handover",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_erase_history",
+        "sql:quiz_group_leave",
+        "sql:quiz_group_mark_removed"
+      ],
+      "manual": "QUIZ-03 internal hand-over to oldest member or dissolve.",
+      "writes": [
+        "sport_quiz_groups"
+      ],
+      "reads": [
+        "sport_quiz_group_members"
+      ]
+    },
+    {
+      "name": "quiz_group_issue_code",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_create",
+        "sql:quiz_group_remove_member",
+        "sql:quiz_group_renew_code"
+      ],
+      "manual": "QUIZ-03 internal hashed code rotation; none when full.",
+      "writes": [
+        "sport_quiz_group_codes",
+        "sport_quiz_groups"
+      ],
+      "reads": []
+    },
+    {
+      "name": "quiz_group_join",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 join by hashed code with MINOR-01 teen rules both ways and PRIV-01 blocks; 10 wrong tries / 5 joins a day; refusals return (counted) with one ordinary outcome.",
+      "writes": [
+        "sport_quiz_group_join_attempts",
+        "sport_quiz_group_members"
+      ],
+      "reads": [
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_group_leave",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 leave any time; creator leaving hands over to the oldest member or dissolves.",
+      "writes": [
+        "sport_quiz_groups"
+      ],
+      "reads": [
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_group_mark_removed",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_group_remove",
+        "sql:quiz_group_recheck",
+        "sql:quiz_group_recheck_group",
+        "sql:quiz_group_recheck_pair",
+        "sql:quiz_group_remove_member",
+        "sql:quiz_groups_on_block"
+      ],
+      "manual": "QUIZ-03 internal removal with tombstone, supervision event, code rotation.",
+      "writes": [
+        "sport_quiz_group_members",
+        "sport_quiz_groups"
+      ],
+      "reads": []
+    },
+    {
+      "name": "quiz_group_needs_recheck",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "sql:quiz_group_page",
+        "sql:quiz_round_begin"
+      ],
+      "manual": "QUIZ-03 internal lazy drift test (birthdays) for group page and group Start.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members"
+      ]
+    },
+    {
+      "name": "quiz_group_owned",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_remove_member",
+        "sql:quiz_group_renew_code",
+        "sql:quiz_group_set_theme"
+      ],
+      "manual": "QUIZ-03 internal creator check with lock order.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_group_owner_gone",
+      "owner": "POLLS",
+      "callers": [
+        "trigger:quiz_group_owner_gone on sport_quiz_groups"
+      ],
+      "manual": "QUIZ-03 trigger: creator account deletion hands the group over or dissolves it.",
+      "writes": [
+        "sport_quiz_group_cases"
+      ],
+      "reads": [
+        "sport_quiz_group_members"
+      ]
+    },
+    {
+      "name": "quiz_group_page",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 member group page: played-this-week mark per member, group totals, opt-in badges; removed members get only the removal notice.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_group_page_dto",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_create",
+        "sql:quiz_group_join",
+        "sql:quiz_group_page",
+        "sql:quiz_group_remove_member",
+        "sql:quiz_group_set_theme"
+      ],
+      "manual": "QUIZ-03 internal live group page projection.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_badges",
+        "sport_quiz_group_codes",
+        "sport_quiz_group_members",
+        "sport_quiz_groups"
+      ]
+    },
+    {
+      "name": "quiz_group_recheck",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "sql:quiz_groups_on_profile"
+      ],
+      "manual": "QUIZ-03 internal re-check of one account in every group after an age correction, setting change or closure.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_group_recheck_group",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "sql:check constraint",
+        "sql:quiz_group_page",
+        "sql:quiz_round_begin"
+      ],
+      "manual": "QUIZ-03 internal lazy group-wide re-check removing closed accounts and refused parties.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members"
+      ]
+    },
+    {
+      "name": "quiz_group_recheck_pair",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "sql:quiz_groups_on_friendship",
+        "sql:quiz_groups_on_guardian_link"
+      ],
+      "manual": "QUIZ-03 internal re-check of two accounts after an unfriend or an ended guardian link.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_group_refusal",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_join"
+      ],
+      "manual": "QUIZ-03 internal join refusal reason (closed, removed, full, blocked, teen rule).",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members",
+        "sport_quiz_groups"
+      ]
+    },
+    {
+      "name": "quiz_group_remove_member",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 creator removes a member (rejoin bar) and receives the rotated code.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members",
+        "sport_quiz_groups"
+      ]
+    },
+    {
+      "name": "quiz_group_renew_code",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 creator renews the 7-day code; refused while full or paused.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_group_report",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 Report group with a fixed reason (members and removed members), 5 a day.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_cases",
+        "sport_quiz_group_members"
+      ]
+    },
+    {
+      "name": "quiz_group_set_theme",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 creator sets the sport-filter theme for sets not yet drawn.",
+      "writes": [
+        "sport_quiz_groups"
+      ],
+      "reads": [
+        "sport_quiz_groups",
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_group_start",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 group round from a group page: same weekly opportunity, shared set with private replacements; refused while trivia.groups is off.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_groups_mine",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 own groups, removal notices and limits.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_groups_on_block",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "trigger:quiz_groups_block on user_blocks"
+      ],
+      "manual": "QUIZ-03 trigger: a block removes the blocked party from shared groups.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_groups_on_friendship",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "trigger:quiz_groups_friendship_rules on friendships"
+      ],
+      "manual": "QUIZ-03 trigger on friendships: re-check shared groups after an unfriend.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_groups_on_guardian_link",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "trigger:quiz_groups_guardian_rules on guardian_links"
+      ],
+      "manual": "QUIZ-03 trigger on guardian_links: re-check shared groups when a link ends.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_groups_on_profile",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "trigger:quiz_groups_profile_rules on profiles"
+      ],
+      "manual": "QUIZ-03 trigger on profiles: re-check groups after age, setting or closure changes.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_group_members"
+      ]
     },
     {
       "name": "quiz_guard_audit",
@@ -8426,12 +9616,56 @@
       "reads": []
     },
     {
+      "name": "quiz_guard_group_case",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "trigger:quiz_group_case_guard on sport_quiz_group_cases",
+        "trigger:quiz_group_case_truncate_guard on sport_quiz_group_cases"
+      ],
+      "manual": "QUIZ-03 trigger keeps the group case log append-only (FK nulling allowed).",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_guard_level",
+      "owner": "AURA",
+      "callers": [
+        "trigger:quiz_level_guard on sport_quiz_levels"
+      ],
+      "manual": "QUIZ-04 trigger: levels only go up; erasure / account deletion removes them.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_guard_life_chapter",
+      "owner": "POLLS",
+      "callers": [
+        "trigger:quiz_life_chapter_guard on sport_quiz_life_chapters"
+      ],
+      "manual": "QUIZ-04 trigger: a chapter opens only when ready (5 approved items); its id is fixed and it is never deleted.",
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "quiz_guard_question",
       "owner": "POLLS",
       "callers": [
         "trigger:quiz_question_guard on sport_quiz_questions"
       ],
       "manual": "Trigger freezes issued question wording/answers; edits become new reviewed versions.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_life_chapters",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_guard_truncate",
+      "owner": "BACKEND",
+      "callers": [
+        "trigger:quiz_level_truncate_guard on sport_quiz_levels"
+      ],
+      "manual": null,
       "writes": [],
       "reads": []
     },
@@ -8464,19 +9698,370 @@
       ]
     },
     {
+      "name": "quiz_level",
+      "owner": "AURA",
+      "callers": [
+        "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+      ],
+      "manual": "QUIZ-04 own personal level across every round kind (highest of stored and current), next threshold.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_levels",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_level_keys",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_admin_life_snapshot",
+        "sql:quiz_level",
+        "sql:quiz_level_rank",
+        "sql:quiz_life_progress",
+        "sql:quiz_sync_badges",
+        "sql:quiz_thresholds_ok"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_level_label",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_admin_life_snapshot",
+        "sql:quiz_level",
+        "sql:quiz_life_progress"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_level_rank",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_level",
+        "sql:quiz_life_progress",
+        "sql:quiz_sync_badges"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_access",
+      "owner": "PROFILE",
+      "callers": [
+        "sql:quiz_end",
+        "sql:quiz_next",
+        "sql:quiz_round_begin"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_preferences",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_life_actor",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_badge_shelf",
+        "sql:quiz_history",
+        "sql:quiz_level",
+        "sql:quiz_life_chapters",
+        "sql:quiz_life_expected_actor",
+        "sql:quiz_life_progress",
+        "sql:quiz_receipt"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_alt",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_life_figure_re",
+        "sql:quiz_life_phrase_re"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_approved_count",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_life_chapter_state",
+        "sql:quiz_life_progress"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_life_band_ok",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "sql:quiz_life_access",
+        "sql:quiz_life_actor",
+        "sql:quiz_life_snapshot",
+        "sql:quiz_round_begin"
+      ],
+      "manual": "QUIZ-04 Life eligibility: trivia bands plus 13+ accounts without a recorded age (not_given / unknown); never under 13.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_chapter_open",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_life_chapters",
+        "sql:quiz_life_pool",
+        "sql:quiz_life_snapshot"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_chapter_state",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_life_chapter",
+        "sql:quiz_admin_life_snapshot",
+        "sql:quiz_guard_life_chapter",
+        "sql:quiz_life_chapter_open"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_life_chapters"
+      ]
+    },
+    {
+      "name": "quiz_life_chapters",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+      ],
+      "manual": "QUIZ-04 the four chapters with effective open state and unseen counts (own read; no admin fields).",
+      "writes": [],
+      "reads": [
+        "sport_quiz_life_chapters"
+      ]
+    },
+    {
+      "name": "quiz_life_copy_problems",
+      "owner": "VOICE",
+      "callers": [
+        "sql:quiz_admin_question",
+        "sql:quiz_guard_question"
+      ],
+      "manual": "QUIZ-04 Life copy ruleset at approval (v4, design §8): lookalike letters, advice, brands, Tapua'i money words, NIL / eligibility, tax / loan / credit score / APR, money figures, years, the Scam Defense line, prompt <= 120 and explanation <= 200 characters.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_copy_rules",
+      "owner": "VOICE",
+      "callers": [
+        "sql:quiz_life_copy_problems",
+        "sql:quiz_life_figure_re"
+      ],
+      "manual": "QUIZ-04 the Life copy rule list, embedded from supabase/content/life_copy_rules.json (pnpm life:bank:check fails on drift).",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_expected_actor",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_erase_history",
+        "sql:quiz_life_preferences",
+        "sql:quiz_life_start",
+        "sql:quiz_next"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_figure_re",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_life_copy_problems"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_normalize",
+      "owner": "VOICE",
+      "callers": [
+        "sql:quiz_life_copy_problems"
+      ],
+      "manual": "QUIZ-04 text normalization before the copy rules: NFKC, zero-width removed, plain spaces and quotes, lowercase.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_open_at",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_life_snapshot",
+        "sql:quiz_life_chapter_state"
+      ],
+      "manual": "QUIZ-04 the number of approved items that opens a Life chapter (5, one round; owner simplification 2026-10-15).",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_phrase_re",
+      "owner": "VOICE",
+      "callers": [
+        "sql:quiz_life_copy_problems",
+        "sql:quiz_life_figure_re"
+      ],
+      "manual": "QUIZ-04 whole-word pattern for a rule phrase list (same pattern as the JS check).",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_pool",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_life_unseen_count",
+        "sql:quiz_round_pick"
+      ],
+      "manual": "QUIZ-04 internal unseen drawable Life questions for an account now (approved, open chapter, chapter filter).",
+      "writes": [],
+      "reads": [
+        "sport_quiz_exposures",
+        "sport_quiz_life_chapters",
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_life_preferences",
+      "owner": "PRIVACY_ENGINEERING",
+      "callers": [
+        "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+      ],
+      "manual": "QUIZ-04 private Life opt-in with its own CAS version; opting out ends an open Life round; not audited.",
+      "writes": [
+        "sport_quiz_preferences"
+      ],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_preferences"
+      ]
+    },
+    {
+      "name": "quiz_life_preferences_dto",
+      "owner": "PROFILE",
+      "callers": [
+        "sql:quiz_life_preferences",
+        "sql:quiz_life_snapshot"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_preferences"
+      ]
+    },
+    {
+      "name": "quiz_life_progress",
+      "owner": "AURA",
+      "callers": [
+        "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+      ],
+      "manual": "QUIZ-04 own chapter progress: share of approved questions seen, facts and the highest chapter level reached.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_exposures",
+        "sport_quiz_levels",
+        "sport_quiz_life_chapters",
+        "sport_quiz_questions",
+        "sport_quiz_round_items",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_life_snapshot",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+      ],
+      "manual": "QUIZ-04 own Life availability, private opt-in, this week's Life attempt and open-chapter / unseen counts.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_life_chapters",
+        "sport_quiz_settings",
+        "sport_quiz_week_guards"
+      ]
+    },
+    {
+      "name": "quiz_life_start",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+      ],
+      "manual": "QUIZ-04 Life round Start (kind life, 90 s default, 30 allowed, optional chapter): trivia.life on, Life notice + opt-in, eligible account, open chapters; same exact recovery as Start.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_strip",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_life_alt",
+        "sql:quiz_life_copy_problems"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_life_unseen_count",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_life_chapters",
+        "sql:quiz_life_snapshot",
+        "sql:quiz_round_begin"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "quiz_lock",
       "owner": "RLS_SECURITY",
       "callers": [
         "sql:quiz_admin_question",
         "sql:quiz_admin_settings",
         "sql:quiz_answer",
+        "sql:quiz_badge_visibility",
         "sql:quiz_bump_history",
         "sql:quiz_end",
         "sql:quiz_erase_history",
+        "sql:quiz_group_create",
+        "sql:quiz_group_report",
         "sql:quiz_invitation",
+        "sql:quiz_life_preferences",
+        "sql:quiz_next",
         "sql:quiz_preferences",
-        "sql:quiz_skip",
-        "sql:quiz_start"
+        "sql:quiz_skip"
       ],
       "manual": "Internal settings/account serialization before lifecycle mutations and clock capture.",
       "writes": [],
@@ -8485,19 +10070,82 @@
       ]
     },
     {
+      "name": "quiz_member_ref",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_page_dto",
+        "sql:quiz_group_remove_member"
+      ],
+      "manual": "QUIZ-03 internal opaque per-group member reference for the creator.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_groups"
+      ]
+    },
+    {
+      "name": "quiz_next",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 Next: exact request/expected-position/session-secret recovery issues the following item with its own deadline; replay returns the same item only before its deadline; re-checks the week boundary.",
+      "writes": [
+        "sport_quiz_attempts"
+      ],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_requests",
+        "sport_quiz_round_items",
+        "sport_quiz_settings"
+      ]
+    },
+    {
       "name": "quiz_normalize_options",
       "owner": "POLLS",
       "callers": [
+        "sql:quiz_admin_forecast",
         "sql:quiz_admin_snapshot",
         "sql:quiz_answer",
         "sql:quiz_fun_available",
+        "sql:quiz_group_ensure_set",
         "sql:quiz_guard_question",
+        "sql:quiz_life_pool",
+        "sql:quiz_round_pick",
         "sql:quiz_snapshot",
-        "sql:quiz_start"
+        "sql:quiz_unseen_count"
       ],
       "manual": "Protected Unicode/ECMAScript-whitespace option canonicalization for new content/approval/assignment; malformed legacy question rows stay admin-correctable and cannot issue or complete.",
       "writes": [],
       "reads": []
+    },
+    {
+      "name": "quiz_pair_ok",
+      "owner": "MINOR_SAFETY",
+      "callers": [
+        "sql:quiz_group_needs_recheck",
+        "sql:quiz_group_recheck",
+        "sql:quiz_group_recheck_group",
+        "sql:quiz_group_recheck_pair"
+      ],
+      "manual": "QUIZ-03 internal both-ways teen rule for one pair.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_played",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_snapshot",
+        "sql:quiz_group_page_dto",
+        "sql:quiz_groups_mine",
+        "sql:quiz_sync_badges"
+      ],
+      "manual": "QUIZ-03 internal played-this-week (at least one committed answer).",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_round_items"
+      ]
     },
     {
       "name": "quiz_preferences",
@@ -8530,11 +10178,40 @@
       ]
     },
     {
+      "name": "quiz_profile_closed",
+      "owner": "POLLS",
+      "callers": [
+        "sql:check constraint",
+        "sql:quiz_group_needs_recheck",
+        "sql:quiz_group_page_dto",
+        "sql:quiz_group_recheck",
+        "sql:quiz_group_recheck_group"
+      ],
+      "manual": "QUIZ-03 internal closed (under-13) account test.",
+      "writes": [],
+      "reads": [
+        "profiles"
+      ]
+    },
+    {
+      "name": "quiz_quarter_of",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_season_recap",
+        "sql:quiz_sync_badges"
+      ],
+      "manual": "QUIZ-03 internal calendar-quarter key.",
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "quiz_question_dto",
       "owner": "POLLS",
       "callers": [
         "sql:quiz_history",
-        "sql:quiz_start"
+        "sql:quiz_next",
+        "sql:quiz_round_begin",
+        "sql:quiz_round_items_dto"
       ],
       "manual": "Internal immutable content projection for original authorized Start or own terminal learning only.",
       "writes": [],
@@ -8559,10 +10236,11 @@
         "sql:quiz_answer",
         "sql:quiz_end",
         "sql:quiz_invitation",
+        "sql:quiz_next",
         "sql:quiz_preferences",
         "sql:quiz_receipt",
-        "sql:quiz_skip",
-        "sql:quiz_start"
+        "sql:quiz_round_begin",
+        "sql:quiz_skip"
       ],
       "manual": "Internal minimal owned exact receipt/terminal learning projection, never active question/token.",
       "writes": [],
@@ -8575,10 +10253,13 @@
       "owner": "RLS_SECURITY",
       "callers": [
         "sql:quiz_answer",
+        "sql:quiz_group_create",
+        "sql:quiz_group_join",
         "sql:quiz_invitation",
+        "sql:quiz_next",
         "sql:quiz_preferences",
-        "sql:quiz_skip",
-        "sql:quiz_start"
+        "sql:quiz_round_begin",
+        "sql:quiz_skip"
       ],
       "manual": "Internal default-paused/tester allowlist/production-refusal guard for quiz participation.",
       "writes": [],
@@ -8592,13 +10273,174 @@
       "callers": [
         "sql:quiz_history",
         "sql:quiz_receipt_dto",
-        "sql:quiz_save_request"
+        "sql:quiz_save_receipt"
       ],
       "manual": "Internal own terminal answer/explanation projection without active correct-answer leakage.",
       "writes": [],
       "reads": [
         "sport_quiz_attempts",
+        "sport_quiz_questions",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_round_begin",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_start",
+        "sql:quiz_life_start",
+        "sql:quiz_start"
+      ],
+      "manual": "QUIZ-04 internal Start core for every round kind (personal, group, life): one guard per (week, kind), one active round at a time, group >= 2 members, Life eligibility / opt-in / chapter gating; settings -> group -> account lock order.",
+      "writes": [
+        "sport_quiz_attempts",
+        "sport_quiz_audit"
+      ],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
+        "sport_quiz_preferences",
+        "sport_quiz_questions",
+        "sport_quiz_requests",
+        "sport_quiz_round_items",
+        "sport_quiz_settings",
+        "sport_quiz_week_guards"
+      ]
+    },
+    {
+      "name": "quiz_round_close",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_life_settings",
+        "sql:quiz_admin_question",
+        "sql:quiz_admin_settings",
+        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_life_preferences",
+        "sql:quiz_next",
+        "sql:quiz_round_settle"
+      ],
+      "manual": "QUIZ-03 internal round closure; completed when at least one committed non-void answer.",
+      "writes": [
+        "sport_quiz_attempts",
+        "sport_quiz_round_items"
+      ],
+      "reads": [
+        "sport_quiz_attempts"
+      ]
+    },
+    {
+      "name": "quiz_round_gap",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_question",
+        "sql:quiz_answer",
+        "sql:quiz_round_begin",
+        "sql:quiz_round_settle",
+        "sql:quiz_round_view"
+      ],
+      "manual": "QUIZ-03 internal 2-minute Next window.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_round_issue",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_next",
+        "sql:quiz_round_begin"
+      ],
+      "manual": "QUIZ-03 internal item + exposure insert.",
+      "writes": [
+        "sport_quiz_exposures",
+        "sport_quiz_round_items"
+      ],
+      "reads": [
         "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_round_items_dto",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_history"
+      ],
+      "manual": "QUIZ-03 internal closed-item history projection; never an open item.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_questions",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_round_pick",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_next",
+        "sql:quiz_round_begin"
+      ],
+      "manual": "QUIZ-03 internal draw: shared set unless seen, else private replacement; personal random unseen.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_exposures",
+        "sport_quiz_group_sets",
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_round_settle",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_life_settings",
+        "sql:quiz_admin_settings",
+        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_expire",
+        "sql:quiz_life_preferences",
+        "sql:quiz_next"
+      ],
+      "manual": "QUIZ-03 internal persisted expiry chain under the lifecycle lock.",
+      "writes": [
+        "sport_quiz_attempts",
+        "sport_quiz_round_items"
+      ],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_round_view",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_result_dto",
+        "sql:quiz_summary"
+      ],
+      "manual": "QUIZ-03 internal read-only effective round state (item expiry, missed Next).",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_save_receipt",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_end",
+        "sql:quiz_next",
+        "sql:quiz_round_begin",
+        "sql:quiz_save_request",
+        "sql:quiz_skip"
+      ],
+      "manual": "QUIZ-04 internal receipt writer: round operations have 20 per kind per week, ordinary saves 111, then reserved answer / off / end slots per (week, kind).",
+      "writes": [
+        "sport_quiz_requests"
+      ],
+      "reads": [
+        "sport_quiz_attempts"
       ]
     },
     {
@@ -8606,17 +10448,27 @@
       "owner": "POLLS",
       "callers": [
         "sql:quiz_answer",
-        "sql:quiz_end",
         "sql:quiz_invitation",
-        "sql:quiz_preferences",
-        "sql:quiz_skip",
-        "sql:quiz_start"
+        "sql:quiz_preferences"
       ],
       "manual": "Internal bounded caller/request/input exact receipt persistence and cancellation fencing.",
-      "writes": [
-        "sport_quiz_requests"
-      ],
+      "writes": [],
       "reads": []
+    },
+    {
+      "name": "quiz_season_recap",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sportQuiz.ts"
+      ],
+      "manual": "QUIZ-03 own calendar-quarter recap: facts by sport/topic, rounds, badges. Own data only.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_badges",
+        "sport_quiz_questions",
+        "sport_quiz_round_items"
+      ]
     },
     {
       "name": "quiz_skip",
@@ -8648,6 +10500,7 @@
         "sport_quiz_badges",
         "sport_quiz_exposures",
         "sport_quiz_questions",
+        "sport_quiz_round_items",
         "sport_quiz_settings",
         "sport_quiz_week_guards"
       ]
@@ -8658,8 +10511,8 @@
       "callers": [
         "sql:quiz_end",
         "sql:quiz_erase_history",
-        "sql:quiz_skip",
-        "sql:quiz_start"
+        "sql:quiz_round_begin",
+        "sql:quiz_skip"
       ],
       "manual": "Internal atomic disclosed35-day minimal weekly quota enforcement.",
       "writes": [
@@ -8674,33 +10527,101 @@
         "apps/mobile/src/frontend/lib/sportQuiz.ts"
       ],
       "manual": "Atomic unseen reviewed family and30/90 deadline under account/settings locks; exact request/profile/week/notice/token-bound original-view recovery only before expiry.",
-      "writes": [
-        "sport_quiz_attempts",
-        "sport_quiz_audit",
-        "sport_quiz_exposures"
-      ],
-      "reads": [
-        "sport_quiz_attempts",
-        "sport_quiz_preferences",
-        "sport_quiz_questions",
-        "sport_quiz_requests",
-        "sport_quiz_settings",
-        "sport_quiz_week_guards"
-      ]
+      "writes": [],
+      "reads": []
     },
     {
       "name": "quiz_summary",
       "owner": "POLLS",
       "callers": [
+        "sql:quiz_admin_snapshot",
         "sql:quiz_history",
+        "sql:quiz_life_snapshot",
         "sql:quiz_receipt_dto",
-        "sql:quiz_save_request",
+        "sql:quiz_save_receipt",
         "sql:quiz_snapshot"
       ],
       "manual": "Internal active-prompt-free attempt metadata and effective expiry at one server instant.",
       "writes": [],
       "reads": [
         "sport_quiz_attempts"
+      ]
+    },
+    {
+      "name": "quiz_sync_badges",
+      "owner": "AURA",
+      "callers": [
+        "sql:quiz_admin_question",
+        "sql:quiz_answer",
+        "sql:quiz_group_create",
+        "sql:quiz_group_join"
+      ],
+      "manual": "QUIZ-03 internal badge derivation from live rows (issue, void, re-earn).",
+      "writes": [
+        "sport_quiz_badges",
+        "sport_quiz_levels"
+      ],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
+        "sport_quiz_life_chapters",
+        "sport_quiz_questions",
+        "sport_quiz_round_items",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_teen_accepts",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_recheck",
+        "sql:quiz_group_recheck_group",
+        "sql:quiz_group_recheck_pair",
+        "sql:quiz_group_refusal",
+        "sql:quiz_pair_ok"
+      ],
+      "manual": "QUIZ-03 internal MINOR-01 friend-request rule for sharing a group.",
+      "writes": [],
+      "reads": [
+        "guardian_links",
+        "profiles"
+      ]
+    },
+    {
+      "name": "quiz_thresholds_ok",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:check constraint",
+        "sql:quiz_admin_life_settings"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_trivia_band",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_answer",
+        "sql:quiz_end",
+        "sql:quiz_next"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_unseen_count",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_round_begin"
+      ],
+      "manual": "QUIZ-03 internal unseen deliverable family count for a topic/sport.",
+      "writes": [],
+      "reads": [
+        "sport_quiz_exposures",
+        "sport_quiz_questions"
       ]
     },
     {
@@ -8715,16 +10636,35 @@
       "name": "quiz_week_at",
       "owner": "POLLS",
       "callers": [
+        "sql:quiz_admin_forecast",
+        "sql:quiz_admin_life_snapshot",
         "sql:quiz_admin_snapshot",
         "sql:quiz_end",
         "sql:quiz_erase_history",
+        "sql:quiz_group_page_dto",
+        "sql:quiz_groups_mine",
         "sql:quiz_invitation",
+        "sql:quiz_life_snapshot",
+        "sql:quiz_next",
         "sql:quiz_preferences",
+        "sql:quiz_round_begin",
         "sql:quiz_skip",
         "sql:quiz_snapshot",
-        "sql:quiz_start"
+        "sql:quiz_sync_badges"
       ],
       "manual": "Internal UTC week from explicit server instant, captured after locks for mutations.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_week_end",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_group_ensure_set",
+        "sql:quiz_next",
+        "sql:quiz_round_begin"
+      ],
+      "manual": "QUIZ-03 internal UTC week end instant.",
       "writes": [],
       "reads": []
     },
@@ -9364,6 +11304,8 @@
         "friendships",
         "profiles",
         "reels",
+        "sport_quiz_group_members",
+        "sport_quiz_groups",
         "supervision_events",
         "user_blocks"
       ]

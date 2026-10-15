@@ -619,6 +619,204 @@
           ]
         }
       }
+    },
+    {
+      "id": "QUIZ-03",
+      "title": "Trivia, play together: weekly rounds of five, true/false (images later), Learn your athlete's sport, family challenge groups, badge shelf and season recap, starter question bank",
+      "owner": "POLLS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-14T19:44:21Z",
+      "exemption": null,
+      "source": {
+        "description": "Builds on QUIZ-02 (paused / testing-only / empty cohort). New round items with per-item deadlines, question types, private challenge groups joined by hashed codes under MINOR-01 teen rules, sport and season badges, drafts-only starter bank. Design: docs/engineering/design/TRIVIA_PLAY_TOGETHER_DESIGN.md (review \u00a79 adopted).",
+        "paths": [
+          "docs/engineering/design/TRIVIA_PLAY_TOGETHER_DESIGN.md",
+          "supabase/migrations/20261014160000_trivia_play_together.sql",
+          "supabase/migrations/20261014170000_trivia_starter_bank.sql",
+          "supabase/content/trivia_starter_bank.json",
+          "scripts/trivia-bank-sql.mjs"
+        ]
+      },
+      "admin": {
+        "route": "/admin/sport-quiz",
+        "actions": [
+          "Round size setting; question type fields; bank exhaustion forecast; group counts (never names or answers); audited group case view and removal from a report; group and image switches; retention purge"
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizPlay.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizGroups.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizBank.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/sport-quiz",
+        "metrics": [
+          "Groups, members, active this week, codes made, join refusals by reason; rounds started / completed; items per round; badges by label; weeks until each sport runs out"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizPlay.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizGroups.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Inherits QUIZ-02 pause / empty cohort; switches trivia.groups (new groups and joins) and trivia.images (off) never loosen safety rules.",
+        "paths": [
+          "supabase/migrations/20261014160000_trivia_play_together.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible enrolled tester"
+        ],
+        "deniedBehavior": "RPC-only; group joins follow MINOR-01 teen rules both ways and blocks; codes hashed and rate-limited; no member answers or counts exposed; guardian sees group count only.",
+        "paths": [
+          "supabase/migrations/20261014160000_trivia_play_together.sql",
+          "scripts/replay/trivia-play-together-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/sport-quiz",
+        "paths": [
+          "apps/mobile/app/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizRound.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizGroups.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizGroupPage.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizBadgeShelf.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LearnSportCard.tsx",
+          "apps/mobile/src/frontend/hooks/useTimedSportQuizRound.ts",
+          "apps/mobile/src/frontend/hooks/useTriviaGroups.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-14T21:12:19Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-03-admin.md",
+              "command": "node scripts/replay/trivia-play-together-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "59/59 on PGlite (Postgres 18.6); schema 105/105; timed trivia with and without QUIZ-03 all pass. No hosted database."
+            },
+            {
+              "path": "docs/engineering/evidence/QUIZ-03-admin.md",
+              "command": "pnpm check",
+              "result": "exit 0, 153 suites / 1,255 tests (implementer run after the security fixes). SQL review APPROVED."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-14T21:43:11Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-03-app.md",
+              "command": "pnpm check",
+              "result": "exit 0: 156 suites / 1,286 tests and every guard. No device, screen reader or hosted database."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "QUIZ-04",
+      "title": "Life Playbook (opt-in, simple fun-fact trivia: Money Huddle, Savings Season, Scam Defense, Smart Plays) and personal progress (separate weekly allowances, levels that only go up)",
+      "owner": "POLLS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-14T21:53:41Z",
+      "exemption": null,
+      "source": {
+        "description": "Builds on QUIZ-02/03. Separate personal / group / life weekly guards; levels from facts learned that never drop; Life Playbook simplified by the owner 2026-10-15 to simple well-known facts: four 13+ chapters, one-admin approval like other trivia, automatic copy rules (no advice, brands, Tapua'i money words, NIL, tax / loan / credit, money figures or years). Design: docs/engineering/design/LIFE_PLAYBOOK_DESIGN.md (\u00a78 overrides \u00a72\u2013\u00a77).",
+        "paths": [
+          "docs/engineering/design/LIFE_PLAYBOOK_DESIGN.md",
+          "supabase/migrations/20261014180000_life_playbook.sql",
+          "supabase/migrations/20261014190000_life_playbook_bank.sql",
+          "supabase/content/life_playbook_bank.json",
+          "supabase/content/life_copy_rules.json",
+          "scripts/life-bank-sql.mjs"
+        ]
+      },
+      "admin": {
+        "route": "/admin/sport-quiz",
+        "actions": [
+          "trivia.life switch; chapters with 'needs N more approved question(s)' (open at 5); life question fields with copy rules at approval; level thresholds"
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLifeQuestion.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizBank.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/sport-quiz",
+        "metrics": [
+          "Opt-ins, Life rounds, chapter coverage, level distribution, per-question stats (>= 20 responders), cells under 10 hidden (aggregate only)"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "trivia.life off by default and stops new life rounds without touching personal or group play; inherits the QUIZ-02 pause / empty cohort.",
+        "paths": [
+          "supabase/migrations/20261014180000_life_playbook.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible enrolled tester"
+        ],
+        "deniedBehavior": "RPC-only; Life only via quiz_life_start for trivia-eligible 13+ accounts; no personal financial data; aggregate-only admin stats; Closed accounts policy on new tables.",
+        "paths": [
+          "supabase/migrations/20261014180000_life_playbook.sql",
+          "scripts/replay/life-playbook-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/sport-quiz",
+        "paths": [
+          "apps/mobile/app/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizScreen.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizAllowances.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizLevel.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LifePlaybookCard.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LifePlaybookHome.tsx",
+          "apps/mobile/src/frontend/hooks/useTimedSportQuizRound.ts",
+          "apps/mobile/src/frontend/hooks/useLifePlaybook.ts",
+          "apps/mobile/src/frontend/hooks/useTriviaLevel.ts",
+          "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-15T03:14:48Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-04-admin.md",
+              "command": "node scripts/replay/life-playbook-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "31/31 after the owner simplification (lead run); schema 105/105; QUIZ-03 59/59. Earlier full SQL review APPROVED; removal narrows the surface. No hosted database."
+            },
+            {
+              "path": "docs/engineering/evidence/QUIZ-04-admin.md",
+              "command": "pnpm check",
+              "result": "exit 0, 166 suites / 1,372 tests (lead run after the simplification)."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-15T03:15:48Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-04-app.md",
+              "command": "pnpm check",
+              "result": "exit 0, 166 suites / 1,372 tests (lead run). VOICE / ACCESSIBILITY / MINOR_SAFETY approved the participant screens before the simplification; screens unchanged apart from fixtures. No device, screen reader or hosted database."
+            }
+          ]
+        }
+      }
     }
   ]
 }

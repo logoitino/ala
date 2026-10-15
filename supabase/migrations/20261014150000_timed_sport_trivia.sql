@@ -28,10 +28,12 @@ alter table public.sport_quiz_attempts add constraint quiz_timed_window check(mo
 alter table public.sport_quiz_attempts drop constraint if exists quiz_timed_capability;
 alter table public.sport_quiz_attempts add constraint quiz_timed_capability check(mode<>'timed' or status<>'issued' or session_hash is not null);
 alter table public.sport_quiz_badges drop constraint if exists sport_quiz_badges_label_check;
-alter table public.sport_quiz_badges add constraint sport_quiz_badges_label_check check(label in ('Sport Learner','Trivia Explorer'));
+-- NOT VALID: on a re-run after QUIZ-03 (which widens these lists) existing rows must not stop the migration; new rows are
+-- still checked, and QUIZ-03 re-adds the wider list.
+alter table public.sport_quiz_badges add constraint sport_quiz_badges_label_check check(label in ('Sport Learner','Trivia Explorer')) not valid;
 alter table public.sport_quiz_audit drop constraint if exists sport_quiz_audit_action_check;
 alter table public.sport_quiz_audit add constraint sport_quiz_audit_action_check check(action in
-  ('settings','question_create','question_edit','question_approve','question_archive','question_void','start','answer','skip','end','retention'));
+  ('settings','question_create','question_edit','question_approve','question_archive','question_void','start','answer','skip','end','retention')) not valid;
 
 create table if not exists public.sport_quiz_preferences (
  profile_id uuid primary key references public.profiles(id) on delete cascade,

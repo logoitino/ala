@@ -3,6 +3,7 @@
  * (Marketing / Owner / Engineer / All) shows, plus the admin reads and actions behind the desks (Spotlight awards,
  * flagged-clip moderation, platform metrics, telemetry digest, reports and health checks).
  * Editing groups exclude the legacy Reports dashboard so top-level reporting has one navigation owner.
+ * The quiz desk is labelled Trivia (2026-10-15); its route and search terms keep the old Sport Pop Quiz name working.
  * @sideEffects Reads and writes through the shared Supabase client; admin role enforced by RLS.
  */
 
@@ -79,7 +80,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: '/admin/games', label: 'Live games', hint: 'Local match board' },
       { href: '/admin/sports', label: 'Sports', hint: 'Scoring, periods, stats per sport' },
       { href: '/admin/polls', label: 'Polls', hint: 'School cheer matchups' },
-      { href: '/admin/sport-quiz', label: 'Sport Pop Quiz', hint: 'Weekly learning bank, private badges and testing controls' },
+      // Trivia (2026-10-15): the desk keeps its saved /admin/sport-quiz address; search still finds the old name.
+      { href: '/admin/sport-quiz', label: 'Trivia', hint: 'Questions, Life Playbook, groups and switches', searchTerms: 'trivia quiz questions Life Playbook Sport Pop Quiz drafts review chapters' },
       { href: '/admin/fan-zone', label: 'Fan Zone', hint: 'Testing campaigns, private entry review, free ballots and tracked removal' },
       { href: '/admin/boosters', label: 'Boosters', hint: 'Local sponsorships' },
       { href: '/admin/publish', label: 'Publish queue', hint: 'Content readiness and go-live queue' },

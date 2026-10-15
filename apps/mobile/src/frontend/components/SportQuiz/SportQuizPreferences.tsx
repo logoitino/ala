@@ -1,4 +1,4 @@
-/** QUIZ-02 invitation/topic choices; Manual only is persisted Off, not a third invitation mode. */
+/** QUIZ-02 invitation/topic choices; Manual only is persisted Off, not a third invitation mode. QUIZ-03: weekly rounds. */
 import { Text, View } from 'react-native';
 import { TIMED_QUIZ_NOTICE_VERSION, type TimedQuizPreferencesInput, type TimedQuizSnapshot } from '@shared/timedSportQuiz';
 import { QuizButton } from './QuizButton';
@@ -12,7 +12,7 @@ export function SportQuizPreferences({ snapshot, busy, suppressed, uncertain, on
 }) {
     const save = (invitation_mode: 'off' | 'weekly', topic_mode = snapshot.preferences.topic_mode) => onSave({ invitation_mode, topic_mode, notice_version: TIMED_QUIZ_NOTICE_VERSION });
     return <View style={{ gap: 10 }}><Text accessibilityRole="header">Your trivia choices</Text>
- <Text>Invitations start off. Manual play is optional. Weekly invitations appear quietly on Home or your account home, with no popup or push. Saving these choices accepts the optional trivia notice shown here: one timed question per UTC week, private learning history and noncash completion badges.</Text>
+ <Text>Invitations start off. Manual play is optional. Weekly invitations appear quietly on Home or your account home, with no popup or push. Saving these choices accepts the optional trivia notice shown here: one round of up to five timed questions per UTC week, private learning history and noncash completion badges.</Text>
  <Text>{suppressed ? 'Invitations off on this view.' : `Invitations: ${snapshot.preferences.invitation_mode}.`}</Text>
  {uncertain ? <Text accessibilityRole="alert">Server save not confirmed. Refresh to review it, or retry the same choices. Manual only does not end an active round.</Text> : null}
  <QuizButton label="Manual only · invitations off" quiet disabled={busy} onPress={() => save('off')}/>

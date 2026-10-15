@@ -76,7 +76,8 @@ describe('QUIZ-02 strict timed adapter', () => {
     expect(mockClient.calls[0]).toEqual(mockClient.calls[1]);
     mockClient.response={...receipt,operation:'end',outcome:'cancelled'};
     await timedQuiz.endTimedSportQuiz({attempt_id:null,start_request_id:request,expected_week:'2026-10-12',reason:'background',request_id:request,expected_profile_id:profile});
-    expect(mockClient.calls[2]).toEqual({fn:'quiz_end',args:{p_attempt_id:null,p_start_request_id:request,p_expected_week:'2026-10-12',p_reason:'background',p_request_id:request,p_expected_profile_id:profile}});
+    // QUIZ-04: End names the round kind; personal is the adapter default.
+    expect(mockClient.calls[2]).toEqual({fn:'quiz_end',args:{p_attempt_id:null,p_start_request_id:request,p_expected_week:'2026-10-12',p_reason:'background',p_request_id:request,p_expected_profile_id:profile,p_round_kind:'personal'}});
   });
   it('maps preference/invitation/Skip and erasure compare-and-set inputs without inventing receipts', async () => {
     mockClient.response={...receipt,operation:'preferences',preferences:{...preferences,version:1}};
@@ -197,5 +198,31 @@ describe('QUIZ-02 strict timed adapter', () => {
     expect(await saveSportQuizQuestion(null,'create',{reason:'Create a reviewed draft.'},profile)).toEqual(saved);
     mockClient.response={...erased,debug:{message:'benign'}};expect(await timedQuiz.eraseTimedSportQuizHistory(0,profile)).toEqual(erased);
     mockClient.response={...retention,debug:{message:'benign'}};expect(await timedQuiz.pruneTimedSportQuizHistory('Prune expired recovery records.',profile)).toEqual(retention);
+  });
+  // QUIZ-04 control tower: whole-bank review counts and the atomic review-queue edit.
+  it('accepts optional whole-bank review counts and refuses malformed or participant-shaped rows',async()=>{
+    const bank_counts={topics:[{topic_category:'life',draft_count:61,approved_count:4},{topic_category:'sport',draft_count:3,approved_count:9}],
+      sports:[{sport:'Rugby',draft_count:3,approved_count:9}],chapters:[{chapter:'money_huddle',draft_count:61,approved_count:4}]};
+    mockClient.response={...admin,bank_counts};expect((await timedQuiz.fetchTimedSportQuizAdmin()).bank_counts).toEqual(bank_counts);
+    mockClient.response=admin;expect((await timedQuiz.fetchTimedSportQuizAdmin()).bank_counts).toBeUndefined();
+    for(const bad of [{...bank_counts,topics:[{topic_category:'life',draft_count:-1,approved_count:0}]},{...bank_counts,sports:[{sport:'Rugby',draft_count:'3',approved_count:0}]},
+      {...bank_counts,chapters:[{chapter:'Money Huddle',draft_count:1,approved_count:0}]},{topics:[],sports:[]},{...bank_counts,topics:[{topic_category:'life',draft_count:1,approved_count:0,profile_id:'p'}]}]){
+      mockClient.response={...admin,bank_counts:bad};await expect(timedQuiz.fetchTimedSportQuizAdmin()).rejects.toThrow(/unavailable/i);
+    }
+  });
+  it('edit_replace sends one bound call and requires the replaced draft to come back archived',async()=>{
+    const payload={reason:'Content review',prompt:'A budget plans where money goes first.',family_action:'existing' as const,question_key:'key1'};
+    mockClient.response={id:'q2',question_key:'key1',version:2,status:'draft',replaced_id:'q1',replaced_status:'archived'};
+    expect(await timedQuiz.replaceSportQuizDraft('q1',payload,profile)).toEqual(mockClient.response);
+    expect(mockClient.calls.at(-1)).toEqual({fn:'quiz_admin_question',args:{p_id:'q1',p_action:'edit_replace',p_payload:payload,p_expected_actor_id:profile}});
+    for(const bad of [{id:'q2',question_key:'key1',version:2,status:'draft'},{id:'q2',question_key:'key1',version:2,status:'draft',replaced_id:'q9',replaced_status:'archived'},
+      {id:'q2',question_key:'key1',version:2,status:'approved',replaced_id:'q1',replaced_status:'archived'}]){
+      mockClient.response=bad;await expect(timedQuiz.replaceSportQuizDraft('q1',payload,profile)).rejects.toThrow(/unavailable/i);
+    }
+    mockClient.error={code:'P0001',message:'quiz_question_action_invalid'};
+    const old=await timedQuiz.replaceSportQuizDraft('q1',payload,profile).catch(e=>e);
+    expect(timedQuiz.editReplaceUnsupported(old)).toBe(true);
+    mockClient.error={code:'P0001',message:'quiz_life_copy: money_figure'};
+    expect(timedQuiz.editReplaceUnsupported(await timedQuiz.replaceSportQuizDraft('q1',payload,profile).catch(e=>e))).toBe(false);
   });
 });

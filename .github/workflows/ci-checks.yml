@@ -89,6 +89,9 @@ jobs:
           echo "1a841344c67fa38277b0c5b898b0ed0c518d3a6d71cb9a07fa21c300b5a5977b84458e8e1780529cbd6dec5647d8c970f913dc78306514981269e70eef773810  /tmp/pglite.tgz" | sha512sum -c -
           mkdir -p /tmp/pglite && tar -xzf /tmp/pglite.tgz -C /tmp/pglite
           node scripts/replay/schema-replay.mjs /tmp/pglite/package/dist
+          node scripts/replay/timed-trivia-replay.mjs /tmp/pglite/package/dist --with-quiz03
+          node scripts/replay/trivia-play-together-replay.mjs /tmp/pglite/package/dist
+          node scripts/replay/life-playbook-replay.mjs /tmp/pglite/package/dist
           node scripts/replay/books01-ledger-replay.mjs /tmp/pglite/package/dist supabase/migrations/20261012210000_bookkeeping_ledger.sql
           node scripts/replay/data01-closures-replay.mjs /tmp/pglite/package/dist supabase/migrations/20261013120000_data_governance_closures.sql
           node scripts/replay/support-replay.mjs /tmp/pglite/package/dist

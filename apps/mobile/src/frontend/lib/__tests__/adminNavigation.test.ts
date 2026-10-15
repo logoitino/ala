@@ -96,7 +96,7 @@ it('gives the finance team a lens with only the money desks, and links editors t
 
 it('makes the weekly Sport Quiz desk discoverable with its account route and analytics trail', () => {
   const { adminAnalysisForPath } = require('@/lib/admin');
-  expect(adminTrailForPath('/admin/sport-quiz').desk.label).toBe('Sport Pop Quiz');
+  expect(adminTrailForPath('/admin/sport-quiz').desk.label).toBe('Trivia');
   expect(adminTrailForPath('/admin/sport-quiz').fanHref).toBe('/sport-quiz');
   for (const lens of ['all', 'owner', 'marketing', 'engineer'] as const) {
     expect(navGroupsForLens(lens).flatMap(group => group.items.map(item => item.href))).toContain('/admin/sport-quiz');

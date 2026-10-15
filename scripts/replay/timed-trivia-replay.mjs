@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /** QUIZ-02 real PostgreSQL actors verify timed authority and private recovery.
+ * `--with-quiz03` also applies the QUIZ-03 rounds/groups migration and re-runs every check on top of it; the few
+ * expectations QUIZ-03 intentionally changes are marked `quiz03 ?` and listed in docs/engineering/SCHEMA.md (QUIZ-03 section).
  * @sideEffects Builds a disposable database from the historical canonical schema; no hosted calls.
  */
 import fs from 'node:fs';
@@ -8,6 +10,8 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 const dist = process.argv[2] || '.smoke/runtime/pglite-cache/package/dist';
+const quiz03 = process.argv.includes('--with-quiz03');
+const quiz03Migration='supabase/migrations/20261014160000_trivia_play_together.sql';
 const { PGlite } = await import(pathToFileURL(path.resolve(dist, 'index.js')).href);
 const { pgcrypto } = await import(pathToFileURL(path.resolve(dist, 'contrib/pgcrypto.js')).href);
 const db = new PGlite({ extensions: { pgcrypto } });
@@ -41,6 +45,7 @@ const oldComplete=(await db.query("insert into public.sport_quiz_attempts(profil
 await db.query("insert into public.sport_quiz_badges(profile_id,attempt_id,week_start) values($1,$2,public.quiz_week()-7)",[profiles.legacyDone,oldComplete]);
 await db.query('update public.sport_quiz_settings set enabled=true,pilot_accounts=$1::uuid[]',[ [profiles.legacy] ]);
 if(fs.existsSync(migration)) await db.exec(fs.readFileSync(migration,'utf8'));
+if(quiz03) await db.exec(fs.readFileSync(quiz03Migration,'utf8'));
 await test('timed protocol starts paused, invitations off and no active question in snapshot',async()=>{
   const s=await snapshot(); assert.equal(s.contract_version,2); assert.equal(s.preferences.invitation_mode,'off');
   assert.equal(s.availability,'paused'); assert.equal(s.attempt,null);
@@ -62,7 +67,9 @@ const start=(key,request=randomUUID(),duration=30,token=secret,expected=profiles
 };
 const answer=(key,id,option=0,request=randomUUID(),token=secret,expected=profiles[key])=>rpc(key,'public.quiz_answer($1,$2,$3,$4,$5)',[id,option,request,token,expected]);
 const end=(key,id=null,startId=null,request=randomUUID(),reason='user_end',expected=profiles[key])=>rpc(key,'public.quiz_end($1,$2,$3,$4,$5,$6)',[id,startId,week,reason,request,expected]);
-const backdate=async(id)=>db.query("update public.sport_quiz_attempts set started_at=t.at-interval '100 seconds',issued_at=t.at-interval '100 seconds',expires_at=t.at-interval '10 seconds',duration_seconds=90 from (select statement_timestamp() at)t where id=$1",[id]);
+const backdate=async(id)=>{await db.query("update public.sport_quiz_attempts set started_at=t.at-interval '100 seconds',issued_at=t.at-interval '100 seconds',expires_at=t.at-interval '10 seconds',duration_seconds=90 from (select statement_timestamp() at)t where id=$1",[id]);
+ // QUIZ-03 harness only: a round's deadline lives on its open item, so the same backdate moves that item too.
+ if(quiz03) await db.query("update public.sport_quiz_round_items set issued_at=t.at-interval '100 seconds',expires_at=t.at-interval '10 seconds' from (select statement_timestamp() at)t where attempt_id=$1 and status='issued'",[id]);};
 await test('canonical profile differs from auth identity',async()=>assert.notEqual(profiles.fan,ids.fan));
 await test('legacy issued round becomes terminal history with its family exposed',async()=>{
  const h=await rpc('legacy','public.quiz_history()');assert.equal(h.items[0].attempt.mode,'legacy');assert.equal(h.items[0].attempt.status,'ended');
@@ -328,7 +335,18 @@ await test('active End at saturated ordinary budget remains exact and last Off s
  assert.equal((await db.query('select count(*)::int n from public.sport_quiz_requests where profile_id=$1',[profiles.quotaActive])).rows[0].n,60);
  await assert.rejects(()=>end('quotaActive',a.attempt.id,null,req,'background'),/quiz_request_conflict/);
 });
-await test('bank cap counts every historical version; immutable sources and family cannot change',async()=>{
+await test(quiz03?'quiz03 ? bank cap 300 counts only draft and approved versions; immutable sources and family cannot change':'bank cap counts every historical version; immutable sources and family cannot change',async()=>{
+ if(quiz03){
+  const active=async()=>(await db.query("select count(*)::int n from public.sport_quiz_questions where status in ('draft','approved')")).rows[0].n;
+  for(let i=await active();i<300;i++) await question(null,'create',{...payload,prompt:`Which additional bounded test question is ${i}?`});
+  await assert.rejects(()=>question(null,'create',payload),/quiz_bank_full/);
+  const draft=(await db.query("select id from public.sport_quiz_questions where status='draft' order by created_at limit 1")).rows[0].id;
+  await question(draft,'archive',{reason:'Archive frees one active slot under the cap.'});
+  await question(null,'create',{...payload,prompt:'Which question uses the slot freed by archiving?'});
+  await assert.rejects(()=>db.query('update public.sport_quiz_questions set source_notes=$1 where id=$2',['Changed private source notes.',q.id]),/quiz_immutable/);
+  const snap=await admin('public.quiz_admin_snapshot()');assert.equal(snap.active_total,300);assert.equal(snap.question_cap,300);assert.ok(snap.question_total>300);
+  return;
+ }
  const initial=(await db.query('select count(*)::int n from public.sport_quiz_questions')).rows[0].n;
  for(let i=initial;i<100;i++) await question(null,'create',{...payload,prompt:`Which additional bounded test question is ${i}?`});
  await assert.rejects(()=>question(null,'create',payload),/quiz_bank_full/);
@@ -352,12 +370,17 @@ await test('ordinary and admin snapshots do not change any private table row cou
 });
 await test('full canonical second application preserves nondefault timed settings, preferences, history and correction',async()=>{
  await prefs('revPreserve');const live=await start('revPreserve',randomUUID(),90);
- const tables=['settings','preferences','questions','attempts','exposures','week_guards','requests','badges','audit'];
+ const tables=['settings','preferences','questions','attempts','exposures','week_guards','requests','badges','audit',...(quiz03?['round_items']:[])];
  const state=async()=>Object.fromEntries(await Promise.all(tables.map(async t=>[t,(await db.query(`select to_jsonb(x) row from public.sport_quiz_${t} x order by to_jsonb(x)::text`)).rows])));
  const before=await state();assert.equal(before.settings[0].row.enabled,true);assert.ok(before.preferences.some(x=>x.row.topic_mode==='mix'));assert.ok(before.attempts.some(x=>x.row.status==='void'));
  assert.ok(before.attempts.some(x=>x.row.id===live.attempt.id&&x.row.status==='issued'&&x.row.session_hash));
- const canonical=fs.readFileSync('apps/mobile/src/backend/db/schema.sql','utf8').split('\n-- QUIZ-02:')[0]+'\n'+fs.readFileSync(migration,'utf8');
+ const canonical=fs.readFileSync('apps/mobile/src/backend/db/schema.sql','utf8').split('\n-- QUIZ-02:')[0]+'\n'+fs.readFileSync(migration,'utf8')+(quiz03?'\n'+fs.readFileSync(quiz03Migration,'utf8'):'');
  await db.exec(canonical);assert.deepEqual(await state(),before);
  for(const signature of ['quiz_start(text)','quiz_answer(uuid,integer,uuid)','quiz_skip()','quiz_admin_snapshot(bigint)']) assert.equal((await db.query('select to_regprocedure($1)::text f',[`public.${signature}`])).rows[0].f,null);
+});
+if(quiz03) await test('quiz03 ? every Start in this run issued a round (mode round with items), never a single timed question',async()=>{
+ const r=(await db.query("select count(*) filter(where mode='round')::int rounds,count(*) filter(where mode='timed' and status<>'skipped')::int timed from public.sport_quiz_attempts")).rows[0];
+ assert.ok(r.rounds>10);assert.equal(r.timed,0);
+ assert.ok((await db.query('select count(*)::int n from public.sport_quiz_round_items')).rows[0].n>=r.rounds-2);
 });
 await finish(); }

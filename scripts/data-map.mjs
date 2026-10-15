@@ -384,7 +384,7 @@ for (const row of ownership.exportsTriage) {
 
 // Archive naming (archive/README.md): every file under a dated pass folder is `<stem>.archived.<ext>`, starts
 // with an ARCHIVED header, and is covered by a registry entry; live code never imports from archive/.
-const ARCHIVE_KINDS = ['whole file', 'export', 'helper', 'unused local', 'tests', 'database function'];
+const ARCHIVE_KINDS = ['whole file', 'export', 'helper', 'unused local', 'tests', 'database function', 'database table'];
 const archiveFiles = fs.readdirSync(path.join(root, 'archive'), { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && /-\d{4}-\d{2}-\d{2}$/.test(entry.name))
   .flatMap((entry) => fs.readdirSync(path.join(root, 'archive', entry.name), { recursive: true }).map((child) => `archive/${entry.name}/${String(child).split(path.sep).join('/')}`))
