@@ -1,4 +1,7 @@
-/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
+ * QUIZ-05: after a first athlete claim has finished, an optional last step offers "Share a fun fact?" with Not now
+ * from the first frame. The claim never waits for it; the step closes itself when the server says this account can't
+ * share (no recorded age, not linked yet, or fun facts off). */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useRef, useState } from 'react';
@@ -18,6 +21,7 @@ import * as Haptics from 'expo-haptics';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { TeamSearchField } from '@/components/Profile/TeamSearchField';
+import { FunFactShare } from '@/components/Profile/FunFactShare';
 import { LegalAckToggle, LegalModal } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
@@ -81,6 +85,11 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
   const [jersey, setJersey] = useState('');
   const [position, setPosition] = useState('');
   const [classYear, setClassYear] = useState<string | null>(null);
+  // Optional fun-fact step, shown only after a first claim has already saved.
+  const [funStep, setFunStep] = useState(false);
+  // The step sits at the top of the list, but Apply is at the bottom: bring it into view when it appears.
+  const scrollRef = useRef<ScrollView>(null);
+  useEffect(() => { if (funStep) scrollRef.current?.scrollTo?.({ y: 0, animated: false }); }, [funStep]);
   const translateY = useSharedValue(0);
   const dim = useSharedValue(0);
   const toggleLayouts = useRef<Partial<Record<'fan' | 'athlete', { x: number; width: number }>>>({});
@@ -126,6 +135,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
     if (!visible) return;
     setOpen(true);
     resetForm();
+    setFunStep(false);
     if (Platform.OS === 'web') {
       translateY.value = 0;
       dim.value = 1;
@@ -182,7 +192,8 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
         classYear: classYear ?? '',
       });
       showToast(isAthlete ? 'Roster saved 🏆' : 'School claimed 🏆 Get Varsity verified to unlock Player of the Week');
-      dismiss();
+      if (isAthlete) dismiss();
+      else setFunStep(true);
     } finally {
       setApplying(false);
     }
@@ -215,11 +226,13 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
             is a later glow, not a gate. Highlights stay public while you wait.
           </Text>
           <ScrollView
+            ref={scrollRef}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             style={styles.sheetScroll}
             contentContainerStyle={styles.sheetContent}
           >
+        {funStep ? <FunFactShare variant="signup" onSkip={dismiss} onHidden={dismiss} /> : null}
 
         <View style={[styles.card, styles.cardOn]} accessibilityRole="summary">
           <View style={styles.cardHead}>

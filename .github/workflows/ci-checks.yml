@@ -92,6 +92,7 @@ jobs:
           node scripts/replay/timed-trivia-replay.mjs /tmp/pglite/package/dist --with-quiz03
           node scripts/replay/trivia-play-together-replay.mjs /tmp/pglite/package/dist
           node scripts/replay/life-playbook-replay.mjs /tmp/pglite/package/dist
+          node scripts/replay/fresh-questions-replay.mjs /tmp/pglite/package/dist
           node scripts/replay/books01-ledger-replay.mjs /tmp/pglite/package/dist supabase/migrations/20261012210000_bookkeeping_ledger.sql
           node scripts/replay/data01-closures-replay.mjs /tmp/pglite/package/dist supabase/migrations/20261013120000_data_governance_closures.sql
           node scripts/replay/support-replay.mjs /tmp/pglite/package/dist

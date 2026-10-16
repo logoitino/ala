@@ -1812,3 +1812,91 @@ reserved slots per (week, kind); (7) Trivia Explorer is one per week and re-poin
 week before a void withdraws it; (8) the trivia snapshot's `attempt` is the open round of any kind, else this week's
 personal attempt; (9) erasure spends all three weekly opportunities and clears levels; (10) QUIZ-03's widened checks
 are re-added `NOT VALID` so QUIZ-04 rows survive a re-run.
+
+## QUIZ-05 Fresh questions: self-healing trivia, Know your athlete and refills (`20261015210000_trivia_fresh_questions.sql`, **written 2026-10-15, not applied**)
+
+Design [TRIVIA_FRESH_QUESTIONS_DESIGN](design/TRIVIA_FRESH_QUESTIONS_DESIGN.md) (§6 design review overrides §1–§5). The one
+rule: nothing reaches players without an admin approving it; spotting, pausing, drafting and alerting are automatic.
+Switch `trivia.athlete_questions` (`sport_quiz_settings.athlete_questions_enabled`) starts off and the fun-fact share
+(`athlete_share_pct`, 0–10) at 0. Appended to `schema.sql` inside the QUIZ transaction; `20261014180000` now refuses a lone
+re-run after this file (`quiz_rerun_after_quiz05`).
+
+| Table / column | Purpose |
+| --- | --- |
+| `quiz_athlete_facts` | An athlete's fun facts: `athlete_id`, `prompt_key` (six prompts), `answer_text` (2–40 characters; the **only** place the athlete's words live, cleared to null on withdrawal, unlink, under-13 block), `status` (`waiting_guardian`, `guardian_review`, `admin_review`, `approved`, `declined`, `withdrawn`, `removed`), `look_reasons`, guardian request / decision, admin decision, `decline_reason`, `question_id`, `cleared_at` / `clear_cause`. At most 3 live and one live per prompt. |
+| `sport_quiz_question_stats` | Per question version: distinct `responders`, `right_count`, `timeouts`, `difficulty` (easy / medium / hard from `min_responders`), `flags` (`too_easy`, `confusing` type-aware, `too_long`), `dismissed_flags`, pause state (`paused_at`, `pause_reason`), `queued_at` (daily cap), `restored_at` / `restored_by`, `reviewed_at`. Aggregates only. |
+| `sport_quiz_reports` | Question reports: `question_id`, `topic_category`, `reporter_id` (cleared at 90 days), `reason` (`wrong_answer`, `confusing`, `not_okay`, `private` on fun facts only), `is_fact`, `counted` / `not_counted_reason` (`new_account`, `no_completed_round`, `blocked_pair`). One per account per question; deleted at 180 days and by erasure. |
+| `sport_quiz_imports` | One row per real bulk import (actor, reason, totals); dry runs write nothing. |
+| `sport_quiz_questions.fact_id`, topic `athlete` | A fun-fact question holds `{name}` in the prompt and `{answer}` as the correct option, never the athlete's words; filled per viewer at read time. Excluded from the bank pages and the 300 cap. |
+| `sport_quiz_round_items.shown_order`, `answered_position` | The shown order generated at issue (null for true / false and older items) and the shown position answered; `answered_option` stays the stored index. |
+| `sport_quiz_attempts.learn_athlete_id` | The athlete whose Learn card started the personal round (validated at Start). |
+| `sport_quiz_settings` | `athlete_questions_enabled`, `athlete_share_pct`, `reports_paused`, `self_heal` (five editable thresholds within bounds), `fact_salt` (private; never returned). |
+| `guardian_approval_requests.change_key` | Also `fun_fact:<fact id>` (MINOR-01 approval type `fun_fact`). |
+| `privacy_default_audience` | Adds `fun_facts: friends`; 13–15 are capped at friends when drawing. |
+
+| RPC | Behaviour |
+| --- | --- |
+| `quiz_learn_start` | Personal weekly round from an athlete's Learn card; the athlete player id is validated (verified, open, no block) and joins the Start digest. |
+| `quiz_answer` (redefined) | `p_option` is the **shown** position; mapped through the item's `shown_order`; both kept on the item and in the receipt result (`answered_position`, `correct_position`, `shown_order` after the reveal). A fun fact is re-checked at the reveal and voided (`fact_unavailable`) if it no longer passes. Fun-fact answer audit rows carry no question id. |
+| `quiz_report` | After a closed round item only; fixed reasons; once per question; 10 per day; intake pause returns `paused` and records nothing; auto-pause at 2 counted reporters (1 `not_okay` / `private` on a fun fact), 3 new after a restore, at most 10 per topic per UTC day (then `queued_at` + one `report_alert`). The reply never says whether it counted. |
+| `quiz_fact_submit`, `quiz_fact_withdraw`, `quiz_fact_mine`, `quiz_fact_counts`, `quiz_fact_export` | Athlete: submit (server text filter, 13–15 to the guardian or a waiting draft, no recorded age refused), withdraw (athlete only; clears the text and voids the question and unrevealed items), own facts (with "paused"), completed-month buckets (5+ / 10+ / 25+, under 5 hidden; athlete, guardians, admins and testers never counted), export of facts and decisions. |
+| `quiz_fact_guardian_pending`, `quiz_fact_guardian_decide` | Supervising guardian only: see and approve / decline; never write, edit or withdraw. `guardian_decide_approval` (redefined) routes `fun_fact` keys the same way, refuses admins for them and changes no privacy setting. |
+| `quiz_admin_fact_queue`, `quiz_admin_fact_decide` | Admin queue (200 newest, guardian status, look reasons, withdrawn shown without text) and decision: approve needs the checklist (no sponsor or business, no place, no schedule), the guardian's approval for 13–15 and a clean server text check; it builds the question from the prompt template, three curated wrong options not near the answer and `{answer}`, shuffled. Decline takes a reason code. |
+| `quiz_admin_needs_look`, `quiz_admin_needs_look_action` | Paused, queued, flagged and reported questions with reasons and counts (responders and percentages only from `min_responders`; never a reporter). Actions `restore`, `dismiss`, `archive` (a fun fact is declined and its question voided). Edit = `quiz_admin_question` `edit_replace`, now also for an approved question that needs a look. |
+| `quiz_admin_fresh_settings` | Switch, share (0–10), report intake and self-heal thresholds, with a reason; audited `fresh_settings`. |
+| `quiz_admin_import` | 200 rows / 64 KB; server re-check; dry run; refuses athlete / image rows, unknown columns and cells starting with `= + - @`; exact duplicates after cleanup (all statuses, versions, families, topics, and the batch) block, near matches (80%+ shared words) warn; caps; passing rows land as shuffled drafts. No approve-all. |
+| `quiz_admin_snapshot` (redefined) | Adds `refill` (weeks left per topic, sport and Life chapter; `refill_needed` under 4 weeks; assumed pace of one round a week without recent play) and `fresh` (settings, report rules, Needs a look / paused counts, fact queue counts, today's alert topics); strips `fact_salt`; bank pages and counts exclude fun-fact questions; participant fact audit rows stay out of the feed. |
+| `quiz_admin_retention` / `quiz_erase_history` (redefined) | Reporter ids cleared at 90 days, reports deleted at 180 (`cleared_reporters`, `removed_reports`); erasure removes the caller's reports (`removed_reports`). |
+| `supervision_json` (redefined) | Adds `fun_facts_shared` (live approved facts; the same for teen and guardian). |
+
+Redefined draws and DTOs: `quiz_round_begin` (12 arguments; the QUIZ-04 11-argument form is dropped), `quiz_start`,
+`quiz_group_start`, `quiz_life_start`, `quiz_next`, `quiz_round_pick` (fun-fact slot, paused never drawn, at most two
+hard), `quiz_round_issue` (shown order), `quiz_unseen_count`, `quiz_fun_available`, `quiz_life_pool`,
+`quiz_group_ensure_set` (two-hard cap without reading members' history), `quiz_result_dto`, `quiz_round_items_dto`,
+`quiz_guard_question` (draft → approved may permute options with the same texts and correct text; fact shape),
+`quiz_admin_question` (approval shuffle; caps exclude fun facts; fun facts approved only through the fact queue).
+Helpers: `quiz_fresh_norm`, `quiz_levenshtein`, `quiz_near_match`, `quiz_word_overlap`, `quiz_random_order`,
+`quiz_shuffle_options`, `quiz_same_options`, `quiz_bucket`, `quiz_self_heal_defaults`, `quiz_self_heal_ok`,
+`quiz_report_rules`, `quiz_fact_prompts`, `quiz_fact_prompt`, `quiz_fact_not_okay_words`, `quiz_fact_text_problems`,
+`quiz_fact_look_reasons`, `quiz_fact_audience_ok`, `quiz_fact_viewer_ok`, `quiz_fact_visible`, `quiz_fact_fill`,
+`quiz_fact_slot`, `quiz_fact_pick`, `quiz_fact_void_items`, `quiz_fact_retire_question`, `quiz_fact_clear`,
+`quiz_fact_actor`, `quiz_fact_request_open`, `quiz_fact_owner_dto`, `quiz_fact_month_bucket`, `quiz_question_stats_refresh`,
+`quiz_question_paused`, `quiz_question_hard`, `quiz_round_hard_count`, `quiz_open_reports`, `quiz_needs_look`,
+`quiz_shown_position`, `quiz_item_question_dto`, `quiz_item_result_dto`, `quiz_admin_refill`. Triggers:
+`quiz_items_stats` (counters when an answer or time-out commits), `quiz_fact_on_approval` (guardian-only decisions move
+the fact), `quiz_facts_on_profile` (unlink / under-13 block clears text), `quiz_facts_on_delete` (account deletion voids
+the question), `quiz_facts_on_block` (a block voids unrevealed items between the two).
+
+**Drawing.** Personal rounds only, never group sets or Life; at most one per round; the slot is deterministic per
+player-week from the private salt (`quiz_bucket < least(share × round_size, 34)`, never position 1); at most one per
+athlete per viewer per UTC month; verified athlete with a recorded 13+ age (13–15 with the guardian's approval); the
+viewer follows the athlete (Crew) or started from that athlete's Learn card; the `fun_facts` audience allows; no block.
+Checked at issue (else an ordinary question) and at the reveal (else the item is voided).
+
+**Intentional behaviour changes.** (1) `quiz_answer`'s option is the shown position for round items; results add the
+positions and the client adapter reads them (QUIZ-03 replay answers by option text); (2) approval reorders a choice
+question's stored options; (3) paused questions are never drawn and at most two hard questions appear in a round;
+(4) bank pages, counts and the 300 cap exclude fun-fact questions; (5) `edit_replace` accepts an approved question that
+needs a look; (6) `guardian_decide_approval` (MINOR-01, edited in place, and QUIZ-05's copy) changes the friend setting
+only for `friend_requests_everyone` and refuses unknown approval types; MINOR-01 refuses a lone re-run after QUIZ-05
+(`minor01_rerun_after_quiz05`; `schema.sql` wraps it with `quiz.full_schema`).
+
+**Security review (RLS_SECURITY, 2026-10-15), applied.** Fun-fact `not_okay` / `private` reports always pause (past the
+daily cap; the alert is still recorded). The text filter folds lookalike letters (`quiz_fold_lookalikes`: dotless i,
+Cyrillic, Greek), reads a letters-only collapsed copy for profanity ("f u c k", "sh!t", "Phuck"), refuses spelled
+contacts ("dot com", "at gmail", "insta" / "snap" + a handle, three spelled digits) and schedules ("Sat mornings",
+"seven pm"), and refuses distinctive 4+ letter words of the athlete's school, team, mascot or town (generic words such as
+high, school, academy excluded); borderline schedule / place words and hidden weaker words are look reasons. A
+timed-out or unanswered fun-fact item is re-checked (`quiz_item_fact_ok`) before anything is filled: on failure the
+option reads "Not available" and the result has `item_status` `fact_unavailable`, no positions and no athlete card.
+`quiz_admin_question` refuses every action on a fun-fact question (`quiz_fact_admin_path`; use the fact queue or Needs a
+look). Import: formula check after NFKC and leading whitespace; `non_latin_text` refusal; `quiz_fresh_norm` folds
+lookalikes and keeps other letters. The fun-fact pick keeps the two-hard limit. Only a validated Learn-card athlete
+skips the fun-slot rotation. `quiz_admin_retention` purges declined fact text 30 days after the decision
+(`clear_cause` `declined_purged`, `purged_declined_facts`). Counts drop viewers blocked either way. A block removes the
+athlete card (`fun_fact`) from saved receipts between the pair. Re-review: one scan, `quiz_fact_word_scan`, feeds both the
+refusals and the look reasons — profanity refuses only as a whole word (swaps undone) or a run of spaced single letters,
+otherwise it is a look ("Crush it", "Scunthorpe" pass); spelled digits refuse only when phone-like (7+, or 4+ with 3 that
+are not "oh"); street abbreviations / Street / Highway refuse after a capitalised name or a number, road / drive / court /
+lane only after a number (a capitalised name before them is a look); sport names and varsity / boys / girls / team words
+are generic for the school and team check.

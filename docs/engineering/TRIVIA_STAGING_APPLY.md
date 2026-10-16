@@ -31,11 +31,14 @@ requires). Three extra security fixes are included because the owner should appl
    `migration repair`). Paste each file into the SQL Editor instead.
 5. **How to paste.** Open the file in a text editor, select all, copy, paste into a new SQL Editor tab, then
    Run. Then run that step's check in a new tab. If the result does not match **Expected**, stop and report it.
-   The biggest file is about 160 KB. If the editor refuses it, report that. Do not split a file.
+   The biggest file is about 190 KB (step 17). If the editor refuses it, report that. Do not split a file.
 6. **Run each file once, in order.** Running the same file again straight away is safe; each header says
    so. Never re-run an *earlier* file after a later one:
    - QUIZ-01 or QUIZ-02 after a later quiz file would bring back older functions.
    - `20261014160000` after `20261014180000` stops on purpose with `quiz_rerun_after_quiz04`.
+   - `20261014180000` after `20261015210000` stops on purpose with `quiz_rerun_after_quiz05`.
+   - `20261014110000` (MINOR-01) after `20261015210000` stops on purpose with `minor01_rerun_after_quiz05`.
+   - PRIV-01 after QUIZ-05 would drop the `fun_facts` audience default (re-apply step 17 after it).
    - MINOR-01 after QUIZ-03 would remove the trivia group count from the guardian summary.
    - Account tags or photo stories after PRIV-01 would replace the privacy-filtered functions.
 
@@ -117,6 +120,7 @@ column names the function or table that proves the dependency (found by grep in 
 | 14 | `20261014170000_trivia_starter_bank.sql` | 60 draft trivia questions | Needs `question_type` from step 13 | Trivia | Drafts only; an admin approves each one |
 | 15 | `20261014180000_life_playbook.sql` | QUIZ-04: round kinds, Life Playbook (off), four closed chapters, levels | Needs steps 11 to 14 | Trivia | Approved (round 3); owner simplification 2026-10-15 re-recorded: Life replay 31/31 ([QUIZ-04](../agents/QUIZ-04.md), [evidence](evidence/QUIZ-04-admin.md)) |
 | 16 | `20261014190000_life_playbook_bank.sql` | 40 draft Life questions (10 per chapter) | Needs the Life columns from step 15 | Trivia | Drafts only; `pnpm life:bank:check` |
+| 17 | `20261015210000_trivia_fresh_questions.sql` | QUIZ-05: fun facts (`trivia.athlete_questions` off, share 0), answer shuffle, reports and auto-pause, quality flags, bulk import, Needs a look, refill forecast | Needs steps 8, 10 and 11 to 16 (`privacy_default_audience`, `guardian_approval_requests`, `quiz_life_normalize`, `quiz_admin_forecast`) | Trivia | RLS_SECURITY review 2026-10-15: changes needed, applied (probes now replay checks); fresh-questions replay 45/45; QUIZ-03 59/59, Life 39/39, schema 105/105 still pass. Re-review and MINOR_SAFETY, PRIVACY_ENGINEERING, VOICE, DATA_GOVERNANCE not yet recorded |
 
 ## Paste and check, one file at a time
 
@@ -279,7 +283,22 @@ where topic_category = 'life' and status = 'draft' and reason like 'Life Playboo
 group by chapter order by chapter;
 ```
 
-**Final check (after step 16).** Expected:
+**17. `20261015210000_trivia_fresh_questions.sql`.** Expected: four `true`, `facts_on = false`, `share = 0`,
+`reports_paused = false`, `fun_facts_default = friends`, `facts = 0`.
+
+```sql
+select to_regclass('public.quiz_athlete_facts') is not null as facts_table,
+  to_regclass('public.sport_quiz_reports') is not null as reports_table,
+  to_regprocedure('public.quiz_admin_import(jsonb,boolean,text,uuid)') is not null as import_rpc,
+  exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'sport_quiz_round_items' and column_name = 'shown_order') as shown_order,
+  (select athlete_questions_enabled from public.sport_quiz_settings) as facts_on,
+  (select athlete_share_pct from public.sport_quiz_settings) as share,
+  (select reports_paused from public.sport_quiz_settings) as reports_paused,
+  public.privacy_default_audience() ->> 'fun_facts' as fun_facts_default,
+  (select count(*) from public.quiz_athlete_facts) as facts;
+```
+
+**Final check (after step 17).** Expected:
 - `rls_tables_without_closed_accounts` is empty (null). QUIZ-02's four tables (`sport_quiz_exposures`,
   `sport_quiz_preferences`, `sport_quiz_requests`, `sport_quiz_week_guards`) did not get the "Closed accounts" policy
   when this packet was first dry-run. Step 15 (`20261014180000_life_playbook.sql` §21) now adds it to every RLS-enabled
@@ -296,7 +315,7 @@ select
   (select count(*) from pg_proc where pronamespace = 'public'::regnamespace and proname like 'quiz\_%'
      and has_function_privilege('anon', oid, 'execute')) as quiz_functions_guests_can_call,
   (select count(*) from information_schema.role_table_grants where table_schema = 'public'
-     and table_name like 'sport\_quiz\_%' and grantee in ('anon', 'authenticated')) as quiz_table_grants_to_clients;
+     and (table_name like 'sport\_quiz\_%' or table_name = 'quiz_athlete_facts') and grantee in ('anon', 'authenticated')) as quiz_table_grants_to_clients;
 ```
 
 ## Rollback

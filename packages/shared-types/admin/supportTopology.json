@@ -1330,6 +1330,7 @@
       "sqlReaders": [
         "get_admin_reports",
         "get_crew_graph",
+        "quiz_fact_viewer_ok",
         "set_reel_flash_unlock"
       ],
       "removers": [
@@ -1353,7 +1354,13 @@
         "/admin/product/sign-in",
         "/admin/revenue",
         "/admin/trends",
+        "/booster",
+        "/dev/trivia-preview",
+        "/operator",
+        "/parent",
         "/profile",
+        "/sponsor",
+        "/sport-quiz",
         "/spotlight",
         "/user/[id]",
         "portal:/",
@@ -1898,10 +1905,13 @@
         "/",
         "/activity",
         "/admin/people",
+        "/booster",
         "/dev/trivia-preview",
         "/local",
+        "/operator",
         "/parent",
         "/profile",
+        "/sponsor",
         "/sport-quiz",
         "/spotlight",
         "/user/[id]"
@@ -2011,18 +2021,25 @@
         "cancel_my_approval_request",
         "enforce_minor_consent",
         "guardian_decide_approval",
+        "quiz_fact_clear",
+        "quiz_fact_guardian_decide",
+        "quiz_fact_submit",
         "set_my_privacy"
       ],
       "sqlReaders": [
         "admin_minor_report",
         "guardian_decide_approval",
         "guardian_list_minors",
-        "minor_status_json"
+        "minor_status_json",
+        "quiz_fact_guardian_pending",
+        "quiz_fact_request_open"
       ],
       "removers": [
         "admin_purge_minor_records"
       ],
-      "triggers": [],
+      "triggers": [
+        "quiz_fact_approval → quiz_fact_on_approval"
+      ],
       "screens": [
         "/",
         "/activity",
@@ -2241,6 +2258,9 @@
         "minor_has_consent",
         "minor_link_slots_used",
         "minor_status_json",
+        "quiz_fact_audience_ok",
+        "quiz_fact_month_bucket",
+        "quiz_fact_on_approval",
         "quiz_teen_accepts",
         "record_guardian_consent",
         "request_friend",
@@ -2566,6 +2586,9 @@
         "minor_has_consent",
         "payee_for_player",
         "publish_spotlight_award",
+        "quiz_fact_audience_ok",
+        "quiz_fact_month_bucket",
+        "quiz_fact_text_problems",
         "rally_manager_role",
         "record_stripe_kyc",
         "report_reel",
@@ -2621,6 +2644,7 @@
         "/admin/wishlist",
         "/athlete",
         "/booster",
+        "/dev/trivia-preview",
         "/drip",
         "/fan-zone",
         "/game/[id]",
@@ -2774,9 +2798,22 @@
         "profile_age_band",
         "profile_item_visible",
         "publish_spotlight_award",
+        "quiz_admin_fact_queue",
         "quiz_admin_settings",
+        "quiz_fact_actor",
+        "quiz_fact_audience_ok",
+        "quiz_fact_fill",
+        "quiz_fact_mine",
+        "quiz_fact_month_bucket",
+        "quiz_fact_text_problems",
+        "quiz_fact_viewer_ok",
+        "quiz_fact_visible",
+        "quiz_facts_on_block",
         "quiz_group_display_name",
         "quiz_profile_closed",
+        "quiz_question_stats_refresh",
+        "quiz_report",
+        "quiz_round_begin",
         "quiz_teen_accepts",
         "rally_manager_role",
         "record_reel_view",
@@ -2816,7 +2853,8 @@
         "profiles_age_guard → guard_profiles_age",
         "profiles_payout_flags_guard → guard_payout_flags",
         "profiles_payee_supersede → payee_changes_supersede",
-        "quiz_groups_profile_rules → quiz_groups_on_profile"
+        "quiz_groups_profile_rules → quiz_groups_on_profile",
+        "quiz_facts_profile_rules → quiz_facts_on_profile"
       ],
       "screens": [
         "/",
@@ -2900,6 +2938,64 @@
         "portal:/people",
         "portal:/profile",
         "portal:/reports"
+      ]
+    },
+    {
+      "name": "quiz_athlete_facts",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "QUIZ-05 athlete fun facts (minors' personal data at 13-17): the only place the athlete's words live (2-40 characters, server-filtered); status through guardian (under 16, MINOR-01 approval type fun_fact) and one-admin approval; cleared at once on withdrawal (athlete only), unlink or an under-13 block, deleted with the account; filled into fun-fact questions per viewer at read time where the fun_facts audience allows; never in the audit log; exported by quiz_fact_export. PROFILE / CUSTODIAL / MINOR_SAFETY review.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_fact_decide",
+        "quiz_admin_needs_look_action",
+        "quiz_admin_retention",
+        "quiz_fact_clear",
+        "quiz_fact_on_approval",
+        "quiz_fact_submit"
+      ],
+      "sqlReaders": [
+        "quiz_admin_fact_decide",
+        "quiz_admin_fact_queue",
+        "quiz_admin_needs_look",
+        "quiz_admin_snapshot",
+        "quiz_fact_clear",
+        "quiz_fact_counts",
+        "quiz_fact_export",
+        "quiz_fact_fill",
+        "quiz_fact_guardian_decide",
+        "quiz_fact_guardian_pending",
+        "quiz_fact_mine",
+        "quiz_fact_month_bucket",
+        "quiz_fact_owner_dto",
+        "quiz_fact_pick",
+        "quiz_fact_submit",
+        "quiz_fact_viewer_ok",
+        "quiz_fact_visible",
+        "quiz_fact_withdraw",
+        "quiz_facts_on_block",
+        "quiz_facts_on_profile",
+        "quiz_question_stats_refresh",
+        "quiz_report",
+        "supervision_json"
+      ],
+      "removers": [],
+      "triggers": [
+        "quiz_facts_delete → quiz_facts_on_delete"
+      ],
+      "screens": [
+        "/",
+        "/admin",
+        "/admin/people",
+        "/admin/sport-quiz",
+        "/booster",
+        "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/profile",
+        "/sponsor",
+        "/sport-quiz"
       ]
     },
     {
@@ -3397,6 +3493,7 @@
         "get_school_confirmation_queue",
         "is_school_operator_for",
         "malo_target_frozen",
+        "quiz_fact_text_problems",
         "redeem_team_code",
         "search_schools_and_teams"
       ],
@@ -3673,6 +3770,7 @@
         "quiz_answer",
         "quiz_end",
         "quiz_expire",
+        "quiz_fact_void_items",
         "quiz_next",
         "quiz_round_begin",
         "quiz_round_close",
@@ -3688,14 +3786,22 @@
         "quiz_attempt_qualifies",
         "quiz_audit_is_life",
         "quiz_end",
+        "quiz_fact_month_bucket",
+        "quiz_fact_pick",
+        "quiz_fact_slot",
         "quiz_facts",
         "quiz_group_facts",
         "quiz_history",
+        "quiz_item_fact_ok",
+        "quiz_item_question_dto",
+        "quiz_item_result_dto",
         "quiz_life_preferences",
         "quiz_life_progress",
         "quiz_life_snapshot",
         "quiz_next",
         "quiz_played",
+        "quiz_question_stats_refresh",
+        "quiz_report",
         "quiz_result_dto",
         "quiz_round_begin",
         "quiz_round_close",
@@ -3735,18 +3841,27 @@
       "writers": [],
       "readers": [],
       "sqlWriters": [
+        "quiz_admin_fact_decide",
+        "quiz_admin_fresh_settings",
+        "quiz_admin_import",
         "quiz_admin_life_chapter",
         "quiz_admin_life_settings",
+        "quiz_admin_needs_look_action",
         "quiz_admin_play_settings",
         "quiz_admin_question",
         "quiz_admin_retention",
         "quiz_admin_settings",
         "quiz_answer",
         "quiz_end",
+        "quiz_fact_clear",
+        "quiz_fact_guardian_decide",
+        "quiz_fact_submit",
+        "quiz_report",
         "quiz_round_begin",
         "quiz_skip"
       ],
       "sqlReaders": [
+        "quiz_admin_needs_look",
         "quiz_admin_snapshot",
         "quiz_audit_is_life"
       ],
@@ -3765,6 +3880,7 @@
         "/dev/trivia-preview",
         "/operator",
         "/parent",
+        "/profile",
         "/sponsor",
         "/sport-quiz"
       ]
@@ -3822,7 +3938,9 @@
       ],
       "sqlReaders": [
         "quiz_admin_forecast",
+        "quiz_admin_refill",
         "quiz_admin_snapshot",
+        "quiz_fact_pick",
         "quiz_fun_available",
         "quiz_life_pool",
         "quiz_life_progress",
@@ -4087,6 +4205,26 @@
       ]
     },
     {
+      "name": "sport_quiz_imports",
+      "kind": "table",
+      "owner": "ADMIN",
+      "purpose": "QUIZ-05 one row per real bulk import (admin, reason, row totals); dry runs write nothing. Read as the 30-day import count in the admin snapshot.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_import"
+      ],
+      "sqlReaders": [
+        "quiz_admin_snapshot"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/admin",
+        "/admin/sport-quiz"
+      ]
+    },
+    {
       "name": "sport_quiz_levels",
       "kind": "table",
       "owner": "AURA",
@@ -4126,8 +4264,10 @@
         "quiz_admin_life_chapter"
       ],
       "sqlReaders": [
+        "quiz_admin_import",
         "quiz_admin_life_snapshot",
         "quiz_admin_question",
+        "quiz_admin_refill",
         "quiz_admin_snapshot",
         "quiz_guard_question",
         "quiz_life_chapter_state",
@@ -4190,6 +4330,44 @@
       ]
     },
     {
+      "name": "sport_quiz_question_stats",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "QUIZ-05 per question version: distinct responders, right, time-outs, flags (too easy, confusing, too long), difficulty and the auto-pause / restore / review state for Needs a look. Aggregates only; refreshed by a trigger when an answer or time-out commits.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_needs_look_action",
+        "quiz_question_stats_refresh",
+        "quiz_report"
+      ],
+      "sqlReaders": [
+        "quiz_admin_needs_look",
+        "quiz_admin_needs_look_action",
+        "quiz_admin_snapshot",
+        "quiz_needs_look",
+        "quiz_open_reports",
+        "quiz_question_hard",
+        "quiz_question_paused",
+        "quiz_report"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/",
+        "/admin",
+        "/admin/sport-quiz",
+        "/booster",
+        "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/profile",
+        "/sponsor",
+        "/sport-quiz",
+        "/user/[id]"
+      ]
+    },
+    {
       "name": "sport_quiz_questions",
       "kind": "table",
       "owner": "POLLS",
@@ -4197,26 +4375,42 @@
       "writers": [],
       "readers": [],
       "sqlWriters": [
-        "quiz_admin_question"
+        "quiz_admin_fact_decide",
+        "quiz_admin_import",
+        "quiz_admin_needs_look_action",
+        "quiz_admin_question",
+        "quiz_fact_retire_question"
       ],
       "sqlReaders": [
         "quiz_admin_forecast",
         "quiz_admin_life_snapshot",
+        "quiz_admin_needs_look",
+        "quiz_admin_needs_look_action",
         "quiz_admin_question",
+        "quiz_admin_refill",
         "quiz_admin_snapshot",
         "quiz_answer",
+        "quiz_fact_fill",
+        "quiz_fact_month_bucket",
+        "quiz_fact_pick",
+        "quiz_fact_viewer_ok",
+        "quiz_facts_on_block",
         "quiz_fun_available",
         "quiz_group_create",
         "quiz_group_ensure_set",
         "quiz_group_set_theme",
+        "quiz_item_fact_ok",
+        "quiz_item_question_dto",
+        "quiz_item_result_dto",
         "quiz_life_approved_count",
         "quiz_life_pool",
         "quiz_life_progress",
         "quiz_question_dto",
+        "quiz_question_stats_refresh",
+        "quiz_report",
         "quiz_result_dto",
         "quiz_round_begin",
         "quiz_round_issue",
-        "quiz_round_items_dto",
         "quiz_round_pick",
         "quiz_season_recap",
         "quiz_snapshot",
@@ -4242,6 +4436,33 @@
       ]
     },
     {
+      "name": "sport_quiz_reports",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "QUIZ-05 question reports with fixed reasons (no free text), counted or why not; reporter id cleared at 90 days and rows deleted at 180 by quiz_admin_retention; erasure removes the reporter's own; admins see counts by reason only.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "quiz_admin_retention",
+        "quiz_report"
+      ],
+      "sqlReaders": [
+        "quiz_admin_needs_look",
+        "quiz_open_reports"
+      ],
+      "removers": [
+        "quiz_admin_retention",
+        "quiz_erase_history"
+      ],
+      "triggers": [],
+      "screens": [
+        "/admin",
+        "/admin/sport-quiz",
+        "/dev/trivia-preview",
+        "/sport-quiz"
+      ]
+    },
+    {
       "name": "sport_quiz_requests",
       "kind": "table",
       "owner": "POLLS",
@@ -4249,6 +4470,7 @@
       "writers": [],
       "readers": [],
       "sqlWriters": [
+        "quiz_facts_on_block",
         "quiz_save_receipt"
       ],
       "sqlReaders": [
@@ -4289,6 +4511,7 @@
       "sqlWriters": [
         "quiz_admin_question",
         "quiz_answer",
+        "quiz_fact_void_items",
         "quiz_round_close",
         "quiz_round_issue",
         "quiz_round_settle"
@@ -4299,13 +4522,21 @@
         "quiz_admin_snapshot",
         "quiz_answer",
         "quiz_attempt_qualifies",
+        "quiz_fact_month_bucket",
+        "quiz_fact_pick",
         "quiz_facts",
         "quiz_group_facts",
+        "quiz_item_fact_ok",
+        "quiz_item_question_dto",
+        "quiz_item_result_dto",
         "quiz_life_progress",
         "quiz_next",
         "quiz_played",
+        "quiz_question_stats_refresh",
+        "quiz_report",
         "quiz_result_dto",
         "quiz_round_begin",
+        "quiz_round_hard_count",
         "quiz_round_items_dto",
         "quiz_round_settle",
         "quiz_round_view",
@@ -4314,7 +4545,9 @@
         "quiz_sync_badges"
       ],
       "removers": [],
-      "triggers": [],
+      "triggers": [
+        "quiz_round_items_stats → quiz_items_stats"
+      ],
       "screens": [
         "/",
         "/admin",
@@ -4337,22 +4570,36 @@
       "writers": [],
       "readers": [],
       "sqlWriters": [
+        "quiz_admin_fresh_settings",
         "quiz_admin_life_settings",
         "quiz_admin_play_settings",
         "quiz_admin_settings"
       ],
       "sqlReaders": [
+        "quiz_admin_fact_decide",
+        "quiz_admin_fresh_settings",
         "quiz_admin_group_case",
         "quiz_admin_group_remove",
+        "quiz_admin_import",
         "quiz_admin_life_chapter",
         "quiz_admin_life_settings",
         "quiz_admin_life_snapshot",
+        "quiz_admin_needs_look",
+        "quiz_admin_needs_look_action",
         "quiz_admin_play_settings",
         "quiz_admin_question",
+        "quiz_admin_refill",
         "quiz_admin_retention",
         "quiz_admin_snapshot",
         "quiz_end",
         "quiz_erase_history",
+        "quiz_fact_guardian_decide",
+        "quiz_fact_mine",
+        "quiz_fact_month_bucket",
+        "quiz_fact_slot",
+        "quiz_fact_submit",
+        "quiz_fact_viewer_ok",
+        "quiz_fact_withdraw",
         "quiz_group_create",
         "quiz_group_join",
         "quiz_group_leave",
@@ -4370,6 +4617,8 @@
         "quiz_life_snapshot",
         "quiz_lock",
         "quiz_next",
+        "quiz_question_stats_refresh",
+        "quiz_report",
         "quiz_require_testing",
         "quiz_round_begin",
         "quiz_snapshot",
@@ -5052,7 +5301,8 @@
       ],
       "triggers": [
         "user_blocks_end_links → user_blocks_end_guardian_links",
-        "quiz_groups_block → quiz_groups_on_block"
+        "quiz_groups_block → quiz_groups_on_block",
+        "quiz_facts_block → quiz_facts_on_block"
       ],
       "screens": [
         "/",
@@ -5100,6 +5350,7 @@
         "/api/fan-zone-upload+api",
         "/athlete",
         "/booster",
+        "/dev/trivia-preview",
         "/drip",
         "/fan-zone",
         "/game/[id]",
@@ -5305,6 +5556,7 @@
         "/admin/wishlist",
         "/athlete",
         "/booster",
+        "/dev/trivia-preview",
         "/drip",
         "/fan-zone",
         "/game/[id]",
@@ -5968,6 +6220,7 @@
       "name": "are_friends",
       "owner": "PROFILE",
       "callers": [
+        "sql:quiz_fact_audience_ok",
         "sql:quiz_teen_accepts",
         "sql:reels_apply_tag_defaults",
         "sql:viewer_relationship"
@@ -6681,6 +6934,10 @@
         "sql:guardian_list_minors",
         "sql:minor_status_json",
         "sql:preview_guardian_invite",
+        "sql:quiz_admin_fact_queue",
+        "sql:quiz_admin_needs_look",
+        "sql:quiz_fact_fill",
+        "sql:quiz_fact_guardian_pending",
         "sql:quiz_group_display_name",
         "sql:respond_guardian_link",
         "sql:sign_guardian_consent",
@@ -7901,6 +8158,7 @@
         "sql:create_guardian_invite",
         "sql:guardian_invite_for_code",
         "sql:quiz_answer",
+        "sql:quiz_bucket",
         "sql:quiz_group_issue_code",
         "sql:quiz_group_join",
         "sql:quiz_member_ref",
@@ -8017,8 +8275,12 @@
         "sql:fun_vote",
         "sql:guardian_invite_for_code",
         "sql:list_my_friends",
+        "sql:quiz_fact_audience_ok",
+        "sql:quiz_fact_month_bucket",
         "sql:quiz_group_page_dto",
         "sql:quiz_group_refusal",
+        "sql:quiz_report",
+        "sql:quiz_round_begin",
         "sql:reels_apply_tag_defaults",
         "sql:request_friend",
         "sql:sign_guardian_consent",
@@ -8109,7 +8371,9 @@
       "callers": [
         "sql:guardian_decide_approval",
         "sql:guardian_get_supervision",
-        "sql:guardian_view"
+        "sql:guardian_view",
+        "sql:quiz_fact_guardian_decide",
+        "sql:quiz_fact_guardian_pending"
       ],
       "manual": null,
       "writes": [],
@@ -8205,6 +8469,9 @@
         "sql:guardian_decide_approval",
         "sql:quiz_admin_group_remove",
         "sql:quiz_erase_history",
+        "sql:quiz_fact_guardian_decide",
+        "sql:quiz_fact_submit",
+        "sql:quiz_fact_withdraw",
         "sql:quiz_group_create",
         "sql:quiz_group_join",
         "sql:quiz_group_leave",
@@ -8249,6 +8516,8 @@
       "callers": [
         "sql:admin_minor_report",
         "sql:enforce_minor_consent",
+        "sql:quiz_fact_mine",
+        "sql:quiz_fact_submit",
         "sql:respond_guardian_link",
         "sql:set_my_privacy"
       ],
@@ -8392,6 +8661,13 @@
         "sql:log_supervision_event",
         "sql:preview_guardian_invite",
         "sql:quiz_actor",
+        "sql:quiz_fact_actor",
+        "sql:quiz_fact_counts",
+        "sql:quiz_fact_export",
+        "sql:quiz_fact_guardian_decide",
+        "sql:quiz_fact_guardian_pending",
+        "sql:quiz_fact_mine",
+        "sql:quiz_fact_withdraw",
         "sql:quiz_life_actor",
         "sql:quiz_life_snapshot",
         "sql:quiz_snapshot",
@@ -8560,7 +8836,9 @@
         "sql:apply_privacy_settings",
         "sql:audience_allows",
         "sql:privacy_settings_json",
-        "sql:profiles_apply_new_account_rules"
+        "sql:profiles_apply_new_account_rules",
+        "sql:quiz_fact_audience_ok",
+        "sql:quiz_fact_mine"
       ],
       "manual": null,
       "writes": [],
@@ -8608,9 +8886,17 @@
         "sql:minor_status_json",
         "sql:payee_for_player",
         "sql:quiz_actor",
+        "sql:quiz_admin_fact_decide",
+        "sql:quiz_admin_fact_queue",
         "sql:quiz_admin_group_case",
         "sql:quiz_admin_life_snapshot",
         "sql:quiz_admin_settings",
+        "sql:quiz_fact_actor",
+        "sql:quiz_fact_audience_ok",
+        "sql:quiz_fact_mine",
+        "sql:quiz_fact_submit",
+        "sql:quiz_fact_viewer_ok",
+        "sql:quiz_fact_visible",
         "sql:quiz_group_display_name",
         "sql:quiz_life_access",
         "sql:quiz_life_actor",
@@ -8718,13 +9004,45 @@
       "name": "quiz_admin_actor",
       "owner": "ADMIN",
       "callers": [
+        "sql:quiz_admin_fact_queue",
         "sql:quiz_admin_life_snapshot",
+        "sql:quiz_admin_needs_look",
         "sql:quiz_admin_snapshot",
         "sql:quiz_expected_actor"
       ],
       "manual": "Internal protected quiz content/settings admin guard.",
       "writes": [],
       "reads": []
+    },
+    {
+      "name": "quiz_admin_fact_decide",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [
+        "quiz_athlete_facts",
+        "sport_quiz_audit",
+        "sport_quiz_questions"
+      ],
+      "reads": [
+        "quiz_athlete_facts",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_admin_fact_queue",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "profiles",
+        "quiz_athlete_facts"
+      ]
     },
     {
       "name": "quiz_admin_forecast",
@@ -8737,6 +9055,21 @@
       "reads": [
         "sport_quiz_exposures",
         "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_admin_fresh_settings",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [
+        "sport_quiz_audit",
+        "sport_quiz_settings"
+      ],
+      "reads": [
+        "sport_quiz_settings"
       ]
     },
     {
@@ -8769,6 +9102,23 @@
       "reads": [
         "sport_quiz_group_members",
         "sport_quiz_groups",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_admin_import",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [
+        "sport_quiz_audit",
+        "sport_quiz_imports",
+        "sport_quiz_questions"
+      ],
+      "reads": [
+        "sport_quiz_life_chapters",
         "sport_quiz_settings"
       ]
     },
@@ -8822,6 +9172,42 @@
       ]
     },
     {
+      "name": "quiz_admin_needs_look",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "quiz_athlete_facts",
+        "sport_quiz_audit",
+        "sport_quiz_question_stats",
+        "sport_quiz_questions",
+        "sport_quiz_reports",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_admin_needs_look_action",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [
+        "quiz_athlete_facts",
+        "sport_quiz_audit",
+        "sport_quiz_question_stats",
+        "sport_quiz_questions"
+      ],
+      "reads": [
+        "sport_quiz_question_stats",
+        "sport_quiz_questions",
+        "sport_quiz_settings"
+      ]
+    },
+    {
       "name": "quiz_admin_play_settings",
       "owner": "POLLS",
       "callers": [
@@ -8857,6 +9243,21 @@
       ]
     },
     {
+      "name": "quiz_admin_refill",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_snapshot"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_exposures",
+        "sport_quiz_life_chapters",
+        "sport_quiz_questions",
+        "sport_quiz_settings"
+      ]
+    },
+    {
       "name": "quiz_admin_retention",
       "owner": "ADMIN",
       "callers": [
@@ -8864,7 +9265,9 @@
       ],
       "manual": "Reasoned bounded expired receipt/quota pruning with actual removal totals; no unexpired quota deletion or hidden learning erasure.",
       "writes": [
-        "sport_quiz_audit"
+        "quiz_athlete_facts",
+        "sport_quiz_audit",
+        "sport_quiz_reports"
       ],
       "reads": [
         "sport_quiz_group_members",
@@ -8896,6 +9299,7 @@
       "manual": "Complete100-slot bank through50-row opaque question paging, independent50-row bigint audit, full topic/lifecycle totals and effective expiry; no individual answer/token list. QUIZ-04 bank_counts: whole-bank draft/approved version counts by topic, sport and Life chapter (content counts only).",
       "writes": [],
       "reads": [
+        "quiz_athlete_facts",
         "sport_quiz_attempts",
         "sport_quiz_audit",
         "sport_quiz_badges",
@@ -8906,8 +9310,10 @@
         "sport_quiz_group_members",
         "sport_quiz_group_sets",
         "sport_quiz_groups",
+        "sport_quiz_imports",
         "sport_quiz_life_chapters",
         "sport_quiz_preferences",
+        "sport_quiz_question_stats",
         "sport_quiz_questions",
         "sport_quiz_requests",
         "sport_quiz_round_items",
@@ -8938,6 +9344,7 @@
       "name": "quiz_attempt_qualifies",
       "owner": "POLLS",
       "callers": [
+        "sql:quiz_report",
         "sql:quiz_sync_badges"
       ],
       "manual": null,
@@ -8997,6 +9404,16 @@
       ]
     },
     {
+      "name": "quiz_bucket",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_fact_slot"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "quiz_bump_history",
       "owner": "PROFILE",
       "callers": [
@@ -9005,6 +9422,7 @@
         "sql:quiz_answer",
         "sql:quiz_end",
         "sql:quiz_expire",
+        "sql:quiz_fact_void_items",
         "sql:quiz_next",
         "sql:quiz_round_begin",
         "sql:quiz_round_close",
@@ -9085,10 +9503,14 @@
       "name": "quiz_expected_actor",
       "owner": "AUTH",
       "callers": [
+        "sql:quiz_admin_fact_decide",
+        "sql:quiz_admin_fresh_settings",
         "sql:quiz_admin_group_case",
         "sql:quiz_admin_group_remove",
+        "sql:quiz_admin_import",
         "sql:quiz_admin_life_chapter",
         "sql:quiz_admin_life_settings",
+        "sql:quiz_admin_needs_look_action",
         "sql:quiz_admin_play_settings",
         "sql:quiz_admin_question",
         "sql:quiz_admin_retention",
@@ -9103,6 +9525,7 @@
         "sql:quiz_group_set_theme",
         "sql:quiz_group_start",
         "sql:quiz_invitation",
+        "sql:quiz_learn_start",
         "sql:quiz_preferences",
         "sql:quiz_skip",
         "sql:quiz_start"
@@ -9126,6 +9549,389 @@
       "reads": []
     },
     {
+      "name": "quiz_fact_actor",
+      "owner": "PROFILE",
+      "callers": [
+        "sql:quiz_fact_submit"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "profiles"
+      ]
+    },
+    {
+      "name": "quiz_fact_audience_ok",
+      "owner": "PROFILE",
+      "callers": [
+        "sql:quiz_fact_viewer_ok",
+        "sql:quiz_fact_visible"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "guardian_links",
+        "players",
+        "profiles"
+      ]
+    },
+    {
+      "name": "quiz_fact_clear",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_fact_withdraw",
+        "sql:quiz_facts_on_profile"
+      ],
+      "manual": null,
+      "writes": [
+        "guardian_approval_requests",
+        "quiz_athlete_facts",
+        "sport_quiz_audit"
+      ],
+      "reads": [
+        "quiz_athlete_facts"
+      ]
+    },
+    {
+      "name": "quiz_fact_counts",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "quiz_athlete_facts"
+      ]
+    },
+    {
+      "name": "quiz_fact_export",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "quiz_athlete_facts"
+      ]
+    },
+    {
+      "name": "quiz_fact_fill",
+      "owner": "PROFILE",
+      "callers": [
+        "sql:quiz_item_question_dto",
+        "sql:quiz_item_result_dto"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "profiles",
+        "quiz_athlete_facts",
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_fact_guardian_decide",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [
+        "guardian_approval_requests",
+        "sport_quiz_audit"
+      ],
+      "reads": [
+        "quiz_athlete_facts",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_fact_guardian_pending",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "guardian_approval_requests",
+        "quiz_athlete_facts"
+      ]
+    },
+    {
+      "name": "quiz_fact_look_reasons",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_fact_submit"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_fact_mine",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "profiles",
+        "quiz_athlete_facts",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_fact_month_bucket",
+      "owner": "PROFILE",
+      "callers": [
+        "sql:quiz_fact_counts"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "guardian_links",
+        "players",
+        "profiles",
+        "quiz_athlete_facts",
+        "sport_quiz_attempts",
+        "sport_quiz_questions",
+        "sport_quiz_round_items",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_fact_not_okay_words",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_fact_look_reasons",
+        "sql:quiz_fact_text_problems"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_fact_on_approval",
+      "owner": "POLLS",
+      "callers": [
+        "trigger:quiz_fact_approval on guardian_approval_requests"
+      ],
+      "manual": null,
+      "writes": [
+        "quiz_athlete_facts"
+      ],
+      "reads": [
+        "guardian_links"
+      ]
+    },
+    {
+      "name": "quiz_fact_owner_dto",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_fact_mine",
+        "sql:quiz_fact_submit",
+        "sql:quiz_fact_withdraw"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "quiz_athlete_facts"
+      ]
+    },
+    {
+      "name": "quiz_fact_pick",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_round_pick"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "quiz_athlete_facts",
+        "sport_quiz_attempts",
+        "sport_quiz_exposures",
+        "sport_quiz_questions",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_fact_prompt",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_admin_fact_decide",
+        "sql:quiz_admin_fact_queue",
+        "sql:quiz_fact_guardian_pending",
+        "sql:quiz_fact_look_reasons",
+        "sql:quiz_fact_owner_dto",
+        "sql:quiz_fact_submit",
+        "sql:quiz_fact_text_problems"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_fact_prompts",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_fact_mine",
+        "sql:quiz_fact_prompt"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_fact_request_open",
+      "owner": "PROFILE",
+      "callers": [
+        "sql:quiz_admin_fact_queue",
+        "sql:quiz_fact_guardian_decide",
+        "sql:quiz_fact_guardian_pending",
+        "sql:quiz_fact_owner_dto",
+        "sql:quiz_fact_submit",
+        "sql:quiz_fact_withdraw"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "guardian_approval_requests"
+      ]
+    },
+    {
+      "name": "quiz_fact_retire_question",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_needs_look_action",
+        "sql:quiz_fact_clear",
+        "sql:quiz_facts_on_delete"
+      ],
+      "manual": null,
+      "writes": [
+        "sport_quiz_questions"
+      ],
+      "reads": []
+    },
+    {
+      "name": "quiz_fact_slot",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_round_pick"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_fact_submit",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [
+        "guardian_approval_requests",
+        "quiz_athlete_facts",
+        "sport_quiz_audit"
+      ],
+      "reads": [
+        "quiz_athlete_facts",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_fact_text_problems",
+      "owner": "ROSTERS",
+      "callers": [
+        "sql:quiz_admin_fact_decide",
+        "sql:quiz_fact_submit"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "players",
+        "profiles",
+        "schools_and_teams"
+      ]
+    },
+    {
+      "name": "quiz_fact_viewer_ok",
+      "owner": "CREW",
+      "callers": [
+        "sql:quiz_answer",
+        "sql:quiz_fact_pick",
+        "sql:quiz_item_fact_ok"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "crew_follows",
+        "profiles",
+        "quiz_athlete_facts",
+        "sport_quiz_questions",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_fact_visible",
+      "owner": "PROFILE",
+      "callers": [
+        "sql:quiz_fact_fill"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "profiles",
+        "quiz_athlete_facts"
+      ]
+    },
+    {
+      "name": "quiz_fact_void_items",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_fact_retire_question",
+        "sql:quiz_facts_on_block",
+        "sql:quiz_report"
+      ],
+      "manual": null,
+      "writes": [
+        "sport_quiz_attempts",
+        "sport_quiz_round_items"
+      ],
+      "reads": []
+    },
+    {
+      "name": "quiz_fact_withdraw",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "quiz_athlete_facts",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_fact_word_scan",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_fact_look_reasons",
+        "sql:quiz_fact_text_problems"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "quiz_facts",
       "owner": "POLLS",
       "callers": [
@@ -9140,6 +9946,71 @@
         "sport_quiz_attempts",
         "sport_quiz_round_items"
       ]
+    },
+    {
+      "name": "quiz_facts_on_block",
+      "owner": "POLLS",
+      "callers": [
+        "trigger:quiz_facts_block on user_blocks"
+      ],
+      "manual": null,
+      "writes": [
+        "sport_quiz_requests"
+      ],
+      "reads": [
+        "profiles",
+        "quiz_athlete_facts",
+        "sport_quiz_questions"
+      ]
+    },
+    {
+      "name": "quiz_facts_on_delete",
+      "owner": "BACKEND",
+      "callers": [
+        "trigger:quiz_facts_delete on quiz_athlete_facts"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_facts_on_profile",
+      "owner": "POLLS",
+      "callers": [
+        "trigger:quiz_facts_profile_rules on profiles"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "quiz_athlete_facts"
+      ]
+    },
+    {
+      "name": "quiz_fold_lookalikes",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_fact_look_reasons",
+        "sql:quiz_fact_text_problems",
+        "sql:quiz_fact_word_scan",
+        "sql:quiz_fresh_norm"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_fresh_norm",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_admin_import",
+        "sql:quiz_fact_submit",
+        "sql:quiz_fact_text_problems",
+        "sql:quiz_near_match",
+        "sql:quiz_word_overlap"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
     },
     {
       "name": "quiz_fun_available",
@@ -9698,6 +10569,72 @@
       ]
     },
     {
+      "name": "quiz_item_fact_ok",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_item_question_dto",
+        "sql:quiz_item_result_dto"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_questions",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_item_question_dto",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_next",
+        "sql:quiz_round_begin",
+        "sql:quiz_round_items_dto"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_questions",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_item_result_dto",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_result_dto",
+        "sql:quiz_round_items_dto"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_attempts",
+        "sport_quiz_questions",
+        "sport_quiz_round_items"
+      ]
+    },
+    {
+      "name": "quiz_items_stats",
+      "owner": "BACKEND",
+      "callers": [
+        "trigger:quiz_round_items_stats on sport_quiz_round_items"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_learn_start",
+      "owner": "BACKEND",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "quiz_level",
       "owner": "AURA",
       "callers": [
@@ -9744,6 +10681,16 @@
         "sql:quiz_level",
         "sql:quiz_life_progress",
         "sql:quiz_sync_badges"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_levenshtein",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_near_match"
       ],
       "manual": null,
       "writes": [],
@@ -9860,6 +10807,7 @@
       "name": "quiz_life_copy_problems",
       "owner": "VOICE",
       "callers": [
+        "sql:quiz_admin_import",
         "sql:quiz_admin_question",
         "sql:quiz_guard_question"
       ],
@@ -9871,6 +10819,7 @@
       "name": "quiz_life_copy_rules",
       "owner": "VOICE",
       "callers": [
+        "sql:quiz_fact_text_problems",
         "sql:quiz_life_copy_problems",
         "sql:quiz_life_figure_re"
       ],
@@ -9887,7 +10836,8 @@
         "sql:quiz_erase_history",
         "sql:quiz_life_preferences",
         "sql:quiz_life_start",
-        "sql:quiz_next"
+        "sql:quiz_next",
+        "sql:quiz_report"
       ],
       "manual": null,
       "writes": [],
@@ -9907,6 +10857,10 @@
       "name": "quiz_life_normalize",
       "owner": "VOICE",
       "callers": [
+        "sql:quiz_fact_look_reasons",
+        "sql:quiz_fact_text_problems",
+        "sql:quiz_fact_word_scan",
+        "sql:quiz_fresh_norm",
         "sql:quiz_life_copy_problems"
       ],
       "manual": "QUIZ-04 text normalization before the copy rules: NFKC, zero-width removed, plain spaces and quotes, lowercase.",
@@ -9928,6 +10882,8 @@
       "name": "quiz_life_phrase_re",
       "owner": "VOICE",
       "callers": [
+        "sql:quiz_fact_look_reasons",
+        "sql:quiz_fact_text_problems",
         "sql:quiz_life_copy_problems",
         "sql:quiz_life_figure_re"
       ],
@@ -10025,6 +10981,10 @@
       "name": "quiz_life_strip",
       "owner": "BACKEND",
       "callers": [
+        "sql:quiz_fact_look_reasons",
+        "sql:quiz_fact_text_problems",
+        "sql:quiz_fact_word_scan",
+        "sql:quiz_fresh_norm",
         "sql:quiz_life_alt",
         "sql:quiz_life_copy_problems"
       ],
@@ -10055,6 +11015,7 @@
         "sql:quiz_bump_history",
         "sql:quiz_end",
         "sql:quiz_erase_history",
+        "sql:quiz_fact_void_items",
         "sql:quiz_group_create",
         "sql:quiz_group_report",
         "sql:quiz_invitation",
@@ -10083,6 +11044,32 @@
       ]
     },
     {
+      "name": "quiz_near_match",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_admin_fact_decide",
+        "sql:quiz_fact_text_problems"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_needs_look",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_needs_look",
+        "sql:quiz_admin_needs_look_action",
+        "sql:quiz_admin_question",
+        "sql:quiz_admin_snapshot"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_question_stats"
+      ]
+    },
+    {
       "name": "quiz_next",
       "owner": "POLLS",
       "callers": [
@@ -10104,6 +11091,8 @@
       "owner": "POLLS",
       "callers": [
         "sql:quiz_admin_forecast",
+        "sql:quiz_admin_import",
+        "sql:quiz_admin_refill",
         "sql:quiz_admin_snapshot",
         "sql:quiz_answer",
         "sql:quiz_fun_available",
@@ -10117,6 +11106,19 @@
       "manual": "Protected Unicode/ECMAScript-whitespace option canonicalization for new content/approval/assignment; malformed legacy question rows stay admin-correctable and cannot issue or complete.",
       "writes": [],
       "reads": []
+    },
+    {
+      "name": "quiz_open_reports",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_needs_look"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_question_stats",
+        "sport_quiz_reports"
+      ]
     },
     {
       "name": "quiz_pair_ok",
@@ -10182,6 +11184,7 @@
       "owner": "POLLS",
       "callers": [
         "sql:check constraint",
+        "sql:quiz_fact_viewer_ok",
         "sql:quiz_group_needs_recheck",
         "sql:quiz_group_page_dto",
         "sql:quiz_group_recheck",
@@ -10209,15 +11212,80 @@
       "owner": "POLLS",
       "callers": [
         "sql:quiz_history",
-        "sql:quiz_next",
-        "sql:quiz_round_begin",
-        "sql:quiz_round_items_dto"
+        "sql:quiz_round_begin"
       ],
       "manual": "Internal immutable content projection for original authorized Start or own terminal learning only.",
       "writes": [],
       "reads": [
         "sport_quiz_questions"
       ]
+    },
+    {
+      "name": "quiz_question_hard",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_fact_pick",
+        "sql:quiz_group_ensure_set",
+        "sql:quiz_round_hard_count",
+        "sql:quiz_round_pick"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_question_stats"
+      ]
+    },
+    {
+      "name": "quiz_question_paused",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_admin_fact_queue",
+        "sql:quiz_admin_refill",
+        "sql:quiz_admin_snapshot",
+        "sql:quiz_fact_owner_dto",
+        "sql:quiz_fact_viewer_ok",
+        "sql:quiz_fact_visible",
+        "sql:quiz_fun_available",
+        "sql:quiz_group_ensure_set",
+        "sql:quiz_life_pool",
+        "sql:quiz_round_pick",
+        "sql:quiz_unseen_count"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_question_stats"
+      ]
+    },
+    {
+      "name": "quiz_question_stats_refresh",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_items_stats"
+      ],
+      "manual": null,
+      "writes": [
+        "sport_quiz_question_stats"
+      ],
+      "reads": [
+        "profiles",
+        "quiz_athlete_facts",
+        "sport_quiz_attempts",
+        "sport_quiz_questions",
+        "sport_quiz_round_items",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_random_order",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_round_issue",
+        "sql:quiz_shuffle_options"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
     },
     {
       "name": "quiz_receipt",
@@ -10247,6 +11315,40 @@
       "reads": [
         "sport_quiz_requests"
       ]
+    },
+    {
+      "name": "quiz_report",
+      "owner": "POLLS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/freshQuestions.ts"
+      ],
+      "manual": null,
+      "writes": [
+        "sport_quiz_audit",
+        "sport_quiz_question_stats",
+        "sport_quiz_reports"
+      ],
+      "reads": [
+        "profiles",
+        "quiz_athlete_facts",
+        "sport_quiz_attempts",
+        "sport_quiz_question_stats",
+        "sport_quiz_questions",
+        "sport_quiz_round_items",
+        "sport_quiz_settings"
+      ]
+    },
+    {
+      "name": "quiz_report_rules",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_admin_fresh_settings",
+        "sql:quiz_admin_snapshot",
+        "sql:quiz_report"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
     },
     {
       "name": "quiz_require_testing",
@@ -10288,6 +11390,7 @@
       "owner": "POLLS",
       "callers": [
         "sql:quiz_group_start",
+        "sql:quiz_learn_start",
         "sql:quiz_life_start",
         "sql:quiz_start"
       ],
@@ -10297,6 +11400,7 @@
         "sport_quiz_audit"
       ],
       "reads": [
+        "profiles",
         "sport_quiz_attempts",
         "sport_quiz_group_members",
         "sport_quiz_groups",
@@ -10317,6 +11421,7 @@
         "sql:quiz_admin_settings",
         "sql:quiz_answer",
         "sql:quiz_end",
+        "sql:quiz_fact_void_items",
         "sql:quiz_life_preferences",
         "sql:quiz_next",
         "sql:quiz_round_settle"
@@ -10336,6 +11441,7 @@
       "callers": [
         "sql:quiz_admin_question",
         "sql:quiz_answer",
+        "sql:quiz_fact_void_items",
         "sql:quiz_round_begin",
         "sql:quiz_round_settle",
         "sql:quiz_round_view"
@@ -10343,6 +11449,19 @@
       "manual": "QUIZ-03 internal 2-minute Next window.",
       "writes": [],
       "reads": []
+    },
+    {
+      "name": "quiz_round_hard_count",
+      "owner": "POLLS",
+      "callers": [
+        "sql:quiz_fact_pick",
+        "sql:quiz_round_pick"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": [
+        "sport_quiz_round_items"
+      ]
     },
     {
       "name": "quiz_round_issue",
@@ -10369,7 +11488,6 @@
       "manual": "QUIZ-03 internal closed-item history projection; never an open item.",
       "writes": [],
       "reads": [
-        "sport_quiz_questions",
         "sport_quiz_round_items"
       ]
     },
@@ -10426,6 +11544,16 @@
       ]
     },
     {
+      "name": "quiz_same_options",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_guard_question"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "quiz_save_receipt",
       "owner": "POLLS",
       "callers": [
@@ -10469,6 +11597,49 @@
         "sport_quiz_questions",
         "sport_quiz_round_items"
       ]
+    },
+    {
+      "name": "quiz_self_heal_defaults",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_question_stats_refresh"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_self_heal_ok",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:check constraint",
+        "sql:quiz_admin_fresh_settings"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_shown_position",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_item_result_dto"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_shuffle_options",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_admin_fact_decide",
+        "sql:quiz_admin_import",
+        "sql:quiz_admin_question"
+      ],
+      "manual": null,
+      "writes": [],
+      "reads": []
     },
     {
       "name": "quiz_skip",
@@ -10638,6 +11809,7 @@
       "callers": [
         "sql:quiz_admin_forecast",
         "sql:quiz_admin_life_snapshot",
+        "sql:quiz_admin_refill",
         "sql:quiz_admin_snapshot",
         "sql:quiz_end",
         "sql:quiz_erase_history",
@@ -10665,6 +11837,16 @@
         "sql:quiz_round_begin"
       ],
       "manual": "QUIZ-03 internal UTC week end instant.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "quiz_word_overlap",
+      "owner": "BACKEND",
+      "callers": [
+        "sql:quiz_admin_import"
+      ],
+      "manual": null,
       "writes": [],
       "reads": []
     },
@@ -11303,6 +12485,7 @@
       "reads": [
         "friendships",
         "profiles",
+        "quiz_athlete_facts",
         "reels",
         "sport_quiz_group_members",
         "sport_quiz_groups",

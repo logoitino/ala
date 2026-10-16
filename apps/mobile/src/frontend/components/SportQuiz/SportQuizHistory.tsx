@@ -2,12 +2,16 @@
  * QUIZ-03 rounds list each closed question privately (prompt, right or not, explanation); never a score or rank.
  * QUIZ-04: Life Playbook and group rounds sit in the same private history with a plain label; a corrected (voided)
  * question shows its correction note; the clear-history copy covers levels, and Life Playbook levels when Life is
- * known to this account (never a teaser otherwise). */
+ * known to this account (never a teaser otherwise).
+ * QUIZ-05: a fun fact is labelled "Fun fact"; one the athlete removed shows the server's "Removed by the athlete" once
+ * (no answer or explanation), and one that no longer passes the server's check shows "This fun fact isn’t available
+ * anymore." */
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import type { SportQuizState } from '@/hooks/useSportQuiz';
 import type { TimedQuizAttemptSummary } from '@shared/timedSportQuiz';
 import { QuizButton } from './QuizButton';
+import { FUN_FACT_REMOVED, FUN_FACT_UNAVAILABLE, factGoneText, factUnavailable, isFunFact } from './FunFactMoment';
 const KIND_LABEL: Record<NonNullable<TimedQuizAttemptSummary['round_kind']>, string | null> = { personal: null, group: 'Group round', life: 'Life Playbook round' };
 /** @purpose CAS erasure needs an explicitly reviewed revision; unknown outcomes require Refresh/reconfirmation. */
 export function SportQuizHistory({ quiz, onBeforeErase, lifeKnown = false }: {
@@ -27,8 +31,10 @@ export function SportQuizHistory({ quiz, onBeforeErase, lifeKnown = false }: {
  {h && !h.items.length ? <Text>No retained learning history to show.</Text> : null}
  {h?.items.map(item => <View key={item.attempt.id} style={{ gap: 6 }}><Text>{`Week starting ${item.attempt.week_start} · ${item.attempt.round_kind && KIND_LABEL[item.attempt.round_kind] ? `${KIND_LABEL[item.attempt.round_kind]} · ` : ''}${item.attempt.status}`}</Text>
  {item.question ? <Text>{item.question.prompt}</Text> : null}{item.result ? <Text>{item.result.explanation}</Text> : null}
- {item.items?.map(i => <View key={i.position} style={{ gap: 2 }}><Text>{`Question ${i.position}: ${i.status === 'void' ? 'corrected' : i.result.answered_option === null ? 'not answered' : i.result.was_correct ? 'right' : 'not quite'}`}</Text>
- <Text>{i.question.prompt}</Text><Text>{i.result.explanation}</Text>{i.status === 'void' || i.correction_reason ? <Text>{`Correction: ${i.correction_reason ?? 'We corrected this question after review, so it doesn’t count.'}`}</Text> : null}</View>)}
+ {item.items?.map(i => { const gone = factUnavailable(i.result); const removed = gone ? null : factGoneText(i.question);
+  return <View key={i.position} style={{ gap: 2 }}><Text>{`Question ${i.position}${isFunFact(i.question) ? ' (Fun fact)' : ''}: ${gone ? 'not available' : removed ? (removed === FUN_FACT_REMOVED ? 'removed' : 'not available') : i.status === 'void' ? 'corrected' : i.result.answered_option === null ? 'not answered' : i.result.was_correct ? 'right' : 'not quite'}`}</Text>
+ {gone ? <Text>{FUN_FACT_UNAVAILABLE}</Text> : removed ? <Text>{removed}</Text> : <>
+ <Text>{i.question.prompt}</Text><Text>{i.result.explanation}</Text>{i.status === 'void' || i.correction_reason ? <Text>{`Correction: ${i.correction_reason ?? 'We corrected this question after review, so it doesn’t count.'}`}</Text> : null}</>}</View>; })}
  {item.badge ? <Text>{item.badge.voided_at ? `${item.badge.label} · corrected/unavailable` : item.badge.label}</Text> : null}
  {item.attempt.correction_reason ? <Text>{item.attempt.correction_reason}</Text> : null}
  {['ended', 'expired'].includes(item.attempt.status) ? <Text>Round ended. You can keep browsing; older completion badges are unaffected.</Text> : null}</View>)}

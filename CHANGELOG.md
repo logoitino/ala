@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-15 — Fresh trivia and athlete fun facts (QUIZ-05)
+
+Trivia now looks after itself. Players can report a question that seems wrong, confusing or not okay; questions with
+enough reports pause until an admin checks them, and answers come in a different order for each player. Athletes can
+choose to share up to three fun facts from a short list of prompts, such as their hype song or pre-game meal. Each one
+is checked by an admin, and a parent or guardian approves first for under-16s. Their fans may then meet a "Fun fact"
+question now and then, shown only to people the athlete's privacy settings allow, and an athlete can remove one any
+time. Admins can paste in a batch of new questions as drafts. Migrations written, not applied; athlete fun facts start
+switched off.
+
 ## 2026-10-15 — Trivia feels like game day
 
 Trivia rounds are now playful: questions pop in, a shot-clock bar counts down, and every right answer gets a sports

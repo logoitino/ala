@@ -359,3 +359,4 @@ export const APP_RUNTIME_FLAG_GROUPS: AppRuntimeFlagGroup[] = [
 export * from './timedSportQuiz';
 export * from './triviaPlayTogether';
 export * from './lifePlaybook';
+export * from './freshQuestions';

@@ -39,6 +39,15 @@
 -- Safe to re-run: add column if not exists, create table if not exists, named constraints dropped and re-added NOT VALID,
 --   seeds on conflict do nothing, create or replace. Rollback: switch trivia.life off and pause; keep records; forward fix.
 
+-- QUIZ-05 (2026-10-15, edited in place before any apply): after 20261015210000_trivia_fresh_questions.sql exists this file
+--   must not be re-run alone (it would replace QUIZ-05 functions and narrow its checks); it stops with
+--   quiz_rerun_after_quiz05. schema.sql re-applies it together with QUIZ-05 (quiz.full_schema is on there).
+do $$ begin
+  if to_regclass('public.quiz_athlete_facts') is not null and coalesce(current_setting('quiz.full_schema',true),'') <> 'on' then
+    raise exception 'quiz_rerun_after_quiz05: 20261014180000_life_playbook.sql must not be re-run alone after QUIZ-05; re-apply schema.sql or write a reviewed forward migration';
+  end if;
+end $$;
+
 -- 0. Helpers used by constraints ---------------------------------------------------------------------------------------
 create or replace function public.quiz_level_keys()
 returns text[] language sql immutable set search_path = '' as $$ select array['rookie','varsity','all_star','pro','hall_of_fame'] $$;

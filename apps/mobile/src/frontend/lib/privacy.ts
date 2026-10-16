@@ -1,6 +1,8 @@
 /**
  * Profile privacy, friends and blocking (PRIV-01). Every rule is enforced in the database
  * (`20261014090000_profile_privacy.sql`); this file only calls those functions and names things for the screens.
+ * QUIZ-05: the `fun_facts` audience is read and sent only when the server returns it (databases without the QUIZ-05
+ * update refuse unknown items), so `funFacts` is absent there.
  * Design: docs/engineering/design/PROFILE_PRIVACY_DESIGN.md.
  * @sideEffects Database functions through `callRpc`; a missing migration reads as "not switched on".
  */
@@ -19,6 +21,8 @@ export type PrivacySettings = {
   tagReview: 'review_all' | 'auto_friends';
   /** 'teens' (only accounts aged 13–17, plus a linked guardian) is the teen default (MINOR-01). */
   friendRequestsFrom: 'everyone' | 'teens' | 'nobody';
+  /** QUIZ-05 trivia fun facts audience; absent when the server has no `fun_facts` item. 13–15 are capped at friends. */
+  funFacts?: Audience;
 };
 
 /** The profile items a person can choose an audience for, in screen order. */
@@ -60,6 +64,7 @@ export function parsePrivacy(raw: unknown): PrivacySettings {
     hideFromSearch: r.hide_from_search === true,
     tagReview: r.tag_review === 'auto_friends' ? 'auto_friends' : 'review_all',
     friendRequestsFrom: r.friend_requests_from === 'nobody' ? 'nobody' : r.friend_requests_from === 'teens' ? 'teens' : 'everyone',
+    ...('fun_facts' in a ? { funFacts: asAudience(a.fun_facts, 'friends') } : {}),
   };
 }
 
@@ -67,7 +72,7 @@ export function parsePrivacy(raw: unknown): PrivacySettings {
 export function privacyPayload(next: Partial<PrivacySettings>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (next.accountPrivate !== undefined) out.account_private = next.accountPrivate;
-  if (next.audience) out.audience = next.audience;
+  if (next.audience || next.funFacts) out.audience = { ...(next.audience ?? {}), ...(next.funFacts ? { fun_facts: next.funFacts } : {}) };
   if (next.hideFromSearch !== undefined) out.hide_from_search = next.hideFromSearch;
   if (next.tagReview) out.tag_review = next.tagReview;
   if (next.friendRequestsFrom) out.friend_requests_from = next.friendRequestsFrom;

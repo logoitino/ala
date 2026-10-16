@@ -4,6 +4,8 @@
  * year, and for 13–17 the parent or guardian link (invite code, confirm, unlink), the consent status, requests waiting
  * for the guardian (under 16) and "What your guardian sees". Adults can open the guardian panel to link a teen. The
  * database enforces every rule; this sheet explains them.
+ * QUIZ-05: athletes get a "Fun facts" audience (same control as the other items) when the server has it; for 13–15
+ * "Everyone" is not offered because the server caps fun facts at friends.
  * @sideEffects `get_my_privacy`, `set_my_privacy`, `list_my_blocks`, `unblock_user` (lib/privacy) and the guardian
  *   functions in lib/minors; `set_my_birth_month` through AuthContext.
  */
@@ -86,7 +88,7 @@ const message = (caught: unknown, fallback: string) => (caught instanceof Error 
 
 /** @purpose The Privacy sheet opened from Edit profile. */
 export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { recordBirthMonth } = useAuth();
+  const { recordBirthMonth, isAthlete } = useAuth();
   const [saved, setSaved] = useState<PrivacySettings | null>(null);
   const [draft, setDraft] = useState<PrivacySettings | null>(null);
   const [minor, setMinor] = useState<MinorStatus | null>(null);
@@ -275,6 +277,21 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
                   />
                 </View>
               ))}
+              {isAthlete && draft.funFacts ? (
+                <View style={styles.item}>
+                  <Text style={styles.itemLabel}>Fun facts</Text>
+                  <Text style={styles.hint}>
+                    {under16 ? 'Trivia fun facts you share. Under 16, fun facts go to friends at most.' : 'Trivia fun facts you share.'}
+                  </Text>
+                  <Choices
+                    label="Fun facts"
+                    value={under16 && draft.funFacts === 'everyone' ? 'friends' : draft.funFacts}
+                    options={AUDIENCES.map((value) => ({ value, label: AUDIENCE_LABEL[value] }))}
+                    onChange={(next) => setDraft({ ...draft, funFacts: next })}
+                    disabled={(option) => under16 && option === 'everyone'}
+                  />
+                </View>
+              ) : null}
 
               <Text style={styles.section}>Finding you</Text>
               <Choices
@@ -423,7 +440,7 @@ const styles = StyleSheet.create({
   itemLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
   hint: { fontSize: 12, color: colors.textMuted, lineHeight: 17 },
   choiceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  choice: { minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignSelf: 'flex-start' },
+  choice: { minHeight: 44, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignSelf: 'flex-start' },
   choiceOn: { backgroundColor: FOCAL.violetInk, borderColor: FOCAL.violetInk },
   choiceOff: { opacity: 0.4 },
   choiceLabel: { fontSize: 13, fontWeight: '700', color: colors.text },

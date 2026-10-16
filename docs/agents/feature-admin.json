@@ -817,6 +817,108 @@
           ]
         }
       }
+    },
+    {
+      "id": "QUIZ-05",
+      "title": "Fresh questions: self-healing trivia (reports, auto-pause, quality flags, answer shuffle, phrasings, low-pool alerts), Know your athlete opt-in questions, and admin bulk import",
+      "owner": "POLLS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-15T17:11:33Z",
+      "exemption": null,
+      "source": {
+        "description": "Builds on QUIZ-02/03/04. Nothing reaches players without admin approval. Design: docs/engineering/design/TRIVIA_FRESH_QUESTIONS_DESIGN.md",
+        "paths": [
+          "docs/engineering/design/TRIVIA_FRESH_QUESTIONS_DESIGN.md",
+          "supabase/migrations/20261015210000_trivia_fresh_questions.sql"
+        ]
+      },
+      "admin": {
+        "route": "/admin/sport-quiz",
+        "actions": [
+          "Needs a look (auto-paused / flagged / reported) with Restore / Edit / Archive; athlete question queue with guardian status; athlete share and self-heal settings; bulk import with dry run"
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizFacts.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizFreshSettings.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizImport.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizNeedsLook.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizSettings.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/TriviaStatusCard.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/sport-quiz",
+        "metrics": [
+          "Reports by reason, auto-paused count, flags by type, weeks left per topic, athlete questions approved / withdrawn (aggregate only)"
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizFacts.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizFreshSettings.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizImport.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizNeedsLook.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizSettings.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/TriviaStatusCard.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Athlete share setting 0 stops athlete questions; report intake can be paused; inherits trivia pause / empty cohort.",
+        "paths": [
+          "supabase/migrations/20261015210000_trivia_fresh_questions.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible enrolled tester",
+          "athlete (own questions)"
+        ],
+        "deniedBehavior": "RPC-only; preset prompts; under-16 guardian approval; athlete withdraw at any time; shown only where the athlete's privacy allows and to followers / Learn-card players.",
+        "paths": [
+          "supabase/migrations/20261015210000_trivia_fresh_questions.sql",
+          "scripts/replay/fresh-questions-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/sport-quiz",
+        "paths": [
+          "apps/mobile/app/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/QuestionReport.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/FunFactMoment.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizRound.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LearnSportCard.tsx",
+          "apps/mobile/src/frontend/components/Profile/FunFactShare.tsx",
+          "apps/mobile/src/frontend/lib/freshQuestions.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-15T21:11:39Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-05-admin.md",
+              "command": "node scripts/replay/fresh-questions-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "46/46 on PGlite (Postgres 18.6); Life 39/39, QUIZ-03 59/59, schema 105/105 (lead run). Security review four rounds; final items fixed and replay-verified. No hosted database."
+            },
+            {
+              "path": "docs/engineering/evidence/QUIZ-05-admin.md",
+              "command": "pnpm check",
+              "result": "exit 0, 1,482 tests and every guard (lead run)."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-15T21:52:58Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-05-app.md",
+              "command": "pnpm check",
+              "result": "exit 0, 1,579 tests and every guard (lead run); fresh-questions replay 46/46. VOICE / ACCESSIBILITY / MINOR_SAFETY / PRIVACY_ENGINEERING passed with fixes. No device, screen reader or hosted database."
+            }
+          ]
+        }
+      }
     }
   ]
 }

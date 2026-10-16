@@ -290,3 +290,48 @@ desk: `/admin/sport-quiz` → *Life Playbook* panels. Before the migration is ap
   = a Life edit must pass the word rules and attestation at save; nothing was saved. On a database without
   `edit_replace` the desk falls back to two audited steps; if the second fails it says "New version saved, but the
   earlier draft was not archived" — archive that draft by hand.
+
+## 12b. Fresh questions: fun facts, reports, Needs a look and import (QUIZ-05)
+
+- **Fun facts, Needs a look or Bulk import say "not switched on".** `20261015210000_trivia_fresh_questions.sql` is not
+  applied (written 2026-10-15, local only). Each panel reads separately, so the rest of the desk keeps working.
+- **`quiz_facts_paused` on submit.** `trivia.athlete_questions` is off (the default). Turn it on in Trivia → Settings →
+  Fun facts; the share can stay 0 so nothing is drawn while the queues are tested.
+- **`quiz_fact_text: …`.** The server filter refused the answer; the codes name why (`digits`, `link`,
+  `handle_or_email`, `address`, `weekday_or_time`, `school_or_city`, `emoji_or_non_latin`, `not_okay_word`,
+  `money_word`, `brand`, `not_on_list` for the pre-game meal, `matches_wrong_option` when it is close to a curated wrong
+  choice). Plain words: `FUN_FACT_TEXT_WORDS` in `lib/freshQuestions.ts`.
+- **`quiz_fact_age_needed` / `quiz_fact_athlete_only`.** No recorded birth month and year, or the account is not linked
+  to a roster athlete. By design: no submissions without a recorded 13+ age.
+- **A 13–15 fact stays "waiting for a guardian".** No guardian is linked (nothing asks the teen to invite one), or the
+  guardian request lapsed after MINOR-01's 14 days; submitting the same prompt again resends it.
+  `quiz_fact_guardian_first` = an admin tried to approve before the guardian; `quiz_fact_guardian_only` = someone other
+  than the supervising guardian (including an admin through `guardian_decide_approval`) tried to decide.
+- **A fun fact is never drawn.** Check: switch on and share above 0; the athlete is verified with a recorded 13+ age;
+  the viewer follows the athlete (Crew) or started from the Learn card; the `fun_facts` audience allows (default friends;
+  13–15 capped at friends); no block; the round is personal (never group or Life) with 2+ questions; the player-week falls
+  in the share (about 1 in 3 at most, deterministic); one per athlete per viewer per month; the question is not paused.
+- **Answer outcome `fact_unavailable`.** The fun fact failed the reveal re-check (audience, follow, block, switch or
+  withdrawal changed after it was shown); the item is voided and the round moves on. Intentional.
+- **Answers look shuffled / `answered_option` differs from what was tapped.** `quiz_answer` takes the shown position;
+  the stored index is kept in `answered_option` and `stored_answered_option` on the client. Use `correct_position` (or
+  the adapter's mapped `correct_option`) to highlight the shown option.
+- **Approving moved the correct answer.** Approval shuffles a choice question's stored order (never true / false), so
+  no path shows "correct answer first". Texts and the correct text are unchanged.
+- **A question disappeared from rounds.** It was auto-paused by reports (Needs a look). Restore it there; three new
+  counted reporters pause it again. After 10 auto-pauses in a topic in one UTC day, reports queue and the desk shows an
+  alert instead.
+- **Report outcome `paused`.** Report intake is paused in Settings; nothing was recorded. `quiz_report_not_allowed` =
+  the reporter has no closed round item for that question; `quiz_report_limit` = 10 reports in 24 hours.
+- **Bulk import refused rows.** `duplicate` (already in the bank, any status), `duplicate_in_batch`, `formula_cell`
+  (a cell starts with `= + - @`), `athlete_row`, `image_row`, `bank_full`, `life_copy:<rule>`. `quiz_import_too_large` =
+  more than 200 rows or 64 KB. Edit the paste and preview again; Import needs a fresh preview of exactly those rows.
+- **`quiz_rerun_after_quiz05` / `minor01_rerun_after_quiz05` while applying SQL.** `20261014180000_life_playbook.sql`
+  and `20261014110000_minor_accounts.sql` must not be re-run alone after QUIZ-05 (they would replace its fun-fact
+  routing and supervision count). Re-apply `schema.sql` or write a forward migration.
+- **"This request cannot be decided here."** `guardian_decide_approval` was asked to decide an approval type it does not
+  know (fail closed; nothing changed). Fun-fact requests are decided by the supervising guardian through QUIZ-05.
+- **`quiz_fact_admin_path` from the question bank.** Fun-fact questions are never archived or voided in the bank; use
+  Needs a look → Archive (declines the fact and voids its question) or the fun-fact queue.
+- **A result says `fact_unavailable`.** A fun fact timed out or was never answered and no longer passes the check (audience,
+  follow, block, switch); nothing about it is shown.

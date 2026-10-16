@@ -150,9 +150,14 @@ await test('Start issues question 1 of 5 with its own deadline and no answer key
   assert.equal((await one('select count(*)::int n from public.sport_quiz_exposures where profile_id=$1', [P.fan])).n, 1);
 });
 await test('answer reveals only that item, then the round waits for Next with next_by about 2 minutes later', async () => {
-  const r = await answer('fan', fanRound.attempt.id, 0);
+  // QUIZ-05: options are shown in a per-item order and stored shuffled at approval, so the replay answers by text: the
+  // shown position of the wrong 'First choice'; the result's stored correct index names 'Second choice'.
+  const shown = fanRound.active_question.options;
+  const r = await answer('fan', fanRound.attempt.id, shown.indexOf('First choice'));
   assert.equal(r.outcome, 'answered'); assert.equal(r.attempt.status, 'issued'); assert.equal(r.attempt.round_state, 'between');
-  assert.equal(r.result.position, 1); assert.equal(r.result.was_correct, false); assert.equal(r.result.correct_option, 1);
+  assert.equal(r.result.position, 1); assert.equal(r.result.was_correct, false);
+  const stored = (await one('select options from public.sport_quiz_questions where id=$1', [fanRound.active_question.id])).options;
+  assert.equal(stored[r.result.correct_option], 'Second choice'); assert.equal(shown[r.result.correct_position], 'Second choice');
   const gap = Date.parse(r.attempt.next_by) - Date.parse(r.result.completed_at); assert.ok(gap >= 119000 && gap <= 121000, String(gap));
   assert.equal((await one("select count(*)::int n from public.sport_quiz_badges where profile_id=$1 and label='Trivia Explorer' and voided_at is null", [P.fan])).n, 1);
 });
@@ -645,7 +650,7 @@ await test('migration re-applies over live QUIZ-03 data without changing it', as
   // QUIZ-04: after QUIZ-04 exists, QUIZ-03 re-runs only on the full-schema path (quiz.full_schema), followed by QUIZ-04.
   await db.exec("select set_config('quiz.full_schema','on',false)");
   try {
-    for (const f of ['20261014150000_timed_sport_trivia.sql', '20261014160000_trivia_play_together.sql', '20261014180000_life_playbook.sql', '20261014190000_life_playbook_bank.sql'])
+    for (const f of ['20261014150000_timed_sport_trivia.sql', '20261014160000_trivia_play_together.sql', '20261014180000_life_playbook.sql', '20261014190000_life_playbook_bank.sql', '20261015210000_trivia_fresh_questions.sql'])
       await db.exec(fs.readFileSync(`supabase/migrations/${f}`, 'utf8'));
   } finally { await db.exec("select set_config('quiz.full_schema','',false)"); }
   assert.deepEqual(await state(), before);

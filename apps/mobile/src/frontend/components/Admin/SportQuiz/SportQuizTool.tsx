@@ -9,6 +9,8 @@
  * the Life chapters, groups, and one Settings panel (trivia state and testers, rounds and switches, Life switch and levels).
  * The review queue counts the whole bank (quiz_admin_snapshot.bank_counts) and its Edit is one atomic edit_replace, with
  * the loaded-page counts and the two-step edit kept as fallbacks for a server without them.
+ * QUIZ-05 adds Needs a look (Restore / Edit / Dismiss / Archive), the athlete fun-fact queue, Bulk import (paste, dry-run
+ * preview, Import as drafts) and the fun-fact / report / self-heal settings; each reads separately ("not switched on").
  * @sideEffects Admin quiz RPCs and existing Analytics/Health/Support navigation. No participant prompts or public rewards.
  */
 import {useCallback,useEffect,useRef,useState} from 'react';
@@ -30,8 +32,14 @@ import {SportQuizReview} from './SportQuizReview';
 import {SportQuizSettings} from './SportQuizSettings';
 import {TriviaStatusLines} from './TriviaStatusCard';
 import {readFailure,triviaStatus} from './triviaDesk';
+import {actOnNeedsLook,decideFact,fetchFactQueue,fetchNeedsLook,importTriviaQuestions,saveFreshSettings,
+  type FactDecisionInput,type FactQueue,type FreshSettingsInput,type ImportResult,type ImportRow,type NeedsLook,type NeedsLookAction} from '@/lib/freshQuestions';
+import {SportQuizNeedsLook} from './SportQuizNeedsLook';
+import {SportQuizFacts} from './SportQuizFacts';
+import {SportQuizImport} from './SportQuizImport';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type Source={epoch:number;data:TimedQuizAdminSnapshot|null;loading:boolean;error:string|null};
+type SideRead<T>={epoch:number;data:T|null;missing:boolean;error:string|null};
 
 /** @purpose Gate mounting of the private operations desk using the existing canonical admin shell. */
 export function SportQuizTool(){return <AdminShell><SportQuizDesk/></AdminShell>;}
@@ -50,7 +58,11 @@ function SportQuizDesk(){
   const actionEpoch=useRef<number|null>(null);
   const [caseFile,setCaseFile]=useState<TriviaGroupCase|null>(null);
   const [life,setLife]=useState<{epoch:number;data:LifeAdminSnapshot|null;error:string|null;missing?:boolean}>({epoch:-1,data:null,error:null});
-  const [view,setView]=useState<'add'|'review'|'all'>('add');const [added,setAdded]=useState(0);
+  const [view,setView]=useState<'add'|'review'|'all'|'import'>('add');const [added,setAdded]=useState(0);
+  // QUIZ-05 reads are separate so an unapplied migration shows "not switched on" instead of failing the desk.
+  const [facts,setFacts]=useState<SideRead<FactQueue>>({epoch:-1,data:null,missing:false,error:null});
+  const [look,setLook]=useState<SideRead<NeedsLook>>({epoch:-1,data:null,missing:false,error:null});
+  const [importResult,setImportResult]=useState<ImportResult|null>(null);
   const {busy,message,run}=useAdminAction();
   const data=source.epoch===epoch&&key?source.data:null;
   const loading=source.epoch!==epoch||source.loading;
@@ -65,6 +77,11 @@ function SportQuizDesk(){
       // Life is read on its own: before QUIZ-04 is applied it shows "not switched on" instead of failing the desk.
       try{const lifeData=await fetchLifeAdmin();if(current()&&sequence===scope.current.read)setLife({epoch,data:lifeData,error:null});}
       catch(lifeError){if(current()&&sequence===scope.current.read)setLife({epoch,data:null,...readFailure(lifeError)});}
+      const [f,l]=await Promise.allSettled([fetchFactQueue(),fetchNeedsLook()]);
+      if(current()&&sequence===scope.current.read){
+        setFacts(f.status==='fulfilled'?{epoch,data:f.value,missing:false,error:null}:{epoch,data:null,...readFailure(f.reason)});
+        setLook(l.status==='fulfilled'?{epoch,data:l.value,missing:false,error:null}:{epoch,data:null,...readFailure(l.reason)});
+      }
     }catch(caught){if(current()&&sequence===scope.current.read)setSource({epoch,data:null,loading:false,error:caught instanceof Error?caught.message:'Timed quiz source unavailable.'});}
   },[current,epoch]);
   useEffect(()=>{scope.current.active=true;setReason('');setTesters('');setCaseFile(null);if(actor)void load();else setSource({epoch,data:null,loading:false,error:null});
@@ -128,7 +145,8 @@ function SportQuizDesk(){
     if(!current())return '';
     setReason('');await load();
     return `Removed ${receipt.removed_guards} expired guards and ${receipt.removed_requests} recovery records; preserved ${receipt.preserved_guards} unexpired guards. `
-      +`Groups: ${receipt.removed_codes??0} expired codes, ${receipt.removed_group_sets??0} past shared sets, ${receipt.removed_join_attempts??0} old join attempts, ${receipt.removed_groups??0} closed groups. Batch limit ${receipt.batch_limit}.`;
+      +`Groups: ${receipt.removed_codes??0} expired codes, ${receipt.removed_group_sets??0} past shared sets, ${receipt.removed_join_attempts??0} old join attempts, ${receipt.removed_groups??0} closed groups. `
+      +`Reports: ${receipt.cleared_reporters??0} reporter ids cleared (90 days), ${receipt.removed_reports??0} reports deleted (180 days). Batch limit ${receipt.batch_limit}.`;
   });
   const savePlay=(next:TriviaPlaySettingsInput)=>action('play',async()=>{
     if(!current()||!actor)return '';
@@ -161,6 +179,23 @@ function SportQuizDesk(){
   const chapter=(id:LifeChapterId,open:boolean)=>lifeAction('life_chapter',async()=>{
     if(!current()||!actor)return '';await setLifeChapterOpen(id,open,reason.trim(),actor);
     if(!current())return '';setReason('');await load();return open?'Chapter opened.':'Chapter closed.';});
+  // QUIZ-05 actions: fun-fact decisions, Needs a look, fresh settings and bulk import.
+  const decide=(factId:string,input:FactDecisionInput)=>action(input.action==='approve'?'fact_approve':'fact_decline',async()=>{
+    if(!current()||!actor)return '';const r=await decideFact(factId,input,actor);if(!current())return '';await load();
+    return r.status==='approved'?'Fun fact approved; it can now be drawn where the athlete\'s settings allow.':'Fun fact declined with your reason.';});
+  const lookAction=(questionId:string,kind:NeedsLookAction,why:string)=>action(`look_${kind}`,async()=>{
+    if(!current()||!actor)return '';await actOnNeedsLook(questionId,kind,why,actor);if(!current())return '';await load();
+    return kind==='restore'?'Restored: it can be drawn again; three new reports would pause it again.':kind==='dismiss'?'Kept as it is; current flags and reports are cleared from the list.':'Archived.';});
+  const lookEdit=(questionId:string,payload:TimedQuizAdminQuestionInput)=>lifeAction('look_edit',async()=>{
+    if(!current()||!actor)return '';await replaceSportQuizDraft(questionId,payload,actor);if(!current())return '';await load();
+    return 'New draft saved for review; the question that needed a look was archived in the same step.';});
+  const saveFresh=(next:FreshSettingsInput)=>action('fresh',async()=>{
+    if(!current()||!actor)return '';const r=await saveFreshSettings(next,reason.trim(),actor);if(!current())return '';setReason('');await load();
+    return `Saved: fun facts ${r.athlete_questions_enabled?'on':'off'} at ${r.athlete_share_pct}% · report intake ${r.reports_paused?'paused':'open'} · thresholds updated.`;});
+  const runImport=(rows:ImportRow[],dryRun:boolean)=>action(dryRun?'import_preview':'import',async()=>{
+    if(!current()||!actor)return '';const r=await importTriviaQuestions(rows,dryRun,reason.trim(),actor);if(!current())return '';setImportResult(r);
+    if(!dryRun){setReason('');await load();}
+    return dryRun?`Preview: ${r.rows_ready} ready, ${r.rows_refused} refused, ${r.rows_warned} with warnings. Nothing was saved.`:`Imported ${r.rows_ready} drafts; ${r.rows_refused} refused. Review them in Drafts to review.`;});
   const lifeData=life.epoch===epoch?life.data:null;
   const lifeError=life.epoch===epoch?life.error:null;
   const playSettings=data?.settings&&typeof data.settings.round_size==='number'?{round_size:data.settings.round_size,groups_enabled:!!data.settings.groups_enabled,images_enabled:!!data.settings.images_enabled}:null;
@@ -182,21 +217,25 @@ function SportQuizDesk(){
       <AdminPanel title="Trivia status">
         <TriviaStatusLines status={triviaStatus({data,missing:false,error:null},{data:lifeData,missing:!!life.missing,error:lifeError})}/>
       </AdminPanel>
+      <SportQuizNeedsLook data={look.epoch===epoch?look.data:null} missing={look.epoch===epoch&&look.missing} error={look.epoch===epoch?look.error:null} busy={blocked}
+        full={full} onAction={lookAction} onEdit={lookEdit}/>
       <AdminField label="Review or correction reason" value={reason} onChangeText={setReason} multiline/>
       <Text>Settings, All questions actions, group cases and retention record this reason. Add a question and Drafts to review keep their own reason.</Text>
       <AdminPills label="Quiz desk" items={[{id:'operate',label:'Operate'},{id:'data',label:'Data'}]} value={tab} onChange={setTab}/>
       <AdminSectionTitle>Question bank</AdminSectionTitle>
-      {tab==='operate'?<AdminPills label="Questions" value={view} items={[{id:'add',label:'Add a question'},{id:'review',label:'Drafts to review'},{id:'all',label:'All questions'}]} onChange={setView}/>:null}
-      {tab==='operate'&&view==='add'?<SportQuizAddQuestion busy={blocked} full={full} resetSignal={added} onSave={payload=>questionWrite(null,'create',payload)}/>
+      {tab==='operate'?<AdminPills label="Questions" value={view} items={[{id:'add',label:'Add a question'},{id:'review',label:'Drafts to review'},{id:'all',label:'All questions'},{id:'import',label:'Bulk import'}]} onChange={setView}/>:null}
+      {tab==='operate'&&view==='import'?<SportQuizImport busy={blocked} hasReason={hasReason} result={importResult} onPreview={rows=>runImport(rows,true)} onImport={rows=>runImport(rows,false)}/>
+        :tab==='operate'&&view==='add'?<SportQuizAddQuestion busy={blocked} full={full} resetSignal={added} onSave={payload=>questionWrite(null,'create',payload)}/>
         :tab==='operate'&&view==='review'?<SportQuizReview questions={data.questions} draftTotal={data.counts.questions_draft} bankCounts={data.bank_counts} life={lifeData} busy={blocked} imagesEnabled={!!data.settings?.images_enabled}
           full={full} nextCursor={data.next_question_cursor} onLoadMore={moreQuestions} onWrite={(id,kind,payload)=>questionWrite(id,kind,payload)} onRevise={reviseDraft}/>
         :<SportQuizBank key={key} questions={data.questions} total={data.question_total} activeTotal={data.active_total??data.question_total} cap={data.question_cap} nextCursor={data.next_question_cursor} busy={blocked} reason={reason} tab={tab}
           imagesEnabled={!!data.settings?.images_enabled} actorId={actor} lifeActiveTotal={data.life_active_total} lifeCap={data.life_cap} onLoadMore={moreQuestions} onWrite={questionWrite}/>}
+      <SportQuizFacts data={facts.epoch===epoch?facts.data:null} missing={facts.epoch===epoch&&facts.missing} error={facts.epoch===epoch?facts.error:null} busy={blocked} onDecide={decide}/>
       <SportQuizLife data={lifeData} error={lifeError} busy={blocked} hasReason={hasReason} onChapter={chapter}/>
       <SportQuizGroups counts={data.groups??null} reports={data.reports??[]} caseFile={caseFile} busy={busy} hasReason={hasReason} onOpenCase={openCase} onRemove={removeGroupMember}/>
       <SportQuizSettings settings={data.settings} weekStart={data.week_start} weekEnd={data.week_end} generatedAt={data.generated_at} testers={testers} onTesters={setTesters}
         pilotIds={pilotIds} validTesters={validTesters} hasReason={hasReason} busy={busy} onConfigure={configure} play={playSettings} onSavePlay={savePlay}
-        life={lifeData} lifeError={lifeError} onSaveLife={saveLife}/>
+        life={lifeData} lifeError={lifeError} onSaveLife={saveLife} fresh={data.fresh??null} onSaveFresh={saveFresh}/>
       <AdminSectionTitle>Numbers</AdminSectionTitle>
       <AdminMetrics items={[
         {label:'Draft questions',value:data.counts.questions_draft},{label:'Approved questions',value:data.counts.questions_approved},{label:'Archived questions',value:data.counts.questions_archived},{label:'Void questions',value:data.counts.questions_void},

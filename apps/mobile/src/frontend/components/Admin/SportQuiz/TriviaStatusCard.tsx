@@ -1,7 +1,8 @@
 /**
  * Trivia status for the control tower (2026-10-15). `TriviaStatusCard` is the compact card on the admin Home: the
  * trivia state (paused / testing / on), the groups / Life / images switches, drafts waiting for approval, Life chapters
- * open, the topics or chapters running low, and a link to the Trivia desk. It reads only the existing admin reads
+ * open, the topics or chapters running low (QUIZ-05: weeks left and "Refill needed"), the Needs a look count, and a
+ * link to the Trivia desk. It reads only the existing admin reads
  * (quiz_admin_snapshot and the Life admin read); a read that is not applied says "not switched on", never zero.
  * `TriviaStatusLines` renders the same summary at the top of the desk.
  * @sideEffects Two read-only admin RPCs when the Home card mounts; no writes.
@@ -23,6 +24,7 @@ export function TriviaStatusLines({status,text,strong,limit}:{status:TriviaStatu
     <Text style={strong}>{`Trivia: ${status.stateText}`}</Text>
     <Text style={text}>{status.switches.join(' · ')}</Text>
     <Text style={text}>{status.drafts}</Text>
+    {status.look?<Text style={text}>{status.look}</Text>:null}
     <Text style={text}>{status.chapters}</Text>
     {status.state==='not_on'||status.state==='unavailable'?null:status.low.length
       ?<Text style={text}>{`Running low: ${low.join('; ')}${status.low.length>low.length?`; and ${status.low.length-low.length} more`:''}.`}</Text>

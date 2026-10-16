@@ -688,7 +688,7 @@ await test('reads do not write; migrations re-apply over live Life data without 
   // The full-schema path (schema.sql sets quiz.full_schema) re-applies the QUIZ blocks together.
   await db.exec("select set_config('quiz.full_schema','on',false)");
   try {
-    for (const f of ['20261014150000_timed_sport_trivia.sql', '20261014160000_trivia_play_together.sql', '20261014180000_life_playbook.sql', '20261014190000_life_playbook_bank.sql'])
+    for (const f of ['20261014150000_timed_sport_trivia.sql', '20261014160000_trivia_play_together.sql', '20261014180000_life_playbook.sql', '20261014190000_life_playbook_bank.sql', '20261015210000_trivia_fresh_questions.sql'])
       await db.exec(fs.readFileSync(`supabase/migrations/${f}`, 'utf8'));
   } finally { await db.exec("select set_config('quiz.full_schema','',false)"); }
   assert.deepEqual(await state(), before);

@@ -7,6 +7,10 @@
  * QUIZ-04 fun presentation (2026-10-15): the screen mounts the effects provider (Reduce Motion, sound choice, page
  * focus), shows the "Sound on / Sound off" switch, and celebrates a level-up once when the level read after a round is
  * higher than the level before it. Effects never delay Start, an answer, Next or End, and leaving still ends a round.
+ * QUIZ-05: one report state per account (`useQuestionReports`) is shared by the reveal and the round summary, so a
+ * question reported at its reveal reads as reported in the summary too. A personal sport round for the Learn card's
+ * sport, opened from that card, carries the athlete's player id to Start (`learnAthlete`); nothing on this screen names
+ * the athlete.
  * @sideEffects Explicit account/round SDK actions and usable Back/account Home; no automatic Start or secret persistence.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -28,6 +32,7 @@ import { SportQuizPreparation } from './SportQuizPreparation';
 import { SportQuizPreferences } from './SportQuizPreferences';
 import { SportQuizHistory } from './SportQuizHistory';
 import { RevealBanner, SportQuizRound, SportQuizRoundSummary, focusSoon, revealOf } from './SportQuizRound';
+import { useQuestionReports } from './QuestionReport';
 import { LevelUpCelebration, QuizFxProvider, QuizSoundToggle, useQuizFx } from './QuizFx';
 import { SportQuizGroups } from './SportQuizGroups';
 import { SportQuizGroupPage } from './SportQuizGroupPage';
@@ -41,7 +46,7 @@ type PreparationIntent = { topic: TimedQuizTopic; sport: string | null; duration
 type GroupPreparation = { groupId: string; label: string; theme: string | null };
 const isForeground = () => (AppState.currentState === 'active' || AppState.currentState == null) && !(Platform.OS === 'web' && typeof document !== 'undefined' && document.visibilityState !== 'visible');
 /** @purpose Remount preparation/round with canonical identity, while navigation remains available during every state. */
-export function SportQuizScreen({ initialSport = null }: { initialSport?: string | null } = {}) { const quiz = useSportQuiz(); const focused = useIsFocused(); return <ScreenShell edges={['top', 'bottom', 'left', 'right']}><QuizFxProvider focused={focused}><SportQuizContent key={quiz.identityKey ?? 'unavailable'} quiz={quiz} initialSport={initialSport}/></QuizFxProvider></ScreenShell>; }
+export function SportQuizScreen({ initialSport = null, learnAthlete = null }: { initialSport?: string | null; learnAthlete?: string | null } = {}) { const quiz = useSportQuiz(); const focused = useIsFocused(); return <ScreenShell edges={['top', 'bottom', 'left', 'right']}><QuizFxProvider focused={focused}><SportQuizContent key={quiz.identityKey ?? 'unavailable'} quiz={quiz} initialSport={initialSport} learnAthlete={learnAthlete}/></QuizFxProvider></ScreenShell>; }
 /** The level a round started at; `undefined` while no round is being watched. */
 type LevelBaseline = LifeLevel | null | undefined;
 /** @purpose The single-question (QUIZ-02) result: the same kicker and cue as a round's reveal, once per result. */
@@ -54,9 +59,10 @@ function TimedReveal({ result }: { result: { was_correct: boolean | null; answer
         []);
     return reveal ? <RevealBanner reveal={reveal} sport={null} seed={1}/> : null;
 }
-function SportQuizContent({ quiz, initialSport }: {
+function SportQuizContent({ quiz, initialSport, learnAthlete }: {
     quiz: SportQuizState;
     initialSport: string | null;
+    learnAthlete: string | null;
 }) {
     const auth = useAuth();
     const router = useRouter();
@@ -68,6 +74,7 @@ function SportQuizContent({ quiz, initialSport }: {
     const round = useTimedSportQuizRound({ identityKey: quiz.identityKey, profileId: quiz.profileId, snapshot: quiz.snapshot, focused, onChanged: changed, life: life.snapshot });
     const groups = useTriviaGroups(quiz.identityKey, quiz.profileId);
     const badges = useTriviaBadges(quiz.identityKey, quiz.profileId);
+    const reports = useQuestionReports(quiz.profileId);
     const [groupPrep, setGroupPrep] = useState<GroupPreparation | null>(null);
     // Where a screen reader goes after a control it pressed disappears: the strip (or the page title) after "Back to
     // this week's rounds", the skipped line after Skip.
@@ -113,7 +120,10 @@ function SportQuizContent({ quiz, initialSport }: {
         void quiz.loadHistory(); }, [quiz.identityKey, focused, quiz.snapshot?.history_version, quiz.loadHistory]);
     const begin = useCallback((choice: Pick<PreparationIntent, 'topic' | 'sport' | 'duration' | 'group' | 'life'>) => choice.life !== undefined
         ? round.startLife(choice.life, choice.duration) : choice.group
-        ? round.startGroup(choice.group, choice.duration) : round.start(choice.topic, choice.sport, choice.duration), [round.start, round.startGroup, round.startLife]);
+        ? round.startGroup(choice.group, choice.duration)
+        // QUIZ-05: only the Learn card's own sport round carries the athlete hint.
+        : round.start(choice.topic, choice.sport, choice.duration, learnAthlete && choice.topic === 'sport' && !!choice.sport && choice.sport.trim().toLowerCase() === initialSport?.trim().toLowerCase() ? learnAthlete : null),
+    [round.start, round.startGroup, round.startLife, learnAthlete, initialSport]);
     useEffect(() => {
         if (!intent) return;
         if (!validIntent(intent)) { setIntent(null); return; }
@@ -217,10 +227,10 @@ function SportQuizContent({ quiz, initialSport }: {
  {idle && !round.ended && s.availability === 'ready' && !s.week_spent && !groupPrep ? <SportQuizPreparation snapshot={s} busy={busy || quiz.loading} initialSport={initialSport} onStart={(...args) => { void start(...args); }}/> : null}
  {idle && !round.ended && s.availability === 'ready' && !groupSpent && groupPrep ? <SportQuizPreparation key={groupPrep.groupId} snapshot={s} busy={busy || quiz.loading} group={{ label: groupPrep.label, theme: groupPrep.theme }} onCancel={() => setGroupPrep(null)} onStart={(_topic, _sport, duration) => { void start('sport', null, duration, groupPrep.groupId); }}/> : null}
  {round.pendingStart ? <><Text>We couldn’t confirm Start. You can retry the same choices while this page stays open and before time runs out.</Text><QuizButton label="Retry original Start" disabled={busy} onPress={() => { void round.retryStart(); }}/></> : null}
- <SportQuizRound round={round} busy={busy}/>
+ <SportQuizRound round={round} busy={busy} reports={reports}/>
  {inRound || round.pendingStart || s.attempt?.status === 'issued' ? <QuizButton label="End round" quiet disabled={quiz.busy==='erase'} onPress={() => round.leave('user_end')}/> : null}
  {round.unavailableQuestion ? <Text accessibilityRole="alert">This question isn’t available, so the round ended safely. You can keep browsing.</Text> : null}
- {roundSummary ? <SportQuizRoundSummary round={round}/> : null}
+ {roundSummary ? <SportQuizRoundSummary round={round} reports={reports}/> : null}
  {levelUp && round.ended ? <LevelUpCelebration label={levelUp}/> : null}
  {round.ended && !inRound ? <QuizButton label="Back to this week’s rounds" quiet onPress={() => { invalidatePreparation(); round.dismiss(); setRefocus(r => ({ to: 'week', n: (r?.n ?? 0) + 1 })); void quiz.refresh(); }}/> : null}
  {!inRound && !roundSummary && !round.unavailableQuestion && (round.ended || s.attempt?.status === 'expired' || s.attempt?.status === 'ended' || s.attempt?.status === 'issued') && !timedResult ? <Text>Round ended or unavailable on this view. Leaving the page, hiding the app or tapping End round ends a round, and no question comes back after leaving. You can keep browsing and check private history.</Text> : null}

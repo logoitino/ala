@@ -381,6 +381,22 @@
     "sport_quiz_levels": {
       "owner": "AURA",
       "purpose": "QUIZ-04 highest trivia level reached per account (track overall) and per Life chapter; only goes up; removed only by history erasure or account deletion. Private to the account; admin sees level counts with cells under 10 hidden."
+    },
+    "quiz_athlete_facts": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-05 athlete fun facts (minors' personal data at 13-17): the only place the athlete's words live (2-40 characters, server-filtered); status through guardian (under 16, MINOR-01 approval type fun_fact) and one-admin approval; cleared at once on withdrawal (athlete only), unlink or an under-13 block, deleted with the account; filled into fun-fact questions per viewer at read time where the fun_facts audience allows; never in the audit log; exported by quiz_fact_export. PROFILE / CUSTODIAL / MINOR_SAFETY review."
+    },
+    "sport_quiz_question_stats": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-05 per question version: distinct responders, right, time-outs, flags (too easy, confusing, too long), difficulty and the auto-pause / restore / review state for Needs a look. Aggregates only; refreshed by a trigger when an answer or time-out commits."
+    },
+    "sport_quiz_reports": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-05 question reports with fixed reasons (no free text), counted or why not; reporter id cleared at 90 days and rows deleted at 180 by quiz_admin_retention; erasure removes the reporter's own; admins see counts by reason only."
+    },
+    "sport_quiz_imports": {
+      "owner": "ADMIN",
+      "purpose": "QUIZ-05 one row per real bulk import (admin, reason, row totals); dry runs write nothing. Read as the 30-day import count in the admin snapshot."
     }
   },
   "buckets": {
@@ -1214,6 +1230,27 @@
       "name": "LIFE_DEFAULT_THRESHOLDS",
       "decision": "keep",
       "reason": "QUIZ-04 shared Life constants mirrored from SQL as the documented contract; the participant screens (QUIZ-04 app) read durations and thresholds from the server instead.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/freshQuestions.ts",
+      "name": "exportMyFunFacts",
+      "decision": "keep",
+      "reason": "QUIZ-05 participant / guardian wrapper built admin-first for the app agent (fun-fact opt-in, report button, Learn card, guardian panel); covered by lib tests; screens come with the app-ready step.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/freshQuestions.ts",
+      "name": "FUN_FACT_MAX_LIVE",
+      "decision": "keep",
+      "reason": "QUIZ-05 wire constant mirroring the SQL rule (limits, report labels per design \u00a76.13, self-heal defaults) for the app screens and tests; one place for the copy.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/freshQuestions.ts",
+      "name": "FRESH_SELF_HEAL_DEFAULTS",
+      "decision": "keep",
+      "reason": "QUIZ-05 wire constant mirroring the SQL rule (limits, report labels per design \u00a76.13, self-heal defaults) for the app screens and tests; one place for the copy.",
       "status": "kept"
     }
   ],

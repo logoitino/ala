@@ -1,6 +1,8 @@
 /**
  * QUIZ-02 bound timed adapter, extended by QUIZ-03 (rounds of up to five with Next, question types, badge shelf,
- * season recap, family groups and the admin group desk). Server owns time, identity and private learning.
+ * season recap, family groups and the admin group desk). QUIZ-05: shown-order answers (results are read in shown
+ * positions), fun-fact fields, the snapshot's refill / fresh blocks and the new audit actions; its own RPCs are in
+ * lib/freshQuestions.ts. Server owns time, identity and private learning.
  * Missing/malformed sources throw; this module never supplies a fallback question or invented counts.
  * @sideEffects Authenticated database RPCs via the shared callRpc binding; no telemetry, storage or payment calls.
  */
@@ -113,7 +115,8 @@ export function editReplaceUnsupported(e: unknown): boolean {
 }
 
 // QUIZ-04: question rows may carry topic 'life'; Life is still never a personal Start or fun-slot topic (server enforced).
-const topics = ['sport','science','geography','general','life'];
+// QUIZ-05: 'athlete' is a fun fact (Know your athlete), filled for the viewer at read time.
+const topics = ['sport','science','geography','general','life','athlete'];
 const roundKinds = ['personal','group','life'];
 const statuses = ['issued','completed','skipped','void','ended','expired'];
 const operations = ['preferences','invitation','start','answer','end','skip','next'];
@@ -134,8 +137,9 @@ const questionReceiptShape=fields('id','question_key','version','status','replac
 const preferencesShape=fields('invitation_mode','topic_mode','notice_version','notice_accepted_at','version','history_version','last_invited_week');
 const attemptShape=fields('id','week_start','mode','status','started_at','expires_at','duration_seconds','closed_at','close_reason','effective_expired','correction_reason',
   'round_state','position','planned_items','round_size','next_by','answered_count','short_round','group_id','round_kind');
-const questionShape=fields('id','question_key','version','topic_category','sport','prompt','options','question_type');
-const resultShape=fields('answered_option','correct_option','was_correct','explanation','completed_at','position','item_status');
+const questionShape:WireShape={...fields('id','question_key','version','topic_category','sport','prompt','options','question_type','shuffled'),fun_fact:fields('first_name','prompt_key')};
+const resultShape:WireShape={...fields('answered_option','correct_option','was_correct','explanation','completed_at','position','item_status',
+  'answered_position','correct_position','shown_order','stored_answered_option','stored_correct_option'),fun_fact:fields('first_name','athlete_player_id')};
 const activeItemShape=fields('position','planned_items','expires_at');
 const receiptShape:WireShape={...fields('contract_version','profile_id','request_id','operation','outcome','week_start','committed_at','round_kind'),attempt:attemptShape,result:resultShape,preferences:preferencesShape};
 const startShape:WireShape={...receiptShape,server_now:true,active_question:questionShape,active_item:activeItemShape};
@@ -153,6 +157,10 @@ const adminShape:WireShape={...fields('contract_version','generated_at','week_st
   audit:[fields('id','action','actor_id','question_id','reason','created_at')],counts:fields(...timedCounts,...roundCounts),pools:[fields('topic_category','sport','approved_count')],
   forecast:[fields('sport','approved_families','players_28d','issued_28d','pace_per_player_week','max_seen','weeks_left')],groups:fields(...groupCounts),
   reports:[fields('id','group_id','reason_code','created_at')],
+  refill:[fields('scope','key','approved','pace_per_player_week','pace_source','max_seen','weeks_left','refill_needed')],
+  fresh:{...fields('athlete_questions_enabled','athlete_share_pct','reports_paused','needs_look_count','paused_count','facts_admin_review','facts_guardian_review','facts_live','imports_30d','alerts'),
+    self_heal:fields('min_responders','too_easy_pct','confusing_choice4_pct','confusing_true_false_pct','too_long_pct'),
+    report_rules:fields('ordinary_reporters','fact_reporters','fact_reasons','restored_reporters','daily_pause_cap','min_account_days','per_account_per_day','reporter_clear_days','delete_days')},
   bank_counts:{topics:[fields('topic_category','draft_count','approved_count')],sports:[fields('sport','draft_count','approved_count')],chapters:[fields('chapter','draft_count','approved_count')]}};
 // Whole-bank review counts (QUIZ-04 control tower): optional so an older server still reads; when present every row is
 // one label and two non-negative counts. Content counts only; no participant field can travel here.
@@ -164,8 +172,8 @@ function bankCounts(v:unknown):boolean{
     &&Array.isArray(v.chapters)&&v.chapters.every(r=>bankCount(r,'chapter',x=>typeof x==='string'&&/^[a-z][a-z_]{2,39}$/.test(x)));
 }
 const eraseShape=fields('contract_version','profile_id','history_version','week_start','week_spent','quota_prune_after','removed_attempts','removed_exposures','removed_badges','removed_requests','removed_audit',
-  'removed_group_memberships','retained_join_attempts','removed_group_sets','removed_levels');
-const retentionShape=fields('contract_version','removed_guards','removed_requests','preserved_guards','batch_limit','removed_codes','removed_group_sets','removed_join_attempts','removed_groups');
+  'removed_group_memberships','retained_join_attempts','removed_group_sets','removed_levels','removed_reports');
+const retentionShape=fields('contract_version','removed_guards','removed_requests','preserved_guards','batch_limit','removed_codes','removed_group_sets','removed_join_attempts','removed_groups','cleared_reporters','removed_reports','purged_declined_facts');
 // Prompt capabilities and SQL hashes are never legal DTO fields, including nested recovery/audit data.
 function hasSecret(v: unknown): boolean {
   if (Array.isArray(v)) return v.some(hasSecret);
@@ -238,7 +246,22 @@ function timedResult(v: unknown): boolean {
     && integer(v.correct_option) && v.correct_option < 4 && (v.was_correct === null || typeof v.was_correct === 'boolean')
     && text(v.explanation,10,500) && nullableTime(v.completed_at) && !('prompt' in v) && !('question' in v)
     && (v.position === undefined || v.position === null || (integer(v.position) && v.position >= 1 && v.position <= 5))
-    && (v.item_status === undefined || v.item_status === null || ['answered','expired','ended','void'].includes(String(v.item_status)));
+    // QUIZ-05: 'fact_unavailable' = an unanswered fun fact that no longer passes the check (no positions, no card).
+    && (v.item_status === undefined || v.item_status === null || ['answered','expired','ended','void','fact_unavailable'].includes(String(v.item_status)))
+    // QUIZ-05 shown positions and order (after the reveal only).
+    && [v.answered_position,v.correct_position].every(x => x === undefined || x === null || (integer(x) && x < 4))
+    && (v.shown_order === undefined || v.shown_order === null || (Array.isArray(v.shown_order) && v.shown_order.length <= 4 && v.shown_order.every(x => integer(x) && x < 4)));
+}
+/**
+ * @purpose QUIZ-05 answer shuffle: the server sends stored indices plus the shown positions. Screens index into the
+ *   options as shown, so answered_option / correct_option become shown positions here; the stored indices are kept in
+ *   stored_answered_option / stored_correct_option. Results without positions (older items) pass unchanged.
+ */
+export function displayResult<T extends Record<string,unknown>|null>(r:T):T{
+  if(!r||typeof r.correct_position!=='number')return r;
+  return {...r,stored_answered_option:r.answered_option??null,stored_correct_option:r.correct_option,
+    answered_option:r.answered_option===null||r.answered_option===undefined?null:(typeof r.answered_position==='number'?r.answered_position:r.answered_option),
+    correct_option:r.correct_position};
 }
 function activeItem(v: unknown, serverNow: unknown): boolean {
   return object(v) && integer(v.position) && v.position >= 1 && integer(v.planned_items) && v.planned_items >= v.position && v.planned_items <= 5
@@ -255,7 +278,8 @@ function receiptValid(v: unknown, allowStart = false): v is TimedQuizReceipt & R
 function checkReceipt(v: unknown, operation?: string, expectedProfile?: string, expectedRequest?: string): TimedQuizReceipt {
   if (!receiptValid(v) || (operation && v.operation !== operation) || (expectedProfile && v.profile_id !== expectedProfile)
     || (expectedRequest && v.request_id !== expectedRequest)) throw unavailable();
-  return projectDto<TimedQuizReceipt>(v,receiptShape);
+  const out = projectDto<TimedQuizReceipt>(v,receiptShape);
+  return {...out,result:displayResult(out.result as Record<string,unknown>|null) as TimedQuizReceipt['result']};
 }
 /** @purpose Read sanitized account opportunity/preferences/counts; an active prompt can never come from this read. */
 export async function fetchTimedSportQuiz(): Promise<TimedQuizSnapshot> {
@@ -298,7 +322,8 @@ function activeReceipt(v: unknown, operation: 'start'|'next', expectedProfile: s
         : v.attempt.mode !== 'round' || v.attempt.round_state !== 'item' || !activeItem(v.active_item,v.server_now)
           || (operation === 'start' && (v.active_item as Record<string,unknown>).position !== 1))))
     || (v.active_question === null && v.active_item != null)) throw unavailable();
-  return projectDto<TimedQuizStartReceipt>(v,startShape);
+  const out = projectDto<TimedQuizStartReceipt>(v,startShape);
+  return {...out,result:displayResult(out.result as Record<string,unknown>|null) as TimedQuizStartReceipt['result']};
 }
 /** @purpose QUIZ-04 Life Start shares the Start check: a live prompt only with matching open metadata before the deadline. */
 export function checkStartReceipt(v: unknown, expectedProfile: string, expectedRequest: string): TimedQuizStartReceipt {
@@ -344,7 +369,10 @@ export async function fetchTimedSportQuizHistory(before: string | null = null): 
         && ['answered','expired','ended','void'].includes(String(item.status)) && timedQuestion(item.question,true) && timedResult(item.result) && nullableText(item.correction_reason))))
       && (i.badge === null || (object(i.badge) && text(i.badge.id) && ['Sport Learner','Trivia Explorer'].includes(String(i.badge.label))
         && ['private','groups'].includes(String(i.badge.visibility)) && timestamp(i.badge.issued_at) && nullableTime(i.badge.voided_at))))) throw unavailable();
-  return projectDto<TimedQuizHistoryPage>(v,historyShape);
+  const page = projectDto<TimedQuizHistoryPage>(v,historyShape);
+  // History questions are in each item's shown order, so results read in shown positions too (QUIZ-05).
+  return {...page,items:page.items.map(i=>({...i,result:displayResult(i.result as Record<string,unknown>|null) as typeof i.result,
+    items:i.items?.map(x=>({...x,result:displayResult(x.result as Record<string,unknown>) as typeof x.result}))}))};
 }
 /** @purpose CAS erasure spends this week and retains the disclosed minimal quota guard. Uncertain success requires a new review. */
 export async function eraseTimedSportQuizHistory(expectedHistoryVersion: number, expectedProfileId: string): Promise<TimedQuizEraseReceipt> {
@@ -352,7 +380,7 @@ export async function eraseTimedSportQuizHistory(expectedHistoryVersion: number,
   if (!object(v) || v.contract_version !== 2 || hasSecret(v) || v.profile_id !== expectedProfileId || !integer(v.history_version)
     || !date(v.week_start) || v.week_spent !== true || !timestamp(v.quota_prune_after)
     || !['removed_attempts','removed_exposures','removed_badges','removed_requests','removed_audit'].every(k=>integer(v[k]))
-    || !['removed_group_memberships','retained_join_attempts','removed_group_sets','removed_levels'].every(k=>optionalInt(v[k]))) throw unavailable();
+    || !['removed_group_memberships','retained_join_attempts','removed_group_sets','removed_levels','removed_reports'].every(k=>optionalInt(v[k]))) throw unavailable();
   return projectDto<TimedQuizEraseReceipt>(v,eraseShape);
 }
 /** @purpose Read one 50-row question page independently of the bigint audit cursor, with authoritative full counts. */
@@ -369,6 +397,11 @@ export async function fetchTimedSportQuizAdmin(input: {question_cursor?: string|
     || (v.next_before !== null && !cursor(v.next_before)) || !object(v.counts) || !timedCounts.every(k=>integer((v.counts as Record<string,unknown>)[k]))
     || !Array.isArray(v.pools) || !v.pools.every(p=>object(p) && topic(p.topic_category) && text(p.sport,2,80) && integer(p.approved_count)) || !bankCounts(v.bank_counts)
     || !roundCounts.every(k=>optionalInt((v.counts as Record<string,unknown>)[k]))
+    || (v.refill !== undefined && (!Array.isArray(v.refill) || !v.refill.every(r=>object(r) && ['topic','sport','chapter'].includes(String(r.scope)) && text(r.key)
+      && integer(r.approved) && integer(r.weeks_left) && integer(r.max_seen) && typeof r.refill_needed === 'boolean' && r.refill_needed === (r.weeks_left < 4))))
+    || (v.fresh !== undefined && (!object(v.fresh) || typeof v.fresh.athlete_questions_enabled !== 'boolean' || typeof v.fresh.reports_paused !== 'boolean'
+      || !integer(v.fresh.athlete_share_pct) || v.fresh.athlete_share_pct > 10 || !['needs_look_count','paused_count','facts_admin_review','facts_guardian_review','facts_live'].every(k=>integer((v.fresh as Record<string,unknown>)[k]))
+      || !strings(v.fresh.alerts)))
     || (v.forecast !== undefined && (!Array.isArray(v.forecast) || !v.forecast.every(f=>object(f) && text(f.sport,2,80)
       && ['approved_families','players_28d','issued_28d','max_seen'].every(k=>integer(f[k])) && typeof f.pace_per_player_week === 'number' && f.pace_per_player_week >= 0
       && (f.weeks_left === null || integer(f.weeks_left)))))
@@ -381,9 +414,11 @@ export async function fetchTimedSportQuizAdmin(input: {question_cursor?: string|
 }
 function timedAdminAudit(a:unknown):boolean{
   if(!object(a)||!cursor(a.id)||!text(a.action)||!nullableText(a.actor_id)||!nullableText(a.question_id)||!nullableText(a.reason)||!timestamp(a.created_at))return false;
-  const editorial=['question_create','question_edit','question_approve','question_archive','question_void','question_review_media'].includes(a.action);
-  // QUIZ-04 admin Life actions (switch, chapters) are management records.
-  const management=['settings','retention','life_settings','life_chapter'].includes(a.action);
+  // QUIZ-05 adds pause / restore / dismiss / import and the admin fun-fact decisions (participant fact rows never reach the feed).
+  const editorial=['question_create','question_edit','question_approve','question_archive','question_void','question_review_media',
+    'question_pause','question_restore','question_dismiss','question_import','fact_approve','fact_decline'].includes(a.action);
+  // QUIZ-04 admin Life actions (switch, chapters) are management records; QUIZ-05 fresh settings and report alerts too.
+  const management=['settings','retention','life_settings','life_chapter','fresh_settings','report_alert'].includes(a.action);
   const participant=['start','answer','skip','end','preferences','invitation'].includes(a.action);
   // Editorial records retain permitted provenance. Participant graphs and management question links remain redacted.
   return editorial||(management&&a.question_id===null)||(participant&&a.actor_id===null&&a.question_id===null);
@@ -392,7 +427,7 @@ function timedAdminAudit(a:unknown):boolean{
 export async function pruneTimedSportQuizHistory(reason: string, expectedActorId: string): Promise<TimedQuizRetentionReceipt> {
   const v=await callRpc<unknown>('quiz_admin_retention',{p_reason:reason,p_expected_actor_id:expectedActorId});
   if (!object(v) || v.contract_version !== 2 || hasSecret(v) || v.batch_limit !== 500 || !['removed_guards','removed_requests','preserved_guards'].every(k=>integer(v[k]))
-    || !['removed_codes','removed_group_sets','removed_join_attempts','removed_groups'].every(k=>optionalInt(v[k]))) throw unavailable();
+    || !['removed_codes','removed_group_sets','removed_join_attempts','removed_groups','cleared_reporters','removed_reports','purged_declined_facts'].every(k=>optionalInt(v[k]))) throw unavailable();
   return projectDto<TimedQuizRetentionReceipt>(v,retentionShape);
 }
 

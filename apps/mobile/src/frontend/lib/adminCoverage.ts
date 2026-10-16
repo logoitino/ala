@@ -2,7 +2,8 @@
  * The production map: every fan-visible control is listed with its admin desk, optional runtime flag and
  * telemetry id. Powers the Overview and Coverage desks ("what is live, what is paused, what is not instrumented").
  * Add a row here whenever you add a fan control. Trivia rows (2026-10-15) add the This week strip, level and Life
- * Playbook opt-in / chapters, and the page Skip now reads "Skip my round this week".
+ * Playbook opt-in / chapters, and the page Skip now reads "Skip my round this week". QUIZ-05 adds Report a problem,
+ * the athlete's Share a fun fact, the Privacy fun facts audience and the guardian's fun-fact Approve / Decline.
  */
 
 import type { AdminNavHref } from '@/lib/admin';
@@ -153,6 +154,10 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'quiz.page.life.start', label: 'Start Life Playbook round', hint: 'QUIZ-04 separate weekly Life round (90 or 30 seconds) with its own notice checkbox; trivia.life off ends open Life rounds; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
   { id: 'quiz.page.life.off', label: 'Turn off Life Playbook', hint: 'QUIZ-04 own opt-out; ends an open Life round and keeps private history; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
   { id: 'quiz.profile.learn', label: 'Learn your athlete’s sport', hint: 'QUIZ-03 card on another athlete’s profile; preselects the sport for the viewer’s own weekly round; shown only when trivia is ready for the viewer; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'profile', fanHref: '/profile', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.report', label: 'Report a problem with this question', hint: 'QUIZ-05 after the reveal only; fixed reasons, no free text; one per question, 10 a day; report intake can be paused from the Trivia control tower; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.profile.funfacts', label: 'Share a fun fact', hint: 'QUIZ-05 athlete Edit profile and optional sign-up step; six preset prompts, admin check, guardian approval under 16, Remove any time; trivia.athlete_questions (off) pauses new fun facts; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'profile', fanHref: '/profile', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.profile.funfacts.audience', label: 'Fun facts audience', hint: 'QUIZ-05 Privacy item fun_facts (default friends; 13–15 capped at friends by the server); sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'profile', fanHref: '/profile', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.parent.funfacts', label: 'Approve or decline a fun fact · parent', hint: 'QUIZ-05 guardian of an under-16 approves or declines only (never writes, edits or withdraws); an admin checks after; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'parent', fanHref: '/parent', adminHref: '/admin/sport-quiz' },
   { id: 'tab.home', label: 'Home tab', hint: 'Fan bar', surface: 'home', fanHref: '/', adminHref: '/admin/features', flag: 'tabs.home', telemetry: 'tab.home' },
   { id: 'home_search', label: 'Clip search', hint: 'Highlights ⚡ search', surface: 'home', fanHref: '/', adminHref: '/admin/features', flag: 'layouts.homeSearch', telemetry: 'home_search' },
   { id: 'feed.home', label: 'Home mix pill', hint: 'For You ranking', surface: 'home', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'feed.home' },

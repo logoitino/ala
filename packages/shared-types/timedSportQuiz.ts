@@ -4,11 +4,13 @@
  * @purpose Keeps active prompts confined to the original Start/Next capability; account reads are sanitized.
  */
 import type { LifeQuestionFields, LifeQuestionInput } from './lifePlaybook';
+import type { FreshRefillRow, FreshStatus } from './freshQuestions';
 export const TIMED_QUIZ_NOTICE_VERSION = 'timed-trivia-v1-testing' as const;
 export const TIMED_QUIZ_DURATIONS = [30, 90] as const;
 export type TimedQuizTopic = 'sport' | 'science' | 'geography' | 'general';
-/** QUIZ-04: a question's topic can also be 'life' (Life Playbook); Life is never a fun-slot or personal Start topic. */
-export type TimedQuizQuestionTopic = TimedQuizTopic | 'life';
+/** QUIZ-04: a question's topic can also be 'life' (Life Playbook); Life is never a fun-slot or personal Start topic.
+ * QUIZ-05: 'athlete' marks a fun fact (Know your athlete), drawn only in personal rounds and filled at read time. */
+export type TimedQuizQuestionTopic = TimedQuizTopic | 'life' | 'athlete';
 /** QUIZ-04 weekly opportunities: each kind has its own guard; one active round at a time. */
 export type TimedQuizRoundKind = 'personal' | 'group' | 'life';
 export type TimedQuizStatus = 'issued' | 'completed' | 'skipped' | 'void' | 'ended' | 'expired';
@@ -51,12 +53,22 @@ export type TimedQuizSnapshot = {
 export type TimedQuizQuestion = {
   id: string; question_key: string; version: number; topic_category: TimedQuizQuestionTopic;
   sport: string; prompt: string; options: string[]; question_type?: TimedQuizQuestionType;
+  /** QUIZ-05: options are in this item's shown order (the answer is the shown position). Never the order itself. */
+  shuffled?: boolean;
+  /** QUIZ-05 fun fact: the athlete's first name (null when not visible) and the prompt key. */
+  fun_fact?: { first_name: string | null; prompt_key: string };
 };
 export type TimedQuizResult = {
   answered_option: number | null; correct_option: number; was_correct: boolean | null;
   explanation: string; completed_at: string | null;
   /** QUIZ-03 rounds: which item this result belongs to and how it closed. */
-  position?: number | null; item_status?: 'answered' | 'expired' | 'ended' | 'void' | null;
+  position?: number | null; item_status?: 'answered' | 'expired' | 'ended' | 'void' | 'fact_unavailable' | null;
+  /** QUIZ-05: the client adapter turns answered_option / correct_option into shown positions (the order the options were
+   * shown); the server's stored indices stay in stored_answered_option / stored_correct_option. */
+  answered_position?: number | null; correct_position?: number | null; shown_order?: number[] | null;
+  stored_answered_option?: number | null; stored_correct_option?: number;
+  /** QUIZ-05: the athlete card after a fun fact's reveal (no Donate or money words on that card). */
+  fun_fact?: { first_name: string | null; athlete_player_id: string | null };
 };
 export type TimedQuizOperation = 'preferences' | 'invitation' | 'start' | 'answer' | 'end' | 'skip' | 'next';
 /** The open item of a round, only on the original Start/Next response before its deadline. */
@@ -92,6 +104,8 @@ export type TimedQuizEraseReceipt = {
   removed_group_memberships?: number; retained_join_attempts?: number; removed_group_sets?: number;
   /** QUIZ-04: levels are cleared by erasure (all three weekly opportunities are spent). */
   removed_levels?: number;
+  /** QUIZ-05: the caller's own question reports. */
+  removed_reports?: number;
 };
 export type TimedQuizAdminQuestion = TimedQuizQuestion & {
   correct_option: number; explanation: string; source_notes: string; reason: string;
@@ -125,6 +139,8 @@ export type TimedQuizAdminSnapshot = {
   pools: { topic_category: TimedQuizTopic; sport: string; approved_count: number }[];
   /** QUIZ-04 control tower: whole-bank review counts; absent on an older server (the desk then counts loaded pages). */
   bank_counts?: TimedQuizBankCounts;
+  /** QUIZ-05: weeks left / Refill needed and the fresh-question settings with the Needs a look count. */
+  refill?: FreshRefillRow[]; fresh?: FreshStatus;
 };
 /** Draft and approved versions in the whole bank. Content counts only: no participant data, so no privacy threshold. */
 export type TimedQuizBankCount = { draft_count: number; approved_count: number };
@@ -143,7 +159,11 @@ export type TimedQuizGroupCounts = Record<'groups_active'|'groups_closed'|'membe
   |'joins_7d'|'refusals_7d'|'wrong_codes_7d'|'reports_7d'|'sets_this_week'|'retained_sets'|'retained_join_attempts',number>;
 export type TimedQuizGroupReport = { id: string; group_id: string; reason_code: 'safety'|'unwanted_contact'|'name_or_theme'|'other'; created_at: string };
 export type TimedQuizRetentionReceipt = { contract_version: 2; removed_guards: number; removed_requests: number; preserved_guards: number; batch_limit: 500;
-  removed_codes?: number; removed_group_sets?: number; removed_join_attempts?: number; removed_groups?: number };
+  removed_codes?: number; removed_group_sets?: number; removed_join_attempts?: number; removed_groups?: number;
+  /** QUIZ-05: report retention (reporter ids cleared at 90 days, reports deleted at 180). */
+  cleared_reporters?: number; removed_reports?: number;
+  /** QUIZ-05 security review: declined fun-fact text purged 30 days after the decision. */
+  purged_declined_facts?: number };
 export type TimedQuizStartInput = { topic_category: TimedQuizTopic; sport: string | null; duration_seconds: 30|90; expected_week: string; notice_version: typeof TIMED_QUIZ_NOTICE_VERSION; request_id: string; session_secret: string; expected_profile_id: string };
 export type TimedQuizAnswerInput = { attempt_id: string; option: number; request_id: string; session_secret: string; expected_profile_id: string };
 /** QUIZ-04: round_kind names the guard End spends for a pending Start (and must match an attempt); the adapter defaults to personal. */

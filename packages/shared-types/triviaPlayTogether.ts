@@ -53,7 +53,7 @@ export type TriviaBadgeReceipt = TriviaBadge & { contract_version: 3 };
 export type TriviaSeasonRecap = {
   contract_version: 3; profile_id: string; quarter: string; starts_on: string; ends_before: string;
   facts: number; sports: number; rounds: number; badges: number;
-  per_sport: { sport: string; facts: number }[]; per_topic: { topic_category: 'sport' | 'science' | 'geography' | 'general' | 'life'; facts: number }[];
+  per_sport: { sport: string; facts: number }[]; per_topic: { topic_category: 'sport' | 'science' | 'geography' | 'general' | 'life' | 'athlete'; facts: number }[];
 };
 
 export type TriviaPlaySettingsInput = { round_size: number; groups_enabled: boolean; images_enabled: boolean };

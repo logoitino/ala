@@ -4,7 +4,8 @@
  * and the Trivia desk. Everything here is read from the existing admin reads (quiz_admin_snapshot and the Life admin
  * read); a read that is missing says "not switched on", never zero. The server re-checks every rule on save and at
  * approval. Review counts come from the snapshot's whole-bank `bank_counts`; an older server without it falls back to
- * the loaded pages, always labelled "(loaded so far)".
+ * the loaded pages, always labelled "(loaded so far)". QUIZ-05 adds weeks left / Refill needed per topic, sport and
+ * chapter, the fun-fact switch and the Needs a look count from the snapshot's `refill` and `fresh` blocks.
  * @sideEffects None (pure functions).
  */
 import { ATHLETE_SPORTS } from '@/data/teams';
@@ -163,6 +164,8 @@ export function readFailure(e: unknown): { missing: boolean; error: string | nul
 export type TriviaStatus = {
   state: 'not_on' | 'unavailable' | 'paused' | 'testing' | 'on';
   stateText: string; switches: string[]; drafts: string; chapters: string; low: string[];
+  /** QUIZ-05: "n questions need a look" when the server sends the fresh block; null on an older server. */
+  look: string | null;
 };
 const onOff = (v: boolean | undefined) => v === undefined ? 'not switched on' : v ? 'on' : 'off';
 
@@ -175,7 +178,7 @@ export function triviaStatus(quiz: TriviaRead<TimedQuizAdminSnapshot>, lifeRead:
   const s = quiz.data;
   if (!s) {
     return { state: quiz.error && !quiz.missing ? 'unavailable' : 'not_on', stateText: quiz.error && !quiz.missing ? `Trivia status could not be read: ${quiz.error}` : 'Trivia is not switched on in this database.',
-      switches: [`Life Playbook (trivia.life): ${lifeSwitch}`], drafts: 'Drafts waiting for approval: not switched on.', chapters, low: [] };
+      switches: [`Life Playbook (trivia.life): ${lifeSwitch}`], drafts: 'Drafts waiting for approval: not switched on.', chapters, low: [], look: null };
   }
   const st = s.settings;
   const state: TriviaStatus['state'] = !st ? 'not_on' : !st.enabled ? 'paused' : st.testing_only ? 'testing' : 'on';
@@ -196,9 +199,20 @@ export function triviaStatus(quiz: TriviaRead<TimedQuizAdminSnapshot>, lifeRead:
   for (const p of s.pools.filter(x => x.topic_category === 'sport' && x.approved_count < size)) low.push(`${p.sport}: ${p.approved_count} approved (a full round needs ${size})`);
   for (const f of s.forecast ?? []) if (f.weeks_left !== null && f.weeks_left <= 2 && !low.some(l => l.startsWith(`${f.sport}:`))) low.push(`${f.sport}: about ${f.weeks_left} week${f.weeks_left === 1 ? '' : 's'} of new questions left`);
   for (const c of life?.chapters ?? []) if (!c.open && c.needs_more > 0) low.push(`${c.title}: needs ${c.needs_more} more approved to open`);
+  // QUIZ-05 weeks left: every topic, sport and chapter under 4 weeks reads "Refill needed".
+  for (const r of s.refill ?? []) {
+    if (!r.refill_needed) continue;
+    const label = r.scope === 'topic' ? topicLabel(r.key) : r.scope === 'chapter' ? life?.chapters.find(c => c.id === r.key)?.title ?? r.key : r.key;
+    const line = `${label}: about ${r.weeks_left} week${r.weeks_left === 1 ? '' : 's'} left · Refill needed`;
+    if (!low.some(l => l.startsWith(`${label}:`))) low.push(line);
+  }
+  const f = s.fresh;
+  const look = f ? `${f.needs_look_count} question${f.needs_look_count === 1 ? '' : 's'} need${f.needs_look_count === 1 ? 's' : ''} a look${f.paused_count ? ` (${f.paused_count} paused)` : ''}`
+    + `${f.facts_admin_review ? ` · ${f.facts_admin_review} fun fact${f.facts_admin_review === 1 ? '' : 's'} ready for an admin` : ''}${f.alerts.length ? ` · auto-pause limit reached today: ${f.alerts.map(topicLabel).join(', ')}` : ''}.` : null;
   return {
     state, stateText,
-    switches: [`Groups (trivia.groups): ${onOff(st?.groups_enabled)}`, `Life Playbook (trivia.life): ${lifeSwitch}`, `Images (trivia.images): ${onOff(st?.images_enabled)}${st?.images_enabled ? '' : ', locked'}`],
-    drafts, chapters, low,
+    switches: [`Groups (trivia.groups): ${onOff(st?.groups_enabled)}`, `Life Playbook (trivia.life): ${lifeSwitch}`, `Images (trivia.images): ${onOff(st?.images_enabled)}${st?.images_enabled ? '' : ', locked'}`,
+      ...(f ? [`Fun facts (trivia.athlete_questions): ${f.athlete_questions_enabled ? 'on' : 'off'}, share ${f.athlete_share_pct}%${f.reports_paused ? ' · report intake paused' : ''}`] : [])],
+    drafts, chapters, low, look,
   };
 }

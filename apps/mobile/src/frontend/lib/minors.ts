@@ -3,6 +3,8 @@
  * approvals, and the admin desk's minor tools. Every rule lives in the database (`20261014110000_minor_accounts.sql`);
  * this file calls those functions and names things for the screens. Design: docs/engineering/design/MINOR_ACCOUNTS_DESIGN.md.
  * Birth month and year never go to telemetry.
+ * QUIZ-05: the summary's "fun facts shared" count (null on servers without it) and plain event lines for fun-fact
+ * approvals (`change: 'fun_fact'`), which are decided in the guardian panel's fun-fact list, not the generic requests.
  * @sideEffects Database functions through `callRpc`; AsyncStorage for the under-13 device pause.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -194,7 +196,9 @@ export type Supervision = {
   username: string | null;
   settings: PrivacySettings;
   status: MinorStatus | null;
-  summary: { friends: number; incomingRequests: number; blockedAccounts: number; tagsWaiting: number; hiddenFromSearch: boolean };
+  summary: { friends: number; incomingRequests: number; blockedAccounts: number; tagsWaiting: number; hiddenFromSearch: boolean;
+    /** QUIZ-05: fun facts live now (a count only, the same for teen and guardian); null when the server does not send it. */
+    funFactsShared: number | null };
   events: SupervisionEvent[];
   canAllowDonations: boolean;
 };
@@ -215,6 +219,7 @@ export function parseSupervision(raw: unknown): Supervision {
       blockedAccounts: num(s.blocked_accounts),
       tagsWaiting: num(s.tags_waiting),
       hiddenFromSearch: s.hidden_from_search === true,
+      funFactsShared: s.fun_facts_shared === undefined || s.fun_facts_shared === null ? null : num(s.fun_facts_shared),
     },
     events: list(r.events).map((e) => ({ kind: str(e.kind), detail: obj(e.detail), at: str(e.at), byTeen: e.by_teen === true })),
     canAllowDonations: r.can_allow_donations === true,
@@ -253,8 +258,11 @@ export function describeEvent(event: SupervisionEvent): string {
       return keys.length ? `Changed: ${keys.join(', ')}.` : 'Privacy settings changed.';
     }
     case 'made_private': return 'The profile went back to private (no consent for public).';
-    case 'approval_requested': return 'Asked the guardian to approve a change.';
-    case 'approval_decided': return `${APPROVAL_LABEL[asApproval(d.change) ?? 'account_public']}: ${d.approved === true ? 'approved' : 'declined'}.`;
+    case 'approval_requested': return Array.isArray(d.changes) && d.changes.length === 1 && d.changes[0] === 'fun_fact'
+      ? 'Asked the guardian to approve a fun fact.' : 'Asked the guardian to approve a change.';
+    case 'approval_decided': return d.change === 'fun_fact'
+      ? `A fun fact was ${d.approved === true ? 'approved' : 'declined'}.`
+      : `${APPROVAL_LABEL[asApproval(d.change) ?? 'account_public']}: ${d.approved === true ? 'approved' : 'declined'}.`;
     case 'approval_cancelled': return 'A request to the guardian was cancelled.';
     default: return 'Something changed.';
   }

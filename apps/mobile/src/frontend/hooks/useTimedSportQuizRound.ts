@@ -4,6 +4,10 @@
  * QUIZ-04: every round has a kind (personal, group or life) with its own weekly guard; End names that kind. A Life round
  * starts only through quiz_life_start (Life notice, optional chapter, 90 s default) and then uses the same Next / answer
  * / End path. After a round ends, dismiss() clears it so another kind's round can start on the same page.
+ * QUIZ-05: a personal round opened from an athlete's Learn card starts through quiz_learn_start with that athlete's
+ * player id as a hint (the server validates it; an invalid id gives an ordinary round). The same request UUID, secret
+ * and deadline serve every retry. A server without quiz_learn_start ("not switched on", nothing written) falls back
+ * once to the ordinary Start with the same request, and later retries stay ordinary.
  * @sideEffects Explicit Start/answer/Next, exact receipt recovery and best-effort End; native/web lifecycle listeners.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -11,6 +15,8 @@ import { AppState, Platform } from 'react-native';
 import { getRandomValues, randomUUID } from 'expo-crypto';
 import { answerTimedSportQuiz, endTimedSportQuiz, fetchTimedSportQuizReceipt, nextTriviaItem, startTimedSportQuiz, startTriviaGroupRound } from '@/lib/sportQuiz';
 import { startLifeRound } from '@/lib/lifePlaybook';
+import { startTriviaFromLearnCard } from '@/lib/freshQuestions';
+import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { LIFE_NOTICE_VERSION, type LifeChapterId, type LifeSnapshot } from '@shared/lifePlaybook';
 import {
     TIMED_QUIZ_NOTICE_VERSION, type TimedQuizSnapshot, type TimedQuizStartInput, type TimedQuizReceipt, type TimedQuizQuestion, type TimedQuizTopic,
@@ -33,8 +39,9 @@ export type TimedQuizLive = {
 export type TimedQuizRoundEntry = { position: number; question: TimedQuizQuestion | null; result: TimedQuizResult };
 /** The explanation step: the item closed (answered or out of time) and the round waits for Next. */
 export type TimedQuizBetween = { attemptId: string; position: number; planned: number; question: TimedQuizQuestion | null; result: TimedQuizResult | null };
-type StartRequest = TimedQuizStartInput & { group_id: string | null; kind: TimedQuizRoundKind; chapter: LifeChapterId | null };
-type Choice = { kind: TimedQuizRoundKind; topic: TimedQuizTopic; sport: string | null; group: string | null; chapter: LifeChapterId | null };
+/** `learn` (QUIZ-05): the Learn-card athlete's player id, a hint for quiz_learn_start; null for every other Start. */
+type StartRequest = TimedQuizStartInput & { group_id: string | null; kind: TimedQuizRoundKind; chapter: LifeChapterId | null; learn: string | null };
+type Choice = { kind: TimedQuizRoundKind; topic: TimedQuizTopic; sport: string | null; group: string | null; chapter: LifeChapterId | null; learn?: string | null };
 /** Life availabilities that mean the account can no longer play Life (the server also closes the round). */
 const LIFE_LOST = ['ineligible', 'unavailable', 'paused', 'not_enrolled', 'off', 'not_opted_in'];
 type Closing = { attemptId: string; position: number; planned: number; question: TimedQuizQuestion | null; request: string; tries: number };
@@ -325,7 +332,9 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
                 const bytes = getRandomValues(new Uint8Array(32));
                 if (bytes.length !== 32)
                     throw Error('secure randomness unavailable');
-                scope.start = { topic_category: choice.topic, sport: choice.sport, duration_seconds: duration, expected_week: s.week_start, notice_version: TIMED_QUIZ_NOTICE_VERSION, request_id: randomUUID(), session_secret: Array.from(bytes, b => b.toString(16).padStart(2, '0')).join(''), expected_profile_id: scope.profile!, group_id: choice.group, kind, chapter: choice.chapter };
+                scope.start = { topic_category: choice.topic, sport: choice.sport, duration_seconds: duration, expected_week: s.week_start, notice_version: TIMED_QUIZ_NOTICE_VERSION, request_id: randomUUID(), session_secret: Array.from(bytes, b => b.toString(16).padStart(2, '0')).join(''), expected_profile_id: scope.profile!, group_id: choice.group, kind, chapter: choice.chapter,
+                    // Only a personal sport round can carry the Learn-card hint.
+                    learn: kind === 'personal' && choice.group === null && choice.topic === 'sport' ? choice.learn ?? null : null };
                 scope.startAt = clock();
                 scope.deadline = scope.startAt + duration * 1000;
             }
@@ -351,11 +360,23 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
         scope.error = null;
         publish();
         try {
-            const { group_id: group, kind: _kind, chapter, ...personal } = exact;
+            const { group_id: group, kind: _kind, chapter, learn, ...personal } = exact;
+            const learnStart = async (athlete: string) => {
+                try {
+                    return await startTriviaFromLearnCard({ athlete_player_id: athlete, sport: personal.sport, duration_seconds: personal.duration_seconds, expected_week: personal.expected_week,
+                        notice_version: personal.notice_version, request_id: personal.request_id, session_secret: personal.session_secret, expected_profile_id: personal.expected_profile_id });
+                }
+                catch (e) {
+                    // Older server: the function is missing, so nothing was written; the same request starts an ordinary round.
+                    if (!(e instanceof Error) || e.message !== NOT_SWITCHED_ON) throw e;
+                    exact.learn = null;
+                    return startTimedSportQuiz(personal);
+                }
+            };
             const receipt = exact.kind === 'life'
                 ? await startLifeRound({ expected_week: exact.expected_week, request_id: exact.request_id, session_secret: exact.session_secret, expected_profile_id: exact.expected_profile_id,
                     notice_version: LIFE_NOTICE_VERSION, chapter, duration_seconds: exact.duration_seconds })
-                : group === null ? await startTimedSportQuiz(personal)
+                : group === null ? (learn ? await learnStart(learn) : await startTimedSportQuiz(personal))
                 : await startTriviaGroupRound({ group_id: group, duration_seconds: exact.duration_seconds, expected_week: exact.expected_week, notice_version: exact.notice_version, request_id: exact.request_id, session_secret: exact.session_secret, expected_profile_id: exact.expected_profile_id });
             if (!valid() || generation !== scope.generation || !latest.current.focused || !scope.foreground)
                 return null;
@@ -395,7 +416,8 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
             }
         }
     }, [valid, scope, publish, leave, clear, trackRound, openItem]);
-    const start = useCallback((topic: TimedQuizTopic, sport: string | null, duration: 30 | 90) => begin({ kind: 'personal', topic, sport, group: null, chapter: null }, duration), [begin]);
+    /** `learnAthlete` (QUIZ-05): the Learn-card athlete's player id when this personal round came from that card. */
+    const start = useCallback((topic: TimedQuizTopic, sport: string | null, duration: 30 | 90, learnAthlete: string | null = null) => begin({ kind: 'personal', topic, sport, group: null, chapter: null, learn: learnAthlete }, duration), [begin]);
     /** @purpose QUIZ-03 group round from that group's page; QUIZ-04 spends only the group guard, never the personal one. */
     const startGroup = useCallback((groupId: string, duration: 30 | 90) => begin({ kind: 'group', topic: 'sport', sport: null, group: groupId, chapter: null }, duration), [begin]);
     /** @purpose QUIZ-04 Life round through quiz_life_start (null chapter = any open chapter); the same round UI after Start. */
@@ -604,7 +626,7 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
         scope.entries = [];
         publish();
     }, [clear,scope,publish]);
-    const retryStart = useCallback(async () => { const p = scope.start; return p ? begin({ kind: p.kind, topic: p.topic_category, sport: p.sport, group: p.group_id, chapter: p.chapter }, p.duration_seconds) : null; }, [scope, begin]);
+    const retryStart = useCallback(async () => { const p = scope.start; return p ? begin({ kind: p.kind, topic: p.topic_category, sport: p.sport, group: p.group_id, chapter: p.chapter, learn: p.learn }, p.duration_seconds) : null; }, [scope, begin]);
     // A finished round stays on screen (its summary) until dismissed; a fresh scope can then start another kind's round.
     const makeLatest = useRef(make);
     makeLatest.current = make;
