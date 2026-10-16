@@ -28,7 +28,10 @@ export const HIGHLIGHT_FEED_ALL = 'All';
 /** Highlights ⚡ feed switch — Seki-tagged plays only. */
 export const HIGHLIGHT_FEED_SEKI = 'Seki';
 
-export type HighlightFeedFilter = 'home' | 'all' | 'seki';
+/** Highlights ⚡ feed switch — Train Like Me + Serve Like Me clips (owner 2026-10-16: Beyond moves to the Home bar). */
+export const HIGHLIGHT_FEED_BEYOND = 'Beyond';
+
+export type HighlightFeedFilter = 'home' | 'beyond' | 'all' | 'seki';
 
 /** Stored `reels.category`. The Game Day label (owner rename 2026-10-07) keeps id `game_play`. */
 export type ReelCategory = 'game_play' | 'train_like_me' | 'serve_like_me';
@@ -96,6 +99,14 @@ export const SEKI_PILL_COUNT = 3;
  */
 export function isSekiHighlight(clip: Pick<HighlightClip, 'sekiPlay' | 'sekiCount'>): boolean {
   return Boolean(clip.sekiPlay) || (clip.sekiCount ?? 0) >= SEKI_PILL_COUNT;
+}
+
+/**
+ * @purpose True when a clip belongs on the Beyond Highlights ⚡ switch: an athlete's workout or service clip.
+ * Fan posts without an athlete live on the Beyond the Game page, not in this feed.
+ */
+export function isBeyondHighlight(clip: Pick<HighlightClip, 'category'>): boolean {
+  return clip.category === REEL_CATEGORY_TRAIN || clip.category === REEL_CATEGORY_SERVE;
 }
 
 /** `reels.media_type` — pre-migration rows and missing columns are `video`. */
@@ -268,20 +279,3 @@ export const HIGHLIGHT_CLIPS: HighlightClip[] = [
     videoUrl: '',
   },
 ];
-
-export function taggedReelsForAthlete(athleteName: string, school?: string): HighlightClip[] {
-  const name = athleteName.trim().toLowerCase();
-  const catalog = HIGHLIGHT_CLIPS;
-  const tagged = catalog.filter((clip) => clip.athleteName.toLowerCase() === name);
-  if (tagged.length >= 6) return tagged;
-
-  const schoolNeedle = (school ?? '').trim().toLowerCase();
-  const schoolmates = catalog.filter(
-    (clip) =>
-      clip.athleteName.toLowerCase() !== name &&
-      Boolean(schoolNeedle) &&
-      clip.school.toLowerCase().includes(schoolNeedle),
-  );
-
-  return [...tagged, ...schoolmates];
-}

@@ -53,10 +53,20 @@
         "apps/mobile/app/(admin)",
         "apps/admin-portal",
         "apps/admin-portal/app/(protected)/reports/page.tsx",
-        "apps/admin-portal/lib/reports.ts"
+        "apps/admin-portal/lib/reports.ts",
+        "apps/mobile/src/frontend/components/Admin/AdminShell.tsx",
+        "apps/mobile/src/frontend/components/Admin/AdminChrome.tsx",
+        "apps/mobile/src/frontend/lib/adminReports.ts",
+        "apps/mobile/src/frontend/hooks/useAdminReports.ts",
+        "apps/mobile/src/frontend/components/Admin/Support",
+        "apps/mobile/src/frontend/hooks/useEngineeringSupport.ts",
+        "apps/mobile/src/frontend/lib/engineeringSupport.ts",
+        "apps/mobile/app/(admin)/admin/support.tsx"
       ],
       "tasks": [
-        "Expo write control plane and read-only Next oversight; Next Trends (/reports) and lib/reports.ts"
+        "Expo write control plane and read-only Next oversight; Next Trends (/reports) and lib/reports.ts",
+        "ADM-02 main Expo admin: selected report design plus all editing desks, authenticated report loaders and integration; Next remains read-only",
+        "Maintain the locally integrated Expo write desks, Beyond/workout review and Support controls; Next remains oversight only, and date-range/export/Product-workbench work from fan-zone is not integrated into main."
       ],
       "model": "grok-4.7-medium"
     },
@@ -68,10 +78,14 @@
       "owns": [
         "apps/admin-portal/lib/analytics.ts",
         "apps/admin-portal/app/(protected)/analytics/page.tsx",
-        "apps/admin-portal/components/AnalyticsBoard.tsx"
+        "apps/admin-portal/components/AnalyticsBoard.tsx",
+        "packages/shared-types/admin/analytics.ts",
+        "apps/mobile/src/frontend/components/Admin/Reports/AdminReportAnalytics.tsx"
       ],
       "tasks": [
-        "Read-only measure catalog and eight analytics dashboards"
+        "Shared read-only Expo/Next measure catalog and eight analytics dashboards; ANALYST reviews meaning, SHARED_CONTRACTS owns shared implementation",
+        "Review shared Expo/Next measure definitions, source provenance, units/window/population/denominator and missing-value meaning for the single GROWTH_ANALYTICS packet; only clips/donations have current prior-week pairs, and MAU/retention/conversion remain unmeasured as defined.",
+        "Use main's existing measure catalog and fixed report windows; preserve missing versus zero and source/denominator limits, with no invented MAU or claim that fan-zone range/export work exists here."
       ],
       "model": "grok-4.7-medium"
     },
@@ -88,7 +102,8 @@
         "apps/mobile/src/frontend/lib/apiUrl.ts"
       ],
       "tasks": [
-        "Own request validation, JWT verification, authorization, typed responses and server error boundaries."
+        "Own request validation, JWT verification, authorization, typed responses and server error boundaries.",
+        "Maintain the shared Node/Edge money-core boundary and canonical actor-bound Beyond/CHAL contracts; provider capability responses and local validation do not certify hosted authorization or settlement."
       ],
       "model": "grok-4.7-medium"
     },
@@ -157,10 +172,13 @@
       "lead": "CTO",
       "owns": [
         "apps/mobile/src/backend/db",
-        "supabase"
+        "supabase",
+        "supabase/migrations/20261013190000_engineering_support.sql",
+        "scripts/replay/support-replay.mjs"
       ],
       "tasks": [
-        "Database architecture, migrations, RPCs, Storage layout and pairing with Security"
+        "Database architecture, migrations, RPCs, Storage layout and pairing with Security",
+        "Retain accepted local Beyond/CHAL actor-bound SQL and real replay evidence; prepare ordered, owner-authorized hosted application/negative readback with migration, Storage and Security owners."
       ],
       "model": "grok-4.7-medium"
     },
@@ -176,6 +194,20 @@
       ],
       "tasks": [
         "Own current one-time Exclusive purchase semantics and future recurring billing design."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "BOOKKEEPER",
+      "file": ".claude/agents/bookkeeper.md",
+      "department": "Finance and Accounting",
+      "lead": "CONTROLLER",
+      "owns": [
+        "docs/company/FINANCE_OPERATIONS.md"
+      ],
+      "tasks": [
+        "Monthly routine in BOOKKEEPING.md §6 and FINANCE_OPERATIONS.md: Stripe fees, payouts to bank, receipts, Suspense, then hand to CONTROLLER",
+        "Keep every recorded entry referenced to a receipt, invoice or Stripe report; void by reversal, never by editing"
       ],
       "model": "grok-4.7-medium"
     },
@@ -212,6 +244,24 @@
       "model": "grok-4.7-medium"
     },
     {
+      "call": "CFO",
+      "file": ".claude/agents/cfo.md",
+      "department": "Finance and Accounting",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/company/FINANCE_OPERATIONS.md",
+        "docs/engineering/design/BOOKKEEPING.md",
+        "docs/agents/BOOKS-01.md"
+      ],
+      "tasks": [
+        "Run the Finance and Accounting department: CONTROLLER, TAX, TREASURY and FPA report here; owner decisions go up to FACILITATOR",
+        "Request finance data and admin screens through the CTO (CTO -> ENGINEERING -> FINANCE_DATA) and give finance acceptance on the result",
+        "Required finance reviewer on any change to splits, the revenue log, the chart of accounts, posting rules, payouts or tax wording",
+        "Accept the existing local Books/catalog work with requesting finance reviewers; W0-10 staged close and P1-08 bank/CPA/first live-month controls remain pending, with no live money or tax-ID storage authority."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
       "call": "CHECKOUT",
       "file": ".claude/agents/checkout.md",
       "department": "Finance",
@@ -240,7 +290,22 @@
         "package.json"
       ],
       "tasks": [
-        "Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation."
+        "Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation.",
+        "Keep existing registry, documentation, data, boundary, type and detection gates reproducible; a structural pass is not semantic review, hosted health, device acceptance or evidence that all 107 roles ran."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "CODE_HYGIENE",
+      "file": ".claude/agents/code-hygiene.md",
+      "department": "Data Governance",
+      "lead": "DATA_GOVERNANCE",
+      "owns": [
+        "archive/README.md"
+      ],
+      "tasks": [
+        "Triage every unused export in data-ownership.json exportsTriage (keep | archive, with reason); remove stale entries",
+        "After owner approval, move archived code and its tests to archive/ in one reviewable change, and confirm typecheck and tests"
       ],
       "model": "grok-4.7-medium"
     },
@@ -256,7 +321,8 @@
         "apps/admin-portal/components/revenue"
       ],
       "tasks": [
-        "Financial design and payment specialist integration; Next Revenue (/money) and its components/revenue"
+        "Financial design and payment specialist integration; Next Revenue (/money) and its components/revenue",
+        "Maintain local Finance & Books and read-only Revenue meaning; guardian/payee, destination-charge choice, authoritative settlement/refund/held balances and live-money acceptance remain separate gates."
       ],
       "model": "grok-4.7-medium"
     },
@@ -270,7 +336,8 @@
         "docs/legal/LEGAL_BRIEFING.md"
       ],
       "tasks": [
-        "Privacy, commercial disclosures and evidence-backed claims"
+        "Privacy, commercial disclosures and evidence-backed claims",
+        "Supply privacy/consent/processor/retention and actual-exposure gaps to the standing Growth charter §9 review; exchange Legal/Growth/Engineering findings, track counsel-approved alternatives and mandatory control acceptance without inventing policy."
       ],
       "model": "grok-4.7-medium"
     },
@@ -286,7 +353,8 @@
         "apps/mobile/app/stripe-connect.tsx"
       ],
       "tasks": [
-        "Own JWT-gated Express links, bank onboarding state and verification/payout readiness."
+        "Own JWT-gated Express links, bank onboarding state and verification/payout readiness.",
+        "Review actual canonical account/link/Terms and transfer-or-payout capability wiring; VERIFY-02's SSN-only-Stripe/guardian policy is an owner rule, not proof that age, guardian, bank and settlement gates are implemented."
       ],
       "model": "grok-4.7-medium"
     },
@@ -300,7 +368,24 @@
         "docs/legal/LEGAL_BRIEFING.md"
       ],
       "tasks": [
-        "Own implementation of approved filming, audio, mark permissions and rights-report language."
+        "Own implementation of approved filming, audio, mark permissions and rights-report language.",
+        "Review both full Beyond attestations, minor/non-user subjects and recorded review-versus-publication scope; photo/video scrubbing is local defense, not licensed footage or server-decoder proof."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "CONTROLLER",
+      "file": ".claude/agents/controller.md",
+      "department": "Finance and Accounting",
+      "lead": "CFO",
+      "owns": [
+        "packages/shared-types/admin/bookkeeping.ts",
+        "apps/mobile/src/frontend/components/Admin/Books"
+      ],
+      "tasks": [
+        "Chart of accounts, posting rules and statement definitions in bookkeeping.ts; any change needs this role's approval and a matching SQL seed",
+        "Month-end close: Suspense at zero, held balances never below zero, Stripe balance agreed to Stripe, then close",
+        "QuickBooks Online / general-ledger export format and the import procedure"
       ],
       "model": "grok-4.7-medium"
     },
@@ -312,10 +397,12 @@
       "owns": [
         "docs/product/ROADMAP.md",
         "docs/company/COMPANY_PHASES.md",
-        "docs/engineering/STAGING_RUNBOOK.md"
+        "docs/engineering/STAGING_RUNBOOK.md",
+        "docs/engineering/HOSTING_DECISION_BRIEF.md"
       ],
       "tasks": [
-        "Wave budgets, free quotas, media bandwidth and vendor cost evidence"
+        "Wave budgets, free quotas, media bandwidth and vendor cost evidence",
+        "Contribute dated actual invoices/usage/verified quotas and loaded 30/90-day cost forecasts/options to the single GROWTH_ANALYTICS packet, with RELIABILITY and FINANCE_DATA/FPA/TREASURY/CFO; preserve OPERATIONS source controls and owner spending gates."
       ],
       "model": "grok-4.7-medium"
     },
@@ -343,7 +430,8 @@
         "docs/agents/TEAM_HIERARCHY.md"
       ],
       "tasks": [
-        "Assign every app fix to one department lead, review the evidence, and reject shortcuts"
+        "Assign every app fix to one department lead, review the evidence, and reject shortcuts",
+        "Review the single GROWTH_ANALYTICS packet through MARKETING after source quality and domain/independent checks; record technical disposition and submit spending/service/release decisions to the owner, retaining $50 initial ceiling and no automatic upgrade."
       ],
       "model": "grok-4.7-medium"
     },
@@ -374,7 +462,40 @@
         "docs/engineering/SCHEMA.md"
       ],
       "tasks": [
-        "Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent."
+        "Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent.",
+        "Maintain canonical parity and replay evidence for written MINOR/VERIFY/DATA/BOOKS/Support/Beyond/CHAL migrations; do not rebuild already complete local slices or apply hosted SQL without authorization."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "DATA_GOVERNANCE",
+      "file": ".claude/agents/data-governance.md",
+      "department": "Data Governance",
+      "lead": "CTO",
+      "owns": [
+        "docs/engineering/DATA_GOVERNANCE.md",
+        "docs/engineering/data-ownership.json"
+      ],
+      "tasks": [
+        "Every table, view, database function and unused export has an owner and a decision in data-ownership.json; `pnpm data:map:check` stays green",
+        "Approve new/changed data paths and feature-admin/migration ownership; keep locally closed DATA-01 findings, owner-approved archives and remaining hosted application/declared exceptions accurately scoped.",
+        "Weekly drift review and a pre-release data review; owner approval before anything moves to archive/",
+        "Review Growth and Capacity Review source/version/window/cohort, quality/deduplication and privacy evidence; approve changed measurement paths through existing data controls, with unknown/partial distinct from zero."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "DATA_LINEAGE",
+      "file": ".claude/agents/data-lineage.md",
+      "department": "Data Governance",
+      "lead": "DATA_GOVERNANCE",
+      "owns": [
+        "scripts/data-map.mjs",
+        "docs/engineering/DATA_MAP.md"
+      ],
+      "tasks": [
+        "Generator accuracy: overloads, dynamic table / function names, symbol-level screen tracing; add a rule when a new pattern appears",
+        "Regenerate DATA_MAP.md with every schema or data-path change; investigate any table with no writer or reader before an exception is recorded"
       ],
       "model": "grok-4.7-medium"
     },
@@ -390,7 +511,8 @@
         "apps/mobile/src/frontend/hooks/useSheetFrame.ts"
       ],
       "tasks": [
-        "Visual design and interaction integration"
+        "Visual design and interaction integration",
+        "Calm Island is the owner's newer source direction after UX-06's frozen manifest; five published theme values may still override it until an authorized Look-to-Daylight publication, with native/accessibility checks open."
       ],
       "model": "grok-4.7-medium"
     },
@@ -405,7 +527,8 @@
       ],
       "tasks": [
         "Own MCP/design-tool workflows: Figma/Canva handoff, Playwright screenshot evidence setup and Expo MCP build tooling.",
-        "Never connect to production or grant write access without owner approval."
+        "Never connect to production or grant write access without owner approval.",
+        "Record each actual Figma file and access/quota result separately: the original UX-06 draft is empty, but a later colour-comparison file succeeded; continue approved local work without buying access or promising Code Connect."
       ],
       "model": "grok-4.7-medium"
     },
@@ -453,7 +576,8 @@
         ".cursor/rules/documentation.mdc"
       ],
       "tasks": [
-        "Synchronize code comments, current state, team ownership, architecture, tester journeys and product evidence across departments in the same change; preserve generated facts and approved legal conclusions."
+        "Synchronize code comments, current state, team ownership, architecture, tester journeys and product evidence across departments in the same change; preserve generated facts and approved legal conclusions.",
+        "On each assigned active feature/fix handoff, reconcile owner-supplied source/environment and dated evidence; record actual executor, changed paths, checks, gaps and next owner in the task ledger and coordinate role/protocol/priority changes with VP_OPERATIONS."
       ],
       "model": "grok-4.7-medium"
     },
@@ -483,7 +607,8 @@
         "apps/mobile/app/(tabs)/drip.tsx"
       ],
       "tasks": [
-        "Own marketplace catalog, order lifecycle and unavailable/retry presentation."
+        "Own marketplace catalog, order lifecycle and unavailable/retry presentation.",
+        "The dedicated bottom slot moved to Beyond; Drip is reached from Profile. This navigation does not activate marketplace commerce, payments, fulfilment or its later-wave release gates."
       ],
       "model": "grok-4.7-medium"
     },
@@ -499,7 +624,9 @@
         "supabase"
       ],
       "tasks": [
-        "Technical architecture, typed contracts and specialist integration"
+        "Technical architecture, typed contracts and specialist integration",
+        "Supply actual versioned client/server/provider/access, supported state, failure/retry and feasible recovery evidence for Growth charter §9; exchange Legal/Growth findings before decision, retaining domain/QA acceptance and existing implementation gates.",
+        "Beyond/CHAL participant and admin slices are complete locally; preserve actor/focus/retry/permission boundaries while integrating only separately assigned fan-zone admin work and current release-path evidence."
       ],
       "model": "grok-4.7-medium"
     },
@@ -514,7 +641,45 @@
         "apps/mobile/src/frontend/components/Filmers"
       ],
       "tasks": [
-        "Own Filmed by credit, Props/Aura noncash rewards and Top Filmers eligibility."
+        "Own Filmed by credit, Props/Aura noncash rewards and Top Filmers eligibility.",
+        "Supply casual-uploader/repeat-filmer growth evidence and honest uploader-versus-camera attribution; distinguish confirmed eligibility/pending/error/removed/self-award states, public recognition permission and manipulation risks; retagging/new recognition/reversals/cash are proposals or later-wave gated, not implemented.",
+        "Review owner-selected free fan-ballot recognition/badge design: staff eligibility/rights/safety, valid votes choose winner, direct newcomers/private acknowledgment, honest credit/Aura eligibility and tie/correction/appeal/network tradeoffs; voluntary service and money/paid work remain separate, with no new award implementation."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "FINANCE_DATA",
+      "file": ".claude/agents/finance-data.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/frontend/lib/bookkeeping.ts",
+        "apps/mobile/src/frontend/hooks/useBooks.ts",
+        "packages/shared-types/admin/financeCatalog.ts",
+        "supabase/migrations/20261012210000_bookkeeping_ledger.sql",
+        "scripts/replay/books01-ledger-replay.mjs"
+      ],
+      "tasks": [
+        "Finance data catalog and its schema coverage test; a new money column cannot land unclassified",
+        "Books data layer: bounded reads, source reconciliation, filters and CSV exports in the Finance & Books hub",
+        "Bookkeeping SQL with BACKEND and DATABASE_MIGRATIONS, replayed on Postgres (scripts/replay) before the owner applies it",
+        "Supply Books/catalog cost completeness, environment/payment-mode and reconciliation evidence for the single Growth and Capacity Review packet; Finance accepts economic meaning and donation rows are not settled income.",
+        "Maintain the built Books hub/catalog/reconciliation/CSV and local replay evidence; payment IDs/fees/authoritative settlement integration and the real staging close remain next work accepted by Finance."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "FPA",
+      "file": ".claude/agents/fpa.md",
+      "department": "Finance and Accounting",
+      "lead": "CFO",
+      "owns": [
+        "docs/company/COMPANY_PHASES.md"
+      ],
+      "tasks": [
+        "Plan versus actual from the journal each month, with COST_OPERATIONS for vendor costs",
+        "Unit economics: Tapua'i's share, optional tips and covered fees minus processing per donation",
+        "Contribute accepted budget/runway and 30/90-day loaded service forecasts to the single GROWTH_ANALYTICS packet with COST_OPERATIONS and CFO; monthly invoice/close review does not authorize purchasing."
       ],
       "model": "grok-4.7-medium"
     },
@@ -528,7 +693,8 @@
         "packages/shared-types"
       ],
       "tasks": [
-        "Cross-feature implementation and end-to-end integration"
+        "Cross-feature implementation and end-to-end integration",
+        "Maintain completed main Beyond/CHAL app-SDK-admin integration with canonical actor guards; any fan-zone date/export/Product/Health work requires a distinct main integration assignment and review."
       ],
       "model": "grok-4.7-medium"
     },
@@ -539,10 +705,16 @@
       "lead": "MARKETING",
       "owns": [
         "apps/mobile/src/frontend/hooks/useSurfaceUsage.ts",
-        "docs/product/PRODUCT_FACTS.md"
+        "docs/product/PRODUCT_FACTS.md",
+        "docs/engineering/GROWTH_CAPACITY_REVIEW.md",
+        "docs/agents/GROWTH-01.md"
       ],
       "tasks": [
-        "Own measurement definitions for browsing, claim, upload and donation conversion."
+        "Own the single Growth and Capacity Review packet and versioned follow-up through MARKETING to CTO and owner; reuse Analytics/Audience, Health/Support and Finance & Books, with verified or explicitly unknown sources.",
+        "Weekly/on-receipt, monthly-invoice and confirmed-trigger reviews after source quality/false-positive checks; integrate product, capacity/recovery and loaded cost evidence, domain reviews, CTO disposition and owner decision. Initial $50 ceiling and MAU/quota checkpoints do not authorize spending, collector activation or automatic upgrades.",
+        "Own standing Legal/Growth/Engineering verification/consent review in the single packet; pair friction/permitted engagement with safety/disputes/recovery and loaded manual-review costs, record disagreements/domain acceptance/owner decisions and next October 20 packet; product options remain proposed.",
+        "Maintain one Growth plan card for every overlapping user segment and gated/internal capacity: acquisition, first useful action, repeat/contribution, qualifying outcomes/gaps, action safeguards, loaded costs and next owner/decision; preserve non-donating fan value and authorized casual uploads; next October 20 packet, authorization-relative 30/60/90 stages.",
+        "Extend family-fun segment cards in the October 20 packet with owner-selected free fan-ballot winners: staff checks eligibility/rights/safety, public candidate consent/private acknowledgment, honest newcomer/network tradeoffs, proportionate abuse/capacity costs and next trusted ballot design; badge/Aura/money and voluntary service remain separate proposals."
       ],
       "model": "grok-4.7-medium"
     },
@@ -556,22 +728,76 @@
         "apps/mobile/src/frontend/components/Reels"
       ],
       "tasks": [
-        "Highlights feed and media specialist integration"
+        "Highlights feed and media specialist integration",
+        "Integrate actual family-fun media/credit/status gaps for owner-selected fan-ballot awards; staff checks eligibility/rights/safety, votes choose winner, per-entry public candidate consent/private acknowledgment and withdrawal/recap corrections precede implementation; newcomer/network and trusted tally gaps stay explicit.",
+        "Maintain default Highlights and the adjacent Beyond integration with UPLOAD/PLAYBACK/FULLSTACK; source-free or ambiguous legacy samples must not acquire an unrelated athlete/payee, and fan awards remain proposed."
       ],
       "model": "grok-4.7-medium"
     },
     {
       "call": "INCIDENT_TRIAGE",
       "file": ".claude/agents/incident-triage.md",
-      "department": "Support",
+      "department": "Engineering support",
       "lead": "SUPPORT",
       "owns": [
         "docs/engineering/TROUBLESHOOTING.md",
         "docs/engineering/STAGING_RUNBOOK.md",
-        "docs/STATE.md"
+        "docs/STATE.md",
+        "docs/agents/INCIDENT_TEMPLATE.md"
       ],
       "tasks": [
-        "Own severity classification, reproduction evidence and financial/security escalation routing."
+        "Own severity, sanitized issue fingerprints, duplicate grouping, reproduction and domain-owner handoff."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "INFO_RETURNS",
+      "file": ".claude/agents/info-returns.md",
+      "department": "Finance and Accounting",
+      "lead": "TAX",
+      "owns": [
+        "packages/shared-types/admin/financeTax.ts"
+      ],
+      "tasks": [
+        "Payees to review: year totals per payee and the 1099 review threshold (confirm each January)",
+        "Have the CPA specify provider-handled payee tax documents and approved non-sensitive status before payouts; VERIFY-02 keeps SSNs only at Stripe, never Tapua'i, with CUSTODIAL, CONNECT and PRIVACY_ENGINEERING",
+        "Have the CPA confirm payee/year/threshold reporting and a provider-handled tax-document workflow; VERIFY-02 directs SSNs only to Stripe, never Tapua'i, and non-sensitive status tracking grants no ID collection or filing authority."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "INFRASTRUCTURE",
+      "file": ".claude/agents/infrastructure.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "docs/engineering/infrastructure.json",
+        "docs/engineering/INFRASTRUCTURE_REGISTER.md",
+        "scripts/infra-register.mjs",
+        "docs/engineering/PORTABILITY.md",
+        "scripts/vendor-boundary-baseline.json"
+      ],
+      "tasks": [
+        "Always aware of the infrastructure: hosting, services, environments and how deeply the app is integrated with each (INFRASTRUCTURE_REGISTER, PORTABILITY)",
+        "Standing dev member of the Growth and Capacity Review (GROWTH-01): technical context, integration depth, exits and options for every scalability recommendation, with COST_OPERATIONS, RELIABILITY, BACKEND, STORAGE, REALTIME; CTO recommends, owner decides",
+        "Review every infrastructure diff (pnpm infra:register:check) and notify affected teams even when they did not ask",
+        "PORT-01's shared money core, media references and local type/token follow-through are source-complete; maintain the actual register, unapplied beyond_game bucket and provider exits without implying hosting activation or prices."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "INTERNAL_CONTROLS",
+      "file": ".claude/agents/internal-controls.md",
+      "department": "Finance and Accounting",
+      "lead": "CONTROLLER",
+      "owns": [
+        "packages/shared-types/admin/financeChecks.ts",
+        "packages/shared-types/admin/financeCatalog.ts"
+      ],
+      "tasks": [
+        "Every money-bearing column in schema.sql is classified in the finance data catalog (unit test fails otherwise)",
+        "Source-to-ledger reconciliation: tips, optional tips, covered card fees, Vault, boosters, Drip and payouts each match the revenue log and journal",
+        "Sign off a month as complete before CONTROLLER closes it"
       ],
       "model": "grok-4.7-medium"
     },
@@ -585,7 +811,8 @@
         "apps/mobile/src/frontend/hooks/useLeaderboards.ts"
       ],
       "tasks": [
-        "Own donor/filmer ranking aggregation, windows, ties and privacy-safe display."
+        "Own donor/filmer ranking aggregation, windows, ties and privacy-safe display.",
+        "Propose owner-selected fan-ballot tally/results with staff eligibility/rights/safety, most valid free ballots wins, no spend/view/follower/stat points, trusted limits/windows/idempotency/corrections/ties, newcomer/network fairness and public-entry consent/private acknowledgment; later school scoring/Aura/money remain distinct."
       ],
       "model": "grok-4.7-medium"
     },
@@ -614,7 +841,8 @@
         "apps/mobile/src/frontend/components/Legal"
       ],
       "tasks": [
-        "Approved legal wording and counsel decision tracking"
+        "Approved legal wording and counsel decision tracking",
+        "Coordinate counsel classification of age/guardian/school/payment checks, approved alternatives and consent/notice decisions for Growth charter §9; exchange findings with Growth/Engineering before the one packet, preserving counsel/domain acceptance and owner business decisions."
       ],
       "model": "grok-4.7-medium"
     },
@@ -630,7 +858,8 @@
       ],
       "tasks": [
         "Game-day fan surfaces and live engagement integration",
-        "Typed guest game claims, check-ins and roster access through guestGames.ts; route-layer data boundaries"
+        "Typed guest game claims, check-ins and roster access through guestGames.ts; route-layer data boundaries",
+        "Coordinate owner-selected free fan-ballot design and separate later school scoring; staff eligibility/rights/safety, votes choose winner, similar school nominations/newcomers with honest network advantage, per-entry publicity/private acknowledgment and proportionate trusted ballot controls; no implementation."
       ],
       "model": "grok-4.7-medium"
     },
@@ -645,7 +874,11 @@
         "docs/product/VOICE.md"
       ],
       "tasks": [
-        "Own consented family-story positioning and accurate release communications."
+        "Own consented family-story positioning and accurate release communications.",
+        "Route the single GROWTH_ANALYTICS Growth and Capacity Review packet to CTO and owner; verify product claims and retain dated review, gaps and next owners without competing vendor decisions.",
+        "Route standing joint verification/consent/safe-engagement review after Legal/Growth/Engineering exchange; require one evidence-based Growth packet with safety/manual-load tradeoffs, counsel/domain acceptance and owner decision; next standing review October 20, 2026.",
+        "Route all user-segment growth cards and exchanged Product/Dev/Legal/Growth evidence through one packet; preserve truthful capability/credit/reward states, non-donating fan value, permission/cost/decision gates and October 20 follow-up; campaigns and proposed feature bridges remain separately authorized.",
+        "Route owner-selected free fan-ballot design through the single Growth packet: staff checks eligibility/rights/safety, votes choose winner; truthful candidate/profile privacy, newcomer/network limits, ethical invitations and separate voluntary service/badge/Aura/money paths; no campaign or implementation."
       ],
       "model": "grok-4.7-medium"
     },
@@ -660,7 +893,8 @@
         "docs/legal/LEGAL_BRIEFING.md"
       ],
       "tasks": [
-        "Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria."
+        "Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria.",
+        "Maintain MINOR birth-month/year, unknown-age and known-under13 closure plus teen consent/guardian limits; Beyond/CHAL age/friend gates stay action-specific, and minor in-person time/location remains prohibited even in future Vault work."
       ],
       "model": "grok-4.7-medium"
     },
@@ -689,7 +923,8 @@
         "apps/mobile/app/(admin)/admin/moderation.tsx"
       ],
       "tasks": [
-        "Own report reasons, immediate-hide versus review threshold, review evidence and appeals design."
+        "Own report reasons, immediate-hide versus review threshold, review evidence and appeals design.",
+        "Beyond's local pre-review/remove/support-erasure desk and legacy report controls exist; confirm staffed capacity, rights, block/closure and removal behavior before public use, with strikes/appeals still separately gated."
       ],
       "model": "grok-4.7-medium"
     },
@@ -747,7 +982,8 @@
         "apps/mobile/src/frontend/context/SoftWallContext.tsx"
       ],
       "tasks": [
-        "Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume."
+        "Own first-open onboarding, birth-month/year age confirmation, athlete claim and pending action resume.",
+        "Maintain browse-first onboarding and MINOR birth-month/year confirmation, unknown-age and known-closed recovery; guest post-auth resumes must not reuse an outgoing actor's retained intent."
       ],
       "model": "grok-4.7-medium"
     },
@@ -823,7 +1059,8 @@
         "apps/mobile/src/frontend/hooks/useReelViewTracker.ts"
       ],
       "tasks": [
-        "Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting."
+        "Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting.",
+        "Maintain PLAY-01-owned lifecycle and signed/private entitlement boundaries; Beyond legacy cards are discovery only and do not authorize edits to held player files or imply native playback/TTL verification."
       ],
       "model": "grok-4.7-medium"
     },
@@ -837,7 +1074,8 @@
         "apps/mobile/src/frontend/components/Local/CheerPollCard.tsx"
       ],
       "tasks": [
-        "Own cheer eligibility, vote math, poll lifecycle and offline vote semantics."
+        "Own cheer eligibility, vote math, poll lifecycle and offline vote semantics.",
+        "Design owner-selected fan-ballot validity with one free eligible-account ballot/window, server limits/idempotency/closure/freeze/ties/corrections/appeals and proportionate abuse without blanket Stripe KYC; staff checks entry eligibility/rights/safety, votes choose winner; current cheer counts unreliable and no unique-person claim or implementation."
       ],
       "model": "grok-4.7-medium"
     },
@@ -853,7 +1091,6 @@
         "apps/admin-portal/app/(protected)/manage/page.tsx",
         "apps/admin-portal/app/(protected)/operations/page.tsx",
         "apps/admin-portal/components/PortalShell.tsx",
-        "apps/admin-portal/components/ColumnChart.tsx",
         "apps/admin-portal/components/charts",
         "apps/admin-portal/lib/chartScale.ts",
         "apps/admin-portal/lib/chartScale.test.ts",
@@ -863,10 +1100,13 @@
         "apps/admin-portal/lib/eventLabels.test.ts",
         "apps/admin-portal/lib/dashboard.ts",
         "apps/admin-portal/lib/departments.ts",
-        "apps/admin-portal/lib/operations.ts"
+        "apps/admin-portal/lib/operations.ts",
+        "apps/mobile/src/frontend/components/Admin/Reports"
       ],
       "tasks": [
-        "Read-only portal shell, Home, Audience, Health, Departments and Product (Trends is ADMIN, Revenue is COMMERCE); owns the shared chart kit (components/charts, lib/chartScale.ts), with DESIGN and ACCESSIBILITY reviewing any prop or visual change; owns lib/measureColors.ts, the one colour per measure for the whole portal, and lib/eventLabels.ts, the shared plain-English labels for telemetry event keys; keeps the owner-adopted report format (2026-10-12) as the portal default"
+        "Own read-only Next portal shell, Home/Audience/Health/Departments/Product, chart presentation and owner-adopted report format; ADMIN owns Trends and COMMERCE Revenue. SHARED_CONTRACTS owns shared report helpers in packages/shared-types/admin (measureColors, chartScale, eventLabels); PORTAL maintains their Next lib compatibility exports and presentation integration with DESIGN/ACCESSIBILITY review.",
+        "ADM-02 universal report presentation in main Expo admin, with DESIGN/ACCESSIBILITY and ANALYST/COMMERCE review",
+        "Maintain main's accepted read-only report shell and fixed-window pages; fan-zone exports/date ranges/Product workbench/Health template are not main capabilities until a scoped integration is assigned."
       ],
       "model": "grok-4.7-medium"
     },
@@ -881,7 +1121,8 @@
         "apps/mobile/src/backend/db/schema.sql"
       ],
       "tasks": [
-        "Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation."
+        "Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation.",
+        "Beyond/CHAL own exports, support erasure/redaction and quota/cleanup metadata exist locally; global account export/deletion, provider physical deletion, retention, known-closed and remote revocation evidence remain separate gaps."
       ],
       "model": "grok-4.7-medium"
     },
@@ -896,7 +1137,9 @@
         "docs/STATE.md"
       ],
       "tasks": [
-        "Translate the family donation and recruitment mission into acceptance criteria and dependencies."
+        "Translate the family donation and recruitment mission into acceptance criteria and dependencies.",
+        "Define per-segment jobs, first/repeat/cross-user value, accepted outcomes and capability gaps with Growth/Research/domain owners; retain action safeguards, loaded support/service costs, proposals and authorization-relative 30/60/90 acceptance/stop decisions without imposing athlete/payee gates on unrelated permitted fan activity.",
+        "Refine family-fun entry and owner-selected fan-ballot Game/Week design: staff eligibility/rights/safety, most valid free votes wins, per-entry publicity/private acknowledgment, one eligible-account ballot/window, trusted limits/closure/ties/corrections/appeals, proportional abuse and honest newcomer/network fairness; no enrollment."
       ],
       "model": "grok-4.7-medium"
     },
@@ -924,7 +1167,8 @@
         "docs/engineering/TESTER_SCRIPT.md"
       ],
       "tasks": [
-        "Independent final verification gate"
+        "Independent final verification gate",
+        "Preserve retained local Beyond/CHAL/UX-06 passes as dated evidence; review newer Calm Island/configured theme and require distinct hosted, actual-build/native and policy acceptance rather than recertifying old hashes."
       ],
       "model": "grok-4.7-medium"
     },
@@ -995,7 +1239,9 @@
       "owns": [
         "docs/engineering/STAGING_RUNBOOK.md",
         "docs/engineering/SCHEMA.md",
-        "supabase/migrations"
+        "supabase/migrations",
+        "scripts/recovery-capsule.mjs",
+        "scripts/__tests__/recovery-capsule.test.mjs"
       ],
       "tasks": [
         "Migration rollback, backup/restore evidence and data recovery runbooks"
@@ -1035,14 +1281,20 @@
     {
       "call": "RELIABILITY",
       "file": ".claude/agents/reliability.md",
-      "department": "IT infrastructure",
-      "lead": "OPERATIONS",
+      "department": "Engineering support",
+      "lead": "SUPPORT",
       "owns": [
         "apps/mobile/src/frontend/services",
-        "docs/engineering/TROUBLESHOOTING.md"
+        "docs/engineering/TROUBLESHOOTING.md",
+        "scripts/detection.mjs",
+        "scripts/__tests__/detection.test.mjs",
+        "apps/mobile/src/frontend/services/supportRuntime.ts",
+        "apps/mobile/src/frontend/services/__tests__/supportRuntime.test.ts",
+        "apps/mobile/src/frontend/components/Common/SupportRuntimeObserver.tsx"
       ],
       "tasks": [
-        "Own failure recovery, incident runbooks, dependency availability and measured service objectives."
+        "Build local detection scans, failure/recovery checks and root-cause repairs together with domain developers.",
+        "Contribute accepted workload/denominator, game-night runtime/capacity and recovery evidence to the single Growth and Capacity Review packet through existing SUPPORT/ENGINEERING reporting; local tests do not establish hosted headroom or uptime."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1116,7 +1368,22 @@
         "apps/mobile/src/frontend/context/AdminLensContext.tsx"
       ],
       "tasks": [
-        "Own draft/published flag states, pause behavior, role lenses and fan control coverage."
+        "Own draft/published flag states, pause behavior, role lenses and fan control coverage.",
+        "Keep discovery tabs.beyond separate from server contribution/challenge switches default off; current Calm Island source may be overridden by five published theme values, and republishing Look requires authorization."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "SALES_TAX",
+      "file": ".claude/agents/sales-tax.md",
+      "department": "Finance and Accounting",
+      "lead": "TAX",
+      "owns": [
+        "packages/shared-types/admin/financeTax.ts"
+      ],
+      "tasks": [
+        "Sales-tax watch in the Taxes tab: Drip and Vault sales by month (and by state once buyer location is recorded)",
+        "Collection and remittance plan with COMMERCE and DRIP before Drip goes live"
       ],
       "model": "grok-4.7-medium"
     },
@@ -1172,10 +1439,12 @@
       "lead": "ENGINEERING",
       "owns": [
         "packages/shared-types/index.ts",
-        "apps/mobile/src/frontend/types/database.ts"
+        "apps/mobile/src/frontend/types/database.ts",
+        "packages/shared-types/admin"
       ],
       "tasks": [
-        "Shared RPC/domain types, generated database type provenance and mobile/admin contract parity"
+        "Shared RPC/domain types, generated database type provenance and mobile/admin contract parity",
+        "ADM-02 platform-neutral admin reporting models and package exports shared by Expo and Next"
       ],
       "model": "grok-4.7-medium"
     },
@@ -1234,37 +1503,67 @@
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "tasks": [
-        "Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle"
+        "Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle",
+        "Maintain the locally written private beyond_game draft/review/cleanup policies and Vault gap with RLS_SECURITY; actual provisioning, signed-URL lifetime and provider physical deletion remain hosted acceptance."
       ],
       "model": "grok-4.7-medium"
     },
     {
       "call": "SUPPORT",
       "file": ".claude/agents/support.md",
-      "department": "Support",
-      "lead": "CTO",
+      "department": "Engineering support",
+      "lead": "ENGINEERING",
       "owns": [
         "docs/engineering/TESTER_SCRIPT.md",
         "docs/engineering/TROUBLESHOOTING.md",
-        "docs/STATE.md"
+        "docs/STATE.md",
+        "docs/engineering/ENGINEERING_SUPPORT.md",
+        "docs/agents/DETECT-01.md",
+        "packages/shared-types/admin/engineeringSupport.ts",
+        "packages/shared-types/admin/teamFlow.ts",
+        "packages/shared-types/admin/supportTopology.json",
+        "apps/mobile/src/frontend/services/SupportSignalManager.ts",
+        "apps/mobile/src/frontend/components/Common/FeatureBoundary.tsx",
+        "docs/agents/DETECT-02.md",
+        "docs/engineering/design/ENGINEERING_SUPPORT_CONSOLE.md",
+        "apps/mobile/src/frontend/components/Admin/Support"
       ],
       "tasks": [
-        "Own help/runbook content, tester intake taxonomy and guardian-safe issue handling."
+        "Own cross-system detection coverage, incident/fix coordination, safe support intake and Dev reporting.",
+        "Maintain implemented DETECT-02 main-admin issue/review/flow/recovery coordination with Dev and independent Security/QA; distinguish local capture/containment from remaining hosted delivery, durable crash intake and legacy telemetry gaps."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "TAX",
+      "file": ".claude/agents/tax.md",
+      "department": "Finance and Accounting",
+      "lead": "CFO",
+      "owns": [
+        "packages/shared-types/admin/financeTax.ts",
+        "docs/company/FINANCE_OPERATIONS.md"
+      ],
+      "tasks": [
+        "Tax calendar and deadlines (financeTax.ts) and the Taxes tab of the Finance & Books hub",
+        "Year-end tax pack, quarterly estimated-tax figures and the CPA question list (BOOKKEEPING.md §8)",
+        "1099-K reconciliation: Stripe gross versus Tapua'i receipts plus pass-through money",
+        "Keep provider-handled payee-document/SSN boundaries and CPA-validated tax dates/thresholds; test-mode tax packs do not authorize Tapua'i tax-ID storage, e-filing, registrations or filings."
       ],
       "model": "grok-4.7-medium"
     },
     {
       "call": "TELEMETRY",
       "file": ".claude/agents/telemetry.md",
-      "department": "IT infrastructure",
-      "lead": "OPERATIONS",
+      "department": "Engineering support",
+      "lead": "SUPPORT",
       "owns": [
         "apps/mobile/src/frontend/services/TelemetryManager.ts",
         "apps/mobile/src/frontend/hooks/useSurfaceUsage.ts",
-        "apps/mobile/src/frontend/hooks/useReelViewTracker.ts"
+        "apps/mobile/src/frontend/hooks/useReelViewTracker.ts",
+        "docs/engineering/detection-sensors.json"
       ],
       "tasks": [
-        "Own bounded telemetry payloads, data minimization, dashboard interpretation and logging failure behavior."
+        "Build cross-system runtime sensors, safe bounded logs, correlation, delivery health and honest coverage gaps."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1285,6 +1584,38 @@
       "model": "grok-4.7-medium"
     },
     {
+      "call": "THREAT_DETECTION",
+      "file": ".claude/agents/threat-detection.md",
+      "department": "Security",
+      "lead": "SECURITY",
+      "owns": [
+        "docs/engineering/design/ENGINEERING_SUPPORT_CONSOLE.md",
+        "docs/agents/DETECT-02.md",
+        "apps/mobile/src/backend/services/supportCapture.ts",
+        "docs/engineering/ENGINEERING_SUPPORT.md"
+      ],
+      "tasks": [
+        "Review trusted security signals, false positives, audit integrity and safe recovery with Engineering Support and Dev."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "TREASURY",
+      "file": ".claude/agents/treasury.md",
+      "department": "Finance and Accounting",
+      "lead": "CFO",
+      "owns": [
+        "apps/mobile/src/frontend/components/Admin/MoneyTool.tsx"
+      ],
+      "tasks": [
+        "Held-for-families roll-forward and per-athlete balances agree before any payout is approved",
+        "Payout queue review in Payouts (MoneyTool) with CUSTODIAL and CONNECT; payouts stay blocked in Wave 0",
+        "Advocate Connect destination charges (STATE §6 item 8) with COMMERCE and payments counsel",
+        "Verify approved infrastructure ceiling and actual billing/cash obligations for the single Growth and Capacity Review packet with FPA/CFO; owner decides spending and test gross is not available company cash."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
       "call": "TRUST_SAFETY",
       "file": ".claude/agents/trust-safety.md",
       "department": "Trust and Safety",
@@ -1294,7 +1625,8 @@
         "apps/mobile/src/frontend/components/Verification"
       ],
       "tasks": [
-        "Coordinate moderation, identity, minor safety and rights safeguards as independent release gates."
+        "Coordinate moderation, identity, minor safety and rights safeguards as independent release gates.",
+        "Maintain local Beyond pre-review and CHAL friend/preset/private-badge safeguards; real reviewer/support staffing, public/minor action scope and appeals policy remain release prerequisites, with no minor in-person location/time."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1313,7 +1645,10 @@
       ],
       "tasks": [
         "Own staged video selection, details, review and optional settings; preserve required rights, draft navigation and safe publishing.",
-        "Own compression, MIME/bucket routing, upload progress/cancellation and athlete/account tag consent."
+        "Own compression, MIME/bucket routing, upload progress/cancellation and athlete/account tag consent.",
+        "Supply actual permitted casual-video versus athlete-required-photo workflows, rights/audience/age checks and publication/tag/reward/error states to per-user growth plans; identify retag/share/public-byte/removal/retry gaps and feasible reviewed bridges with support/service costs; no implementation or new rewards implied.",
+        "Supply actual casual-video/photo/right/age/audience behavior for fan-ballot entries; staff eligibility/rights/safety and per-entry public candidate consent/private acknowledgment, restricted media/status/withdrawal and trusted ballot gaps remain proposed; no blanket Stripe KYC or implemented workflow.",
+        "Keep existing Highlight/photo rights and draft behavior distinct from Beyond's private pending video/JPEG review pipeline; current actor/consent/metadata/retry boundaries do not prove server decoding or public media safety."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1328,7 +1663,8 @@
         "apps/mobile/src/frontend/hooks/useSubscriberRequests.ts"
       ],
       "tasks": [
-        "Own private video entitlements, signed playback URLs and subscription-request access."
+        "Own private video entitlements, signed playback URLs and subscription-request access.",
+        "Keep private entitlement/signed playback separate from public workout discovery and presets; workout Vault protection, try videos, season access and minor in-person prohibitions remain later action-specific gates."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1369,10 +1705,15 @@
         "docs/agents/WORK_QUEUE.md",
         "docs/agents/DEPARTMENT_PLANS.md",
         "docs/agents/EXPERT_STANDARDS.md",
-        ".claude/agents/registry.json"
+        ".claude/agents/registry.json",
+        ".claude/agents/vp-operations.md",
+        "docs/agents/TEAM_HIERARCHY.md",
+        "docs/agents/COORD-01.md"
       ],
       "tasks": [
-        "Keep every agent role, protocol, and priority current in the same turn, and report team drift to the CTO"
+        "Reconcile roles, reporting lines, protocols and current priorities on assigned changes and affected handoffs; pair with DOCUMENTATION, preserve model pins/domain authority and report drift to CTO.",
+        "Record actual executor, checked documents/roles/priorities, changed paths, dated check results, unresolved drift and next owner in the existing task ledger; release shared claims after integration/checks. Definitions are task-triggered, with no unattended scheduler configured.",
+        "Reconcile all 107 current role duties against main/task evidence and documented job-function gaps; preserve reporting/models and report actual reviewed/changed paths, checks, next owners and uncorrected outside-scope docs."
       ],
       "model": "grok-4.7-medium"
     },

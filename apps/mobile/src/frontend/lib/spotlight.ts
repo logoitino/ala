@@ -34,20 +34,6 @@ export function utcWeekStart(date = new Date()): string {
   return utc.toISOString().slice(0, 10);
 }
 
-/**
- * @purpose First of the month UTC, matching Postgres `date_trunc('month', now())`.
- */
-export function utcMonthStart(date = new Date()): string {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1)).toISOString().slice(0, 10);
-}
-
-/**
- * @purpose January 1 UTC, matching Postgres `date_trunc('year', now())`.
- */
-export function utcYearStart(date = new Date()): string {
-  return new Date(Date.UTC(date.getUTCFullYear(), 0, 1)).toISOString().slice(0, 10);
-}
-
 function seenKey(awardId: string): string {
   return `${SEEN_PREFIX}${awardId}`;
 }

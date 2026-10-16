@@ -16,8 +16,9 @@ perfect. "This felt slow" counts as a bug.
 ## Before you start (2 minutes)
 
 1. Install from the link you were sent (iPhone needs your device registered first).
-2. Sign up with your own email. There is no demo account on this build.
-3. Confirm you are 13 or older when asked.
+2. Check the installed build against STATE §0. The current internal preview offers the
+   test account `demo@tapuai.app`; use its account-sheet action or create your own account.
+3. Confirm you are 13 or older when creating an account; sign-in does not ask again.
 
 ## Everyone — Watch (does it feel like TikTok?)
 
@@ -25,14 +26,37 @@ perfect. "This felt slow" counts as a bug.
 2. Double-tap to drop Aura. Try Seki and Flex. Tap again to take one back.
 3. Tap an athlete's name to open their profile, then come back.
 4. Hide one clip. Report one clip (pick any reason — it is a test).
-5. Post a clip of a teammate: you must pick who is in it. Then find it on their profile — it should say
+5. Post a clip of a teammate and choose that athlete. Then find it on their profile — it should say
    "🎥 Filmed by" you, and after a few friends each watch it for 3+ seconds the ▶ count on the poster goes up.
+   On a build with the current upload flow, also try **Tag later** on a video: it can publish without an
+   athlete, shows "Not tagged yet", and Donate stays off until an athlete is tagged. Photo stories still
+   require an athlete before publishing. Check STATE §0: the October 11 night previews lack Tag later.
 6. Tap "🎥 Filmed by" on a friend's clip: send Props (once — the button should lock), and check the
    filmer card on your own Profile (tier, clips, views, Aura from filming). Look for your friend on
    Spotlight → Boards → Top Filmers 🎥.
 
 Tell us: *How long before the first video played? Did anything stutter, go black, or jump? Did the
 hype taps feel satisfying? Would you keep scrolling?*
+
+## Browser playback repair follow-up (PLAY-01)
+
+Use a build containing PLAY-01; the older queued previews do not contain this repair.
+
+1. Play a known valid video. Scroll away/back quickly, open/close its profile, and
+   toggle sound. Repeat while a clip is loading: no red error overlay should appear
+   from an interrupted play request, and an offscreen or locked clip stays paused.
+2. Use an existing known failed clip or an approved local invalid-media fixture.
+   It shows **This Highlight couldn't play.** and **Retry**, rather than an uncaught
+   exception. Retry starts one attempt; leaving the clip still works. A bad hosted
+   file can fail again—Retry does not repair its contents or format.
+3. Verify keyboard and screen-reader access to **Retry this Highlight**, a minimum
+   44-point touch target, and readable text at narrow/large native text sizes.
+4. A failed/loading/paused clip contributes no playback time to the view threshold.
+   A valid focused unlocked clip still counts after real playback, using the existing
+   threshold. Photo stories retain their photo-loaded rule and horizontal paging.
+5. On iOS and Android, verify slow replacement, rapid focus changes, lock/unlock and
+   returning from the background. Successful bundle exports alone do not accept
+   native decoder readiness, VoiceOver/TalkBack or device gestures.
 
 ## Profile sport and navigation follow-up (2026-10-07)
 
@@ -98,6 +122,15 @@ used; use existing recorded test data or controlled fixtures for missing/schedul
 
 Record phone/window size, keyboard state and screenshots. These are device checks; mocked
 component tests do not establish visual fit or native picker behavior.
+
+## Beyond on the Highlights bar and the Upload chooser (2026-10-16)
+
+1. On Highlights, the top bar reads **Home | Beyond | Local**. Tap **Beyond**: only workout (💪 Train Like Me) and service (🤝 Serve Like Me) clips play, full screen, with Seki / Aura / Flex and Donate. The clip's badge sits below the banners, not under them.
+2. Tap **Fan workouts, service, learning and stories ›** under the bar: the Beyond the Game page opens with **‹ Highlights** at the top. Back returns to Highlights.
+3. If there are no workout or service clips, Beyond says so and offers **Share a clip** and **Open Beyond the Game**.
+4. The bottom bar is Home · Activity · ＋ · Spotlight · Profile (no Beyond tab).
+5. Tap ＋. Where Beyond posting is switched on, a sheet asks **What are you sharing?** — **Highlight** opens the clip composer, **Beyond moment** opens the Beyond composer. Where it is off, ＋ opens the clip composer straight away. Feel question: was it obvious which one to pick?
+6. Which of these would you actually say about your workout: "Seki Set", "Extra Rep", "OT" or "Two-a-Day"? Write down the one you remember tomorrow.
 
 ## Photo stories in Highlights (UX-05)
 
@@ -244,7 +277,7 @@ make you share your kid's page with family?*
    `select public.admin_set_school_branding('<school id>','https://…/logo.png','#1D3F8F','#FFFFFF');`)
 2b. **Vouch.** As a confirmed athlete, open Activity: pending teammates at your school appear
    under "Vouch for teammates". Tap **They're on my team** — the count goes up by one.
-2c. **Aura card.** On your profile tap **Flip Aura card**, then use **Identity / Season stats**
+2c. **Aura card.** On your profile tap **Flip Aura card**, then use **Identity / Stats**
    under the card and swipe the card itself. It should flip every time and nothing should overlap.
 3. Upload a Highlight tagged to yourself.
 4. Look at your profile's Highlights, Stats and Vault tabs. Lock and unlock a Vault clip.
@@ -282,6 +315,76 @@ Tell us: *Would a local business pay for this? What would make matching an athle
 appealing?*
 
 ---
+
+## Main admin — ADM-02 hosted and device follow-up
+
+The main application is Expo `/admin`; the local `:3033` report preview supplied the
+design. [ADM-02](../agents/ADM-02.md) records local synthetic-data evidence.
+
+1. With a staging admin account, open Home, Trends, Audience, Revenue, Health,
+   Product, Analytics and Departments, then all four Product oversight pages.
+   Check real source permissions, missing donation-band notices and the ledger's
+   test-mode/partial-read notices against the staging data.
+2. Use Manage desks and each lens to reach the owning editor. Confirm draft changes
+   remain drafts until the reviewed Publish action; perform writes only as part of
+   an authorized staging test. Check Back/Home trails and sign-out.
+3. Repeat access with a guest, signed-in non-admin and revoked admin. Guests should
+   reach the existing sign-in sheet; report data must never cross account changes.
+4. On an installed iOS/Android build, check large text, screen-reader summaries,
+   complete Data values and native navigation. Bundling alone does not accept this.
+5. On the browser, check keyboard Health tabs and Data disclosure, enlarged text,
+   full money values and unobscured focus. Record browser-tool limitations separately
+   from application failures.
+
+## Engineer/admin telemetry delivery follow-up (HEALTH-01 / DETECT-01-G3)
+
+Use a build containing HEALTH-01. This is the existing QA repair tool under `/admin/qa`,
+alongside the aggregate analysis in Health. Run failure injections only in a controlled local
+transport fixture or an explicitly authorized test environment; never put real private payloads
+into an error probe. Local regression results are in [HEALTH-01](../agents/HEALTH-01.md); the
+hosted/device walkthrough below remains unrun until its build/environment evidence is recorded.
+
+1. Open QA on the test device and record the sample time, build and device. A process-local
+   delivery view must identify its scope: no previous confirmed delivery is unknown, not proof
+   of fleet health. Health remains the source for aggregate periods and operational thresholds.
+   An older development singleton without `getHealth` must request a full app reload without
+   displaying invented zero counts.
+2. Generate one existing synthetic event and flush in the controlled fixture. Confirm successful
+   delivery increments only the local delivered count and its timestamp. No new event field,
+   personal identifier or raw backend diagnostic should appear in the delivery-health sample.
+3. Probe unconfigured, missing-table (`42P01` / `PGRST205`), denied and ordinary failed writes.
+   They must remain distinct; a message merely naming `telemetry_logs`, a missing column or
+   relationship must not read as a missing table. Rejected rows count loss and are not replayed.
+4. Simulate a response lost after a server INSERT and a hung request. The attempted batch must
+   never replay; uncertainty is part of dropped, not a separate population to add to it. The
+   caller returns after ten seconds and requests abort. If the fixture ignores abort, its
+   reservation remains in flight and blocks new sends until it settles; later normal triggers
+   can send fresh rows only. Confirm no batch exceeds 15 and queued plus in-flight never exceeds
+   120. Overflow increments loss; dropped may exceed accepted because refusal is not admission.
+5. Keep one QA source pending or failed while the other completes: the telemetry digest and
+   device OfflineQueue must render their own available/unread states independently. Refresh
+   repeatedly, change focus and remount during a delayed source read: at most one actual read
+   per source may remain pending, including development reload. The UI stops waiting after ten
+   seconds but does not cancel transport/release the slot; overlapping requests explain the
+   existing pending read. Only real settlement allows a fresh read. No old response may be
+   cached/reused or replace the latest sample, including after navigating away.
+6. After a later successful delivery, historical failure/time must remain visible. Dispose the
+   test logger during a write: buffered rows count loss, unconfirmed attempted rows count
+   uncertainty, listeners stop and late success cannot claim delivery. A new process/singleton
+   starts fresh counts only after a fresh process/test reset; `getInstance()` retains a disposed
+   logger without starting a replacement writer. Neither restores a lost batch or proves
+   durable crash intake.
+7. Use controlled queued Clear/Unsave actions: labels must describe removal accurately. Keep a
+   repair write unresolved: the notice must say its result is unconfirmed and its action lock
+   must remain held until real settlement. A read/UI timeout must not unlock or replay it.
+   Navigate away before completion: no late follow-up read or success state may appear in a
+   newer generation. Replay completion reports the actual remaining count; local labels and
+   notices do not change existing offline action semantics or permissions.
+
+Record actual checks/results/date and any unresolved reservation or unavailable source. Route
+local failures to TELEMETRY + ADMIN/QA; hosted ingestion/retention to BACKEND + TELEMETRY with
+PRIVACY_ENGINEERING, and durable crash intake to RELIABILITY. A successful local sample does
+not close those hosted/fleet/device/retention gaps.
 
 ## After the session — five questions for everyone
 

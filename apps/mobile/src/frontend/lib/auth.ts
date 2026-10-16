@@ -14,6 +14,9 @@ import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 import type { Session, User } from '@supabase/supabase-js';
 
+import type { Profile } from '@/types/database';
+import { isMissingColumn } from '@/lib/dbErrors';
+import { AGE_GATE_REFUSAL, ageBandFrom, birthInputError } from '@/lib/minors';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -56,24 +59,42 @@ export const MIN_PASSWORD_LENGTH = 8;
 
 /**
  * @purpose Which buttons the Soft-Wall email form may enable, for a given field state.
- * @remarks The 13+ checkbox is a COPPA attestation for accounts being *created*, so it gates
- * Create account and magic link (`signInWithOtp` mints a user when none exists) but never
- * Sign in — gating sign-in would retroactively lock out email accounts that already exist,
- * which `signInWithEmailPassword` is explicitly built not to do (it takes the flag as an
- * optional bootstrap fallback only). Kept here, not inline in `SoftWallModal`, so the rule
+ * @remarks The birth month and year (MINOR-01, replacing the 13+ checkbox) are asked of accounts being
+ * *created*, so they gate Create account and magic link (`signInWithOtp` mints a user when none exists)
+ * but never Sign in — gating sign-in would retroactively lock out email accounts that already exist.
+ * An under-13 date still enables the button: pressing it shows the neutral refusal (`signUpBirthProblem`),
+ * so the form never hints at the age that works. Kept here, not inline in `SoftWallModal`, so the rule
  * is covered by tests.
  */
 export function softWallEmailGates(
   email: string,
   password: string,
-  ageConfirmed13Plus: boolean,
+  birth: BirthMonth | null,
 ): { canSignIn: boolean; canCreate: boolean; canMagic: boolean } {
   const hasEmail = Boolean(email.trim());
+  const hasBirth = Boolean(birth) && birthInputError(birth?.year ?? null, birth?.month ?? null) === null;
   return {
     canSignIn: hasEmail && Boolean(password),
-    canCreate: hasEmail && ageConfirmed13Plus && passwordMeetsPolicy(password),
-    canMagic: hasEmail && ageConfirmed13Plus,
+    canCreate: hasEmail && hasBirth && passwordMeetsPolicy(password),
+    canMagic: hasEmail && hasBirth,
   };
+}
+
+/** Birth month (1–12) and year from the sign-up form (MINOR-01; replaces the 13+ checkbox). No day is collected. */
+export type BirthMonth = { year: number; month: number };
+
+/**
+ * @purpose Check a sign-up birth month before any account is made: a malformed value gets its fix, an under-13 date
+ *   gets the neutral refusal (the caller pauses the device for 24 hours).
+ */
+export function signUpBirthProblem(birth: BirthMonth | null | undefined): string | null {
+  const problem = birthInputError(birth?.year ?? null, birth?.month ?? null);
+  if (problem) return problem;
+  return ageBandFrom(birth?.year ?? null, birth?.month ?? null) === 'under_13' ? AGE_GATE_REFUSAL : null;
+}
+
+function birthMetadata(birth: BirthMonth): Record<string, string | boolean> {
+  return { age_confirmed_13_plus: true, birth_year: String(birth.year), birth_month: String(birth.month) };
 }
 
 /**
@@ -182,18 +203,21 @@ export function isNewAuthUser(user: User): boolean {
  * the race and already carries this from signup metadata; either path never overwrites an existing row).
  * @sideEffects `profiles` SELECT + INSERT.
  */
-export async function ensureFanProfile(user: User, ageConfirmed13Plus?: boolean): Promise<void> {
+export async function ensureFanProfile(user: User, ageConfirmed13Plus?: boolean, birth?: BirthMonth): Promise<void> {
   if (!isSupabaseConfigured) return;
   const { data } = await supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle();
   if (data?.id) return;
-  const { error } = await supabase.from('profiles').insert({
+  const row: Partial<Profile> & Pick<Profile, 'full_name'> = {
     user_id: user.id,
     full_name: displayNameFromUser(user),
     role: 'fan',
     roles: ['fan'],
     active_role: 'fan',
     age_confirmed_13_plus: ageConfirmed13Plus ?? null,
-  });
+  };
+  let { error } = await supabase.from('profiles').insert(birth ? { ...row, birth_year: birth.year, birth_month: birth.month } : row);
+  // Databases without the minor-accounts update have no birth columns; the 13+ confirmation still lands.
+  if (error && birth && isMissingColumn(error)) ({ error } = await supabase.from('profiles').insert(row));
   if (error && !/duplicate|unique/i.test(error.message)) {
     throw new Error(error.message || 'Could not create your fan profile.');
   }
@@ -352,19 +376,19 @@ export async function signInWithEmailPassword(
 
 /**
  * @purpose Create a fan account with email and password. Role is always fan; the client never sends one.
- * @param ageConfirmed13Plus Must be true. Stored in signup metadata for `handle_new_auth_user`.
+ * @param birth Birth month and year (13 or older). Stored in signup metadata for `handle_new_auth_user`, which also
+ *   refuses an under-13 date; the 13+ confirmation is still sent for databases without the minor-accounts update.
  * @returns Session when Supabase signs the new user in immediately.
  * @sideEffects `signUp`; `ensureFanProfile` when a session comes back. No profile write if email confirmation is still required.
  */
 export async function signUpWithEmailPassword(
   email: string,
   password: string,
-  ageConfirmed13Plus: boolean,
+  birth: BirthMonth,
 ): Promise<Session | null> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-  if (ageConfirmed13Plus !== true) {
-    throw new Error('Confirm you are 13 or older before creating an account.');
-  }
+  const birthProblem = signUpBirthProblem(birth);
+  if (birthProblem) throw new Error(birthProblem);
   const trimmed = email.trim().toLowerCase();
   if (!trimmed.includes('@') || trimmed.startsWith('@') || trimmed.endsWith('@')) {
     throw new Error('Enter a valid email.');
@@ -378,7 +402,7 @@ export async function signUpWithEmailPassword(
     password,
     options: {
       data: {
-        age_confirmed_13_plus: true,
+        ...birthMetadata(birth),
         full_name: trimmed.split('@')[0] || 'Fan',
       },
       emailRedirectTo: authRedirectUri(),
@@ -389,7 +413,7 @@ export async function signUpWithEmailPassword(
     throw new Error('That email already has an account. Sign in instead.');
   }
   if (data.session?.user) {
-    await ensureFanProfile(data.session.user, true);
+    await ensureFanProfile(data.session.user, true, birth);
     return data.session;
   }
   return null;
@@ -397,25 +421,24 @@ export async function signUpWithEmailPassword(
 
 /**
  * @purpose Email magic link. User returns via `alasports://auth/callback`.
- * @param ageConfirmed13Plus COPPA checkbox from the sign-up sheet. Carried as signup `user_metadata`
- * so `handle_new_auth_user()` can stamp it on the new `profiles` row — only applies the first time this
+ * @param birth Birth month and year from the sign-up sheet. Carried as signup `user_metadata` so
+ * `handle_new_auth_user()` can stamp it on the new `profiles` row — only applies the first time this
  * email creates an account; Supabase does not re-run the trigger or touch metadata for a returning user.
  * @sideEffects `signInWithOtp`.
  */
-export async function signInWithMagicLink(email: string, ageConfirmed13Plus?: boolean): Promise<void> {
+export async function signInWithMagicLink(email: string, birth: BirthMonth): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
   const trimmed = email.trim().toLowerCase();
   if (!trimmed.includes('@') || trimmed.startsWith('@') || trimmed.endsWith('@')) {
     throw new Error('Enter a valid email.');
   }
-  if (ageConfirmed13Plus !== true) {
-    throw new Error('Confirm you are 13 or older before creating an account.');
-  }
+  const birthProblem = signUpBirthProblem(birth);
+  if (birthProblem) throw new Error(birthProblem);
   const { error } = await supabase.auth.signInWithOtp({
     email: trimmed,
     options: {
       emailRedirectTo: authRedirectUri(),
-      data: { age_confirmed_13_plus: ageConfirmed13Plus ?? null },
+      data: birthMetadata(birth),
     },
   });
   if (error) throw new Error(error.message);

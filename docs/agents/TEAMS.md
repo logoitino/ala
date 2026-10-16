@@ -1,5 +1,14 @@
 # Tapua'i department call sheet
 
+## Current main-checkout handoff — COORD-01 (2026-10-16 UTC)
+
+[TEAM_STATUS](TEAM_STATUS.md) is the all-role briefing and job-function mapping; [COORD-01](COORD-01.md) records actual outside-session executors, reviewed paths, checks and remaining issues. There are **107 callable definitions across 17 department labels**. This review does not mean107 specialists ran, staff are hired or a scheduler is installed. Existing reporting, model pins and independent Finance/Legal/Privacy/Security/QA authority remain.
+
+- **Locally complete:** Beyond's dedicated tab, four discovery categories and reviewed video/JPEG contribution flow; CHAL-01a's preset responses, accepted-friend invites, private self-reported badge, settings and own export. Their admin checkpoints preceded app-ready. Discovery `tabs.beyond` is separate from contribution/challenge server switches default off; migrations remain unapplied. Own history/removal/export while paused remains part of these domain controls, not a complete account/provider erasure guarantee.
+- **Newer visual source:** Calm Island colour refresh followed UX-06's accepted frozen-source manifest. The current warm canvas/deep jade/gold awards/red LIVE source and the newer successful Figma comparison are distinct from the original empty UX-06 draft. Five published theme values may override source until an owner-authorized Look → Daylight republish. A previous screenshot/hash is not a review of newer bytes.
+- **Main versus fan-zone:** advanced admin exports/date ranges/Product inventory/workbench and service-traffic template work in the separate worktree is not integrated main capability. ADMIN/PORTAL/SHARED_CONTRACTS/FULLSTACK need a scoped integration assignment and review before those features are described as main.
+- **Next release evidence:** actual build/native/accessibility, authorized hosted application and negative readback, database/provider recovery, staffed review/support and accepted Utah action/age/audience scope. No public invitation, runtime publication, live money, new hosting/spend or external contact follows. Generic fan-ballot awards/trivia, CHAL-01b Vault/try-video/season extensions and paid/in-person models remain separate later decisions; minor in-person time/location is prohibited even in future Vault work.
+
 **Org chart (who reports where):** [TEAM_HIERARCHY.md](TEAM_HIERARCHY.md) — open that first if you only need the hierarchy and agent list. **Each department's plan:** [DEPARTMENT_PLANS.md](DEPARTMENT_PLANS.md).
 
 Use this when you **call a team** to fix or update one area. An app fix is assigned by the **CTO** (`CALL: CTO`). The **VP of Operations** (`CALL: VP_OPERATIONS`) reports to the CTO and updates roles, protocols, and priorities in the same turn they change. The CTO gives the fix to one department lead. That lead gives it to a specialist. The specialist reports to the lead. The lead reports the fix to the CTO and reports role or protocol drift to the VP of Operations. The owner (`FACILITATOR`) still decides prices, counsel, applying SQL, merging, and live money.
@@ -24,7 +33,7 @@ Read first: docs/agents/TEAMS.md#<anchor>
 Gate: pnpm typecheck && pnpm docs:check
 ```
 
-Say the department in plain words. These calls have an agent that does the work:
+Say the department in plain words. These calls map to available specialist instruction definitions:
 
 `CALL: DESIGN` · `CALL: ENGINEERING` · `CALL: FULLSTACK` · `CALL: BACKEND` · `CALL: LEGAL` · `CALL: COMPLIANCE` · `CALL: VOICE` · `CALL: QA`
 
@@ -38,11 +47,119 @@ If the bug spans two departments, the **CTO** names one lead and the required pa
 
 Every department except `FACILITATOR` (that's whoever is driving the session — human or the top-level Claude Code assistant, reading this file to route) is a real subagent at `.claude/agents/<code>.md` (lowercase, `ROLE_HQ` → `role-hq.md`). Ask Claude Code to dispatch one directly — "CALL: BACKEND, fix the anon RLS grants" works, or explicitly say "use the backend subagent." Each subagent's file already embeds its fan surface, admin desk, key files, do-not-touch list, and pairing rules from this page, plus any currently-open backlog items relevant to that department, so a call does not need to re-explain context. Subagents run with `Read, Edit, Write, Bash, Grep, Glob` (LEGAL and QA are more restricted — see their files) and are expected to self-gate with `pnpm typecheck` / `pnpm docs:check` before reporting done. Keep this file and the `.claude/agents/*.md` files in sync when a department's surface changes — the agent files are the executable copy, this file is the readable one.
 
-Cursor works in this same tree alongside Claude Code. Claude owns the security sweeps and `docs/product/ROADMAP.md`; Cursor should extend that work, not replace it or revive a closed audit item. Claude should keep Cursor's later fixes: Account Settings waits for the hamburger modal to dismiss before Soft-Wall opens, and profile photos plus booster logos upload as image bytes to `avatars` (`sponsors/` for logos), not as a `text/plain` blob and not into the video-only `game_highlights` bucket. New Vault / Exclusive videos upload to the private `reel_vault` bucket as `reelvault:{path}` and play through `resolvePlaybackUrl`; free Highlights stay on the public `reels` bucket. That bucket is a bridge only. The video host is still Cloudflare Stream or Mux — pick the cheaper one that still plays well — and neither tool should build transcoding, a CDN, or analytics on Supabase Storage while that choice is open. When either tool lands a schema or copy change, the other treats `docs/engineering/SCHEMA.md` and `docs/product/ROADMAP.md` as the current story.
+Cursor works in this same tree alongside Claude Code. Claude owns the security sweeps and `docs/product/ROADMAP.md`; Cursor should extend that work, not replace it or revive a closed audit item. Claude should keep Cursor's later fixes: Account Settings waits for the hamburger modal to dismiss before Soft-Wall opens, and profile photos plus booster logos upload as image bytes to `avatars` (`sponsors/` for logos), not as a `text/plain` blob and not into the video-only `game_highlights` bucket. New Vault / Exclusive videos upload to the private `reel_vault` bucket as `reelvault:{path}` and play through `resolvePlaybackUrl`; free Highlights stay on the public `reels` bucket. That bucket is a bridge only. Current video candidates are Mux, Bunny Stream and Cloudflare Stream; compare equivalent actual storage, delivery, encoding and operating costs with accepted playback, private entitlement and recovery requirements. Mux is a provisional first technical experiment, not a selected or verified-cheapest provider; Bunny joins the initial comparison and Cloudflare may win it. GROWTH_ANALYTICS integrates one packet through MARKETING to CTO and the owner, who selects the provider/spending under GROWTH-01 and SCALE-02. Neither tool should build transcoding, a CDN or duplicate analytics on Supabase Storage while that choice is open. When either tool lands a schema or copy change, the other treats `docs/engineering/SCHEMA.md` and `docs/product/ROADMAP.md` as the current story.
 
-Codex, run by the owner in the Codex app, also works in this tree (2026-10-12: admin portal UI/UX). It is not a registry agent. It has no internet, so it cannot reach Jev, the TypeSafe SDK scorer; Claude reaches Jev through `~/bin/jev-ask`. Claude cannot launch the Codex CLI on this Mac (`sandbox-exec` is blocked), so the two hand off through the tracker and the owner. Both follow **Concurrent sessions** in the [Specialist operating contract](#specialist-operating-contract) (item 10).
+Codex, run by the owner in the Codex app, also works in this tree. It is an outside-session executor, not a registry agent. Earlier Codex sessions could not reach Jev, the TypeSafe SDK scorer; Claude's documented route is `~/bin/jev-ask`. Do not infer current network capability or specialist execution from those historical limits. The historical Claude sandbox could not launch Codex CLI, so sessions hand off through the tracker and the owner. Follow **Concurrent sessions** in the [Specialist operating contract](#specialist-operating-contract) (item 10).
+
+### Active documentation and team upkeep — COORD-01 (2026-10-13)
+
+The actual owner-requested passes and shared-file claims are in [COORD-01](COORD-01.md):
+Codex documentation_sync performs documentation synchronization; Codex team_coordination
+performs VP coordination; root integrates shared status and checks. DOCUMENTATION reports
+to ENGINEERING; VP_OPERATIONS reports to CTO. These outside-session executors do not establish
+that the repository's pinned Cursor models ran. Future feature/fix handoffs trigger DOCUMENTATION;
+role/protocol/priority changes trigger VP coordination. Each receipt names executor, checked
+documents/roles/priorities, changed paths, dated actual results, gaps and next owner.
+Definitions/CI do not certify continuously running workers; no unattended scheduler is configured.
 
 ---
+
+## Growth and Capacity Review working group — GROWTH-01 (2026-10-13)
+
+[GROWTH-01](GROWTH-01.md) records the actual outside-session setup and receipts;
+[the charter](../engineering/GROWTH_CAPACITY_REVIEW.md) owns the metric contract, review rules,
+first evidence-gap packet and service options. GROWTH_ANALYTICS is the **single accountable
+packet owner**, reporting GROWTH_ANALYTICS → MARKETING → CTO → owner. This working assignment
+uses existing roles and domain controls; it does not create a new department or reporting tree.
+
+| Contribution | Existing responsible members / controls |
+| --- | --- |
+| Product success and one recommendation/follow-up packet | GROWTH_ANALYTICS; MARKETING routes, PRODUCT helps propose accepted goals |
+| Accepted definitions, provenance, quality and privacy | ANALYST with DATA_GOVERNANCE and TELEMETRY/Privacy; SHARED_CONTRACTS retains shared source ownership |
+| Actual vendor usage/quotas, invoices and loaded 30/90-day costs | COST_OPERATIONS with Finance; OPERATIONS retains infrastructure controls |
+| Representative runtime/game-night capacity and recovery | RELIABILITY through SUPPORT/ENGINEERING; BACKEND, STORAGE, REALTIME and RECOVERY retain service controls |
+| Reconciled economics, approved budget and cash | FINANCE_DATA with FPA/TREASURY/CFO; Finance accepts economic evidence |
+| Independent checks and disposition | QA, Security/Privacy and Finance as needed; CTO recommends; owner approves/rejects/defers spending, service/data movement and release |
+| Actual handoff/coordination receipts | DOCUMENTATION and VP_OPERATIONS record executor/date, checked changes/results, unresolved drift and next owner in GROWTH-01 |
+
+Reuse Analytics/Audience, Health/Support/QA and Finance & Books. Current MAU, retention,
+conversion, invoices/quotas and capacity remain unknown; profile/event counts are not active
+people and test donation rows are not settled income. Weekly/on-receipt, monthly-invoice and
+confirmed-trigger reviews are standing assignments with dated execution, not a scheduler.
+Quality/false-positive checks precede CTO disposition and owner decision. The selected initial
+$50/month ceiling and charter watch/review/MAU checkpoints are review rules, not purchase
+permission, accepted product targets or certified capacity. No collector, admin UI, automatic
+upgrade or hosted reading is implemented by this setup. Source gaps have named next owners
+in [WORK_QUEUE](WORK_QUEUE.md#growth-01--growth-and-capacity-review-2026-10-13).
+
+### Standing Legal, Growth and Engineering checkpoint
+
+[Growth charter §9](../engineering/GROWTH_CAPACITY_REVIEW.md#9-verification-consent-and-safe-engagement)
+and [Verification, consent and safe growth](../legal/VERIFICATION_AND_SAFE_GROWTH_REVIEW.md)
+require contributors to exchange findings before one GROWTH_ANALYTICS packet is routed through
+MARKETING → CTO → owner. LEGAL/COMPLIANCE coordinate counsel's ages/jurisdictions, obligation
+versus processor/school/company choices, approved alternatives and consent/notice decisions.
+ENGINEERING supplies actual server/provider/access behavior and feasible retry/recovery.
+Growth pairs permitted engagement/friction with safety, disputes and loaded manual-review costs.
+Privacy/Safety, Finance/School and independent QA accept their domain evidence; counsel accepts
+legal conclusions and the owner records business decisions. Preserve explicit disagreements.
+
+Use the existing cadence; the next joint packet is **October 20, 2026**. Actual receipts and
+next owners belong in GROWTH-01. Product options remain proposed; concurrent local minor-account
+work and written migrations are not hosted controls. New measurements and implementation retain
+admin-first/Data/release gates. These assignments do not start workers or collectors.
+
+### Growth plans for every user segment
+
+[User growth plans](../product/USER_GROWTH_PLANS.md) and [Growth charter §10](../engineering/GROWTH_CAPACITY_REVIEW.md#10-growth-plans-for-every-user-type)
+require one GROWTH_ANALYTICS plan card for every overlapping guest, fan, young fan, casual
+uploader, repeat filmer, donor, athlete, guardian, school, booster and sponsor segment; retain
+gated operators and internal staff/admin/moderation capacity. Record acquisition, first useful
+action, repeat/cross-user value, qualifying outcome/baseline or gap, supported capability,
+action safeguards, loaded support/service costs and next owner/decision. Meaningful fan value
+includes non-donating use; permitted casual videos do not require athlete/payee/pro filmer status.
+
+PRODUCT/RESEARCH and Upload/Filmer Rewards/domain owners supply actual workflow evidence;
+Legal/Privacy/Safety, Dev/QA and Finance review controls/feasibility/economics. Exchange findings
+before one GROWTH_ANALYTICS → MARKETING → CTO → owner packet. Recognition requires honest
+uploader-versus-camera attribution and clear eligibility/pending/error states. Fan retag/share,
+private staging/removal and new recognition are proposals, not implementations. Next packet:
+October 20, 2026; proposed 30/60/90 stages start from authorization and existing public/money/
+partner/later-wave gates remain. Preserve prior guardian/payment decisions and unknown measures.
+
+### Family-fun standing packet — continued brainstorming
+
+[Family-fun playbook](../product/FAMILY_FUN_PLAYBOOK.md) and [Growth charter §11](../engineering/GROWTH_CAPACITY_REVIEW.md#11-family-fun-fan-recognition-and-voluntary-service)
+extend the existing segment cards and single GROWTH_ANALYTICS → MARKETING → CTO → owner packet.
+Growth/Product refine free accessible Fan Moment, Behind the Jersey and Serve Together value
+for overlapping fans/families/friends, including young fans and newcomers. The owner selected fan voting for Game/Week winners; staff checks published eligibility,
+rights and safety, and the entry with the most valid free ballots wins without a staff-preferred winner.
+Month/Year need bounded windows and direct newcomers. Positive conduct/creativity/inclusion
+guide invitations; spending, views, followers and athlete statistics add no ballot points. Service, posting and public recognition
+remain optional before/after either confirmed earning path.
+
+HIGHLIGHTS/UPLOAD/FILMER_REWARDS supply actual media/credit/eligibility gaps; existing athlete
+Spotlight and filmer Aura do not establish generic fan awards. LOCAL/POLLS/LEADERBOARDS with
+SCHOOL_PARTNERS supply school permission and later opt-in cohort/size/cap/abuse/closure options;
+current cheers cannot prove fair scoring. Legal/Privacy/Minor Safety/Content Rights, Dev/Security,
+Support/Cost/Finance and independent QA review permission, restricted review, honest credit,
+pause/removal, appeals, staffing/backlog and loaded costs before decisions. Separate noncash
+badges/Aura, eligible family donations and future creator/paid-service/prize models; no service
+or public proof is a condition for family money release or account access.
+
+Next packet: October 20, 2026, America/Denver. Record unknown return/contribution/service/cost
+sources, exchanged alternatives and the focused audience/age/place/ballot/staffing design
+choice in GROWTH-01. This is continued brainstorming: no feature enrollment, new badge/award,
+service program, scored competition, payment model or implementation is established. Prior
+identity/guardian/money and later-wave/domain/admin/release gates remain open.
+
+PRODUCT/POLLS/LEADERBOARDS with Backend/Security/Privacy/QA propose one free eligible-account
+ballot/award window, risk-proportionate abuse/rate/duplicate checks, idempotency, server closure/
+freeze and published ballot-change/tie/ineligible-correction/appeal rules. No blanket Stripe KYC
+or unique-person claim follows from account counts. Balance candidate discovery/direct newcomers
+and school nomination opportunities while acknowledging fanbase/network advantage. Public
+candidate consent is per entry; whole-profile publicity is unnecessary, and declined candidate
+exposure preserves private acknowledgment. Current cheer counts cannot select these winners.
 
 ## Business departments
 
@@ -52,22 +169,24 @@ These are the departments a company actually has. The names under **Builds it** 
 
 | Department | What the business owns | Builds it | Now | Next | Later |
 | --- | --- | --- | --- | --- | --- |
-| **VP of Operations** | Whether every team is on its role, on the current protocol, and on the current priority. | `VP_OPERATIONS`, reporting to `CTO` | Update agent definitions, TEAMS, the hierarchy, and the queue in the same turn a role or protocol changes. Tell each lead what is actually next. | Keep the same check as the roster grows | A staffed human operations desk is not this role |
+| **VP of Operations** | Whether every team is on its role, on the current protocol, and on the current priority. | `VP_OPERATIONS`, reporting to `CTO` | COORD-01 actual Codex coordination pass; reconcile 107 current roles and completed local work. Record executor, checked duties/priorities, actual checks and next owner in the task ledger | Repeat on assigned role/protocol/priority changes and affected feature/fix handoffs | A staffed human operations desk requires its own authorization |
 | **Product** | What ships, for whom, and in what order. Acceptance for an app fix comes from the CTO. | `PRODUCT` · `RESEARCH`, reporting to `CTO` | Test wave: compact uploads/donations and shared menu energy; staged device acceptance in TESTER_SCRIPT | Owner decisions in STATE §6 before live money | Company formation stays with the founder |
-| **Design (UX/UI)** | How every screen looks, moves, and reads. | `DESIGN` · `ACCESSIBILITY` · `MOTION` · `DESIGN_TOOLING`; `AURA` keeps tier math | Daylight canvas, tab colors, springs, one primary action per sheet, empty vs error. UX-05 photo story screens via Figma/Canva MCP handoff; TOOL-01 MCP tooling (`.mcp.json`, [TOOLING.md](../engineering/TOOLING.md)) | Feel check on a real phone with Quality (M9) | Share card, backer wall, badges, a bigger rivalry takeover (M8). Fan digital signature on the Aura card |
-| **Engineering** | The app and the admin tools — industry practice, no shortcuts. The database is its own team. | `ENGINEERING` lead (reports to `CTO`) · `FULLSTACK` · `DOCUMENTATION` · screen squads (incl. `PHOTO_STORIES` under `HIGHLIGHTS`). Database: `BACKEND` | UX-05 photo stories in Highlights ⚡ ([design](../engineering/design/PHOTO_STORIES_DESIGN.md); migration `20261007230000` written, not applied). Shared Daylight sheets/pages and code/doc handoffs. Home, Activity, Local, Spotlight, Profile, sign-in, sideline scorer, Expo admin. Account tags on a Highlight (SQL not applied). Staging has the September SQL and the content-rights SQL. Drip tab is off | Magic-link redirect on staging. `reel_vault` so Vault video plays. Apply account-tag SQL when the owner asks. Real admin and operator sessions. Pick Cloudflare Stream or Mux; do not build a video platform on Storage | Drip marketplace (Wave 1). Fan digital signature on the Aura card. Low-view lane (M3). Train Like Me / Ask an athlete (M4). Showcase link (M6). Game-day gigs (M5, Wave 3). No licensed music picker |
-| **Database** | Schema, migrations, RPCs, Storage layout. | `BACKEND` (reports to `CTO`) · `DATABASE_MIGRATIONS` · `STORAGE`. `SECURITY` reviews RLS | Canonical `schema.sql`. Photo-story and account-tag SQL written, not applied | Hosted replay only when the owner asks | Export/deletion SQL after counsel and Product agree |
-| **Security** | Authorization, sessions, secrets. Critical review, no open policies for convenience. | `SECURITY` (reports to `CTO`) · `RLS_SECURITY` · `SESSION_SECURITY` | Named gaps stay open until fixed: client `tips` insert, public profile fields, operator GPS policy not applied | Negative authorization tests before public beta | Repeat when a new sensitive table lands |
-| **IT infrastructure** | Staging, CI, releases, reliability, recovery, cost, game day. | `OPERATIONS` (reports to `CTO`) · `OPERATOR` · `RELEASE` · `CI` · `RELIABILITY` · `TELEMETRY` · `RECOVERY` · `COST_OPERATIONS` | Sideline PIN, GPS check-in, score and clock. Expo `/admin` is where staff edit. The Next portal is read-only oversight | The operator PIN is for internal test only. It is not a public login | Paid game-day coverage and a light game line (M5). No published uptime SLA |
+| **Design (UX/UI)** | How every screen looks, moves, and reads. | `DESIGN` · `ACCESSIBILITY` · `MOTION` · `DESIGN_TOOLING`; `AURA` keeps tier math | Daylight canvas, tab colors, springs, one primary action per sheet, empty vs error. Local UX-06 followed by newer Calm Island source; configured-theme/native/accessibility checks remain open; TOOL-01 MCP tooling (`.mcp.json`, [TOOLING.md](../engineering/TOOLING.md)) | Feel check on a real phone with Quality (M9) | Share card, backer wall, badges, a bigger rivalry takeover (M8). Fan digital signature on the Aura card |
+| **Engineering** | The app and the admin tools — industry practice, no shortcuts. The database is its own team. | `ENGINEERING` lead (reports to `CTO`) · `FULLSTACK` · `DOCUMENTATION` · `SUPPORT` · screen squads (incl. `PHOTO_STORIES` under `HIGHLIGHTS`). Database: `BACKEND` | ADM-01/02 and consolidated Expo admin accepted locally; Finance & Books and DETECT-02 implemented locally. STANDARD-01 innovation/handoff standard documented and accepted; COORD-01 synchronizes actual evidence. Beyond/CHAL and earlier photo-story/account-tag SQL remain unapplied; Drip commerce is gated, with Profile entry retained | Integrate scoped repairs and evidence through assigned leads; approved staging SQL, real admin/operator sessions, device acceptance and video-host decision remain separate gates | Drip marketplace (Wave 1). Fan digital signature on the Aura card. Low-view lane (M3). CHAL-01b Vault/try-video/season extensions; Ask an athlete remains gated (M4). Showcase link (M6). Game-day gigs (M5, Wave 3). No licensed music picker |
+| **Database** | Schema, migrations, RPCs, Storage layout. | `BACKEND` (reports to `CTO`) · `DATABASE_MIGRATIONS` · `STORAGE`. `SECURITY` reviews RLS | Canonical `schema.sql`. Beyond/CHAL and earlier photo-story/account-tag SQL written, not applied | Hosted replay only when the owner asks | Domain-local export/erasure contracts exist; broader account/provider retention and deletion acceptance remains with counsel/Product |
+| **Security** | Authorization, sessions, secrets and independent cybersecurity review. | `SECURITY` (reports to `CTO`) · `RLS_SECURITY` · `SESSION_SECURITY` · `THREAT_DETECTION` | DETECT-02 source trust, protected false-positive review and transactional audit verified locally (144 SQL replay checks). Client `tips`, public profile fields, parent payout policy and unapplied GPS/storage policies remain open | Approved hosted SQL and negative authorization/delivery tests; protected review and unsigned-audit trust limits stay explicit | Repeat on new sensitive data or capabilities |
+| **IT infrastructure** | Staging, CI, releases, recovery, cost, game day; pairs with Engineering Support on service detection. | `OPERATIONS` (reports to `CTO`) · `OPERATOR` · `RELEASE` · `CI` · `RECOVERY` · `COST_OPERATIONS` | Sideline PIN, GPS check-in, score and clock. Expo `/admin` is where staff edit. The Next portal is read-only oversight | The operator PIN is for internal test only. It is not a public login | Paid game-day coverage and a light game line (M5). No published uptime SLA |
 | **Finance** | Money in, the split, receipts, and money out. | `COMMERCE` lead · `CHECKOUT` · `LEDGER` · `RECONCILIATION` · `REFUNDS` · `CONNECT` · `CUSTODIAL` · `RALLY` · `DONATION_THANKS` · `BILLING` · `DRIP` · `WISHLIST` · `RECEIPTS`, with `BACKEND` | Staged Amount → Options → Review Donate popup (90 / 10, optional tip for Tapua'i starts at No tip), gear goals, Rally, receipts. Payouts stay blocked. Drip is off | One credit path: the webhook writes the donation, then the app stops inserting it. Parent is the payee. A server balance before any payout | Drip marketplace (Wave 1). Team gift and booster match (counsel first). Pathway labels only, no fund held here (M7). Filmer cash from Tapua'i's own budget (M11) — nothing in the UI mentions cash |
+| **Finance and Accounting** (Office of the CFO, reports to the owner) | The books, every tax area, cash held for families and the financial plan. Taxes are owned by `TAX`. | `CFO` lead · `CONTROLLER` (`BOOKKEEPER`, `INTERNAL_CONTROLS`) · `TAX` (`INFO_RETURNS`, `SALES_TAX`) · `TREASURY` · `FPA`; data built by `FINANCE_DATA` (Engineering, assigned by the CTO). Chain of command and calendars: [FINANCE_OPERATIONS.md](../company/FINANCE_OPERATIONS.md) | Finance & Books hub at `/admin/books` (Overview, Transactions, Statements, Taxes, Reconcile, Data, Record & close, Export); data catalog and reconciliation tests in `pnpm check`; W0-10 staging rehearsal | P1-08: bank account, QuickBooks company, CPA, monthly close from the first live month | Outside audit, investor reporting, a staffed finance team |
+| **Data Governance** (reports to the CTO; the data control point) | Where every piece of data lives and moves: every table, view, database function and export has an owner, a writer, a reader and a purpose; no dead data or code. | `DATA_GOVERNANCE` lead · `DATA_LINEAGE` · `CODE_HYGIENE`; ties together PRIVACY_ENGINEERING's privacy map, FINANCE_DATA's finance catalog, ANALYST's measure catalog and the coverage map. Handbook: [DATA_GOVERNANCE.md](../engineering/DATA_GOVERNANCE.md) | DATA-01 findings closed locally; 62 entries archived with owner approval; buckets/switches mapped; 30-day rounded check-ins and shared helpers built. Closures replay 46/46; hosted migration unapplied | Keep ownership and dead-code guards current, regenerate Support topology on ownership changes; owner applies closures and hosted drift is reviewed after R2 | A staffed data team |
 | **Legal & Compliance** | What the company is allowed to say and do. Counsel decides. Agents place approved words and refuse false claims. | `LEGAL` · `COMPLIANCE` · `PRIVACY_ENGINEERING` · `CONTENT_RIGHTS` | Terms and ack toggles. `DATA_PRIVACY_MAP.md` inventory. No invented SOC 2 or uptime SLA. Conclusions stay in `LEGAL_BRIEFING.md` | Counsel: Privacy Policy, ToS liability, parental consent. Export / deletion product path. Processor list stays honest. Auto-renewal only if Billing lands | Formation, trademark, association letter (L0–L4). DPA for booster/sponsor/school B2B. Measured uptime SLO only after Ops exists. Agents do not file or draft counsel paper |
 | **Brand** | The words a parent reads. Donate / donation. No money tied to a play. | `VOICE`, with `BRAND` (Marketing) for the approved message | `pnpm copy:check` on every money screen; review the BRAND-01 tagline "Donate. Elevate. Celebrate." | Run again before a release | Every new money screen, including ones listed as Later |
-| **Trust & Safety** | Who may post, what may be reported, and what leaves the public feed. | `TRUST_SAFETY` · `MODERATION` · `ATHLETE_VERIFICATION` · `MINOR_SAFETY`, paired with `CONTENT_RIGHTS`, `LEGAL` and `ADMIN` | Upload confirms permission, sound, and marks. Reports name a reason. Some reasons hide the clip immediately | A human moderation queue before public video of minors | Strikes, appeals, and a filmed-at-the-game badge. Not built |
+| **Trust & Safety** | Who may post, what may be reported, and what leaves the public feed. | `TRUST_SAFETY` · `MODERATION` · `ATHLETE_VERIFICATION` · `MINOR_SAFETY`, paired with `CONTENT_RIGHTS`, `LEGAL` and `ADMIN` | Upload confirms permission, sound, and marks. Reports name a reason. Some reasons hide the clip immediately | Existing local Beyond/admin review controls require real reviewer/support capacity and approved public/minor scope | Strikes, appeals, and a filmed-at-the-game badge. Not built |
 | **Partnerships** | Schools, families, booster clubs, and sponsors. | `PARTNERSHIPS` · `ROLE_HQ` · `SCHOOL_PARTNERS` · `SPONSOR_ADS`, paired with `LOCAL` and `PROFILE` | Parent, Booster, and Sponsor portals. A guardian approves an athlete's Rally | The parent stays the payee on paper. The payout button stays a stub | Real custodial payout only after Finance has a ledger. Written school permission before a commercial build shows a school mark |
 | **Operations** | Game day on the field, under IT infrastructure. | See **IT infrastructure** above | Sideline PIN, GPS check-in, score and clock | The operator PIN is for internal test only | Paid game-day coverage (M5) |
 | **Quality** | Whether a change is safe to hand to a tester — automated + product + compliance hygiene. | `QA` · `TEST_AUTOMATION` · `DEVICE_QA` · `VISUAL_QA` | UX-05e photo story + tagline browser evidence (VISUAL_QA, Playwright on Expo web) and native checks (DEVICE_QA). UX-02 small-phone/keyboard/review checks in TESTER_SCRIPT; typecheck, docs, copy, boundaries, comments, Jest, Soft-Wall, Profile, payments, no fake SOC 2 / SLA / trackers-before-consent | Feel check on the preview installs. Export/deletion path once built | A full pass by each department, then the public-beta gate |
-| **Marketing** | How families hear about Tapua'i. | `MARKETING` · `GROWTH_ANALYTICS` · `BRAND`, with `PRODUCT` and `VOICE` | Internal messaging and measurement definitions; BRAND-01 approved message "Donate. Elevate. Celebrate." in its approved placements; no external campaigns | Reviewed launch plan after Product/Legal gates | Rally stories from real families, with consent (M10) |
-| **Support** | Helping a parent or athlete when something breaks. | `SUPPORT` · `INCIDENT_TRIAGE` | Internal tester triage, compact Donate/upload journeys and menu evidence from TESTER_SCRIPT | Minimal-data support escalation before external users | A help desk after approved launch |
+| **Marketing** | How families hear about Tapua'i; routes the single Growth and Capacity Review packet. | `MARKETING` · `GROWTH_ANALYTICS` · `BRAND`, with `PRODUCT` and `VOICE` | GROWTH-01 charter/first gap packet documented; GROWTH_ANALYTICS owns one growth/capacity/cost review through MARKETING; live measurements unknown. Internal messaging and BRAND-01 approved message "Donate. Elevate. Celebrate." in its approved placements; no external campaigns | Dated authorized growth/runtime/cost evidence and quality/domain reviews; CTO recommendation and owner decision; launch plan after Product/Legal gates | Rally stories from real families, with consent (M10) |
+| **Engineering support** | Detect failures across app, admin, backend, finance, data and UI; help Dev build sensors and repairs. | `SUPPORT` (reports to `ENGINEERING`) · `INCIDENT_TRIAGE` · `TELEMETRY` · `RELIABILITY` | DETECT-02 four-tab `/admin/support`, static team/source flow, bounded opt-in signals, protected reviews and isolated source recovery implemented locally; admin-ready before app-ready; full local gate 115 suites/827 tests, Next86 | Approved hosted capture/SQL and durable fatal intake; remaining telemetry self-health, settlement alerts, reusable QA harness and intake gaps with named owners; database-backup/compatibility and device checks | Hosted/scheduled alerting and external support require implementation and approved release |
 
 A business call uses the agent named above. A screen call uses the squad (`CALL: HIGHLIGHTS`). Schema, RLS, Storage, and Stripe secrets always include `BACKEND`. Publish-to-app always includes Quality. Money words always include Brand. Anything a parent, a school, or a regulator could read as a promise includes Legal.
 
@@ -122,7 +241,7 @@ Legal does not decide the law. A licensed attorney does. This team puts approved
 | --- | --- | --- | --- |
 | **Terms in the app** | `LegalModal` and the ack on Varsity apply and Connect Bank. Version: `LEGAL_TERMS_VERSION`. | Counsel drafts terms, privacy, and parental consent. The app only stores the version they approve. | — |
 | **Privacy Policy** | Inventory only (`DATA_PRIVACY_MAP.md`). Not a published Privacy Policy. | Counsel drafts. App links the approved version. | Keep inventory current when tables change. |
-| **Data export & deletion** | Not built (`DATA_PRIVACY_MAP` §3.4). | Product + BACKEND + FULLSTACK scope soft-delete / export; COMPLIANCE tracks disclosure of what is kept. | Hard deletes only if counsel and ledger rules allow. |
+| **Data export & deletion** | Beyond/CHAL own export and privileged domain erasure exist locally; global account export/deletion and provider cleanup remain gaps (`DATA_PRIVACY_MAP` §3.4). | Product + BACKEND + FULLSTACK scope soft-delete / export; COMPLIANCE tracks disclosure of what is kept. | Hard deletes only if counsel and ledger rules allow. |
 | **Auto-renewal disclosure** | Checkout creates a one-time PaymentIntent (`createPaymentIntent.ts`). No Stripe Billing renewal or cancel path. Exclusive labels on the Vault and a locked Highlight say one-time Exclusive and name the price with no `/mo` (`data/exclusive.ts`). Booster prices have no period (`formatSponsorDollars`). The profile row does not sell Exclusive. | If Stripe Billing lands, clear pre-buy disclosure and a cancel path before launch. | — |
 | **No false SOC 2** | Agents and QA reject invented "SOC 2" / "certified" claims. | Same. | Real audit only if the company buys one. |
 | **Cookie / tracker posture** | No analytics/ad SDK found that phones home on first open. Prefer none. | Any tracker stays off until affirmative consent. Reject "accept all or leave" cookie walls. | — |
@@ -132,7 +251,7 @@ Legal does not decide the law. A licensed attorney does. This team puts approved
 | **ToS tickbox** | Ack on Varsity apply, Connect Bank, and Claim athlete (`RoleSwitcherModal`). Version `LEGAL_TERMS_VERSION` `2026-09-27`. The in-app text is a prototype summary. | Counsel may require ack on sign-up too. | — |
 | **Real uptime SLA** | Do not publish 99.x% while Wave 0 hosting is best-effort. | — | Measured SLO only after Ops + paid hosting exist. |
 | **Money words** | Compact Donate review retains 90 / 10, No tip default, optional fees, total and held-gift notice. Brand (`VOICE`) checks wording. | Counsel reviews that line and App Store gift rules before live money. | Tax reporting is CPA / payments counsel (B6). |
-| **Minors** | Sign-up confirms 13+. Sign in for an existing account is not blocked by that box. Thank-yous presets only. Athlete Rally waits for guardian. | Parent is the payee until counsel signs the design. | 1-on-1 with minors stays off until safety rules are signed. |
+| **Minors** | MINOR-01 uses birth month/year, unknown-age handling and known-under13 closure; local source is not applied SQL. Thank-yous/CHAL responses remain presets; athlete Rally waits for guardian. | Parent is the payee until counsel signs the design. | Minor in-person time/location is prohibited even in future Vault work; other extensions require action-specific acceptance. |
 | **Footage, sound, and marks** | Upload confirms permission, sound, and marks. Game Day confirms real footage. Photo stories use a photo-permission line (`PHOTO_RIGHTS_VERSION` `2026-10-07`). | Counsel decides whether school marks may appear at all. | Strikes, appeals, filmed-at-the-game badge — not this wave. |
 | **Schools and associations** | Demo rosters are not a license to use a school's name or film. | — | Written association / district position before a metro launch. |
 | **Company paper** | Stripe stays in test mode. | Counsel retained before filings. | LLC, trademark, patent triage — founder + counsel. Agents do not file. |
@@ -244,7 +363,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 | Function | Where |
 | --- | --- |
 | Shared sheet | `components/Profile/AthleteProfileView.tsx` |
-| Own vs public | `app/(tabs)/profile.tsx` · `user/[id].tsx` · `lib/roster.ts` `isOwnAthleteSheet` |
+| Own vs public | `app/(tabs)/profile.tsx` · `user/[id].tsx` · `lib/roster.ts` |
 | Hamburger | `ProfileMenuSheet.tsx` |
 | Edit Profile | `Profile/EditProfileModal.tsx` · `AuthContext.updateProfile` · `lib/socialLinks.ts` |
 | Avatar | `ProfileAvatarPicker.tsx` · Storage `avatars` |
@@ -320,7 +439,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 
 | Function | Where |
 | --- | --- |
-| Math / tiers | `lib/aura.ts` · RPC `add_user_aura` / `get_aura_tier` |
+| Math / tiers | `lib/aura.ts` (`AURA_TIERS`, the only tier source) · RPC `add_user_aura` |
 | Card | `AuraTradingCard.tsx` · `Effects/GlowingNeonBorder.tsx` |
 | Motion / focals | `theme/motion.ts` · `constants/theme.ts` |
 | Look desk | `components/Admin/LookTool.tsx` |
@@ -353,6 +472,17 @@ These are not extra companies. They are the Dev team, split by the part of the a
 | Features flags | `FeaturesTool.tsx` · `lib/runtime.ts` · `APP_RUNTIME_FLAG_GROUPS` |
 | Coverage map | `lib/adminCoverage.ts` (source of fan-control inventory) |
 | Next portal (read-only) | `apps/admin-portal/` · `components/PortalShell.tsx`'s `FlagStatusList` |
+
+**ADM-02 — main admin (owner request 2026-10-12):** Expo `/admin` combines the report
+design selected at `:3033` with reports, Analytics, Departments and every editing desk.
+`ADMIN` owns routes/navigation, AdminShell/AdminChrome, `lib/adminReports.ts` and
+`hooks/useAdminReports.ts`; `PORTAL` owns `components/Admin/Reports/` universal report
+presentation; `SHARED_CONTRACTS` owns `packages/shared-types/admin/` and its package
+exports. `ANALYST` reviews measure/catalog meaning, `COMMERCE` reviews Revenue,
+`DESIGN`/`ACCESSIBILITY` review presentation and `QA` reviews acceptance.
+`DOCUMENTATION` integrates evidence; Next remains a compatible read-only client.
+Execution claims: [ADM-02.md](ADM-02.md). The pinned registry models stay unchanged;
+current Codex execution is recorded as an owner-authorized outside session.
 
 **Do not:** Publish a dirty draft "to see if it works" on a live project. Add any write path (toggle, form, RPC call) to the Next portal — it is deliberately read-only; if a desk needs editing, that happens in Expo `/admin`, not by porting it onto Next.
 
@@ -446,7 +576,7 @@ Checklist:
 5. Profile: own hub hamburger; `/user/[id]` back; no self Mālo
 6. Features: draft vs published; did anyone hit **Publish to app** on purpose?
 7. Press screenshots STALE if Reel / Local / Profile chrome moved
-8. Compliance flows (see the fix/testing roadmap): Mālo works from a Profile with no clip open; a frozen athlete/school rejects Mālo and exclusive checkout at the database level; new sign-up requires the 13+ confirmation and existing accounts are never retroactively blocked by it.
+8. Compliance flows (see the fix/testing roadmap): Mālo works from a Profile with no clip open; a frozen athlete/school rejects Mālo and exclusive checkout at the database level; test MINOR-01 birth-month/year, unknown-age and known-under13 closure/age_blocked_at boundaries; local source is not hosted enforcement.
 9. Device smoke: run the relevant role slice (fan/athlete/parent/operator/booster) from `docs/engineering/AUDIT_REPORT.md`'s "Device smoke" checklist on a real device — the web preview can't test PaymentSheet, camera upload, or haptics.
 
 Full detail and rationale: `.claude/agents/qa.md` (the executable copy of this checklist) and [ROADMAP.md](../product/ROADMAP.md) (the phased roadmap this checklist tracks).
@@ -473,8 +603,8 @@ Full detail and rationale: `.claude/agents/qa.md` (the executable copy of this c
 | Parent HQ | `/parent` | `ROLE_HQ` | `layouts.parentHq` |
 | Booster HQ | `/booster` | `ROLE_HQ` | `layouts.boosterHq` |
 | Sponsor HQ | `/sponsor` | `ROLE_HQ` | `layouts.sponsorHq` |
-| Expo Admin | `/admin/*` | `ADMIN` + owning department | — |
-| Next portal | `localhost:3001` | `ADMIN` | same `app_runtime_config` |
+| Main Expo Admin | `/admin/*` | `ADMIN` + owning department | Same report models and `app_runtime_config`; all editors live here |
+| Next reporting client | `localhost:3001` | `PORTAL` → `ADMIN` | Same report models and `app_runtime_config`; oversight |
 
 ---
 
@@ -482,7 +612,15 @@ Full detail and rationale: `.claude/agents/qa.md` (the executable copy of this c
 
 | Desk | Path | Department |
 | --- | --- | --- |
-| Home / Overview | `/admin` | `ADMIN` |
+| Home community report | `/admin` | `ADMIN` + `PORTAL` |
+| Trends | `/admin/trends` | `ADMIN` + `ANALYST` |
+| Audience report | `/admin/audience` | `PORTAL` |
+| Revenue report | `/admin/revenue` | `COMMERCE` |
+| Health | `/admin/health` | `PORTAL` + `QA` |
+| Product oversight | `/admin/product` | `PORTAL` |
+| Analytics | `/admin/analytics` | `ANALYST` |
+| Departments | `/admin/departments` | `PORTAL` |
+| Product Features / Profile / Sign-in / People | `/admin/product/features` · `/admin/product/profile` · `/admin/product/sign-in` · `/admin/product/people` | `PORTAL` with `ADMIN`, `PROFILE` and `AUTH` reviewers |
 | Games | `/admin/games` | `LOCAL` + `OPERATOR` |
 | Sports | `/admin/sports` | `LOCAL` + `OPERATOR` + `PROFILE` (Stats) |
 | Polls | `/admin/polls` | `LOCAL` |
@@ -504,7 +642,7 @@ Full detail and rationale: `.claude/agents/qa.md` (the executable copy of this c
 | Look | `/admin/look` | `AURA` + `PROFILE` chrome |
 | Catalogs | `/admin/catalog` | `COMMERCE` + `FACILITATOR` (`docs:sync`) |
 | Studio | `/admin/studio` | `ADMIN` |
-| Lab / QA | `/admin/lab` · `/admin/qa` | `ADMIN` + `QA` (hidden) |
+| Lab / QA utilities | `/admin/lab` · `/admin/qa` | `ADMIN` + `QA` |
 
 Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/reports` Trends (`ADMIN`) · `/audience` Audience (`PORTAL`) · `/money` Revenue (`COMMERCE`) · `/operations` Health (`PORTAL`) · `/product` Product (`PORTAL`) · `/manage` Departments (`PORTAL`) · `/auth` Sign-in (`AUTH`) · `/profile` Profile chrome (`PROFILE`) · `/features` flag board (`ADMIN`) · `/people` roster oversight (`AUTH` / `PROFILE`).
 
@@ -525,18 +663,20 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 
 ## Specialist operating contract
 
-**Aligned:** 2026-10-09. **Registry:** `.claude/agents/registry.json`. Agent definitions describe available roles; they are not evidence that agents have run or features are complete. This roster does not hire people or staff a live moderation desk. The hierarchy is responsibility and escalation routing. Which model runs an agent is a separate field in that agent's file and in the registry. The bar for each department is [EXPERT_STANDARDS.md](EXPERT_STANDARDS.md).
+**Aligned:** 2026-10-16 UTC (COORD-01 whole-team refresh). **Registry:** `.claude/agents/registry.json`. Agent definitions describe available roles; they are not evidence that agents have run or features are complete. This roster does not hire people or staff a live moderation desk. The hierarchy is responsibility and escalation routing. Which model runs an agent is a separate field in that agent's file and in the registry. The bar for each department is [EXPERT_STANDARDS.md](EXPERT_STANDARDS.md).
 
 1. Read STATE before work, then AGENTS, CONVENTIONS and the relevant schema/privacy/voice/architecture docs. Use repo-root paths. Verify stale statements against current evidence; distinguish written, applied to staging, applied to development and tested.
 2. One app fix is assigned by `CTO` to one lead. That lead assigns one accountable specialist, with explicit acceptance criteria, exact files, dependency owners and an independent reviewer where financial or security behavior changes. The specialist reports to the lead. The lead reports the fix to the CTO. Role drift, protocol conflicts, and priority questions go to `VP_OPERATIONS`. When a role, protocol, or priority changes, `VP_OPERATIONS` updates the agent definition, the registry, TEAMS, the hierarchy, and the queue in the same turn. Each lead is the expert for that team and rejects untested, undocumented, or overly broad work. A local test pass is not hosted proof. A written migration is not applied SQL. `QA` can reject the result. Leads and reviewers may overlap path ownership; each functional task has one primary specialist.
 3. Coordinate shared-file edits before writing. Never overwrite existing work. Root/session integration owns STATE/ROADMAP/queue aggregation unless explicitly assigned. Schema changes still require migration, canonical schema, SCHEMA, migration README and privacy inventory updates in the same change.
-4. **Wave 0 gates:** Stripe test mode; payouts blocked; no parallel webhook/client donation crediting; Drip fan tab off; guest browsing remains; Next portal remains read-only and Expo admin owns writes. A Next or Later assignment is preparation until dependencies and owner/legal/release gates are met.
+4. **Wave 0 gates:** Stripe test mode; payouts blocked; no parallel webhook/client donation crediting; Drip bottom tab off with the existing Profile entry retained; guest browsing remains; Next portal remains read-only and Expo admin owns writes. A Next or Later assignment is preparation until dependencies and owner/legal/release gates are met.
 5. No role authorizes applying hosted SQL, deploying functions, publishing runtime flags/builds/campaigns, contacting others, enabling live money, buying services or making legal decisions. Continue local reviewable work; escalate concrete dependent action to the session lead under current authorization.
 6. For changed behavior run relevant existing gates and focused tests. Known machine limits stay explicit: blocked registry, Expo web native binary, untappable simulator and staging-only migrations. Use STATE §3 direct-node/local-bin commands when pnpm fails. Device, hosted SQL and counsel checks remain **not run** until evidence exists.
 7. Report task ID, changed files, behavior/why, exact executed checks and results, unverified dependencies, remaining risks, next owner and completion status. QA owns the final gate and can reject; a prepared checklist is not a test pass.
 8. Update the registry, call sheet, hierarchy and agent definition together for role changes. Keep practical functions split; do not create an agent for every helper or hook. CI's `agents:check` validates unique calls, definition files, parent graph, existing ownership paths and document entries. Leads review semantic ownership; the structural guard cannot prove a task description is correct.
 
-9. Pair every active specialist with `DOCUMENTATION` for same-turn documentation synchronization. Feature owners supply exact behavior, changed APIs and verification evidence; DOCUMENTATION updates affected team/agent definitions, architecture, tester journeys, STATE and CHANGELOG. Preserve generated facts and approved legal conclusions.
+9. Assign a task-triggered `DOCUMENTATION` handoff for every active feature/fix owner. Owners supply exact changed paths, behavior/APIs, source version/environment and dated verification evidence; DOCUMENTATION reconciles affected contracts, architecture, tester journeys and state/history through agreed shared claims. Assign `VP_OPERATIONS` when roles/protocols/priorities change, including a completed handoff changing next work. Record actual executor, checked docs/roles/priorities, changed paths, command/result/date, unresolved drift and next owner in the existing ledger; release claims after integration/checks. [COORD-01](COORD-01.md) records this pass's actual Codex executors. Definitions and CI passes do not prove specialist execution or continuous workers; no unattended scheduler is configured. Preserve generated facts and approved legal conclusions.
+11. **Data control point (2026-10-13).** `DATA_GOVERNANCE` (reports to the CTO) is the control person for data and functions. Before landing a new or changed table, column, view, database function, export or Storage path, the owning specialist adds or updates its entry in `docs/engineering/data-ownership.json`, regenerates `docs/engineering/DATA_MAP.md` (`node scripts/data-map.mjs`) and gets DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. Anything that looks dead goes to DATA_GOVERNANCE, never straight to deletion; archiving needs the owner. Handbook: [DATA_GOVERNANCE.md](../engineering/DATA_GOVERNANCE.md).
+12. **Infrastructure awareness (2026-10-14, owner).** `INFRASTRUCTURE` (Engineering, the scalability team's dev member) must always know what we run and how integrated it is. Any change that adds or removes a dependency, environment variable, Edge Function or API route, Storage bucket, database extension, Realtime publication, CI workflow or build profile — or changes how deeply the app calls Supabase — updates `docs/engineering/infrastructure.json` and regenerates `docs/engineering/INFRASTRUCTURE_REGISTER.md` in the same change (`pnpm infra:register:check` fails otherwise), and INFRASTRUCTURE reviews the diff. Agents who need infrastructure context ask INFRASTRUCTURE; when a register change affects a team that did not ask, INFRASTRUCTURE tells that team's lead. Scalability recommendations go through the Growth and Capacity Review with INFRASTRUCTURE's technical context; the CTO recommends and the owner decides.
 10. **Concurrent sessions (2026-10-12).** Another tool's session (Codex, Cursor, a person) may edit the same tree while an agent works. Codex and people are not registry agents, and their edits do not change who owns a file.
     - **Claim.** Before editing a shared file, claim it in the task tracker's Status table (for example the Status table in `docs/agents/ADM-01.md`): name the session, the files, and the time. Release the claim in the same table when done.
     - **Check times.** Check the file's modified time (`stat` or `ls -l`) before each edit. If it changed since you read it, read it again before you write.
@@ -546,7 +686,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 
 ## Functional specialist roster
 
-**92 callable agents**, coordinated by the CTO, who reports to the Facilitator. `VP_OPERATIONS` (VP of Operations) reports to the CTO and keeps roles, protocols, and priorities current. All rows map to actionable definitions; exact Now/Next/Later tasks live in each definition. Existing product surface sections above remain the route inventory.
+**107 callable agents**. The CTO coordinates app and data work and the CFO coordinates Finance and Accounting (books, taxes, cash, plans); both report to the Facilitator. `VP_OPERATIONS` (VP of Operations) reports to the CTO and keeps roles, protocols, and priorities current. All rows map to actionable definitions; exact Now/Next/Later tasks live in each definition. Existing product surface sections above remain the route inventory.
 
 | Call | Department | Reports to | Owns / primary function | Definition |
 | --- | --- | --- | --- | --- |
@@ -554,7 +694,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `ACCOUNT_TAGS` | Engineering | `UPLOAD` | Account mention request/confirm/hide lifecycle, honest RPC errors and concurrent three-tag limit | [account-tags.md](../../.claude/agents/account-tags.md) |
 | `ACTIVITY` | Engineering | `HIGHLIGHTS` | Own activity rows, pagination, actor navigation and empty/error states. | [activity.md](../../.claude/agents/activity.md) |
 | `ADMIN` | Engineering | `ENGINEERING` | Expo write control plane and read-only Next oversight; owns Next Trends (`/reports`) and `lib/reports.ts` | [admin.md](../../.claude/agents/admin.md) |
-| `ANALYST` | Engineering | `ADMIN` | Read-only measure catalog and eight analytics dashboards. | [analyst.md](../../.claude/agents/analyst.md) |
+| `ANALYST` | Engineering | `ADMIN` | Shared Expo/Next measure meaning/catalog; definitions/provenance/quality contribution to the single Growth packet. | [analyst.md](../../.claude/agents/analyst.md) |
 | `API` | Engineering | `ENGINEERING` | Own request validation, JWT verification, authorization, typed responses and server error boundaries. | [api.md](../../.claude/agents/api.md) |
 | `ATHLETE_STATS` | Engineering | `PROFILE` | Own athlete bio/stat/social visibility and sport-specific stat shapes. | [athlete-stats.md](../../.claude/agents/athlete-stats.md) |
 | `ATHLETE_VERIFICATION` | Trust and Safety | `TRUST_SAFETY` | Own claim/vouch/school confirmation ladder, token validity and verified badge semantics. | [athlete-verification.md](../../.claude/agents/athlete-verification.md) |
@@ -562,19 +702,25 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `AUTH` | Engineering | `ENGINEERING` | Guest browse, sign-in and role flow integration | [auth.md](../../.claude/agents/auth.md) |
 | `BACKEND` | Database | `CTO` | Database architecture and migration/security integration | [backend.md](../../.claude/agents/backend.md) |
 | `BILLING` | Finance | `COMMERCE` | Own current one-time Exclusive purchase semantics and future recurring billing design. | [billing.md](../../.claude/agents/billing.md) |
+| `BOOKKEEPER` | Finance and Accounting | `CONTROLLER` | Records Stripe fees, expenses, payouts to the bank and owner money with receipts; clears Suspense before close. | [bookkeeper.md](../../.claude/agents/bookkeeper.md) |
 | `BRAND` | Marketing | `MARKETING` | Own the approved message "Donate. Elevate. Celebrate." and its consistent use in the approved placements; VOICE reviews money words, LEGAL reviews claims. | [brand.md](../../.claude/agents/brand.md) |
 | `CATALOGS` | Engineering | `ADMIN` | Own sport/region/category/price catalog consistency and generated product facts. | [catalogs.md](../../.claude/agents/catalogs.md) |
+| `CFO` | Finance and Accounting | `FACILITATOR` | Head of Finance and Accounting: books, taxes, cash and plans. Assigns CONTROLLER, TAX, TREASURY and FPA; requests finance data through the CTO; accepts money-recording changes. | [cfo.md](../../.claude/agents/cfo.md) |
 | `CHECKOUT` | Finance | `COMMERCE` | Own staged Amount / Options / Review donation UI, PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling. | [checkout.md](../../.claude/agents/checkout.md) |
 | `CI` | IT infrastructure | `OPERATIONS` | Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation. | [ci.md](../../.claude/agents/ci.md) |
+| `CODE_HYGIENE` | Data Governance | `DATA_GOVERNANCE` | Dead functions, exports and switches: keep-or-archive triage; archives (never deletes) after owner approval. | [code-hygiene.md](../../.claude/agents/code-hygiene.md) |
 | `COMMERCE` | Finance | `CTO` | Financial design and payment specialist integration; owns Next Revenue (`/money`) | [commerce.md](../../.claude/agents/commerce.md) |
 | `COMPLIANCE` | Legal and Compliance | `CTO` | Privacy, commercial disclosures and evidence-backed claims | [compliance.md](../../.claude/agents/compliance.md) |
 | `CONNECT` | Finance | `COMMERCE` | Own JWT-gated Express links, bank onboarding state and verification/payout readiness. | [connect.md](../../.claude/agents/connect.md) |
 | `CONTENT_RIGHTS` | Legal and Compliance | `LEGAL` | Own implementation of approved filming, audio, mark permissions and rights-report language. | [content-rights.md](../../.claude/agents/content-rights.md) |
-| `COST_OPERATIONS` | IT infrastructure | `OPERATIONS` | Wave budgets, free quotas, media bandwidth and vendor cost evidence | [cost-operations.md](../../.claude/agents/cost-operations.md) |
-| `CTO` | Office of the CTO | `FACILITATOR` | Assign every app fix to one department lead, review the evidence, and reject shortcuts. | [cto.md](../../.claude/agents/cto.md) |
+| `CONTROLLER` | Finance and Accounting | `CFO` | Accounting lead: chart of accounts, posting rules, statements, month-end close and QuickBooks export. | [controller.md](../../.claude/agents/controller.md) |
+| `COST_OPERATIONS` | IT infrastructure | `OPERATIONS` | Actual invoices/usage/verified quotas and loaded cost forecasts/options to the single Growth packet; owner decides spending | [cost-operations.md](../../.claude/agents/cost-operations.md) |
 | `CREW` | Engineering | `PROFILE` | Own Join Crew, follow counts, self-action restrictions and sign-in resume. | [crew.md](../../.claude/agents/crew.md) |
+| `CTO` | Office of the CTO | `FACILITATOR` | Assign every app fix to one department lead, review the evidence, and reject shortcuts. | [cto.md](../../.claude/agents/cto.md) |
 | `CUSTODIAL` | Finance | `COMMERCE` | Own guardian approval, payee relationship, age handover and server payout policy invariants. | [custodial.md](../../.claude/agents/custodial.md) |
 | `DATABASE_MIGRATIONS` | Database | `BACKEND` | Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent. | [database-migrations.md](../../.claude/agents/database-migrations.md) |
+| `DATA_GOVERNANCE` | Data Governance | `CTO` | Data control point: master data map, every table / function / export owned and connected, approves new data paths, routes findings, proposes archives. | [data-governance.md](../../.claude/agents/data-governance.md) |
+| `DATA_LINEAGE` | Data Governance | `DATA_GOVERNANCE` | Master data map generator: owner → writers → readers → database functions → triggers → screens for every table; callers for every function. | [data-lineage.md](../../.claude/agents/data-lineage.md) |
 | `DESIGN` | Design | `CTO` | Visual design and interaction integration | [design.md](../../.claude/agents/design.md) |
 | `DESIGN_TOOLING` | Design | `DESIGN` | Own MCP/design-tool workflows (`.mcp.json`, TOOLING.md): Figma/Canva handoff, Playwright screenshot setup, Expo MCP build tooling; no production or write access without owner approval. | [design-tooling.md](../../.claude/agents/design-tooling.md) |
 | `DEVICE_QA` | Quality | `QA` | Own real-device fan/athlete/guardian/operator/booster journey evidence. | [device-qa.md](../../.claude/agents/device-qa.md) |
@@ -584,22 +730,27 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `DRIP` | Finance | `COMMERCE` | Own marketplace catalog, order lifecycle and unavailable/retry presentation. | [drip.md](../../.claude/agents/drip.md) |
 | `ENGINEERING` | Engineering | `CTO` | Technical architecture, typed contracts and specialist integration | [engineering.md](../../.claude/agents/engineering.md) |
 | `FILMER_REWARDS` | Engineering | `HIGHLIGHTS` | Own Filmed by credit, Props/Aura noncash rewards and Top Filmers eligibility. | [filmer-rewards.md](../../.claude/agents/filmer-rewards.md) |
+| `FINANCE_DATA` | Engineering | `ENGINEERING` | Dev-team engineer serving Finance: data catalog, reconciliation, Books data layer, filters, exports and bookkeeping SQL (assigned by the CTO via ENGINEERING). | [finance-data.md](../../.claude/agents/finance-data.md) |
+| `FPA` | Finance and Accounting | `CFO` | Budgets, unit economics per donation and plan versus actual from the books. | [fpa.md](../../.claude/agents/fpa.md) |
 | `FULLSTACK` | Engineering | `ENGINEERING` | Cross-feature implementation and end-to-end integration | [fullstack.md](../../.claude/agents/fullstack.md) |
-| `GROWTH_ANALYTICS` | Marketing | `MARKETING` | Own measurement definitions for browsing, claim, upload and donation conversion. | [growth-analytics.md](../../.claude/agents/growth-analytics.md) |
+| `GROWTH_ANALYTICS` | Marketing | `MARKETING` | Sole Growth and Capacity Review packet/follow-up owner: accepted product success, service capacity/recovery and costs; unknown sources stay unknown. | [growth-analytics.md](../../.claude/agents/growth-analytics.md) |
 | `HIGHLIGHTS` | Engineering | `ENGINEERING` | Highlights feed and media specialist integration | [highlights.md](../../.claude/agents/highlights.md) |
-| `INCIDENT_TRIAGE` | Support | `SUPPORT` | Own severity classification, reproduction evidence and financial/security escalation routing. | [incident-triage.md](../../.claude/agents/incident-triage.md) |
+| `INFRASTRUCTURE` | Engineering | `ENGINEERING` | Always aware of hosting, services, environments and integration depth (`INFRASTRUCTURE_REGISTER`, `PORTABILITY`); standing dev member of the Growth and Capacity Review; reviews every infrastructure diff and tells affected teams. | [infrastructure.md](../../.claude/agents/infrastructure.md) |
+| `INCIDENT_TRIAGE` | Engineering support | `SUPPORT` | Own severity, sanitized issue fingerprints, duplicate grouping, reproduction and domain-owner handoff. | [incident-triage.md](../../.claude/agents/incident-triage.md) |
+| `INFO_RETURNS` | Finance and Accounting | `TAX` | CPA/provider tax-document and 1099 review; VERIFY-02 keeps SSNs only at Stripe, never Tapua'i; no collection/filing grant. | [info-returns.md](../../.claude/agents/info-returns.md) |
+| `INTERNAL_CONTROLS` | Finance and Accounting | `CONTROLLER` | Data completeness: finance data catalog coverage, source-to-ledger reconciliation, closed-month drift, sign-off before close. | [internal-controls.md](../../.claude/agents/internal-controls.md) |
 | `LEADERBOARDS` | Engineering | `AURA` | Own donor/filmer ranking aggregation, windows, ties and privacy-safe display. | [leaderboards.md](../../.claude/agents/leaderboards.md) |
 | `LEDGER` | Finance | `COMMERCE` | Own immutable financial events, exactly-once credits, revenue/owed balances and lifecycle invariants. | [ledger.md](../../.claude/agents/ledger.md) |
 | `LEGAL` | Legal and Compliance | `CTO` | Approved legal wording and counsel decision tracking | [legal.md](../../.claude/agents/legal.md) |
 | `LOCAL` | Engineering | `ENGINEERING` | Game-day fan surfaces and live engagement integration | [local.md](../../.claude/agents/local.md) |
-| `MARKETING` | Marketing | `CTO` | Own consented family-story positioning and accurate release communications. | [marketing.md](../../.claude/agents/marketing.md) |
+| `MARKETING` | Marketing | `CTO` | Accurate consented communications; route the single GROWTH_ANALYTICS packet to CTO and owner. | [marketing.md](../../.claude/agents/marketing.md) |
 | `MINOR_SAFETY` | Trust and Safety | `TRUST_SAFETY` | Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria. | [minor-safety.md](../../.claude/agents/minor-safety.md) |
 | `MOBILE_PERFORMANCE` | Engineering | `ENGINEERING` | Feed rendering, media memory, startup and measured interaction performance | [mobile-performance.md](../../.claude/agents/mobile-performance.md) |
 | `MODERATION` | Trust and Safety | `TRUST_SAFETY` | Own report reasons, immediate-hide versus review threshold, review evidence and appeals design. | [moderation.md](../../.claude/agents/moderation.md) |
 | `MOTION` | Design | `DESIGN` | Maintain motion tokens, haptics, sheet geometry and reduced-motion behavior. | [motion.md](../../.claude/agents/motion.md) |
 | `NOTIFICATIONS` | Engineering | `CREW` | crew_push_queue privacy, deduplication and authorized delivery design | [notifications.md](../../.claude/agents/notifications.md) |
 | `OFFLINE` | Engineering | `ENGINEERING` | Own durable action queue, retry policy, duplicate prevention and logout boundary behavior. | [offline.md](../../.claude/agents/offline.md) |
-| `ONBOARDING` | Engineering | `AUTH` | Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume. | [onboarding.md](../../.claude/agents/onboarding.md) |
+| `ONBOARDING` | Engineering | `AUTH` | Own first-open onboarding, birth-month/year age confirmation, athlete claim and pending action resume. | [onboarding.md](../../.claude/agents/onboarding.md) |
 | `OPERATIONS` | IT infrastructure | `CTO` | Coordinate staging readiness, releases, reliability, observability and game-day operations. | [operations.md](../../.claude/agents/operations.md) |
 | `OPERATOR` | IT infrastructure | `OPERATIONS` | Sideline PIN/check-in/score/clock console | [operator.md](../../.claude/agents/operator.md) |
 | `PARTNERSHIPS` | Partnerships | `CTO` | Coordinate guardian, school, booster and sponsor requirements without inventing permissions. | [partnerships.md](../../.claude/agents/partnerships.md) |
@@ -618,23 +769,27 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `RECOVERY` | IT infrastructure | `OPERATIONS` | Migration rollback, backup/restore evidence and data recovery runbooks | [recovery.md](../../.claude/agents/recovery.md) |
 | `REFUNDS` | Finance | `COMMERCE` | Own refund/dispute lifecycle design and reversal effects on revenue, entitlements and owed funds. | [refunds.md](../../.claude/agents/refunds.md) |
 | `RELEASE` | IT infrastructure | `OPERATIONS` | Own preview profiles, environment binding, signing/device eligibility and rollback artifact evidence. | [release.md](../../.claude/agents/release.md) |
-| `RELIABILITY` | IT infrastructure | `OPERATIONS` | Own failure recovery, incident runbooks, dependency availability and measured service objectives. | [reliability.md](../../.claude/agents/reliability.md) |
+| `RELIABILITY` | Engineering support | `SUPPORT` | Build local detection scans, failure/recovery checks and root-cause repairs together with domain developers. | [reliability.md](../../.claude/agents/reliability.md) |
 | `RESEARCH` | Product | `PRODUCT` | Test family, athlete, guardian, filmer and operator journeys using consented feedback. | [research.md](../../.claude/agents/research.md) |
 | `RLS_SECURITY` | Security | `SECURITY` | Audit grants, RLS, security-definer RPCs, storage policies and ownership boundaries. | [rls-security.md](../../.claude/agents/rls-security.md) |
 | `ROLE_HQ` | Partnerships | `PARTNERSHIPS` | Parent, booster and sponsor role portal integration | [role-hq.md](../../.claude/agents/role-hq.md) |
 | `ROSTERS` | Engineering | `LOCAL` | Own roster claim identity, team search, CSV import validation and athlete navigation. | [rosters.md](../../.claude/agents/rosters.md) |
 | `RUNTIME_CONFIG` | Engineering | `ADMIN` | Own draft/published flag states, pause behavior, role lenses and fan control coverage. | [runtime-config.md](../../.claude/agents/runtime-config.md) |
+| `SALES_TAX` | Finance and Accounting | `TAX` | Sales and use tax for Drip and Vault: nexus watch, sales by month and the collection plan. | [sales-tax.md](../../.claude/agents/sales-tax.md) |
 | `SCHOOL_PARTNERS` | Partnerships | `PARTNERSHIPS` | Own school onboarding requirements, AD/coach confirmation workflow and marks permission records design. | [school-partners.md](../../.claude/agents/school-partners.md) |
-| `SECURITY` | Security | `CTO` | Critical review of RLS, sessions, secrets and storage authorization. Assigns `RLS_SECURITY` and `SESSION_SECURITY`. | [security.md](../../.claude/agents/security.md) |
+| `SECURITY` | Security | `CTO` | Critical review of RLS, sessions, secrets and storage authorization. Assigns `RLS_SECURITY`, `SESSION_SECURITY` and `THREAT_DETECTION`. | [security.md](../../.claude/agents/security.md) |
 | `SESSION_SECURITY` | Security | `SECURITY` | Own JWT/session handling, role boundaries, OAuth redirect integrity and server identity checks. | [session-security.md](../../.claude/agents/session-security.md) |
+| `THREAT_DETECTION` | Security | `SECURITY` | Trusted signals, false positives, audit integrity and safe recovery with Dev. | [threat-detection.md](../../.claude/agents/threat-detection.md) |
 | `SHARED_CONTRACTS` | Engineering | `ENGINEERING` | Shared RPC/domain types, generated database type provenance and mobile/admin contract parity | [shared-contracts.md](../../.claude/agents/shared-contracts.md) |
 | `SHARING` | Engineering | `PROFILE` | Own public athlete QR, share links, deep links and safe preview content. | [sharing.md](../../.claude/agents/sharing.md) |
 | `SPONSOR_ADS` | Partnerships | `PARTNERSHIPS` | Own approved sponsor placement, booster tier display and role portal consistency. | [sponsor-ads.md](../../.claude/agents/sponsor-ads.md) |
 | `SPOTLIGHT` | Engineering | `ENGINEERING` | Awards board, real athlete IDs and tag queue | [spotlight.md](../../.claude/agents/spotlight.md) |
 | `STORAGE` | Database | `BACKEND` | Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle | [storage.md](../../.claude/agents/storage.md) |
-| `SUPPORT` | Support | `CTO` | Own help/runbook content, tester intake taxonomy and guardian-safe issue handling. | [support.md](../../.claude/agents/support.md) |
-| `TELEMETRY` | IT infrastructure | `OPERATIONS` | Own bounded telemetry payloads, data minimization, dashboard interpretation and logging failure behavior. | [telemetry.md](../../.claude/agents/telemetry.md) |
+| `SUPPORT` | Engineering support | `ENGINEERING` | Own cross-system detection coverage, incident/fix coordination, safe support intake and Dev reporting. | [support.md](../../.claude/agents/support.md) |
+| `TAX` | Finance and Accounting | `CFO` | Owns every tax area: return lines, estimated tax, tax pack, tax calendar, CPA liaison and 1099-K reconciliation. | [tax.md](../../.claude/agents/tax.md) |
+| `TELEMETRY` | Engineering support | `SUPPORT` | Build cross-system runtime sensors, safe bounded logs, correlation, delivery health and honest coverage gaps. | [telemetry.md](../../.claude/agents/telemetry.md) |
 | `TEST_AUTOMATION` | Quality | `QA` | Own meaningful regression, boundary/security and finance invariant checks. | [test-automation.md](../../.claude/agents/test-automation.md) |
+| `TREASURY` | Finance and Accounting | `CFO` | Cash: Stripe balance versus bank, money held for families never spent or below zero, payout review. | [treasury.md](../../.claude/agents/treasury.md) |
 | `TRUST_SAFETY` | Trust and Safety | `CTO` | Coordinate moderation, identity, minor safety and rights safeguards as independent release gates. | [trust-safety.md](../../.claude/agents/trust-safety.md) |
 | `UPLOAD` | Engineering | `HIGHLIGHTS` | Own compact Clip → Details → Review composer, optional settings, draft navigation, compression, upload progress and athlete/account consent. | [upload.md](../../.claude/agents/upload.md) |
 | `VAULT` | Engineering | `PROFILE` | Own private video entitlements, signed playback URLs and subscription-request access. | [vault.md](../../.claude/agents/vault.md) |
@@ -648,8 +803,15 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | Work | Primary owner | Required pair / independent gate |
 | --- | --- | --- |
 | Roadmap / Wave 0 acceptance | PRODUCT | RESEARCH, department lead, QA |
+| Growth and Capacity Review / GROWTH-01 | GROWTH_ANALYTICS (single packet owner) → MARKETING → CTO → owner | INFRASTRUCTURE (standing dev member: hosting, services, integration depth), ANALYST, COST_OPERATIONS, RELIABILITY, DATA_GOVERNANCE, FINANCE_DATA/FPA/TREASURY; independent QA/Security/Finance as needed; owner decides service/spending/release |
 | Donation quote and native wallet | CHECKOUT | API, LEDGER, VOICE; QA |
 | Authoritative credit path | LEDGER | API, BACKEND, CHECKOUT, RECONCILIATION; RLS_SECURITY + QA |
+| Chart of accounts, posting rules, close | CONTROLLER (rule) · FINANCE_DATA (code) | INTERNAL_CONTROLS, CFO acceptance; QA |
+| Taxes, tax pack, 1099 / sales tax | TAX · INFO_RETURNS · SALES_TAX | CONTROLLER, LEGAL, VOICE; the owner's CPA decides |
+| Finance data, catalog, reconciliation, exports | FINANCE_DATA (assigned by CTO → ENGINEERING) | INTERNAL_CONTROLS, CONTROLLER, ADMIN; BACKEND + RLS_SECURITY for SQL; QA |
+| Money held for families, payout review | TREASURY | CUSTODIAL, CONNECT, LEDGER; owner approves any payout |
+| New or changed table, view, database function, export or data path | Owning specialist | DATA_GOVERNANCE approves; `pnpm data:map:check`; BACKEND + DATABASE_MIGRATIONS for SQL |
+| Dead data or dead code | CODE_HYGIENE (triage) | Owning team confirms; owner approves before anything moves to archive/ |
 | Refund/dispute reversal | REFUNDS | LEDGER, RECONCILIATION, LEGAL; QA |
 | Account links / payout readiness | CONNECT | SESSION_SECURITY, CUSTODIAL; RLS_SECURITY + QA |
 | Parent payee / handover / amount owed | CUSTODIAL | MINOR_SAFETY, LEDGER, BACKEND, LEGAL; QA |
@@ -669,3 +831,33 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 ### Dispatch next work
 
 Use [WORK_QUEUE.md](WORK_QUEUE.md) for evidence, dependencies and assigned execution tasks when available. A roster assignment means ownership; queue status identifies what actually ran. The immediate sequence is baseline verification, current staging/device blockers, security and money architecture preparation, then public-launch prerequisites. Current code and hosted status remain in [STATE.md](../STATE.md).
+
+## Future feature operating contract
+
+All future feature assignments follow [FEATURE_ADMIN_WORKFLOW](../engineering/FEATURE_ADMIN_WORKFLOW.md).
+Enroll with [FEATURE_ADMIN_TEMPLATE](FEATURE_ADMIN_TEMPLATE.md), assign one owner and
+reviewers, and reuse canonical admin/report surfaces. Source, admin actions, reporting,
+access/privacy and disable/repair handling are verified before app implementation. The
+selected `admin-ready` gate precedes app work; `app-ready` follows app verification with
+the earlier checkpoint preserved. Presentation-only exemptions need the recorded reason,
+reviewer and evidence. Ordinary repairs keep the fix process unless adding a capability.
+`pnpm check` validates registered contracts and workflow tests; leads must catch missing
+enrollment and review actual evidence. These local checks do not apply SQL or certify
+hosted/device/release readiness. Existing role/model pins and release owners are unchanged.
+
+## Engineering Support reporting and detection (2026-10-13)
+
+`CTO` → `ENGINEERING` → `SUPPORT` → `INCIDENT_TRIAGE`, `TELEMETRY`, `RELIABILITY`.
+SUPPORT integrates detection and repair evidence with the functional developer; ENGINEERING
+reports to the CTO. TELEMETRY and RELIABILITY moved from OPERATIONS; QA remains independent.
+Use [ENGINEERING_SUPPORT.md](../engineering/ENGINEERING_SUPPORT.md) for the shared incident lifecycle,
+scan, safe logs and domain review boundaries. SUPPORT reviews future-feature detection/repair
+coverage before admin-ready. New tables/fields/exports still go through DATA_GOVERNANCE.
+
+## Cybersecurity collaboration in main admin (2026-10-13)
+
+`THREAT_DETECTION` reports to `SECURITY`, alongside RLS_SECURITY and SESSION_SECURITY.
+Engineering Support under Dev owns the issue/repair workflow; Security independently reviews
+suspicious evidence, false-positive safeguards, audit integrity and safe recovery.
+Definition: [.claude/agents/threat-detection.md](../../.claude/agents/threat-detection.md).
+Operating design: [ENGINEERING_SUPPORT_CONSOLE.md](../engineering/design/ENGINEERING_SUPPORT_CONSOLE.md).

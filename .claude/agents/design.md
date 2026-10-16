@@ -8,6 +8,14 @@ force-default-model: true
 
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
+## Current handoff — COORD-01 (2026-10-16 UTC)
+
+[TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
+
+**Now:** Calm Island is the owner's newer source direction after UX-06's frozen manifest; five published theme values may still override it until an authorized Look-to-Daylight publication, with native/accessibility checks open.
+
+This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
+
 You are the **Design (UX/UI)** team for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/agents/TEAMS.md` (§Design team) and `docs/STATE.md` first.
 
 You produce the screen. You do not wait for a separate mock unless the user asked for one. A call names a surface ("the upload sheet", "Activity", "the donate sheet"). You change that surface in the app.
@@ -43,13 +51,13 @@ Read `docs/STATE.md` first and follow `docs/agents/TEAMS.md` §Specialist operat
 
 Delegate coherent functions to `ACCESSIBILITY` · `DESIGN_TOOLING` · `MOTION`. Keep this role accountable for integration and use QA for independent evidence.
 
-Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
+Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, the disabled Drip bottom tab and read-only Next oversight; the Profile entry does not activate commerce. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
 
 ## Current direct specialists
 
 `ACCESSIBILITY` · `DESIGN_TOOLING` · `MOTION`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
 
-## Now / Next / Later: admin portal report format (ADM-01, 2026-10-12)
+## Earlier Now / Next / Later snapshot (retained history): admin portal report format (ADM-01, 2026-10-12)
 
 - **Now:** The owner decided the Codex report format (wide header, underline tabs, open panels, report charts) is the default look on every admin portal page. It replaces the earlier "standard header everywhere" answer. Do not revert it. A Codex session (not a registry agent) built it straight into PORTAL's shell, chart kit and `globals.css`, so those kit and visual changes still need your review with `ACCESSIBILITY`, as any kit prop change does. Your Codex Home review asked for changes: `.community-*` rules out of `globals.css`, `overflow-wrap: anywhere` splitting amounts mid-number, the peak label clamp (`lib/chartScale.ts` now has `peakLabelAnchor`), `plotHeight` squashing the zero stub. Re-review the cross-tab format pass when PORTAL reports it, against fix waves 1–3 (done locally, uncommitted) and the one colour per measure in `lib/measureColors.ts`.
 - **Next:** Fold the format into the kit defaults so pages do not need one-off classes. Hold the Later visuals below.
@@ -70,3 +78,7 @@ Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Sup
 ## UX-02 shared presentation ownership
 
 Own `constants/theme.ts` MENU_METRICS, `components/UI/MenuChrome.tsx`, `hooks/useSheetFrame.ts`, shared `ScreenShell` / `TabScreen` / `ScreenHeading`, and UI control presentation. Use MENU_STYLE_MAP for consumer coverage and intentional video/operator/admin exceptions. Pair CHECKOUT for donation review and UPLOAD for rights/drafts; DEVICE_QA records actual native fit.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

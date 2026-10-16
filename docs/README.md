@@ -19,9 +19,14 @@ order, then dip into the folders as you need them.
 | [ARCHITECTURE.md](engineering/ARCHITECTURE.md) | How the apps, Supabase, Stripe and Edge Functions fit together. |
 | [SYSTEM_OVERVIEW.md](engineering/SYSTEM_OVERVIEW.md) | Executive summary, tech stack, directory map, feature tracker. |
 | [CONVENTIONS.md](engineering/CONVENTIONS.md) | Folder rules, file naming, where code goes, the comment standard (§5). |
+| [INNOVATION_AND_HANDOFF.md](engineering/INNOVATION_AND_HANDOFF.md) | Test new solutions, retain decisions and evidence, and prepare understandable engineering/legal/investor handoffs. |
 | [SCHEMA.md](engineering/SCHEMA.md) | Every table, RPC, policy and storage bucket. Checked by `pnpm docs:check`. |
 | [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md) | The engineering readiness plan: readiness phases R1–R4, from dev-only to a separate production environment. |
+| [ENVIRONMENTS_AND_HOSTING.md](engineering/ENVIRONMENTS_AND_HOSTING.md) | Dev / staging / prod, stay on Supabase or move to AWS / Azure (options, cost, exit drill), and the merge-to-deploy pipeline (phases E0–E3). |
+| [HOSTING_DECISION_BRIEF.md](engineering/HOSTING_DECISION_BRIEF.md) | Prior engineering recommendations plus the owner's $50/month follow-up (§10): phased costs, Supabase/AWS/Azure/own-server options, video workload, operating effort and a prepared Claude review. Prices unverified. |
+| [GROWTH_CAPACITY_REVIEW.md](engineering/GROWTH_CAPACITY_REVIEW.md) | One accountable growth/capacity team, accepted measurement sources, per-service review triggers and CTO/owner decisions. |
 | [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md) | Standing up the staging project and a tester build. |
+| [DEV_DATABASE_CATCHUP.md](engineering/DEV_DATABASE_CATCHUP.md) | Ordered SQL checklist to bring the development database up to date and switch Beyond posting on (owner decision 2026-10-16; not run). |
 | [TOOLING.md](engineering/TOOLING.md) | MCP servers for assistants (Playwright, Expo, Canva, Supabase dev, Figma): what each is for, sign-in, safety limits. |
 | [TROUBLESHOOTING.md](engineering/TROUBLESHOOTING.md) | Metro, Expo, env and payment failures and their fixes. |
 | [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) | What testers do per role, and what to ask them. |
@@ -30,8 +35,23 @@ order, then dip into the folders as you need them.
 | [AUDIT_REPORT.md](engineering/AUDIT_REPORT.md) | Interaction audits (newest at the top; older sections are history). |
 | [design/ATHLETE_VERIFICATION_DESIGN.md](engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | Athlete verification ladder, open sign-up, fake-highlight takedown. |
 | [design/PHOTO_STORIES_DESIGN.md](engineering/design/PHOTO_STORIES_DESIGN.md) | Photo stories in Highlights: data model, RPC, screens, privacy rules and build ownership. |
+| [design/PROFILE_PRIVACY_DESIGN.md](engineering/design/PROFILE_PRIVACY_DESIGN.md) | Profile privacy (PRIV-01): public / private accounts, per-item audiences, friends, blocking, hide from search, tag approval. |
+| [EXIT_DRILL.md](engineering/EXIT_DRILL.md) | Exit drill runbook (E3): local rehearsal today, full self-hosted Supabase drill after E1; record of runs. |
+| [INFRASTRUCTURE_REGISTER.md](engineering/INFRASTRUCTURE_REGISTER.md) | Generated list of what Tapua'i runs on and how deeply the app is integrated (INFRA-01); owner `INFRASTRUCTURE`; source `infrastructure.json`. |
+| [PORTABILITY.md](engineering/PORTABILITY.md) | Staying free to move hosts (PORT-01): what is portable, the Supabase ties, the two exits, the boundary guard and next steps. |
+| [design/PAYEE_VERIFICATION_PLAN.md](engineering/design/PAYEE_VERIFICATION_PLAN.md) | Verifying people who receive donations (VERIFY-02): SSN to Stripe only, guardian proof (Stripe + school), two-admin payout override. |
+| [design/MINOR_ACCOUNTS_DESIGN.md](engineering/design/MINOR_ACCOUNTS_DESIGN.md) | Minor accounts (MINOR-01): birth month and year, teen defaults, guardian link and signed consent, supervision, under-16 approvals, under-13 closure. |
 | [design/PARENT_PAYEE_CONNECT_DESIGN.md](engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md) | Guardian-as-payee and custodial money rules. |
 | [design/COMMUNITY_DASHBOARD.md](engineering/design/COMMUNITY_DASHBOARD.md) | Selected Community Impact dashboard, scoped implementation plan and verification requirements. |
+| [ENGINEERING_SUPPORT.md](engineering/ENGINEERING_SUPPORT.md) | Engineering Support under Dev: cross-system detection, retained scans, safe logs, incidents and verified repairs. |
+| [detection-sensors.json](engineering/detection-sensors.json) | Declared app/admin/backend/finance/data/UI/feedback/tooling coverage, limits and gap owners. |
+| [DATA_GOVERNANCE.md](engineering/DATA_GOVERNANCE.md) | DATA-01: the data control point, the rule (owner, writer, reader, purpose), how to change data, open findings. |
+| [DATA_MAP.md](engineering/DATA_MAP.md) | Generated master data map: every table, view and database function with owner, writers, readers, triggers and screens; dead-code triage. |
+| [BOOKS01_STAGING_REHEARSAL.md](engineering/BOOKS01_STAGING_REHEARSAL.md) | W0-10: apply the bookkeeping migration on staging, read-only checks, a practice month and a QuickBooks sandbox import. |
+| [design/BOOKKEEPING.md](engineering/design/BOOKKEEPING.md) | BOOKS-01/02: Finance & Books hub, double-entry journal from the money tables, QuickBooks export, monthly routine and tax questions for the CPA. |
+| [FEATURE_ADMIN_WORKFLOW.md](engineering/FEATURE_ADMIN_WORKFLOW.md) | Future features: admin contracts, implementation/evidence before app work, and registered lifecycle gates. |
+| [design/ADMIN_DATA_CONSOLIDATION.md](engineering/design/ADMIN_DATA_CONSOLIDATION.md) | All desk/report data ownership, safe menu merges and analysis preservation evidence. |
+| [design/MAIN_ADMIN_PORTAL.md](engineering/design/MAIN_ADMIN_PORTAL.md) | ADM-02: selected report design and all administration controls in one main Expo portal. |
 | [design/COMMUNITY_DASHBOARD_QA.md](engineering/design/COMMUNITY_DASHBOARD_QA.md) | Community Home and report-format design QA: source/render comparison and local browser checks (screenshots in `design/community-preview/`). |
 
 Also: [`supabase/migrations/README.md`](../supabase/migrations/README.md) for how database changes are made.
@@ -43,6 +63,8 @@ Also: [`supabase/migrations/README.md`](../supabase/migrations/README.md) for ho
 | [ROADMAP.md](product/ROADMAP.md) | North Star, release waves, phases and mission track. |
 | [STORY.md](product/STORY.md) | The mission in plain words and the guardrails that keep athletes eligible. |
 | [VOICE.md](product/VOICE.md) | Money wording rules (Donate / donation). Enforced by `pnpm copy:check`. |
+| [USER_GROWTH_PLANS.md](product/USER_GROWTH_PLANS.md) | Growth and mitigation plans for guests, fans, uploaders/filmers, donors, athletes, guardians and partner users; proposed 30/60/90-day sequence. |
+| [FAMILY_FUN_PLAYBOOK.md](product/FAMILY_FUN_PLAYBOOK.md) | Brainstorming draft: fan-video Game/Week/Month/Year recognition, family activities, badges, voluntary service, school spirit and separate money paths. |
 | [PUBLIC.md](product/PUBLIC.md) | Public one-pager. |
 | [STORE_LISTING.md](product/STORE_LISTING.md) | **Draft** App Store / Google Play copy using the approved message. Not submitted; LEGAL review required. |
 | [PRODUCT_FACTS.md](product/PRODUCT_FACTS.md) | Prices, splits, tiers. **Generated** by `pnpm docs:sync`; do not hand-edit. |
@@ -52,11 +74,13 @@ Also: [`supabase/migrations/README.md`](../supabase/migrations/README.md) for ho
 | Document | What it answers |
 | --- | --- |
 | [LEGAL_BRIEFING.md](legal/LEGAL_BRIEFING.md) | Every legal and money-copy risk as a lettered row. Owned by Legal. |
+| [VERIFICATION_AND_SAFE_GROWTH_REVIEW.md](legal/VERIFICATION_AND_SAFE_GROWTH_REVIEW.md) | Joint Legal/Growth/Dev source review, guardian/Stripe/school checks, consent gaps and proposed owner decisions. |
 
 ## company/ — business context
 
 | Document | What it answers |
 | --- | --- |
+| [FINANCE_OPERATIONS.md](company/FINANCE_OPERATIONS.md) | Office of the CFO: finance team, chain of command, how Finance requests data, monthly close and tax calendars, owner-only actions. |
 | [COMPANY_PHASES.md](company/COMPANY_PHASES.md) | Company phases and the billing plan (when money becomes real). |
 | [INVESTOR.md](company/INVESTOR.md) | Investor briefing. |
 | [ALA_TEAM_BRIEF.md](company/ALA_TEAM_BRIEF.md) | Team brief for the ALA assistant bot. |
@@ -72,10 +96,20 @@ location (tracked in [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_P
 | --- | --- |
 | [TEAMS.md](agents/TEAMS.md) | Department call sheet: who owns which screens and files, now / next / later. |
 | [TEAM_HIERARCHY.md](agents/TEAM_HIERARCHY.md) | Org chart of departments and agents. |
+| [DETECT-01.md](agents/DETECT-01.md) | Engineering Support setup, file claims, detection gaps and actual verification. |
+| [COORD-01.md](agents/COORD-01.md) | Actual Documentation and team-coordination assignments, checks, results and continuity limits. |
+| [TEAM_STATUS.md](agents/TEAM_STATUS.md) | Current whole-team briefing, complete role coverage, gaps and next owners. |
+| [HEALTH-01.md](agents/HEALTH-01.md) | Current-task evaluation, bounded telemetry and QA repairs, local health checks and remaining owners. |
+| [GROWTH-01.md](agents/GROWTH-01.md) | Growth and Capacity Review setup, actual coordination/documentation checks, first measurement-gap baseline and next owners. |
+| [INCIDENT_TEMPLATE.md](agents/INCIDENT_TEMPLATE.md) | Minimal incident evidence, owner, reproduction, repair and recovery handoff. |
+| [FEATURE_ADMIN_TEMPLATE.md](agents/FEATURE_ADMIN_TEMPLATE.md) | Future feature registration and readiness checkpoint template. |
+| [feature-admin.json](agents/feature-admin.json) | Enrolled future feature contracts checked by `pnpm feature-admin:check`. |
 | [WORK_QUEUE.md](agents/WORK_QUEUE.md) | Ordered tasks with acceptance criteria and owners. |
 | [DEPARTMENT_PLANS.md](agents/DEPARTMENT_PLANS.md) | Each department: what is in the app today, and what that team will do before a public release. |
 | [EXPERT_STANDARDS.md](agents/EXPERT_STANDARDS.md) | The expert bar for each department, and which model is connected to each agent. |
 | [ADM-01.md](agents/ADM-01.md) | Live tracker for the admin portal charts work (ADM-01): status, owner decisions, how to resume. Brief: [ADM-01_ASSIGNMENT.md](agents/ADM-01_ASSIGNMENT.md); fix list: [ADM-01_FIXES.md](agents/ADM-01_FIXES.md). |
+| [ADM-02.md](agents/ADM-02.md) | Unified main admin: implementation claims, report/tool coverage and actual verification evidence. |
+| [PLAY-01.md](agents/PLAY-01.md) | Browser media errors: scoped playback/dependency repair, ownership and actual verification evidence. |
 
 The agent definitions themselves are in `.claude/agents/`; `pnpm agents:check` keeps them in step
 with these files.
@@ -86,3 +120,30 @@ with these files.
 - Paths in docs are repo-relative in backticks (`docs/engineering/SCHEMA.md`) or relative links.
 - A doc that describes the past belongs in `CHANGELOG.md`; a doc that describes the present is
   updated in the same PR as the code.
+
+### Engineering Support console
+
+| Document | Purpose |
+| --- | --- |
+| [Engineering Support console](engineering/design/ENGINEERING_SUPPORT_CONSOLE.md) | Main-admin design and safety contract |
+| [DETECT-02 ledger](agents/DETECT-02.md) | Implementation claims, verification and admin-first checkpoint |
+
+| [DETECT-02 admin evidence](engineering/evidence/DETECT-02-admin.md) | Local checks and review limits |
+| [DETECT-02 app evidence](engineering/evidence/DETECT-02-app.md) | Runtime integration, bounded recovery and final local checks |
+
+| [Recovery runbook](engineering/RECOVERY_RUNBOOK.md) | Source version previews and approved database backup rehearsal |
+
+## Beyond the Game continuation
+
+| Document | Purpose |
+| --- | --- |
+| [BEYOND-01](agents/BEYOND-01.md) | Actual scoped implementation and review ledger |
+| [Beyond the Game design](engineering/design/BEYOND_GAME_DESIGN.md) | Beyond switch on the Highlights bar and Beyond page (owner 2026-10-16; was a bottom tab), reviewed media and workout/Vault boundaries |
+| [Coach-level move label design](engineering/design/COACH_LEVEL_LABEL_DESIGN.md) | SAFETY-01 (planned): safety notice for risky workouts, wording options for Legal, admin-first contract |
+| [Figma UI/UX polish](engineering/design/UI_UX_FIGMA_POLISH.md) | Actual draft/plugin quota checkpoint, approved mock font, source reviews and proposed polish. |
+| [UX-06](agents/UX-06.md) | Local Beyond/workout polish ownership, presentation exemption and actual verification. |
+| [Implementation plan](engineering/design/BEYOND_GAME_IMPLEMENTATION_PLAN.md) | Ownership, admin-first gates and verification sequence |
+| [CHAL-01 admin evidence](engineering/evidence/CHAL-01-admin.md) | Actual local operational checks and remaining acceptance scope. |
+| [BEYOND-01 admin evidence](engineering/evidence/BEYOND-01-admin.md) | Actual private contribution/moderation checks, source limits and checkpoint. |
+| [CHAL-01 app evidence](engineering/evidence/CHAL-01-app.md) | Actual local workout participant verification and release limits. |
+| [BEYOND-01 app evidence](engineering/evidence/BEYOND-01-app.md) | Actual local dedicated-tab/contribution verification and release limits. |

@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { CrewAlertsCard } from '@/components/Activity/CrewAlertsCard';
 import { AthleteMoneyCard } from '@/components/Custodial/AthleteMoneyCard';
 import { AthleteVerificationCard } from '@/components/Verification/AthleteVerificationCard';
 import { TeammateVouchCard } from '@/components/Verification/TeammateVouchCard';
@@ -20,6 +21,8 @@ import { useActivityFeed, type ActivityItem, type ActivityKind } from '@/hooks/u
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { userProfileHref } from '@/lib/navigation';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { FriendRequestsCard } from '@/components/Activity/FriendRequestsCard';
+import { ChallengeInbox } from '@/components/Challenges/ChallengeInbox';
 
 const ACCENT = TAB_ACCENTS.activity;
 
@@ -86,7 +89,8 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
  * @remarks Derived from existing tables (see `useActivityFeed`), so there is no read/unread
  * state and no push yet. Rows needing an action sort to the top instead.
  * @sideEffects `useActivityFeed` refetches its three sources on focus; rows deep-link into
- * the tagged highlight or the receipts screen.
+ * the tagged highlight or the receipts screen. CHAL-01 adds actor-isolated accepted-friend workout invitations
+ * through its verified admin contract; no free-text replies or money actions.
  */
 export default function ActivityTab() {
   const router = useRouter();
@@ -161,6 +165,9 @@ export default function ActivityTab() {
 
         {user ? <AthleteVerificationCard isAthlete={isAthlete} /> : null}
         {user ? <TeammateVouchCard /> : null}
+        {user ? <FriendRequestsCard /> : null}
+        <ChallengeInbox />
+        {user ? <CrewAlertsCard /> : null}
         <AthleteMoneyCard playerId={profile?.player_id} />
 
         {loading && items.length === 0 ? (

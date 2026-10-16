@@ -1,20 +1,27 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.116.0';
 import Stripe from 'https://esm.sh/stripe@22.6.2?target=deno';
 
+import {
+  CONNECT_PROFILE_COLUMNS,
+  CONNECT_SIGN_IN_MESSAGE,
+  runCreateStripeAccount,
+} from '../_shared/money/connect.ts';
+import { INVALID_SESSION_MESSAGE, errorResult, refuseLiveStripeKey, readBearerLoose, thrownMessage, type CoreResult } from '../_shared/money/http.ts';
+import { resolveSession } from '../_shared/money/session.ts';
+
+/**
+ * Edge Function adapter for Stripe Connect Express set-up (Accounts v2) — the path installed builds use.
+ *
+ * SCALE-04: the mode, Terms / linked-account gates, account shape, links and stored flags are the shared money core
+ * (`../_shared/money/connect.ts`), the same code the Metro route runs. This file keeps only what is Deno-specific:
+ * `Deno.env`, `Deno.serve`, CORS, the `esm.sh` SDKs, the service-role profile client and this function's order of
+ * checks (all configuration before the session). Creating a payee account is money-moving, so the session is
+ * always confirmed live with `getUser` — never the local token check, which cannot see a sign-out before expiry.
+ */
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const ACCOUNT_INCLUDE = ['configuration.recipient', 'requirements', 'defaults'] as const;
-
-type ConnectMode = 'onboarding' | 'dashboard' | 'status';
-
-type ConnectPayload = {
-  url: string | null;
-  accountId: string;
-  stripe_onboarding_complete: boolean;
-  payouts_enabled: boolean;
 };
 
 function json(body: unknown, status = 200): Response {
@@ -24,20 +31,8 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-function flagsFromAccount(account: Stripe.V2.Core.Account): Pick<
-  ConnectPayload,
-  'stripe_onboarding_complete' | 'payouts_enabled'
-> {
-  const dueFromUser = (account.requirements?.entries ?? []).some(
-    (entry) => entry.awaiting_action_from === 'user',
-  );
-  const recipient = account.configuration?.recipient;
-  const transfers = recipient?.capabilities?.stripe_balance?.stripe_transfers?.status;
-  const payouts = recipient?.capabilities?.stripe_balance?.payouts?.status;
-  return {
-    stripe_onboarding_complete: Boolean(recipient?.applied) && !dueFromUser,
-    payouts_enabled: payouts === 'active' || transfers === 'active',
-  };
+function respond(result: CoreResult): Response {
+  return json(result.body, result.status);
 }
 
 Deno.serve(async (req) => {
@@ -47,9 +42,9 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
-    const jwt = authHeader.replace(/^Bearer\s+/i, '').trim();
+    const jwt = readBearerLoose(authHeader);
     if (!jwt) {
-      return json({ error: 'Sign in to connect payouts.' }, 401);
+      return respond(errorResult(CONNECT_SIGN_IN_MESSAGE, 401));
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -58,157 +53,60 @@ Deno.serve(async (req) => {
     const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 
     if (!supabaseUrl || !anonKey) {
-      return json({ error: 'Missing SUPABASE_URL or SUPABASE_ANON_KEY.' }, 500);
+      return respond(errorResult('Missing SUPABASE_URL or SUPABASE_ANON_KEY.', 500));
     }
     if (!stripeSecret) {
-      return json({ error: 'Missing STRIPE_SECRET_KEY.' }, 500);
+      return respond(errorResult('Missing STRIPE_SECRET_KEY.', 500));
     }
+    const liveKey = refuseLiveStripeKey(stripeSecret);
+    if (liveKey) return respond(liveKey);
     if (!serviceKey) {
-      return json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY.' }, 500);
+      return respond(errorResult('Missing SUPABASE_SERVICE_ROLE_KEY.', 500));
     }
 
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { data: authData, error: authError } = await userClient.auth.getUser(jwt);
-    if (authError || !authData.user) {
-      return json({ error: 'Invalid or expired session.' }, 401);
-    }
-
-    const body = (await req.json()) as {
-      returnUrl?: string;
-      refreshUrl?: string;
-      mode?: ConnectMode;
-    };
-    const mode: ConnectMode =
-      body.mode === 'dashboard' || body.mode === 'status' ? body.mode : 'onboarding';
-    const returnUrl = typeof body.returnUrl === 'string' ? body.returnUrl.trim() : '';
-    const refreshUrl = (typeof body.refreshUrl === 'string' ? body.refreshUrl.trim() : '') || returnUrl;
-    if (mode !== 'status' && (!returnUrl || !refreshUrl)) {
-      return json({ error: 'returnUrl is required for Connect onboarding.' }, 400);
-    }
-
-    const admin = createClient(supabaseUrl, serviceKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
+    // Money-moving: no `verifyLocally`, so a signed-out session is caught even before its token expires.
+    const session = await resolveSession(jwt, {
+      getUser: async (token) => {
+        const { data, error } = await userClient.auth.getUser(token);
+        return { user: data.user ? { id: data.user.id, email: data.user.email ?? null } : null, error };
+      },
     });
-    const { data: profile } = await admin
-      .from('profiles')
-      .select('id, stripe_connect_id, legal_terms_accepted_at, legal_terms_version')
-      .eq('user_id', authData.user.id)
-      .maybeSingle();
-
-    const storedAccountId =
-      typeof profile?.stripe_connect_id === 'string' && profile.stripe_connect_id.trim()
-        ? profile.stripe_connect_id.trim()
-        : null;
-
-    if (mode === 'onboarding' && !storedAccountId && !profile?.legal_terms_accepted_at) {
-      return json({ error: 'Agree to Terms of Service & NIL Compliance before connecting a bank.' }, 403);
+    if (!session.ok) {
+      return respond(errorResult(INVALID_SESSION_MESSAGE, 401));
     }
 
-    if ((mode === 'dashboard' || mode === 'status') && !storedAccountId) {
-      return json({ error: 'No Stripe Express account is linked to this athlete yet.' }, 400);
-    }
+    const body: unknown = await req.json();
+    // Built once the request passes validation (first profile read), as before.
+    const makeAdminDb = () =>
+      createClient(supabaseUrl, serviceKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+    let admin: ReturnType<typeof makeAdminDb> | null = null;
+    const adminDb = () => (admin ??= makeAdminDb());
 
-    const stripe = new Stripe(stripeSecret, {
-      httpClient: Stripe.createFetchHttpClient(),
-    });
-
-    const account = storedAccountId
-      ? await stripe.v2.core.accounts.retrieve(storedAccountId, {
-          include: [...ACCOUNT_INCLUDE],
-        })
-      : await stripe.v2.core.accounts.create({
-          display_name: "Tapua'i Athlete",
-          contact_email: authData.user.email?.trim() || 'athlete@tapuai.app',
-          dashboard: 'express',
-          identity: {
-            country: 'us',
-            entity_type: 'individual',
-          },
-          defaults: {
-            currency: 'usd',
-            responsibilities: {
-              fees_collector: 'application',
-              losses_collector: 'application',
-            },
-            profile: {
-              product_description: "Tapua'i athlete receiving Mālo tips and subscriptions",
-            },
-          },
-          configuration: {
-            recipient: {
-              capabilities: {
-                stripe_balance: {
-                  stripe_transfers: { requested: true },
-                },
-              },
-            },
-          },
-          metadata: { tapuai_user_id: authData.user.id },
-          include: [...ACCOUNT_INCLUDE],
-        });
-
-    const flags = flagsFromAccount(account);
-    const payload: ConnectPayload = {
-      url: null,
-      accountId: account.id,
-      ...flags,
-    };
-
-    if (mode !== 'status') {
-      if (mode === 'dashboard' && flags.stripe_onboarding_complete) {
-        try {
-          const login = await stripe.accounts.createLoginLink(account.id);
-          payload.url = login.url;
-        } catch {
-          // Fall through to a v2 Account Link.
-        }
-      }
-
-      if (!payload.url) {
-        const link = await stripe.v2.core.accountLinks.create({
-          account: account.id,
-          use_case: flags.stripe_onboarding_complete
-            ? {
-                type: 'account_update',
-                account_update: {
-                  configurations: ['recipient'],
-                  return_url: returnUrl,
-                  refresh_url: refreshUrl,
-                  collection_options: { fields: 'eventually_due' },
-                },
-              }
-            : {
-                type: 'account_onboarding',
-                account_onboarding: {
-                  configurations: ['recipient'],
-                  return_url: returnUrl,
-                  refresh_url: refreshUrl,
-                  collection_options: { fields: 'eventually_due' },
-                },
-              },
-        });
-        payload.url = link.url;
-      }
-    }
-
-    if (profile?.id) {
-      await admin
-        .from('profiles')
-        .update({
-          stripe_connect_id: payload.accountId,
-          stripe_onboarding_complete: payload.stripe_onboarding_complete,
-          payouts_enabled: payload.payouts_enabled,
-        })
-        .eq('id', profile.id)
-        .eq('user_id', authData.user.id);
-    }
-
-    return json(payload);
+    return respond(
+      await runCreateStripeAccount({
+        user: session.user,
+        body,
+        loadProfile: async (userId) => {
+          const { data: profile } = await adminDb()
+            .from('profiles')
+            .select(CONNECT_PROFILE_COLUMNS)
+            .eq('user_id', userId)
+            .maybeSingle();
+          return profile;
+        },
+        saveFlags: async (profileId, userId, flags) => {
+          await adminDb().from('profiles').update(flags).eq('id', profileId).eq('user_id', userId);
+        },
+        stripe: () => new Stripe(stripeSecret, { httpClient: Stripe.createFetchHttpClient() }),
+      }),
+    );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unexpected error';
-    return json({ error: message }, 400);
+    return respond(errorResult(thrownMessage(error), 400));
   }
 });

@@ -1,9 +1,16 @@
-/** Local scoreboard regressions: no invented live state, clock or zeroes; roster navigation stays intact. */
+/**
+ * Local scoreboard regressions: no invented live state, clock or zeroes; roster navigation stays intact; booster logos
+ * render from a legacy full URL or an `sb:` reference (SCALE-02) and fall back to initials.
+ */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { GameCard } from '@/components/Local/GameCard';
-import type { Game } from '@/types/database';
+import type { Game, Sponsorship } from '@/types/database';
 
 jest.mock('expo-haptics', () => ({ impactAsync: jest.fn(), ImpactFeedbackStyle: { Light: 'light' } }));
+jest.mock('@/lib/supabase', () => ({
+  isSupabaseConfigured: true,
+  supabase: { storage: { from: (bucket: string) => ({ getPublicUrl: (path: string) => ({ data: { publicUrl: `https://abc123.supabase.co/storage/v1/object/public/${bucket}/${path}` } }) }) } },
+}));
 const recordedGame: Game = {
   id: 'scoreboard-game', home_team: 'North Valley Timberwolves', away_team: 'South Ridge Falcons',
   home_school: 'North Valley High School', away_school: 'South Ridge High School',
@@ -68,5 +75,30 @@ describe('GameCard scoreboard', () => {
     expect(screen.getByText('S2')).toBeTruthy();
     expect(screen.getByText('Volleyball')).toBeTruthy();
     expect(screen.queryByText(/4:15/)).toBeNull();
+  });
+});
+
+describe('GameCard booster logos', () => {
+  const sponsor = (id: string, logo_url: string): Sponsorship => ({
+    id, sponsor_user_id: null, business_name: `Pizza ${id}`, logo_url, school_team: 'North Valley High School',
+    tier: 'silver', amount_cents: 5000, aura_points: 50, billing_interval: 'month', status: 'active',
+  });
+  it('renders a legacy full URL and an sb: reference, and shows initials when the logo is blank', async () => {
+    const legacy = 'https://abc123.supabase.co/storage/v1/object/public/avatars/sponsors/u1/1.png';
+    await render(
+      <GameCard game={recordedGame} onPress={jest.fn()}
+        sponsors={[sponsor('a', legacy), sponsor('b', 'sb:avatars/sponsors/u2/2.png'), sponsor('c', '  ')]} />,
+    );
+    const uris: string[] = [];
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) return node.forEach(walk);
+      if (!node || typeof node !== 'object') return;
+      const { props, children } = node as { props?: { source?: { uri?: string } }; children?: unknown };
+      if (props?.source?.uri) uris.push(props.source.uri);
+      walk(children);
+    };
+    walk(screen.toJSON());
+    expect(uris).toEqual([legacy, 'https://abc123.supabase.co/storage/v1/object/public/avatars/sponsors/u2/2.png']);
+    expect(screen.getByText('PC')).toBeTruthy();
   });
 });

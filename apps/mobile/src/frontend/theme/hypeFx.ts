@@ -19,21 +19,21 @@ export type HypeFx = {
  * @sideEffects None — tokens only.
  */
 export const HYPE_FX: Record<PlayReactionId, HypeFx> = {
-    seki: {
+  seki: {
     color: FOCAL.islandCyan,
-    glow: 'rgba(0,229,255,0.62)',
+    glow: 'rgba(61,214,245,0.62)',
     shout: 'SEKI!',
     emojis: ['🤙', '🌊', '✨', '💙'],
   },
   aura: {
     color: FOCAL.neonJade,
-    glow: 'rgba(0,230,118,0.62)',
+    glow: 'rgba(46,229,157,0.62)',
     shout: 'AURA!',
     emojis: ['⚡', '✨', '💚', '🌟'],
   },
   flex: {
     color: FOCAL.electricGold,
-    glow: 'rgba(255,215,0,0.62)',
+    glow: 'rgba(245,197,66,0.62)',
     shout: 'FLEX!',
     emojis: ['💪', '🔥', '😤', '✨'],
   },

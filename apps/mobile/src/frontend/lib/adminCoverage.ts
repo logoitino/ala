@@ -5,10 +5,11 @@
  */
 
 import type { AdminNavHref } from '@/lib/admin';
-import { getRuntimeFlag, type AppRuntimeConfig, type AppRuntimeFlagPath } from '@/lib/runtime';
+import {   type AppRuntimeFlagPath } from '@/lib/runtime';
 
 export type CoverageSurface =
   | 'home'
+  | 'beyond'
   | 'local'
   | 'activity'
   | 'spotlight'
@@ -37,6 +38,7 @@ export type CoverageControl = {
 
 export const COVERAGE_SURFACES: { id: CoverageSurface; label: string }[] = [
   { id: 'home', label: 'Home · Highlights ⚡' },
+  { id: 'beyond', label: 'Beyond the Game' },
   { id: 'local', label: 'Local' },
   { id: 'activity', label: 'Activity' },
   { id: 'spotlight', label: 'Spotlight' },
@@ -83,6 +85,16 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'reel_unsave', label: 'Remove bookmark', hint: 'More sheet · saved_reels delete', surface: 'home', fanHref: '/', adminHref: '/admin/features', flag: 'buttons.more' },
   { id: 'reel_category', label: 'Clip category badge', hint: 'Game Day / Train / Serve labels — Catalogs', surface: 'home', fanHref: '/', adminHref: '/admin/catalog' },
 
+  // BEYOND/CHAL have no new behavioral telemetry; operational counts are bounded RPC snapshots, not engagement outcomes.
+  { id: 'tab.beyond', label: 'Beyond (Highlights switch + page)', hint: 'Home-bar Beyond switch and the Beyond the Game page; server contribution switch is separate', surface: 'beyond', fanHref: '/beyond', adminHref: '/admin/features', flag: 'tabs.beyond' },
+  { id: 'beyond.categories', label: 'Workouts / Service / Learning / Stories', hint: 'Category filters; reviewed new posts plus eligible legacy workout/service clips', surface: 'beyond', fanHref: '/beyond', adminHref: '/admin/highlights' },
+  { id: 'beyond.contribute', label: 'Share a moment', hint: 'Private reservation/upload/review; default-off server control at Highlights desk', surface: 'beyond', fanHref: '/beyond', adminHref: '/admin/highlights' },
+  { id: 'beyond.mine', label: 'My submissions and export', hint: 'Own review status/removal; own export; admin erasure and physical cleanup', surface: 'beyond', fanHref: '/beyond', adminHref: '/admin/highlights' },
+  { id: 'beyond.report', label: 'Report a concern', hint: 'Immediately holds distribution; reasoned admin review', surface: 'beyond', fanHref: '/beyond', adminHref: '/admin/highlights' },
+  { id: 'challenge.respond', label: 'Workout response / friend invitation', hint: 'Preset-only, server eligibility and current actor; no cash/ranking; challenges.enabled', surface: 'beyond', fanHref: '/beyond', adminHref: '/admin/highlights' },
+  { id: 'challenge.inbox', label: 'Workout invitations', hint: 'Activity accepted-friend invites; mute/report controls; no delivery promise', surface: 'activity', fanHref: '/activity', adminHref: '/admin/highlights' },
+  { id: 'challenge.settings', label: 'Workout settings / private badge', hint: 'Own athlete switch, mutes, private noncash recognition, own-data export', surface: 'profile', fanHref: '/profile', adminHref: '/admin/highlights' },
+
   { id: 'tab.local', label: 'Local', hint: 'Home pill → /local', surface: 'local', fanHref: '/local', adminHref: '/admin/features', flag: 'tabs.local', telemetry: 'tab.local' },
   { id: 'local_search', label: 'Local Explore', hint: 'Players, schools, sponsors', surface: 'local', fanHref: '/local', adminHref: '/admin/features', flag: 'layouts.localSearch' },
   { id: 'hub.matches', label: 'Live Matches', hint: 'Scoreboard list', surface: 'local', fanHref: '/local', adminHref: '/admin/games', flag: 'layouts.liveMatches', telemetry: 'hub.matches' },
@@ -111,7 +123,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'spotlight_card', label: 'Award card', hint: 'Replay Player of the Week', surface: 'spotlight', fanHref: '/spotlight', adminHref: '/admin/spotlight', telemetry: 'spotlight_card' },
   { id: 'leaderboards', label: 'Boards', hint: 'Players (hype / views), Highlights, Schools, Fans — this week', surface: 'spotlight', fanHref: '/spotlight', adminHref: '/admin/features', flag: 'layouts.leaderboards', telemetry: 'leaderboards' },
 
-  { id: 'tab.drip', label: 'Drip tab', hint: 'Fan bar', surface: 'drip', fanHref: '/drip', adminHref: '/admin/features', flag: 'tabs.drip', telemetry: 'tab.drip' },
+  { id: 'tab.drip', label: 'Drip', hint: 'Profile menu; existing route and switch', surface: 'drip', fanHref: '/drip', adminHref: '/admin/features', flag: 'tabs.drip', telemetry: 'tab.drip' },
   { id: 'drip_item', label: 'Gear card', hint: 'Opens ProductSheet', surface: 'drip', fanHref: '/drip', adminHref: '/admin/drip', telemetry: 'drip_item' },
   { id: 'drip_buy', label: 'Buy Now', hint: 'PaymentSheet + shop_orders', surface: 'drip', fanHref: '/drip', adminHref: '/admin/drip', telemetry: 'drip_buy' },
   { id: 'drip_categories', label: 'Category chips', hint: 'Chip labels live in Look Copy', surface: 'drip', fanHref: '/drip', adminHref: '/admin/look' },
@@ -193,11 +205,3 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'sponsor_sideline', label: 'Place sideline board', hint: 'sponsor_ads', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/boosters', flag: 'layouts.sponsorHq', telemetry: 'sponsor_sideline' },
   { id: 'sponsor_rivalry', label: 'Publish rivalry banner', hint: 'sponsor_ads', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/boosters', flag: 'layouts.sponsorHq', telemetry: 'sponsor_rivalry' },
 ];
-
-/**
- * @purpose Count live vs paused fan controls for Overview and Coverage.
- */
-export function coverageHealth(live: AppRuntimeConfig): { total: number; liveCount: number; paused: number } {
-  const paused = COVERAGE_CONTROLS.filter((item) => item.flag && !getRuntimeFlag(live, item.flag)).length;
-  return { total: COVERAGE_CONTROLS.length, liveCount: COVERAGE_CONTROLS.length - paused, paused };
-}

@@ -32,8 +32,8 @@ import {
   claimOperatorGame,
   fetchOperatorGames,
   saveOperatorCheckIn,
+  subscribeOperatorGames,
 } from '@/lib/operator';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Game } from '@/types/database';
 
 export default function OperatorPortalScreen() {
@@ -70,23 +70,9 @@ export default function OperatorPortalScreen() {
 
   useEffect(() => {
     void fetchGames();
-
-    if (!isSupabaseConfigured) return;
-
-    const channel = supabase
-      .channel(`operator_games_${Date.now()}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'games' },
-        () => {
-          void fetchGames(false);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return subscribeOperatorGames(() => {
+      void fetchGames(false);
+    });
   }, [fetchGames]);
 
   const claimGame = async () => {

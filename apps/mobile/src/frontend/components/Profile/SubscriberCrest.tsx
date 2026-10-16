@@ -3,7 +3,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { colors } from '@/constants/theme';
 
-const NEON_JADE = '#00E676';
+import { FOCAL } from '@/theme/motion';
+
+const NEON_JADE = FOCAL.neonJade;
 
 type SubscriberCrestProps = {
   size?: number;

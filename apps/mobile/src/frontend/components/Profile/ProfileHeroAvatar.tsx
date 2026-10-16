@@ -60,7 +60,7 @@ function initialsFromName(name: string): string {
  * @param auraPoints Drives tier ring color + slim progress.
  * @param onFlipAura Opens the Aura trading card sheet (menu or control).
  * @param verificationStatus Viewer-facing Varsity chip next to the name.
- * @param avatarUrl `profiles.avatar_url` when set.
+ * @param avatarUrl `profiles.avatar_url` when set (full URL or `sb:` reference; `ProfileAvatarPicker` resolves it).
  * @param canEditAvatar Own hub — opens `ProfileAvatarPicker` 1:1 crop.
  * @param athlete Community accounts hide jersey and athlete details even when a favorite roster is supplied.
  * @param compact Keeps identity, known credentials and Aura together without a tall centered hero.

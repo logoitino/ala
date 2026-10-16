@@ -26,6 +26,7 @@ import { useCelebration } from '@/context/CelebrationContext';
 import { RESERVED_BADGE_MARKS, RESERVED_BADGE_MARKS_ERROR } from '@/data/verification';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 import type { ProfileVisibility } from '@/types/database';
+import { fetchMyPrivacy } from '@/lib/privacy';
 
 const SHEET_TRAVEL = 520;
 const BIO_MAX = 500;
@@ -54,6 +55,8 @@ const VISIBILITY_FIELDS: { key: keyof ProfileVisibility; label: string; hint: st
 type EditProfileModalProps = {
   visible: boolean;
   onClose: () => void;
+  /** Opens Profile → Privacy. When the database has the privacy update it replaces the old show/hide switches. */
+  onOpenPrivacy?: () => void;
 };
 
 /**
@@ -62,7 +65,7 @@ type EditProfileModalProps = {
  * of these flags; hiding only ever narrows the public `/user/[id]` view for other users.
  * @sideEffects `AuthContext.updateProfile` → `profiles` UPDATE (bio / social_links / profile_visibility / full_name / username).
  */
-export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
+export function EditProfileModal({ visible, onClose, onOpenPrivacy }: EditProfileModalProps) {
   const frame = useSheetFrame();
   const { profile, updateProfile } = useAuth();
   const { showToast } = useCelebration();
@@ -73,6 +76,8 @@ export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
   const [bio, setBio] = useState('');
   const [social, setSocial] = useState<Record<string, string>>({});
   const [visibility, setVisibility] = useState<Required<ProfileVisibility>>(DEFAULT_VISIBILITY);
+  // True once Profile → Privacy is available (PRIV-01 applied); the legacy switches then stay hidden and unsent.
+  const [privacyReady, setPrivacyReady] = useState(false);
   const translateY = useSharedValue(SHEET_TRAVEL);
   const backdropOpacity = useSharedValue(0);
 
@@ -84,6 +89,7 @@ export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
     setBio(profile?.bio ?? '');
     setSocial({ ...(profile?.social_links ?? {}) });
     setVisibility({ ...DEFAULT_VISIBILITY, ...(profile?.profile_visibility ?? {}) });
+    void fetchMyPrivacy().then(() => setPrivacyReady(true), () => setPrivacyReady(false));
     translateY.value = withSpring(0, SPRING_CARD);
     backdropOpacity.value = withTiming(1, { duration: 200 });
   }, [backdropOpacity, profile, translateY, visible]);
@@ -121,7 +127,7 @@ export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
         username: username.trim() || null,
         bio: bio.trim() || null,
         social_links: cleanedSocial,
-        profile_visibility: visibility,
+        ...(privacyReady ? {} : { profile_visibility: visibility }),
       });
       showToast('Profile updated ✅');
       dismiss();
@@ -207,6 +213,17 @@ export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
                 </View>
               ))}
 
+              {privacyReady && onOpenPrivacy ? (
+                <Pressable accessibilityRole="button" accessibilityLabel="Open privacy settings" haptic="selection"
+                  onPress={() => { dismiss(); onOpenPrivacy(); }} style={styles.visRow}>
+                  <View style={styles.visText}>
+                    <Text style={styles.visLabel}>Privacy</Text>
+                    <Text style={styles.visHint}>Public or private, who sees each part of your profile, friends, search and blocked accounts</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </Pressable>
+              ) : null}
+              {privacyReady ? null : <>
               <Text style={styles.sectionLabel}>Show or hide from other users</Text>
               <Text style={styles.sectionHint}>
                 You always see everything on your own Hub. Hiding a field only removes it from your public profile
@@ -244,6 +261,7 @@ export function EditProfileModal({ visible, onClose }: EditProfileModalProps) {
                   </Pressable>
                 );
               })}
+              </>}
             </ScrollView>
 
             <AnimatedButton

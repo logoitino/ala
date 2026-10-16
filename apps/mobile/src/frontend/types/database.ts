@@ -5,6 +5,11 @@
  */
 import type { SchoolTeam } from '@/data/teams';
 import type {
+  ClientSupportCode, EngineeringSupportSnapshot, SupportAudit, SupportCode, SupportDisposition,
+  SupportEnvironment, SupportFeature, SupportRelease, SupportReleaseManifest, SupportReview,
+  SupportSignal, SupportSource,
+} from '@tapuai/shared-types/admin/engineeringSupport';
+import type {
   SpotlightAward as SharedSpotlightAward,
   SpotlightPeriodKind,
   UserRole,
@@ -14,7 +19,6 @@ export type {
   ActionStats,
   CastCheerVoteRpc,
   FanTipHistoryRpc,
-  GetAuraTierRpc,
   SharedSchoolTeam,
   SpotlightPeriodKind,
   TapuaiRpcMap,
@@ -31,7 +35,6 @@ export type Profile = {
   /** `unverified` | `pending` | `verified`. Claiming a school does not set verified. */
   verification_status?: 'unverified' | 'pending' | 'verified' | string | null;
   aura_points?: number;
-  current_tier?: number | null;
   /** Dual capability, e.g. `['fan', 'athlete']`. Falls back to `[role]` when omitted. */
   roles?: UserRole[] | string[] | null;
   /** True when `role` / `roles` include admin. Synced by `add_user_role('admin')`. */
@@ -59,6 +62,13 @@ export type Profile = {
   /** COPPA gate: self-attested "13 years of age or older" checkbox. Null = not yet confirmed
    * (pre-existing accounts included) — never used to retroactively block an existing session. */
   age_confirmed_13_plus?: boolean | null;
+  /** MINOR-01: birth month and year (no day); present only once the minor-accounts update is applied. */
+  birth_year?: number | null;
+  birth_month?: number | null;
+  /** True for accounts made after MINOR-01 (a missing age is 'not_given'); false for older accounts. */
+  age_check_required?: boolean;
+  /** Set when an under-13 age was entered: the account is closed and waits for deletion. */
+  age_blocked_at?: string | null;
   /** Compliance freeze switch (LEGAL_BRIEFING.md §8 item 5). Flip only via `set_malo_freeze`. */
   malo_frozen?: boolean | null;
   /** Free-text about-me, ≤500 chars (`profiles_bio_length_check`). */
@@ -79,11 +89,14 @@ export type ProfileVisibility = {
   social_links?: boolean;
 };
 
-/** Shape of `public.profiles_public` — the "someone else is viewing this account" read surface;
- * hidden `bio`/`social_links` come back null/empty rather than throwing. See `schema.sql`. */
+/** Who is looking at a profile, from `viewer_relationship` (PRIV-01). */
+export type ProfileViewerRelation = 'self' | 'admin' | 'guardian' | 'friend' | 'stranger' | 'blocked' | 'guest';
+
+/** Shape of `public.profiles_public` — the "someone else is viewing this account" read surface. Every item follows
+ * the owner's audience for this viewer (PRIV-01, `20261014090000`): hidden items come back null / empty / false,
+ * never an error. `user_id` is no longer exposed. The PRIV-01 columns are absent on databases without the migration. */
 export type ProfilePublic = {
   id: string;
-  user_id: string | null;
   player_id: string | null;
   username: string | null;
   full_name: string;
@@ -95,6 +108,14 @@ export type ProfilePublic = {
   athlete_sport?: string | null;
   bio: string | null;
   social_links: ProfileSocialLinks;
+  verification_status?: string | null;
+  school_id?: string | null;
+  aura_points?: number | null;
+  account_private?: boolean;
+  viewer_relation?: ProfileViewerRelation;
+  stats_visible?: boolean;
+  crew_visible?: boolean;
+  friends_visible?: boolean;
 };
 
 export type Player = {
@@ -231,6 +252,10 @@ export type TipLedgerEntry = {
   source_label?: string | null;
   /** Optional tip to Tapua'i charged on top of this donation (cents; not part of `amount_cents`). */
   platform_tip_cents?: number;
+  /** Card fee the donor chose to cover (cents; charged on top, logged as Tapua'i's `card_fee` revenue). BOOKS-01. */
+  cover_fee_cents?: number;
+  /** Stripe PaymentIntent id (`pi_…`) so a payout can be matched to its donations. BOOKS-01. */
+  stripe_payment_intent_id?: string | null;
   /** Rally goal this donation counted toward (nulled by the server if the Rally wasn't open). */
   rally_id?: string | null;
 };
@@ -273,6 +298,8 @@ export type ReceivedMalo = {
   reel_id: string | null;
   wishlist_item_id: string | null;
   fan_name: string;
+  /** What reached the family account (books); null until 20261013231000 is applied. */
+  family_cents: number | null;
 };
 
 /** Row from `get_fan_tip_history` (Mālo receipts for the signed-in fan). */
@@ -655,6 +682,11 @@ type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
 export type Database = {
   public: {
     Tables: {
+      // Evidence is RPC-only: no client inserts/updates, including from an admin session.
+      support_signals: Table<SupportSignal, never, never>;
+      support_reviews: Table<SupportReview, never, never>;
+      support_audit_events: Table<SupportAudit & { chain_index: number }, never, never>;
+      support_releases: Table<SupportRelease, never, never>;
       profiles: Table<Profile, Partial<Profile> & Pick<Profile, 'full_name'>>;
       players: Table<Player, Partial<Player> & Pick<Player, 'name'>>;
       games: Table<Game, Partial<Game> & Pick<Game, 'home_team' | 'away_team'>>;
@@ -831,9 +863,8 @@ export type Database = {
         Relationships: [];
       };
       /**
-       * 2026-09 profile customization: read-only mirror of `profiles` with `bio` / `social_links`
-       * nulled/emptied for anyone other than the owner or admin whose `profile_visibility` hides
-       * them. The public `/user/[id]` screen and other "viewing someone else" surfaces read this
+       * Read-only mirror of `profiles` for viewing someone else: each item follows the owner's audience for this
+       * viewer (PRIV-01); `profiles` itself is readable only for your own row (admins: all). The public `/user/[id]` screen and other "viewing someone else" surfaces read this
        * instead of the base table — see schema.sql for the view definition.
        */
       profiles_public: {
@@ -850,6 +881,22 @@ export type Database = {
       };
     };
     Functions: {
+      /** Fixed bounded snapshot; errors/missing migration remain unread, never healthy empty data. */
+      get_engineering_support_snapshot: { Args: Record<string, never>; Returns: EngineeringSupportSnapshot };
+      record_support_signal: {
+        Args: { p_feature: SupportFeature; p_code: ClientSupportCode; p_environment: SupportEnvironment; p_release: string };
+        Returns: string;
+      };
+      /** Server credential role only; the database also verifies the actual session role. */
+      record_trusted_support_signal: {
+        Args: { p_feature: SupportFeature; p_code: SupportCode; p_environment: SupportEnvironment; p_release: string; p_source: Exclude<SupportSource, 'client'> };
+        Returns: string;
+      };
+      record_support_review: {
+        Args: { p_fingerprint: string; p_disposition: SupportDisposition; p_rationale: string; p_reviewed_through: string; p_parent_review_id?: string | null };
+        Returns: string;
+      };
+      register_support_release: { Args: { p_manifest: SupportReleaseManifest }; Returns: string };
       increment_backer_count: {
         Args: { target_player_id: string };
         Returns: number;
@@ -1020,15 +1067,6 @@ export type Database = {
         Args: { target_profile_id: string; note?: string | null };
         Returns: Record<string, unknown>;
       };
-      get_aura_tier: {
-        Args: { points: number };
-        Returns: {
-          tier: number;
-          title: string;
-          min_points: number;
-          color: string;
-        };
-      };
       increment_player_hype: {
         Args: { target_player_id: string; hype_kind: string };
         Returns: {
@@ -1193,6 +1231,33 @@ export type Database = {
       get_company_revenue_summary: {
         Args: Record<string, never>;
         Returns: Record<string, unknown>;
+      };
+      /** BOOKS-01 (`20261012210000_bookkeeping_ledger.sql`, not applied yet): accounts, recorded entries, closes. */
+      get_ledger_books: {
+        Args: Record<string, never>;
+        Returns: Record<string, unknown>;
+      };
+      record_ledger_entry: {
+        Args: {
+          p_entry_date: string;
+          p_kind: string;
+          p_memo: string;
+          p_reference: string;
+          p_lines: { account_code: string; debit_cents: number; credit_cents: number; memo?: string | null; athlete_ref?: string | null }[];
+        };
+        Returns: string;
+      };
+      void_ledger_entry: {
+        Args: { p_entry_id: string; p_reason: string; p_reversal_date?: string };
+        Returns: string;
+      };
+      close_ledger_period: {
+        Args: { p_period: string; p_note: string; p_totals: Record<string, number> };
+        Returns: undefined;
+      };
+      reopen_ledger_period: {
+        Args: { p_period: string; p_reason: string };
+        Returns: undefined;
       };
       submit_app_feedback: {
         Args: { p_body: string; p_kind?: string; p_surface?: string };

@@ -1,5 +1,6 @@
 /**
  * Local tab (game day): Matches, School Polls and Top Boosters hubs, plus search (`SearchResultsOverlay`).
+ * Booster logos display through `mediaUri` from lib/media (legacy full URL or `sb:` reference, SCALE-02).
  * Reached from the Home pill, not the tab bar. The `tabs.local` runtime flag can pause it (`RuntimePaused`).
  */
 
@@ -42,6 +43,7 @@ import { usePublishedCheerPolls } from '@/hooks/useCheerPoll';
 import { useSponsorships } from '@/hooks/useSponsorships';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { mediaUri } from '@/lib/media';
 import { localGameHref, userProfileHref } from '@/lib/navigation';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 import type { Game, LocalSearchHit, Sponsorship } from '@/types/database';
@@ -157,6 +159,7 @@ function SponsorRailCard({
   onPress: () => void;
 }) {
   const pack = sponsorTierById(sponsor.tier);
+  const logo = mediaUri(sponsor.logo_url);
   return (
     <View onLayout={(event) => onLayoutX(event.nativeEvent.layout.x)}>
       <AnimatedButton
@@ -171,8 +174,8 @@ function SponsorRailCard({
         ]}
       >
         <View style={styles.sponsorLogo}>
-          {sponsor.logo_url ? (
-            <Image source={{ uri: sponsor.logo_url }} resizeMode="cover" style={styles.sponsorLogoImage} />
+          {logo ? (
+            <Image source={{ uri: logo }} resizeMode="cover" style={styles.sponsorLogoImage} />
           ) : (
             <Text style={styles.sponsorInitials}>{initialsForBusiness(sponsor.business_name)}</Text>
           )}
@@ -423,8 +426,6 @@ export default function LocalTab() {
                 }
               }}
               accessibilityLabel="Local hub"
-              accent={TAB_ACCENTS.local.color}
-              mist={TAB_ACCENTS.local.mist}
             />
             {hubs.length === 0 ? (
               <EmptyState
@@ -447,8 +448,6 @@ export default function LocalTab() {
                 allowDeselect
                 onChange={setFilterId}
                 accessibilityLabel="Region filters"
-                accent={FOCAL.cyanInk}
-                mist={FOCAL.mistCyan}
               />
 
               <Text style={styles.sectionTitle}>Live matchups</Text>

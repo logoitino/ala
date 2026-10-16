@@ -27,9 +27,7 @@ import {
   sportClockLabel,
   type SportCallout,
   type SportConfig,
-  type SportScoreAction,
-  type SportStatSource,
-} from '@/data/sports';
+  type SportScoreAction } from '@/data/sports';
 import {
   deleteSportConfig,
   fetchSportUsage,

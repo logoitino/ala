@@ -5,6 +5,7 @@
  * `reels` insert path shared by videos and photo stories (`insertReelRow`) and the JPEG metadata stripper that keeps
  * GPS / camera data out of public photos (PHOTO_STORIES_DESIGN.md "Privacy and safety"). Process-wide helper, so it
  * lives in services/ (PascalCase) rather than lib/.
+ * Avatar uploads write through `mediaValueToStore` (SCALE-02 switch in lib/media, off for now).
  * @sideEffects Reads device media; writes Supabase Storage; inserts `reels` rows.
  */
 
@@ -13,10 +14,9 @@ import { Platform, TurboModuleRegistry } from 'react-native';
 import { RIGHTS_VERSION } from '@/data/contentRights';
 import {
   HIGHLIGHT_MAX_MS,
-  HIGHLIGHT_OPTIMIZING,
-  HIGHLIGHT_TOO_LONG,
-} from '@/data/media';
+  HIGHLIGHT_OPTIMIZING } from '@/data/media';
 import { parseReelCategory, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
+import { mediaValueToStore, publicMediaUrl } from '@/lib/media';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Database, Reel } from '@/types/database';
 
@@ -175,9 +175,7 @@ async function uploadToBucket(
       upsert,
     });
     if (!error) {
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from(bucket).getPublicUrl(path);
+      const publicUrl = publicMediaUrl(bucket, path);
       if (publicUrl) return { bucket, publicUrl };
       lastError = 'Upload succeeded but no public URL was returned.';
       continue;
@@ -593,7 +591,8 @@ export async function uploadStoryPhoto(
 /**
  * @purpose Upload a 1:1 cropped profile photo to `avatars/{user_id}/{timestamp}.jpg` and stamp `profiles.avatar_url`.
  * @param uri Local ImagePicker image URI.
- * @returns Public HTTPS URL written to the signed-in profile.
+ * @returns The value written to the signed-in profile: the public HTTPS URL today, or an `sb:avatars/...` reference
+ *   once `MEDIA_WRITE_REFERENCES` is on (SCALE-02). Display it through `mediaUri` from lib/media.
  * @sideEffects Storage `avatars` upload; `profiles` UPDATE on `user_id = auth.uid()`.
  */
 export async function uploadAvatar(uri: string, onProgress?: CompressProgress): Promise<string> {
@@ -611,10 +610,11 @@ export async function uploadAvatar(uri: string, onProgress?: CompressProgress): 
   onProgress?.(0.4);
 
   const path = `${userId}/${Date.now()}.jpg`;
-  const { publicUrl } = await uploadToBucket([AVATARS_BUCKET], path, body, imageContentType(uri));
+  const { bucket, publicUrl } = await uploadToBucket([AVATARS_BUCKET], path, body, imageContentType(uri));
+  const stored = mediaValueToStore(bucket, path, publicUrl);
   onProgress?.(0.8);
 
-  const { error } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('user_id', userId);
+  const { error } = await supabase.from('profiles').update({ avatar_url: stored }).eq('user_id', userId);
   if (error) {
     throw new Error(
       error.message.includes('avatar_url')
@@ -624,16 +624,5 @@ export async function uploadAvatar(uri: string, onProgress?: CompressProgress): 
   }
 
   onProgress?.(1);
-  return publicUrl;
+  return stored;
 }
-
-export const MediaUploadService = {
-  compressHighlight,
-  uploadHighlight,
-  uploadStoryPhoto,
-  stripJpegMetadata,
-  uploadAvatar,
-  isHighlightTooLong,
-  assetDurationMs,
-  HIGHLIGHT_TOO_LONG,
-};

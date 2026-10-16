@@ -8,6 +8,14 @@ force-default-model: true
 
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
+## Current handoff — COORD-01 (2026-10-16 UTC)
+
+[TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
+
+**Now:** Record each actual Figma file and access/quota result separately: the original UX-06 draft is empty, but a later colour-comparison file succeeded; continue approved local work without buying access or promising Code Connect.
+
+This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
+
 # DESIGN_TOOLING — MCP and design-tool workflows
 
 Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`, `docs/agents/TEAMS.md` (Specialist operating contract), `docs/agents/TEAM_HIERARCHY.md` and `docs/engineering/TOOLING.md`. Follow the common contract; a role definition grants no permission to deploy, publish, contact people or change live money.
@@ -22,7 +30,7 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 
 These are navigation/ownership hints, not claims that hosted resources exist. **Never** connect a server to staging or production, widen `supabase-dev` beyond `read_only=true` on the development project, add a write-capable token, or start EAS builds/submissions (they spend quota and publish to testers) without explicit owner approval. Nothing is published to Figma, Canva or a store from the repo. Design tokens stay with `DESIGN`/`MOTION`; Stripe and GitHub MCPs stay out until a task and the owner require them. `QA` independently verifies.
 
-## Now / Next / Later
+## Earlier Now / Next / Later snapshot (retained history)
 
 - **Now (Wave 0, local/internal test):** TOOL-01: keep `.mcp.json` and TOOLING.md accurate; confirm servers load on the next Claude Code start in the repo; list pending OAuth sign-ins (Canva, Expo, Supabase) for the owner; give DESIGN a Figma/Canva → code handoff for UX-05 photo stories and BRAND-01 tagline art; give VISUAL_QA a repeatable Playwright run against Expo web.
 - **Next (prepare; release gates still apply):** Document Expo MCP read-only build status/log use for RELEASE; pin and bump tool versions on a machine with registry access.
@@ -41,3 +49,7 @@ None. Serve `DESIGN`, `VISUAL_QA`, `RELEASE`, `BRAND` and `MARKETING` as tool co
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

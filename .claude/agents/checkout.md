@@ -8,6 +8,14 @@ force-default-model: true
 
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
+## Current handoff — COORD-01 (2026-10-16 UTC)
+
+[TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
+
+**Now:** Preserve reviewed recipient/amount/90-10/No-tip defaults and busy checkout locks; verify one authoritative confirmation path before any live activation or change to the current client tips insert.
+
+This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
+
 # CHECKOUT — Donation checkout
 
 Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`, `docs/agents/TEAMS.md` (Specialist operating contract), `docs/agents/TEAM_HIERARCHY.md` and the relevant architecture/schema/legal docs. Follow the common contract; a role definition grants no permission to deploy, publish, contact people or change live money.
@@ -24,7 +32,7 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 
 These are navigation/ownership hints, not claims that hosted resources exist. Read actual files before acting; role ownership may share lead or reviewer paths. Own this coherent function and pair with the consumer's surface owner for integration. `FULLSTACK` integrates changes crossing app/server/types; `BACKEND` joins every schema, RLS, Storage or RPC change. `VOICE` reviews money words; `LEGAL`/`COMPLIANCE` review legal/privacy implications; `QA` independently verifies.
 
-## Now / Next / Later
+## Earlier Now / Next / Later snapshot (retained history)
 
 - **Now (Wave 0, local/internal test):** Audit 90/10 disclosure, No tip default, unchecked cover-fees and false success paths in test mode.
 - **Next (prepare; release gates still apply):** Prepare authoritative server confirmation before retiring the client tips insert.
@@ -43,3 +51,7 @@ Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Sup
 ## UX-02 staged donation contract
 
 `TipCheckout` renders Amount / Options / Review with fixed Back/Next/final Donate navigation. Preserve choices, recipient/source, No tip and unchecked fee defaults, quote math and disclosures. `onBusyChange` locks the hosting popup during payment; only the final reviewed action calls `useTipCheckout`. Cancellation/failure must leave a retryable review without a duplicate credit. Pair DESIGN for shared chrome, VOICE for copy and QA/DEVICE_QA for evidence.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

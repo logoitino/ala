@@ -14,18 +14,20 @@ const mockCreatePlayer = jest.fn();
 const mockReplace = jest.fn(async () => undefined);
 const mockTracker = jest.fn();
 const mockOverlay = jest.fn();
+const mockVideoPlayer = { replaceAsync: mockReplace, play: jest.fn(), pause: jest.fn(), status: 'readyToPlay', playing: false, loop: false, muted: true, duration: 9 };
+const mockVideoEvents: Record<string, (payload: any) => void> = {};
 
 jest.mock('expo-video', () => {
   const { View } = jest.requireActual('react-native');
   return {
     useVideoPlayer: (source: unknown) => {
       mockCreatePlayer(source);
-      return { replaceAsync: mockReplace, play: jest.fn(), pause: jest.fn(), loop: false, muted: true, duration: 0 };
+      return mockVideoPlayer;
     },
     VideoView: () => <View testID="video-view" />,
   };
 });
-jest.mock('expo', () => ({ useEventListener: jest.fn() }));
+jest.mock('expo', () => ({ useEventListener: (_player: unknown, event: string, callback: (payload: any) => void) => { mockVideoEvents[event] = callback; } }));
 jest.mock('expo-router', () => ({ useIsFocused: () => true }));
 jest.mock('expo-blur', () => {
   const { View } = jest.requireActual('react-native');
@@ -114,6 +116,10 @@ function renderCard(clip: HighlightClip, active = true) {
 beforeEach(() => {
   mockCreatePlayer.mockReset();
   mockReplace.mockClear();
+  mockReplace.mockImplementation(async () => undefined);
+  mockVideoPlayer.play.mockClear(); mockVideoPlayer.pause.mockClear();
+  mockVideoPlayer.status = 'readyToPlay'; mockVideoPlayer.playing = false;
+  for (const key of Object.keys(mockVideoEvents)) delete mockVideoEvents[key];
   mockTracker.mockReset();
   mockOverlay.mockReset();
 });
@@ -149,5 +155,48 @@ describe('ReelCard photo-story branch', () => {
     expect(mockReplace).toHaveBeenCalledWith('https://x/v.mp4');
     expect(screen.queryByText(/photos:/)).toBeNull();
     expect(mockOverlay).toHaveBeenLastCalledWith(expect.objectContaining({ storyNote: null }));
+  });
+
+  it('shows an accessible Retry after a failed video without counting it as playback', async () => {
+    mockReplace.mockRejectedValueOnce(new Error('Private media URL must not appear in the UI'));
+    await renderCard({ ...base, id: 'v1', videoUrl: 'https://x/v.mp4' });
+    await act(async () => {});
+    expect(screen.getByText("This Highlight couldn't play.")).toBeTruthy();
+    expect(screen.queryByText(/Private media/)).toBeNull();
+    const retry = screen.getByRole('button', { name: 'Retry this Highlight' });
+    expect(retry.props.style.minHeight).toBeGreaterThanOrEqual(44);
+    expect(mockTracker.mock.calls.every(call => call[2] === false)).toBe(true);
+    await fireEvent.press(retry); await act(async () => {});
+    expect(mockReplace).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('button', { name: 'Retry this Highlight' })).toBeNull();
+    await act(async () => {
+      mockVideoEvents.sourceChange({ source: { uri: 'https://x/v.mp4' } });
+      mockVideoEvents.statusChange({ status: 'readyToPlay' });
+    });
+    expect(mockVideoPlayer.play).toHaveBeenCalledTimes(1);
+    expect(mockTracker.mock.calls.every(call => call[2] === false)).toBe(true);
+    await act(async () => { mockVideoEvents.playingChange({ isPlaying: true, oldIsPlaying: false }); });
+    expect(mockTracker).toHaveBeenLastCalledWith('v1', true, true, 3000);
+  });
+
+  it('hides failed-source recovery on an offscreen card and never resumes it from a ready event', async () => {
+    mockReplace.mockRejectedValueOnce(new Error('Unavailable'));
+    const clip = { ...base, id: 'v1', videoUrl: 'https://x/v.mp4' }; const view = await renderCard(clip);
+    await act(async () => {}); expect(screen.getByRole('button', { name: 'Retry this Highlight' })).toBeTruthy();
+    await view.rerender(<ReelCard clip={clip} player={null} active={false} height={800} tipping={false} onTip={jest.fn()} />);
+    expect(screen.queryByRole('button', { name: 'Retry this Highlight' })).toBeNull();
+    await act(async () => { mockVideoEvents.statusChange({ status: 'readyToPlay' }); });
+    expect(mockVideoPlayer.play).not.toHaveBeenCalled();
+  });
+
+  it('shows Retry for a delayed web media error even when no source metadata could load', async () => {
+    const platform = require('react-native').Platform; const originalOS = platform.OS;
+    platform.OS = 'web'; mockVideoPlayer.status = 'loading';
+    try {
+      await renderCard({ ...base, id: 'v1', videoUrl: 'https://x/bad.mp4' }); await act(async () => {});
+      await act(async () => { mockVideoEvents.statusChange({ status: 'error', error: { message: 'Unsupported source' } }); });
+      expect(screen.getByRole('button', { name: 'Retry this Highlight' })).toBeTruthy();
+      expect(mockTracker.mock.calls.every(call => call[2] === false)).toBe(true);
+    } finally { platform.OS = originalOS; }
   });
 });

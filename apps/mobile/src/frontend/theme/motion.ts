@@ -66,56 +66,60 @@ export const SCROLL_FX = {
 } as const;
 
 /**
- * Focal color hierarchy — Island Daylight (standard fan-app scheme).
+ * Focal color hierarchy — Calm Island (owner-selected 2026-10-15 from the Figma comparison
+ * "Tapua'i — Look & colour refresh": one brand colour does the work).
  *
  * | Role | Color | Where |
  * | --- | --- | --- |
- * | Brand / Mālo / Aura | Neon Jade + jade ink | Primary CTAs, active Home/Profile |
- * | Seki / away / Local | Island Cyan | Local tab, cheer away, Seki bursts |
- * | Rank / Spotlight | Electric Gold + gold ink | Kickers, #1 ranks, Spotlight, Flex |
- * | Live / heat | Ember | LIVE pills, Crimson Ember tier, urgency |
- * | Flex-adjacent | Electric Violet | Profile chrome, Flex-adjacent accents |
+ * | Brand / Donate / Aura | Deep jade ink + bright jade glow | Primary CTAs, Upload, the active tab on every destination |
+ * | Rank / Spotlight | Gold ink + soft gold | Kickers, #1 ranks, Spotlight, Flex — awards only |
+ * | Live / heat | Ember | LIVE pills, Crimson Ember tier, errors — nothing decorative |
+ * | Seki / Flex-adjacent | Island Cyan / Electric Violet | Hype bursts and Aura tiers, mostly over video |
  *
- * The app ships **light** (`backgroundBase`). Use `ink` on filled jade/gold, `*Ink` for
- * colored text on light surfaces, `mist*` washes for cards, and `videoBase` for chrome
- * that stays dark (Reel overlays, Spotlight modal, scrims).
+ * The app ships **light** on a warm sand-white canvas (`backgroundBase`). Use `ink` on bright
+ * fills, `*Ink` for coloured text on light surfaces, `mist*` washes for cards, and `videoBase`
+ * for chrome that stays dark (Reel overlays, Spotlight modal, scrims). Hex pairs are WCAG AA
+ * (≥ 4.5:1) checked for text use.
  */
 export const FOCAL = {
-  backgroundBase: '#F3FAF6',
-  ink: '#0F1416',
-  neonJade: '#00E676',
-  jadeInk: '#00733C',
-  mistJade: '#E8FBF0',
-  islandCyan: '#00E5FF',
+  backgroundBase: '#F7F6F2',
+  ink: '#14191B',
+  neonJade: '#2EE59D',
+  jadeInk: '#0B6E4F',
+  mistJade: '#E3F1EA',
+  islandCyan: '#3DD6F5',
   cyanInk: '#00707E',
-  mistCyan: '#CFF7FF',
-  electricGold: '#FFD700',
-  goldInk: '#8A6400',
-  mistGold: '#FFF8DC',
+  mistCyan: '#DDF5FA',
+  electricGold: '#F5C542',
+  goldInk: '#7F5A00',
+  mistGold: '#FBF4DE',
   electricViolet: '#7C4DFF',
   violetInk: '#4C1D95',
-  mistViolet: '#F3EDFF',
-  ember: '#FF1744',
-  emberInk: '#C4002B',
-  mistEmber: '#FFE8EC',
-  mistSlate: '#F1F5F9',
-  videoBase: '#0F1416',
+  mistViolet: '#F1ECFB',
+  ember: '#E5213F',
+  emberInk: '#C8102E',
+  mistEmber: '#FCE9EB',
+  mistSlate: '#F1F3F2',
+  videoBase: '#0E1315',
 } as const;
+
+const JADE_ACCENT = { color: FOCAL.jadeInk, mist: FOCAL.mistJade, glow: FOCAL.neonJade } as const;
 
 /**
- * @purpose Per-tab accent for the fan bar and light-tab chrome so each destination reads at a glance.
- * Home = jade, Local = cyan, Spotlight = gold, Drip = ember, Profile = violet.
+ * @purpose Screen accent per fan destination (headings, kickers, light-tab chrome). Calm Island keeps one
+ * brand jade everywhere; Spotlight alone stays gold because gold now means awards. The fan bar itself
+ * always uses `TAB_ACCENTS.index` so the active tab reads the same on every destination.
  */
 export const TAB_ACCENTS = {
-  index: { color: FOCAL.jadeInk, mist: FOCAL.mistJade, glow: FOCAL.neonJade },
-  local: { color: FOCAL.cyanInk, mist: FOCAL.mistCyan, glow: FOCAL.islandCyan },
-  activity: { color: FOCAL.violetInk, mist: FOCAL.mistViolet, glow: FOCAL.electricViolet },
+  index: JADE_ACCENT,
+  beyond: JADE_ACCENT,
+  local: JADE_ACCENT,
+  activity: JADE_ACCENT,
   spotlight: { color: FOCAL.goldInk, mist: FOCAL.mistGold, glow: FOCAL.electricGold },
-  drip: { color: FOCAL.emberInk, mist: FOCAL.mistEmber, glow: FOCAL.ember },
-  profile: { color: FOCAL.violetInk, mist: FOCAL.mistViolet, glow: FOCAL.electricViolet },
+  drip: JADE_ACCENT,
+  profile: JADE_ACCENT,
 } as const;
 
-export type FanTabAccentId = keyof typeof TAB_ACCENTS;
 
 /** Persistent Neon Jade border glow for the Reel Mālo ⚡ control. */
 export const JADE_BORDER_GLOW: ViewStyle = Platform.select({

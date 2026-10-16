@@ -2885,6 +2885,8 @@ end;
 $$;
 
 -- Gifts an athlete (or their linked guardian) can read. Fans still use get_fan_tip_history for what they sent.
+-- Re-runnable: 20261013231000 (end of file) changes this function's result columns, so a re-run drops first.
+drop function if exists public.get_received_malo(uuid);
 create or replace function public.get_received_malo(target_player_id uuid)
 returns table (
   id uuid,
@@ -9165,7 +9167,8 @@ end $$;
 alter table public.company_revenue_logs drop constraint if exists company_revenue_logs_source_check;
 alter table public.company_revenue_logs
   add constraint company_revenue_logs_source_check
-  check (source in ('malo', 'booster', 'vault', 'merch', 'tip'));
+  -- 'card_fee' (BOOKS-01, below) is listed here too, so re-running this file after card-fee rows exist cannot fail.
+  check (source in ('malo', 'booster', 'vault', 'merch', 'tip', 'card_fee'));
 
 create or replace function public.company_revenue_bps(stream_source text)
 returns integer
@@ -11130,3 +11133,9121 @@ create policy "Public update reels bucket"
   );
 
 commit;
+
+
+-- =============================================================================
+-- 2026-10-12 Books: chart of accounts, recorded entries, month closes and reopens, covered card fee
+-- and PaymentIntent id on donations, server-owned payout paid date (BOOKS-01 / BOOKS-02).
+-- Source: supabase/migrations/20261012210000_bookkeeping_ledger.sql (revised 2026-10-13 after
+-- RLS_SECURITY and CONTROLLER/TAX review; replayed 72/72 on PGlite / Postgres 18.6).
+-- Written, not applied anywhere. Design: docs/engineering/design/BOOKKEEPING.md.
+-- =============================================================================
+begin;
+
+-- Books (BOOKS-01): chart of accounts, hand-entered journal entries, month closes, and the three
+-- money facts the revenue log was missing.
+--
+-- Purpose
+--   The admin Books desk (`/admin/books`) builds a double-entry journal from the money tables the app
+--   already writes (company_revenue_logs, disbursements). This file adds what cannot be derived:
+--   1. ledger_accounts — the chart of accounts, seeded. Codes match CHART_OF_ACCOUNTS in
+--      packages/shared-types/admin/bookkeeping.ts (a unit test compares them).
+--   2. ledger_manual_entries + ledger_manual_lines — expenses, Stripe fees, Stripe payouts to the bank,
+--      owner contributions/draws and corrections. Written only through record_ledger_entry, which
+--      checks the entry balances, every account exists, and the month is open. Never edited or
+--      deleted: void_ledger_entry posts a reversing entry.
+--   3. ledger_period_closes — closing a month stores its per-account totals so the desk can tell
+--      when a source row in a closed month changes later. Hand-entered entries cannot be dated into
+--      a closed month; a per-month advisory lock serializes close, record, void and reopen.
+--      ledger_period_reopens keeps every reopen with its reason and the totals it replaced.
+--   4. tips.cover_fee_cents — the card fee a donor chose to cover. It is charged today but recorded
+--      nowhere, so Stripe deposits cannot match the books. Logged as its own revenue row
+--      (source 'card_fee', 100% Tapua'i), like the optional tip to Tapua'i.
+--   5. tips.stripe_payment_intent_id — lets a Stripe payout be matched to the donations inside it
+--      (unique when present).
+--   6. disbursements.paid_at — owned by the server: set when a payout becomes paid, never taken from a
+--      client, so a payout cannot be backdated into a closed month.
+--   7. get_company_revenue_summary lists card fees as their own stream.
+--   Reviewed 2026-10-13 by RLS_SECURITY (search_path '', locks, paid_at ownership, unique payment id,
+--   reserved kinds) and CONTROLLER/TAX (manual lines carry an athlete reference for refunds and payouts).
+--   No money moves. No change to who can donate, the 90 / 10 split, or the optional tip.
+--
+-- Owner: BOOKS-01 (2026-10-12, owner asked for bookkeeping, tax preparation and accounting export).
+--   Design: docs/engineering/design/BOOKKEEPING.md.
+--
+-- Dependencies: public.require_admin_guard(), public.current_user_role(), public.tips,
+--   public.disbursements, public.company_revenue_logs with the 'tip' source
+--   (20260929180000_rally_goals_thanks_platform_tip.sql), public.record_company_revenue.
+--   The pre-flight block stops with a clear message if the 'tip' source migration is missing.
+--
+-- Security: every new table has RLS on with an admin-only SELECT policy and no client write grant.
+--   Writes go through security definer RPCs that call require_admin_guard() first. EXECUTE is
+--   revoked from public and anon and granted to authenticated. The new tips columns are written by
+--   the donor's own insert, like platform_tip_cents; cover_fee_cents is bounded by a CHECK.
+--
+-- Safe to re-run: if not exists / create or replace / on conflict do nothing throughout.
+--
+-- Applied: written 2026-10-12, not applied anywhere. Never parsed by Postgres.
+--
+-- Rollback:
+--   drop trigger if exists tips_card_fee_revenue_ai on public.tips;
+--   drop trigger if exists disbursements_paid_at_bu on public.disbursements;
+--   drop function if exists public.tips_card_fee_revenue(), public.disbursements_paid_at(),
+--     public.record_ledger_entry(date, text, text, text, jsonb), public.void_ledger_entry(uuid, text, date),
+--     public.close_ledger_period(text, text, jsonb), public.reopen_ledger_period(text, text),
+--     public.get_ledger_books(), public.ledger_period_is_closed(date), public.ledger_lock_period(text);
+--   drop table if exists public.ledger_manual_lines, public.ledger_manual_entries,
+--     public.ledger_period_closes, public.ledger_period_reopens, public.ledger_accounts;
+--   drop index if exists public.tips_stripe_payment_intent_key;
+--   (card_fee revenue rows must be deleted or reclassified before the source check can drop 'card_fee';
+--   restore get_company_revenue_summary from 20260929180000.)
+--   alter table public.tips drop column if exists cover_fee_cents, drop column if exists stripe_payment_intent_id;
+--   alter table public.disbursements drop column if exists paid_at;
+--   (then restore company_revenue_bps and the company_revenue_logs source check without 'card_fee').
+
+do $$
+begin
+  if to_regprocedure('public.require_admin_guard()') is null then
+    raise exception 'Apply the 2026-09 audit section of schema.sql first (require_admin_guard is missing).';
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'tips' and column_name = 'platform_tip_cents'
+  ) then
+    raise exception 'Apply 20260929180000_rally_goals_thanks_platform_tip.sql first (tips.platform_tip_cents is missing).';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------------------------
+-- 1. Chart of accounts
+-- ---------------------------------------------------------------------------------------------
+
+create table if not exists public.ledger_accounts (
+  code text primary key check (code ~ '^\d{4}$'),
+  name text not null,
+  account_type text not null check (account_type in ('asset', 'liability', 'equity', 'revenue', 'expense')),
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+insert into public.ledger_accounts (code, name, account_type) values
+  ('1000', 'Business bank account', 'asset'),
+  ('1010', 'Stripe balance', 'asset'),
+  ('1999', 'Suspense (needs review)', 'asset'),
+  ('2000', 'Donations held for families', 'liability'),
+  ('2010', 'Vault earnings held for athletes', 'liability'),
+  ('2100', 'Booster operator payable', 'liability'),
+  ('2200', 'Sales tax payable', 'liability'),
+  ('2300', 'Owed to owner (expenses paid personally)', 'liability'),
+  ('3000', 'Owner contributions', 'equity'),
+  ('3100', 'Owner draws', 'equity'),
+  ('4000', 'Platform share of donations', 'revenue'),
+  ('4010', 'Optional tips to Tapua''i', 'revenue'),
+  ('4020', 'Vault platform share', 'revenue'),
+  ('4030', 'Booster sponsorship share', 'revenue'),
+  ('4040', 'Drip merchandise sales', 'revenue'),
+  ('4050', 'Card fees covered by donors', 'revenue'),
+  ('4900', 'Refunds and chargebacks', 'revenue'),
+  ('5000', 'Card processing fees', 'expense'),
+  ('5010', 'Merchandise cost', 'expense'),
+  ('6000', 'Software and hosting', 'expense'),
+  ('6010', 'App store and developer fees', 'expense'),
+  ('6020', 'Legal and professional', 'expense'),
+  ('6030', 'Marketing and advertising', 'expense'),
+  ('6040', 'Filmer rewards (paid by Tapua''i)', 'expense'),
+  ('6050', 'Game-day operator fees', 'expense'),
+  ('6090', 'Other business expenses', 'expense'),
+  ('6100', 'Bank fees', 'expense')
+on conflict (code) do nothing;
+
+-- ---------------------------------------------------------------------------------------------
+-- 2. Hand-entered entries and month closes
+-- ---------------------------------------------------------------------------------------------
+
+create table if not exists public.ledger_period_closes (
+  period text primary key check (period ~ '^\d{4}-(0[1-9]|1[0-2])$'),
+  closed_at timestamptz not null default now(),
+  closed_by uuid references auth.users (id) on delete set null,
+  note text not null default '' check (char_length(note) <= 200),
+  totals jsonb not null default '{}'::jsonb
+);
+
+-- Every reopen is kept with its reason and the totals the month had when it was closed.
+create table if not exists public.ledger_period_reopens (
+  id uuid primary key default gen_random_uuid(),
+  period text not null check (period ~ '^\d{4}-(0[1-9]|1[0-2])$'),
+  reopened_at timestamptz not null default now(),
+  reopened_by uuid references auth.users (id) on delete set null,
+  reason text not null check (char_length(btrim(reason)) between 1 and 200),
+  previous_closed_at timestamptz,
+  previous_totals jsonb not null default '{}'::jsonb
+);
+
+create table if not exists public.ledger_manual_entries (
+  id uuid primary key default gen_random_uuid(),
+  entry_date date not null,
+  kind text not null check (kind ~ '^[a-z_]{2,40}$'),
+  memo text not null check (char_length(btrim(memo)) between 1 and 200),
+  reference text not null default '' check (char_length(reference) <= 120),
+  reverses_id uuid references public.ledger_manual_entries (id) on delete restrict,
+  voided_at timestamptz,
+  void_reason text not null default '' check (char_length(void_reason) <= 200),
+  created_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists ledger_manual_entries_one_reversal_idx
+  on public.ledger_manual_entries (reverses_id) where reverses_id is not null;
+create index if not exists ledger_manual_entries_date_idx on public.ledger_manual_entries (entry_date);
+
+-- athlete_ref is the pseudonymous reference (ath-xxxxxxxx) the books use, so a refund or payout
+-- recorded by hand reduces the right athlete's held balance.
+create table if not exists public.ledger_manual_lines (
+  id uuid primary key default gen_random_uuid(),
+  entry_id uuid not null references public.ledger_manual_entries (id) on delete restrict,
+  account_code text not null references public.ledger_accounts (code),
+  debit_cents bigint not null default 0 check (debit_cents >= 0),
+  credit_cents bigint not null default 0 check (credit_cents >= 0),
+  memo text not null default '' check (char_length(memo) <= 200),
+  athlete_ref text check (athlete_ref is null or athlete_ref ~ '^ath-[0-9a-f]{8}$'),
+  check ((debit_cents > 0) <> (credit_cents > 0))
+);
+
+create index if not exists ledger_manual_lines_entry_idx on public.ledger_manual_lines (entry_id);
+
+alter table public.ledger_accounts enable row level security;
+alter table public.ledger_period_closes enable row level security;
+alter table public.ledger_period_reopens enable row level security;
+alter table public.ledger_manual_entries enable row level security;
+alter table public.ledger_manual_lines enable row level security;
+
+drop policy if exists "Admin read ledger accounts" on public.ledger_accounts;
+create policy "Admin read ledger accounts" on public.ledger_accounts
+  for select to authenticated using (public.current_user_role() = 'admin');
+drop policy if exists "Admin read ledger closes" on public.ledger_period_closes;
+create policy "Admin read ledger closes" on public.ledger_period_closes
+  for select to authenticated using (public.current_user_role() = 'admin');
+drop policy if exists "Admin read ledger reopens" on public.ledger_period_reopens;
+create policy "Admin read ledger reopens" on public.ledger_period_reopens
+  for select to authenticated using (public.current_user_role() = 'admin');
+drop policy if exists "Admin read ledger entries" on public.ledger_manual_entries;
+create policy "Admin read ledger entries" on public.ledger_manual_entries
+  for select to authenticated using (public.current_user_role() = 'admin');
+drop policy if exists "Admin read ledger lines" on public.ledger_manual_lines;
+create policy "Admin read ledger lines" on public.ledger_manual_lines
+  for select to authenticated using (public.current_user_role() = 'admin');
+
+-- Supabase default privileges grant new tables to anon/authenticated; the books are RPC-written only.
+revoke all on public.ledger_accounts, public.ledger_period_closes, public.ledger_period_reopens,
+  public.ledger_manual_entries, public.ledger_manual_lines from public, anon, authenticated;
+grant select on public.ledger_accounts, public.ledger_period_closes, public.ledger_period_reopens,
+  public.ledger_manual_entries, public.ledger_manual_lines to authenticated;
+
+-- Security definer functions below use an empty search_path and schema-qualified names
+-- (EXPERT_STANDARDS, Security); built-ins still resolve from pg_catalog.
+
+create or replace function public.ledger_period_is_closed(p_day date)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (select 1 from public.ledger_period_closes where period = to_char(p_day, 'YYYY-MM'));
+$$;
+
+-- One transaction-scoped lock per month, taken by every RPC that checks or changes that month, so a
+-- close cannot race a record, void or reopen of the same month.
+create or replace function public.ledger_lock_period(p_period text)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  select pg_advisory_xact_lock(hashtextextended('ledger:' || p_period, 0));
+$$;
+
+-- p_lines: [{"account_code":"6000","debit_cents":2500,"credit_cents":0,"memo":"","athlete_ref":null}, …],
+-- 2 to 20 lines. Dates are UTC calendar days.
+create or replace function public.record_ledger_entry(
+  p_entry_date date,
+  p_kind text,
+  p_memo text,
+  p_reference text,
+  p_lines jsonb
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  entry_id uuid;
+  line jsonb;
+  debit_total bigint := 0;
+  credit_total bigint := 0;
+  d bigint;
+  c bigint;
+begin
+  perform public.require_admin_guard();
+  if p_entry_date is null or p_entry_date > current_date or p_entry_date < date '2020-01-01' then
+    raise exception 'Choose a date between 2020-01-01 and today (UTC).';
+  end if;
+  if lower(btrim(coalesce(p_kind, ''))) in ('period_reopen', 'period_close') then
+    raise exception 'That entry kind is reserved.';
+  end if;
+  perform public.ledger_lock_period(to_char(p_entry_date, 'YYYY-MM'));
+  if public.ledger_period_is_closed(p_entry_date) then
+    raise exception 'That month is closed. Date the entry in an open month.';
+  end if;
+  if jsonb_typeof(p_lines) <> 'array' or jsonb_array_length(p_lines) not between 2 and 20 then
+    raise exception 'An entry needs 2 to 20 lines.';
+  end if;
+  for line in select * from jsonb_array_elements(p_lines) loop
+    d := coalesce((line->>'debit_cents')::bigint, 0);
+    c := coalesce((line->>'credit_cents')::bigint, 0);
+    if d < 0 or c < 0 or (d > 0) = (c > 0) then
+      raise exception 'Each line is either a debit or a credit, above zero.';
+    end if;
+    if d > 100000000 or c > 100000000 then
+      raise exception 'Each line must be $1,000,000 or less.';
+    end if;
+    if not exists (select 1 from public.ledger_accounts a where a.code = line->>'account_code' and a.active) then
+      raise exception 'Unknown account %', line->>'account_code';
+    end if;
+    if nullif(line->>'athlete_ref', '') is not null and line->>'athlete_ref' !~ '^ath-[0-9a-f]{8}$' then
+      raise exception 'Athlete reference must look like ath-1a2b3c4d.';
+    end if;
+    debit_total := debit_total + d;
+    credit_total := credit_total + c;
+  end loop;
+  if debit_total <> credit_total or debit_total = 0 then
+    raise exception 'Debits and credits must be equal.';
+  end if;
+
+  insert into public.ledger_manual_entries (entry_date, kind, memo, reference, created_by)
+  values (p_entry_date, lower(btrim(p_kind)), btrim(p_memo), btrim(coalesce(p_reference, '')), auth.uid())
+  returning id into entry_id;
+
+  insert into public.ledger_manual_lines (entry_id, account_code, debit_cents, credit_cents, memo, athlete_ref)
+  select entry_id, l->>'account_code', coalesce((l->>'debit_cents')::bigint, 0),
+    coalesce((l->>'credit_cents')::bigint, 0), left(coalesce(l->>'memo', ''), 200), nullif(l->>'athlete_ref', '')
+  from jsonb_array_elements(p_lines) l;
+
+  return entry_id;
+end;
+$$;
+
+-- Voiding never deletes: it posts the mirror-image entry, dated in an open month.
+create or replace function public.void_ledger_entry(p_entry_id uuid, p_reason text, p_reversal_date date default current_date)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  original public.ledger_manual_entries%rowtype;
+  reversal_id uuid;
+begin
+  perform public.require_admin_guard();
+  if p_reversal_date is null or p_reversal_date > current_date or p_reversal_date < date '2020-01-01' then
+    raise exception 'Choose a reversal date between 2020-01-01 and today (UTC).';
+  end if;
+  perform public.ledger_lock_period(to_char(p_reversal_date, 'YYYY-MM'));
+  select * into original from public.ledger_manual_entries where id = p_entry_id for update;
+  if not found then raise exception 'Entry not found.'; end if;
+  if original.voided_at is not null or original.reverses_id is not null then
+    raise exception 'This entry is already voided or is itself a reversal.';
+  end if;
+  if char_length(btrim(coalesce(p_reason, ''))) = 0 then raise exception 'Say why it is being voided.'; end if;
+  if public.ledger_period_is_closed(p_reversal_date) then
+    raise exception 'That month is closed. Date the reversal in an open month.';
+  end if;
+
+  insert into public.ledger_manual_entries (entry_date, kind, memo, reference, reverses_id, created_by)
+  values (p_reversal_date, original.kind, left('Reversal: ' || original.memo, 200), original.reference, original.id, auth.uid())
+  returning id into reversal_id;
+
+  insert into public.ledger_manual_lines (entry_id, account_code, debit_cents, credit_cents, memo, athlete_ref)
+  select reversal_id, account_code, credit_cents, debit_cents, memo, athlete_ref
+  from public.ledger_manual_lines where entry_id = original.id;
+
+  update public.ledger_manual_entries
+  set voided_at = now(), void_reason = left(btrim(p_reason), 200)
+  where id = original.id;
+
+  return reversal_id;
+end;
+$$;
+
+create or replace function public.close_ledger_period(p_period text, p_note text, p_totals jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  if p_period is null or p_period !~ '^\d{4}-(0[1-9]|1[0-2])$' then raise exception 'Period must look like 2026-10.'; end if;
+  if to_date(p_period || '-01', 'YYYY-MM-DD') >= date_trunc('month', current_date)::date then
+    raise exception 'Only a finished month can be closed.';
+  end if;
+  if jsonb_typeof(coalesce(p_totals, '{}'::jsonb)) <> 'object' then raise exception 'Totals must be an object.'; end if;
+  perform public.ledger_lock_period(p_period);
+  insert into public.ledger_period_closes (period, closed_by, note, totals)
+  values (p_period, auth.uid(), left(btrim(coalesce(p_note, '')), 200), coalesce(p_totals, '{}'::jsonb))
+  on conflict (period) do nothing;
+  if not found then raise exception 'That month is already closed.'; end if;
+end;
+$$;
+
+create or replace function public.reopen_ledger_period(p_period text, p_reason text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  closed public.ledger_period_closes%rowtype;
+begin
+  perform public.require_admin_guard();
+  if char_length(btrim(coalesce(p_reason, ''))) = 0 then raise exception 'Say why the month is being reopened.'; end if;
+  perform public.ledger_lock_period(coalesce(p_period, ''));
+  delete from public.ledger_period_closes where period = p_period returning * into closed;
+  if not found then raise exception 'That month is not closed.'; end if;
+  insert into public.ledger_period_reopens (period, reopened_by, reason, previous_closed_at, previous_totals)
+  values (p_period, auth.uid(), left(btrim(p_reason), 200), closed.closed_at, closed.totals);
+end;
+$$;
+
+-- One read for the desk: accounts, every recorded entry with its lines, closes and reopens.
+create or replace function public.get_ledger_books()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  return jsonb_build_object(
+    'accounts', (select coalesce(jsonb_agg(to_jsonb(a) order by a.code), '[]'::jsonb) from public.ledger_accounts a),
+    'entries', (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'id', e.id, 'entry_date', e.entry_date, 'kind', e.kind, 'memo', e.memo, 'reference', e.reference,
+        'reverses_id', e.reverses_id, 'voided_at', e.voided_at, 'void_reason', e.void_reason, 'created_at', e.created_at,
+        'lines', (select coalesce(jsonb_agg(jsonb_build_object('account_code', l.account_code, 'debit_cents', l.debit_cents,
+          'credit_cents', l.credit_cents, 'memo', l.memo, 'athlete_ref', l.athlete_ref) order by l.debit_cents desc, l.account_code), '[]'::jsonb)
+          from public.ledger_manual_lines l where l.entry_id = e.id)
+      ) order by e.entry_date, e.created_at), '[]'::jsonb)
+      from public.ledger_manual_entries e
+    ),
+    'closes', (select coalesce(jsonb_agg(jsonb_build_object('period', c.period, 'closed_at', c.closed_at,
+      'note', c.note, 'totals', c.totals) order by c.period), '[]'::jsonb) from public.ledger_period_closes c),
+    'reopens', (select coalesce(jsonb_agg(jsonb_build_object('period', r.period, 'reopened_at', r.reopened_at,
+      'reason', r.reason, 'previous_closed_at', r.previous_closed_at) order by r.reopened_at), '[]'::jsonb) from public.ledger_period_reopens r)
+  );
+end;
+$$;
+
+revoke all on function public.ledger_period_is_closed(date) from public, anon, authenticated;
+revoke all on function public.ledger_lock_period(text) from public, anon, authenticated;
+revoke all on function public.record_ledger_entry(date, text, text, text, jsonb) from public, anon;
+revoke all on function public.void_ledger_entry(uuid, text, date) from public, anon;
+revoke all on function public.close_ledger_period(text, text, jsonb) from public, anon;
+revoke all on function public.reopen_ledger_period(text, text) from public, anon;
+revoke all on function public.get_ledger_books() from public, anon;
+grant execute on function public.record_ledger_entry(date, text, text, text, jsonb) to authenticated;
+grant execute on function public.void_ledger_entry(uuid, text, date) to authenticated;
+grant execute on function public.close_ledger_period(text, text, jsonb) to authenticated;
+grant execute on function public.reopen_ledger_period(text, text) to authenticated;
+grant execute on function public.get_ledger_books() to authenticated;
+
+-- ---------------------------------------------------------------------------------------------
+-- 3. Money facts the revenue log was missing
+-- ---------------------------------------------------------------------------------------------
+
+alter table public.tips add column if not exists cover_fee_cents integer not null default 0;
+alter table public.tips add column if not exists stripe_payment_intent_id text;
+
+do $$
+begin
+  -- The covered fee is admin-configured (maloFeeDollars) and usually a few percent; the bound stops a
+  -- fabricated client row without rejecting a real fee on a small donation.
+  alter table public.tips add constraint tips_cover_fee_cents_check
+    check (cover_fee_cents >= 0 and cover_fee_cents <= greatest(500, amount_cents));
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter table public.tips add constraint tips_stripe_payment_intent_id_check
+    check (stripe_payment_intent_id is null or stripe_payment_intent_id ~ '^pi_[A-Za-z0-9]{8,64}$');
+exception
+  when duplicate_object then null;
+end $$;
+
+-- One PaymentIntent pays for one donation; a reused id would spoil payout matching and the future
+-- webhook's dedupe key.
+create unique index if not exists tips_stripe_payment_intent_key on public.tips (stripe_payment_intent_id)
+  where stripe_payment_intent_id is not null;
+
+alter table public.company_revenue_logs drop constraint if exists company_revenue_logs_source_check;
+alter table public.company_revenue_logs
+  add constraint company_revenue_logs_source_check
+  check (source in ('malo', 'booster', 'vault', 'merch', 'tip', 'card_fee'));
+
+create or replace function public.company_revenue_bps(stream_source text)
+returns integer
+language sql
+immutable
+as $$
+  select case lower(btrim(coalesce(stream_source, '')))
+    when 'malo' then 1000
+    when 'booster' then 1500
+    when 'vault' then 2000
+    when 'merch' then 10000
+    when 'tip' then 10000
+    when 'card_fee' then 10000
+    else 0
+  end;
+$$;
+
+-- Same shape as tips_platform_tip_revenue: its own all-Tapua'i row, keyed by the donation id.
+create or replace function public.tips_card_fee_revenue()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if coalesce(new.cover_fee_cents, 0) > 0 then
+    insert into public.company_revenue_logs (
+      transaction_type, source, source_id, label, payee_kind, player_id,
+      gross_cents, platform_cents, payout_cents,
+      gross_amount, platform_cut_amount, payout_amount, created_at
+    )
+    values (
+      'card_fee', 'card_fee', new.id::text, 'Card fee covered by donor', 'none', new.player_id,
+      new.cover_fee_cents, new.cover_fee_cents, 0,
+      round(new.cover_fee_cents / 100.0, 2), round(new.cover_fee_cents / 100.0, 2), 0,
+      new.created_at
+    )
+    on conflict (source, source_id) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.tips_card_fee_revenue() from public, anon, authenticated;
+
+drop trigger if exists tips_card_fee_revenue_ai on public.tips;
+create trigger tips_card_fee_revenue_ai
+  after insert on public.tips
+  for each row execute procedure public.tips_card_fee_revenue();
+
+-- Revenue report: card fees covered by donors as their own stream, so the streams add up to the total.
+create or replace function public.get_company_revenue_summary()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  payload jsonb;
+begin
+  if public.current_user_role() <> 'admin' then
+    raise exception 'Admin access required';
+  end if;
+  perform public.sync_company_revenue_logs();
+
+  select jsonb_build_object(
+    'total_gross', round((select coalesce(sum(gross_cents), 0) from public.company_revenue_logs) / 100.0, 2),
+    'total_platform_revenue', round((select coalesce(sum(platform_cents), 0) from public.company_revenue_logs) / 100.0, 2),
+    'total_payouts', round((select coalesce(sum(payout_cents), 0) from public.company_revenue_logs) / 100.0, 2),
+    'gross_volume_cents', (select coalesce(sum(gross_cents), 0)::int from public.company_revenue_logs),
+    'company_net_cents', (select coalesce(sum(platform_cents), 0)::int from public.company_revenue_logs),
+    'payouts_cents', (select coalesce(sum(payout_cents), 0)::int from public.company_revenue_logs),
+    'stripe_paid_cents', (
+      select coalesce(sum(amount_cents), 0)::int
+      from public.disbursements
+      where status = 'paid'
+    ),
+    'streams', jsonb_build_array(
+      jsonb_build_object(
+        'source', 'malo',
+        'label', 'Donations',
+        'split', '10% platform / 90% athlete',
+        'gross_cents', (select coalesce(sum(gross_cents), 0)::int from public.company_revenue_logs where source = 'malo'),
+        'platform_cents', (select coalesce(sum(platform_cents), 0)::int from public.company_revenue_logs where source = 'malo'),
+        'payout_cents', (select coalesce(sum(payout_cents), 0)::int from public.company_revenue_logs where source = 'malo'),
+        'platform_bps', 1000,
+        'payout_bps', 9000,
+        'payee', 'Athlete'
+      ),
+      jsonb_build_object(
+        'source', 'tip',
+        'label', 'Optional tips to Tapua''i',
+        'split', '100% platform (donor chose it)',
+        'gross_cents', (select coalesce(sum(gross_cents), 0)::int from public.company_revenue_logs where source = 'tip'),
+        'platform_cents', (select coalesce(sum(platform_cents), 0)::int from public.company_revenue_logs where source = 'tip'),
+        'payout_cents', 0,
+        'platform_bps', 10000,
+        'payout_bps', 0,
+        'payee', 'Tapua''i'
+      ),
+      jsonb_build_object(
+        'source', 'card_fee',
+        'label', 'Card fees covered by donors',
+        'split', '100% platform (offsets card processing)',
+        'gross_cents', (select coalesce(sum(gross_cents), 0)::int from public.company_revenue_logs where source = 'card_fee'),
+        'platform_cents', (select coalesce(sum(platform_cents), 0)::int from public.company_revenue_logs where source = 'card_fee'),
+        'payout_cents', 0,
+        'platform_bps', 10000,
+        'payout_bps', 0,
+        'payee', 'Tapua''i'
+      ),
+      jsonb_build_object(
+        'source', 'booster',
+        'label', 'Local District Booster Sponsorships',
+        'split', '15% platform / 85% operator',
+        'gross_cents', (select coalesce(sum(gross_cents), 0)::int from public.company_revenue_logs where source = 'booster'),
+        'platform_cents', (select coalesce(sum(platform_cents), 0)::int from public.company_revenue_logs where source = 'booster'),
+        'payout_cents', (select coalesce(sum(payout_cents), 0)::int from public.company_revenue_logs where source = 'booster'),
+        'platform_bps', 1500,
+        'payout_bps', 8500,
+        'payee', 'Operator'
+      ),
+      jsonb_build_object(
+        'source', 'merch_vault',
+        'label', 'Merch & Vault Subscriptions',
+        'split', 'Vault 20% / 80% athlete · Drip 100% platform',
+        'gross_cents', (select coalesce(sum(gross_cents), 0)::int from public.company_revenue_logs where source in ('vault', 'merch')),
+        'platform_cents', (select coalesce(sum(platform_cents), 0)::int from public.company_revenue_logs where source in ('vault', 'merch')),
+        'payout_cents', (select coalesce(sum(payout_cents), 0)::int from public.company_revenue_logs where source in ('vault', 'merch')),
+        'platform_bps', null,
+        'payout_bps', null,
+        'payee', 'Athlete + company'
+      )
+    ),
+    'recent', (
+      select coalesce(
+        jsonb_agg(
+          jsonb_build_object(
+            'id', row.id,
+            'source', row.source,
+            'label', row.label,
+            'gross_cents', row.gross_cents,
+            'platform_cents', row.platform_cents,
+            'payout_cents', row.payout_cents,
+            'payee_kind', row.payee_kind,
+            'created_at', row.created_at
+          )
+          order by row.created_at desc
+        ),
+        '[]'::jsonb
+      )
+      from (
+        select *
+        from public.company_revenue_logs
+        order by created_at desc
+        limit 40
+      ) row
+    )
+  )
+  into payload;
+
+  return payload;
+end;
+$$;
+
+alter table public.disbursements add column if not exists paid_at timestamptz;
+
+-- Payouts marked paid before this migration are dated by when they were created.
+update public.disbursements set paid_at = created_at where status = 'paid' and paid_at is null;
+
+-- The server owns paid_at: set when a payout first becomes paid, kept while it stays paid, cleared
+-- otherwise. A client value (insert or a direct update) is always replaced, so nobody can backdate a
+-- payout into a closed month.
+create or replace function public.disbursements_paid_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.status = 'paid' then
+    new.paid_at := case when tg_op = 'UPDATE' and old.status = 'paid' then old.paid_at else now() end;
+  else
+    new.paid_at := null;
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.disbursements_paid_at() from public, anon, authenticated;
+
+drop trigger if exists disbursements_paid_at_bu on public.disbursements;
+create trigger disbursements_paid_at_bu
+  before insert or update on public.disbursements
+  for each row execute procedure public.disbursements_paid_at();
+
+commit;
+
+
+-- =============================================================================
+-- 2026-10-13 Data governance closures (DATA-01 F1–F5): writers for athlete stats, Crew alert clearing,
+-- operator check-in reader and retention purge (direct table reads closed), school confirmer list
+-- (token hash no longer granted), get_aura_tier archived.
+-- Source: supabase/migrations/20261013120000_data_governance_closures.sql (replayed 40/40 on PGlite after
+-- RLS_SECURITY review). Written, not applied anywhere. Handbook: docs/engineering/DATA_GOVERNANCE.md.
+-- =============================================================================
+begin;
+
+-- Data governance closures (DATA-01, findings F1–F5): give every orphaned table and function a real
+-- reader, writer or caller, and archive the one function nothing needs.
+--
+-- Purpose
+--   F1  athlete_career_stats / athlete_game_logs were read on profiles but nothing in the app wrote them.
+--       admin_upsert_athlete_career_stats, admin_add_athlete_game_log, admin_remove_athlete_game_log
+--       are the writers (Athletes desk → Stats).
+--   F2  crew_push_queue was filled by set_reel_flash_unlock and never read or cleared. Fans already read
+--       their own rows (policy "Users read own crew push"); Activity now shows them, and
+--       clear_my_crew_alerts() removes all of the caller's alerts and, as housekeeping, any alert older
+--       than 30 days for anyone, so fans who never press Clear do not keep alerts forever.
+--   F3  operator_checkins stored exact GPS that nothing read. PRIVACY_ENGINEERING decision 2026-10-13: there
+--       is no current purpose (paid gigs are Wave 3) and operators may be minors, so keep as little as
+--       possible: a before-insert trigger rounds location to two decimals (about 1 km) and sets the time on
+--       the server, and check-ins older than 30 days are removed automatically (on every insert and every
+--       admin read; no pg_cron needed). One function, expire_operator_checkins, holds the delete rule for the
+--       trigger, admin_list_operator_checkins and admin_purge_operator_checkins (Live games desk, manual
+--       purge with a 7-day floor). Direct table reads are closed (RLS_SECURITY review 2026-10-13): clients
+--       keep INSERT only, through an insert-only policy that supersedes "Operators write checkins"
+--       (20261002120000).
+--   F4  admin_list_school_confirmers lets the Schools desk show confirmers (never the token hash) so the
+--       existing admin_add / admin_revoke_school_confirmer and admin_set_school_branding get an admin
+--       control; admin_revoke_verification and admin_set_custodial_terms get controls in People and
+--       Athletes without SQL changes.
+--   F5  get_aura_tier(integer) is never called (the app computes tiers in lib/aura). Archived: its
+--       definition is kept in archive/dead-code-2026-10-13/sql/get_aura_tier.archived.sql and the function is dropped here.
+--
+-- Owner: DATA_GOVERNANCE (DATA-01), owner approval 2026-10-13 ("go all the way … archive as wanted").
+--   Owners of each fix: ATHLETE_STATS (F1), NOTIFICATIONS (F2), OPERATOR + PRIVACY_ENGINEERING (F3),
+--   SCHOOL_PARTNERS / ATHLETE_VERIFICATION / CUSTODIAL (F4), AURA (F5).
+--
+-- Security: every function is security definer with an empty search_path and schema-qualified names.
+--   Admin functions call require_admin_guard() first; clear_my_crew_alerts clears the caller's rows and
+--   alerts older than 30 days. EXECUTE is revoked from public and anon and granted to authenticated.
+--   Table grants narrowed: operator_checkins loses client SELECT / UPDATE / DELETE (insert-only policy);
+--   school_confirmers SELECT becomes column-level without token_hash (admins read through the RPC).
+--
+-- Safe to re-run: create or replace; drop function if exists.
+--
+-- Applied: written 2026-10-13, not applied anywhere.
+--
+-- Rollback:
+--   drop function if exists public.admin_upsert_athlete_career_stats(uuid, text, integer, integer, integer, integer),
+--     public.admin_add_athlete_game_log(uuid, date, text, text, integer, integer),
+--     public.admin_remove_athlete_game_log(uuid), public.clear_my_crew_alerts(),
+--     public.admin_list_operator_checkins(integer), public.admin_purge_operator_checkins(integer),
+--     public.admin_list_school_confirmers(uuid);
+--   drop trigger if exists operator_checkins_minimize on public.operator_checkins;
+--   drop function if exists public.operator_checkins_minimize(), public.expire_operator_checkins(integer);
+--   drop index if exists public.operator_checkins_checked_in_at_idx;
+--   (rounded coordinates and check-ins already removed cannot be restored)
+--   restore get_aura_tier from archive/dead-code-2026-10-13/sql/get_aura_tier.archived.sql;
+--   grant select, insert on public.operator_checkins to anon, authenticated; drop policy "Operators insert checkins"
+--   and re-run 20261002120000; grant select on public.school_confirmers to authenticated.
+--   Before applying, confirm no hosted-only function calls get_aura_tier:
+--   select proname from pg_proc where prosrc ilike '%get_aura_tier%';
+
+do $$
+begin
+  if to_regprocedure('public.require_admin_guard()') is null then
+    raise exception 'Apply the 2026-09 audit section of schema.sql first (require_admin_guard is missing).';
+  end if;
+end $$;
+
+-- F1 ------------------------------------------------------------------------------------------
+
+create or replace function public.admin_upsert_athlete_career_stats(
+  p_player_id uuid,
+  p_sport text,
+  p_games_played integer,
+  p_scoring_value integer,
+  p_volume_value integer,
+  p_mvp_badges integer
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  if p_player_id is null or not exists (select 1 from public.players where id = p_player_id) then
+    raise exception 'Choose an athlete.';
+  end if;
+  if char_length(btrim(coalesce(p_sport, ''))) not between 2 and 40 then raise exception 'Name the sport.'; end if;
+  if least(coalesce(p_games_played, 0), coalesce(p_scoring_value, 0), coalesce(p_volume_value, 0), coalesce(p_mvp_badges, 0)) < 0
+     or greatest(coalesce(p_games_played, 0), coalesce(p_scoring_value, 0), coalesce(p_volume_value, 0), coalesce(p_mvp_badges, 0)) > 100000 then
+    raise exception 'Stats must be between 0 and 100,000.';
+  end if;
+  insert into public.athlete_career_stats (player_id, sport, games_played, scoring_value, volume_value, mvp_badges, updated_at)
+  values (p_player_id, btrim(p_sport), coalesce(p_games_played, 0), coalesce(p_scoring_value, 0), coalesce(p_volume_value, 0), coalesce(p_mvp_badges, 0), now())
+  on conflict (player_id) do update set
+    sport = excluded.sport, games_played = excluded.games_played, scoring_value = excluded.scoring_value,
+    volume_value = excluded.volume_value, mvp_badges = excluded.mvp_badges, updated_at = now();
+end;
+$$;
+
+create or replace function public.admin_add_athlete_game_log(
+  p_player_id uuid,
+  p_played_on date,
+  p_opponent_school text,
+  p_stat_line text,
+  p_scoring_value integer,
+  p_volume_value integer
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  log_id uuid;
+begin
+  perform public.require_admin_guard();
+  if p_player_id is null or not exists (select 1 from public.players where id = p_player_id) then
+    raise exception 'Choose an athlete.';
+  end if;
+  if p_played_on is null or p_played_on > current_date or p_played_on < date '2000-01-01' then
+    raise exception 'Choose the game date (not in the future).';
+  end if;
+  if char_length(coalesce(p_stat_line, '')) > 120 or char_length(coalesce(p_opponent_school, '')) > 120 then
+    raise exception 'Keep the opponent and stat line under 120 characters.';
+  end if;
+  if least(coalesce(p_scoring_value, 0), coalesce(p_volume_value, 0)) < 0 or greatest(coalesce(p_scoring_value, 0), coalesce(p_volume_value, 0)) > 10000 then
+    raise exception 'Game stats must be between 0 and 10,000.';
+  end if;
+  insert into public.athlete_game_logs (player_id, played_on, opponent_school, stat_line, scoring_value, volume_value)
+  values (p_player_id, p_played_on, btrim(coalesce(p_opponent_school, '')), btrim(coalesce(p_stat_line, '')), coalesce(p_scoring_value, 0), coalesce(p_volume_value, 0))
+  returning id into log_id;
+  return log_id;
+end;
+$$;
+
+-- Removing a mistaken game line is a correction an admin makes from the Athletes desk.
+create or replace function public.admin_remove_athlete_game_log(p_log_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  delete from public.athlete_game_logs where id = p_log_id;
+  if not found then raise exception 'That game line no longer exists.'; end if;
+end;
+$$;
+
+-- F2 ------------------------------------------------------------------------------------------
+
+create or replace function public.clear_my_crew_alerts()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  cleared integer;
+begin
+  if auth.uid() is null then raise exception 'Sign in to clear alerts.'; end if;
+  delete from public.crew_push_queue where recipient_id = auth.uid();
+  get diagnostics cleared = row_count;
+  -- Housekeeping: nobody's alerts outlive 30 days, including fans who never press Clear.
+  delete from public.crew_push_queue where created_at < now() - interval '30 days';
+  return cleared;
+end;
+$$;
+
+-- F3 ------------------------------------------------------------------------------------------
+
+-- The one retention rule. Never shorter than 7 days, so a mistyped purge cannot wipe today's check-ins.
+create or replace function public.expire_operator_checkins(p_older_than_days integer default 30)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  purged integer;
+begin
+  delete from public.operator_checkins
+  where checked_in_at < now() - make_interval(days => greatest(coalesce(p_older_than_days, 30), 7));
+  get diagnostics purged = row_count;
+  return purged;
+end;
+$$;
+
+-- Exact GPS never reaches storage, a client cannot pick a timestamp that dodges expiry, and every insert
+-- clears expired rows.
+create or replace function public.operator_checkins_minimize()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  new.latitude := round(new.latitude::numeric, 2)::double precision;
+  new.longitude := round(new.longitude::numeric, 2)::double precision;
+  new.checked_in_at := now();
+  perform public.expire_operator_checkins();
+  return new;
+end;
+$$;
+
+drop trigger if exists operator_checkins_minimize on public.operator_checkins;
+create trigger operator_checkins_minimize
+  before insert on public.operator_checkins
+  for each row execute function public.operator_checkins_minimize();
+
+create index if not exists operator_checkins_checked_in_at_idx on public.operator_checkins (checked_in_at);
+
+-- Rows stored before this migration get the same treatment.
+update public.operator_checkins
+set latitude = round(latitude::numeric, 2)::double precision,
+  longitude = round(longitude::numeric, 2)::double precision,
+  checked_in_at = least(checked_in_at, now());
+select public.expire_operator_checkins();
+
+-- Reading also expires, so old check-ins are gone even when no new ones arrive.
+create or replace function public.admin_list_operator_checkins(p_limit integer default 50)
+returns table (id uuid, gig_id uuid, checked_in_at timestamptz, latitude_approx numeric, longitude_approx numeric)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  perform public.expire_operator_checkins();
+  return query
+    select c.id, c.gig_id, c.checked_in_at,
+      round(c.latitude::numeric, 2), round(c.longitude::numeric, 2)
+    from public.operator_checkins c
+    order by c.checked_in_at desc
+    limit least(greatest(coalesce(p_limit, 50), 1), 200);
+end;
+$$;
+
+create or replace function public.admin_purge_operator_checkins(p_older_than_days integer default 30)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  if coalesce(p_older_than_days, 0) < 7 then raise exception 'Keep at least 7 days of check-ins.'; end if;
+  return public.expire_operator_checkins(p_older_than_days);
+end;
+$$;
+
+-- Exact coordinates are readable by no client: INSERT stays (operator PIN / operator / admin), reads go
+-- through admin_list_operator_checkins only.
+revoke select, update, delete on public.operator_checkins from anon, authenticated;
+drop policy if exists "Operators write checkins" on public.operator_checkins;
+drop policy if exists "Operators insert checkins" on public.operator_checkins;
+create policy "Operators insert checkins" on public.operator_checkins
+  for insert to anon, authenticated
+  with check (auth.role() = 'anon' or public.current_user_role() in ('operator', 'admin'));
+
+-- F4 ------------------------------------------------------------------------------------------
+
+-- Admins read confirmers through admin_list_school_confirmers; the table grant no longer includes the
+-- token hash.
+revoke select on public.school_confirmers from authenticated;
+grant select (id, school_id, full_name, email, staff_role, sport, active, expires_at, created_by, created_at, last_used_at)
+  on public.school_confirmers to authenticated;
+
+-- Confirmers for one school, without the token hash.
+create or replace function public.admin_list_school_confirmers(target_school_id uuid)
+returns table (id uuid, full_name text, email text, staff_role text, sport text, active boolean, expires_at timestamptz, last_used_at timestamptz)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  return query
+    select c.id, c.full_name, c.email, c.staff_role, c.sport, c.active, c.expires_at, c.last_used_at
+    from public.school_confirmers c
+    where c.school_id = target_school_id
+    order by c.active desc, c.created_at desc;
+end;
+$$;
+
+-- F5 ------------------------------------------------------------------------------------------
+
+drop function if exists public.get_aura_tier(integer);
+
+-- Grants --------------------------------------------------------------------------------------
+
+revoke all on function public.admin_upsert_athlete_career_stats(uuid, text, integer, integer, integer, integer) from public, anon;
+revoke all on function public.admin_add_athlete_game_log(uuid, date, text, text, integer, integer) from public, anon;
+revoke all on function public.admin_remove_athlete_game_log(uuid) from public, anon;
+revoke all on function public.clear_my_crew_alerts() from public, anon;
+revoke all on function public.admin_list_operator_checkins(integer) from public, anon;
+revoke all on function public.admin_purge_operator_checkins(integer) from public, anon;
+revoke all on function public.admin_list_school_confirmers(uuid) from public, anon;
+-- Internal: only the trigger and the two admin functions above call these; no client may.
+revoke all on function public.expire_operator_checkins(integer) from public, anon, authenticated;
+revoke all on function public.operator_checkins_minimize() from public, anon, authenticated;
+grant execute on function public.admin_upsert_athlete_career_stats(uuid, text, integer, integer, integer, integer) to authenticated;
+grant execute on function public.admin_add_athlete_game_log(uuid, date, text, text, integer, integer) to authenticated;
+grant execute on function public.admin_remove_athlete_game_log(uuid) to authenticated;
+grant execute on function public.clear_my_crew_alerts() to authenticated;
+grant execute on function public.admin_list_operator_checkins(integer) to authenticated;
+grant execute on function public.admin_purge_operator_checkins(integer) to authenticated;
+grant execute on function public.admin_list_school_confirmers(uuid) to authenticated;
+
+commit;
+
+
+-- DETECT-02: restricted support evidence, independent reviews, release provenance and atomic audit.
+-- Dependencies: current_user_role(), auth.uid(), September RBAC and October bookkeeping tables.
+-- Local replay only. The owner applies SQL. No financial rules or payout gates are changed.
+-- Rollback: revoke RPC execution and remove source audit triggers after review; retain evidence.
+-- Trust boundary: DB owners/superusers can disable triggers/change functions and recompute hashes.
+-- Chains detect accidental/application tampering; they are not signed or externally anchored.
+
+begin;
+
+-- Fixed vocabulary keeps client reports from carrying private payloads or arbitrary diagnostic text.
+create or replace function public.support_code_metadata(p_code text)
+returns jsonb language sql immutable set search_path = '' as $$
+  select case p_code
+    when 'render_failure' then '["ui","error"]'::jsonb
+    when 'runtime_failure' then '["runtime","error"]'::jsonb
+    when 'unhandled_rejection' then '["runtime","error"]'::jsonb
+    when 'read_timeout' then '["network","warning"]'::jsonb
+    when 'network_unavailable' then '["network","warning"]'::jsonb
+    when 'read_failed' then '["data","error"]'::jsonb
+    when 'user_cancelled' then '["ui","info"]'::jsonb
+    when 'auth_expired' then '["runtime","info"]'::jsonb
+    when 'data_invalid' then '["data","error"]'::jsonb
+    when 'payment_failed' then '["finance","error"]'::jsonb
+    when 'access_denied' then '["security","warning"]'::jsonb
+    when 'suspicious_pattern' then '["security","warning"]'::jsonb
+    when 'confirmed_attack' then '["security","critical"]'::jsonb
+    when 'syntax_check_failed' then '["syntax","error"]'::jsonb
+    when 'user_report' then '["user_report","warning"]'::jsonb
+    when 'recovery_succeeded' then '["runtime","info"]'::jsonb
+    when 'recovery_failed' then '["runtime","error"]'::jsonb
+    when 'auth_invalid' then '["security","warning"]'::jsonb
+    when 'auth_unavailable' then '["network","error"]'::jsonb
+    when 'server_configuration_error' then '["runtime","critical"]'::jsonb
+  end
+$$;
+revoke all on function public.support_code_metadata(text) from public, anon, authenticated, service_role;
+
+create table if not exists public.support_signals (
+  id uuid primary key default gen_random_uuid(),
+  fingerprint text not null check (char_length(fingerprint) <= 180),
+  feature text not null check (feature in ('app','highlights','activity','local','spotlight','drip','profile','auth','donation','payouts','operator','upload','admin','support')),
+  code text not null check (public.support_code_metadata(code) is not null),
+  category text not null check (category = public.support_code_metadata(code)->>0),
+  severity text not null check (severity = public.support_code_metadata(code)->>1),
+  source text not null check (source in ('client','server','security','check')),
+  environment text not null check (environment in ('development','test','preview','production')),
+  release text not null check (release ~ '^[a-z0-9][a-z0-9._-]{0,79}$'),
+  occurred_at timestamptz not null default clock_timestamp(),
+  actor_id uuid,
+  check (source <> 'client' or (actor_id is not null and code not in ('confirmed_attack','syntax_check_failed','auth_invalid','auth_unavailable','server_configuration_error'))),
+  check (code <> 'confirmed_attack' or source = 'security')
+);
+create index if not exists support_signals_read_idx on public.support_signals(occurred_at desc,id desc);
+create index if not exists support_signals_scope_idx on public.support_signals(fingerprint,occurred_at desc);
+create index if not exists support_signals_actor_rate_idx on public.support_signals(actor_id,occurred_at desc) where source='client';
+
+create table if not exists public.support_reviews (
+  id uuid primary key default gen_random_uuid(),
+  fingerprint text not null check (char_length(fingerprint) <= 180),
+  disposition text not null check (disposition in ('investigating','expected','false_positive','resolved','confirmed_attack')),
+  rationale text not null check (char_length(btrim(rationale)) between 8 and 500 and octet_length(rationale) <= 2000),
+  reviewed_through timestamptz not null,
+  actor_id uuid not null,
+  created_at timestamptz not null default clock_timestamp(),
+  decision text not null check (decision in ('pending','confirmed')),
+  parent_review_id uuid unique references public.support_reviews(id)
+);
+create index if not exists support_reviews_read_idx on public.support_reviews(created_at desc,id desc);
+create index if not exists support_reviews_scope_idx on public.support_reviews(fingerprint,created_at desc);
+
+create table if not exists public.support_audit_events (
+  id uuid primary key default gen_random_uuid(),
+  chain_index bigint generated always as identity unique,
+  actor_id uuid,
+  actor_role text not null,
+  occurred_at timestamptz not null,
+  operation text not null check (operation in ('INSERT','UPDATE','DELETE')),
+  table_name text not null,
+  record_id text not null check (char_length(record_id) <= 128),
+  changed_fields text[] not null,
+  previous_hash text check (previous_hash ~ '^[a-f0-9]{64}$'),
+  event_hash text not null check (event_hash ~ '^[a-f0-9]{64}$')
+);
+create index if not exists support_audit_read_idx on public.support_audit_events(chain_index desc);
+create index if not exists support_audit_chain_idx on public.support_audit_events(table_name,record_id,chain_index desc);
+
+create table if not exists public.support_releases (
+  id uuid primary key default gen_random_uuid(),
+  actor_id uuid not null,
+  created_at timestamptz not null default clock_timestamp(),
+  manifest jsonb not null check (jsonb_typeof(manifest)='object' and octet_length(manifest::text) <= 65536)
+);
+create index if not exists support_releases_read_idx on public.support_releases(created_at desc,id desc);
+
+-- Every API role, including the server credential role, uses scoped RPCs rather than table writes.
+alter table public.support_signals enable row level security;
+alter table public.support_reviews enable row level security;
+alter table public.support_audit_events enable row level security;
+alter table public.support_releases enable row level security;
+revoke all on public.support_signals,public.support_reviews,public.support_audit_events,public.support_releases from public,anon,authenticated,service_role;
+revoke all on sequence public.support_audit_events_chain_index_seq from public,anon,authenticated,service_role;
+
+create or replace function public.guard_support_append_only()
+returns trigger language plpgsql set search_path = '' as $$
+begin raise exception 'Support evidence is append-only'; end $$;
+revoke all on function public.guard_support_append_only() from public,anon,authenticated,service_role;
+do $$ declare t text; begin
+  foreach t in array array['support_signals','support_reviews','support_audit_events','support_releases'] loop
+    execute format('drop trigger if exists support_append_only on public.%I',t);
+    execute format('create trigger support_append_only before update or delete or truncate on public.%I for each statement execute function public.guard_support_append_only()',t);
+  end loop;
+end $$;
+
+-- Internal insertion has no public EXECUTE; immutable scope and actor are derived by RPC wrappers.
+create or replace function public.insert_support_signal(p_feature text,p_code text,p_environment text,p_release text,p_source text)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare v_id uuid; v_meta jsonb; v_scope text; v_actor uuid := auth.uid(); v_count integer; v_time timestamptz;
+begin
+  v_meta := public.support_code_metadata(p_code);
+  if p_feature is null or p_feature not in ('app','highlights','activity','local','spotlight','drip','profile','auth','donation','payouts','operator','upload','admin','support')
+    or v_meta is null or p_environment is null or p_environment not in ('development','test','preview','production')
+    or p_release is null or p_release !~ '^[a-z0-9][a-z0-9._-]{0,79}$'
+    or p_source is null or p_source not in ('client','server','security','check') then
+    raise exception 'Invalid support signal vocabulary';
+  end if;
+  if p_source='client' and (v_actor is null or p_code in ('confirmed_attack','syntax_check_failed','auth_invalid','auth_unavailable','server_configuration_error')) then
+    raise exception 'Trusted code or signed-in actor required';
+  end if;
+  if p_code='confirmed_attack' and p_source<>'security' then raise exception 'Confirmed attack requires security source'; end if;
+  v_scope := p_feature||':'||p_code||':'||p_source||':'||p_environment||':'||p_release;
+  -- Serialize only one reporting account/scope. No global audit lock or automatic repair.
+  if p_source='client' then
+    perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('support-rate:'||v_actor::text,0));
+    select count(*) into v_count from public.support_signals where source='client' and actor_id=v_actor and occurred_at>clock_timestamp()-interval '1 minute';
+    if v_count>=30 then raise exception 'Support client rate limit reached'; end if;
+  else
+    perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('support-rate:'||v_scope,0));
+    select count(*) into v_count from public.support_signals where fingerprint=v_scope and occurred_at>clock_timestamp()-interval '1 minute';
+    if v_count>=120 then raise exception 'Support trusted rate limit reached'; end if;
+  end if;
+  -- Equal clock readings cannot let a later occurrence inherit an earlier review's coverage.
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('support-occurrence:'||v_scope,0));
+  select greatest(clock_timestamp(),max(occurred_at)+interval '1 microsecond') into v_time from public.support_signals where fingerprint=v_scope;
+  insert into public.support_signals(fingerprint,feature,code,category,severity,source,environment,release,actor_id,occurred_at)
+    values(v_scope,p_feature,p_code,v_meta->>0,v_meta->>1,p_source,p_environment,p_release,v_actor,v_time) returning id into v_id;
+  return v_id;
+end $$;
+revoke all on function public.insert_support_signal(text,text,text,text,text) from public,anon,authenticated,service_role;
+
+-- Signed-in clients submit minimal untrusted reports; category/severity cannot be forged.
+create or replace function public.record_support_signal(p_feature text,p_code text,p_environment text,p_release text)
+returns uuid language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'Signed-in actor required'; end if;
+  return public.insert_support_signal(p_feature,p_code,p_environment,p_release,'client');
+end $$;
+revoke all on function public.record_support_signal(text,text,text,text) from public,anon,authenticated,service_role;
+grant execute on function public.record_support_signal(text,text,text,text) to authenticated;
+
+-- The actual PostgREST role, rather than user_metadata/JWT text alone, gates trusted capture.
+create or replace function public.record_trusted_support_signal(p_feature text,p_code text,p_environment text,p_release text,p_source text)
+returns uuid language plpgsql security definer set search_path = '' as $$
+begin
+  if current_setting('role',true)<>'service_role' then raise exception 'Trusted service role required'; end if;
+  if p_source is null or p_source not in ('server','security','check') then raise exception 'Invalid trusted source'; end if;
+  return public.insert_support_signal(p_feature,p_code,p_environment,p_release,p_source);
+end $$;
+revoke all on function public.record_trusted_support_signal(text,text,text,text,text) from public,anon,authenticated,service_role;
+grant execute on function public.record_trusted_support_signal(text,text,text,text,text) to service_role;
+
+-- Admin reviews retain original occurrences and decisions. Later occurrences reopen the issue.
+create or replace function public.record_support_review(p_fingerprint text,p_disposition text,p_rationale text,p_reviewed_through timestamptz,p_parent_review_id uuid default null)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare v_signal public.support_signals; v_parent public.support_reviews; v_id uuid; v_decision text; v_latest timestamptz; v_time timestamptz;
+begin
+  if auth.uid() is null or public.current_user_role()<>'admin' then raise exception 'Admin access required'; end if;
+  if p_fingerprint is null or char_length(p_fingerprint)>180 or p_disposition is null or p_disposition not in ('investigating','expected','false_positive','resolved','confirmed_attack')
+    or p_rationale is null or char_length(btrim(p_rationale)) not between 8 and 500 or octet_length(p_rationale)>2000
+    or p_rationale ~ '[[:cntrl:]]' or p_reviewed_through is null then raise exception 'Invalid review bounds'; end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('support-review:'||p_fingerprint,0));
+  select * into v_signal from public.support_signals where fingerprint=p_fingerprint order by occurred_at desc,id desc limit 1;
+  if not found then raise exception 'Review source not found'; end if;
+  v_latest := v_signal.occurred_at;
+  -- Require an actual occurrence, not a future timestamp that could suppress unseen evidence.
+  if p_reviewed_through>v_latest or not exists(select 1 from public.support_signals where fingerprint=p_fingerprint and occurred_at=p_reviewed_through) then
+    raise exception 'Review must match an existing occurrence';
+  end if;
+  if p_disposition='confirmed_attack' and (v_signal.source<>'security' or v_signal.code<>'confirmed_attack') then
+    raise exception 'Confirmed attack requires trusted security source';
+  end if;
+  if p_parent_review_id is not null then
+    select * into v_parent from public.support_reviews where id=p_parent_review_id;
+    if not found or v_parent.decision<>'pending' or v_parent.parent_review_id is not null or v_parent.fingerprint<>p_fingerprint
+      or v_parent.disposition<>p_disposition or v_parent.reviewed_through<>p_reviewed_through then raise exception 'Second review must match pending review'; end if;
+    if v_parent.actor_id=auth.uid() then raise exception 'Second reviewer must be independent'; end if;
+    if p_reviewed_through<>v_latest then raise exception 'New occurrence requires a new review'; end if;
+    v_decision := 'confirmed';
+  elsif (v_signal.category in ('security','finance') or v_signal.feature in ('auth','donation','payouts','admin','support')) and p_disposition<>'investigating' then v_decision := 'pending';
+  else v_decision := 'confirmed'; end if;
+  select greatest(clock_timestamp(),max(created_at)+interval '1 microsecond') into v_time from public.support_reviews where fingerprint=p_fingerprint;
+  insert into public.support_reviews(fingerprint,disposition,rationale,reviewed_through,actor_id,decision,parent_review_id,created_at)
+    values(p_fingerprint,p_disposition,btrim(p_rationale),p_reviewed_through,auth.uid(),v_decision,p_parent_review_id,v_time) returning id into v_id;
+  return v_id;
+end $$;
+revoke all on function public.record_support_review(text,text,text,timestamptz,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.record_support_review(text,text,text,timestamptz,uuid) to authenticated;
+
+-- Registration records reported local capsule verification. It does not certify signer/deployment.
+create or replace function public.register_support_release(p_manifest jsonb)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare v_id uuid; v_m jsonb; v_date timestamptz;
+begin
+  if auth.uid() is null or public.current_user_role()<>'admin' then raise exception 'Admin access required'; end if;
+  if p_manifest is null or jsonb_typeof(p_manifest)<>'object' or octet_length(p_manifest::text)>65536
+    or (select array_agg(k order by k) from jsonb_object_keys(p_manifest) k) is distinct from
+      array['byteCount','capsuleHash','createdAt','filesCount','gitCommit','manifestHash','migrationHashes','provenanceHash','releaseId','schemaHash','treeHash','verification','version']::text[] then
+    raise exception 'Invalid release manifest keys or bounds';
+  end if;
+  if p_manifest->'version'<>'1'::jsonb or jsonb_typeof(p_manifest->'releaseId')<>'string' or p_manifest->>'releaseId' !~ '^[a-z0-9][a-z0-9-]{0,79}$'
+    or jsonb_typeof(p_manifest->'createdAt')<>'string' or p_manifest->>'createdAt' !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$'
+    or not (p_manifest->'gitCommit'='null'::jsonb or (jsonb_typeof(p_manifest->'gitCommit')='string' and p_manifest->>'gitCommit' ~ '^[a-f0-9]{40}$'))
+    or not (p_manifest->'schemaHash'='null'::jsonb or (jsonb_typeof(p_manifest->'schemaHash')='string' and p_manifest->>'schemaHash' ~ '^[a-f0-9]{64}$'))
+    or jsonb_typeof(p_manifest->'verification')<>'string' or p_manifest->>'verification' not in ('not-run','passed')
+    or jsonb_typeof(p_manifest->'filesCount')<>'number' or (p_manifest->>'filesCount') !~ '^\d+$' or (p_manifest->>'filesCount')::numeric not between 1 and 100000
+    or jsonb_typeof(p_manifest->'byteCount')<>'number' or (p_manifest->>'byteCount') !~ '^\d+$' or (p_manifest->>'byteCount')::numeric not between 0 and 10737418240
+    or jsonb_typeof(p_manifest->'migrationHashes')<>'array' or jsonb_array_length(p_manifest->'migrationHashes')>1000 then
+    raise exception 'Invalid release manifest values';
+  end if;
+  v_date := (p_manifest->>'createdAt')::timestamptz;
+  if v_date<'2020-01-01'::timestamptz or v_date>clock_timestamp()+interval '5 minutes' then raise exception 'Invalid package time'; end if;
+  if exists(select 1 from unnest(array['treeHash','manifestHash','capsuleHash','provenanceHash']) k where jsonb_typeof(p_manifest->k)<>'string' or p_manifest->>k !~ '^[a-f0-9]{64}$') then raise exception 'Invalid release hash'; end if;
+  for v_m in select value from jsonb_array_elements(p_manifest->'migrationHashes') loop
+    if jsonb_typeof(v_m)<>'object' or (select array_agg(k order by k) from jsonb_object_keys(v_m) k) is distinct from array['path','sha256']::text[]
+      or jsonb_typeof(v_m->'path')<>'string' or v_m->>'path' !~ '^supabase/migrations/[0-9]{14}_[a-z0-9_]+\.sql$'
+      or jsonb_typeof(v_m->'sha256')<>'string' or v_m->>'sha256' !~ '^[a-f0-9]{64}$' then raise exception 'Invalid migration hash entry'; end if;
+  end loop;
+  if exists(select 1 from jsonb_array_elements(p_manifest->'migrationHashes') x group by x->>'path' having count(*)>1) then raise exception 'Duplicate migration path'; end if;
+  insert into public.support_releases(actor_id,manifest) values(auth.uid(),p_manifest) returning id into v_id;
+  return v_id;
+end $$;
+revoke all on function public.register_support_release(jsonb) from public,anon,authenticated,service_role;
+grant execute on function public.register_support_release(jsonb) to authenticated;
+
+-- Atomic AFTER trigger observes actual field changes, stores no row values and locks only its entity.
+create or replace function public.capture_support_audit()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare v_old jsonb := case when TG_OP='INSERT' then '{}'::jsonb else to_jsonb(OLD) end;
+  v_new jsonb := case when TG_OP='DELETE' then '{}'::jsonb else to_jsonb(NEW) end;
+  v_fields text[]; v_record text; v_prev text; v_hash text; v_id uuid := gen_random_uuid();
+  v_time timestamptz := clock_timestamp(); v_actor uuid := auth.uid(); v_role text := public.current_user_role(); v_payload jsonb;
+begin
+  select array_agg(k order by k) into v_fields from (select jsonb_object_keys(v_old||v_new) k) keys where v_old->k is distinct from v_new->k;
+  if v_fields is null then return null; end if;
+  if TG_TABLE_NAME='profiles' then
+    v_fields := array(select f from unnest(v_fields) f where f in ('role','roles','is_admin','active_role','player_id','is_verified','verification_status','stripe_connect_id','malo_frozen','payouts_enabled'));
+    if cardinality(v_fields)=0 then return null; end if;
+    if TG_OP<>'INSERT' and v_old->>'user_id'=v_actor::text then
+      v_role := case when coalesce((v_old->>'is_admin')::boolean,false) or v_old->>'role'='admin' or coalesce(v_old->'roles','[]'::jsonb) ? 'admin' then 'admin' else coalesce(v_old->>'role','guest') end;
+    end if;
+  elsif TG_TABLE_NAME in ('games','reels','players') and v_role<>'admin' and current_setting('role',true)<>'service_role' then
+    v_fields := array(select f from unnest(v_fields) f where f in ('guardian_id','parental_consent_approved','malo_frozen','is_verified','verification_status','is_hidden','is_published','status'));
+    if cardinality(v_fields)=0 then return null; end if;
+  end if;
+  if current_setting('role',true)='service_role' then v_role := 'service_role';
+  elsif v_actor is null then v_role := 'database_operator'; end if;
+  v_record := coalesce(v_new->>'id',v_old->>'id',v_new->>'user_id',v_old->>'user_id',v_new->>'code',v_old->>'code',v_new->>'period',v_old->>'period');
+  if v_record is null then raise exception 'Audited entity requires opaque id'; end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('support-audit:'||TG_TABLE_NAME||':'||v_record,0));
+  select event_hash into v_prev from public.support_audit_events where table_name=TG_TABLE_NAME and record_id=v_record order by chain_index desc limit 1;
+  v_payload := jsonb_build_object('id',v_id,'actor_id',v_actor,'actor_role',v_role,'occurred_at',to_char(v_time at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+    'operation',TG_OP,'table_name',TG_TABLE_NAME,'record_id',v_record,'changed_fields',v_fields,'previous_hash',v_prev);
+  v_hash := encode(pg_catalog.sha256(convert_to(v_payload::text,'UTF8')),'hex');
+  insert into public.support_audit_events(id,actor_id,actor_role,occurred_at,operation,table_name,record_id,changed_fields,previous_hash,event_hash)
+    values(v_id,v_actor,v_role,v_time,TG_OP,TG_TABLE_NAME,v_record,v_fields,v_prev,v_hash);
+  return null;
+end $$;
+revoke all on function public.capture_support_audit() from public,anon,authenticated,service_role;
+
+-- Required source scope is explicit; missing dependencies fail activation rather than hiding coverage.
+do $$ declare t text; begin
+  foreach t in array array['profiles','players','games','reels','app_runtime_config','school_confirmers','tips','disbursements','company_revenue_logs','sponsorships','subscriptions','ledger_accounts','ledger_manual_entries','ledger_manual_lines','ledger_period_closes','ledger_period_reopens'] loop
+    if to_regclass('public.'||t) is null then raise exception 'Apply source migrations first: %',t; end if;
+    execute format('drop trigger if exists support_actual_write_audit on public.%I',t);
+    execute format('create trigger support_actual_write_audit after insert or update or delete on public.%I for each row execute function public.capture_support_audit()',t);
+  end loop;
+end $$;
+
+-- Admin-only one-statement read. Absence/error remains an error; clients cannot supply unbounded limits.
+create or replace function public.get_engineering_support_snapshot()
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_result jsonb;
+begin
+  if auth.uid() is null or public.current_user_role()<>'admin' then raise exception 'Admin access required'; end if;
+  select jsonb_build_object('version',1,'read_at',clock_timestamp(),
+    'signals',coalesce((select jsonb_agg(to_jsonb(s) order by s.occurred_at desc,s.id desc) from (select * from public.support_signals order by occurred_at desc,id desc limit 200) s),'[]'::jsonb),
+    'reviews',coalesce((select jsonb_agg(to_jsonb(r) order by r.created_at desc,r.id desc) from (select * from public.support_reviews order by created_at desc,id desc limit 300) r),'[]'::jsonb),
+    'audit',coalesce((select jsonb_agg(to_jsonb(a)-'chain_index' order by a.chain_index desc) from (select * from public.support_audit_events order by chain_index desc limit 200) a),'[]'::jsonb),
+    'releases',coalesce((select jsonb_agg(to_jsonb(m) order by m.created_at desc,m.id desc) from (select * from public.support_releases order by created_at desc,id desc limit 20) m),'[]'::jsonb),
+    'limits',jsonb_build_object('signals',200,'reviews',300,'audit',200,'releases',20)) into v_result;
+  return v_result;
+end $$;
+revoke all on function public.get_engineering_support_snapshot() from public,anon,authenticated,service_role;
+grant execute on function public.get_engineering_support_snapshot() to authenticated;
+
+commit;
+
+-- Function access hardening (DATA-01 schema replay finding, 2026-10-13; RLS_SECURITY reviewed).
+--
+-- Purpose
+--   A replay of the whole schema.sql on an empty Postgres (scripts/replay/schema-replay.mjs) checked who can call
+--   what. It found:
+--   1. Books integrity: record_company_revenue and sync_company_revenue_logs had EXECUTE revoked from anon and
+--      authenticated but not from PUBLIC, so any guest with the public key could write a revenue row into
+--      company_revenue_logs (proved in the replay). increment_reel_tips, add_user_aura and increment_backer_count (donation
+--      totals, Aura, backer counts) were open to guests the same way (backer count only ever granted authenticated,
+--      never revoked from anon, which hosted Supabase grants by default), as did publish_spotlight_award and upsert_cheer_poll (those two check
+--      the caller's role inside, so tidy-up only).
+--   2. Admin-desk functions open to guests: triage_app_feedback, upsert_sport_config and delete_sport_config were
+--      granted to anon and checked nothing. Only the admin desks (signed-in admins) call them.
+--   3. "No claims" counted as the database: is_admin_or_db() treated a missing JWT role as the SQL Editor, so a
+--      request running as anon with no claims passed it, and four verification-ladder admin functions
+--      (20260929120000) were still executable by anon. Caps that test `auth.role() <> 'service_role'` read NULL
+--      for such a request and were skipped (add_user_aura 5,000-point cap, update_game_score claimed-game check,
+--      chip_in_wishlist_item cap, the Stripe-fields guard), and the profile role-escalation trigger returned early.
+--      Whether the hosted gateway ever forwards a claimless request is not verified; this closes it either way.
+--
+-- Changes
+--   - is_trusted_server(): the one test for "the server, not a client": service_role, or a session with no JWT
+--     role that did not switch to anon / authenticated (the SQL Editor; PostgREST always switches). Always true or
+--     false. The role setting survives inside security definer functions, where current_user is the owner.
+--   - is_admin_or_db() = is_trusted_server() or an admin. The caps above use not is_trusted_server(); the
+--     escalation trigger skips only for a true database session.
+--   - The three admin-desk functions require is_admin_or_db() and are no longer granted to anon.
+--   - PUBLIC / anon EXECUTE removed where listed; authenticated keeps what the app calls; service_role is granted every
+--     narrowed function explicitly (RLS_SECURITY: a CHECK runs its function as the writing role, so the Stripe
+--     webhook's tip insert needs EXECUTE on is_trusted_server).
+--   - The five amount / Aura cap CHECK constraints on tips, sponsorships and shop_orders read
+--     `auth.role() = 'service_role' or …`, which passes on NULL; they now use is_trusted_server(). Added NOT VALID:
+--     existing rows were accepted under the old rule and are not re-judged; every new row is.
+--   Not changed: update_game_score stays anon-executable for the operator PIN (STATE §5, accepted for internal
+--   testing).
+--
+-- Owner: RLS_SECURITY (review), DATA_GOVERNANCE (finding); function owners LEDGER (revenue), ATHLETE_VERIFICATION /
+--   SCHOOL_PARTNERS (ladder), AURA, OPERATOR, COMMERCE (wishlist), ADMIN (feedback, sports).
+-- Safe to re-run: create or replace; grants are idempotent; revokes skip functions this database lacks
+--   (development lacks the verification ladder and other September SQL).
+-- Applied: written 2026-10-13, not applied anywhere. Apply FIRST on staging; independent of the other 2026-10-13
+--   files. Function bodies below are the current schema.sql definitions with only the marked lines changed.
+-- Rollback: re-run each function's previous definition from schema.sql history and restore the old grants
+--   (not recommended: it reopens the books write).
+
+create or replace function public.is_trusted_server()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(auth.role() = 'service_role', false)
+    or (auth.role() is null and coalesce(nullif(current_setting('role', true), ''), 'none') not in ('anon', 'authenticated'));
+$$;
+
+create or replace function public.is_admin_or_db()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  -- Always true or false: a NULL would read as "not refused" in callers' `if not public.is_admin_or_db()`.
+  select public.is_trusted_server() or coalesce(public.current_user_role() = 'admin', false);
+$$;
+
+-- Bodies: current definitions; changed lines use is_trusted_server() / is_admin_or_db().
+
+create or replace function public.add_user_aura(target_user_id uuid, points_to_add integer)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  add_points integer;
+  player_total integer;
+  profile_total integer;
+begin
+  add_points := greatest(coalesce(points_to_add, 0), 0);
+
+  -- SECURITY TRADEOFF (2026-09 audit item 1/4): this RPC is called for BOTH the tipper
+  -- (self-Aura) and the athlete recipient right after a real tip (see useTipCheckout.ts),
+  -- so a strict `auth.uid() = target_user_id` ownership check would break the "award the
+  -- athlete too" half. Postgres/RLS alone cannot verify a real Stripe charge happened —
+  -- that verification now lives in supabase/functions/stripe-webhook/index.ts, which writes
+  -- Aura directly (as service_role, exempt below) once a charge is confirmed. Until every
+  -- caller is migrated to trust that webhook instead of calling this RPC client-side, cap the
+  -- client-facing path so a compromised/scripted client can fabricate at most a small amount
+  -- of Aura per call rather than an unbounded amount. This is a stopgap, not a fix.
+  if not public.is_trusted_server() and add_points > 5000 then
+    raise exception 'points_to_add exceeds the per-call limit (5000)';
+  end if;
+
+  -- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): this RPC is called both for the tipper's own
+  -- Fan Aura (target_user_id = auth user id) and for the athlete recipient's Athlete Aura
+  -- (target_user_id = players.id) — see useTipCheckout.ts. `malo_target_frozen` only matches a
+  -- `profiles` row keyed by `player_id = target_user_id`, so this is a no-op (false) for a tipper's
+  -- own auth/profile id and only blocks the case that actually matters: awarding Aura to a frozen
+  -- athlete. Applies to every caller (checkout, reel double-tap, wishlist chip-in), not service_role
+  -- exempt, since the freeze must be a hard block regardless of caller.
+  if public.malo_target_frozen(target_user_id) then
+    raise exception 'Mālo is frozen for this athlete; Aura cannot be added.';
+  end if;
+
+  update public.players
+  set aura_points = coalesce(aura_points, 0) + add_points
+  where id = target_user_id
+  returning aura_points into player_total;
+
+  update public.profiles
+  set aura_points = coalesce(aura_points, 0) + add_points
+  where user_id = target_user_id or id = target_user_id
+  returning aura_points into profile_total;
+
+  return jsonb_build_object(
+    'aura_points', coalesce(player_total, profile_total, add_points),
+    'player_aura_points', player_total,
+    'profile_aura_points', profile_total,
+    'points_added', add_points
+  );
+end;
+$$;
+
+create or replace function public.update_game_score(
+  target_game_id uuid,
+  home_delta integer default 0,
+  away_delta integer default 0,
+  set_clock_running boolean default null,
+  set_clock text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  result public.games%rowtype;
+begin
+  -- 2026-09 audit item 12: this is SECURITY DEFINER, so it bypasses the "Operators update games"
+  -- RLS policy's claimed_by-narrowing entirely — and it's the operator console's PRIMARY score
+  -- path (`updateGameScore` in lib/operator.ts calls this RPC before falling back to a direct
+  -- table UPDATE), so leaving this function unconditional would make that RLS narrowing mostly
+  -- cosmetic. Same stopgap here: an anon caller may only update a game that is still unclaimed.
+  if public.current_user_role() not in ('operator', 'admin') and not public.is_trusted_server() then
+    if exists (select 1 from public.games where id = target_game_id and claimed_by is not null) then
+      raise exception 'This game has been claimed by another operator.';
+    end if;
+  end if;
+
+  update public.games
+  set
+    home_score = greatest(coalesce(home_score, 0) + coalesce(home_delta, 0), 0),
+    away_score = greatest(coalesce(away_score, 0) + coalesce(away_delta, 0), 0),
+    is_clock_running = coalesce(set_clock_running, is_clock_running),
+    clock = coalesce(nullif(btrim(coalesce(set_clock, '')), ''), clock),
+    updated_at = now()
+  where id = target_game_id
+  returning * into result;
+
+  if result.id is null then
+    raise exception 'Game % not found', target_game_id;
+  end if;
+
+  return jsonb_build_object(
+    'id', result.id,
+    'home_score', result.home_score,
+    'away_score', result.away_score,
+    'clock', result.clock,
+    'is_clock_running', result.is_clock_running,
+    'claimed_by', result.claimed_by,
+    'quarter', result.quarter,
+    'status', result.status
+  );
+end;
+$$;
+
+create or replace function public.chip_in_wishlist_item(item_id uuid, amount_cents integer)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  add_cents integer := greatest(coalesce(amount_cents, 0), 0);
+  equip_aura constant integer := 500;
+  row_after public.wishlist_items;
+  newly_equipped boolean := false;
+  awarded integer := 0;
+  aura_result jsonb;
+  target_player uuid;
+begin
+  -- The per-gift ledger is the `tips` row `useTipCheckout` inserts before this call
+  -- (`origin = wishlist`, `wishlist_item_id`, `source_label` = the item title). This RPC only
+  -- moves the item aggregate, so it must not insert a second `tips` row.
+  -- SECURITY TRADEOFF (2026-09 audit item 5): there is still no payer column on `wishlist_items`
+  -- itself. Execute is `authenticated`-only and a per-call cap stands in until a Stripe charge
+  -- is verified the same way supabase/functions/stripe-webhook/index.ts will eventually verify tips.
+  if not public.is_trusted_server() and add_cents > 100000 then
+    raise exception 'amount_cents exceeds the per-call limit (100000)';
+  end if;
+
+  -- 2026-09 compliance (LEGAL_BRIEFING.md §8 item 5): this is a Mālo contribution too (see the
+  -- doc comment above) — block it the same way `tips` INSERT does, before the aggregate even moves,
+  -- not only at the equip/+500 Aura step below (add_user_aura's own check would catch that step,
+  -- but not a below-target contribution that never reaches it).
+  select player_id into target_player from public.wishlist_items where id = item_id;
+  if target_player is not null and public.malo_target_frozen(target_player) then
+    raise exception 'Mālo is frozen for this athlete; wishlist contributions are disabled.';
+  end if;
+
+  update public.wishlist_items
+  set
+    current_amount_cents = current_amount_cents + add_cents,
+    updated_at = timezone('utc', now())
+  where id = item_id
+  returning * into row_after;
+
+  if row_after.id is null then
+    raise exception 'Wishlist item not found.';
+  end if;
+
+  if row_after.target_amount_cents > 0
+    and row_after.current_amount_cents >= row_after.target_amount_cents
+    and not row_after.aura_awarded
+  then
+    update public.wishlist_items
+    set
+      is_equipped = true,
+      equipped_at = timezone('utc', now()),
+      aura_awarded = true,
+      updated_at = timezone('utc', now())
+    where id = item_id
+    returning * into row_after;
+
+    newly_equipped := true;
+    awarded := equip_aura;
+
+    if row_after.player_id is not null then
+      aura_result := public.add_user_aura(row_after.player_id, equip_aura);
+    end if;
+  end if;
+
+  return jsonb_build_object(
+    'item', to_jsonb(row_after),
+    'newly_equipped', newly_equipped,
+    'aura_points', awarded,
+    'athlete_aura_points', (aura_result ->> 'aura_points')::integer
+  );
+end;
+$$;
+
+create or replace function public.guard_profiles_admin_escalation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  privileged_roles constant text[] := array['admin', 'booster', 'operator', 'parent', 'sponsor'];
+  new_roles_set text[];
+  old_roles_set text[];
+  gained text[];
+begin
+  if auth.role() is null and coalesce(nullif(current_setting('role', true), ''), 'none') not in ('anon', 'authenticated') then
+    return new;
+  end if;
+
+  new_roles_set := coalesce(new.roles, array[]::text[])
+    || array[new.role]
+    || case when coalesce(new.is_admin, false) then array['admin'] else array[]::text[] end;
+
+  if tg_op = 'INSERT' then
+    old_roles_set := array[]::text[];
+  else
+    old_roles_set := coalesce(old.roles, array[]::text[])
+      || array[old.role]
+      || case when coalesce(old.is_admin, false) then array['admin'] else array[]::text[] end;
+  end if;
+
+  select coalesce(array_agg(r), array[]::text[])
+  into gained
+  from unnest(privileged_roles) as r
+  where r = any (new_roles_set) and not (r = any (old_roles_set));
+
+  if array_length(gained, 1) > 0 and public.current_user_role() <> 'admin' then
+    raise exception 'these roles can only be granted by an existing admin: %', array_to_string(gained, ', ');
+  end if;
+
+  -- 2026-09 audit (Round 29 sweep): same root cause as the role-escalation gap above, different
+  -- column. `set_malo_freeze`'s own comment claimed it was "the ONLY way" to flip `malo_frozen`
+  -- because no *extra* table grant was added for it — but `profiles` already has a blanket
+  -- `grant ... update` with no column restriction, so that reasoning never actually held. A frozen
+  -- account (a real compliance/legal action per LEGAL_BRIEFING.md §8 item 5) could self-unfreeze
+  -- with a raw `update profiles set malo_frozen = false where user_id = auth.uid()`, bypassing the
+  -- admin-only RPC entirely and defeating the freeze's whole purpose. Guarding it the same way as
+  -- the role columns: only an admin session may change it.
+  if (
+    (tg_op = 'INSERT' and coalesce(new.malo_frozen, false))
+    or (tg_op = 'UPDATE' and new.malo_frozen is distinct from old.malo_frozen)
+  ) and public.current_user_role() <> 'admin' then
+    raise exception 'malo_frozen can only be changed by an admin';
+  end if;
+
+  -- 2026-09 audit (Round 30 sweep): same root cause again, a third time. `createPayout.ts` and
+  -- `create-stripe-account`'s own doc comments both say the payout destination is "resolved
+  -- server-side from `profiles.stripe_connect_id`, never a client-supplied account id" — but that
+  -- claim only held for the app's own client code, which never happened to write these columns
+  -- directly. Nothing stopped a raw REST call: `profiles`' blanket update grant covers
+  -- `stripe_connect_id` / `payouts_enabled` / `stripe_onboarding_complete` same as everything else,
+  -- so any signed-in user could self-set `payouts_enabled = true` and `stripe_connect_id` to an
+  -- arbitrary string (their own real Connect id, someone else's if ever discoverable, or garbage)
+  -- with zero real Stripe onboarding. Harmless today only because Round 23 already hard-blocks every
+  -- real transfer regardless of these flags — but the entire "destination resolved server-side, never
+  -- trust the client" security property this system is documented to rely on would be false the
+  -- moment that block is lifted, undermining the point of building a balance ledger at all. `auth.role()
+  -- = 'service_role'` is exempted so the `create-stripe-account` Edge Function (which legitimately
+  -- writes these with the service key, and has no admin session to satisfy `current_user_role()`)
+  -- keeps working.
+  if (
+    (tg_op = 'INSERT' and (
+      new.stripe_connect_id is not null
+      or coalesce(new.payouts_enabled, false)
+      or coalesce(new.stripe_onboarding_complete, false)
+    ))
+    or (tg_op = 'UPDATE' and (
+      new.stripe_connect_id is distinct from old.stripe_connect_id
+      or new.payouts_enabled is distinct from old.payouts_enabled
+      or new.stripe_onboarding_complete is distinct from old.stripe_onboarding_complete
+    ))
+  ) and not public.is_trusted_server() and public.current_user_role() <> 'admin' then
+    raise exception 'Stripe Connect fields can only be set by the server';
+  end if;
+
+  -- 2026-09 audit (Round 31/33 follow-up): `team_code_fail_count`/`team_code_locked_until` are
+  -- `redeem_team_code`'s anti-brute-force lockout state (Round 12). Unlike the columns above, the
+  -- one legitimate writer runs as the *calling user's own session*, not admin/service_role, so this
+  -- can't just check `current_user_role()`. `redeem_team_code` sets a transaction-local flag
+  -- (`app.tapuai_team_code_write`) immediately before its own writes to these columns; a raw client
+  -- update attempting the same reset has no way to set that flag first, so it's rejected here.
+  if (
+    (tg_op = 'INSERT' and (
+      coalesce(new.team_code_fail_count, 0) <> 0
+      or new.team_code_locked_until is not null
+    ))
+    or (tg_op = 'UPDATE' and (
+      new.team_code_fail_count is distinct from old.team_code_fail_count
+      or new.team_code_locked_until is distinct from old.team_code_locked_until
+    ))
+  )
+    and public.current_user_role() <> 'admin'
+    and coalesce(current_setting('app.tapuai_team_code_write', true), '') <> 'true'
+  then
+    raise exception 'team_code_fail_count / team_code_locked_until can only be changed by the server';
+  end if;
+
+  return new;
+end;
+$$;
+
+create or replace function public.triage_app_feedback(
+  target_id uuid,
+  next_status text,
+  next_note text default '',
+  next_runtime_path text default ''
+)
+returns public.app_feedback
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  status_n text := lower(btrim(coalesce(next_status, '')));
+  result public.app_feedback;
+begin
+  -- Admin desks only (function access hardening 2026-10-13); it used to be granted to guests with no check.
+  if not public.is_admin_or_db() then
+    raise exception 'Admins only';
+  end if;
+  if status_n not in ('new', 'reviewing', 'planned', 'shipping', 'shipped', 'declined') then
+    raise exception 'Unknown feedback status %', next_status;
+  end if;
+
+  update public.app_feedback
+  set
+    status = status_n,
+    admin_note = coalesce(next_note, admin_note),
+    runtime_path = coalesce(next_runtime_path, runtime_path),
+    updated_at = timezone('utc', now())
+  where id = target_id
+  returning * into result;
+
+  if result.id is null then
+    raise exception 'Feedback not found.';
+  end if;
+
+  return result;
+end;
+$$;
+
+create or replace function public.upsert_sport_config(payload jsonb)
+returns public.sport_configs
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  sport_n text := btrim(coalesce(payload ->> 'sport', ''));
+  target_id uuid := nullif(payload ->> 'id', '')::uuid;
+  result public.sport_configs;
+begin
+  -- Admin desks only (function access hardening 2026-10-13); it used to be granted to guests with no check.
+  if not public.is_admin_or_db() then
+    raise exception 'Admins only';
+  end if;
+  if sport_n = '' then
+    raise exception 'Name the sport before saving.';
+  end if;
+
+  if target_id is null then
+    select id into target_id
+    from public.sport_configs
+    where lower(btrim(sport)) = lower(sport_n);
+  end if;
+
+  insert into public.sport_configs as sc (
+    id, sport, emoji, period_label, periods, uses_clock, clock_seconds,
+    scoring, callouts, stat_fields, measurables, positions, is_active, sort_order, updated_at
+  )
+  values (
+    coalesce(target_id, gen_random_uuid()),
+    sport_n,
+    coalesce(nullif(payload ->> 'emoji', ''), '🏅'),
+    coalesce(nullif(payload ->> 'period_label', ''), 'Period'),
+    coalesce(payload -> 'periods', '[]'::jsonb),
+    coalesce((payload ->> 'uses_clock')::boolean, true),
+    greatest(coalesce((payload ->> 'clock_seconds')::integer, 0), 0),
+    coalesce(payload -> 'scoring', '[]'::jsonb),
+    coalesce(payload -> 'callouts', '[]'::jsonb),
+    coalesce(payload -> 'stat_fields', '[]'::jsonb),
+    coalesce(payload -> 'measurables', '[]'::jsonb),
+    coalesce(payload -> 'positions', '[]'::jsonb),
+    coalesce((payload ->> 'is_active')::boolean, true),
+    coalesce((payload ->> 'sort_order')::integer, 0),
+    timezone('utc', now())
+  )
+  on conflict (id) do update
+  set
+    sport = excluded.sport,
+    emoji = excluded.emoji,
+    period_label = excluded.period_label,
+    periods = excluded.periods,
+    uses_clock = excluded.uses_clock,
+    clock_seconds = excluded.clock_seconds,
+    scoring = excluded.scoring,
+    callouts = excluded.callouts,
+    stat_fields = excluded.stat_fields,
+    measurables = excluded.measurables,
+    positions = excluded.positions,
+    is_active = excluded.is_active,
+    sort_order = excluded.sort_order,
+    updated_at = timezone('utc', now())
+  returning * into result;
+
+  return result;
+end;
+$$;
+
+create or replace function public.delete_sport_config(target_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Admin desks only (function access hardening 2026-10-13); it used to be granted to guests with no check.
+  if not public.is_admin_or_db() then
+    raise exception 'Admins only';
+  end if;
+  delete from public.sport_configs where id = target_id;
+  return found;
+end;
+$$;
+
+-- Cap constraints: the same server test, so a request with no claims cannot skip a cap.
+alter table public.tips drop constraint if exists tips_amount_cents_cap_check;
+alter table public.tips add constraint tips_amount_cents_cap_check
+  check (public.is_trusted_server() or amount_cents <= 100000) not valid;
+alter table public.tips drop constraint if exists tips_aura_points_cap_check;
+alter table public.tips add constraint tips_aura_points_cap_check
+  check (public.is_trusted_server() or aura_points <= 10000) not valid;
+alter table public.sponsorships drop constraint if exists sponsorships_amount_cents_cap_check;
+alter table public.sponsorships add constraint sponsorships_amount_cents_cap_check
+  check (public.is_trusted_server() or amount_cents <= 100000) not valid;
+alter table public.sponsorships drop constraint if exists sponsorships_aura_points_cap_check;
+alter table public.sponsorships add constraint sponsorships_aura_points_cap_check
+  check (public.is_trusted_server() or aura_points <= 10000) not valid;
+alter table public.shop_orders drop constraint if exists shop_orders_amount_cents_cap_check;
+alter table public.shop_orders add constraint shop_orders_amount_cents_cap_check
+  check (public.is_trusted_server() or amount_cents <= 100000) not valid;
+
+-- Grants. Each statement runs only where the function exists.
+do $$
+declare
+  stmt text;
+  fn text;
+begin
+  foreach stmt in array array[
+    'revoke all on function public.is_trusted_server() from public',
+    'grant execute on function public.is_trusted_server() to anon, authenticated',
+    'revoke all on function public.is_admin_or_db() from public, anon',
+    'grant execute on function public.is_admin_or_db() to authenticated',
+    -- server-only: called by triggers and by security definer functions, never by a client
+    'revoke all on function public.record_company_revenue(text, text, integer, text, uuid, text, timestamptz) from public, anon, authenticated',
+    'revoke all on function public.sync_company_revenue_logs() from public, anon, authenticated',
+    -- signed-in callers only
+    'revoke all on function public.increment_reel_tips(uuid, integer) from public, anon',
+    'grant execute on function public.increment_reel_tips(uuid, integer) to authenticated',
+    'revoke all on function public.add_user_aura(uuid, integer) from public, anon',
+    -- schema.sql said "anon revoked" here but only ever granted authenticated; hosted grants anon by default
+    'revoke all on function public.increment_backer_count(uuid) from public, anon',
+    'grant execute on function public.increment_backer_count(uuid) to authenticated',
+    'grant execute on function public.add_user_aura(uuid, integer) to authenticated',
+    'revoke all on function public.publish_spotlight_award(uuid, text, text, date, date) from public, anon',
+    'revoke all on function public.upsert_cheer_poll(text, text, text, boolean) from public, anon',
+    -- admin desks: signed-in, and the functions now check for an admin
+    'revoke all on function public.triage_app_feedback(uuid, text, text, text) from public, anon',
+    'grant execute on function public.triage_app_feedback(uuid, text, text, text) to authenticated',
+    'revoke all on function public.upsert_sport_config(jsonb) from public, anon',
+    'grant execute on function public.upsert_sport_config(jsonb) to authenticated',
+    'revoke all on function public.delete_sport_config(uuid) from public, anon',
+    'grant execute on function public.delete_sport_config(uuid) to authenticated',
+    -- verification ladder admin functions (guarded inside by is_admin_or_db)
+    'revoke all on function public.admin_add_school_confirmer(uuid, text, text, text, text) from public, anon',
+    'revoke all on function public.admin_decide_verification(uuid, boolean, text) from public, anon',
+    'revoke all on function public.admin_revoke_school_confirmer(uuid) from public, anon',
+    'revoke all on function public.admin_revoke_verification(uuid, text) from public, anon',
+    -- guarded inside by current_user_role(), but revoked from public only, and hosted Supabase grants anon directly
+    'revoke all on function public.admin_approve_player_consent(uuid) from public, anon',
+    'revoke all on function public.admin_set_custodial_terms(uuid, smallint, date) from public, anon',
+    'revoke all on function public.admin_set_player_guardian(uuid, uuid) from public, anon',
+    -- The server role keeps every function above: removing PUBLIC must not take it from the Stripe webhook (its
+    -- add_user_aura calls; and is_trusted_server inside the cap CHECKs runs as the writing role).
+    'grant execute on function public.add_user_aura(uuid, integer) to service_role',
+    'grant execute on function public.admin_add_school_confirmer(uuid, text, text, text, text) to service_role',
+    'grant execute on function public.admin_decide_verification(uuid, boolean, text) to service_role',
+    'grant execute on function public.admin_revoke_school_confirmer(uuid) to service_role',
+    'grant execute on function public.admin_revoke_verification(uuid, text) to service_role',
+    'grant execute on function public.admin_approve_player_consent(uuid) to service_role',
+    'grant execute on function public.admin_set_custodial_terms(uuid, smallint, date) to service_role',
+    'grant execute on function public.admin_set_player_guardian(uuid, uuid) to service_role',
+    'grant execute on function public.increment_backer_count(uuid) to service_role',
+    'grant execute on function public.delete_sport_config(uuid) to service_role',
+    'grant execute on function public.increment_reel_tips(uuid, integer) to service_role',
+    'grant execute on function public.is_admin_or_db() to service_role',
+    'grant execute on function public.is_trusted_server() to service_role',
+    'grant execute on function public.publish_spotlight_award(uuid, text, text, date, date) to service_role',
+    'grant execute on function public.record_company_revenue(text, text, integer, text, uuid, text, timestamptz) to service_role',
+    'grant execute on function public.sync_company_revenue_logs() to service_role',
+    'grant execute on function public.triage_app_feedback(uuid, text, text, text) to service_role',
+    'grant execute on function public.upsert_cheer_poll(text, text, text, boolean) to service_role',
+    'grant execute on function public.upsert_sport_config(jsonb) to service_role'
+  ] loop
+    fn := substring(stmt from 'function (public\.[a-z_]+\([^)]*\))');
+    if to_regprocedure(fn) is not null then
+      execute stmt;
+    end if;
+  end loop;
+end;
+$$;
+
+-- Payout rows: admins write, and a parent reads only their own athlete's (STATE §5 Wave 1 blocker, 2026-10-13).
+--
+-- Purpose
+--   "Admin write disbursements" let any account with the parent role insert, update or delete every payout row,
+--   and "Admin read disbursements" let it read them all, not only its own child's (found by RLS_SECURITY during
+--   the BOOKS-01 review). Payout rows feed the books (Finance & Books, Money desk), so a parent could change an
+--   amount or status for any family. Only admin desks write disbursements in the app (Money, Books); the parent
+--   app never does.
+--   - Writes: admins only.
+--   - Reads: admins, plus the custodial parties for that athlete through custodial_role(player_id) (the guardian
+--     and the verified athlete, as for custodial_accounts: the athlete sees every gift and payout). A database
+--     without custodial_role (development lacks custodial_money.sql) falls back to admin-only reads.
+--
+--   - Paid and failed payouts are final (INTERNAL_CONTROLS review; tightened after RLS_SECURITY): status moves only
+--     between 'paid' and 'failed' (a bank return), and amount and athlete never change. The books never edit history
+--     (BOOKS-01: entries are voided by reversal); a wrong payment is corrected with a new row. Side effect: deleting an
+--     athlete who has a paid or failed payout is refused for app roles (the FK would blank player_id), which keeps
+--     payout attribution for the books and 1099 review; the SQL Editor can still do it.
+--
+-- Chain of command: owner → CTO → SECURITY → RLS_SECURITY (owner); reviewed by CUSTODIAL (guardian rules) and
+--   INTERNAL_CONTROLS (payout controls, CFO office).
+-- Safe to re-run: drop policy if exists / create policy.
+-- Applied: written 2026-10-13, not applied anywhere. Apply after 20261013210000_function_access_hardening.sql.
+-- Rollback: drop trigger disbursements_paid_final and function disbursements_paid_final(); re-create the two previous policies from schema.sql (`current_user_role() in ('admin', 'parent')`) —
+--   not recommended; it reopens every family's payout rows to every parent.
+
+drop policy if exists "Admin write disbursements" on public.disbursements;
+drop policy if exists "Admins write disbursements" on public.disbursements;
+create policy "Admins write disbursements"
+  on public.disbursements for all
+  to authenticated
+  using (public.current_user_role() = 'admin')
+  with check (public.current_user_role() = 'admin');
+
+drop policy if exists "Admin read disbursements" on public.disbursements;
+drop policy if exists "Custodial parties read disbursements" on public.disbursements;
+do $$
+begin
+  if to_regprocedure('public.custodial_role(uuid)') is not null then
+    execute $p$create policy "Custodial parties read disbursements"
+      on public.disbursements for select
+      to authenticated
+      using (public.current_user_role() = 'admin' or public.custodial_role(player_id) is not null)$p$;
+  else
+    raise notice 'custodial_role is not on this database: payout rows stay admin-read only';
+    execute $p$create policy "Custodial parties read disbursements"
+      on public.disbursements for select
+      to authenticated
+      using (public.current_user_role() = 'admin')$p$;
+  end if;
+end;
+$$;
+
+create or replace function public.disbursements_paid_final()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  -- Paid and failed are final states: a payout cannot be moved back to queued to edit it and pay again
+  -- (RLS_SECURITY: paid -> failed -> edit -> paid). The Money desk only ever moves queued -> paid | failed.
+  if old.status in ('paid', 'failed') and not public.is_trusted_server() then
+    if new.status not in ('paid', 'failed') then
+      raise exception 'A paid or failed payout cannot go back to %. Record a new payout instead.', new.status;
+    end if;
+    if new.amount_cents is distinct from old.amount_cents or new.player_id is distinct from old.player_id then
+      raise exception 'A paid or failed payout cannot change amount or athlete. Record a correcting payout instead.';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists disbursements_paid_final on public.disbursements;
+create trigger disbursements_paid_final
+  before update on public.disbursements
+  for each row execute function public.disbursements_paid_final();
+
+revoke all on function public.disbursements_paid_final() from public, anon, authenticated;
+
+-- Avatars bucket: a signed-in user may write only inside their own folder (2026-10-13).
+--
+-- Purpose
+--   "Public upload avatars" / "Public update avatars" only checked the bucket and that the caller was signed in,
+--   so any account could overwrite any other account's profile photo (often a minor's face) at its path. Same
+--   class of hole as the reels bucket (20261007231000).
+--   Writers audited 2026-10-13 (the only code that writes to `avatars`):
+--   * MediaUploadService.uploadAvatar: `{auth.uid}/{ms}.jpg` → folder[1] = uid.
+--   * useSponsorships.uploadSponsorLogo: `sponsors/{ms}.{ext}` today, `sponsors/{auth.uid}/{ms}.{ext}` from this
+--     change. Older app builds keep the flat layout, so INSERT still accepts a new file directly under `sponsors/`,
+--     but nobody can UPDATE (overwrite) a file there; overwriting needs the caller's own folder.
+--   Reads stay public (profile photos are shown to guests by design; whether minors' photos should be is an open
+--   product question, WORK_QUEUE P1-02).
+--
+--   Adds "Owner delete avatars": a user may delete their own photos (RLS_SECURITY review).
+--
+-- Owner: STORAGE (via BACKEND, CTO); reviewed by RLS_SECURITY.
+-- Safe to re-run: drop policy if exists / create policy.
+-- Applied: written 2026-10-13, not applied anywhere. Independent of the other 2026-10-13 files.
+-- Rollback (restores the bucket-only policies; reopens the overwrite):
+--   drop policy if exists "Public upload avatars" on storage.objects;
+--   create policy "Public upload avatars" on storage.objects for insert
+--     with check (bucket_id = 'avatars' and auth.role() = 'authenticated');
+--   drop policy if exists "Public update avatars" on storage.objects;
+--   create policy "Public update avatars" on storage.objects for update
+--     using (bucket_id = 'avatars' and auth.role() = 'authenticated')
+--     with check (bucket_id = 'avatars' and auth.role() = 'authenticated');
+
+drop policy if exists "Public upload avatars" on storage.objects;
+create policy "Public upload avatars"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'avatars'
+    and auth.role() = 'authenticated'
+    and (
+      (storage.foldername(name))[1] = auth.uid()::text
+      or (
+        (storage.foldername(name))[1] = 'sponsors'
+        and (
+          (storage.foldername(name))[2] = auth.uid()::text
+          -- legacy flat layout from older builds: a new file directly in sponsors/, never an overwrite
+          or coalesce(array_length(storage.foldername(name), 1), 0) = 1
+        )
+      )
+    )
+  );
+
+drop policy if exists "Public update avatars" on storage.objects;
+create policy "Public update avatars"
+  on storage.objects for update
+  using (
+    bucket_id = 'avatars'
+    and auth.role() = 'authenticated'
+    and (
+      (storage.foldername(name))[1] = auth.uid()::text
+      or ((storage.foldername(name))[1] = 'sponsors' and (storage.foldername(name))[2] = auth.uid()::text)
+    )
+  )
+  with check (
+    bucket_id = 'avatars'
+    and auth.role() = 'authenticated'
+    and (
+      (storage.foldername(name))[1] = auth.uid()::text
+      or ((storage.foldername(name))[1] = 'sponsors' and (storage.foldername(name))[2] = auth.uid()::text)
+    )
+  );
+
+-- A user can remove their own old photo (often a minor's face); nobody else's. There was no delete policy at all.
+drop policy if exists "Owner delete avatars" on storage.objects;
+create policy "Owner delete avatars"
+  on storage.objects for delete
+  using (
+    bucket_id = 'avatars'
+    and auth.role() = 'authenticated'
+    and (
+      (storage.foldername(name))[1] = auth.uid()::text
+      or ((storage.foldername(name))[1] = 'sponsors' and (storage.foldername(name))[2] = auth.uid()::text)
+    )
+  );
+
+-- Show families what actually reaches their account (2026-10-13).
+--
+-- Purpose
+--   The athlete's "Support received" list (get_received_malo) and the custodial money cards (get_custodial_summary,
+--   "… received" / "Held for you") showed the full amount fans donated. The family account receives that amount
+--   minus Tapua'i's share (90% today), so a family saw $50 when $45 reached them.
+--   - get_received_malo gains family_cents per donation.
+--   - get_custodial_summary gains family_cents; received_cents keeps meaning "donated by fans" so app builds already
+--     installed keep working (expand, then contract).
+--   family_cents comes from the books' recorded payout for that donation (company_revenue_logs, source 'malo'), and
+--   falls back to the current split (company_revenue_bps('malo')) when no revenue row exists.
+--   The fallback uses company_revenue_bps('malo'); sync_company_revenue_logs hard-codes 1000 bps, so the two differ
+--   only if the rate changes (RLS_SECURITY note).
+--   Not changed: withdrawal requests are still not capped against the family share; how money reaches families is
+--   an open owner + counsel decision (STATE §6 item 8).
+--
+-- Owner: COMMERCE → LEDGER, CUSTODIAL (chain: owner → CTO → COMMERCE); copy reviewed by VOICE and LEGAL.
+-- Depends on: company_revenue.sql (company_revenue_logs, company_revenue_bps), custodial_money.sql, the Rally /
+--   thanks migration (get_received_malo). All on staging.
+-- Safe to re-run: get_received_malo is dropped and re-created (its result columns change), with grants restored;
+--   get_custodial_summary is create or replace.
+-- Applied: written 2026-10-13, not applied anywhere.
+-- Rollback: re-run both functions' previous definitions from schema.sql history (the app falls back to the
+--   donated total when family_cents is missing).
+
+drop function if exists public.get_received_malo(uuid);
+
+create or replace function public.get_received_malo(target_player_id uuid)
+returns table (
+  id uuid,
+  amount_cents integer,
+  aura_points integer,
+  created_at timestamptz,
+  origin text,
+  entry text,
+  source_label text,
+  reel_id uuid,
+  wishlist_item_id uuid,
+  fan_name text,
+  family_cents integer
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null or target_player_id is null then
+    return;
+  end if;
+
+  if public.current_user_role() is distinct from 'admin'
+    and not exists (
+      select 1
+      from public.profiles me
+      where me.user_id = auth.uid()
+        and me.player_id = target_player_id
+    )
+    and not exists (
+      select 1
+      from public.players pl
+      join public.profiles me on me.id = pl.guardian_id
+      where pl.id = target_player_id
+        and me.user_id = auth.uid()
+    )
+  then
+    return;
+  end if;
+
+  return query
+  select
+    t.id,
+    t.amount_cents,
+    coalesce(t.aura_points, 0) as aura_points,
+    t.created_at,
+    coalesce(t.origin, 'profile') as origin,
+    coalesce(t.entry, 'in_app') as entry,
+    coalesce(t.source_label, '') as source_label,
+    t.reel_id,
+    t.wishlist_item_id,
+    coalesce(nullif(split_part(btrim(coalesce(f.full_name, '')), ' ', 1), ''), 'Fan') as fan_name,
+    -- What reaches the family account: the books' recorded payout for this donation, or the current split when
+    -- no revenue row exists yet.
+    coalesce(
+      r.payout_cents,
+      t.amount_cents - round((t.amount_cents * public.company_revenue_bps('malo'))::numeric / 10000.0)::integer
+    ) as family_cents
+  from public.tips t
+  left join public.profiles f on f.user_id = t.fan_id
+  left join public.company_revenue_logs r on r.source = 'malo' and r.source_id = t.id::text
+  where t.player_id = target_player_id
+  order by t.created_at desc
+  limit 100;
+end;
+$$;
+
+revoke execute on function public.get_received_malo(uuid) from public, anon;
+grant execute on function public.get_received_malo(uuid) to authenticated;
+
+create or replace function public.get_custodial_summary(target_player_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  role_name text := public.custodial_role(target_player_id);
+  acct public.custodial_accounts%rowtype;
+  athlete public.players%rowtype;
+  guardian_name text;
+  handover date;
+begin
+  if role_name is null then
+    return null;
+  end if;
+  select * into athlete from public.players where id = target_player_id;
+  select * into acct from public.custodial_accounts where player_id = target_player_id;
+  select coalesce(nullif(trim(p.full_name), ''), 'Your guardian') into guardian_name
+  from public.profiles p where p.id = athlete.guardian_id;
+  handover := public.athlete_handover_date(target_player_id);
+
+  return jsonb_build_object(
+    'viewer_role', role_name,
+    'player_id', target_player_id,
+    'athlete_name', coalesce(athlete.name, ''),
+    'guardian_linked', athlete.guardian_id is not null,
+    'guardian_name', guardian_name,
+    'has_account', acct.player_id is not null,
+    'payouts_enabled', coalesce(acct.payouts_enabled, false),
+    'bank_in_athlete_name', acct.bank_in_athlete_name,
+    'handover_age', coalesce(acct.handover_age, 18),
+    'handover_date', handover,
+    'athlete_controls', coalesce(handover <= current_date, false),
+    'received_cents', (
+      select coalesce(sum(t.amount_cents), 0) from public.tips t where t.player_id = target_player_id
+    ),
+    -- The family account's share (after Tapua'i's share), from the books; received_cents stays the donated total.
+    'family_cents', (
+      select coalesce(sum(coalesce(
+        r.payout_cents,
+        t.amount_cents - round((t.amount_cents * public.company_revenue_bps('malo'))::numeric / 10000.0)::integer
+      )), 0)
+      from public.tips t
+      left join public.company_revenue_logs r on r.source = 'malo' and r.source_id = t.id::text
+      where t.player_id = target_player_id
+    ),
+    'requests', coalesce((
+      select jsonb_agg(to_jsonb(w) order by w.created_at desc)
+      from (
+        select id, requested_role, amount_cents, note, status, created_at, decided_at
+        from public.custodial_withdrawals
+        where player_id = target_player_id
+        order by created_at desc
+        limit 20
+      ) w
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+-- Hosted Supabase grants new functions to anon by default; the summary is for signed-in custodial parties only
+-- (it returns null without a user, so this is tidy-up; RLS_SECURITY review).
+revoke execute on function public.get_custodial_summary(uuid) from public, anon;
+grant execute on function public.get_custodial_summary(uuid) to authenticated;
+
+-- Profile privacy, two-way friends and blocking — stage 1 of PRIV-01 (2026-10-14).
+--
+-- Purpose
+--   Owner decisions 2026-10-13 (docs/engineering/design/PROFILE_PRIVACY_DESIGN.md): accounts are public or private
+--   (new accounts private), each profile item has an audience (everyone / friends / only me), friends are two-way,
+--   people can block others, and people can hide from search. A private
+--   athlete's name, approved-tagged Highlights, Donate, Rally / gear goals and Join Crew stay public.
+--   Before this, `profiles` was readable by anyone (guests included), so the old hide switches only hid things from the
+--   app's own screens. This migration closes direct reads of other people's rows and enforces every rule in SQL.
+--
+--   1. Settings live in new columns (account_private, profile_audience, hide_from_search, tag_review,
+--      friend_requests_from). Existing accounts keep today's behaviour (public; each old
+--      switch maps true → everyone, false → only me; friends list only me). New accounts get the private defaults.
+--      Changes go only through set_my_privacy (a trigger refuses direct column writes), so the minor-account rules
+--      (20261014110000_minor_accounts.sql) cannot be bypassed; older app builds that write the legacy profile_visibility switches are
+--      mirrored into the new audience, fail-closed (a re-shown item becomes friends, not everyone).
+--   2. friendships (requests, accepted, declined with a 30-day cooldown that the requester is never told about),
+--      user_blocks (the blocked person is not told). Neither table accepts direct client writes.
+--   3. viewer_relationship(target) and profile_item_visible(target, item) are the single rule; profiles_public is
+--      rebuilt on them (user_id removed from it), and `profiles` SELECT becomes own row or admin.
+--   4. Abuse limits: 20 friend requests a day, "who can send me requests", blocked people cannot request, join the
+--      Crew (enforced in the crew_follows policy too) or appear in each other's searches; account search needs a
+--      3-character username prefix.
+--   5. crew_follows reads close (the follower, the athlete's own account and admins; counts still come from
+--      get_crew_graph); get_crew_graph finds the athlete's account by player_id, not by matching names.
+--   6. Search (account tags, local athlete search, the Aura board) respects hide-from-search and blocks.
+--   Stage 2 (tags) and the screens follow in separate changes.
+--
+-- Owner: PROFILE (via ENGINEERING, CTO), with CREW, DISCOVERY, ADMIN; reviews RLS_SECURITY, PRIVACY_ENGINEERING,
+--   MINOR_SAFETY, CUSTODIAL, DATA_GOVERNANCE. The guardian lock in the first draft was replaced before anything was
+--   applied: owner 2026-10-14, a guardian supervises and approves a few changes instead (20261014110000_minor_accounts.sql).
+-- Safe to re-run: add column if not exists; backfills touch only null rows; create or replace; drop policy if exists.
+-- Applied: written 2026-10-14, not applied anywhere. Apply after the 2026-10-13 security files.
+-- Rollback: recreate "Public read profiles" (using (true)) and "Public read crew follows" (using (true)), restore the
+--   previous profiles_public view from schema.sql history; the new tables and columns can stay (unused).
+--   Stage 1 review (2026-10-14) applied: helpers that answer about other people are not client-callable; the public
+--   view is read only through get_public_profiles (named accounts, so hide-from-search holds); a blocked person sees a
+--   guest's view; photos and full names no longer leak through reels_feed, the boards, Spotlight, donor and tag lists;
+--   friend-request limits use a log; tag search escapes wildcards; one relationship lookup per view row.
+-- Known limit: the avatars bucket is public, so hiding the photo hides the URL from other people but not a file whose
+--   URL someone already has (WORK_QUEUE P1-02 follow-up: private avatars with signed URLs).
+
+-- 1. Settings ------------------------------------------------------------------------------------------------------
+
+alter table public.profiles add column if not exists account_private boolean;
+alter table public.profiles add column if not exists profile_audience jsonb;
+alter table public.profiles add column if not exists hide_from_search boolean not null default false;
+alter table public.profiles add column if not exists tag_review text not null default 'review_all';
+alter table public.profiles add column if not exists friend_requests_from text not null default 'everyone';
+
+alter table public.profiles drop constraint if exists profiles_tag_review_check;
+alter table public.profiles add constraint profiles_tag_review_check check (tag_review in ('review_all', 'auto_friends'));
+alter table public.profiles drop constraint if exists profiles_friend_requests_from_check;
+alter table public.profiles add constraint profiles_friend_requests_from_check check (friend_requests_from in ('everyone', 'teens', 'nobody'));
+
+-- Existing accounts keep what they had (explicit backfill; only rows not yet migrated).
+update public.profiles set account_private = false where account_private is null;
+update public.profiles
+set profile_audience = jsonb_build_object(
+  'photo', 'everyone',
+  'bio', case when coalesce((profile_visibility ->> 'bio')::boolean, true) then 'everyone' else 'only_me' end,
+  'school', case when coalesce((profile_visibility ->> 'school')::boolean, true) then 'everyone' else 'only_me' end,
+  'social_links', case when coalesce((profile_visibility ->> 'social_links')::boolean, true) then 'everyone' else 'only_me' end,
+  'stats', case when coalesce((profile_visibility ->> 'stats')::boolean, true) then 'everyone' else 'only_me' end,
+  'aura', 'everyone',
+  'crew', 'everyone',
+  'friends_list', 'only_me'
+)
+where profile_audience is null;
+
+-- New accounts: private, with the private defaults (fail closed).
+alter table public.profiles alter column account_private set default true;
+alter table public.profiles alter column account_private set not null;
+alter table public.profiles alter column profile_audience set default
+  '{"photo":"friends","bio":"friends","school":"friends","social_links":"only_me","stats":"friends","aura":"friends","crew":"friends","friends_list":"only_me"}'::jsonb;
+alter table public.profiles alter column profile_audience set not null;
+
+-- One verified account per roster athlete, so "the athlete's account" is unambiguous (skipped with a notice if data
+-- already has duplicates; an admin resolves them first).
+do $$
+begin
+  if not exists (
+    select 1 from public.profiles where verification_status = 'verified' and player_id is not null
+    group by player_id having count(*) > 1
+  ) then
+    create unique index if not exists profiles_verified_player_uidx
+      on public.profiles (player_id) where verification_status = 'verified' and player_id is not null;
+  else
+    raise warning 'profiles_verified_player_uidx SKIPPED: more than one verified account per athlete exists. Resolve the duplicates, then re-run this file.';
+  end if;
+end;
+$$;
+
+-- 2. Friends and blocks ---------------------------------------------------------------------------------------------
+
+create table if not exists public.friendships (
+  id uuid primary key default gen_random_uuid(),
+  requester_id uuid not null references public.profiles (id) on delete cascade,
+  addressee_id uuid not null references public.profiles (id) on delete cascade,
+  status text not null default 'pending',
+  created_at timestamptz not null default timezone('utc', now()),
+  responded_at timestamptz,
+  constraint friendships_not_self check (requester_id <> addressee_id),
+  constraint friendships_status_check check (status in ('pending', 'accepted', 'declined'))
+);
+create unique index if not exists friendships_pair_uidx
+  on public.friendships (least(requester_id, addressee_id), greatest(requester_id, addressee_id));
+create index if not exists friendships_addressee_idx on public.friendships (addressee_id, status);
+create index if not exists friendships_requester_idx on public.friendships (requester_id, created_at desc);
+
+create table if not exists public.user_blocks (
+  blocker_id uuid not null references public.profiles (id) on delete cascade,
+  blocked_id uuid not null references public.profiles (id) on delete cascade,
+  created_at timestamptz not null default timezone('utc', now()),
+  primary key (blocker_id, blocked_id),
+  constraint user_blocks_not_self check (blocker_id <> blocked_id)
+);
+create index if not exists user_blocks_blocked_idx on public.user_blocks (blocked_id);
+
+-- Every request ever sent, so the daily and per-person limits cannot be reset by cancelling and asking again.
+create table if not exists public.friend_request_log (
+  requester_id uuid not null references public.profiles (id) on delete cascade,
+  addressee_id uuid not null references public.profiles (id) on delete cascade,
+  created_at timestamptz not null default timezone('utc', now())
+);
+create index if not exists friend_request_log_requester_idx on public.friend_request_log (requester_id, created_at desc);
+
+alter table public.friendships enable row level security;
+alter table public.friend_request_log enable row level security;
+alter table public.user_blocks enable row level security;
+
+-- 3. The rule -------------------------------------------------------------------------------------------------------
+
+create or replace function public.my_profile_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p.id from public.profiles p where p.user_id = auth.uid() limit 1;
+$$;
+
+create or replace function public.are_friends(a uuid, b uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select a is not null and b is not null and exists (
+    select 1 from public.friendships f
+    where f.status = 'accepted'
+      and least(f.requester_id, f.addressee_id) = least(a, b)
+      and greatest(f.requester_id, f.addressee_id) = greatest(a, b)
+  );
+$$;
+
+create or replace function public.is_blocked_between(a uuid, b uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select a is not null and b is not null and exists (
+    select 1 from public.user_blocks u
+    where (u.blocker_id = a and u.blocked_id = b) or (u.blocker_id = b and u.blocked_id = a)
+  );
+$$;
+
+-- The guardian of an athlete's account: players.guardian_id for the roster athlete the account is linked to.
+create or replace function public.is_guardian_of_profile(target uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.profiles t
+    join public.players pl on pl.id = t.player_id
+    where t.id = target and pl.guardian_id is not null and pl.guardian_id = public.my_profile_id()
+  );
+$$;
+
+-- self, admin, guardian, blocked, friend, stranger or guest — for the signed-in caller looking at `target`.
+create or replace function public.viewer_relationship(target uuid)
+returns text
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+begin
+  if target is null then
+    return 'guest';
+  end if;
+  if me is not null and me = target then
+    return 'self';
+  end if;
+  if public.current_user_role() = 'admin' then
+    return 'admin';
+  end if;
+  if me is null then
+    return 'guest';
+  end if;
+  if public.is_guardian_of_profile(target) then
+    return 'guardian';
+  end if;
+  if public.is_blocked_between(me, target) then
+    return 'blocked';
+  end if;
+  if public.are_friends(me, target) then
+    return 'friend';
+  end if;
+  return 'stranger';
+end;
+$$;
+
+create or replace function public.privacy_default_audience()
+returns jsonb
+language sql
+immutable
+set search_path = ''
+as $$
+  select '{"photo":"friends","bio":"friends","school":"friends","social_links":"only_me","stats":"friends","aura":"friends","crew":"friends","friends_list":"only_me"}'::jsonb;
+$$;
+
+-- The audience rule on its own (no lookups), so a view can work out the viewer once per row and reuse it.
+create or replace function public.audience_allows(rel text, is_private boolean, audience jsonb, item text)
+returns boolean
+language plpgsql
+immutable
+set search_path = ''
+as $$
+declare
+  level text;
+begin
+  if rel in ('self', 'admin', 'guardian') then
+    return true;
+  end if;
+  if rel is null or rel = 'blocked' then
+    return false;
+  end if;
+  level := coalesce(audience ->> item, public.privacy_default_audience() ->> item, 'only_me');
+  if level = 'friends' then
+    return rel = 'friend';
+  end if;
+  if level = 'everyone' then
+    return rel = 'friend' or not coalesce(is_private, true);
+  end if;
+  return false;
+end;
+$$;
+
+-- Whether the caller may see one item of `target`'s profile. Unknown item, setting or account → hidden (fail closed).
+create or replace function public.profile_item_visible(target uuid, item text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((
+    select public.audience_allows(public.viewer_relationship(p.id), p.account_private, p.profile_audience, item)
+    from public.profiles p where p.id = target
+  ), false);
+$$;
+
+-- Whether a roster athlete's linked account hides from this caller's search.
+create or replace function public.player_hidden_from_viewer(target_player_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles p
+    where p.player_id = target_player_id
+      and (
+        (p.hide_from_search and public.viewer_relationship(p.id) not in ('self', 'admin', 'guardian', 'friend'))
+        or public.viewer_relationship(p.id) = 'blocked'
+      )
+  );
+$$;
+
+-- 4. Direct reads close; the public view applies the rule ---------------------------------------------------------
+
+drop policy if exists "Public read profiles" on public.profiles;
+drop policy if exists "Read own profile or admin" on public.profiles;
+create policy "Read own profile or admin" on public.profiles
+  for select using (user_id = auth.uid() or public.current_user_role() = 'admin');
+
+drop function if exists public.get_public_profiles(uuid[], uuid[], text);
+drop view if exists public.profiles_public;
+create view public.profiles_public as
+select
+  pr.id,
+  pr.player_id,
+  pr.username,
+  -- Accounts not linked to a roster athlete show strangers a username or first name, not the full name.
+  case
+    when pr.player_id is not null or v.rel in ('self', 'admin', 'guardian', 'friend') then pr.full_name
+    else coalesce(nullif(btrim(pr.username), ''), nullif(split_part(btrim(coalesce(pr.full_name, '')), ' ', 1), ''), 'Fan')
+  end as full_name,
+  case when public.audience_allows(v.rel, pr.account_private, pr.profile_audience, 'photo') then pr.avatar_url else null end as avatar_url,
+  pr.is_verified,
+  pr.is_verified_athlete,
+  public.audience_allows(v.rel, pr.account_private, pr.profile_audience, 'school') as school_visible,
+  case when public.audience_allows(v.rel, pr.account_private, pr.profile_audience, 'bio') then pr.bio else null end as bio,
+  case when public.audience_allows(v.rel, pr.account_private, pr.profile_audience, 'social_links') then pr.social_links else '{}'::jsonb end as social_links,
+  -- Sport is public athlete identity (clips and donations depend on it).
+  case when pr.player_id is not null and (pr.role = 'athlete' or 'athlete' = any(coalesce(pr.roles, '{}'::text[])))
+    then nullif(btrim(pr.athlete_sport), '') else null end as athlete_sport,
+  pr.verification_status,
+  case when public.audience_allows(v.rel, pr.account_private, pr.profile_audience, 'school') then pr.school_id else null end as school_id,
+  case when public.audience_allows(v.rel, pr.account_private, pr.profile_audience, 'aura') then pr.aura_points else null end as aura_points,
+  pr.account_private,
+  -- A blocked person sees the same as a guest and is not told; the blocker sees 'blocked' (to offer Unblock).
+  case
+    when v.rel = 'blocked' and not exists (
+      select 1 from public.user_blocks u where u.blocker_id = public.my_profile_id() and u.blocked_id = pr.id
+    ) then 'guest'
+    else v.rel
+  end as viewer_relation,
+  public.audience_allows(v.rel, pr.account_private, pr.profile_audience, 'stats') as stats_visible,
+  public.audience_allows(v.rel, pr.account_private, pr.profile_audience, 'crew') as crew_visible,
+  public.audience_allows(v.rel, pr.account_private, pr.profile_audience, 'friends_list') as friends_visible,
+  -- The school-confirmed badge is public even when the school itself is hidden.
+  (pr.school_id is not null) as school_confirmed
+from public.profiles pr
+cross join lateral (select public.viewer_relationship(pr.id) as rel) v;
+
+-- No directory: the view is read only through get_public_profiles, for named accounts (hide-from-search holds).
+revoke all on public.profiles_public from public, anon, authenticated;
+grant select on public.profiles_public to service_role;
+
+create or replace function public.get_public_profiles(
+  profile_ids uuid[] default null,
+  player_ids uuid[] default null,
+  handle text default null
+)
+-- An explicit column list (not `setof profiles_public`) so re-running the schema can drop and rebuild the view.
+returns table (
+  id uuid, player_id uuid, username text, full_name text, avatar_url text, is_verified boolean,
+  is_verified_athlete boolean, school_visible boolean, bio text, social_links jsonb, athlete_sport text,
+  verification_status text, school_id uuid, aura_points integer, account_private boolean, viewer_relation text,
+  stats_visible boolean, crew_visible boolean, friends_visible boolean, school_confirmed boolean
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select v.*
+  from public.profiles_public v
+  where v.id = any(coalesce((profile_ids)[1:50], '{}'::uuid[]))
+     or v.player_id = any(coalesce((player_ids)[1:50], '{}'::uuid[]))
+     or (nullif(btrim(handle), '') is not null and lower(v.username) = lower(btrim(handle)));
+$$;
+
+-- Stats follow the stats audience; a roster athlete nobody has claimed has no owner to choose, so stays visible.
+create or replace function public.athlete_stats_visible(target_player_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select public.profile_item_visible(pr.id, 'stats') from public.profiles pr where pr.player_id = target_player_id
+     order by (pr.verification_status = 'verified') desc limit 1),
+    true
+  );
+$$;
+
+-- 5. Writes to privacy columns go through the functions below -----------------------------------------------------
+
+create or replace function public.guard_profiles_privacy()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  k text;
+  was boolean;
+  now_on boolean;
+begin
+  if coalesce(current_setting('app.tapuai_privacy_write', true), '') = 'on' or public.is_trusted_server() then
+    return new;
+  end if;
+  if new.account_private is distinct from old.account_private
+     or new.profile_audience is distinct from old.profile_audience
+     or new.hide_from_search is distinct from old.hide_from_search
+     or new.tag_review is distinct from old.tag_review
+     or new.friend_requests_from is distinct from old.friend_requests_from then
+    raise exception 'Change privacy settings from Profile → Privacy.';
+  end if;
+  -- Older app builds still write the four legacy switches: mirror them and fail closed.
+  if new.profile_visibility is distinct from old.profile_visibility then
+    foreach k in array array['bio', 'school', 'stats', 'social_links'] loop
+      was := coalesce((old.profile_visibility ->> k)::boolean, true);
+      now_on := coalesce((new.profile_visibility ->> k)::boolean, true);
+      if was and not now_on then
+        new.profile_audience := jsonb_set(new.profile_audience, array[k], '"only_me"');
+      elsif now_on and not was then
+        if coalesce(new.profile_audience ->> k, 'only_me') = 'only_me' then
+          new.profile_audience := jsonb_set(new.profile_audience, array[k], '"friends"');
+        end if;
+      end if;
+    end loop;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_privacy_guard on public.profiles;
+create trigger profiles_privacy_guard
+  before update on public.profiles
+  for each row execute function public.guard_profiles_privacy();
+
+create or replace function public.privacy_settings_json(target uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'account_private', p.account_private,
+    'audience', public.privacy_default_audience() || coalesce(p.profile_audience, '{}'::jsonb),
+    'hide_from_search', p.hide_from_search,
+    'tag_review', p.tag_review,
+    'friend_requests_from', p.friend_requests_from
+  )
+  from public.profiles p where p.id = target;
+$$;
+
+-- Applies a settings object to one profile (callers check who may change what first).
+create or replace function public.apply_privacy_settings(target uuid, settings jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  cur public.profiles%rowtype;
+  next_private boolean;
+  next_audience jsonb;
+  next_hide boolean;
+  next_review text;
+  next_requests text;
+  k text;
+  v text;
+begin
+  select * into cur from public.profiles where id = target;
+  if not found then
+    raise exception 'Account not found.';
+  end if;
+  settings := coalesce(settings, '{}'::jsonb);
+  next_private := coalesce((settings ->> 'account_private')::boolean, cur.account_private);
+  next_hide := coalesce((settings ->> 'hide_from_search')::boolean, cur.hide_from_search);
+  next_review := coalesce(settings ->> 'tag_review', cur.tag_review);
+  next_requests := coalesce(settings ->> 'friend_requests_from', cur.friend_requests_from);
+  next_audience := public.privacy_default_audience() || coalesce(cur.profile_audience, '{}'::jsonb);
+  if jsonb_typeof(settings -> 'audience') = 'object' then
+    for k, v in select key, value #>> '{}' from jsonb_each(settings -> 'audience') loop
+      if not (public.privacy_default_audience() ? k) then
+        raise exception 'Unknown profile item: %', k;
+      end if;
+      if v not in ('everyone', 'friends', 'only_me') then
+        raise exception 'Choose everyone, friends or only me.';
+      end if;
+      next_audience := jsonb_set(next_audience, array[k], to_jsonb(v));
+    end loop;
+  end if;
+  -- 'teens' (requests only from accounts aged 13–17, plus a linked guardian) is the teen default; its rules live in
+  -- 20261014110000_minor_accounts.sql.
+  if next_review not in ('review_all', 'auto_friends') or next_requests not in ('everyone', 'teens', 'nobody') then
+    raise exception 'That setting is not available.';
+  end if;
+  perform set_config('app.tapuai_privacy_write', 'on', true);
+  update public.profiles
+  set account_private = next_private, profile_audience = next_audience, hide_from_search = next_hide,
+      tag_review = next_review, friend_requests_from = next_requests
+  where id = target;
+  perform set_config('app.tapuai_privacy_write', 'off', true);
+  return public.privacy_settings_json(target);
+end;
+$$;
+
+create or replace function public.get_my_privacy()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+begin
+  if me is null then
+    raise exception 'Sign in to see your privacy settings.';
+  end if;
+  return public.privacy_settings_json(me);
+end;
+$$;
+
+create or replace function public.set_my_privacy(settings jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+begin
+  if me is null then
+    raise exception 'Sign in to change your privacy settings.';
+  end if;
+  return public.apply_privacy_settings(me, settings);
+end;
+$$;
+
+-- 6. Friends ---------------------------------------------------------------------------------------------------------
+
+-- Friend requests can be turned off by the owner (feature switch privacy.friends = false in the published config).
+create or replace function public.friend_requests_enabled()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((
+    select (c.published -> 'features' ->> 'privacy.friends')::boolean
+    from public.app_runtime_config c where c.id = 'default'
+  ), true);
+$$;
+
+-- Returns 'friends' or 'requested'. The same message covers blocked, closed and unknown accounts.
+create or replace function public.request_friend(target_profile_id uuid)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  t public.profiles%rowtype;
+  row_found public.friendships%rowtype;
+  sent_today integer;
+begin
+  if me is null then
+    raise exception 'Sign in to add friends.';
+  end if;
+  if not public.friend_requests_enabled() then
+    raise exception 'Friend requests are paused right now.';
+  end if;
+  select * into t from public.profiles where id = target_profile_id;
+  if not found or t.id = me or public.is_blocked_between(me, t.id) or t.friend_requests_from = 'nobody' then
+    raise exception 'You can''t send a friend request to this account.';
+  end if;
+  select * into row_found from public.friendships f
+  where least(f.requester_id, f.addressee_id) = least(me, t.id)
+    and greatest(f.requester_id, f.addressee_id) = greatest(me, t.id);
+  if found then
+    if row_found.status = 'accepted' then
+      return 'friends';
+    end if;
+    if row_found.status = 'pending' and row_found.requester_id = me then
+      return 'requested';
+    end if;
+    if row_found.status = 'pending' and row_found.addressee_id = me then
+      update public.friendships set status = 'accepted', responded_at = timezone('utc', now()) where id = row_found.id;
+      return 'friends';
+    end if;
+    -- Declined: the requester waits 30 days and is never told; the person who declined may send their own request.
+    if row_found.requester_id = me and row_found.responded_at > timezone('utc', now()) - interval '30 days' then
+      return 'requested';
+    end if;
+    delete from public.friendships where id = row_found.id;
+  end if;
+  select count(*)::int into sent_today from public.friend_request_log l
+  where l.requester_id = me and l.created_at > timezone('utc', now()) - interval '1 day';
+  if sent_today >= 20 then
+    raise exception 'You''ve sent a lot of friend requests today. Try again tomorrow.';
+  end if;
+  if (select count(*) from public.friend_request_log l
+      where l.requester_id = me and l.addressee_id = t.id and l.created_at > timezone('utc', now()) - interval '7 days') >= 3 then
+    return 'requested';
+  end if;
+  insert into public.friend_request_log (requester_id, addressee_id) values (me, t.id);
+  insert into public.friendships (requester_id, addressee_id) values (me, t.id);
+  return 'requested';
+end;
+$$;
+
+create or replace function public.respond_friend(request_id uuid, accept boolean)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  f public.friendships%rowtype;
+begin
+  select * into f from public.friendships where id = request_id;
+  if not found or f.addressee_id is distinct from me or f.status <> 'pending' then
+    raise exception 'That request is no longer waiting.';
+  end if;
+  update public.friendships
+  set status = case when accept then 'accepted' else 'declined' end, responded_at = timezone('utc', now())
+  where id = request_id;
+  return case when accept then 'friends' else 'declined' end;
+end;
+$$;
+
+-- Unfriend, or cancel my own pending request. A decline the requester is waiting out stays in place.
+create or replace function public.remove_friend(target_profile_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+begin
+  if me is null then
+    raise exception 'Sign in first.';
+  end if;
+  delete from public.friendships f
+  where least(f.requester_id, f.addressee_id) = least(me, target_profile_id)
+    and greatest(f.requester_id, f.addressee_id) = greatest(me, target_profile_id)
+    and (f.status in ('accepted', 'pending') or f.addressee_id = me);
+end;
+$$;
+
+create or replace function public.list_my_friends()
+returns table (request_id uuid, profile_id uuid, display_name text, username text, avatar_url text, status text, since timestamptz)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+begin
+  if me is null then
+    return;
+  end if;
+  return query
+  select
+    f.id,
+    o.id,
+    case when f.status = 'accepted' or o.player_id is not null then o.full_name
+         else coalesce(nullif(btrim(o.username), ''), nullif(split_part(btrim(coalesce(o.full_name, '')), ' ', 1), ''), 'Fan') end,
+    o.username,
+    case when public.profile_item_visible(o.id, 'photo') then o.avatar_url else null end,
+    case when f.status = 'accepted' then 'friend' when f.addressee_id = me then 'incoming' else 'outgoing' end,
+    coalesce(f.responded_at, f.created_at)
+  from public.friendships f
+  join public.profiles o on o.id = case when f.requester_id = me then f.addressee_id else f.requester_id end
+  where (f.requester_id = me or f.addressee_id = me)
+    and (f.status in ('accepted', 'pending'))
+    and not public.is_blocked_between(me, o.id)
+  order by (f.status = 'pending' and f.addressee_id = me) desc, coalesce(f.responded_at, f.created_at) desc
+  limit 500;
+end;
+$$;
+
+-- 7. Blocks ----------------------------------------------------------------------------------------------------------
+
+-- Ends the friendship, any requests, Crew follows both ways and pending tags/mentions between the two accounts.
+create or replace function public.block_user(target_profile_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  mine public.profiles%rowtype;
+  theirs public.profiles%rowtype;
+begin
+  if me is null then
+    raise exception 'Sign in first.';
+  end if;
+  select * into theirs from public.profiles where id = target_profile_id;
+  if not found or theirs.id = me then
+    raise exception 'You can''t block this account.';
+  end if;
+  select * into mine from public.profiles where id = me;
+  insert into public.user_blocks (blocker_id, blocked_id) values (me, theirs.id) on conflict do nothing;
+  delete from public.friendships f
+  where least(f.requester_id, f.addressee_id) = least(me, theirs.id)
+    and greatest(f.requester_id, f.addressee_id) = greatest(me, theirs.id);
+  if mine.player_id is not null and theirs.user_id is not null then
+    delete from public.crew_follows where follower_id = theirs.user_id and athlete_id = mine.player_id;
+  end if;
+  if theirs.player_id is not null and mine.user_id is not null then
+    delete from public.crew_follows where follower_id = mine.user_id and athlete_id = theirs.player_id;
+  end if;
+  -- Their pending tags of me end like a decline (untagged; nobody named). The tag-write flag lets this through the
+  -- stage 2 trigger, which otherwise refuses status changes from anyone but the athlete's review (RLS_SECURITY P1).
+  if mine.player_id is not null then
+    -- Remembered as an automatic decline (rejected_by null) once stage 2 exists, so an admin can undo it.
+    if to_regclass('public.reel_tag_rejections') is not null then
+      execute 'insert into public.reel_tag_rejections (reel_id, player_id, uploader_id, rejected_by)
+               select r.id, r.player_id, r.uploaded_by, null from public.reels r
+               where r.uploaded_by = $1 and r.player_id = $2 and r.tag_status = ''pending''
+               on conflict (reel_id, player_id) do nothing'
+        using theirs.id, mine.player_id;
+    end if;
+    perform set_config('app.tapuai_tag_write', 'on', true);
+    update public.reels set tag_status = 'rejected', player_id = null, tag_confirmed_at = null, tag_confirmed_by = null
+    where uploaded_by = theirs.id and player_id = mine.player_id and tag_status = 'pending';
+    perform set_config('app.tapuai_tag_write', 'off', true);
+  end if;
+  if to_regclass('public.reel_account_tags') is not null then
+    execute 'delete from public.reel_account_tags t using public.reels r
+             where r.id = t.reel_id and t.status = ''pending''
+               and ((t.profile_id = $1 and r.uploaded_by = $2) or (t.profile_id = $2 and r.uploaded_by = $1))'
+      using me, theirs.id;
+  end if;
+end;
+$$;
+
+create or replace function public.unblock_user(target_profile_id uuid)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  delete from public.user_blocks where blocker_id = public.my_profile_id() and blocked_id = target_profile_id;
+$$;
+
+create or replace function public.list_my_blocks()
+returns table (profile_id uuid, display_name text, username text, blocked_at timestamptz)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select o.id,
+    coalesce(nullif(btrim(o.username), ''), nullif(split_part(btrim(coalesce(o.full_name, '')), ' ', 1), ''), 'Account'),
+    o.username, u.created_at
+  from public.user_blocks u
+  join public.profiles o on o.id = u.blocked_id
+  where u.blocker_id = public.my_profile_id()
+  order by u.created_at desc;
+$$;
+
+-- 8. Reads that used to touch other people's profiles rows -------------------------------------------------------
+
+-- Which of these roster athletes have a linked account (roster "claimed" badge). Ids only.
+create or replace function public.claimed_player_ids(target_player_ids uuid[])
+returns setof uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select distinct p.player_id from public.profiles p
+  where p.player_id = any(coalesce(target_player_ids, '{}'::uuid[]));
+$$;
+
+-- The Aura board: only people whose Aura this caller may see, never hidden-from-search or blocked accounts.
+create or replace function public.get_aura_board(max_rows integer default 20)
+returns table (id uuid, username text, display_name text, aura_points integer)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select c.id, c.username, c.display_name, c.aura_points
+  from (
+    select p.id, p.username,
+      case when p.player_id is not null then p.full_name
+           else coalesce(nullif(btrim(p.username), ''), nullif(split_part(btrim(coalesce(p.full_name, '')), ' ', 1), ''), 'Fan') end
+        as display_name,
+      p.aura_points, p.hide_from_search
+    from public.profiles p
+    where coalesce(p.aura_points, 0) > 0
+    order by p.aura_points desc
+    limit 200
+  ) c
+  where public.profile_item_visible(c.id, 'aura')
+    and (not c.hide_from_search or public.viewer_relationship(c.id) in ('self', 'admin', 'guardian', 'friend'))
+  order by c.aura_points desc
+  limit least(greatest(coalesce(max_rows, 20), 1), 50);
+$$;
+
+-- Account tag search: a username prefix of at least 3 characters (wildcards are escaped, not stripped); hidden and
+-- blocked accounts never appear.
+create or replace function public.search_taggable_accounts(search_query text)
+returns table (id uuid, label text)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  q text := replace(replace(replace(btrim(coalesce(search_query, '')), '\', '\\'), '%', '\%'), '_', '\_');
+begin
+  if auth.uid() is null or char_length(btrim(coalesce(search_query, ''))) < 3 then
+    return;
+  end if;
+  return query
+  select p.id, public.account_tag_label(p) as label
+  from public.profiles p
+  where p.username ilike q || '%'
+    and (not p.hide_from_search or public.viewer_relationship(p.id) in ('self', 'admin', 'guardian', 'friend'))
+    and public.viewer_relationship(p.id) <> 'blocked'
+  order by p.username nulls last
+  limit 8;
+end;
+$$;
+
+-- Local search: athletes whose account hides from search (or blocked this caller) are left out.
+create or replace function public.search_local_entities(search_query text, entity_kind text default 'all')
+returns table (
+  entity_type text,
+  entity_id text,
+  title text,
+  subtitle text
+)
+language plpgsql
+stable
+security invoker
+set search_path = public
+as $$
+declare
+  needle text := btrim(coalesce(search_query, ''));
+  kind text := lower(btrim(coalesce(entity_kind, 'all')));
+begin
+  if char_length(needle) < 2 then
+    return;
+  end if;
+  if kind not in ('all', 'athlete', 'school', 'booster') then
+    kind := 'all';
+  end if;
+
+  if kind in ('all', 'athlete') and to_regclass('public.players') is not null then
+    return query
+    select
+      'athlete'::text,
+      p.id::text,
+      p.name,
+      coalesce(nullif(p.school_name, ''), coalesce(p.team, ''))
+    from public.players p
+    where (p.name ilike '%' || needle || '%'
+       or p.school_name ilike '%' || needle || '%'
+       or coalesce(p.team, '') ilike '%' || needle || '%')
+      and not public.player_hidden_from_viewer(p.id)
+    order by p.name
+    limit 20;
+  end if;
+
+  if kind in ('all', 'school') and to_regclass('public.games') is not null then
+    return query
+    select
+      'school'::text,
+      min(school_name) as entity_id,
+      min(school_name) as title,
+      'High school'::text as subtitle
+    from (
+      select distinct btrim(label) as school_name
+      from (
+        select g.home_school as label from public.games g
+        union all
+        select g.away_school from public.games g
+        union all
+        select g.home_team from public.games g
+        union all
+        select g.away_team from public.games g
+      ) raw
+      where btrim(coalesce(label, '')) <> ''
+    ) names
+    where school_name ilike '%' || needle || '%'
+    group by lower(school_name)
+    order by min(school_name)
+    limit 20;
+  end if;
+
+  if kind in ('all', 'booster') and to_regclass('public.sponsorships') is not null then
+    return query
+    select
+      'booster'::text,
+      s.id::text,
+      s.business_name,
+      coalesce(s.school_team, '')
+    from public.sponsorships s
+    where s.business_name ilike '%' || needle || '%'
+       or coalesce(s.school_team, '') ilike '%' || needle || '%'
+    order by s.business_name
+    limit 20;
+  end if;
+end;
+$$;
+
+-- 9. Crew -------------------------------------------------------------------------------------------------------------
+
+create or replace function public.crew_follow_blocked(target_athlete_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles a
+    where a.player_id = target_athlete_id and public.is_blocked_between(a.id, public.my_profile_id())
+  );
+$$;
+
+drop policy if exists "Public read crew follows" on public.crew_follows;
+drop policy if exists "Read own or own athlete crew follows" on public.crew_follows;
+create policy "Read own or own athlete crew follows" on public.crew_follows
+  for select using (
+    follower_id = auth.uid()
+    or public.current_user_role() = 'admin'
+    or exists (select 1 from public.profiles p where p.player_id = crew_follows.athlete_id and p.user_id = auth.uid())
+  );
+
+drop policy if exists "Users write own crew follows" on public.crew_follows;
+create policy "Users write own crew follows"
+  on public.crew_follows for all
+  using (follower_id = auth.uid())
+  with check (follower_id = auth.uid() and not public.crew_follow_blocked(athlete_id));
+
+create or replace function public.get_crew_graph(target_athlete_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  actor uuid := auth.uid();
+  crew_n integer := 0;
+  squad_n integer := 0;
+  is_following boolean := false;
+  is_mutual boolean := false;
+  viewer_player uuid;
+  athlete_user uuid;
+begin
+  select count(*)::int into crew_n
+  from public.crew_follows
+  where athlete_id = target_athlete_id;
+
+  -- The athlete's account by its roster link (it used to match names, which two athletes can share).
+  select p.user_id into athlete_user
+  from public.profiles p
+  where p.player_id = target_athlete_id and p.user_id is not null
+  order by (p.verification_status = 'verified') desc
+  limit 1;
+
+  if athlete_user is not null then
+    select count(*)::int into squad_n
+    from public.crew_follows
+    where follower_id = athlete_user;
+  end if;
+
+  if actor is not null then
+    select exists(
+      select 1
+      from public.crew_follows
+      where follower_id = actor
+        and athlete_id = target_athlete_id
+    ) into is_following;
+
+    select p.player_id into viewer_player
+    from public.profiles p
+    where p.user_id = actor and p.player_id is not null
+    limit 1;
+
+    if is_following and viewer_player is not null and athlete_user is not null then
+      select exists(
+        select 1
+        from public.crew_follows
+        where follower_id = athlete_user
+          and athlete_id = viewer_player
+      ) into is_mutual;
+    end if;
+  end if;
+
+  return jsonb_build_object(
+    'crew_count', coalesce(crew_n, 0),
+    'squad_count', coalesce(squad_n, 0),
+    'following', coalesce(is_following, false),
+    'mutual', coalesce(is_mutual, false)
+  );
+end;
+$$;
+
+create or replace function public.toggle_crew_follow(target_athlete_id uuid, should_join boolean)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  actor uuid := auth.uid();
+begin
+  if actor is null then
+    raise exception 'Sign in to join the Crew.';
+  end if;
+
+  if not exists (select 1 from public.players where id = target_athlete_id) then
+    raise exception 'Athlete not found.';
+  end if;
+
+  if should_join then
+    if public.crew_follow_blocked(target_athlete_id) then
+      raise exception 'You can''t join this Crew.';
+    end if;
+    insert into public.crew_follows (follower_id, athlete_id)
+    values (actor, target_athlete_id)
+    on conflict (follower_id, athlete_id) do nothing;
+  else
+    delete from public.crew_follows
+    where follower_id = actor
+      and athlete_id = target_athlete_id;
+  end if;
+
+  return public.get_crew_graph(target_athlete_id);
+end;
+$$;
+
+-- 10. Admin -------------------------------------------------------------------------------------------------------
+
+create or replace function public.admin_get_privacy(target_profile_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  return public.privacy_settings_json(target_profile_id) || jsonb_build_object(
+    'friend_count', (select count(*) from public.friendships f where f.status = 'accepted' and target_profile_id in (f.requester_id, f.addressee_id)),
+    'pending_incoming', (select count(*) from public.friendships f where f.status = 'pending' and f.addressee_id = target_profile_id),
+    'pending_outgoing', (select count(*) from public.friendships f where f.status = 'pending' and f.requester_id = target_profile_id),
+    -- from the request log, so cancelled requests still count (the spam signal)
+    'requests_sent_7d', (select count(*) from public.friend_request_log l where l.requester_id = target_profile_id and l.created_at > timezone('utc', now()) - interval '7 days'),
+    'blocks_made', (select count(*) from public.user_blocks u where u.blocker_id = target_profile_id),
+    'blocks_received', (select count(*) from public.user_blocks u where u.blocked_id = target_profile_id)
+  );
+end;
+$$;
+
+create or replace function public.admin_reset_privacy(target_profile_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  return public.apply_privacy_settings(target_profile_id, jsonb_build_object(
+    'account_private', true, 'audience', public.privacy_default_audience(),
+    'hide_from_search', false, 'tag_review', 'review_all', 'friend_requests_from', 'everyone'));
+end;
+$$;
+
+create or replace function public.admin_set_hide_from_search(target_profile_id uuid, hidden boolean)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  return public.apply_privacy_settings(target_profile_id, jsonb_build_object('hide_from_search', coalesce(hidden, true)));
+end;
+$$;
+
+create or replace function public.admin_end_friendship(profile_a uuid, profile_b uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  removed integer;
+begin
+  perform public.require_admin_guard();
+  delete from public.friendships f
+  where least(f.requester_id, f.addressee_id) = least(profile_a, profile_b)
+    and greatest(f.requester_id, f.addressee_id) = greatest(profile_a, profile_b);
+  get diagnostics removed = row_count;
+  return removed;
+end;
+$$;
+
+create or replace function public.admin_privacy_report()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  return jsonb_build_object(
+    'private_accounts', (select count(*) from public.profiles where account_private),
+    'public_accounts', (select count(*) from public.profiles where not account_private),
+    'hidden_from_search', (select count(*) from public.profiles where hide_from_search),
+    'friendships', (select count(*) from public.friendships where status = 'accepted'),
+    'requests_7d', (select count(*) from public.friend_request_log where created_at > timezone('utc', now()) - interval '7 days'),
+    'blocks_7d', (select count(*) from public.user_blocks where created_at > timezone('utc', now()) - interval '7 days'),
+    'friend_requests_enabled', public.friend_requests_enabled()
+  );
+end;
+$$;
+
+
+-- 12. Photos and names outside profiles_public (stage 1 review) ------------------------------------------------
+
+-- One account's photo for this caller, or null. Narrow on purpose: invoker views (reels_feed) can call it without
+-- clients getting the general visibility helper.
+create or replace function public.visible_avatar_url(target uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select case when public.profile_item_visible(p.id, 'photo') then p.avatar_url else null end
+  from public.profiles p where p.id = target;
+$$;
+
+-- reels_feed: the uploader's photo follows their photo audience (it used to bypass it).
+create or replace view public.reels_feed as
+select
+  r.id,
+  r.title,
+  r.player_id,
+  r.game_id,
+  r.created_at,
+  r.seki_count,
+  r.aura_count,
+  r.flex_count,
+  r.total_tips_cents,
+  r.is_exclusive,
+  r.is_vault_only,
+  r.is_flagged,
+  r.reported_by,
+  r.is_removed,
+  r.category,
+  r.flash_unlock_until,
+  r.uploaded_by,
+  r.tag_status,
+  r.tag_confirmed_at,
+  r.tag_confirmed_by,
+  case
+    when coalesce(r.is_vault_only, false) = false then r.video_url
+    when r.flash_unlock_until is not null and r.flash_unlock_until > timezone('utc', now()) then r.video_url
+    when public.current_user_role() = 'admin' then r.video_url
+    when auth.uid() is not null and r.uploaded_by = (
+      select p.id from public.profiles p where p.user_id = auth.uid() limit 1
+    ) then r.video_url
+    when auth.uid() is not null and r.player_id is not null and exists (
+      select 1 from public.subscriptions s
+      where s.subscriber_id = auth.uid()
+        and s.athlete_id = r.player_id
+        and s.status = 'active'
+    ) then r.video_url
+    else ''
+  end as video_url,
+  coalesce(r.view_count, 0) as view_count,
+  -- Handle first, else first name only: the clip credit never shows a fan's full name.
+  -- Null when the tagged athlete posted it themself (no "Filmed by" on your own clip).
+  case
+    when r.player_id is not null and up.player_id = r.player_id then null
+    else coalesce(
+      nullif(btrim(up.username), ''),
+      nullif(split_part(btrim(coalesce(up.full_name, '')), ' ', 1), '')
+    )
+  end as uploader_name,
+  public.visible_avatar_url(up.id) as uploader_avatar_url,
+  r.media_type,
+  r.photo_count,
+  (
+    select case
+      when coalesce(r.is_vault_only, false) = false then ph.image_path
+      when r.flash_unlock_until is not null and r.flash_unlock_until > timezone('utc', now()) then ph.image_path
+      when public.current_user_role() = 'admin' then ph.image_path
+      when auth.uid() is not null and r.uploaded_by = (
+        select p.id from public.profiles p where p.user_id = auth.uid() limit 1
+      ) then ph.image_path
+      when auth.uid() is not null and r.player_id is not null and exists (
+        select 1 from public.subscriptions s
+        where s.subscriber_id = auth.uid()
+          and s.athlete_id = r.player_id
+          and s.status = 'active'
+      ) then ph.image_path
+      else ''
+    end
+    from public.reel_photos ph
+    where ph.reel_id = r.id and ph.position = 0
+  ) as cover_path
+from public.reels r
+left join public.profiles up on up.id = r.uploaded_by;
+
+
+-- get_leaderboards: fans board respects photo audience, hide-from-search and blocks.
+create or replace function public.get_leaderboards(period_kind text default 'week')
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  kind text := public.spotlight_normalize_kind(period_kind);
+  bounds record;
+  board_limit constant integer := 10;
+  result jsonb;
+begin
+  select * into bounds from public.spotlight_window(kind);
+
+  with eligible as (
+    select r.id, r.title, r.player_id, r.uploaded_by, r.created_at, r.category,
+      p.name as player_name, coalesce(nullif(btrim(p.school_name), ''), '') as school_name
+    from public.reels r
+    join public.players p on p.id = r.player_id
+    where r.tag_status = 'confirmed'
+      and coalesce(r.is_removed, false) = false
+      and coalesce(r.is_flagged, false) = false
+      and coalesce(r.is_vault_only, false) = false
+      and coalesce(r.is_exclusive, false) = false
+  ),
+  hype as (
+    select v.reel_id, v.user_id, v.kind
+    from public.reel_hype_votes v
+    join eligible e on e.id = v.reel_id
+    where v.created_at::date between bounds.window_start and bounds.window_end
+  ),
+  views as (
+    select w.reel_id, w.viewer_id
+    from public.reel_views w
+    join eligible e on e.id = w.reel_id
+    where w.view_day between bounds.window_start and bounds.window_end
+  ),
+  reel_scores as (
+    select e.*,
+      coalesce((select count(*) from hype h where h.reel_id = e.id), 0)::int as hype,
+      coalesce((select count(*) from views w where w.reel_id = e.id), 0)::int as views
+    from eligible e
+  ),
+  player_scores as (
+    select rs.player_id, max(rs.player_name) as name, max(rs.school_name) as school_name,
+      sum(rs.hype)::int as hype, sum(rs.views)::int as views,
+      coalesce((select count(*) from hype h join eligible e on e.id = h.reel_id
+        where e.player_id = rs.player_id and h.kind = 'seki'), 0)::int as seki,
+      coalesce((select count(*) from hype h join eligible e on e.id = h.reel_id
+        where e.player_id = rs.player_id and h.kind = 'aura'), 0)::int as aura,
+      coalesce((select count(*) from hype h join eligible e on e.id = h.reel_id
+        where e.player_id = rs.player_id and h.kind = 'flex'), 0)::int as flex
+    from reel_scores rs
+    group by rs.player_id
+  ),
+  school_fans as (
+    select e.school_name, h.user_id as fan from hype h join eligible e on e.id = h.reel_id
+    union
+    select e.school_name, w.viewer_id as fan from views w join eligible e on e.id = w.reel_id
+  ),
+  school_scores as (
+    select rs.school_name,
+      sum(rs.hype)::int as hype,
+      count(*) filter (where rs.created_at::date between bounds.window_start and bounds.window_end)::int as highlights,
+      coalesce((select count(distinct sf.fan) from school_fans sf where sf.school_name = rs.school_name), 0)::int as fans
+    from reel_scores rs
+    where rs.school_name <> ''
+    group by rs.school_name
+  ),
+  fan_scores as (
+    select pr.id as profile_id,
+      coalesce(nullif(btrim(pr.username), ''), nullif(split_part(btrim(pr.full_name), ' ', 1), ''), 'Fan') as name,
+      case when public.profile_item_visible(pr.id, 'photo') then pr.avatar_url else null end as avatar_url,
+      coalesce((select count(*) from hype h where h.user_id = pr.user_id), 0)::int as hype_given,
+      coalesce((select count(*) from eligible e where e.uploaded_by = pr.id
+        and e.created_at::date between bounds.window_start and bounds.window_end), 0)::int as clips_tagged
+    from public.profiles pr
+    where (exists (select 1 from hype h where h.user_id = pr.user_id)
+      or exists (select 1 from eligible e where e.uploaded_by = pr.id
+        and e.created_at::date between bounds.window_start and bounds.window_end))
+      -- hidden-from-search and blocked accounts are left off the fans board
+      and (not pr.hide_from_search or public.viewer_relationship(pr.id) in ('self', 'admin', 'guardian', 'friend'))
+      and public.viewer_relationship(pr.id) <> 'blocked'
+  )
+  select jsonb_build_object(
+    'period_kind', kind,
+    'start_date', bounds.window_start,
+    'end_date', bounds.window_end,
+    'players_hype', coalesce((
+      select jsonb_agg(row_data order by rank)
+      from (
+        select row_number() over (order by ps.hype desc, ps.views desc, ps.name) as rank,
+          jsonb_build_object(
+            'rank', row_number() over (order by ps.hype desc, ps.views desc, ps.name),
+            'player_id', ps.player_id, 'name', ps.name, 'school_name', ps.school_name,
+            'hype', ps.hype, 'seki', ps.seki, 'aura', ps.aura, 'flex', ps.flex, 'views', ps.views
+          ) as row_data
+        from player_scores ps
+        where ps.hype > 0
+        order by rank
+        limit board_limit
+      ) t
+    ), '[]'::jsonb),
+    'players_views', coalesce((
+      select jsonb_agg(row_data order by rank)
+      from (
+        select row_number() over (order by ps.views desc, ps.hype desc, ps.name) as rank,
+          jsonb_build_object(
+            'rank', row_number() over (order by ps.views desc, ps.hype desc, ps.name),
+            'player_id', ps.player_id, 'name', ps.name, 'school_name', ps.school_name,
+            'views', ps.views, 'hype', ps.hype
+          ) as row_data
+        from player_scores ps
+        where ps.views > 0
+        order by rank
+        limit board_limit
+      ) t
+    ), '[]'::jsonb),
+    'highlights', coalesce((
+      select jsonb_agg(row_data order by rank)
+      from (
+        select row_number() over (order by rs.views desc, rs.hype desc, rs.created_at desc) as rank,
+          jsonb_build_object(
+            'rank', row_number() over (order by rs.views desc, rs.hype desc, rs.created_at desc),
+            'reel_id', rs.id, 'title', rs.title, 'category', rs.category,
+            'player_id', rs.player_id, 'name', rs.player_name, 'school_name', rs.school_name,
+            'views', rs.views, 'hype', rs.hype
+          ) as row_data
+        from reel_scores rs
+        where rs.views > 0
+        order by rank
+        limit board_limit
+      ) t
+    ), '[]'::jsonb),
+    'schools', coalesce((
+      select jsonb_agg(row_data order by rank)
+      from (
+        select row_number() over (order by (ss.hype + ss.highlights * 10 + ss.fans * 5) desc, ss.school_name) as rank,
+          jsonb_build_object(
+            'rank', row_number() over (order by (ss.hype + ss.highlights * 10 + ss.fans * 5) desc, ss.school_name),
+            'school_name', ss.school_name, 'hype', ss.hype, 'highlights', ss.highlights,
+            'fans', ss.fans, 'score', ss.hype + ss.highlights * 10 + ss.fans * 5
+          ) as row_data
+        from school_scores ss
+        where ss.hype + ss.highlights + ss.fans > 0
+        order by rank
+        limit board_limit
+      ) t
+    ), '[]'::jsonb),
+    'fans', coalesce((
+      select jsonb_agg(row_data order by rank)
+      from (
+        select row_number() over (order by (fs.clips_tagged * 10 + fs.hype_given) desc, fs.name) as rank,
+          jsonb_build_object(
+            'rank', row_number() over (order by (fs.clips_tagged * 10 + fs.hype_given) desc, fs.name),
+            'profile_id', fs.profile_id, 'name', fs.name, 'avatar_url', fs.avatar_url,
+            'hype_given', fs.hype_given, 'clips_tagged', fs.clips_tagged,
+            'score', fs.clips_tagged * 10 + fs.hype_given
+          ) as row_data
+        from fan_scores fs
+        order by rank
+        limit board_limit
+      ) t
+    ), '[]'::jsonb)
+  ) into result;
+
+  return result;
+end;
+$$;
+
+-- get_top_filmers: same rules as the fans board.
+create or replace function public.get_top_filmers(period_kind text default 'week')
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  kind text := public.spotlight_normalize_kind(period_kind);
+  bounds record;
+begin
+  select * into bounds from public.spotlight_window(kind);
+
+  return coalesce((
+    with eligible as (
+      select r.id, r.uploaded_by
+      from public.reels r
+      join public.profiles up on up.id = r.uploaded_by
+      where r.tag_status = 'confirmed'
+        and not coalesce(r.is_removed, false)
+        and not coalesce(r.is_flagged, false)
+        and not coalesce(r.is_vault_only, false)
+        and (r.player_id is null or up.player_id is distinct from r.player_id)
+    ),
+    scores as (
+      select e.uploaded_by as profile_id,
+        count(distinct e.id)::int as clips,
+        coalesce(sum((select count(*) from public.reel_views w
+          where w.reel_id = e.id and w.view_day between bounds.window_start and bounds.window_end)), 0)::int as views,
+        coalesce(sum((select count(*) from public.reel_hype_votes v
+          where v.reel_id = e.id and v.created_at::date between bounds.window_start and bounds.window_end)), 0)::int as hype,
+        coalesce(sum((select count(*) from public.filmer_props fp
+          where fp.reel_id = e.id and fp.created_at::date between bounds.window_start and bounds.window_end)), 0)::int as props
+      from eligible e
+      group by e.uploaded_by
+    ),
+    ranked as (
+      select s.*, s.views + s.hype * 3 + s.props * 5 as score,
+        coalesce(nullif(btrim(pr.username), ''), nullif(split_part(btrim(coalesce(pr.full_name, '')), ' ', 1), ''), 'Filmer') as name,
+        case when public.profile_item_visible(pr.id, 'photo') then pr.avatar_url else null end as avatar_url
+      from scores s
+      join public.profiles pr on pr.id = s.profile_id
+      where s.views + s.hype + s.props > 0
+        and (not pr.hide_from_search or public.viewer_relationship(pr.id) in ('self', 'admin', 'guardian', 'friend'))
+        and public.viewer_relationship(pr.id) <> 'blocked'
+    )
+    select jsonb_agg(row_data order by rank)
+    from (
+      select row_number() over (order by rk.score desc, rk.name) as rank,
+        jsonb_build_object(
+          'rank', row_number() over (order by rk.score desc, rk.name),
+          'profile_id', rk.profile_id, 'name', rk.name, 'avatar_url', rk.avatar_url,
+          'clips', rk.clips, 'views', rk.views, 'hype', rk.hype, 'props', rk.props, 'score', rk.score
+        ) as row_data
+      from ranked rk
+      order by rank
+      limit 10
+    ) t
+  ), '[]'::jsonb);
+end;
+$$;
+
+-- get_spotlight_standings: a filmer with no username shows a first name, never a full name.
+create or replace function public.get_spotlight_standings(period_kind text default 'week')
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  kind text := public.spotlight_normalize_kind(period_kind);
+  bounds record;
+  leaders jsonb;
+begin
+  select * into bounds from public.spotlight_window(kind);
+
+  select coalesce(jsonb_agg(ranked.row_data order by ranked.hype desc, ranked.created_at desc), '[]'::jsonb)
+    into leaders
+  from (
+    select
+      jsonb_build_object(
+        'rank', row_number() over (order by scored.hype desc, scored.created_at desc),
+        'player_id', scored.player_id,
+        'name', scored.player_name,
+        'school_name', scored.school_name,
+        'hype', scored.hype,
+        'seki', scored.seki,
+        'aura', scored.aura,
+        'flex', scored.flex,
+        'reel_id', scored.reel_id,
+        'title', scored.clip_title,
+        'shot_by', scored.shot_by
+      ) as row_data,
+      scored.hype,
+      scored.created_at
+    from (
+      select
+        p.id as player_id,
+        p.name as player_name,
+        p.school_name,
+        sum(coalesce(r.seki_count, 0) + coalesce(r.aura_count, 0) + coalesce(r.flex_count, 0))::int as hype,
+        sum(coalesce(r.seki_count, 0))::int as seki,
+        sum(coalesce(r.aura_count, 0))::int as aura,
+        sum(coalesce(r.flex_count, 0))::int as flex,
+        (
+          select hot.id
+          from public.reels hot
+          where hot.player_id = p.id
+            and hot.tag_status = 'confirmed'
+            and coalesce(hot.is_removed, false) = false
+            and coalesce(hot.is_vault_only, false) = false
+            and coalesce(hot.is_flagged, false) = false
+            and coalesce(hot.category, 'game_play') = 'game_play'
+            and coalesce(hot.media_type, 'video') = 'video'
+            and hot.created_at::date between bounds.window_start and bounds.window_end
+          order by (coalesce(hot.seki_count, 0) + coalesce(hot.aura_count, 0) + coalesce(hot.flex_count, 0)) desc,
+            hot.created_at desc
+          limit 1
+        ) as reel_id,
+        (
+          select hot.title
+          from public.reels hot
+          where hot.player_id = p.id
+            and hot.tag_status = 'confirmed'
+            and coalesce(hot.is_removed, false) = false
+            and coalesce(hot.is_vault_only, false) = false
+            and coalesce(hot.is_flagged, false) = false
+            and coalesce(hot.category, 'game_play') = 'game_play'
+            and coalesce(hot.media_type, 'video') = 'video'
+            and hot.created_at::date between bounds.window_start and bounds.window_end
+          order by (coalesce(hot.seki_count, 0) + coalesce(hot.aura_count, 0) + coalesce(hot.flex_count, 0)) desc,
+            hot.created_at desc
+          limit 1
+        ) as clip_title,
+        (
+          select coalesce(nullif(btrim(pr.username), ''), nullif(split_part(btrim(coalesce(pr.full_name, '')), ' ', 1), ''))
+          from public.reels hot
+          left join public.profiles pr on pr.id = hot.uploaded_by
+          where hot.player_id = p.id
+            and hot.tag_status = 'confirmed'
+            and coalesce(hot.is_removed, false) = false
+            and coalesce(hot.is_vault_only, false) = false
+            and coalesce(hot.is_flagged, false) = false
+            and coalesce(hot.category, 'game_play') = 'game_play'
+            and coalesce(hot.media_type, 'video') = 'video'
+            and hot.created_at::date between bounds.window_start and bounds.window_end
+          order by (coalesce(hot.seki_count, 0) + coalesce(hot.aura_count, 0) + coalesce(hot.flex_count, 0)) desc,
+            hot.created_at desc
+          limit 1
+        ) as shot_by,
+        max(r.created_at) as created_at
+      from public.reels r
+      join public.players p on p.id = r.player_id
+      where r.tag_status = 'confirmed'
+        and public.athlete_is_varsity_verified(p.id)
+        and coalesce(r.is_removed, false) = false
+        and coalesce(r.is_vault_only, false) = false
+        and coalesce(r.is_flagged, false) = false
+        and coalesce(r.category, 'game_play') = 'game_play'
+        and coalesce(r.media_type, 'video') = 'video'
+        and r.created_at::date between bounds.window_start and bounds.window_end
+      group by p.id, p.name, p.school_name
+      having sum(coalesce(r.seki_count, 0) + coalesce(r.aura_count, 0) + coalesce(r.flex_count, 0)) > 0
+    ) scored
+  ) ranked;
+
+  return jsonb_build_object(
+    'period_kind', kind,
+    'start_date', bounds.window_start,
+    'end_date', bounds.window_end,
+    'leaders', coalesce(leaders, '[]'::jsonb)
+  );
+end;
+$$;
+
+-- get_pending_player_tags: the uploader's first name, not full name.
+create or replace function public.get_pending_player_tags()
+returns table (
+  id uuid,
+  title text,
+  video_url text,
+  player_id uuid,
+  player_name text,
+  school_name text,
+  created_at timestamptz,
+  seki_count integer,
+  aura_count integer,
+  flex_count integer,
+  uploader_name text
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  actor uuid;
+  role_name text := public.current_user_role();
+begin
+  select pr.id into actor
+  from public.profiles pr
+  where pr.user_id = auth.uid()
+  limit 1;
+
+  return query
+  select
+    r.id,
+    r.title,
+    r.video_url,
+    r.player_id,
+    p.name,
+    p.school_name,
+    r.created_at,
+    coalesce(r.seki_count, 0),
+    coalesce(r.aura_count, 0),
+    coalesce(r.flex_count, 0),
+    coalesce(nullif(split_part(btrim(coalesce(uploader.full_name, '')), ' ', 1), ''), nullif(btrim(uploader.username), ''))
+  from public.reels r
+  join public.players p on p.id = r.player_id
+  left join public.profiles uploader on uploader.id = r.uploaded_by
+  where r.tag_status = 'pending'
+    and coalesce(r.is_removed, false) = false
+    and not (coalesce(r.media_type, 'video') = 'photo_story' and coalesce(r.photo_count, 0) = 0)
+    and (
+      -- 2026-09 audit follow-up: dropped the `auth.role() = 'anon'` bypass alongside
+      -- `can_confirm_player_tag`'s matching fix, above.
+      role_name = 'admin'
+      or public.can_confirm_player_tag(r.player_id)
+    )
+  order by r.created_at desc
+  limit 40;
+end;
+$$;
+
+-- get_donations_to_thank: the donor's first name, not full name.
+create or replace function public.get_donations_to_thank(target_player_id uuid)
+returns table (
+  tip_id uuid,
+  amount_cents integer,
+  created_at timestamptz,
+  fan_name text,
+  rally_title text,
+  thanked_key text
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if public.rally_manager_role(target_player_id) not in ('athlete', 'guardian', 'admin') then
+    return;
+  end if;
+  return query
+  select
+    t.id,
+    t.amount_cents,
+    t.created_at,
+    coalesce(nullif(split_part(btrim(coalesce(f.full_name, '')), ' ', 1), ''), 'A fan') as fan_name,
+    r.title as rally_title,
+    dt.message_key as thanked_key
+  from public.tips t
+  left join public.profiles f on f.user_id = t.fan_id
+  left join public.rallies r on r.id = t.rally_id
+  left join public.donation_thanks dt on dt.tip_id = t.id
+  where t.player_id = target_player_id
+    and t.fan_id is not null
+  order by t.created_at desc
+  limit 50;
+end;
+$$;
+
+-- 11. Access ---------------------------------------------------------------------------------------------------------
+
+revoke all on table public.friendships from public, anon, authenticated;
+revoke all on table public.user_blocks from public, anon, authenticated;
+revoke all on table public.friend_request_log from public, anon, authenticated;
+grant select on table public.friendships to authenticated;
+grant select on table public.user_blocks to authenticated;
+
+drop policy if exists "Parties read friendships" on public.friendships;
+create policy "Parties read friendships" on public.friendships
+  for select to authenticated
+  using (addressee_id = public.my_profile_id() or (requester_id = public.my_profile_id() and status <> 'declined'));
+
+drop policy if exists "Blocker reads own blocks" on public.user_blocks;
+create policy "Blocker reads own blocks" on public.user_blocks
+  for select to authenticated using (blocker_id = public.my_profile_id());
+
+do $$
+declare
+  stmt text;
+  fn text;
+begin
+  foreach stmt in array array[
+    -- internal helpers: callable from views, policies and other functions; harmless booleans for clients
+    'grant execute on function public.my_profile_id() to anon, authenticated, service_role',
+    'revoke all on function public.are_friends(uuid, uuid) from public, anon, authenticated',
+    'grant execute on function public.are_friends(uuid, uuid) to service_role',
+    'revoke all on function public.is_blocked_between(uuid, uuid) from public, anon, authenticated',
+    'grant execute on function public.is_blocked_between(uuid, uuid) to service_role',
+    'revoke all on function public.is_guardian_of_profile(uuid) from public, anon, authenticated',
+    'grant execute on function public.is_guardian_of_profile(uuid) to service_role',
+    'revoke all on function public.viewer_relationship(uuid) from public, anon, authenticated',
+    'grant execute on function public.viewer_relationship(uuid) to service_role',
+    'grant execute on function public.privacy_default_audience() to anon, authenticated, service_role',
+    'grant execute on function public.audience_allows(text, boolean, jsonb, text) to anon, authenticated, service_role',
+    'grant execute on function public.visible_avatar_url(uuid) to anon, authenticated, service_role',
+    'revoke all on function public.get_public_profiles(uuid[], uuid[], text) from public',
+    'grant execute on function public.get_public_profiles(uuid[], uuid[], text) to anon, authenticated, service_role',
+    'revoke all on function public.profile_item_visible(uuid, text) from public, anon, authenticated',
+    'grant execute on function public.profile_item_visible(uuid, text) to service_role',
+    'grant execute on function public.player_hidden_from_viewer(uuid) to anon, authenticated, service_role',
+    'grant execute on function public.crew_follow_blocked(uuid) to anon, authenticated, service_role',
+    'grant execute on function public.athlete_stats_visible(uuid) to anon, authenticated, service_role',
+    'grant execute on function public.claimed_player_ids(uuid[]) to anon, authenticated, service_role',
+    'grant execute on function public.get_aura_board(integer) to anon, authenticated, service_role',
+    'grant execute on function public.search_local_entities(text, text) to anon, authenticated, service_role',
+    'grant execute on function public.friend_requests_enabled() to anon, authenticated, service_role',
+    -- guests browse athlete profiles, including Crew counts
+    'grant execute on function public.get_crew_graph(uuid) to anon, authenticated, service_role',
+    -- signed-in only
+    'revoke all on function public.privacy_settings_json(uuid) from public, anon, authenticated',
+    'revoke all on function public.apply_privacy_settings(uuid, jsonb) from public, anon, authenticated',
+    'revoke all on function public.guard_profiles_privacy() from public, anon, authenticated',
+    'revoke all on function public.search_taggable_accounts(text) from public, anon',
+    'grant execute on function public.search_taggable_accounts(text) to authenticated, service_role',
+    'grant execute on function public.privacy_settings_json(uuid) to service_role',
+    'grant execute on function public.apply_privacy_settings(uuid, jsonb) to service_role'
+  ] loop
+    fn := substring(stmt from 'function (public\.[a-z_]+\([^)]*\))');
+    if to_regprocedure(fn) is not null then
+      execute stmt;
+    end if;
+  end loop;
+  foreach fn in array array[
+    'public.get_my_privacy()', 'public.set_my_privacy(jsonb)', 'public.request_friend(uuid)', 'public.respond_friend(uuid, boolean)',
+    'public.remove_friend(uuid)', 'public.list_my_friends()', 'public.block_user(uuid)', 'public.unblock_user(uuid)',
+    'public.list_my_blocks()', 'public.admin_get_privacy(uuid)', 'public.admin_reset_privacy(uuid)',
+    'public.admin_set_hide_from_search(uuid, boolean)',
+    'public.admin_end_friendship(uuid, uuid)', 'public.admin_privacy_report()',
+    'public.toggle_crew_follow(uuid, boolean)'
+  ] loop
+    execute format('revoke all on function %s from public, anon', fn);
+    execute format('grant execute on function %s to authenticated, service_role', fn);
+  end loop;
+end;
+$$;
+
+-- 13. Safety check for databases with extra policies (staging was built by hand) -------------------------------------
+do $$
+declare
+  extra text;
+begin
+  select string_agg(tablename || ': ' || policyname, ', ') into extra
+  from pg_policies
+  where schemaname = 'public' and permissive = 'PERMISSIVE' and cmd in ('SELECT', 'ALL')
+    and ((tablename = 'profiles' and policyname not in ('Read own profile or admin', 'Users update own profile', 'Users insert own profile'))
+      or (tablename = 'crew_follows' and policyname not in ('Read own or own athlete crew follows', 'Users write own crew follows')));
+  if extra is not null then
+    raise exception 'Other read policies still open these tables (%). Review and drop them, then re-run.', extra;
+  end if;
+end;
+$$;
+
+-- Tag approval — stage 2 of PRIV-01 (2026-10-14).
+--
+-- Purpose
+--   Owner decision 2026-10-13: tags are approved by the person tagged, with a clear difference between approved and not
+--   approved, designed so waiting tags do not cost athletes highlights, Spotlight credit or donations. Design panel
+--   findings applied (docs/engineering/design/PROFILE_PRIVACY_DESIGN.md §3):
+--   1. Decisions move only from pending to confirmed or rejected (admins may undo; undoing an approved tag that already
+--      took donations is admin-only). A rejection clears the athlete from the clip and is remembered
+--      (reel_tag_rejections): the same athlete cannot be tagged on that clip again, and after three declines that
+--      uploader cannot tag that athlete at all. One uploader may have at most five tags of an athlete waiting.
+--   2. Tags from someone the athlete blocked are rejected quietly; "Auto-approve tags from friends" approves a friend's tag.
+--   3. Once an athlete has a verified account, only they, their guardian or an admin approve their tags (school
+--      operators still confirm for athletes with no account).
+--   4. reels_feed names a pending tag's athlete only to the uploader, the athlete, their guardian and admins, and a
+--      rejected tag names nobody (a stranger's clip must not show a private athlete before they agree).
+--   5. Credit is not lost while a tag waits: views and hype already accrue on a pending clip; Spotlight now places a clip
+--      in the week its tag was approved, and leaderboards count earlier reactions and views on the approval date.
+--
+--   Stage 2 review (2026-10-14) applied: clients write only the app's reel columns (an uploader could approve their own
+--   tag and set counters); a decline does not reveal who declined, even on the uploader's own reels row; a blocked
+--   uploader's tag ends exactly like a decline (re-review: blocking someone with pending tags failed — fixed in
+--   block_user; known limit: the quiet decline is immediate); the athlete
+--   can remove an approved tag (unless it took donations); admins can undo a rejection; re-confirming keeps the date;
+--   school operators are exempt from the pending cap. Follow-up (COMMERCE / CHECKOUT): refuse a donation on a pending
+--   clip before charging (create-payment-intent does not receive the clip today; the app already disables Donate).
+--
+-- Owner: HIGHLIGHTS → ACCOUNT_TAGS, UPLOAD; SPOTLIGHT / LEADERBOARDS for credit; reviews RLS_SECURITY, MINOR_SAFETY.
+-- Depends on: 20261014090000_profile_privacy.sql (is_blocked_between, are_friends, profiles.tag_review).
+-- Safe to re-run: create table if not exists; create or replace.
+-- Applied: written 2026-10-14, not applied anywhere.
+-- Rollback: re-run the previous definitions of the five functions and reels_feed from schema.sql history; the
+--   rejections table can stay.
+
+create table if not exists public.reel_tag_rejections (
+  -- Deferred so the tag trigger can record a block's quiet decline while the clip row is still being inserted.
+  reel_id uuid not null references public.reels (id) on delete cascade deferrable initially deferred,
+  player_id uuid not null references public.players (id) on delete cascade,
+  uploader_id uuid references public.profiles (id) on delete set null,
+  -- null = declined automatically because of a block (an admin can still undo it)
+  rejected_by uuid references public.profiles (id) on delete set null,
+  rejected_at timestamptz not null default timezone('utc', now()),
+  primary key (reel_id, player_id)
+);
+create index if not exists reel_tag_rejections_uploader_idx on public.reel_tag_rejections (player_id, uploader_id);
+alter table public.reel_tag_rejections enable row level security;
+revoke all on table public.reel_tag_rejections from public, anon, authenticated;
+
+-- Whether the caller is a school operator at this roster athlete's school (same rule as can_confirm_player_tag).
+create or replace function public.is_school_operator_for(target_player_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.players athlete
+    join public.profiles pr on pr.user_id = auth.uid()
+    join public.schools_and_teams s on s.id = pr.school_id
+    where athlete.id = target_player_id
+      and (public.current_user_role() = 'operator' or coalesce(pr.roles, array[]::text[]) @> array['operator']::text[])
+      and (lower(s.name) = lower(athlete.school_name) or lower(s.name) = lower(coalesce(athlete.team, '')))
+  );
+$$;
+
+-- Whether the caller is a party to a clip's athlete tag: admin, uploader, the athlete's account or their guardian.
+create or replace function public.tag_party(clip_uploaded_by uuid, clip_player_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select public.current_user_role() = 'admin'
+    or (clip_uploaded_by is not null and clip_uploaded_by = public.my_profile_id())
+    or (clip_player_id is not null and exists (
+      select 1 from public.profiles p where p.player_id = clip_player_id and p.user_id = auth.uid()
+    ))
+    or (clip_player_id is not null and exists (
+      select 1 from public.players pl where pl.id = clip_player_id and pl.guardian_id is not null and pl.guardian_id = public.my_profile_id()
+    ));
+$$;
+
+create or replace function public.can_confirm_player_tag(target_player_id uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  actor uuid;
+  role_name text := public.current_user_role();
+  athlete public.players%rowtype;
+begin
+  if target_player_id is null then
+    return false;
+  end if;
+  if role_name = 'admin' then
+    return true;
+  end if;
+
+  select * into athlete from public.players where id = target_player_id;
+  if athlete.id is null then
+    return false;
+  end if;
+
+  select pr.id into actor from public.profiles pr where pr.user_id = auth.uid() limit 1;
+  if actor is null then
+    return false;
+  end if;
+
+  if athlete.guardian_id is not null and athlete.guardian_id = actor then
+    return true;
+  end if;
+
+  if exists (
+    select 1 from public.profiles pr
+    where pr.id = actor and pr.player_id = athlete.id and pr.verification_status = 'verified'
+  ) then
+    return true;
+  end if;
+
+  -- Once an athlete has a verified account, only they, their guardian or an admin approve their tags ("Review every
+  -- tag" means it). A school operator still confirms tags for athletes with no account.
+  if exists (select 1 from public.profiles vp where vp.player_id = athlete.id and vp.verification_status = 'verified') then
+    return false;
+  end if;
+
+  if role_name = 'operator'
+     or exists (
+       select 1 from public.profiles pr
+       where pr.id = actor and coalesce(pr.roles, array[]::text[]) @> array['operator']::text[]
+     )
+  then
+    if exists (
+      select 1
+      from public.profiles pr
+      join public.schools_and_teams s on s.id = pr.school_id
+      where pr.id = actor
+        and (lower(s.name) = lower(athlete.school_name) or lower(s.name) = lower(coalesce(athlete.team, '')))
+    ) then
+      return true;
+    end if;
+  end if;
+
+  return false;
+end;
+$$;
+
+create or replace function public.reels_apply_tag_defaults()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  actor uuid;
+  should_set boolean := false;
+  account public.profiles%rowtype;
+begin
+  -- confirm_reel_player_tag sets this while it records a decision (it clears player_id on a rejection).
+  if coalesce(current_setting('app.tapuai_tag_write', true), '') = 'on' then
+    return NEW;
+  end if;
+  select pr.id into actor
+  from public.profiles pr
+  where pr.user_id = auth.uid()
+  limit 1;
+
+  if NEW.uploaded_by is null then
+    NEW.uploaded_by := actor;
+  end if;
+
+  -- Tag status and who approved it change only through confirm_reel_player_tag (or the server / an admin).
+  if TG_OP = 'UPDATE'
+     and (NEW.tag_status is distinct from OLD.tag_status or NEW.tag_confirmed_at is distinct from OLD.tag_confirmed_at
+          or NEW.tag_confirmed_by is distinct from OLD.tag_confirmed_by)
+     and NEW.player_id is not distinct from OLD.player_id
+     and not public.is_trusted_server() and public.current_user_role() is distinct from 'admin' then
+    raise exception 'Tags are approved by the athlete.';
+  end if;
+
+  if TG_OP = 'INSERT' then
+    should_set := true;
+  elsif TG_OP = 'UPDATE' and NEW.player_id is distinct from OLD.player_id then
+    NEW.tag_status := 'pending';
+    NEW.tag_confirmed_at := null;
+    NEW.tag_confirmed_by := null;
+    should_set := true;
+  end if;
+
+  if not should_set then
+    return NEW;
+  end if;
+
+  if NEW.player_id is null then
+    NEW.tag_status := 'pending';
+    return NEW;
+  end if;
+
+  select * into account from public.profiles p
+  where p.player_id = NEW.player_id
+  order by (p.verification_status = 'verified') desc
+  limit 1;
+
+  if public.current_user_role() is distinct from 'admin' then
+    -- The athlete already declined this clip.
+    if exists (select 1 from public.reel_tag_rejections x where x.reel_id = NEW.id and x.player_id = NEW.player_id) then
+      raise exception 'This athlete declined being tagged on this clip.';
+    end if;
+    -- Three declines from this athlete: this uploader can no longer tag them.
+    if NEW.uploaded_by is not null and (
+      select count(*) from public.reel_tag_rejections x where x.player_id = NEW.player_id and x.uploader_id = NEW.uploaded_by
+    ) >= 3 then
+      raise exception 'You can''t tag this athlete.';
+    end if;
+    -- At most five tags of the same athlete waiting on them from one uploader (a school operator uploading the
+    -- athlete's games is exempt).
+    if NEW.uploaded_by is not null and not public.is_school_operator_for(NEW.player_id) and (
+      select count(*) from public.reels q
+      where q.uploaded_by = NEW.uploaded_by and q.player_id = NEW.player_id and q.tag_status = 'pending' and q.id <> NEW.id
+    ) >= 5 then
+      raise exception 'Wait for this athlete to review your earlier tags.';
+    end if;
+  end if;
+
+  -- A blocked uploader's tag ends exactly like a decline (untagged, nobody named), so neither reels_feed nor their
+  -- own reels row tells them about the block (re-review P2). Known limit: it happens at once, not after a delay.
+  if account.id is not null and NEW.uploaded_by is not null and public.is_blocked_between(account.id, NEW.uploaded_by) then
+    insert into public.reel_tag_rejections (reel_id, player_id, uploader_id, rejected_by)
+    values (NEW.id, NEW.player_id, NEW.uploaded_by, null)
+    on conflict (reel_id, player_id) do nothing;
+    NEW.player_id := null;
+    NEW.tag_status := 'rejected';
+    NEW.tag_confirmed_at := null;
+    NEW.tag_confirmed_by := null;
+    return NEW;
+  end if;
+
+  -- "Auto-approve tags from friends".
+  if account.id is not null and account.tag_review = 'auto_friends' and NEW.uploaded_by is not null
+     and public.are_friends(account.id, NEW.uploaded_by) then
+    NEW.tag_status := 'confirmed';
+    NEW.tag_confirmed_at := timezone('utc', now());
+    NEW.tag_confirmed_by := account.id;
+    return NEW;
+  end if;
+
+  if public.can_confirm_player_tag(NEW.player_id)
+     and public.current_user_role() <> 'guest'
+     and auth.role() <> 'anon'
+  then
+    NEW.tag_status := 'confirmed';
+    NEW.tag_confirmed_at := timezone('utc', now());
+    NEW.tag_confirmed_by := actor;
+  else
+    NEW.tag_status := 'pending';
+    NEW.tag_confirmed_at := null;
+    NEW.tag_confirmed_by := null;
+  end if;
+
+  return NEW;
+end;
+$$;
+
+create or replace function public.confirm_reel_player_tag(target_reel_id uuid, tag_action text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  action text := lower(btrim(coalesce(tag_action, '')));
+  clip public.reels%rowtype;
+  actor uuid;
+  is_admin boolean := public.current_user_role() = 'admin';
+begin
+  if action not in ('confirm', 'reject') then
+    raise exception 'tag_action must be confirm or reject';
+  end if;
+
+  select * into clip from public.reels where id = target_reel_id;
+  if clip.id is null then
+    raise exception 'Highlight not found.';
+  end if;
+  -- An admin re-confirming a rejection restores the athlete from the decline record.
+  if clip.player_id is null and is_admin and action = 'confirm' and clip.tag_status = 'rejected' then
+    select x.player_id into clip.player_id from public.reel_tag_rejections x
+    where x.reel_id = clip.id order by x.rejected_at desc limit 1;
+    delete from public.reel_tag_rejections x where x.reel_id = clip.id and x.player_id = clip.player_id;
+  end if;
+  if clip.player_id is null then
+    raise exception 'This clip has no tagged player.';
+  end if;
+  if not public.can_confirm_player_tag(clip.player_id) then
+    raise exception 'Only the athlete, their guardian or an admin can review this tag.';
+  end if;
+  -- Decisions move only forward from pending; undoing an approved tag that already took donations is an admin call.
+  -- The athlete may still remove an approved tag (for example an auto-approved friend's tag); otherwise decisions
+  -- move only forward from pending.
+  if clip.tag_status <> 'pending' and not is_admin and not (action = 'reject' and clip.tag_status = 'confirmed') then
+    raise exception 'This tag was already reviewed.';
+  end if;
+  if action = 'reject' and clip.tag_status = 'confirmed'
+     and exists (select 1 from public.tips t where t.reel_id = clip.id) and not is_admin then
+    raise exception 'This tag already has donations; ask an admin.';
+  end if;
+
+  select pr.id into actor from public.profiles pr where pr.user_id = auth.uid() limit 1;
+
+  perform set_config('app.tapuai_tag_write', 'on', true);
+  if action = 'reject' then
+    -- Remember the decline so the same athlete cannot be tagged on this clip again, then untag it.
+    insert into public.reel_tag_rejections (reel_id, player_id, uploader_id, rejected_by)
+    values (clip.id, clip.player_id, clip.uploaded_by, actor)
+    on conflict (reel_id, player_id) do nothing;
+    -- Who declined, and when, stays in reel_tag_rejections: the uploader can read their own reels row, and a guardian's
+    -- decline must not name the guardian (re-review P2). A quiet rejection looks the same.
+    update public.reels
+    set tag_status = 'rejected', player_id = null, tag_confirmed_at = null, tag_confirmed_by = null
+    where id = target_reel_id
+    returning * into clip;
+  else
+    update public.reels
+    set tag_status = 'confirmed', player_id = clip.player_id,
+        -- re-confirming an approved tag keeps its date, so the clip does not land in a second Spotlight week
+        tag_confirmed_at = case when clip.tag_status = 'confirmed' then clip.tag_confirmed_at else timezone('utc', now()) end,
+        tag_confirmed_by = case when clip.tag_status = 'confirmed' then clip.tag_confirmed_by else actor end
+    where id = target_reel_id
+    returning * into clip;
+  end if;
+  perform set_config('app.tapuai_tag_write', 'off', true);
+
+  perform public.sync_live_spotlight_awards();
+
+  return jsonb_build_object(
+    'id', clip.id,
+    'player_id', clip.player_id,
+    'tag_status', clip.tag_status,
+    'tag_confirmed_at', clip.tag_confirmed_at
+  );
+end;
+$$;
+
+create or replace view public.reels_feed as
+select
+  r.id,
+  r.title,
+  -- A pending tag names the athlete only to the uploader, the athlete, their guardian and admins; a rejected tag names
+  -- nobody (PRIV-01 stage 2, MINOR_SAFETY): a stranger's clip must not show a private athlete before they agree.
+  case
+    when r.tag_status = 'rejected' and public.current_user_role() is distinct from 'admin' then null
+    when r.tag_status = 'pending' and not public.tag_party(r.uploaded_by, r.player_id) then null
+    else r.player_id
+  end as player_id,
+  r.game_id,
+  r.created_at,
+  r.seki_count,
+  r.aura_count,
+  r.flex_count,
+  r.total_tips_cents,
+  r.is_exclusive,
+  r.is_vault_only,
+  r.is_flagged,
+  r.reported_by,
+  r.is_removed,
+  r.category,
+  r.flash_unlock_until,
+  r.uploaded_by,
+  -- A blocked uploader's quiet rejection and a real decline look the same (see reels_apply_tag_defaults).
+  r.tag_status,
+  -- Who decided, and when, only on an approved tag (a decline must not reveal the athlete or guardian).
+  case when r.tag_status = 'confirmed' or public.current_user_role() = 'admin' then r.tag_confirmed_at else null end as tag_confirmed_at,
+  case when r.tag_status = 'confirmed' or public.current_user_role() = 'admin' then r.tag_confirmed_by else null end as tag_confirmed_by,
+  case
+    when coalesce(r.is_vault_only, false) = false then r.video_url
+    when r.flash_unlock_until is not null and r.flash_unlock_until > timezone('utc', now()) then r.video_url
+    when public.current_user_role() = 'admin' then r.video_url
+    when auth.uid() is not null and r.uploaded_by = (
+      select p.id from public.profiles p where p.user_id = auth.uid() limit 1
+    ) then r.video_url
+    when auth.uid() is not null and r.player_id is not null and exists (
+      select 1 from public.subscriptions s
+      where s.subscriber_id = auth.uid()
+        and s.athlete_id = r.player_id
+        and s.status = 'active'
+    ) then r.video_url
+    else ''
+  end as video_url,
+  coalesce(r.view_count, 0) as view_count,
+  -- Handle first, else first name only: the clip credit never shows a fan's full name.
+  -- Null when the tagged athlete posted it themself (no "Filmed by" on your own clip).
+  case
+    when r.player_id is not null and up.player_id = r.player_id then null
+    else coalesce(
+      nullif(btrim(up.username), ''),
+      nullif(split_part(btrim(coalesce(up.full_name, '')), ' ', 1), '')
+    )
+  end as uploader_name,
+  public.visible_avatar_url(up.id) as uploader_avatar_url,
+  r.media_type,
+  r.photo_count,
+  (
+    select case
+      when coalesce(r.is_vault_only, false) = false then ph.image_path
+      when r.flash_unlock_until is not null and r.flash_unlock_until > timezone('utc', now()) then ph.image_path
+      when public.current_user_role() = 'admin' then ph.image_path
+      when auth.uid() is not null and r.uploaded_by = (
+        select p.id from public.profiles p where p.user_id = auth.uid() limit 1
+      ) then ph.image_path
+      when auth.uid() is not null and r.player_id is not null and exists (
+        select 1 from public.subscriptions s
+        where s.subscriber_id = auth.uid()
+          and s.athlete_id = r.player_id
+          and s.status = 'active'
+      ) then ph.image_path
+      else ''
+    end
+    from public.reel_photos ph
+    where ph.reel_id = r.id and ph.position = 0
+  ) as cover_path
+from public.reels r
+left join public.profiles up on up.id = r.uploaded_by;
+
+
+create or replace function public.get_spotlight_standings(period_kind text default 'week')
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  kind text := public.spotlight_normalize_kind(period_kind);
+  bounds record;
+  leaders jsonb;
+begin
+  select * into bounds from public.spotlight_window(kind);
+
+  select coalesce(jsonb_agg(ranked.row_data order by ranked.hype desc, ranked.created_at desc), '[]'::jsonb)
+    into leaders
+  from (
+    select
+      jsonb_build_object(
+        'rank', row_number() over (order by scored.hype desc, scored.created_at desc),
+        'player_id', scored.player_id,
+        'name', scored.player_name,
+        'school_name', scored.school_name,
+        'hype', scored.hype,
+        'seki', scored.seki,
+        'aura', scored.aura,
+        'flex', scored.flex,
+        'reel_id', scored.reel_id,
+        'title', scored.clip_title,
+        'shot_by', scored.shot_by
+      ) as row_data,
+      scored.hype,
+      scored.created_at
+    from (
+      select
+        p.id as player_id,
+        p.name as player_name,
+        p.school_name,
+        sum(coalesce(r.seki_count, 0) + coalesce(r.aura_count, 0) + coalesce(r.flex_count, 0))::int as hype,
+        sum(coalesce(r.seki_count, 0))::int as seki,
+        sum(coalesce(r.aura_count, 0))::int as aura,
+        sum(coalesce(r.flex_count, 0))::int as flex,
+        (
+          select hot.id
+          from public.reels hot
+          where hot.player_id = p.id
+            and hot.tag_status = 'confirmed'
+            and coalesce(hot.is_removed, false) = false
+            and coalesce(hot.is_vault_only, false) = false
+            and coalesce(hot.is_flagged, false) = false
+            and coalesce(hot.category, 'game_play') = 'game_play'
+            and coalesce(hot.media_type, 'video') = 'video'
+            and coalesce(hot.tag_confirmed_at, hot.created_at)::date between bounds.window_start and bounds.window_end
+          order by (coalesce(hot.seki_count, 0) + coalesce(hot.aura_count, 0) + coalesce(hot.flex_count, 0)) desc,
+            hot.created_at desc
+          limit 1
+        ) as reel_id,
+        (
+          select hot.title
+          from public.reels hot
+          where hot.player_id = p.id
+            and hot.tag_status = 'confirmed'
+            and coalesce(hot.is_removed, false) = false
+            and coalesce(hot.is_vault_only, false) = false
+            and coalesce(hot.is_flagged, false) = false
+            and coalesce(hot.category, 'game_play') = 'game_play'
+            and coalesce(hot.media_type, 'video') = 'video'
+            and coalesce(hot.tag_confirmed_at, hot.created_at)::date between bounds.window_start and bounds.window_end
+          order by (coalesce(hot.seki_count, 0) + coalesce(hot.aura_count, 0) + coalesce(hot.flex_count, 0)) desc,
+            hot.created_at desc
+          limit 1
+        ) as clip_title,
+        (
+          select coalesce(nullif(btrim(pr.username), ''), nullif(split_part(btrim(coalesce(pr.full_name, '')), ' ', 1), ''))
+          from public.reels hot
+          left join public.profiles pr on pr.id = hot.uploaded_by
+          where hot.player_id = p.id
+            and hot.tag_status = 'confirmed'
+            and coalesce(hot.is_removed, false) = false
+            and coalesce(hot.is_vault_only, false) = false
+            and coalesce(hot.is_flagged, false) = false
+            and coalesce(hot.category, 'game_play') = 'game_play'
+            and coalesce(hot.media_type, 'video') = 'video'
+            and coalesce(hot.tag_confirmed_at, hot.created_at)::date between bounds.window_start and bounds.window_end
+          order by (coalesce(hot.seki_count, 0) + coalesce(hot.aura_count, 0) + coalesce(hot.flex_count, 0)) desc,
+            hot.created_at desc
+          limit 1
+        ) as shot_by,
+        max(r.created_at) as created_at
+      from public.reels r
+      join public.players p on p.id = r.player_id
+      where r.tag_status = 'confirmed'
+        and public.athlete_is_varsity_verified(p.id)
+        and coalesce(r.is_removed, false) = false
+        and coalesce(r.is_vault_only, false) = false
+        and coalesce(r.is_flagged, false) = false
+        and coalesce(r.category, 'game_play') = 'game_play'
+        and coalesce(r.media_type, 'video') = 'video'
+        and coalesce(r.tag_confirmed_at, r.created_at)::date between bounds.window_start and bounds.window_end
+      group by p.id, p.name, p.school_name
+      having sum(coalesce(r.seki_count, 0) + coalesce(r.aura_count, 0) + coalesce(r.flex_count, 0)) > 0
+    ) scored
+  ) ranked;
+
+  return jsonb_build_object(
+    'period_kind', kind,
+    'start_date', bounds.window_start,
+    'end_date', bounds.window_end,
+    'leaders', coalesce(leaders, '[]'::jsonb)
+  );
+end;
+$$;
+
+create or replace function public.get_leaderboards(period_kind text default 'week')
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  kind text := public.spotlight_normalize_kind(period_kind);
+  bounds record;
+  board_limit constant integer := 10;
+  result jsonb;
+begin
+  select * into bounds from public.spotlight_window(kind);
+
+  with eligible as (
+    select r.id, r.title, r.player_id, r.uploaded_by, r.created_at, r.category,
+      coalesce(r.tag_confirmed_at, r.created_at) as counted_at,
+      p.name as player_name, coalesce(nullif(btrim(p.school_name), ''), '') as school_name
+    from public.reels r
+    join public.players p on p.id = r.player_id
+    where r.tag_status = 'confirmed'
+      and coalesce(r.is_removed, false) = false
+      and coalesce(r.is_flagged, false) = false
+      and coalesce(r.is_vault_only, false) = false
+      and coalesce(r.is_exclusive, false) = false
+  ),
+  hype as (
+    select v.reel_id, v.user_id, v.kind
+    from public.reel_hype_votes v
+    join eligible e on e.id = v.reel_id
+    where greatest(v.created_at, e.counted_at)::date between bounds.window_start and bounds.window_end
+  ),
+  views as (
+    select w.reel_id, w.viewer_id
+    from public.reel_views w
+    join eligible e on e.id = w.reel_id
+    where greatest(w.view_day, e.counted_at::date) between bounds.window_start and bounds.window_end
+  ),
+  reel_scores as (
+    select e.*,
+      coalesce((select count(*) from hype h where h.reel_id = e.id), 0)::int as hype,
+      coalesce((select count(*) from views w where w.reel_id = e.id), 0)::int as views
+    from eligible e
+  ),
+  player_scores as (
+    select rs.player_id, max(rs.player_name) as name, max(rs.school_name) as school_name,
+      sum(rs.hype)::int as hype, sum(rs.views)::int as views,
+      coalesce((select count(*) from hype h join eligible e on e.id = h.reel_id
+        where e.player_id = rs.player_id and h.kind = 'seki'), 0)::int as seki,
+      coalesce((select count(*) from hype h join eligible e on e.id = h.reel_id
+        where e.player_id = rs.player_id and h.kind = 'aura'), 0)::int as aura,
+      coalesce((select count(*) from hype h join eligible e on e.id = h.reel_id
+        where e.player_id = rs.player_id and h.kind = 'flex'), 0)::int as flex
+    from reel_scores rs
+    group by rs.player_id
+  ),
+  school_fans as (
+    select e.school_name, h.user_id as fan from hype h join eligible e on e.id = h.reel_id
+    union
+    select e.school_name, w.viewer_id as fan from views w join eligible e on e.id = w.reel_id
+  ),
+  school_scores as (
+    select rs.school_name,
+      sum(rs.hype)::int as hype,
+      count(*) filter (where rs.counted_at::date between bounds.window_start and bounds.window_end)::int as highlights,
+      coalesce((select count(distinct sf.fan) from school_fans sf where sf.school_name = rs.school_name), 0)::int as fans
+    from reel_scores rs
+    where rs.school_name <> ''
+    group by rs.school_name
+  ),
+  fan_scores as (
+    select pr.id as profile_id,
+      coalesce(nullif(btrim(pr.username), ''), nullif(split_part(btrim(pr.full_name), ' ', 1), ''), 'Fan') as name,
+      case when public.profile_item_visible(pr.id, 'photo') then pr.avatar_url else null end as avatar_url,
+      coalesce((select count(*) from hype h where h.user_id = pr.user_id), 0)::int as hype_given,
+      coalesce((select count(*) from eligible e where e.uploaded_by = pr.id
+        and e.counted_at::date between bounds.window_start and bounds.window_end), 0)::int as clips_tagged
+    from public.profiles pr
+    where (exists (select 1 from hype h where h.user_id = pr.user_id)
+      or exists (select 1 from eligible e where e.uploaded_by = pr.id
+        and e.counted_at::date between bounds.window_start and bounds.window_end))
+      -- hidden-from-search and blocked accounts are left off the fans board
+      and (not pr.hide_from_search or public.viewer_relationship(pr.id) in ('self', 'admin', 'guardian', 'friend'))
+      and public.viewer_relationship(pr.id) <> 'blocked'
+  )
+  select jsonb_build_object(
+    'period_kind', kind,
+    'start_date', bounds.window_start,
+    'end_date', bounds.window_end,
+    'players_hype', coalesce((
+      select jsonb_agg(row_data order by rank)
+      from (
+        select row_number() over (order by ps.hype desc, ps.views desc, ps.name) as rank,
+          jsonb_build_object(
+            'rank', row_number() over (order by ps.hype desc, ps.views desc, ps.name),
+            'player_id', ps.player_id, 'name', ps.name, 'school_name', ps.school_name,
+            'hype', ps.hype, 'seki', ps.seki, 'aura', ps.aura, 'flex', ps.flex, 'views', ps.views
+          ) as row_data
+        from player_scores ps
+        where ps.hype > 0
+        order by rank
+        limit board_limit
+      ) t
+    ), '[]'::jsonb),
+    'players_views', coalesce((
+      select jsonb_agg(row_data order by rank)
+      from (
+        select row_number() over (order by ps.views desc, ps.hype desc, ps.name) as rank,
+          jsonb_build_object(
+            'rank', row_number() over (order by ps.views desc, ps.hype desc, ps.name),
+            'player_id', ps.player_id, 'name', ps.name, 'school_name', ps.school_name,
+            'views', ps.views, 'hype', ps.hype
+          ) as row_data
+        from player_scores ps
+        where ps.views > 0
+        order by rank
+        limit board_limit
+      ) t
+    ), '[]'::jsonb),
+    'highlights', coalesce((
+      select jsonb_agg(row_data order by rank)
+      from (
+        select row_number() over (order by rs.views desc, rs.hype desc, rs.created_at desc) as rank,
+          jsonb_build_object(
+            'rank', row_number() over (order by rs.views desc, rs.hype desc, rs.created_at desc),
+            'reel_id', rs.id, 'title', rs.title, 'category', rs.category,
+            'player_id', rs.player_id, 'name', rs.player_name, 'school_name', rs.school_name,
+            'views', rs.views, 'hype', rs.hype
+          ) as row_data
+        from reel_scores rs
+        where rs.views > 0
+        order by rank
+        limit board_limit
+      ) t
+    ), '[]'::jsonb),
+    'schools', coalesce((
+      select jsonb_agg(row_data order by rank)
+      from (
+        select row_number() over (order by (ss.hype + ss.highlights * 10 + ss.fans * 5) desc, ss.school_name) as rank,
+          jsonb_build_object(
+            'rank', row_number() over (order by (ss.hype + ss.highlights * 10 + ss.fans * 5) desc, ss.school_name),
+            'school_name', ss.school_name, 'hype', ss.hype, 'highlights', ss.highlights,
+            'fans', ss.fans, 'score', ss.hype + ss.highlights * 10 + ss.fans * 5
+          ) as row_data
+        from school_scores ss
+        where ss.hype + ss.highlights + ss.fans > 0
+        order by rank
+        limit board_limit
+      ) t
+    ), '[]'::jsonb),
+    'fans', coalesce((
+      select jsonb_agg(row_data order by rank)
+      from (
+        select row_number() over (order by (fs.clips_tagged * 10 + fs.hype_given) desc, fs.name) as rank,
+          jsonb_build_object(
+            'rank', row_number() over (order by (fs.clips_tagged * 10 + fs.hype_given) desc, fs.name),
+            'profile_id', fs.profile_id, 'name', fs.name, 'avatar_url', fs.avatar_url,
+            'hype_given', fs.hype_given, 'clips_tagged', fs.clips_tagged,
+            'score', fs.clips_tagged * 10 + fs.hype_given
+          ) as row_data
+        from fan_scores fs
+        order by rank
+        limit board_limit
+      ) t
+    ), '[]'::jsonb)
+  ) into result;
+
+  return result;
+end;
+$$;
+
+-- The trigger also sees direct writes to the tag columns, so it can refuse them.
+drop trigger if exists reels_apply_tag_defaults on public.reels;
+create trigger reels_apply_tag_defaults
+  before insert or update of player_id, uploaded_by, tag_status, tag_confirmed_at, tag_confirmed_by
+  on public.reels
+  for each row
+  execute procedure public.reels_apply_tag_defaults();
+
+-- Clients write only the columns the app writes. Hosted Supabase grants every column by default, which made the
+-- schema's column list meaningless: an uploader could approve their own tag or set their own counters and totals.
+do $$
+declare
+  ins text;
+  upd text;
+begin
+  select string_agg(quote_ident(column_name), ', ') into ins
+  from information_schema.columns
+  where table_schema = 'public' and table_name = 'reels'
+    and column_name in ('id', 'video_url', 'title', 'player_id', 'game_id', 'is_exclusive', 'is_vault_only', 'category',
+                        'attested_at', 'rights_version', 'media_type');
+  select string_agg(quote_ident(column_name), ', ') into upd
+  from information_schema.columns
+  where table_schema = 'public' and table_name = 'reels'
+    and column_name in ('title', 'category', 'is_exclusive', 'is_vault_only', 'flash_unlock_until');
+  execute 'revoke insert, update on public.reels from anon, authenticated';
+  execute format('grant insert (%s) on public.reels to authenticated', ins);
+  execute format('grant update (%s) on public.reels to authenticated', upd);
+end;
+$$;
+
+do $$
+declare
+  stmt text;
+  fn text;
+begin
+  foreach stmt in array array[
+    'grant execute on function public.tag_party(uuid, uuid) to anon, authenticated, service_role',
+    'revoke all on function public.is_school_operator_for(uuid) from public, anon',
+    'grant execute on function public.is_school_operator_for(uuid) to authenticated, service_role',
+    'revoke all on function public.confirm_reel_player_tag(uuid, text) from public, anon',
+    'grant execute on function public.confirm_reel_player_tag(uuid, text) to authenticated, service_role'
+  ] loop
+    fn := substring(stmt from 'function (public\.[a-z_]+\([^)]*\))');
+    if to_regprocedure(fn) is not null then
+      execute stmt;
+    end if;
+  end loop;
+end;
+$$;
+
+-- Minor accounts: birth month and year, teen-safe defaults, guardian link, signed consent and supervision (MINOR-01,
+-- 2026-10-14). Builds on PRIV-01 (20261014090000_profile_privacy.sql, 20261014100000_tag_approval.sql).
+--
+-- Purpose
+--   Owner decisions 2026-10-14 (docs/engineering/design/MINOR_ACCOUNTS_DESIGN.md): a guardian is linked and signs a
+--   consent, but is not "total dictatorship"; teens can go solo within the law; sign-up stays fast.
+--   1. profiles.birth_year / birth_month (no day) replace the 13+ checkbox. Bands: under_13, teen_13_15, teen_16_17,
+--      adult, unknown (accounts made before this). A person reaches an age at the start of the month after their birth
+--      month (never early). Under 13: sign-up is refused; a later under-13 entry blocks the account (my_profile_id()
+--      stops resolving, profile details cleared, listed for deletion on the admin desk). Self-corrections only to a
+--      younger age; older needs support.
+--   2. Teens get teen-safe defaults: private, friend requests only from other teens (new value 'teens').
+--   3. guardian_links (a teen's one-time invite code, or the admin-set athlete guardian), at most two per teen; either
+--      side can end it. guardian_consents keeps the signed form (version, typed name, relationship, permissions,
+--      revocation). Consent unlocks a public profile and payouts of donations (athlete_payout_status gains the reason
+--      'needs_guardian_consent' for a known minor).
+--   4. Supervision: the teen and the guardian see the same summary (settings, counts never who, consent, requests,
+--      events). Under-16s: going public or opening friend requests to everyone becomes a guardian approve / decline
+--      request. This replaces the PRIV-01 guardian lock (removed from stage 1 before anything was applied).
+--   5. Admin: overview, birth correction with a reason, end a link, report, the age-blocked list, a retention purge;
+--      switch minors.guardian_links pauses new invites and links (it never loosens a rule).
+--   Design review (MINOR_SAFETY, CUSTODIAL, PRIVACY_ENGINEERING, LEGAL; 2026-10-14) applied: a code-linked guardian
+--   gets only the supervision summary, never the teen's only-me items (the PRIV-01 'guardian' relationship stays the
+--   admin-set athlete guardian); the teen confirms each code link; blocking a guardian ends the link; codes last 48
+--   hours; new accounts with no age yet ('not_given') cannot be friended and cannot friend teens; payouts need positive
+--   adult evidence or, for a minor, the donations consent of the guardian on record; consent records are append-only,
+--   survive account deletion and pin the signed text by hash; a guardian sees only events after they linked;
+--   retention purge; under-13 clips are hidden at once.
+--   SQL review (RLS_SECURITY + MINOR_SAFETY, 2026-10-14) applied: "off" / "no" / "f" could make a teen public (booleans
+--   are now read the way Postgres casts them and the consent rule is re-checked after every save); one refusal message
+--   for every account in sign_guardian_consent; a guardian sees nothing until the teen confirms; the guardian on record
+--   cannot re-link after the teen ended or blocked them; a closed under-13 account is refused by every table (a
+--   restrictive "Closed accounts" policy on every RLS table) and its friendships end; stale waiting links are closed;
+--   payouts treat a typed adult age as enough only with the account's own Stripe payouts on (Stripe checks the birth
+--   date) and read the claimant's age on the identity path; consent records also refuse truncate and later edits.
+--   Future migrations that add an RLS table must add the "Closed accounts" policy too.
+--
+-- Owner: PROFILE (via ENGINEERING, CTO), with AUTH, ONBOARDING, CUSTODIAL, ADMIN; reviews MINOR_SAFETY,
+--   PRIVACY_ENGINEERING, RLS_SECURITY, CUSTODIAL, LEGAL (consent form, LEGAL_BRIEFING row AA), DATA_GOVERNANCE.
+-- Needs: 20261014090000 and 20261014100000 first; hash_secret() (athlete verification ladder).
+-- Safe to re-run: add column if not exists; create table if not exists; create or replace; drop trigger if exists.
+-- Applied: written 2026-10-14, not applied anywhere.
+-- Rollback: drop the five new tables and the functions below; re-apply set_my_privacy, get_my_privacy, request_friend,
+--   my_profile_id from 20261014090000 and athlete_payout_status / handle_new_auth_user from
+--   schema.sql history; the birth columns can stay (unused).
+
+-- 1. Age -------------------------------------------------------------------------------------------------------------
+
+alter table public.profiles add column if not exists birth_year smallint;
+alter table public.profiles add column if not exists birth_month smallint;
+alter table public.profiles add column if not exists birth_recorded_at timestamptz;
+alter table public.profiles add column if not exists age_blocked_at timestamptz;
+-- false for accounts made before this change (their missing age is 'unknown', today's behaviour); true for every new
+-- account (a missing age is 'not_given': no friend requests in or to teens, no guardian link, payouts wait).
+alter table public.profiles add column if not exists age_check_required boolean;
+update public.profiles set age_check_required = false where age_check_required is null;
+alter table public.profiles alter column age_check_required set default true;
+alter table public.profiles alter column age_check_required set not null;
+
+alter table public.profiles drop constraint if exists profiles_birth_month_check;
+alter table public.profiles add constraint profiles_birth_month_check check (
+  (birth_year is null and birth_month is null)
+  or (birth_month between 1 and 12 and birth_year between 1900 and 2100)
+);
+
+-- Whole years old on `on_date`, counting the birthday as the last day of the birth month (up to a month late).
+create or replace function public.age_band_from(birth_y integer, birth_m integer, on_date date)
+returns text
+language sql
+immutable
+set search_path = ''
+as $$
+  select case
+    when birth_y is null or birth_m is null then 'unknown'
+    else (
+      select case when y < 13 then 'under_13' when y < 16 then 'teen_13_15' when y < 18 then 'teen_16_17' else 'adult' end
+      from (
+        select floor(((extract(year from on_date)::int * 12 + extract(month from on_date)::int) - (birth_y * 12 + birth_m) - 1) / 12.0)::int as y
+      ) a
+    )
+  end;
+$$;
+
+create or replace function public.is_minor_band(band text)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select coalesce(band in ('teen_13_15', 'teen_16_17'), false);
+$$;
+
+create or replace function public.profile_age_band(target uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((
+    select case when p.birth_year is null and p.age_check_required then 'not_given'
+                else public.age_band_from(p.birth_year, p.birth_month, current_date) end
+    from public.profiles p where p.id = target
+  ), 'unknown');
+$$;
+
+-- An age-blocked (under-13) account is treated as signed out by every function that asks who the caller is.
+create or replace function public.my_profile_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p.id from public.profiles p where p.user_id = auth.uid() and p.age_blocked_at is null limit 1;
+$$;
+
+-- 2. Guardian links, invites, consent, approvals, events ---------------------------------------------------------------
+
+create table if not exists public.guardian_links (
+  id uuid primary key default gen_random_uuid(),
+  minor_id uuid not null references public.profiles (id) on delete cascade,
+  guardian_id uuid not null references public.profiles (id) on delete cascade,
+  source text not null check (source in ('invite', 'custodial')),
+  created_at timestamptz not null default timezone('utc', now()),
+  -- An invite link counts only once the teen confirms "Is this your parent or guardian?" (7 days to answer); the
+  -- admin-set athlete guardian's link is confirmed when made.
+  confirmed_at timestamptz,
+  ended_at timestamptz,
+  ended_by uuid references public.profiles (id) on delete set null,
+  end_reason text check (end_reason is null or char_length(end_reason) <= 200),
+  constraint guardian_links_not_self check (minor_id <> guardian_id)
+);
+create unique index if not exists guardian_links_one_active on public.guardian_links (minor_id, guardian_id) where ended_at is null;
+create index if not exists guardian_links_guardian_idx on public.guardian_links (guardian_id) where ended_at is null;
+
+-- Only the hash of a code is stored; a code works once, for 48 hours, and only the teen's newest one works.
+create table if not exists public.guardian_invites (
+  code_hash text primary key,
+  minor_id uuid not null references public.profiles (id) on delete cascade,
+  created_at timestamptz not null default timezone('utc', now()),
+  expires_at timestamptz not null,
+  used_at timestamptz,
+  used_by uuid references public.profiles (id) on delete set null
+);
+create index if not exists guardian_invites_minor_idx on public.guardian_invites (minor_id, created_at desc);
+
+-- Wrong-code attempts, so an 8-character code cannot be guessed (10 a day per account).
+create table if not exists public.guardian_invite_attempts (
+  profile_id uuid not null references public.profiles (id) on delete cascade,
+  created_at timestamptz not null default timezone('utc', now())
+);
+create index if not exists guardian_invite_attempts_idx on public.guardian_invite_attempts (profile_id, created_at desc);
+
+-- Append-only signed records (guard_consent_records). They outlive the accounts (ids become null) for the period
+-- counsel sets (LEGAL row AA); form_sha256 pins the exact text signed (data/guardianConsent.ts).
+create table if not exists public.guardian_consents (
+  id uuid primary key default gen_random_uuid(),
+  link_id uuid references public.guardian_links (id) on delete set null,
+  minor_id uuid references public.profiles (id) on delete set null,
+  guardian_id uuid references public.profiles (id) on delete set null,
+  form_version text not null check (char_length(form_version) <= 40),
+  form_sha256 text not null check (form_sha256 ~ '^[0-9a-f]{64}$'),
+  -- the typed full name is the signature
+  signer_name text not null check (char_length(btrim(signer_name)) between 2 and 120),
+  relationship text not null check (relationship in ('parent', 'legal_guardian')),
+  allows_donations boolean not null,
+  allows_public_profile boolean not null,
+  signed_at timestamptz not null default timezone('utc', now()),
+  revoked_at timestamptz,
+  revoked_by uuid references public.profiles (id) on delete set null,
+  revoke_reason text check (revoke_reason is null or char_length(revoke_reason) <= 200)
+);
+create unique index if not exists guardian_consents_one_active on public.guardian_consents (link_id) where revoked_at is null;
+create index if not exists guardian_consents_minor_idx on public.guardian_consents (minor_id) where revoked_at is null;
+
+create table if not exists public.guardian_approval_requests (
+  id uuid primary key default gen_random_uuid(),
+  minor_id uuid not null references public.profiles (id) on delete cascade,
+  change_key text not null check (change_key in ('account_public', 'friend_requests_everyone')),
+  status text not null default 'pending' check (status in ('pending', 'approved', 'declined', 'cancelled', 'expired')),
+  requested_at timestamptz not null default timezone('utc', now()),
+  decided_by uuid references public.profiles (id) on delete set null,
+  decided_at timestamptz
+);
+create unique index if not exists guardian_approval_one_pending on public.guardian_approval_requests (minor_id, change_key) where status = 'pending';
+
+-- What the teen and their guardian both see. Kept 365 days (trimmed on write, filtered on read, purged by the desk).
+create table if not exists public.supervision_events (
+  id bigint generated always as identity primary key,
+  minor_id uuid not null references public.profiles (id) on delete cascade,
+  kind text not null check (kind in (
+    'age_recorded', 'age_corrected', 'invite_created', 'guardian_linked', 'guardian_unlinked', 'consent_signed',
+    'consent_withdrawn', 'settings_changed', 'made_private', 'approval_requested', 'approval_decided', 'approval_cancelled'
+  )),
+  detail jsonb not null default '{}'::jsonb,
+  actor_id uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default timezone('utc', now())
+);
+create index if not exists supervision_events_minor_idx on public.supervision_events (minor_id, created_at desc);
+
+alter table public.guardian_links enable row level security;
+alter table public.guardian_invites enable row level security;
+alter table public.guardian_invite_attempts enable row level security;
+alter table public.guardian_consents enable row level security;
+alter table public.guardian_approval_requests enable row level security;
+alter table public.supervision_events enable row level security;
+
+-- 3. Building blocks ---------------------------------------------------------------------------------------------------
+
+create or replace function public.guardian_links_enabled()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((
+    select (c.published -> 'features' ->> 'minors.guardian_links')::boolean
+    from public.app_runtime_config c where c.id = 'default'
+  ), true);
+$$;
+
+-- The consent form text lives in the app (data/guardianConsent.ts); the server accepts only this version and hash.
+create or replace function public.guardian_consent_form_version()
+returns text
+language sql
+immutable
+set search_path = ''
+as $$
+  select '2026-10-14-draft'::text;
+$$;
+
+create or replace function public.guardian_consent_form_sha256()
+returns text
+language sql
+immutable
+set search_path = ''
+as $$
+  select 'f39f7c23538fcf209fb368bd56f16250ba685cd7c3a4bf23d94be19cea0caa0f'::text;
+$$;
+
+create or replace function public.guard_consent_records()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'DELETE' then
+    if public.is_trusted_server() then
+      return old;
+    end if;
+    raise exception 'Signed consent records are kept.';
+  end if;
+  if (new.form_version, new.form_sha256, new.signer_name, new.relationship, new.allows_donations, new.allows_public_profile, new.signed_at)
+     is distinct from (old.form_version, old.form_sha256, old.signer_name, old.relationship, old.allows_donations, old.allows_public_profile, old.signed_at)
+     or new.id is distinct from old.id
+     or (old.revoked_at is not null and (new.revoked_at is distinct from old.revoked_at or new.revoke_reason is distinct from old.revoke_reason
+         or (new.revoked_by is distinct from old.revoked_by and new.revoked_by is not null)))
+     or (new.link_id is distinct from old.link_id and new.link_id is not null)
+     or (new.minor_id is distinct from old.minor_id and new.minor_id is not null)
+     or (new.guardian_id is distinct from old.guardian_id and new.guardian_id is not null) then
+    raise exception 'Signed consent records are kept as signed; sign again instead.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists guardian_consents_append_only on public.guardian_consents;
+create trigger guardian_consents_append_only
+  before update or delete on public.guardian_consents
+  for each row execute function public.guard_consent_records();
+
+create or replace function public.guard_consent_truncate()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  raise exception 'Signed consent records are kept.';
+end;
+$$;
+
+drop trigger if exists guardian_consents_no_truncate on public.guardian_consents;
+create trigger guardian_consents_no_truncate
+  before truncate on public.guardian_consents
+  for each statement execute function public.guard_consent_truncate();
+
+create or replace function public.first_name_of(target uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(nullif(split_part(btrim(coalesce(p.full_name, '')), ' ', 1), ''), nullif(btrim(p.username), ''), 'Someone')
+  from public.profiles p where p.id = target;
+$$;
+
+-- An active consent on a confirmed link. Donations also need the signer to be the guardian on record for the athlete
+-- (players.guardian_id, admin-set; the custodial money guardian) at the time it is checked.
+create or replace function public.minor_has_consent(minor uuid, scope text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.guardian_consents c
+    join public.guardian_links l on l.id = c.link_id and l.ended_at is null and l.confirmed_at is not null
+    where c.minor_id = minor and c.revoked_at is null
+      and case scope
+        when 'public_profile' then c.allows_public_profile
+        when 'donations' then c.allows_donations and exists (
+          select 1 from public.profiles t join public.players pl on pl.id = t.player_id
+          where t.id = minor and t.verification_status = 'verified' and pl.guardian_id = c.guardian_id)
+        else false end
+  );
+$$;
+
+create or replace function public.minor_guardian_count(minor uuid)
+returns integer
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select count(*)::int from public.guardian_links l where l.minor_id = minor and l.ended_at is null and l.confirmed_at is not null;
+$$;
+
+-- Confirmed links plus invite links still waiting for the teen (both use one of the two places).
+create or replace function public.minor_link_slots_used(minor uuid)
+returns integer
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select count(*)::int from public.guardian_links l
+  where l.minor_id = minor and l.ended_at is null
+    and (l.confirmed_at is not null or l.created_at > timezone('utc', now()) - interval '7 days');
+$$;
+
+-- The caller supervises this teen: a confirmed link while the account is 13–17. This is NOT the PRIV-01 'guardian'
+-- viewer relationship (which stays the admin-set athlete guardian): supervision is only the summary below.
+create or replace function public.is_supervising_guardian(minor uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.guardian_links l
+    where l.minor_id = minor and l.guardian_id = public.my_profile_id() and l.ended_at is null and l.confirmed_at is not null
+      and public.is_minor_band(public.profile_age_band(minor))
+  );
+$$;
+
+create or replace function public.is_guardian_of_record(minor uuid, guardian uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles t join public.players pl on pl.id = t.player_id
+    where t.id = minor and t.verification_status = 'verified' and pl.guardian_id = guardian
+  );
+$$;
+
+create or replace function public.log_supervision_event(minor uuid, event_kind text, event_detail jsonb default '{}'::jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_minor_band(public.profile_age_band(minor)) then
+    return;
+  end if;
+  insert into public.supervision_events (minor_id, kind, detail, actor_id)
+  values (minor, event_kind, coalesce(event_detail, '{}'::jsonb), public.my_profile_id());
+  delete from public.supervision_events e
+  where e.minor_id = minor and e.created_at < timezone('utc', now()) - interval '365 days';
+end;
+$$;
+
+-- The athlete account for a roster athlete: the verified one, else the open claimant.
+create or replace function public.athlete_profile_for_player(target_player_id uuid)
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(
+    (select p.id from public.profiles p where p.player_id = target_player_id and p.verification_status = 'verified' limit 1),
+    (select v.requester_user_id from public.verification_requests v
+       where v.player_id = target_player_id and v.status in ('pending', 'disputed') order by v.created_at desc limit 1)
+  );
+$$;
+
+-- Why money for this athlete must wait, or null. `account` is the athlete account money would follow (the verified
+-- account, or the open claimant). Adult evidence: the custodial birth date, or a typed adult age on an account whose own
+-- Stripe payouts are on (Stripe checks the birth date; unverified assumption, counsel row AA). A minor needs the
+-- donations consent of the guardian on record. When signals disagree, the protective one wins.
+create or replace function public.minor_payout_hold_reason(target_player_id uuid, account uuid)
+returns text
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  bd date;
+  band text;
+  own_payouts boolean;
+begin
+  select b.birth_date into bd from public.athlete_birthdates b where b.player_id = target_player_id;
+  band := case when account is null then 'unknown' else public.profile_age_band(account) end;
+  select coalesce(p.payouts_enabled, false) into own_payouts from public.profiles p where p.id = account;
+  if (bd is not null and bd > current_date - interval '18 years') or public.is_minor_band(band) or band = 'under_13' then
+    return case when public.minor_has_consent(account, 'donations') then null else 'needs_guardian_consent' end;
+  end if;
+  if (bd is not null and bd <= current_date - interval '18 years') or (band = 'adult' and coalesce(own_payouts, false)) then
+    return null;
+  end if;
+  if band = 'adult' then
+    return 'needs_payout_setup';
+  end if;
+  return 'needs_birth_month';
+end;
+$$;
+
+-- A teen's account cannot stay public without a consent that allows it.
+create or replace function public.enforce_minor_consent(minor uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if public.is_minor_band(public.profile_age_band(minor))
+     and exists (select 1 from public.profiles p where p.id = minor and not p.account_private)
+     and not public.minor_has_consent(minor, 'public_profile') then
+    perform public.apply_privacy_settings(minor, '{"account_private": true}'::jsonb);
+    perform public.log_supervision_event(minor, 'made_private', '{"why": "no_consent"}'::jsonb);
+  end if;
+  if public.minor_guardian_count(minor) = 0 then
+    update public.guardian_approval_requests set status = 'cancelled', decided_at = timezone('utc', now())
+    where minor_id = minor and status = 'pending';
+  end if;
+end;
+$$;
+
+-- Teen defaults when an age is first recorded (or corrected into the teen range).
+create or replace function public.apply_teen_defaults(minor uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_minor_band(public.profile_age_band(minor)) then
+    return;
+  end if;
+  if exists (select 1 from public.profiles p where p.id = minor and p.friend_requests_from = 'everyone') then
+    perform public.apply_privacy_settings(minor, '{"friend_requests_from": "teens"}'::jsonb);
+  end if;
+  perform public.enforce_minor_consent(minor);
+end;
+$$;
+
+-- Closes an account whose holder is under 13 (COPPA actual knowledge): stop using it, clear what it shared, hide its
+-- clips, end its friendships and guardian links. The caller has already recorded the birth month and set the flag.
+create or replace function public.close_under_13_account(target uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  link uuid;
+begin
+  -- The age-write flag stays on to the end: the closed-account guard would refuse these server-side writes too.
+  perform set_config('app.tapuai_age_write', 'on', true);
+  update public.profiles set bio = null, avatar_url = null, social_links = '{}'::jsonb where id = target;
+  perform public.apply_privacy_settings(target, '{"account_private": true, "hide_from_search": true}'::jsonb);
+  update public.reels set is_removed = true where uploaded_by = target;
+  delete from public.friendships where target in (requester_id, addressee_id);
+  for link in select l.id from public.guardian_links l where l.minor_id = target and l.ended_at is null loop
+    perform public.close_guardian_link(link, 'age_blocked');
+  end loop;
+  perform set_config('app.tapuai_age_write', 'off', true);
+end;
+$$;
+
+-- Every RLS table refuses a closed (under-13) account: policies that use auth.uid() directly would otherwise still let
+-- it write. Evaluated once per query.
+create or replace function public.caller_not_age_blocked()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select not exists (select 1 from public.profiles p where p.user_id = auth.uid() and p.age_blocked_at is not null);
+$$;
+
+-- 4. New accounts and the birth columns --------------------------------------------------------------------------------
+
+-- Inserts start on the private defaults (a client insert could otherwise create a public row and skip the PRIV-01
+-- guard, which only watches updates). A recorded age sets the teen rules or refuses an under-13 account; a new account
+-- with no age yet ('not_given') takes no friend requests until it adds one.
+create or replace function public.profiles_apply_new_account_rules()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  band text;
+begin
+  if not (coalesce(current_setting('app.tapuai_privacy_write', true), '') = 'on' or public.is_trusted_server()) then
+    new.account_private := true;
+    new.profile_audience := public.privacy_default_audience();
+    new.hide_from_search := false;
+    new.tag_review := 'review_all';
+    new.friend_requests_from := 'everyone';
+    new.age_blocked_at := null;
+    new.age_check_required := true;
+  end if;
+  if new.birth_year is null or new.birth_month is null then
+    new.birth_year := null;
+    new.birth_month := null;
+    new.birth_recorded_at := null;
+    if coalesce(new.age_check_required, true) then
+      new.friend_requests_from := 'nobody';
+    end if;
+    return new;
+  end if;
+  if new.birth_year * 12 + new.birth_month > extract(year from current_date)::int * 12 + extract(month from current_date)::int then
+    raise exception 'Check your birth month and year.';
+  end if;
+  band := public.age_band_from(new.birth_year, new.birth_month, current_date);
+  if band = 'under_13' then
+    raise exception 'We can''t create your account right now.';
+  end if;
+  new.birth_recorded_at := coalesce(new.birth_recorded_at, timezone('utc', now()));
+  new.age_confirmed_13_plus := true;
+  if public.is_minor_band(band) then
+    new.account_private := true;
+    new.friend_requests_from := 'teens';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_new_account_rules on public.profiles;
+create trigger profiles_new_account_rules
+  before insert on public.profiles
+  for each row execute function public.profiles_apply_new_account_rules();
+
+create or replace function public.guard_profiles_age()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if coalesce(current_setting('app.tapuai_age_write', true), '') = 'on' or public.is_trusted_server() then
+    return new;
+  end if;
+  -- A closed (under-13) account changes nothing; support reopens it with admin_set_birth_month.
+  if old.age_blocked_at is not null and public.current_user_role() is distinct from 'admin' then
+    raise exception 'This account is closed.';
+  end if;
+  if new.birth_year is distinct from old.birth_year or new.birth_month is distinct from old.birth_month
+     or new.birth_recorded_at is distinct from old.birth_recorded_at or new.age_blocked_at is distinct from old.age_blocked_at
+     or new.age_check_required is distinct from old.age_check_required then
+    raise exception 'Add or correct your birth month and year from Profile.';
+  end if;
+  -- Older builds only ever set the 13+ confirmation to true.
+  if coalesce(old.age_confirmed_13_plus, false) and new.age_confirmed_13_plus is distinct from old.age_confirmed_13_plus then
+    raise exception 'Add or correct your birth month and year from Profile.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_age_guard on public.profiles;
+create trigger profiles_age_guard
+  before update on public.profiles
+  for each row execute function public.guard_profiles_age();
+
+-- Sign-up metadata now carries birth_year / birth_month (email and magic-link sign-up); Apple / Google ask after the
+-- first sign-in. Bad values are dropped (the app asks again); an under-13 date fails the sign-up (the trigger above).
+create or replace function public.handle_new_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  by_text text := new.raw_user_meta_data->>'birth_year';
+  bm_text text := new.raw_user_meta_data->>'birth_month';
+  by_val smallint;
+  bm_val smallint;
+begin
+  if by_text ~ '^[0-9]{4}$' and bm_text ~ '^[0-9]{1,2}$' and bm_text::int between 1 and 12 and by_text::int >= 1900
+     and by_text::int * 12 + bm_text::int <= extract(year from current_date)::int * 12 + extract(month from current_date)::int then
+    by_val := by_text::smallint;
+    bm_val := bm_text::smallint;
+  end if;
+  insert into public.profiles (
+    user_id, full_name, role, roles, is_verified, aura_points, active_role, age_confirmed_13_plus, birth_year, birth_month,
+    age_check_required
+  )
+  values (
+    new.id,
+    coalesce(
+      nullif(trim(new.raw_user_meta_data->>'full_name'), ''),
+      nullif(trim(new.raw_user_meta_data->>'name'), ''),
+      split_part(coalesce(new.email, 'fan'), '@', 1),
+      'Fan'
+    ),
+    'fan',
+    array['fan']::text[],
+    false,
+    0,
+    'fan',
+    -- Older builds send only the 13+ confirmation; a birth month and year sets it too (profiles_new_account_rules).
+    nullif(new.raw_user_meta_data->>'age_confirmed_13_plus', '')::boolean,
+    by_val,
+    bm_val,
+    true
+  )
+  on conflict (user_id) do nothing;
+  return new;
+end;
+$$;
+
+-- The teen's own view adds their birth month and year and the links waiting for their answer.
+create or replace function public.minor_status_json(target uuid, for_teen boolean)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'age_band', public.profile_age_band(p.id),
+    'needs_birth', p.birth_year is null,
+    'birth_year', case when for_teen then p.birth_year end,
+    'birth_month', case when for_teen then p.birth_month end,
+    'guardian_links_enabled', public.guardian_links_enabled(),
+    'has_public_consent', public.minor_has_consent(p.id, 'public_profile'),
+    'has_donations_consent', public.minor_has_consent(p.id, 'donations'),
+    'guardians', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'link_id', l.id, 'first_name', public.first_name_of(l.guardian_id), 'since', l.confirmed_at,
+        'guardian_of_record', public.is_guardian_of_record(p.id, l.guardian_id),
+        'consent', (select jsonb_build_object('signed_at', c.signed_at, 'form_version', c.form_version,
+                      'relationship', c.relationship, 'allows_donations', c.allows_donations,
+                      'allows_public_profile', c.allows_public_profile)
+                    from public.guardian_consents c where c.link_id = l.id and c.revoked_at is null)
+      ) order by l.confirmed_at)
+      from public.guardian_links l where l.minor_id = p.id and l.ended_at is null and l.confirmed_at is not null
+    ), '[]'::jsonb),
+    'pending_links', case when for_teen then coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'link_id', l.id, 'first_name', public.first_name_of(l.guardian_id),
+        'username', (select g.username from public.profiles g where g.id = l.guardian_id), 'requested_at', l.created_at
+      ) order by l.created_at)
+      from public.guardian_links l
+      where l.minor_id = p.id and l.ended_at is null and l.confirmed_at is null
+        and l.created_at > timezone('utc', now()) - interval '7 days'
+    ), '[]'::jsonb) else '[]'::jsonb end,
+    'pending_approvals', coalesce((
+      select jsonb_agg(jsonb_build_object('id', r.id, 'change_key', r.change_key, 'requested_at', r.requested_at) order by r.requested_at)
+      from public.guardian_approval_requests r
+      where r.minor_id = p.id and r.status = 'pending' and r.requested_at > timezone('utc', now()) - interval '14 days'
+    ), '[]'::jsonb)
+  )
+  from public.profiles p where p.id = target;
+$$;
+
+-- Records (or corrects to a younger age) the caller's birth month and year. Returns the new status; an under-13 entry
+-- blocks the account and returns {"status": "blocked"}.
+create or replace function public.set_my_birth_month(birth_y integer, birth_m integer)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  cur public.profiles%rowtype;
+  band text;
+  old_band text;
+begin
+  if me is null then
+    raise exception 'Sign in first.';
+  end if;
+  if birth_m is null or birth_y is null or birth_m not between 1 and 12 or birth_y < 1900
+     or birth_y * 12 + birth_m > extract(year from current_date)::int * 12 + extract(month from current_date)::int then
+    raise exception 'Check your birth month and year.';
+  end if;
+  select * into cur from public.profiles where id = me;
+  old_band := public.profile_age_band(me);
+  if cur.birth_year is not null then
+    if birth_y * 12 + birth_m < cur.birth_year * 12 + cur.birth_month then
+      raise exception 'To change this to an older age, contact support.';
+    end if;
+    if birth_y = cur.birth_year and birth_m = cur.birth_month then
+      return public.minor_status_json(me, true);
+    end if;
+  end if;
+  band := public.age_band_from(birth_y, birth_m, current_date);
+  perform set_config('app.tapuai_age_write', 'on', true);
+  if band = 'under_13' then
+    -- COPPA actual knowledge: the desk lists the account for deletion (admin_list_age_blocked).
+    update public.profiles
+    set birth_year = birth_y, birth_month = birth_m, birth_recorded_at = timezone('utc', now()), age_blocked_at = timezone('utc', now())
+    where id = me;
+    perform set_config('app.tapuai_age_write', 'off', true);
+    perform public.close_under_13_account(me);
+    return jsonb_build_object('status', 'blocked');
+  end if;
+  update public.profiles
+  set birth_year = birth_y, birth_month = birth_m, birth_recorded_at = timezone('utc', now()), age_confirmed_13_plus = true
+  where id = me;
+  perform set_config('app.tapuai_age_write', 'off', true);
+  -- Leaving 'not_given' opens friend requests to the band's default; a correction never loosens otherwise.
+  if old_band = 'not_given' and cur.friend_requests_from = 'nobody' then
+    perform public.apply_privacy_settings(me, jsonb_build_object('friend_requests_from',
+      case when public.is_minor_band(band) then 'teens' else 'everyone' end));
+  elsif not public.is_minor_band(band) and cur.friend_requests_from = 'teens' then
+    perform public.apply_privacy_settings(me, '{"friend_requests_from": "nobody"}'::jsonb);
+  end if;
+  if public.is_minor_band(band) and band is distinct from old_band then
+    perform public.apply_teen_defaults(me);
+  end if;
+  perform public.log_supervision_event(me, case when cur.birth_year is null then 'age_recorded' else 'age_corrected' end,
+    jsonb_build_object('band', band));
+  return public.minor_status_json(me, true);
+end;
+$$;
+
+-- 5. Privacy with the teen rules ------------------------------------------------------------------------------------
+
+create or replace function public.get_my_privacy()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+begin
+  if me is null then
+    raise exception 'Sign in to see your privacy settings.';
+  end if;
+  return public.privacy_settings_json(me) || jsonb_build_object('minor', public.minor_status_json(me, true));
+end;
+$$;
+
+-- Teens: Public needs a guardian consent that allows it; under-16s send Public and friend requests from Anyone to the
+-- guardian as approve / decline requests (the rest of the save applies). 'teens' is only for teen accounts; a new
+-- account adds its age before opening up.
+create or replace function public.set_my_privacy(settings jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  cur public.profiles%rowtype;
+  band text;
+  wants_public boolean;
+  wants_open boolean;
+  held text[] := array[]::text[];
+  before_json jsonb;
+  after_json jsonb;
+  changed text[];
+begin
+  if me is null then
+    raise exception 'Sign in to change your privacy settings.';
+  end if;
+  settings := coalesce(settings, '{}'::jsonb);
+  select * into cur from public.profiles where id = me;
+  band := public.profile_age_band(me);
+  -- Read booleans the way apply_privacy_settings casts them ("off", "no", "f" and "0" are all false).
+  wants_public := cur.account_private and not coalesce((settings ->> 'account_private')::boolean, true);
+  wants_open := coalesce(settings ->> 'friend_requests_from', cur.friend_requests_from) <> cur.friend_requests_from
+    and (settings ->> 'friend_requests_from') in ('everyone', 'teens');
+
+  if (settings ->> 'friend_requests_from') = 'teens' and cur.friend_requests_from <> 'teens' and not public.is_minor_band(band) then
+    raise exception 'That setting is for teen accounts.';
+  end if;
+  if band = 'not_given' and (wants_public or wants_open) then
+    raise exception 'Add your birth month and year first.';
+  end if;
+  if public.is_minor_band(band) then
+    if wants_public and not public.minor_has_consent(me, 'public_profile') then
+      raise exception 'A parent or guardian needs to sign the consent before your profile can be public.';
+    end if;
+    wants_open := (settings ->> 'friend_requests_from') = 'everyone' and cur.friend_requests_from <> 'everyone';
+    if band = 'teen_13_15' and (wants_public or wants_open) then
+      if public.minor_guardian_count(me) = 0 then
+        raise exception 'Invite a parent or guardian first. They approve this change.';
+      end if;
+      update public.guardian_approval_requests set status = 'expired'
+      where minor_id = me and status = 'pending' and requested_at <= timezone('utc', now()) - interval '14 days';
+      if wants_public then
+        held := array_append(held, 'account_public');
+        settings := settings - 'account_private';
+      end if;
+      if wants_open then
+        held := array_append(held, 'friend_requests_everyone');
+        settings := settings - 'friend_requests_from';
+      end if;
+      insert into public.guardian_approval_requests (minor_id, change_key)
+      select me, k from unnest(held) k
+      on conflict do nothing;
+      perform public.log_supervision_event(me, 'approval_requested', jsonb_build_object('changes', to_jsonb(held)));
+    end if;
+  end if;
+
+  before_json := public.privacy_settings_json(me);
+  after_json := public.apply_privacy_settings(me, settings);
+  select array_agg(k) into changed from jsonb_object_keys(after_json) k where after_json -> k is distinct from before_json -> k;
+  if changed is not null then
+    perform public.log_supervision_event(me, 'settings_changed', jsonb_build_object('keys', to_jsonb(changed)));
+  end if;
+  -- Belt and braces: whatever was sent, a teen without a public-profile consent ends the save private.
+  perform public.enforce_minor_consent(me);
+  after_json := public.privacy_settings_json(me);
+  return after_json || jsonb_build_object('minor', public.minor_status_json(me, true), 'held_for_approval', to_jsonb(held));
+end;
+$$;
+
+-- PRIV-01's request_friend with one more rule: "Only other teens" refuses everyone who is not a recorded teen (a
+-- linked guardian may still ask). The refusal reads the same as every other refusal, so it does not reveal a teen.
+create or replace function public.request_friend(target_profile_id uuid)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  t public.profiles%rowtype;
+  row_found public.friendships%rowtype;
+  sent_today integer;
+begin
+  if me is null then
+    raise exception 'Sign in to add friends.';
+  end if;
+  if not public.friend_requests_enabled() then
+    raise exception 'Friend requests are paused right now.';
+  end if;
+  select * into t from public.profiles where id = target_profile_id;
+  if not found or t.id = me or t.age_blocked_at is not null or public.is_blocked_between(me, t.id) or t.friend_requests_from = 'nobody'
+     or (t.friend_requests_from = 'teens'
+         and not public.is_minor_band(public.profile_age_band(me))
+         and not exists (select 1 from public.guardian_links l
+                         where l.minor_id = t.id and l.guardian_id = me and l.ended_at is null and l.confirmed_at is not null)) then
+    raise exception 'You can''t send a friend request to this account.';
+  end if;
+  select * into row_found from public.friendships f
+  where least(f.requester_id, f.addressee_id) = least(me, t.id)
+    and greatest(f.requester_id, f.addressee_id) = greatest(me, t.id);
+  if found then
+    if row_found.status = 'accepted' then
+      return 'friends';
+    end if;
+    if row_found.status = 'pending' and row_found.requester_id = me then
+      return 'requested';
+    end if;
+    if row_found.status = 'pending' and row_found.addressee_id = me then
+      update public.friendships set status = 'accepted', responded_at = timezone('utc', now()) where id = row_found.id;
+      return 'friends';
+    end if;
+    -- Declined: the requester waits 30 days and is never told; the person who declined may send their own request.
+    if row_found.requester_id = me and row_found.responded_at > timezone('utc', now()) - interval '30 days' then
+      return 'requested';
+    end if;
+    delete from public.friendships where id = row_found.id;
+  end if;
+  select count(*)::int into sent_today from public.friend_request_log l
+  where l.requester_id = me and l.created_at > timezone('utc', now()) - interval '1 day';
+  if sent_today >= 20 then
+    raise exception 'You''ve sent a lot of friend requests today. Try again tomorrow.';
+  end if;
+  if (select count(*) from public.friend_request_log l
+      where l.requester_id = me and l.addressee_id = t.id and l.created_at > timezone('utc', now()) - interval '7 days') >= 3 then
+    return 'requested';
+  end if;
+  insert into public.friend_request_log (requester_id, addressee_id) values (me, t.id);
+  insert into public.friendships (requester_id, addressee_id) values (me, t.id);
+  return 'requested';
+end;
+$$;
+
+-- 6. Invites, links and consent ---------------------------------------------------------------------------------------
+
+create or replace function public.create_guardian_invite()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  band text;
+  alphabet constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  raw text := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+  code text := '';
+  i integer;
+  expires timestamptz := timezone('utc', now()) + interval '48 hours';
+begin
+  if me is null then
+    raise exception 'Sign in first.';
+  end if;
+  band := public.profile_age_band(me);
+  if band in ('unknown', 'not_given') then
+    raise exception 'Add your birth month and year first.';
+  end if;
+  if not public.is_minor_band(band) then
+    raise exception 'Guardian links are for accounts aged 13 to 17.';
+  end if;
+  if not public.guardian_links_enabled() then
+    raise exception 'Guardian links are paused right now.';
+  end if;
+  if public.minor_link_slots_used(me) >= 2 then
+    raise exception 'You already have two guardians linked or waiting.';
+  end if;
+  if (select count(*) from public.guardian_invites g where g.minor_id = me and g.created_at > timezone('utc', now()) - interval '1 day') >= 5 then
+    raise exception 'You''ve made a lot of codes today. Try again tomorrow.';
+  end if;
+  -- 8 characters from 31 (no 0/O, 1/I/L), each from two random hex digits of v4 UUIDs.
+  for i in 0..7 loop
+    code := code || substr(alphabet, 1 + (('x' || substr(raw, 1 + i * 2, 2))::bit(8)::int % 31), 1);
+  end loop;
+  update public.guardian_invites set expires_at = timezone('utc', now())
+  where minor_id = me and used_at is null and expires_at > timezone('utc', now());
+  insert into public.guardian_invites (code_hash, minor_id, expires_at) values (public.hash_secret(code), me, expires);
+  perform public.log_supervision_event(me, 'invite_created', '{}'::jsonb);
+  return jsonb_build_object('code', code, 'expires_at', expires);
+end;
+$$;
+
+-- The guardian side of a code: the caller must be 18+ (recorded), with 10 wrong tries a day. Returns the invite row, or
+-- an empty row for a wrong code (no exception, so the counted try is kept: an exception would roll it back).
+create or replace function public.guardian_invite_for_code(invite_code text)
+returns public.guardian_invites
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  band text;
+  inv public.guardian_invites%rowtype;
+begin
+  if me is null then
+    raise exception 'Sign in first.';
+  end if;
+  band := public.profile_age_band(me);
+  if band in ('unknown', 'not_given') then
+    raise exception 'Add your birth month and year first.';
+  end if;
+  if band <> 'adult' then
+    raise exception 'A parent or guardian must be 18 or older.';
+  end if;
+  if not public.guardian_links_enabled() then
+    raise exception 'Guardian links are paused right now.';
+  end if;
+  if (select count(*) from public.guardian_invite_attempts a where a.profile_id = me and a.created_at > timezone('utc', now()) - interval '1 day') >= 10 then
+    raise exception 'Too many tries. Try again tomorrow.';
+  end if;
+  select * into inv from public.guardian_invites g
+  where g.code_hash = public.hash_secret(upper(btrim(coalesce(invite_code, ''))))
+    and g.used_at is null and g.expires_at > timezone('utc', now());
+  if not found or inv.minor_id = me or public.is_blocked_between(me, inv.minor_id) then
+    insert into public.guardian_invite_attempts (profile_id) values (me);
+    return null;
+  end if;
+  return inv;
+end;
+$$;
+
+create or replace function public.preview_guardian_invite(invite_code text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  inv public.guardian_invites%rowtype := public.guardian_invite_for_code(invite_code);
+begin
+  if inv.code_hash is null then
+    return jsonb_build_object('status', 'bad_code');
+  end if;
+  return jsonb_build_object(
+    'status', 'ok',
+    'first_name', public.first_name_of(inv.minor_id),
+    'username', (select p.username from public.profiles p where p.id = inv.minor_id),
+    'form_version', public.guardian_consent_form_version(),
+    'can_allow_donations', public.is_guardian_of_record(inv.minor_id, public.my_profile_id())
+  );
+end;
+$$;
+
+-- Records a signed consent on a link (revoking the guardian's earlier one), then applies its effects. The consent counts
+-- once the link is confirmed; payouts only from the guardian on record.
+create or replace function public.record_guardian_consent(
+  link uuid, signer text, relation text, donations boolean, public_profile boolean, version text, text_sha256 text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  l public.guardian_links%rowtype;
+begin
+  select * into l from public.guardian_links where id = link and ended_at is null;
+  if not found then
+    raise exception 'This guardian link has ended.';
+  end if;
+  if version is distinct from public.guardian_consent_form_version() or text_sha256 is distinct from public.guardian_consent_form_sha256() then
+    raise exception 'The consent form has changed. Reload and read it again.';
+  end if;
+  if char_length(btrim(coalesce(signer, ''))) < 2 then
+    raise exception 'Type your full name to sign.';
+  end if;
+  if relation is null or relation not in ('parent', 'legal_guardian') then
+    raise exception 'Choose parent or legal guardian.';
+  end if;
+  if coalesce(donations, false) and not public.is_guardian_of_record(l.minor_id, l.guardian_id) then
+    raise exception 'Only the guardian on record for this athlete''s family account can allow payouts.';
+  end if;
+  update public.guardian_consents set revoked_at = timezone('utc', now()), revoked_by = public.my_profile_id(), revoke_reason = 'signed_again'
+  where link_id = link and revoked_at is null;
+  insert into public.guardian_consents (link_id, minor_id, guardian_id, form_version, form_sha256, signer_name, relationship, allows_donations, allows_public_profile)
+  values (link, l.minor_id, l.guardian_id, version, text_sha256, btrim(signer), relation, coalesce(donations, false), coalesce(public_profile, false));
+  perform public.log_supervision_event(l.minor_id, 'consent_signed',
+    jsonb_build_object('donations', coalesce(donations, false), 'public_profile', coalesce(public_profile, false)));
+  perform public.enforce_minor_consent(l.minor_id);
+end;
+$$;
+
+-- The guardian redeems a teen's code and signs. The link waits for the teen to confirm (respond_guardian_link).
+create or replace function public.accept_guardian_invite(
+  invite_code text, signer_name text, relationship text, allows_donations boolean, allows_public_profile boolean,
+  form_version text, form_sha256 text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  inv public.guardian_invites%rowtype := public.guardian_invite_for_code(invite_code);
+  link uuid;
+  waiting boolean := false;
+begin
+  if inv.code_hash is null or not public.is_minor_band(public.profile_age_band(inv.minor_id)) then
+    return jsonb_build_object('status', 'bad_code');
+  end if;
+  -- A waiting link the teen never answered (7 days) is closed, so the new code starts a fresh one they can see.
+  update public.guardian_links set ended_at = timezone('utc', now()), end_reason = 'not_confirmed'
+  where minor_id = inv.minor_id and guardian_id = me and ended_at is null and confirmed_at is null
+    and created_at <= timezone('utc', now()) - interval '7 days';
+  select l.id, l.confirmed_at is null into link, waiting from public.guardian_links l
+  where l.minor_id = inv.minor_id and l.guardian_id = me and l.ended_at is null;
+  if link is null then
+    if public.minor_link_slots_used(inv.minor_id) >= 2 then
+      raise exception 'This account already has two guardians linked or waiting.';
+    end if;
+    insert into public.guardian_links (minor_id, guardian_id, source) values (inv.minor_id, me, 'invite') returning id into link;
+    waiting := true;
+  end if;
+  update public.guardian_invites set used_at = timezone('utc', now()), used_by = me where code_hash = inv.code_hash;
+  perform public.record_guardian_consent(link, signer_name, relationship, allows_donations, allows_public_profile, form_version, form_sha256);
+  return jsonb_build_object('status', case when waiting then 'waiting_for_teen' else 'linked' end,
+                            'first_name', public.first_name_of(inv.minor_id), 'link_id', link);
+end;
+$$;
+
+-- The teen answers "Is {name} your parent or guardian?". Yes makes the link (and its consent) count; no ends it.
+create or replace function public.respond_guardian_link(link_id uuid, accept boolean)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  l public.guardian_links%rowtype;
+begin
+  select * into l from public.guardian_links g
+  where g.id = link_id and g.minor_id = me and g.ended_at is null and g.confirmed_at is null
+    and g.created_at > timezone('utc', now()) - interval '7 days'
+  for update;
+  if not found then
+    raise exception 'This request has ended.';
+  end if;
+  if coalesce(accept, false) then
+    if public.minor_guardian_count(me) >= 2 then
+      raise exception 'You already have two guardians linked.';
+    end if;
+    update public.guardian_links set confirmed_at = timezone('utc', now()) where id = l.id;
+    perform public.log_supervision_event(me, 'guardian_linked', jsonb_build_object('guardian', public.first_name_of(l.guardian_id)));
+    perform public.enforce_minor_consent(me);
+  else
+    perform public.close_guardian_link(l.id, 'teen_declined');
+  end if;
+  return public.minor_status_json(me, true);
+end;
+$$;
+
+-- A guardian signs (or re-signs) for a teen they are linked to; the admin-set athlete guardian may start a link here.
+-- Every refusal reads the same, so this cannot be used to find out who is a teen. The guardian on record's new link is
+-- confirmed at once, unless the teen ended or blocked an earlier one: then the teen confirms again.
+create or replace function public.sign_guardian_consent(
+  minor_profile_id uuid, signer_name text, relationship text, allows_donations boolean, allows_public_profile boolean,
+  form_version text, form_sha256 text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  link uuid;
+  refused constant text := 'You can''t sign for this account. Ask the teen for a guardian code.';
+  teen_ended boolean;
+begin
+  if me is null then
+    raise exception 'Sign in first.';
+  end if;
+  if public.profile_age_band(me) <> 'adult' then
+    raise exception 'A parent or guardian must be 18 or older (add your birth month and year first).';
+  end if;
+  update public.guardian_links set ended_at = timezone('utc', now()), end_reason = 'not_confirmed'
+  where minor_id = minor_profile_id and guardian_id = me and ended_at is null and confirmed_at is null
+    and created_at <= timezone('utc', now()) - interval '7 days';
+  select l.id into link from public.guardian_links l where l.minor_id = minor_profile_id and l.guardian_id = me and l.ended_at is null;
+  -- An admin-ended link stays ended: support reinstates on purpose (or changes players.guardian_id) — review P2.
+  if (link is null and not public.is_guardian_of_record(minor_profile_id, me))
+     or not public.is_minor_band(public.profile_age_band(minor_profile_id))
+     or public.is_blocked_between(me, minor_profile_id)
+     or (link is null and exists (
+           select 1 from public.guardian_links l
+           where l.minor_id = minor_profile_id and l.guardian_id = me and l.end_reason like 'admin:%')) then
+    raise exception '%', refused;
+  end if;
+  if link is null then
+    if not public.guardian_links_enabled() then
+      raise exception 'Guardian links are paused right now.';
+    end if;
+    if public.minor_link_slots_used(minor_profile_id) >= 2 then
+      raise exception '%', refused;
+    end if;
+    select exists (
+      select 1 from public.guardian_links l
+      where l.minor_id = minor_profile_id and l.guardian_id = me and l.end_reason in ('teen_unlinked', 'teen_declined', 'blocked')
+    ) into teen_ended;
+    insert into public.guardian_links (minor_id, guardian_id, source, confirmed_at)
+    values (minor_profile_id, me, 'custodial', case when teen_ended then null else timezone('utc', now()) end)
+    returning id into link;
+    if not teen_ended then
+      perform public.log_supervision_event(minor_profile_id, 'guardian_linked', jsonb_build_object('guardian', public.first_name_of(me)));
+    end if;
+  end if;
+  perform public.record_guardian_consent(link, signer_name, relationship, allows_donations, allows_public_profile, form_version, form_sha256);
+  return public.guardian_view(minor_profile_id);
+end;
+$$;
+
+create or replace function public.revoke_guardian_consent(minor_profile_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  n integer;
+begin
+  update public.guardian_consents c set revoked_at = timezone('utc', now()), revoked_by = me, revoke_reason = 'withdrawn'
+  from public.guardian_links l
+  where l.id = c.link_id and l.ended_at is null and l.guardian_id = me and l.minor_id = minor_profile_id and c.revoked_at is null;
+  get diagnostics n = row_count;
+  if n = 0 then
+    raise exception 'There is no consent of yours to withdraw.';
+  end if;
+  perform public.log_supervision_event(minor_profile_id, 'consent_withdrawn', '{}'::jsonb);
+  perform public.enforce_minor_consent(minor_profile_id);
+  return public.guardian_view(minor_profile_id);
+end;
+$$;
+
+-- Ends a link and the consent signed on it, then re-applies the teen rules. Shared by both sides, blocks and the admin.
+create or replace function public.close_guardian_link(link uuid, reason text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  l public.guardian_links%rowtype;
+begin
+  update public.guardian_links
+  set ended_at = timezone('utc', now()), ended_by = public.my_profile_id(), end_reason = left(reason, 200)
+  where id = link and ended_at is null
+  returning * into l;
+  if l.id is null then
+    raise exception 'This guardian link has already ended.';
+  end if;
+  update public.guardian_consents set revoked_at = timezone('utc', now()), revoked_by = public.my_profile_id(), revoke_reason = 'link_ended'
+  where link_id = link and revoked_at is null;
+  if l.confirmed_at is not null then
+    perform public.log_supervision_event(l.minor_id, 'guardian_unlinked',
+      jsonb_build_object('guardian', public.first_name_of(l.guardian_id), 'reason', left(reason, 40)));
+  end if;
+  perform public.enforce_minor_consent(l.minor_id);
+end;
+$$;
+
+-- Either side may end a link at any time (the owner's "no dictatorship" rule).
+create or replace function public.end_guardian_link(link_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  l public.guardian_links%rowtype;
+begin
+  select * into l from public.guardian_links g where g.id = link_id and g.ended_at is null;
+  if not found or me is null or me not in (l.minor_id, l.guardian_id) then
+    raise exception 'This guardian link has already ended.';
+  end if;
+  perform public.close_guardian_link(link_id, case when me = l.minor_id then 'teen_unlinked' else 'guardian_unlinked' end);
+end;
+$$;
+
+-- Blocking either way ends every link between the two (a teen can always cut a guardian off with Block).
+create or replace function public.user_blocks_end_guardian_links()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  link uuid;
+begin
+  for link in
+    select l.id from public.guardian_links l
+    where l.ended_at is null
+      and ((l.minor_id = new.blocker_id and l.guardian_id = new.blocked_id) or (l.minor_id = new.blocked_id and l.guardian_id = new.blocker_id))
+  loop
+    perform public.close_guardian_link(link, 'blocked');
+  end loop;
+  return new;
+end;
+$$;
+
+drop trigger if exists user_blocks_end_links on public.user_blocks;
+create trigger user_blocks_end_links
+  after insert on public.user_blocks
+  for each row execute function public.user_blocks_end_guardian_links();
+
+-- 7. Supervision and approvals ----------------------------------------------------------------------------------------
+
+create or replace function public.verified_player_of(target uuid)
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p.player_id from public.profiles p where p.id = target and p.verification_status = 'verified';
+$$;
+
+-- What the teen and their guardian both see: settings, status, counts (never who) and events since `events_since`
+-- (a guardian sees only what happened after they linked).
+create or replace function public.supervision_json(minor uuid, events_since timestamptz)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'profile_id', p.id,
+    'first_name', public.first_name_of(p.id),
+    'username', p.username,
+    'settings', public.privacy_settings_json(p.id),
+    'status', public.minor_status_json(p.id, false),
+    'summary', jsonb_build_object(
+      'friends', (select count(*) from public.friendships f where f.status = 'accepted' and p.id in (f.requester_id, f.addressee_id)),
+      'incoming_requests', (select count(*) from public.friendships f where f.status = 'pending' and f.addressee_id = p.id),
+      'blocked_accounts', (select count(*) from public.user_blocks u where u.blocker_id = p.id),
+      'tags_waiting', (select count(*) from public.reels r
+                       where r.player_id = public.verified_player_of(p.id) and r.tag_status = 'pending'),
+      'hidden_from_search', p.hide_from_search
+    ),
+    'events', coalesce((
+      select jsonb_agg(jsonb_build_object('kind', e.kind, 'detail', e.detail, 'at', e.created_at,
+                                          'by_teen', e.actor_id is not distinct from p.id) order by e.created_at desc)
+      from (
+        select * from public.supervision_events e
+        where e.minor_id = p.id and e.created_at >= coalesce(events_since, '-infinity'::timestamptz)
+          and e.created_at > timezone('utc', now()) - interval '365 days'
+        order by e.created_at desc limit 30
+      ) e
+    ), '[]'::jsonb)
+  )
+  from public.profiles p where p.id = minor;
+$$;
+
+-- The guardian's view of one teen: the shared summary from the date they linked, plus whether they can allow payouts.
+create or replace function public.guardian_view(minor uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select case
+    when public.is_supervising_guardian(minor) then
+      public.supervision_json(minor, (
+        select min(l.confirmed_at) from public.guardian_links l
+        where l.minor_id = minor and l.guardian_id = public.my_profile_id() and l.ended_at is null and l.confirmed_at is not null
+      )) || jsonb_build_object('can_allow_donations', public.is_guardian_of_record(minor, public.my_profile_id()), 'link_status', 'linked')
+    -- Nothing about the teen until they confirm the link.
+    else jsonb_build_object('profile_id', minor, 'link_status', 'waiting_for_teen')
+  end;
+$$;
+
+create or replace function public.get_my_supervision()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+begin
+  if me is null then
+    raise exception 'Sign in first.';
+  end if;
+  return public.supervision_json(me, null) || jsonb_build_object('status', public.minor_status_json(me, true));
+end;
+$$;
+
+create or replace function public.guardian_get_supervision(minor_profile_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_supervising_guardian(minor_profile_id) then
+    raise exception 'Only this teen''s linked guardian can see this.';
+  end if;
+  return public.guardian_view(minor_profile_id);
+end;
+$$;
+
+-- Teens this guardian supervises or is waiting on, plus the admin-set athlete guardian's teens who still need a consent.
+create or replace function public.guardian_list_minors()
+returns table (
+  profile_id uuid, first_name text, username text, age_band text, link_id uuid, link_status text,
+  account_private boolean, my_consent jsonb, can_allow_donations boolean, pending_approvals integer
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  with me as (select public.my_profile_id() as id),
+  mine as (
+    select l.minor_id, l.id as link_id, case when l.confirmed_at is null then 'waiting_for_teen' else 'linked' end as link_status
+    from public.guardian_links l, me
+    where l.guardian_id = me.id and l.ended_at is null
+      and (l.confirmed_at is not null or l.created_at > timezone('utc', now()) - interval '7 days')
+    union
+    select t.id, null::uuid, 'not_linked' from public.profiles t join public.players pl on pl.id = t.player_id, me
+    where pl.guardian_id = me.id and t.verification_status = 'verified'
+      and not exists (select 1 from public.guardian_links l where l.minor_id = t.id and l.guardian_id = me.id and l.ended_at is null)
+  )
+  select p.id, public.first_name_of(p.id), p.username, public.profile_age_band(p.id), m.link_id, m.link_status,
+    case when m.link_status = 'linked' then p.account_private end,
+    (select jsonb_build_object('signed_at', c.signed_at, 'form_version', c.form_version, 'relationship', c.relationship,
+                               'allows_donations', c.allows_donations, 'allows_public_profile', c.allows_public_profile)
+       from public.guardian_consents c where c.link_id = m.link_id and c.revoked_at is null),
+    public.is_guardian_of_record(p.id, (select id from me)),
+    case when m.link_status = 'linked' then (select count(*)::int from public.guardian_approval_requests r
+       where r.minor_id = p.id and r.status = 'pending' and r.requested_at > timezone('utc', now()) - interval '14 days') else 0 end
+  from mine m join public.profiles p on p.id = m.minor_id
+  where (select id from me) is not null;
+$$;
+
+create or replace function public.guardian_decide_approval(request_id uuid, approve boolean)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  r public.guardian_approval_requests%rowtype;
+begin
+  select * into r from public.guardian_approval_requests a where a.id = request_id for update;
+  if not found or not (public.is_supervising_guardian(r.minor_id) or public.current_user_role() = 'admin') then
+    raise exception 'This request is not yours to decide.';
+  end if;
+  if r.status <> 'pending' then
+    raise exception 'This request was already handled.';
+  end if;
+  if r.requested_at <= timezone('utc', now()) - interval '14 days' then
+    update public.guardian_approval_requests set status = 'expired' where id = r.id;
+    return public.guardian_view(r.minor_id) || jsonb_build_object('notice', 'This request expired. They can ask again.');
+  end if;
+  if coalesce(approve, false) then
+    if r.change_key = 'account_public' then
+      if public.is_minor_band(public.profile_age_band(r.minor_id)) and not public.minor_has_consent(r.minor_id, 'public_profile') then
+        raise exception 'Sign the consent with "public profile" allowed first.';
+      end if;
+      perform public.apply_privacy_settings(r.minor_id, '{"account_private": false}'::jsonb);
+    else
+      perform public.apply_privacy_settings(r.minor_id, '{"friend_requests_from": "everyone"}'::jsonb);
+    end if;
+  end if;
+  update public.guardian_approval_requests
+  set status = case when coalesce(approve, false) then 'approved' else 'declined' end,
+      decided_by = public.my_profile_id(), decided_at = timezone('utc', now())
+  where id = r.id;
+  perform public.log_supervision_event(r.minor_id, 'approval_decided',
+    jsonb_build_object('change', r.change_key, 'approved', coalesce(approve, false)));
+  return public.guardian_view(r.minor_id);
+end;
+$$;
+
+create or replace function public.cancel_my_approval_request(request_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+  n integer;
+begin
+  update public.guardian_approval_requests set status = 'cancelled', decided_by = me, decided_at = timezone('utc', now())
+  where id = request_id and minor_id = me and status = 'pending';
+  get diagnostics n = row_count;
+  if n = 0 then
+    raise exception 'This request was already handled.';
+  end if;
+  perform public.log_supervision_event(me, 'approval_cancelled', '{}'::jsonb);
+  return public.minor_status_json(me, true);
+end;
+$$;
+
+-- 8. Money: payouts wait for positive adult evidence, or a minor's donations consent ------------------------------------
+
+-- Same as before (athlete verification ladder), plus minor_payout_hold_reason wherever money would otherwise be allowed.
+--   reason   why it is held: 'disputed' | 'no_claim' | 'needs_payout_setup' | 'needs_guardian_consent' |
+--            'needs_birth_month' | null
+create or replace function public.athlete_payout_status(target_player_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  req public.verification_requests%rowtype;
+  open_claims integer;
+  claimant_kyc boolean;
+  guardian_kyc boolean;
+  guardian_holds boolean;
+  vouches integer := 0;
+  hold text;
+begin
+  if target_player_id is null then
+    return jsonb_build_object('allowed', false, 'path', null, 'cap_cents', null, 'reason', 'no_claim', 'vouches', 0);
+  end if;
+
+  if exists (
+    select 1 from public.profiles p
+    where p.player_id = target_player_id
+      and p.verification_status = 'verified'
+      and coalesce(p.is_verified, false)
+  ) then
+    hold := public.minor_payout_hold_reason(target_player_id, public.athlete_profile_for_player(target_player_id));
+    if hold is not null then
+      return jsonb_build_object('allowed', false, 'path', 'school', 'cap_cents', null, 'reason', hold, 'vouches', 0);
+    end if;
+    return jsonb_build_object('allowed', true, 'path', 'school', 'cap_cents', null, 'reason', null, 'vouches', 0);
+  end if;
+
+  if exists (
+    select 1 from public.verification_requests v
+    where v.player_id = target_player_id and v.status = 'disputed'
+  ) then
+    return jsonb_build_object('allowed', false, 'path', null, 'cap_cents', null, 'reason', 'disputed', 'vouches', 0);
+  end if;
+
+  select count(*) into open_claims
+  from public.verification_requests v
+  where v.player_id = target_player_id and v.status = 'pending';
+  if open_claims <> 1 then
+    return jsonb_build_object('allowed', false, 'path', null, 'cap_cents', null, 'reason', 'no_claim', 'vouches', 0);
+  end if;
+
+  select * into req
+  from public.verification_requests v
+  where v.player_id = target_player_id and v.status = 'pending'
+  limit 1;
+
+  select count(*) into vouches from public.athlete_vouches av where av.request_id = req.id;
+
+  -- players.guardian_id is admin-set only; custodial_accounts.payouts_enabled is server-only.
+  select exists (
+    select 1
+    from public.custodial_accounts ca
+    join public.players pl on pl.id = ca.player_id and pl.guardian_id = ca.guardian_id
+    where ca.player_id = target_player_id and ca.payouts_enabled
+  ) into guardian_kyc;
+
+  guardian_holds := exists (select 1 from public.custodial_accounts ca where ca.player_id = target_player_id)
+    and not public.athlete_controls_money(target_player_id);
+
+  select coalesce(p.payouts_enabled, false) into claimant_kyc
+  from public.profiles p where p.id = req.requester_user_id;
+
+  if not (guardian_kyc or (coalesce(claimant_kyc, false) and not guardian_holds)) then
+    return jsonb_build_object('allowed', false, 'path', null, 'cap_cents', null, 'reason', 'needs_payout_setup', 'vouches', vouches);
+  end if;
+
+  -- the claimant is the account money would follow on this path
+  hold := public.minor_payout_hold_reason(target_player_id, req.requester_user_id);
+  if hold is not null then
+    return jsonb_build_object('allowed', false, 'path', 'identity', 'cap_cents', null, 'reason', hold, 'vouches', vouches);
+  end if;
+
+  return jsonb_build_object(
+    'allowed', true,
+    'path', 'identity',
+    'cap_cents', case when vouches >= 3 then null else public.athlete_pending_payout_cap_cents() end,
+    'reason', null,
+    'vouches', vouches
+  );
+end;
+$$;
+
+-- 9. Admin -------------------------------------------------------------------------------------------------------------
+
+-- The safety case file for one account: names are shown here (admins only), unlike the counts-only privacy panel.
+create or replace function public.admin_minor_overview(target_profile_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  return (
+    select jsonb_build_object(
+      'age_band', public.profile_age_band(p.id),
+      'birth_year', p.birth_year,
+      'birth_month', p.birth_month,
+      'birth_recorded_at', p.birth_recorded_at,
+      'age_blocked_at', p.age_blocked_at,
+      'links', coalesce((
+        select jsonb_agg(jsonb_build_object('link_id', l.id, 'guardian_id', l.guardian_id,
+          'guardian_name', (select g.full_name from public.profiles g where g.id = l.guardian_id),
+          'guardian_teens', (select count(*) from public.guardian_links x where x.guardian_id = l.guardian_id and x.ended_at is null),
+          'source', l.source, 'created_at', l.created_at, 'confirmed_at', l.confirmed_at,
+          'ended_at', l.ended_at, 'end_reason', l.end_reason) order by l.created_at desc)
+        from public.guardian_links l where l.minor_id = p.id
+      ), '[]'::jsonb),
+      'consents', coalesce((
+        select jsonb_agg(jsonb_build_object('form_version', c.form_version, 'signer_name', c.signer_name,
+          'relationship', c.relationship, 'allows_donations', c.allows_donations,
+          'allows_public_profile', c.allows_public_profile, 'signed_at', c.signed_at, 'revoked_at', c.revoked_at,
+          'revoke_reason', c.revoke_reason) order by c.signed_at desc)
+        from public.guardian_consents c where c.minor_id = p.id
+      ), '[]'::jsonb),
+      'supervision', public.supervision_json(p.id, null)
+    )
+    from public.profiles p where p.id = target_profile_id
+  );
+end;
+$$;
+
+-- Support's correction (either direction), with a reason kept as a supervision event.
+create or replace function public.admin_set_birth_month(target_profile_id uuid, birth_y integer, birth_m integer, reason text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  band text;
+  old_band text := public.profile_age_band(target_profile_id);
+begin
+  perform public.require_admin_guard();
+  if char_length(btrim(coalesce(reason, ''))) < 5 then
+    raise exception 'Give a reason (at least 5 characters).';
+  end if;
+  if birth_m is null or birth_y is null or birth_m not between 1 and 12 or birth_y < 1900
+     or birth_y * 12 + birth_m > extract(year from current_date)::int * 12 + extract(month from current_date)::int then
+    raise exception 'Check the birth month and year.';
+  end if;
+  band := public.age_band_from(birth_y, birth_m, current_date);
+  perform set_config('app.tapuai_age_write', 'on', true);
+  update public.profiles
+  set birth_year = birth_y, birth_month = birth_m, birth_recorded_at = timezone('utc', now()),
+      age_blocked_at = case when band = 'under_13' then coalesce(age_blocked_at, timezone('utc', now())) else null end
+  where id = target_profile_id;
+  perform set_config('app.tapuai_age_write', 'off', true);
+  if band = 'under_13' then
+    perform public.close_under_13_account(target_profile_id);
+  else
+    if not public.is_minor_band(band) and exists (select 1 from public.profiles p where p.id = target_profile_id and p.friend_requests_from = 'teens') then
+      perform public.apply_privacy_settings(target_profile_id, '{"friend_requests_from": "nobody"}'::jsonb);
+    end if;
+    if band is distinct from old_band then
+      perform public.apply_teen_defaults(target_profile_id);
+    end if;
+  end if;
+  perform public.log_supervision_event(target_profile_id, 'age_corrected', jsonb_build_object('band', band, 'by', 'support', 'reason', left(btrim(reason), 200)));
+  return public.admin_minor_overview(target_profile_id);
+end;
+$$;
+
+create or replace function public.admin_end_guardian_link(link_id uuid, reason text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  minor uuid;
+begin
+  perform public.require_admin_guard();
+  if char_length(btrim(coalesce(reason, ''))) < 5 then
+    raise exception 'Give a reason (at least 5 characters).';
+  end if;
+  select l.minor_id into minor from public.guardian_links l where l.id = link_id;
+  perform public.close_guardian_link(link_id, 'admin: ' || btrim(reason));
+  return public.admin_minor_overview(minor);
+end;
+$$;
+
+create or replace function public.admin_minor_report()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  return (
+    with bands as (
+      select p.id, public.profile_age_band(p.id) as band, p.age_blocked_at from public.profiles p
+    )
+    select jsonb_build_object(
+      'teen_13_15', count(*) filter (where band = 'teen_13_15' and age_blocked_at is null),
+      'teen_16_17', count(*) filter (where band = 'teen_16_17' and age_blocked_at is null),
+      'adult', count(*) filter (where band = 'adult'),
+      'not_given', count(*) filter (where band = 'not_given'),
+      'unknown', count(*) filter (where band = 'unknown'),
+      'under_13_blocked', count(*) filter (where age_blocked_at is not null),
+      'teens_with_guardian', count(*) filter (where public.is_minor_band(band) and public.minor_guardian_count(id) > 0),
+      'teens_public_consent', count(*) filter (where public.is_minor_band(band) and public.minor_has_consent(id, 'public_profile')),
+      'teens_donations_consent', count(*) filter (where public.is_minor_band(band) and public.minor_has_consent(id, 'donations')),
+      'pending_approvals', (select count(*) from public.guardian_approval_requests r
+                            where r.status = 'pending' and r.requested_at > timezone('utc', now()) - interval '14 days'),
+      'invites_7d', (select count(*) from public.guardian_invites g where g.created_at > timezone('utc', now()) - interval '7 days'),
+      -- abuse signals: one adult supervising many teens; adults sending friend requests to teens
+      'guardians_over_3_teens', (select count(*) from (
+          select l.guardian_id from public.guardian_links l where l.ended_at is null group by l.guardian_id having count(*) > 3) g),
+      'adult_requests_to_teens_7d', (select count(*) from public.friend_request_log f
+          where f.created_at > timezone('utc', now()) - interval '7 days'
+            and public.profile_age_band(f.requester_id) = 'adult' and public.is_minor_band(public.profile_age_band(f.addressee_id))),
+      'guardian_links_enabled', public.guardian_links_enabled()
+    )
+    from bands
+  );
+end;
+$$;
+
+-- Under-13 accounts waiting for deletion (deleting the sign-in itself needs the service role / Supabase dashboard).
+create or replace function public.admin_list_age_blocked()
+returns table (profile_id uuid, user_id uuid, blocked_at timestamptz)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  return query select p.id, p.user_id, p.age_blocked_at from public.profiles p where p.age_blocked_at is not null order by p.age_blocked_at;
+end;
+$$;
+
+-- Retention (PRIVACY_ENGINEERING): events 365 days, invite codes 30 days, wrong tries 2 days, decided or expired
+-- approvals 90 days. Consent records are not purged here (counsel sets their period, LEGAL row AA).
+create or replace function public.admin_purge_minor_records()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  ev integer;
+  inv integer;
+  att integer;
+  app integer;
+begin
+  perform public.require_admin_guard();
+  delete from public.supervision_events where created_at < timezone('utc', now()) - interval '365 days';
+  get diagnostics ev = row_count;
+  delete from public.guardian_invites where created_at < timezone('utc', now()) - interval '30 days';
+  get diagnostics inv = row_count;
+  delete from public.guardian_invite_attempts where created_at < timezone('utc', now()) - interval '2 days';
+  get diagnostics att = row_count;
+  delete from public.guardian_approval_requests
+  where (status <> 'pending' and coalesce(decided_at, requested_at) < timezone('utc', now()) - interval '90 days')
+     or (status = 'pending' and requested_at < timezone('utc', now()) - interval '90 days');
+  get diagnostics app = row_count;
+  return jsonb_build_object('events', ev, 'invites', inv, 'attempts', att, 'approvals', app);
+end;
+$$;
+
+-- 10. Access -------------------------------------------------------------------------------------------------------------
+
+do $$
+declare
+  t text;
+  fn text;
+begin
+  foreach t in array array['guardian_links', 'guardian_invites', 'guardian_invite_attempts', 'guardian_consents',
+                           'guardian_approval_requests', 'supervision_events'] loop
+    execute format('revoke all on table public.%I from public, anon, authenticated', t);
+    execute format('grant all on table public.%I to service_role', t);
+  end loop;
+  execute 'revoke all on sequence public.supervision_events_id_seq from public, anon, authenticated';
+  -- internal: other functions, triggers and the server only
+  foreach fn in array array[
+    'public.profile_age_band(uuid)', 'public.guardian_links_enabled()', 'public.first_name_of(uuid)',
+    'public.guard_consent_records()', 'public.minor_has_consent(uuid, text)', 'public.minor_guardian_count(uuid)',
+    'public.minor_link_slots_used(uuid)', 'public.is_supervising_guardian(uuid)', 'public.is_guardian_of_record(uuid, uuid)',
+    'public.log_supervision_event(uuid, text, jsonb)', 'public.athlete_profile_for_player(uuid)',
+    'public.minor_payout_hold_reason(uuid, uuid)', 'public.enforce_minor_consent(uuid)', 'public.close_under_13_account(uuid)',
+    'public.guard_consent_truncate()', 'public.apply_teen_defaults(uuid)',
+    'public.profiles_apply_new_account_rules()', 'public.guard_profiles_age()', 'public.minor_status_json(uuid, boolean)',
+    'public.guardian_invite_for_code(text)', 'public.record_guardian_consent(uuid, text, text, boolean, boolean, text, text)',
+    'public.close_guardian_link(uuid, text)', 'public.user_blocks_end_guardian_links()',
+    'public.supervision_json(uuid, timestamptz)', 'public.verified_player_of(uuid)', 'public.guardian_view(uuid)'
+  ] loop
+    execute format('revoke all on function %s from public, anon, authenticated', fn);
+    execute format('grant execute on function %s to service_role', fn);
+  end loop;
+  -- evaluated as the caller inside the "Closed accounts" policies; answers only about the caller
+  execute 'revoke all on function public.caller_not_age_blocked() from public, anon';
+  execute 'grant execute on function public.caller_not_age_blocked() to authenticated, service_role';
+  -- pure helpers (no lookups)
+  foreach fn in array array['public.age_band_from(integer, integer, date)', 'public.is_minor_band(text)',
+                            'public.guardian_consent_form_version()', 'public.guardian_consent_form_sha256()'] loop
+    execute format('grant execute on function %s to anon, authenticated, service_role', fn);
+  end loop;
+  -- signed-in only
+  foreach fn in array array[
+    'public.set_my_birth_month(integer, integer)', 'public.get_my_privacy()', 'public.set_my_privacy(jsonb)',
+    'public.request_friend(uuid)', 'public.create_guardian_invite()', 'public.preview_guardian_invite(text)',
+    'public.accept_guardian_invite(text, text, text, boolean, boolean, text, text)', 'public.respond_guardian_link(uuid, boolean)',
+    'public.sign_guardian_consent(uuid, text, text, boolean, boolean, text, text)', 'public.revoke_guardian_consent(uuid)',
+    'public.end_guardian_link(uuid)', 'public.get_my_supervision()', 'public.guardian_get_supervision(uuid)',
+    'public.guardian_list_minors()', 'public.guardian_decide_approval(uuid, boolean)', 'public.cancel_my_approval_request(uuid)',
+    'public.admin_minor_overview(uuid)', 'public.admin_set_birth_month(uuid, integer, integer, text)',
+    'public.admin_end_guardian_link(uuid, text)', 'public.admin_minor_report()', 'public.admin_list_age_blocked()',
+    'public.admin_purge_minor_records()'
+  ] loop
+    execute format('revoke all on function %s from public, anon', fn);
+    execute format('grant execute on function %s to authenticated, service_role', fn);
+  end loop;
+end;
+$$;
+
+-- 11. Closed accounts on every RLS table ------------------------------------------------------------------------------
+
+do $$
+declare
+  tbl text;
+begin
+  for tbl in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+             where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity loop
+    execute format('drop policy if exists "Closed accounts" on public.%I', tbl);
+    execute format('create policy "Closed accounts" on public.%I as restrictive for all to authenticated
+                    using ((select public.caller_not_age_blocked())) with check ((select public.caller_not_age_blocked()))', tbl);
+  end loop;
+  -- Uploads too (avatars, reels): a closed account cannot add or change files.
+  if to_regclass('storage.objects') is not null then
+    execute 'drop policy if exists "Closed accounts" on storage.objects';
+    execute 'create policy "Closed accounts" on storage.objects as restrictive for all to authenticated
+             using ((select public.caller_not_age_blocked())) with check ((select public.caller_not_age_blocked()))';
+  end if;
+end;
+$$;
+
+-- Payee verification: who may receive an athlete's donations, how they were verified, and who can change payout flags
+-- (VERIFY-02, 2026-10-14). Plan and owner decisions: docs/engineering/design/PAYEE_VERIFICATION_PLAN.md.
+--
+-- Purpose
+--   Owner decisions 2026-10-14: (1) an earner's Social Security number goes to Stripe only (Stripe-hosted Connect
+--   onboarding verifies it and issues tax forms); Tapua'i never stores an SSN or part of one; (2) a guardian may receive a
+--   minor's money only after Stripe verifies their identity AND the school confirms in person that they are the parent on
+--   record (support reviews a birth certificate or court order as the fallback, without keeping it); (3) Stripe Identity
+--   (ID + selfie) only for disputes; (4) payout flags change by hand only with a written reason and a second admin.
+--   1. payee_verifications: append-only record of each check (provider, method, Stripe reference, status, yes/no
+--      checks, recorder, second reviewer, reason). looks_like_ssn() refuses SSN-shaped text. No client access.
+--   2. payee_for_player / payee_hold_reason: the actual payee and the account that would be paid (the guardian on record
+--      and their custodial account while they hold the money, or their own account for a minor; otherwise the athlete's
+--      account) needs a current Stripe identity + TIN check FOR THAT ACCOUNT and, for a guardian, a relationship check
+--      confirmed by two admins. athlete_payout_status adds 'needs_payee_verification'. "Transfers active"
+--      (payouts_enabled) is no longer read as identity.
+--   3. record_stripe_kyc (server only) records Stripe's result for the future account.updated webhook (CONNECT).
+--   4. Payout flags (profiles.stripe_connect_id / payouts_enabled / stripe_onboarding_complete and the custodial
+--      account's) change only from the server or through an override approved by an independent second admin.
+--   5. A changed guardian on record or Connect account supersedes the old checks (re-verification).
+--   6. Admin: overview, relationship check (recorded, then confirmed by a second admin), revoke, override, report.
+--   RLS_SECURITY review (2026-10-14) applied: one admin could make themselves (or an accomplice) guardian and unlock a
+--   payout → relationship checks need a second, independent admin and never the subject; revoke failed (ambiguous
+--   name) → fixed; the verified person was not tied to the account being paid → KYC must match that Stripe account and
+--   the custodial holder must be the guardian on record; a minor could be their own guardian payee → refused; an override
+--   could be approved by the person it benefits → refused; the SSN filter refused ordinary long numbers and missed
+--   dotted / spaced / full-width forms and "SSN last four" → looks_like_ssn() with readable messages; the append-only
+--   guard could be bypassed by nulling a reference → compared separately; no delete or truncate.
+--
+-- Owner: CONNECT (via COMMERCE, CTO) with CUSTODIAL, ATHLETE_VERIFICATION, ADMIN; reviews RLS_SECURITY, SECURITY,
+--   PRIVACY_ENGINEERING, INFO_RETURNS, LEGAL (row AA), DATA_GOVERNANCE.
+-- Needs: 20261014110000_minor_accounts.sql first.
+-- Safe to re-run: create table if not exists; create or replace; drop trigger if exists.
+-- Applied: written 2026-10-14, not applied anywhere. Payouts stay blocked (503) regardless; createPayout.ts must pay
+--   payee_for_player's account before payouts are unblocked (CONNECT follow-up).
+-- Rollback: drop the two new tables and the functions and triggers below; re-apply athlete_payout_status from
+--   20261014110000; admin writes to the payout flags come back (guard_profiles_admin_escalation still allows them).
+
+-- 1. Records -----------------------------------------------------------------------------------------------------------
+
+-- SSN-shaped text: nine digits with at most three separators between each (dashes, dots, spaces, full-width forms after
+-- NFKC), or "SSN" / "social security" followed by digits (even the last four). Ordinary dates and times pass; phone
+-- numbers and other long runs of digits are refused too (they do not belong in a verification reason).
+create or replace function public.looks_like_ssn(value text)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select coalesce(
+    normalize(value, NFKC) ~ '([0-9][^0-9A-Za-z]{0,3}){8}[0-9]'
+    -- no-ssn-check: this pattern is the guard itself
+    or normalize(value, NFKC) ~* '(ssn|social[^A-Za-z]*security|tax[^A-Za-z]*id)[^0-9]{0,25}[0-9]{2,}',
+    false);
+$$;
+
+create table if not exists public.payee_verifications (
+  id uuid primary key default gen_random_uuid(),
+  subject_profile_id uuid references public.profiles (id) on delete set null,
+  player_id uuid references public.players (id) on delete set null,
+  role text not null check (role in ('adult_athlete', 'guardian_payee')),
+  method text not null check (method in ('stripe_connect_kyc', 'school_parent_confirmation', 'document_review', 'stripe_identity')),
+  provider text not null check (provider in ('stripe', 'school', 'support')),
+  -- Stripe object ids only (acct_…, vs_…); never a number a person typed.
+  provider_ref text check (provider_ref is null or provider_ref ~ '^(acct|vs|vi)_[A-Za-z0-9]{6,64}$'),
+  status text not null check (status in ('pending', 'verified', 'requires_input', 'failed', 'revoked', 'superseded')),
+  checks jsonb not null default '{}'::jsonb,
+  verified_at timestamptz,
+  expires_at timestamptz,
+  reviewer_id uuid references public.profiles (id) on delete set null,
+  -- the independent admin who confirmed a relationship check (two-person rule)
+  second_reviewer_id uuid references public.profiles (id) on delete set null,
+  reason text check (reason is null or char_length(reason) <= 500),
+  superseded_at timestamptz,
+  created_at timestamptz not null default timezone('utc', now()),
+  -- Owner decision: no SSN, not even part of one, ever lands here.
+  constraint payee_verifications_no_ssn check (not public.looks_like_ssn(coalesce(reason, ''))),
+  constraint payee_verifications_known_checks check (
+    jsonb_typeof(checks) = 'object'
+    and checks - array['identity', 'tin', 'bank', 'relationship', 'document_kept'] = '{}'::jsonb
+  )
+);
+create index if not exists payee_verifications_subject_idx on public.payee_verifications (subject_profile_id, created_at desc);
+create index if not exists payee_verifications_player_idx on public.payee_verifications (player_id, created_at desc);
+
+create table if not exists public.payout_flag_overrides (
+  id uuid primary key default gen_random_uuid(),
+  subject_profile_id uuid not null references public.profiles (id) on delete cascade,
+  player_id uuid references public.players (id) on delete cascade,
+  target text not null check (target in ('profile', 'custodial')),
+  payouts_enabled boolean not null,
+  reason text not null check (char_length(btrim(reason)) between 10 and 500 and not public.looks_like_ssn(reason)),
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected', 'expired')),
+  requested_by uuid references public.profiles (id) on delete set null,
+  requested_at timestamptz not null default timezone('utc', now()),
+  decided_by uuid references public.profiles (id) on delete set null,
+  decided_at timestamptz,
+  constraint payout_flag_overrides_custodial_player check (target = 'profile' or player_id is not null)
+);
+create index if not exists payout_flag_overrides_pending_idx on public.payout_flag_overrides (status, requested_at desc);
+
+alter table public.payee_verifications enable row level security;
+alter table public.payout_flag_overrides enable row level security;
+
+-- Append-only. The only changes: pending → verified (second reviewer and time set, once), a live record → superseded /
+-- revoked (once), and a reference becoming null when that account is deleted. No deletes, no truncate.
+create or replace function public.guard_payee_verifications()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'DELETE' then
+    raise exception 'Verification records are kept.';
+  end if;
+  if (new.id, new.role, new.method, new.provider, new.provider_ref, new.checks, new.expires_at, new.reason, new.created_at)
+     is distinct from (old.id, old.role, old.method, old.provider, old.provider_ref, old.checks, old.expires_at, old.reason, old.created_at)
+     or (new.subject_profile_id is distinct from old.subject_profile_id and new.subject_profile_id is not null)
+     or (new.player_id is distinct from old.player_id and new.player_id is not null)
+     or (new.reviewer_id is distinct from old.reviewer_id and new.reviewer_id is not null) then
+    raise exception 'Verification records are kept as recorded.';
+  end if;
+  if new.status is distinct from old.status then
+    if old.status = 'pending' and new.status = 'verified' then
+      if old.second_reviewer_id is not null or new.second_reviewer_id is null or new.verified_at is null then
+        raise exception 'Verification records are kept as recorded.';
+      end if;
+    elsif not (old.status in ('pending', 'verified', 'requires_input') and new.status in ('superseded', 'revoked')) then
+      raise exception 'Verification records are kept as recorded.';
+    end if;
+  elsif new.second_reviewer_id is distinct from old.second_reviewer_id and new.second_reviewer_id is not null
+        or new.verified_at is distinct from old.verified_at then
+    raise exception 'Verification records are kept as recorded.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists payee_verifications_append_only on public.payee_verifications;
+create trigger payee_verifications_append_only
+  before update or delete on public.payee_verifications
+  for each row execute function public.guard_payee_verifications();
+
+create or replace function public.guard_payee_truncate()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  raise exception 'Verification records are kept.';
+end;
+$$;
+
+drop trigger if exists payee_verifications_no_truncate on public.payee_verifications;
+create trigger payee_verifications_no_truncate
+  before truncate on public.payee_verifications
+  for each statement execute function public.guard_payee_truncate();
+
+-- 2. Who the payee is, and is it verified ------------------------------------------------------------------------------
+
+-- The payee and the Stripe account that would be paid. While the guardian holds the money (custodial account, before
+-- handover) the payee is the guardian on record and the account is the custodial one — and only if that account belongs
+-- to the guardian on record. For a known minor without a custodial account, the guardian on record and their own
+-- account. Otherwise the athlete's own account. A guardian who is the athlete's own account, or not a recorded adult,
+-- is no payee.
+create or replace function public.payee_for_player(target_player_id uuid)
+returns table (payee_profile_id uuid, payee_role text, payee_account text)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  guardian uuid;
+  account uuid := public.athlete_profile_for_player(target_player_id);
+  ca public.custodial_accounts%rowtype;
+  bd date;
+  band text;
+  guardian_holds boolean;
+  minor boolean;
+begin
+  select pl.guardian_id into guardian from public.players pl where pl.id = target_player_id;
+  select * into ca from public.custodial_accounts c where c.player_id = target_player_id;
+  select b.birth_date into bd from public.athlete_birthdates b where b.player_id = target_player_id;
+  band := case when account is null then 'unknown' else public.profile_age_band(account) end;
+  guardian_holds := ca.player_id is not null and not public.athlete_controls_money(target_player_id);
+  minor := (bd is not null and bd > current_date - interval '18 years') or public.is_minor_band(band) or band = 'under_13';
+  if guardian_holds or minor then
+    if guardian is null or guardian is not distinct from account or public.profile_age_band(guardian) <> 'adult'
+       or (ca.player_id is not null and ca.guardian_id is distinct from guardian) then
+      return query select null::uuid, 'guardian_payee'::text, null::text;
+    elsif ca.player_id is not null then
+      return query select guardian, 'guardian_payee'::text, ca.stripe_connect_id;
+    else
+      return query select guardian, 'guardian_payee'::text, (select g.stripe_connect_id from public.profiles g where g.id = guardian);
+    end if;
+  else
+    return query select account, 'adult_athlete'::text, (select a.stripe_connect_id from public.profiles a where a.id = account);
+  end if;
+end;
+$$;
+
+-- The newest live record of these methods for this payee (and athlete, and Stripe account, when given).
+create or replace function public.current_payee_check(subject uuid, target_player_id uuid, check_methods text[], stripe_account text default null)
+returns public.payee_verifications
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select v.* from public.payee_verifications v
+  where v.subject_profile_id = subject
+    and v.method = any (check_methods)
+    and (target_player_id is null or v.player_id = target_player_id)
+    and (stripe_account is null or v.provider_ref = stripe_account)
+    and v.status not in ('superseded', 'revoked')
+    and (v.expires_at is null or v.expires_at > timezone('utc', now()))
+  order by v.created_at desc
+  limit 1;
+$$;
+
+-- What is still needed, as a list: 'payee' (nobody valid to pay), 'identity' (Stripe identity + TIN for the account
+-- that would be paid), 'relationship' (a two-admin-confirmed school confirmation or document review, for a guardian).
+-- Empty = verified.
+create or replace function public.payee_missing_checks(target_player_id uuid)
+returns text[]
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  payee uuid;
+  payee_role text;
+  payee_account text;
+  kyc public.payee_verifications;
+  rel public.payee_verifications;
+  missing text[] := array[]::text[];
+begin
+  select p.payee_profile_id, p.payee_role, p.payee_account into payee, payee_role, payee_account from public.payee_for_player(target_player_id) p;
+  if payee is null then
+    return array['payee'];
+  end if;
+  if payee_account is not null then
+    kyc := public.current_payee_check(payee, null, array['stripe_connect_kyc'], payee_account);
+  end if;
+  if kyc.id is null or kyc.status <> 'verified' or coalesce((kyc.checks ->> 'identity')::boolean, false) is not true
+     or coalesce((kyc.checks ->> 'tin')::boolean, false) is not true then
+    missing := array_append(missing, 'identity');
+  end if;
+  if payee_role = 'guardian_payee' then
+    rel := public.current_payee_check(payee, target_player_id, array['school_parent_confirmation', 'document_review']);
+    if rel.id is null or rel.status <> 'verified' or rel.second_reviewer_id is null then
+      missing := array_append(missing, 'relationship');
+    end if;
+  end if;
+  return missing;
+end;
+$$;
+
+create or replace function public.payee_hold_reason(target_player_id uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select case when cardinality(public.payee_missing_checks(target_player_id)) = 0 then null else 'needs_payee_verification' end;
+$$;
+
+-- 3. The payout gate ----------------------------------------------------------------------------------------------
+
+-- Same as MINOR-01, plus payee_hold_reason wherever money would otherwise be allowed (the payout flags alone are no
+-- longer read as identity).
+--   reason   why it is held: 'disputed' | 'no_claim' | 'needs_payout_setup' | 'needs_guardian_consent' |
+--            'needs_birth_month' | 'needs_payee_verification' | null
+create or replace function public.athlete_payout_status(target_player_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  req public.verification_requests%rowtype;
+  open_claims integer;
+  claimant_kyc boolean;
+  guardian_kyc boolean;
+  guardian_holds boolean;
+  vouches integer := 0;
+  hold text;
+begin
+  if target_player_id is null then
+    return jsonb_build_object('allowed', false, 'path', null, 'cap_cents', null, 'reason', 'no_claim', 'vouches', 0);
+  end if;
+
+  if exists (
+    select 1 from public.profiles p
+    where p.player_id = target_player_id
+      and p.verification_status = 'verified'
+      and coalesce(p.is_verified, false)
+  ) then
+    hold := coalesce(public.minor_payout_hold_reason(target_player_id, public.athlete_profile_for_player(target_player_id)),
+                     public.payee_hold_reason(target_player_id));
+    if hold is not null then
+      return jsonb_build_object('allowed', false, 'path', 'school', 'cap_cents', null, 'reason', hold, 'vouches', 0);
+    end if;
+    return jsonb_build_object('allowed', true, 'path', 'school', 'cap_cents', null, 'reason', null, 'vouches', 0);
+  end if;
+
+  if exists (
+    select 1 from public.verification_requests v
+    where v.player_id = target_player_id and v.status = 'disputed'
+  ) then
+    return jsonb_build_object('allowed', false, 'path', null, 'cap_cents', null, 'reason', 'disputed', 'vouches', 0);
+  end if;
+
+  select count(*) into open_claims
+  from public.verification_requests v
+  where v.player_id = target_player_id and v.status = 'pending';
+  if open_claims <> 1 then
+    return jsonb_build_object('allowed', false, 'path', null, 'cap_cents', null, 'reason', 'no_claim', 'vouches', 0);
+  end if;
+
+  select * into req
+  from public.verification_requests v
+  where v.player_id = target_player_id and v.status = 'pending'
+  limit 1;
+
+  select count(*) into vouches from public.athlete_vouches av where av.request_id = req.id;
+
+  -- players.guardian_id is admin-set only; custodial_accounts.payouts_enabled is server-only.
+  select exists (
+    select 1
+    from public.custodial_accounts ca
+    join public.players pl on pl.id = ca.player_id and pl.guardian_id = ca.guardian_id
+    where ca.player_id = target_player_id and ca.payouts_enabled
+  ) into guardian_kyc;
+
+  guardian_holds := exists (select 1 from public.custodial_accounts ca where ca.player_id = target_player_id)
+    and not public.athlete_controls_money(target_player_id);
+
+  select coalesce(p.payouts_enabled, false) into claimant_kyc
+  from public.profiles p where p.id = req.requester_user_id;
+
+  if not (guardian_kyc or (coalesce(claimant_kyc, false) and not guardian_holds)) then
+    return jsonb_build_object('allowed', false, 'path', null, 'cap_cents', null, 'reason', 'needs_payout_setup', 'vouches', vouches);
+  end if;
+
+  -- the claimant is the account money would follow on this path
+  hold := coalesce(public.minor_payout_hold_reason(target_player_id, req.requester_user_id), public.payee_hold_reason(target_player_id));
+  if hold is not null then
+    return jsonb_build_object('allowed', false, 'path', 'identity', 'cap_cents', null, 'reason', hold, 'vouches', vouches);
+  end if;
+
+  return jsonb_build_object(
+    'allowed', true,
+    'path', 'identity',
+    'cap_cents', case when vouches >= 3 then null else public.athlete_pending_payout_cap_cents() end,
+    'reason', null,
+    'vouches', vouches
+  );
+end;
+$$;
+
+-- 4. Recording checks --------------------------------------------------------------------------------------------------
+
+-- Marks this payee's live checks of these methods superseded (a new check, or something changed that needs a new one).
+create or replace function public.supersede_payee_checks(subject uuid, target_player_id uuid, check_methods text[])
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.payee_verifications set status = 'superseded', superseded_at = timezone('utc', now())
+  where subject_profile_id = subject and method = any (check_methods)
+    and (target_player_id is null or player_id = target_player_id)
+    and status in ('pending', 'verified', 'requires_input');
+$$;
+
+-- Stripe's answer for a Connect account (server only: the account.updated webhook, CONNECT follow-up). Records identity /
+-- TIN / bank results against that exact account and, with the server's own flag, mirrors "transfers active".
+create or replace function public.record_stripe_kyc(account_id text, identity_verified boolean, tin_verified boolean, transfers_active boolean, details_due boolean default false)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  subject uuid;
+  is_custodial boolean := false;
+  rec uuid;
+begin
+  if not public.is_trusted_server() then
+    raise exception 'Only the server records Stripe results.';
+  end if;
+  select ca.guardian_id into subject from public.custodial_accounts ca where ca.stripe_connect_id = account_id limit 1;
+  is_custodial := subject is not null;
+  if subject is null then
+    select p.id into subject from public.profiles p where p.stripe_connect_id = account_id limit 1;
+  end if;
+  if subject is null then
+    raise exception 'Unknown Connect account.';
+  end if;
+  update public.payee_verifications set status = 'superseded', superseded_at = timezone('utc', now())
+  where subject_profile_id = subject and method = 'stripe_connect_kyc' and provider_ref = account_id
+    and status in ('pending', 'verified', 'requires_input');
+  insert into public.payee_verifications (subject_profile_id, role, method, provider, provider_ref, status, checks, verified_at)
+  values (
+    subject,
+    case when is_custodial or exists (select 1 from public.players pl where pl.guardian_id = subject) then 'guardian_payee' else 'adult_athlete' end,
+    'stripe_connect_kyc', 'stripe', account_id,
+    case when coalesce(identity_verified, false) and coalesce(tin_verified, false) then 'verified'
+         when coalesce(details_due, false) then 'requires_input' else 'pending' end,
+    jsonb_build_object('identity', coalesce(identity_verified, false), 'tin', coalesce(tin_verified, false), 'bank', coalesce(transfers_active, false)),
+    case when coalesce(identity_verified, false) and coalesce(tin_verified, false) then timezone('utc', now()) end
+  )
+  returning id into rec;
+  perform set_config('app.tapuai_payout_flag_write', 'on', true);
+  update public.profiles set payouts_enabled = coalesce(transfers_active, false) where stripe_connect_id = account_id;
+  update public.custodial_accounts set payouts_enabled = coalesce(transfers_active, false) where stripe_connect_id = account_id;
+  perform set_config('app.tapuai_payout_flag_write', 'off', true);
+  return rec;
+end;
+$$;
+
+-- An admin records a relationship check for the guardian on record: the school's in-person confirmation (default) or
+-- support's review of a birth certificate / court order (fallback; not kept); Stripe Identity only for a dispute. A
+-- passed check stays pending until a second, independent admin confirms it (admin_confirm_payee_check).
+create or replace function public.admin_record_payee_check(
+  target_player_id uuid, subject uuid, check_method text, passed boolean, p_reason text, provider_ref text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  rec uuid;
+  me uuid := public.my_profile_id();
+begin
+  perform public.require_admin_guard();
+  if check_method not in ('school_parent_confirmation', 'document_review', 'stripe_identity') then
+    raise exception 'Choose school parent confirmation, document review or Stripe Identity.';
+  end if;
+  if public.looks_like_ssn(coalesce(p_reason, '')) then
+    raise exception 'Leave numbers out of the reason: never an SSN, a document number or other long number.';
+  end if;
+  if char_length(btrim(coalesce(p_reason, ''))) < 10 then
+    raise exception 'Say what was checked and by whom (at least 10 characters).';
+  end if;
+  if subject is not distinct from me then
+    raise exception 'You cannot record a check about yourself.';
+  end if;
+  if public.profile_age_band(subject) <> 'adult' or subject is not distinct from public.athlete_profile_for_player(target_player_id) then
+    raise exception 'A guardian payee must be an adult other than the athlete.';
+  end if;
+  if not exists (select 1 from public.players pl where pl.id = target_player_id and pl.guardian_id = subject) then
+    raise exception 'Set this person as the athlete''s guardian on record first.';
+  end if;
+  insert into public.payee_verifications (subject_profile_id, player_id, role, method, provider, provider_ref, status, checks, reviewer_id, reason)
+  values (
+    subject, target_player_id, 'guardian_payee', check_method,
+    case check_method when 'school_parent_confirmation' then 'school' when 'document_review' then 'support' else 'stripe' end,
+    provider_ref,
+    case when coalesce(passed, false) then 'pending' else 'failed' end,
+    case check_method
+      when 'stripe_identity' then jsonb_build_object('identity', coalesce(passed, false))
+      when 'document_review' then jsonb_build_object('relationship', coalesce(passed, false), 'document_kept', false)
+      else jsonb_build_object('relationship', coalesce(passed, false)) end,
+    me, btrim(p_reason)
+  )
+  returning id into rec;
+  return rec;
+end;
+$$;
+
+-- The second admin: not the one who recorded it, not the person it is about. Confirming replaces older checks of the
+-- same kind.
+create or replace function public.admin_confirm_payee_check(verification_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.payee_verifications%rowtype;
+  me uuid := public.my_profile_id();
+begin
+  perform public.require_admin_guard();
+  select * into v from public.payee_verifications where id = verification_id for update;
+  if not found or v.status <> 'pending' or v.method = 'stripe_connect_kyc' then
+    raise exception 'There is nothing to confirm here.';
+  end if;
+  if v.reviewer_id is not distinct from me or v.subject_profile_id is not distinct from me then
+    raise exception 'A second admin, not the recorder or the person it is about, has to confirm this.';
+  end if;
+  update public.payee_verifications set status = 'superseded', superseded_at = timezone('utc', now())
+  where subject_profile_id = v.subject_profile_id and player_id = v.player_id and method = v.method
+    and id <> v.id and status in ('pending', 'verified', 'requires_input');
+  update public.payee_verifications
+  set status = 'verified', second_reviewer_id = me, verified_at = timezone('utc', now())
+  where id = v.id;
+end;
+$$;
+
+create or replace function public.admin_revoke_payee_check(verification_id uuid, p_reason text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  n integer;
+begin
+  perform public.require_admin_guard();
+  if public.looks_like_ssn(coalesce(p_reason, '')) then
+    raise exception 'Leave numbers out of the reason: never an SSN, a document number or other long number.';
+  end if;
+  if char_length(btrim(coalesce(p_reason, ''))) < 10 then
+    raise exception 'Give a reason (at least 10 characters).';
+  end if;
+  update public.payee_verifications set status = 'revoked', superseded_at = timezone('utc', now())
+  where id = verification_id and status in ('pending', 'verified', 'requires_input');
+  get diagnostics n = row_count;
+  if n = 0 then
+    raise exception 'This check is no longer live.';
+  end if;
+  insert into public.payee_verifications (subject_profile_id, player_id, role, method, provider, status, reviewer_id, reason)
+  select v.subject_profile_id, v.player_id, v.role, v.method, v.provider, 'revoked', public.my_profile_id(), 'Revoked: ' || btrim(p_reason)
+  from public.payee_verifications v where v.id = verification_id;
+end;
+$$;
+
+-- 5. Payout flags: the server, or two independent admins with a reason --------------------------------------------------
+
+create or replace function public.guard_payout_flags()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if public.is_trusted_server() or coalesce(current_setting('app.tapuai_payout_flag_write', true), '') = 'on' then
+    return new;
+  end if;
+  -- Nested: PL/pgSQL resolves every field named in a condition, so each table's columns are read only for that table.
+  if tg_table_name = 'profiles' then
+    if new.stripe_connect_id is distinct from old.stripe_connect_id
+       or new.payouts_enabled is distinct from old.payouts_enabled
+       or new.stripe_onboarding_complete is distinct from old.stripe_onboarding_complete then
+      raise exception 'Payout settings change only from Stripe, or with a second admin''s approval.';
+    end if;
+  elsif new.stripe_connect_id is distinct from old.stripe_connect_id or new.payouts_enabled is distinct from old.payouts_enabled
+        or new.guardian_id is distinct from old.guardian_id then
+    raise exception 'Payout settings change only from Stripe, or with a second admin''s approval.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_payout_flags_guard on public.profiles;
+create trigger profiles_payout_flags_guard
+  before update on public.profiles
+  for each row execute function public.guard_payout_flags();
+drop trigger if exists custodial_payout_flags_guard on public.custodial_accounts;
+create trigger custodial_payout_flags_guard
+  before update on public.custodial_accounts
+  for each row execute function public.guard_payout_flags();
+
+create or replace function public.admin_request_payout_override(subject uuid, target_player_id uuid, enable boolean, p_reason text)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  rec uuid;
+begin
+  perform public.require_admin_guard();
+  if public.looks_like_ssn(coalesce(p_reason, '')) then
+    raise exception 'Leave numbers out of the reason: never an SSN, a document number or other long number.';
+  end if;
+  if char_length(btrim(coalesce(p_reason, ''))) < 10 then
+    raise exception 'Give a reason (at least 10 characters).';
+  end if;
+  if target_player_id is not null
+     and not exists (select 1 from public.custodial_accounts ca where ca.player_id = target_player_id and ca.guardian_id = subject) then
+    raise exception 'That custodial account belongs to someone else.';
+  end if;
+  insert into public.payout_flag_overrides (subject_profile_id, player_id, target, payouts_enabled, reason, requested_by)
+  values (subject, target_player_id, case when target_player_id is null then 'profile' else 'custodial' end, coalesce(enable, false), btrim(p_reason), public.my_profile_id())
+  returning id into rec;
+  return rec;
+end;
+$$;
+
+-- A second admin (not the requester, not the person it affects, not the athlete's guardian) decides within 7 days.
+create or replace function public.admin_decide_payout_override(override_id uuid, approve boolean)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  o public.payout_flag_overrides%rowtype;
+  me uuid := public.my_profile_id();
+begin
+  perform public.require_admin_guard();
+  select * into o from public.payout_flag_overrides where id = override_id for update;
+  if not found or o.status <> 'pending' then
+    raise exception 'This request was already handled.';
+  end if;
+  if o.requested_by is not distinct from me or o.subject_profile_id is not distinct from me
+     or (o.player_id is not null and exists (select 1 from public.players pl where pl.id = o.player_id and pl.guardian_id = me)) then
+    raise exception 'A second, independent admin has to decide this.';
+  end if;
+  if o.requested_at <= timezone('utc', now()) - interval '7 days' then
+    update public.payout_flag_overrides set status = 'expired', decided_at = timezone('utc', now()) where id = o.id;
+    return 'expired';
+  end if;
+  if coalesce(approve, false) then
+    perform set_config('app.tapuai_payout_flag_write', 'on', true);
+    if o.target = 'profile' then
+      update public.profiles set payouts_enabled = o.payouts_enabled where id = o.subject_profile_id;
+    else
+      update public.custodial_accounts set payouts_enabled = o.payouts_enabled
+      where player_id = o.player_id and guardian_id = o.subject_profile_id;
+    end if;
+    perform set_config('app.tapuai_payout_flag_write', 'off', true);
+  end if;
+  update public.payout_flag_overrides
+  set status = case when coalesce(approve, false) then 'approved' else 'rejected' end, decided_by = me, decided_at = timezone('utc', now())
+  where id = o.id;
+  return case when coalesce(approve, false) then 'approved' else 'rejected' end;
+end;
+$$;
+
+-- 6. Re-verification ----------------------------------------------------------------------------------------------------
+
+-- A new guardian on record needs new checks; so does a new Connect account.
+create or replace function public.payee_changes_supersede()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  -- Nested: PL/pgSQL resolves every field named in a condition, so each table's columns are read only for that table.
+  if tg_table_name = 'players' then
+    if new.guardian_id is distinct from old.guardian_id and old.guardian_id is not null then
+      perform public.supersede_payee_checks(old.guardian_id, new.id, array['school_parent_confirmation', 'document_review', 'stripe_identity']);
+    end if;
+  elsif tg_table_name = 'profiles' then
+    if new.stripe_connect_id is distinct from old.stripe_connect_id then
+      perform public.supersede_payee_checks(new.id, null, array['stripe_connect_kyc']);
+    end if;
+  elsif tg_table_name = 'custodial_accounts' then
+    if new.stripe_connect_id is distinct from old.stripe_connect_id or new.guardian_id is distinct from old.guardian_id then
+      perform public.supersede_payee_checks(old.guardian_id, null, array['stripe_connect_kyc']);
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists players_payee_supersede on public.players;
+create trigger players_payee_supersede after update of guardian_id on public.players
+  for each row execute function public.payee_changes_supersede();
+drop trigger if exists profiles_payee_supersede on public.profiles;
+create trigger profiles_payee_supersede after update of stripe_connect_id on public.profiles
+  for each row execute function public.payee_changes_supersede();
+drop trigger if exists custodial_payee_supersede on public.custodial_accounts;
+create trigger custodial_payee_supersede after update of stripe_connect_id, guardian_id on public.custodial_accounts
+  for each row execute function public.payee_changes_supersede();
+
+-- 7. Admin ---------------------------------------------------------------------------------------------------------------
+
+-- One person's payee picture: athletes they are the payee for (as the athlete or the guardian on record), what each
+-- still needs, the check history (never an SSN; no document), the payout flags and open override requests.
+create or replace function public.admin_payee_overview(target_profile_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+begin
+  perform public.require_admin_guard();
+  return jsonb_build_object(
+    'payouts_enabled', (select coalesce(p.payouts_enabled, false) from public.profiles p where p.id = target_profile_id),
+    'has_connect_account', (select p.stripe_connect_id is not null from public.profiles p where p.id = target_profile_id),
+    'is_me', target_profile_id is not distinct from me,
+    'athletes', coalesce((
+      select jsonb_agg(jsonb_build_object('player_id', pl.id, 'name', pl.name,
+        'as', case when pl.guardian_id = target_profile_id then 'guardian' else 'athlete' end,
+        'payee_is_this_person', (select f.payee_profile_id = target_profile_id from public.payee_for_player(pl.id) f),
+        'missing', to_jsonb(public.payee_missing_checks(pl.id)),
+        'payout', public.athlete_payout_status(pl.id)) order by pl.name)
+      from public.players pl
+      where pl.guardian_id = target_profile_id
+         or pl.id = (select p.player_id from public.profiles p where p.id = target_profile_id and p.verification_status = 'verified')
+    ), '[]'::jsonb),
+    'checks', coalesce((
+      select jsonb_agg(jsonb_build_object('id', v.id, 'player_id', v.player_id, 'role', v.role, 'method', v.method,
+        'provider', v.provider, 'status', v.status, 'checks', v.checks, 'verified_at', v.verified_at, 'created_at', v.created_at,
+        'reviewer', (select r.full_name from public.profiles r where r.id = v.reviewer_id),
+        'second_reviewer', (select r.full_name from public.profiles r where r.id = v.second_reviewer_id),
+        'recorded_by_me', v.reviewer_id is not distinct from me, 'reason', v.reason) order by v.created_at desc)
+      from public.payee_verifications v where v.subject_profile_id = target_profile_id
+    ), '[]'::jsonb),
+    'overrides', coalesce((
+      select jsonb_agg(jsonb_build_object('id', o.id, 'target', o.target, 'player_id', o.player_id, 'payouts_enabled', o.payouts_enabled,
+        'reason', o.reason, 'status', o.status, 'requested_at', o.requested_at,
+        'requested_by', (select r.full_name from public.profiles r where r.id = o.requested_by),
+        'mine', o.requested_by is not distinct from me) order by o.requested_at desc)
+      from public.payout_flag_overrides o where o.subject_profile_id = target_profile_id
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+create or replace function public.admin_payee_report()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_admin_guard();
+  return jsonb_build_object(
+    'verified_identity', (select count(distinct v.subject_profile_id) from public.payee_verifications v
+                          where v.method = 'stripe_connect_kyc' and v.status = 'verified'),
+    'verified_relationship', (select count(*) from public.payee_verifications v
+                              where v.method in ('school_parent_confirmation', 'document_review') and v.status = 'verified'),
+    'awaiting_second_admin', (select count(*) from public.payee_verifications v where v.status = 'pending' and v.method <> 'stripe_connect_kyc'),
+    'needs_input', (select count(*) from public.payee_verifications v where v.status = 'requires_input'),
+    'failed_30d', (select count(*) from public.payee_verifications v where v.status = 'failed' and v.created_at > timezone('utc', now()) - interval '30 days'),
+    'overrides_waiting', (select count(*) from public.payout_flag_overrides o
+                          where o.status = 'pending' and o.requested_at > timezone('utc', now()) - interval '7 days')
+  );
+end;
+$$;
+
+-- 8. Access ----------------------------------------------------------------------------------------------------------------
+
+do $$
+declare
+  t text;
+  fn text;
+begin
+  foreach t in array array['payee_verifications', 'payout_flag_overrides'] loop
+    execute format('revoke all on table public.%I from public, anon, authenticated', t);
+    execute format('grant select, insert, update on table public.%I to service_role', t);
+    execute format('revoke delete, truncate on table public.%I from service_role', t);
+    -- MINOR-01 rule for every RLS table: closed (under-13) accounts are refused.
+    execute format('drop policy if exists "Closed accounts" on public.%I', t);
+    execute format('create policy "Closed accounts" on public.%I as restrictive for all to authenticated
+                    using ((select public.caller_not_age_blocked())) with check ((select public.caller_not_age_blocked()))', t);
+  end loop;
+  foreach fn in array array[
+    'public.guard_payee_verifications()', 'public.guard_payee_truncate()', 'public.payee_for_player(uuid)',
+    'public.current_payee_check(uuid, uuid, text[], text)', 'public.payee_missing_checks(uuid)', 'public.payee_hold_reason(uuid)',
+    'public.supersede_payee_checks(uuid, uuid, text[])', 'public.record_stripe_kyc(text, boolean, boolean, boolean, boolean)',
+    'public.guard_payout_flags()', 'public.payee_changes_supersede()'
+  ] loop
+    execute format('revoke all on function %s from public, anon, authenticated', fn);
+    execute format('grant execute on function %s to service_role', fn);
+  end loop;
+  -- pure helper (no lookups), used in CHECK constraints
+  execute 'grant execute on function public.looks_like_ssn(text) to anon, authenticated, service_role';
+  foreach fn in array array[
+    'public.admin_record_payee_check(uuid, uuid, text, boolean, text, text)', 'public.admin_confirm_payee_check(uuid)',
+    'public.admin_revoke_payee_check(uuid, text)', 'public.admin_request_payout_override(uuid, uuid, boolean, text)',
+    'public.admin_decide_payout_override(uuid, boolean)', 'public.admin_payee_overview(uuid)', 'public.admin_payee_report()'
+  ] loop
+    execute format('revoke all on function %s from public, anon', fn);
+    execute format('grant execute on function %s to authenticated, service_role', fn);
+  end loop;
+end;
+$$;
+
+-- Workout challenges, part 1a: preset responses, friend invites, the "Challenge finisher" badge and the admin desk
+-- (CHAL-01, 2026-10-16). Design: docs/engineering/design/WORKOUT_CHALLENGES_DESIGN.md (§6 "1a" overrides §1–§5).
+--
+-- Purpose
+--   On a public Train Like Me workout, a signed-in fan can answer with one preset ("Challenge accepted!", "Love this
+--   workout", "I'm in", "Did it! 💪") and invite an accepted friend to try it. No free text, no list of who responded.
+--   1. challenge_responses: one preset per account per post, changeable or removable; 50 posts a day. Only on a
+--      listable, non-Vault, non-Exclusive `train_like_me` post with a confirmed athlete tag whose athlete account allows
+--      challenges. Eligible: signed in, not closed, age band known (`unknown` / `not_given` count as 13–15).
+--   2. challenge_counts: counts per preset, each hidden below 5; on a minor athlete's post only the athlete and their
+--      guardian see them. Closed responders and responders blocked with the athlete or the viewer do not count.
+--   3. challenge_nudges: "{name} invited you to try {athlete}'s workout", in Activity only (never a push). Accepted
+--      two-way friends only; 5 a day per sender and 1 per pair per day across all posts, counted under a per-sender
+--      lock. A mute (everyone or one sender), a block, or an admin mute drops the invite silently: the row is kept with
+--      delivered = false so the limits behave exactly the same and the sender cannot tell. Deleted after 30 days.
+--   4. challenge_athlete_settings: "Allow challenges on my workouts". With no row the default is on for adults and off
+--      for everyone else (minors, unknown ages). Changing it logs a MINOR-01 supervision event; the guardian summary
+--      gains `challenge_invites_7d` (a count, never who).
+--   5. challenge_badges: "Challenge finisher" after "Did it! 💪" on 3 different workouts. Private, noncash.
+--   6. Admin: the challenges.enabled switch (off; refused while PRIV-01 / MINOR-01 objects are missing), per-post
+--      aggregate counts, the nudge-abuse view (counts per sender, recipient ids only) with a mute or suspend that needs
+--      a reason (challenge_sender_holds, audited in challenge_admin_events), retention, and erasure.
+--   7. challenge_response_quota: minimal responder/post IDs and last-response time enforce 50 distinct workouts in
+--      rolling 24 hours despite response/post removal. No reel FK, so deletion cannot reset the quota or resurrect a post.
+--      Expired entries are pruned on participant writes and by admin retention; own export and privileged erasure
+--      cover them. Support erasure deliberately clears quota, even if the account survives; not a self-service reset.
+--   8. Export (challenge_export_my_data) and erasure (admin_challenge_erase, challenge_erase_profile, and on delete
+--      cascade from profiles) cover every challenge table. A sender's export never shows whether an invite was dropped.
+--   Every table is RPC-only (RLS on, no client grants, the restrictive "Closed accounts" policy); every function pins
+--   search_path. Functions that use PRIV-01 / MINOR-01 objects are plpgsql (late-bound), so this file applies on a
+--   database without them and the switch then refuses with the missing pieces named.
+--
+-- Owner: HIGHLIGHTS (via ENGINEERING, CTO), with BACKEND, DATABASE_MIGRATIONS, ADMIN; reviews MINOR_SAFETY,
+--   PRIVACY_ENGINEERING, RLS_SECURITY, MODERATION, VOICE, SUPPORT, DATA_GOVERNANCE.
+-- Needs: 20261014090000_profile_privacy.sql and 20261014110000_minor_accounts.sql for the switch to turn on. If either
+--   is applied after this file, re-run this file (the guardian summary count and the "Closed accounts" policy are
+--   added only when MINOR-01 exists; the switch lists what is missing).
+-- Safe to re-run: create table if not exists; create or replace; drop policy / trigger if exists.
+-- Applied: written 2026-10-16, not applied anywhere.
+-- Rollback: drop the eight challenge_* tables and the functions below, then re-run supervision_json from
+--   20261014110000_minor_accounts.sql (it drops the challenge_invites_7d count).
+
+-- 1. Tables -------------------------------------------------------------------------------------------------------------
+
+create table if not exists public.challenge_responses (
+  reel_id uuid not null references public.reels (id) on delete cascade,
+  responder_id uuid not null references public.profiles (id) on delete cascade,
+  preset text not null check (preset in ('accepted', 'love_it', 'im_in', 'did_it')),
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  primary key (reel_id, responder_id)
+);
+create index if not exists challenge_responses_responder_idx on public.challenge_responses (responder_id, updated_at desc);
+
+-- Minimal abuse counter, not response history. No reel FK: a deleted workout still consumes its recent slot.
+-- Ownership: HIGHLIGHTS / BACKEND; no text or preset, no growth reuse. Profile deletion cascades; expiry and
+-- privileged support erasure remove rows. Timestamp is captured by the server under the per-responder lock.
+create table if not exists public.challenge_response_quota (
+  responder_id uuid not null references public.profiles (id) on delete cascade,
+  reel_id uuid not null,
+  last_responded_at timestamptz not null,
+  primary key (responder_id, reel_id)
+);
+create index if not exists challenge_response_quota_expiry_idx on public.challenge_response_quota (last_responded_at);
+-- Reapplying over an older local challenge schema preserves still-recent recorded responses without overwriting
+-- a newer durable quota entry. Existing timestamps are recorded response times, not reconstructed history.
+insert into public.challenge_response_quota as q (responder_id, reel_id, last_responded_at)
+select r.responder_id, r.reel_id, r.updated_at from public.challenge_responses r
+where r.updated_at > now() - interval '24 hours'
+on conflict (responder_id, reel_id) do update
+  set last_responded_at = greatest(q.last_responded_at, excluded.last_responded_at);
+
+-- delivered = false: dropped because of a mute, a block or an admin mute. Kept (30 days, like the rest) only so the
+-- limits count it and the sender cannot tell; never shown to the recipient or in the sender's export.
+create table if not exists public.challenge_nudges (
+  id uuid primary key default gen_random_uuid(),
+  sender_id uuid not null references public.profiles (id) on delete cascade,
+  recipient_id uuid not null references public.profiles (id) on delete cascade,
+  reel_id uuid not null references public.reels (id) on delete cascade,
+  delivered boolean not null,
+  created_at timestamptz not null default timezone('utc', now()),
+  constraint challenge_nudges_not_self check (sender_id <> recipient_id)
+);
+create index if not exists challenge_nudges_sender_idx on public.challenge_nudges (sender_id, created_at desc);
+create index if not exists challenge_nudges_recipient_idx on public.challenge_nudges (recipient_id, created_at desc);
+create index if not exists challenge_nudges_reel_idx on public.challenge_nudges (reel_id);
+
+-- sender_id null = mute everyone.
+create table if not exists public.challenge_mutes (
+  id bigint generated always as identity primary key,
+  recipient_id uuid not null references public.profiles (id) on delete cascade,
+  sender_id uuid references public.profiles (id) on delete cascade,
+  created_at timestamptz not null default timezone('utc', now()),
+  constraint challenge_mutes_not_self check (sender_id is null or sender_id <> recipient_id)
+);
+create unique index if not exists challenge_mutes_all_uidx on public.challenge_mutes (recipient_id) where sender_id is null;
+create unique index if not exists challenge_mutes_one_uidx on public.challenge_mutes (recipient_id, sender_id) where sender_id is not null;
+
+create table if not exists public.challenge_badges (
+  profile_id uuid not null references public.profiles (id) on delete cascade,
+  badge text not null check (badge in ('challenge_finisher')),
+  earned_at timestamptz not null default timezone('utc', now()),
+  primary key (profile_id, badge)
+);
+
+-- No row = the default (on for adults, off for everyone else).
+create table if not exists public.challenge_athlete_settings (
+  profile_id uuid primary key references public.profiles (id) on delete cascade,
+  allow_challenges boolean not null,
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+-- An admin's hold on one sender's invites: 'mute' drops them silently, 'suspend' refuses them with a message.
+create table if not exists public.challenge_sender_holds (
+  sender_id uuid primary key references public.profiles (id) on delete cascade,
+  hold text not null check (hold in ('mute', 'suspend')),
+  reason text not null check (char_length(btrim(reason)) between 5 and 300),
+  set_by uuid references public.profiles (id) on delete set null,
+  set_at timestamptz not null default timezone('utc', now())
+);
+
+-- The switch history and every admin action, with the reason. The newest switch_on / switch_off row is the switch.
+create table if not exists public.challenge_admin_events (
+  id bigint generated always as identity primary key,
+  admin_id uuid references public.profiles (id) on delete set null,
+  action text not null check (action in ('switch_on', 'switch_off', 'sender_mute', 'sender_suspend', 'sender_clear',
+                                         'retention', 'erase')),
+  target_profile_id uuid references public.profiles (id) on delete set null,
+  reason text check (reason is null or char_length(reason) <= 300),
+  detail jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default timezone('utc', now())
+);
+create index if not exists challenge_admin_events_action_idx on public.challenge_admin_events (action, id desc);
+
+alter table public.challenge_response_quota enable row level security;
+alter table public.challenge_responses enable row level security;
+alter table public.challenge_nudges enable row level security;
+alter table public.challenge_mutes enable row level security;
+alter table public.challenge_badges enable row level security;
+alter table public.challenge_athlete_settings enable row level security;
+alter table public.challenge_sender_holds enable row level security;
+alter table public.challenge_admin_events enable row level security;
+
+-- The audit evidence is immutable. Retention may delete expired rows; a private helper may only null the exact
+-- profile identity being erased/deleted, preserving every other column. No client has table or helper authority.
+create or replace function public.guard_challenge_admin_events()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'DELETE' and coalesce(current_setting('app.tapuai_challenge_purge', true), '') = 'on' then
+    return old;
+  end if;
+  if tg_op = 'UPDATE'
+     and new.id is not distinct from old.id and new.action is not distinct from old.action
+     and new.reason is not distinct from old.reason and new.detail is not distinct from old.detail
+     and new.created_at is not distinct from old.created_at
+     and (new.admin_id is not distinct from old.admin_id or
+          (new.admin_id is null and old.admin_id::text = current_setting('app.tapuai_challenge_redact_profile', true)))
+     and (new.target_profile_id is not distinct from old.target_profile_id or
+          (new.target_profile_id is null and old.target_profile_id::text = current_setting('app.tapuai_challenge_redact_profile', true)))
+     and (new.admin_id is distinct from old.admin_id or new.target_profile_id is distinct from old.target_profile_id) then
+    return new;
+  end if;
+  raise exception 'Challenge admin records are kept as written.';
+end;
+$$;
+
+drop trigger if exists challenge_admin_events_append_only on public.challenge_admin_events;
+create trigger challenge_admin_events_append_only
+  before update or delete on public.challenge_admin_events
+  for each row execute function public.guard_challenge_admin_events();
+
+-- Narrow identity-only redaction used by trusted erasure and profile deletion. Restore any enclosing setting
+-- on both success and failure; the audit trigger still rejects action/reason/detail/time changes under this scope.
+create or replace function public.challenge_redact_audit_identity(target uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  previous_scope text := coalesce(current_setting('app.tapuai_challenge_redact_profile', true), '');
+  redacted integer;
+begin
+  perform set_config('app.tapuai_challenge_redact_profile', coalesce(target::text, ''), true);
+  update public.challenge_admin_events e
+    set admin_id = case when e.admin_id = target then null else e.admin_id end,
+        target_profile_id = case when e.target_profile_id = target then null else e.target_profile_id end
+    where e.admin_id = target or e.target_profile_id = target;
+  get diagnostics redacted = row_count;
+  perform set_config('app.tapuai_challenge_redact_profile', previous_scope, true);
+  return redacted;
+exception when others then
+  perform set_config('app.tapuai_challenge_redact_profile', previous_scope, true);
+  raise;
+end;
+$$;
+
+-- Run before the FK's SET NULL updates; those updates cannot widen the immutable audit exception.
+create or replace function public.challenge_on_profile_delete()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.challenge_redact_audit_identity(old.id);
+  return old;
+end;
+$$;
+drop trigger if exists challenge_profile_identity_redaction on public.profiles;
+create trigger challenge_profile_identity_redaction before delete on public.profiles
+  for each row execute function public.challenge_on_profile_delete();
+
+-- 2. Building blocks ------------------------------------------------------------------------------------------------------
+
+-- Every public RPC binds the caller's expected canonical profile to the current JWT. This UUID is only an
+-- equality check, never authority. Guests may read counts only with an explicit null; authenticated callers must
+-- match a nonclosed profile. The JSON lookup remains compatible before MINOR-01 adds the closure field.
+create or replace function public.challenge_expected_profile(expected_actor_id uuid, allow_guest boolean default false)
+returns uuid
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  actual uuid;
+begin
+  if auth.uid() is null then
+    if allow_guest and expected_actor_id is null then return null; end if;
+    raise exception 'Account access required.';
+  end if;
+  select p.id into actual from public.profiles p
+    where p.user_id = auth.uid() and to_jsonb(p)->>'age_blocked_at' is null limit 1;
+  if actual is null then raise exception 'Sign in first.'; end if;
+  if expected_actor_id is null or actual is distinct from expected_actor_id then
+    raise exception 'Account access required.';
+  end if;
+  return actual;
+end;
+$$;
+
+-- What this feature needs from PRIV-01 and MINOR-01, as readable names; empty when everything is there.
+create or replace function public.challenge_missing_dependencies()
+returns text[]
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  missing text[] := '{}';
+  tbl text;
+  summary_fn regprocedure;
+begin
+  if to_regclass('public.friendships') is null or to_regprocedure('public.are_friends(uuid, uuid)') is null
+     or to_regprocedure('public.my_profile_id()') is null or to_regprocedure('public.is_guardian_of_profile(uuid)') is null then
+    missing := array_append(missing, 'PRIV-01 friends (friendships, are_friends, my_profile_id, is_guardian_of_profile)');
+  end if;
+  if to_regclass('public.user_blocks') is null or to_regprocedure('public.is_blocked_between(uuid, uuid)') is null then
+    missing := array_append(missing, 'PRIV-01 blocks (user_blocks, is_blocked_between)');
+  end if;
+  if to_regprocedure('public.profile_age_band(uuid)') is null
+     or not exists (select 1 from pg_catalog.pg_attribute a where a.attrelid = 'public.profiles'::regclass
+                    and a.attname = 'age_blocked_at' and not a.attisdropped) then
+    missing := array_append(missing, 'MINOR-01 age bands (profile_age_band, profiles.age_blocked_at)');
+  end if;
+  if to_regprocedure('public.caller_not_age_blocked()') is null then
+    missing := array_append(missing, 'MINOR-01 closed accounts (caller_not_age_blocked)');
+  end if;
+  if to_regprocedure('public.log_supervision_event(uuid, text, jsonb)') is null
+     or to_regprocedure('public.is_supervising_guardian(uuid)') is null
+     or to_regprocedure('public.first_name_of(uuid)') is null then
+    missing := array_append(missing, 'MINOR-01 supervision (log_supervision_event, is_supervising_guardian, first_name_of)');
+  end if;
+  summary_fn := to_regprocedure('public.supervision_json(uuid, timestamptz)');
+  if summary_fn is null or position('challenge_invites_7d' in pg_catalog.pg_get_functiondef(summary_fn)) = 0 then
+    missing := array_append(missing, 'the guardian summary count (re-run 20261016100000_workout_challenges.sql after MINOR-01)');
+  end if;
+  foreach tbl in array array['challenge_response_quota', 'challenge_responses', 'challenge_nudges', 'challenge_mutes', 'challenge_badges',
+                             'challenge_athlete_settings', 'challenge_sender_holds', 'challenge_admin_events'] loop
+    if not exists (select 1 from pg_catalog.pg_policies p where p.schemaname = 'public' and p.tablename = tbl
+                   and p.policyname = 'Closed accounts' and p.permissive = 'RESTRICTIVE') then
+      missing := array_append(missing, 'the "Closed accounts" policy on the challenge tables (re-run 20261016100000_workout_challenges.sql after MINOR-01)');
+      exit;
+    end if;
+  end loop;
+  return missing;
+end;
+$$;
+
+create or replace function public.challenge_switch_on()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((
+    select e.action = 'switch_on' from public.challenge_admin_events e
+    where e.action in ('switch_on', 'switch_off') order by e.id desc limit 1
+  ), false);
+$$;
+
+-- The switch is on and nothing it needs is missing.
+create or replace function public.challenges_live()
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  return public.challenge_switch_on() and cardinality(public.challenge_missing_dependencies()) = 0;
+end;
+$$;
+
+-- The caller's profile, or an error: PRIV-01 / MINOR-01 missing, switched off (when `require_switch`), not signed in,
+-- closed (my_profile_id is null for a closed account), or no age band this feature accepts.
+create or replace function public.challenge_me(require_switch boolean)
+returns uuid
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid;
+begin
+  if cardinality(public.challenge_missing_dependencies()) > 0 or (require_switch and not public.challenge_switch_on()) then
+    raise exception 'Workout challenges are not switched on.';
+  end if;
+  me := public.my_profile_id();
+  if me is null then
+    raise exception 'Sign in first.';
+  end if;
+  if public.challenge_band(me) not in ('adult', 'teen_16_17', 'teen_13_15') then
+    raise exception 'Workout challenges are not available on this account.';
+  end if;
+  return me;
+end;
+$$;
+
+-- The MINOR-01 band with the challenge rule: an unknown or missing age counts as 13–15.
+create or replace function public.challenge_band(target uuid)
+returns text
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  band text := public.profile_age_band(target);
+begin
+  return case when band in ('unknown', 'not_given') then 'teen_13_15' else band end;
+end;
+$$;
+
+-- "Allow challenges on my workouts": the athlete's choice, else on for adults and off for everyone else.
+create or replace function public.challenge_athlete_allows(athlete uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  return coalesce(
+    (select s.allow_challenges from public.challenge_athlete_settings s where s.profile_id = athlete),
+    public.challenge_band(athlete) = 'adult'
+  );
+end;
+$$;
+
+-- Whether a post takes challenges, and whose workout it is. reason: null when it does, else not_found, not_workout,
+-- vault, exclusive, not_listed (removed, no media, tag not confirmed), no_athlete_account, athlete_off.
+-- media_type / photo_count are read through to_jsonb so a database without photo stories (UX-05a) still works.
+create or replace function public.challenge_reel_check(target_reel_id uuid, out athlete_id uuid, out reason text)
+returns record
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  r public.reels%rowtype;
+  media jsonb;
+  has_media boolean;
+begin
+  select * into r from public.reels where id = target_reel_id;
+  if not found then
+    reason := 'not_found';
+    return;
+  end if;
+  media := to_jsonb(r);
+  -- Same rule as isListableReel in the app: a photo story needs its photos, a video needs its file.
+  has_media := coalesce((media ->> 'photo_count')::int, 0) > 0;
+  if coalesce(media ->> 'media_type', 'video') <> 'photo_story' then
+    has_media := coalesce(r.video_url, '') <> '';
+  end if;
+  if coalesce(r.category, '') <> 'train_like_me' then
+    reason := 'not_workout';
+  elsif coalesce(r.is_vault_only, false) then
+    reason := 'vault';
+  elsif coalesce(r.is_exclusive, false) then
+    reason := 'exclusive';
+  elsif coalesce(r.is_removed, false) or r.player_id is null or coalesce(r.tag_status, 'confirmed') <> 'confirmed' or not has_media then
+    reason := 'not_listed';
+  end if;
+  if reason is not null then
+    return;
+  end if;
+  select p.id into athlete_id from public.profiles p
+  where p.player_id = r.player_id and p.verification_status = 'verified' and p.age_blocked_at is null
+  order by p.created_at limit 1;
+  if athlete_id is null then
+    reason := 'no_athlete_account';
+  elsif not public.challenge_athlete_allows(athlete_id) then
+    reason := 'athlete_off';
+    athlete_id := null;
+  end if;
+end;
+$$;
+
+-- The caller may see the counts on this athlete's posts: everyone for an adult athlete; for a minor (or unknown age)
+-- only the athlete and their guardian (a confirmed MINOR-01 link or the guardian on record).
+create or replace function public.challenge_counts_visible(athlete uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.my_profile_id();
+begin
+  if public.challenge_band(athlete) = 'adult' then
+    return true;
+  end if;
+  if me is null then
+    return false;
+  end if;
+  return me = athlete or public.is_supervising_guardian(athlete) or public.is_guardian_of_profile(athlete);
+end;
+$$;
+
+create or replace function public.challenge_award_badge(target uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  added integer;
+begin
+  if (select count(*) from public.challenge_responses c where c.responder_id = target and c.preset = 'did_it') < 3 then
+    return false;
+  end if;
+  insert into public.challenge_badges (profile_id, badge) values (target, 'challenge_finisher') on conflict do nothing;
+  get diagnostics added = row_count;
+  return added > 0;
+end;
+$$;
+
+-- The counts for one post as the caller may see them (the shape every participant RPC returns).
+create or replace function public.challenge_counts_json(target_reel_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid;
+  chk record;
+  visible boolean;
+  c record;
+  mine text;
+  hide constant integer := 5;
+begin
+  if not public.challenges_live() then
+    return jsonb_build_object('enabled', false, 'eligible', false, 'reason', 'switched_off', 'visible', false,
+                              'counts', null, 'total', null, 'mine', null, 'min_shown', hide);
+  end if;
+  me := public.my_profile_id();
+  select * into chk from public.challenge_reel_check(target_reel_id);
+  if me is not null and chk.athlete_id is not null and public.is_blocked_between(me, chk.athlete_id) then
+    return jsonb_build_object('enabled', true, 'eligible', false, 'reason', 'not_listed', 'visible', false,
+                              'counts', null, 'total', null, 'mine', null, 'min_shown', hide, 'can_respond', false);
+  end if;
+  if me is not null then
+    select r.preset into mine from public.challenge_responses r where r.reel_id = target_reel_id and r.responder_id = me;
+  end if;
+  if chk.athlete_id is null then
+    return jsonb_build_object('enabled', true, 'eligible', false, 'reason', chk.reason, 'visible', false,
+                              'counts', null, 'total', null, 'mine', mine, 'min_shown', hide);
+  end if;
+  visible := public.challenge_counts_visible(chk.athlete_id);
+  select
+    count(*) filter (where r.preset = 'accepted') as accepted,
+    count(*) filter (where r.preset = 'love_it') as love_it,
+    count(*) filter (where r.preset = 'im_in') as im_in,
+    count(*) filter (where r.preset = 'did_it') as did_it,
+    count(*) as total
+  into c
+  from public.challenge_responses r
+  join public.profiles p on p.id = r.responder_id
+  where r.reel_id = target_reel_id
+    and p.age_blocked_at is null
+    and not public.is_blocked_between(r.responder_id, chk.athlete_id)
+    and (me is null or r.responder_id = me or not public.is_blocked_between(r.responder_id, me));
+  return jsonb_build_object(
+    'enabled', true, 'eligible', true, 'reason', null, 'visible', visible,
+    'counts', case when visible then jsonb_build_object(
+      'accepted', case when c.accepted >= hide then c.accepted end,
+      'love_it', case when c.love_it >= hide then c.love_it end,
+      'im_in', case when c.im_in >= hide then c.im_in end,
+      'did_it', case when c.did_it >= hide then c.did_it end) end,
+    'total', case when visible and c.total >= hide then c.total end,
+    'mine', mine,
+    'min_shown', hide,
+    'can_respond', me is not null and me <> chk.athlete_id
+  );
+end;
+$$;
+
+-- Unapplied contract change: remove every legacy overload so reapply cannot leave an unbound entrypoint.
+drop function if exists public.challenge_respond(uuid, text);
+drop function if exists public.challenge_counts(uuid);
+drop function if exists public.challenge_invite(uuid, uuid);
+drop function if exists public.challenge_mute(uuid, boolean);
+drop function if exists public.challenge_inbox(integer);
+drop function if exists public.challenge_my_status();
+drop function if exists public.set_allow_challenges(boolean);
+drop function if exists public.challenge_export_my_data();
+drop function if exists public.admin_challenge_status();
+drop function if exists public.admin_set_challenges_enabled(boolean, text);
+drop function if exists public.admin_challenge_post_counts(integer);
+drop function if exists public.admin_challenge_nudge_senders(integer);
+drop function if exists public.admin_hold_challenge_sender(uuid, text, text);
+drop function if exists public.admin_challenge_retention();
+drop function if exists public.admin_challenge_erase(uuid, text);
+drop function if exists public.challenge_admin_profile();
+
+-- 3. Participant RPCs -------------------------------------------------------------------------------------------------
+
+-- Answer a workout with one preset, change it, or remove it (preset null). 50 posts a day.
+create or replace function public.challenge_respond(expected_actor_id uuid, target_reel_id uuid, preset text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.challenge_me(true);
+  chk record;
+  today integer;
+  responded_at timestamptz;
+  earned boolean := false;
+begin
+  perform public.challenge_expected_profile(expected_actor_id);
+  select * into chk from public.challenge_reel_check(target_reel_id);
+  if chk.athlete_id is null or public.is_blocked_between(me, chk.athlete_id) then
+    raise exception 'Challenges are not open on this post.';
+  end if;
+  if chk.athlete_id = me then
+    raise exception 'You can''t respond to your own workout.';
+  end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('challenge-respond:' || me::text, 0));
+  responded_at := clock_timestamp();
+  delete from public.challenge_response_quota q where q.responder_id = me and q.last_responded_at <= responded_at - interval '24 hours';
+  if preset is null then
+    delete from public.challenge_responses r where r.reel_id = target_reel_id and r.responder_id = me;
+    return public.challenge_counts_json(target_reel_id);
+  end if;
+  if preset not in ('accepted', 'love_it', 'im_in', 'did_it') then
+    raise exception 'Choose one of the responses.';
+  end if;
+  select count(*) into today from public.challenge_response_quota q
+  where q.responder_id = me and q.reel_id <> target_reel_id and q.last_responded_at > responded_at - interval '24 hours';
+  if today >= 50 then
+    raise exception 'You''ve responded to 50 workouts today. Try again tomorrow.';
+  end if;
+  insert into public.challenge_response_quota as q (responder_id, reel_id, last_responded_at)
+  values (me, target_reel_id, responded_at)
+  on conflict (responder_id, reel_id) do update set last_responded_at = excluded.last_responded_at;
+  insert into public.challenge_responses as r (reel_id, responder_id, preset)
+  values (target_reel_id, me, challenge_respond.preset)
+  on conflict (reel_id, responder_id) do update
+    set preset = excluded.preset, updated_at = timezone('utc', now())
+    where r.preset is distinct from excluded.preset;
+  if challenge_respond.preset = 'did_it' then
+    earned := public.challenge_award_badge(me);
+  end if;
+  return public.challenge_counts_json(target_reel_id) || jsonb_build_object('badge_earned', earned);
+end;
+$$;
+
+-- Counts per preset for one post (guests too). See challenge_counts_json for who sees what.
+create or replace function public.challenge_counts(expected_actor_id uuid, target_reel_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.challenge_expected_profile(expected_actor_id, true);
+  return public.challenge_counts_json(target_reel_id);
+end;
+$$;
+
+-- Invite one accepted friend to try this workout. The answer is the same whether the invite was delivered or dropped
+-- (mute, block, admin mute); only the limits, a non-friend and a suspended sender are refused.
+create or replace function public.challenge_invite(expected_actor_id uuid, target_reel_id uuid, friend_profile_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.challenge_me(true);
+  chk record;
+  hold_kind text;
+  sent_today integer;
+  deliver boolean;
+begin
+  perform public.challenge_expected_profile(expected_actor_id);
+  select * into chk from public.challenge_reel_check(target_reel_id);
+  if chk.athlete_id is null or public.is_blocked_between(me, chk.athlete_id) then
+    raise exception 'Challenges are not open on this post.';
+  end if;
+  if friend_profile_id is null or friend_profile_id = me or not public.are_friends(me, friend_profile_id) then
+    raise exception 'You can only invite friends.';
+  end if;
+  select h.hold into hold_kind from public.challenge_sender_holds h where h.sender_id = me;
+  if hold_kind = 'suspend' then
+    raise exception 'Invites are paused on your account.';
+  end if;
+  -- One sender at a time, so two taps at once cannot both pass the limits.
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('challenge-invite:' || me::text, 0));
+  select count(*) into sent_today from public.challenge_nudges n
+  where n.sender_id = me and n.created_at > timezone('utc', now()) - interval '24 hours';
+  if sent_today >= 5 then
+    raise exception 'You''ve sent 5 invites today. Try again tomorrow.';
+  end if;
+  if exists (select 1 from public.challenge_nudges n where n.sender_id = me and n.recipient_id = friend_profile_id
+             and n.created_at > timezone('utc', now()) - interval '24 hours') then
+    raise exception 'You''ve already invited this friend today.';
+  end if;
+  deliver := hold_kind is null
+    and not public.is_blocked_between(me, friend_profile_id)
+    and not public.is_blocked_between(friend_profile_id, chk.athlete_id)
+    and not exists (select 1 from public.challenge_mutes m
+                    where m.recipient_id = friend_profile_id and (m.sender_id is null or m.sender_id = me));
+  insert into public.challenge_nudges (sender_id, recipient_id, reel_id, delivered)
+  values (me, friend_profile_id, target_reel_id, deliver);
+  delete from public.challenge_nudges n where n.created_at < timezone('utc', now()) - interval '30 days';
+  return jsonb_build_object('status', 'sent', 'sent_today', sent_today + 1, 'daily_limit', 5);
+end;
+$$;
+
+-- Mute invites from one sender (sender_profile_id) or from everyone (null); mute false lifts it.
+create or replace function public.challenge_mute(expected_actor_id uuid, sender_profile_id uuid default null, mute boolean default true)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.challenge_me(false);
+begin
+  perform public.challenge_expected_profile(expected_actor_id);
+  if sender_profile_id = me then
+    raise exception 'You can''t mute yourself.';
+  end if;
+  if mute then
+    if sender_profile_id is null then
+      insert into public.challenge_mutes (recipient_id, sender_id) values (me, null) on conflict do nothing;
+    elsif exists (select 1 from public.profiles p where p.id = sender_profile_id) then
+      insert into public.challenge_mutes (recipient_id, sender_id) values (me, sender_profile_id) on conflict do nothing;
+    end if;
+  else
+    delete from public.challenge_mutes m where m.recipient_id = me and m.sender_id is not distinct from sender_profile_id;
+  end if;
+  return public.challenge_my_status(expected_actor_id);
+end;
+$$;
+
+-- Invites to the caller for Activity (last 30 days, delivered only, not from muted or blocked senders, posts still open).
+create or replace function public.challenge_inbox(expected_actor_id uuid, max_rows integer default 30)
+returns table (id uuid, reel_id uuid, sender_id uuid, sender_name text, athlete_name text, created_at timestamptz)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.challenge_me(false);
+begin
+  perform public.challenge_expected_profile(expected_actor_id);
+  if not public.challenge_switch_on() then
+    return;
+  end if;
+  return query
+    select n.id, n.reel_id, n.sender_id, public.first_name_of(n.sender_id), pl.name, n.created_at
+    from public.challenge_nudges n
+    join public.profiles s on s.id = n.sender_id and s.age_blocked_at is null
+    join public.reels r on r.id = n.reel_id
+    join public.players pl on pl.id = r.player_id
+    cross join lateral public.challenge_reel_check(n.reel_id) chk
+    where n.recipient_id = me and n.delivered
+      and n.created_at > timezone('utc', now()) - interval '30 days'
+      and not public.is_blocked_between(me, n.sender_id)
+      and not exists (select 1 from public.challenge_mutes m where m.recipient_id = me and (m.sender_id is null or m.sender_id = n.sender_id))
+      and chk.athlete_id is not null
+      and not public.is_blocked_between(me, chk.athlete_id)
+    order by n.created_at desc
+    limit least(greatest(coalesce(max_rows, 30), 1), 100);
+end;
+$$;
+
+-- The caller's challenge settings: athlete switch, mutes and badges.
+create or replace function public.challenge_my_status(expected_actor_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.challenge_me(false);
+  athlete boolean;
+  explicit boolean;
+begin
+  perform public.challenge_expected_profile(expected_actor_id);
+  select p.player_id is not null and p.verification_status = 'verified' into athlete from public.profiles p where p.id = me;
+  select s.allow_challenges into explicit from public.challenge_athlete_settings s where s.profile_id = me;
+  return jsonb_build_object(
+    'enabled', public.challenges_live(),
+    'is_athlete', coalesce(athlete, false),
+    'allow_challenges', public.challenge_athlete_allows(me),
+    'allow_default', public.challenge_band(me) = 'adult',
+    'allow_set', explicit is not null,
+    'muted_all', exists (select 1 from public.challenge_mutes m where m.recipient_id = me and m.sender_id is null),
+    'muted_senders', coalesce((
+      select jsonb_agg(jsonb_build_object('profile_id', m.sender_id, 'name', public.first_name_of(m.sender_id)) order by m.created_at desc)
+      from public.challenge_mutes m where m.recipient_id = me and m.sender_id is not null
+    ), '[]'::jsonb),
+    'badges', coalesce((
+      select jsonb_agg(jsonb_build_object('badge', b.badge, 'earned_at', b.earned_at) order by b.earned_at)
+      from public.challenge_badges b where b.profile_id = me
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+-- The athlete's "Allow challenges on my workouts". A change on a minor's account is a supervision event.
+create or replace function public.set_allow_challenges(expected_actor_id uuid, allow boolean)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.challenge_me(false);
+  was_on boolean;
+begin
+  perform public.challenge_expected_profile(expected_actor_id);
+  if allow is null then
+    raise exception 'Choose on or off.';
+  end if;
+  if not exists (select 1 from public.profiles p where p.id = me and p.player_id is not null and p.verification_status = 'verified') then
+    raise exception 'Only a verified athlete account has this setting.';
+  end if;
+  was_on := public.challenge_athlete_allows(me);
+  insert into public.challenge_athlete_settings as s (profile_id, allow_challenges) values (me, allow)
+  on conflict (profile_id) do update set allow_challenges = excluded.allow_challenges, updated_at = timezone('utc', now());
+  if was_on is distinct from allow then
+    perform public.log_supervision_event(me, 'settings_changed',
+      jsonb_build_object('keys', jsonb_build_array('allow_challenges'), 'allow_challenges', allow));
+  end if;
+  return public.challenge_my_status(expected_actor_id);
+end;
+$$;
+
+-- The invite picker reads only the current account's accepted friends. It can load while the workout switch
+-- is off, but still needs PRIV-01 / MINOR-01. The caller's claimed UUID is compared to the JWT before any
+-- relationship is read; no pending requests, school information, full names or unrelated friendships leave here.
+create or replace function public.challenge_friends(expected_actor_id uuid, max_rows integer default 50)
+returns table (profile_id uuid, name text)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid;
+begin
+  me := public.challenge_expected_profile(expected_actor_id);
+  perform public.challenge_me(false);
+  if max_rows is null or max_rows < 1 or max_rows > 50 then
+    raise exception 'Choose a friend limit from 1 to 50.';
+  end if;
+  return query
+    select other.id, left(public.first_name_of(other.id), 160)
+    from public.friendships f
+    join public.profiles other on other.id = case when f.requester_id = me then f.addressee_id else f.requester_id end
+    where (f.requester_id = me or f.addressee_id = me) and f.status = 'accepted'
+      and to_jsonb(other)->>'age_blocked_at' is null
+      and public.profile_age_band(other.id) <> 'under_13'
+      and not public.is_blocked_between(me, other.id)
+    order by other.id
+    limit max_rows;
+end;
+$$;
+
+-- 4. Export and erasure ---------------------------------------------------------------------------------------------------
+
+-- Everything the challenge tables hold about one person. Sent invites never say whether they were dropped.
+create or replace function public.challenge_profile_export(target uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'response_quota', coalesce((select jsonb_agg(jsonb_build_object('reel_id', q.reel_id, 'last_responded_at', q.last_responded_at) order by q.last_responded_at, q.reel_id)
+                                from public.challenge_response_quota q where q.responder_id = target), '[]'::jsonb),
+    'responses', coalesce((select jsonb_agg(jsonb_build_object('reel_id', r.reel_id, 'preset', r.preset, 'created_at', r.created_at, 'updated_at', r.updated_at) order by r.created_at)
+                           from public.challenge_responses r where r.responder_id = target), '[]'::jsonb),
+    'invites_sent', coalesce((select jsonb_agg(jsonb_build_object('reel_id', n.reel_id, 'recipient_id', n.recipient_id, 'created_at', n.created_at) order by n.created_at)
+                              from public.challenge_nudges n where n.sender_id = target), '[]'::jsonb),
+    'invites_received', coalesce((select jsonb_agg(jsonb_build_object('reel_id', n.reel_id, 'sender_id', n.sender_id, 'created_at', n.created_at) order by n.created_at)
+                                  from public.challenge_nudges n where n.recipient_id = target and n.delivered), '[]'::jsonb),
+    'mutes', coalesce((select jsonb_agg(jsonb_build_object('sender_id', m.sender_id, 'created_at', m.created_at) order by m.created_at)
+                       from public.challenge_mutes m where m.recipient_id = target), '[]'::jsonb),
+    'badges', coalesce((select jsonb_agg(jsonb_build_object('badge', b.badge, 'earned_at', b.earned_at)) from public.challenge_badges b where b.profile_id = target), '[]'::jsonb),
+    'athlete_setting', (select jsonb_build_object('allow_challenges', s.allow_challenges, 'updated_at', s.updated_at)
+                        from public.challenge_athlete_settings s where s.profile_id = target)
+  );
+$$;
+
+create or replace function public.challenge_export_my_data(expected_actor_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  me uuid := public.challenge_me(false);
+begin
+  perform public.challenge_expected_profile(expected_actor_id);
+  return public.challenge_profile_export(me);
+end;
+$$;
+
+-- Removes one person from every challenge table (their responses, invites both ways, mutes either side, badges,
+-- setting, any hold and quota). Audit identity is nulled immediately while action/evidence/time survive.
+-- This privileged support operation resets quota even when the profile survives; no participant RPC exposes it.
+create or replace function public.challenge_erase_profile(target uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  resp integer;
+  nud integer;
+  mut integer;
+  bad integer;
+  sett integer;
+  hol integer;
+  quota integer;
+  audit_ids integer;
+begin
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('challenge-respond:' || target::text, 0));
+  audit_ids := public.challenge_redact_audit_identity(target);
+  delete from public.challenge_response_quota where responder_id = target;
+  get diagnostics quota = row_count;
+  delete from public.challenge_responses where responder_id = target;
+  get diagnostics resp = row_count;
+  delete from public.challenge_nudges where target in (sender_id, recipient_id);
+  get diagnostics nud = row_count;
+  delete from public.challenge_mutes where recipient_id = target or sender_id = target;
+  get diagnostics mut = row_count;
+  delete from public.challenge_badges where profile_id = target;
+  get diagnostics bad = row_count;
+  delete from public.challenge_athlete_settings where profile_id = target;
+  get diagnostics sett = row_count;
+  delete from public.challenge_sender_holds where sender_id = target;
+  get diagnostics hol = row_count;
+  return jsonb_build_object('responses', resp, 'invites', nud, 'mutes', mut, 'badges', bad, 'settings', sett, 'holds', hol, 'response_quota', quota, 'audit_identities', audit_ids);
+end;
+$$;
+
+-- 5. Guardian summary: invites received in the last 7 days (a count, never who) --------------------------------------
+-- The body is 20261014110000's supervision_json with one line added (marked). Only replaced when MINOR-01 is there.
+
+do $do$
+begin
+  if to_regprocedure('public.supervision_json(uuid, timestamptz)') is not null and to_regclass('public.friendships') is not null then
+    execute $sj$
+create or replace function public.supervision_json(minor uuid, events_since timestamptz)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'profile_id', p.id,
+    'first_name', public.first_name_of(p.id),
+    'username', p.username,
+    'settings', public.privacy_settings_json(p.id),
+    'status', public.minor_status_json(p.id, false),
+    'summary', jsonb_build_object(
+      'friends', (select count(*) from public.friendships f where f.status = 'accepted' and p.id in (f.requester_id, f.addressee_id)),
+      'incoming_requests', (select count(*) from public.friendships f where f.status = 'pending' and f.addressee_id = p.id),
+      'blocked_accounts', (select count(*) from public.user_blocks u where u.blocker_id = p.id),
+      'tags_waiting', (select count(*) from public.reels r
+                       where r.player_id = public.verified_player_of(p.id) and r.tag_status = 'pending'),
+      'hidden_from_search', p.hide_from_search,
+      -- CHAL-01 (20261016100000): workout challenge invites delivered in the last 7 days.
+      'challenge_invites_7d', (select count(*) from public.challenge_nudges n
+                               where n.recipient_id = p.id and n.delivered and n.created_at > timezone('utc', now()) - interval '7 days')
+    ),
+    'events', coalesce((
+      select jsonb_agg(jsonb_build_object('kind', e.kind, 'detail', e.detail, 'at', e.created_at,
+                                          'by_teen', e.actor_id is not distinct from p.id) order by e.created_at desc)
+      from (
+        select * from public.supervision_events e
+        where e.minor_id = p.id and e.created_at >= coalesce(events_since, '-infinity'::timestamptz)
+          and e.created_at > timezone('utc', now()) - interval '365 days'
+        order by e.created_at desc limit 30
+      ) e
+    ), '[]'::jsonb)
+  )
+  from public.profiles p where p.id = minor;
+$$;
+$sj$;
+    execute 'revoke all on function public.supervision_json(uuid, timestamptz) from public, anon, authenticated';
+    execute 'grant execute on function public.supervision_json(uuid, timestamptz) to service_role';
+  end if;
+end;
+$do$;
+
+-- 6. Admin ------------------------------------------------------------------------------------------------------------------
+
+create or replace function public.challenge_admin_profile(expected_actor_id uuid)
+returns uuid
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  admin uuid;
+begin
+  perform public.require_admin_guard();
+  begin
+    admin := public.challenge_expected_profile(expected_actor_id);
+  exception when raise_exception then
+    raise exception 'Admin access required.';
+  end;
+  return admin;
+end;
+$$;
+
+-- The switch, what is missing, the last change and desk totals.
+create or replace function public.admin_challenge_status(expected_actor_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  missing text[];
+  last_change record;
+begin
+  perform public.challenge_admin_profile(expected_actor_id);
+  missing := public.challenge_missing_dependencies();
+  select e.action, e.created_at, e.reason into last_change from public.challenge_admin_events e
+  where e.action in ('switch_on', 'switch_off') order by e.id desc limit 1;
+  return jsonb_build_object(
+    'switched_on', public.challenge_switch_on(),
+    'live', public.challenge_switch_on() and cardinality(missing) = 0,
+    'missing', to_jsonb(missing),
+    'changed_at', last_change.created_at,
+    'change_reason', last_change.reason,
+    'totals', jsonb_build_object(
+      'responses', (select count(*) from public.challenge_responses),
+      'responders', (select count(distinct responder_id) from public.challenge_responses),
+      'invites_7d', (select count(*) from public.challenge_nudges where created_at > timezone('utc', now()) - interval '7 days'),
+      'invites_dropped_7d', (select count(*) from public.challenge_nudges where not delivered and created_at > timezone('utc', now()) - interval '7 days'),
+      'badges', (select count(*) from public.challenge_badges),
+      'senders_held', (select count(*) from public.challenge_sender_holds),
+      'athletes_on', (select count(*) from public.challenge_athlete_settings where allow_challenges),
+      'athletes_off', (select count(*) from public.challenge_athlete_settings where not allow_challenges)
+    )
+  );
+end;
+$$;
+
+-- Switch challenges on or off, with a reason. On is refused, with the missing pieces named, until PRIV-01 and MINOR-01
+-- are in place.
+create or replace function public.admin_set_challenges_enabled(expected_actor_id uuid, turn_on boolean, reason text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  missing text[];
+begin
+  perform public.challenge_admin_profile(expected_actor_id);
+  if turn_on is null then
+    raise exception 'Choose on or off.';
+  end if;
+  if char_length(btrim(coalesce(reason, ''))) < 5 then
+    raise exception 'Give a reason (at least 5 characters).';
+  end if;
+  missing := public.challenge_missing_dependencies();
+  if turn_on and cardinality(missing) > 0 then
+    raise exception 'Workout challenges cannot be switched on yet. Missing: %.', array_to_string(missing, '; ');
+  end if;
+  insert into public.challenge_admin_events (admin_id, action, reason)
+  values (public.challenge_admin_profile(expected_actor_id), case when turn_on then 'switch_on' else 'switch_off' end, btrim(reason));
+  return public.admin_challenge_status(expected_actor_id);
+end;
+$$;
+
+-- Aggregate counts per workout post (no names of who responded or was invited).
+create or replace function public.admin_challenge_post_counts(expected_actor_id uuid, max_rows integer default 50)
+returns table (
+  reel_id uuid, title text, athlete_name text, posted_at timestamptz, eligible boolean, reason text,
+  accepted integer, love_it integer, im_in integer, did_it integer, responses integer, invites integer, invites_7d integer
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  deps_ok boolean := cardinality(public.challenge_missing_dependencies()) = 0;
+begin
+  perform public.challenge_admin_profile(expected_actor_id);
+  return query
+    with resp as (
+      select c.reel_id,
+        count(*) filter (where c.preset = 'accepted')::int as accepted,
+        count(*) filter (where c.preset = 'love_it')::int as love_it,
+        count(*) filter (where c.preset = 'im_in')::int as im_in,
+        count(*) filter (where c.preset = 'did_it')::int as did_it,
+        count(*)::int as total
+      from public.challenge_responses c group by c.reel_id
+    ), inv as (
+      select n.reel_id, count(*)::int as total,
+        count(*) filter (where n.created_at > timezone('utc', now()) - interval '7 days')::int as week
+      from public.challenge_nudges n group by n.reel_id
+    )
+    select r.id, r.title, pl.name, r.created_at,
+      case when deps_ok then (select k.athlete_id from public.challenge_reel_check(r.id) k) is not null end,
+      case when deps_ok then (select k.reason from public.challenge_reel_check(r.id) k) end,
+      coalesce(resp.accepted, 0), coalesce(resp.love_it, 0), coalesce(resp.im_in, 0), coalesce(resp.did_it, 0),
+      coalesce(resp.total, 0), coalesce(inv.total, 0), coalesce(inv.week, 0)
+    from public.reels r
+    left join public.players pl on pl.id = r.player_id
+    left join resp on resp.reel_id = r.id
+    left join inv on inv.reel_id = r.id
+    where r.category = 'train_like_me'
+    order by coalesce(resp.total, 0) + coalesce(inv.total, 0) desc, r.created_at desc
+    limit least(greatest(coalesce(max_rows, 50), 1), 200);
+end;
+$$;
+
+-- Invite counts per sender over the last `days` days, for spotting abuse. Recipients appear as ids only.
+create or replace function public.admin_challenge_nudge_senders(expected_actor_id uuid, days integer default 7)
+returns table (
+  sender_id uuid, sender_username text, sent integer, delivered integer, dropped integer, recipients integer,
+  recipient_ids uuid[], muted_by integer, hold text, hold_reason text, last_sent_at timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  window_days integer := least(greatest(coalesce(days, 7), 1), 30);
+begin
+  perform public.challenge_admin_profile(expected_actor_id);
+  return query
+    select n.sender_id, s.username,
+      count(*)::int, count(*) filter (where n.delivered)::int, count(*) filter (where not n.delivered)::int,
+      count(distinct n.recipient_id)::int,
+      (array_agg(distinct n.recipient_id))[1:20],
+      (select count(*)::int from public.challenge_mutes m where m.sender_id = n.sender_id),
+      h.hold, h.reason, max(n.created_at)
+    from public.challenge_nudges n
+    left join public.profiles s on s.id = n.sender_id
+    left join public.challenge_sender_holds h on h.sender_id = n.sender_id
+    where n.created_at > timezone('utc', now()) - make_interval(days => window_days)
+    group by n.sender_id, s.username, h.hold, h.reason
+    order by count(*) desc, max(n.created_at) desc
+    limit 100;
+end;
+$$;
+
+-- Mute (drop silently), suspend (refuse) or clear one sender's invites, with a reason. Audited.
+create or replace function public.admin_hold_challenge_sender(expected_actor_id uuid, sender_profile_id uuid, hold text, reason text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  admin uuid := public.challenge_admin_profile(expected_actor_id);
+begin
+  perform public.challenge_admin_profile(expected_actor_id);
+  if hold not in ('mute', 'suspend', 'clear') then
+    raise exception 'Choose mute, suspend or clear.';
+  end if;
+  if char_length(btrim(coalesce(reason, ''))) < 5 then
+    raise exception 'Give a reason (at least 5 characters).';
+  end if;
+  if not exists (select 1 from public.profiles p where p.id = sender_profile_id) then
+    raise exception 'No such account.';
+  end if;
+  if hold = 'clear' then
+    delete from public.challenge_sender_holds h where h.sender_id = sender_profile_id;
+  else
+    insert into public.challenge_sender_holds as h (sender_id, hold, reason, set_by)
+    values (sender_profile_id, admin_hold_challenge_sender.hold, btrim(reason), admin)
+    on conflict (sender_id) do update set hold = excluded.hold, reason = excluded.reason, set_by = excluded.set_by,
+      set_at = timezone('utc', now());
+  end if;
+  insert into public.challenge_admin_events (admin_id, action, target_profile_id, reason)
+  values (admin, 'sender_' || admin_hold_challenge_sender.hold, sender_profile_id, btrim(reason));
+  return jsonb_build_object('sender_id', sender_profile_id, 'hold', nullif(admin_hold_challenge_sender.hold, 'clear'));
+end;
+$$;
+
+-- Retention: expired rolling-24h quota; invites after 30 days; admin records after 2 years (the newest switch change is always kept).
+create or replace function public.admin_challenge_retention(expected_actor_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  nud integer;
+  ev integer;
+  quota integer;
+begin
+  perform public.challenge_admin_profile(expected_actor_id);
+  delete from public.challenge_response_quota where last_responded_at <= clock_timestamp() - interval '24 hours';
+  get diagnostics quota = row_count;
+  delete from public.challenge_nudges where created_at < timezone('utc', now()) - interval '30 days';
+  get diagnostics nud = row_count;
+  perform set_config('app.tapuai_challenge_purge', 'on', true);
+  delete from public.challenge_admin_events e
+  where e.created_at < timezone('utc', now()) - interval '2 years'
+    and e.id is distinct from (select x.id from public.challenge_admin_events x where x.action in ('switch_on', 'switch_off') order by x.id desc limit 1);
+  get diagnostics ev = row_count;
+  perform set_config('app.tapuai_challenge_purge', 'off', true);
+  insert into public.challenge_admin_events (admin_id, action, detail)
+  values (public.challenge_admin_profile(expected_actor_id), 'retention', jsonb_build_object('invites', nud, 'admin_records', ev, 'response_quota', quota));
+  return jsonb_build_object('invites', nud, 'admin_records', ev, 'response_quota', quota);
+end;
+$$;
+
+-- Erase one person from the challenge tables (a deletion request handled by support), with a reason. Audited.
+create or replace function public.admin_challenge_erase(expected_actor_id uuid, target_profile_id uuid, reason text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  removed jsonb;
+  admin uuid := public.challenge_admin_profile(expected_actor_id);
+begin
+  perform public.challenge_admin_profile(expected_actor_id);
+  if char_length(btrim(coalesce(reason, ''))) < 5 then
+    raise exception 'Give a reason (at least 5 characters).';
+  end if;
+  removed := public.challenge_erase_profile(target_profile_id);
+  insert into public.challenge_admin_events (admin_id, action, target_profile_id, reason, detail)
+  -- Never reintroduce the erased target identity; erasing the acting admin also clears its attribution.
+  values (case when admin = target_profile_id then null else admin end, 'erase', null, btrim(reason), removed);
+  return removed;
+end;
+$$;
+
+-- 7. Access -------------------------------------------------------------------------------------------------------------
+
+do $$
+declare
+  t text;
+  fn text;
+begin
+  foreach t in array array['challenge_response_quota', 'challenge_responses', 'challenge_nudges', 'challenge_mutes', 'challenge_badges',
+                           'challenge_athlete_settings', 'challenge_sender_holds', 'challenge_admin_events'] loop
+    execute format('revoke all on table public.%I from public, anon, authenticated', t);
+    execute format('grant all on table public.%I to service_role', t);
+  end loop;
+  execute 'revoke all on sequence public.challenge_mutes_id_seq from public, anon, authenticated';
+  execute 'revoke all on sequence public.challenge_admin_events_id_seq from public, anon, authenticated';
+  -- internal: other functions, triggers and the server only
+  foreach fn in array array[
+    'public.guard_challenge_admin_events()', 'public.challenge_redact_audit_identity(uuid)', 'public.challenge_on_profile_delete()',
+    'public.challenge_missing_dependencies()', 'public.challenge_switch_on()',
+    'public.challenges_live()', 'public.challenge_me(boolean)', 'public.challenge_band(uuid)', 'public.challenge_athlete_allows(uuid)',
+    'public.challenge_reel_check(uuid)', 'public.challenge_counts_visible(uuid)', 'public.challenge_award_badge(uuid)',
+    'public.challenge_counts_json(uuid)', 'public.challenge_profile_export(uuid)', 'public.challenge_erase_profile(uuid)',
+    'public.challenge_admin_profile(uuid)', 'public.challenge_expected_profile(uuid, boolean)'
+  ] loop
+    execute format('revoke all on function %s from public, anon, authenticated', fn);
+    execute format('grant execute on function %s to service_role', fn);
+  end loop;
+  -- guests see counts on adult athletes' posts
+  execute 'revoke all on function public.challenge_counts(uuid, uuid) from public';
+  execute 'grant execute on function public.challenge_counts(uuid, uuid) to anon, authenticated, service_role';
+  -- signed-in only (admin functions check the admin role inside)
+  foreach fn in array array[
+    'public.challenge_respond(uuid, uuid, text)', 'public.challenge_invite(uuid, uuid, uuid)', 'public.challenge_mute(uuid, uuid, boolean)',
+    'public.challenge_inbox(uuid, integer)', 'public.challenge_my_status(uuid)', 'public.set_allow_challenges(uuid, boolean)',
+    'public.challenge_export_my_data(uuid)', 'public.challenge_friends(uuid, integer)',
+    'public.admin_challenge_status(uuid)', 'public.admin_set_challenges_enabled(uuid, boolean, text)',
+    'public.admin_challenge_post_counts(uuid, integer)', 'public.admin_challenge_nudge_senders(uuid, integer)',
+    'public.admin_hold_challenge_sender(uuid, uuid, text, text)', 'public.admin_challenge_retention(uuid)',
+    'public.admin_challenge_erase(uuid, uuid, text)'
+  ] loop
+    execute format('revoke all on function %s from public, anon', fn);
+    execute format('grant execute on function %s to authenticated, service_role', fn);
+  end loop;
+end;
+$$;
+
+-- 8. Closed accounts (MINOR-01 rule for every RLS table), when MINOR-01 is there ------------------------------------------
+
+do $$
+declare
+  t text;
+begin
+  if to_regprocedure('public.caller_not_age_blocked()') is null then
+    raise notice 'MINOR-01 is not applied: the "Closed accounts" policy is skipped (no client can reach these tables anyway). Re-run this file after MINOR-01.';
+    return;
+  end if;
+  foreach t in array array['challenge_response_quota', 'challenge_responses', 'challenge_nudges', 'challenge_mutes', 'challenge_badges',
+                           'challenge_athlete_settings', 'challenge_sender_holds', 'challenge_admin_events'] loop
+    execute format('drop policy if exists "Closed accounts" on public.%I', t);
+    execute format('create policy "Closed accounts" on public.%I as restrictive for all to authenticated
+                    using ((select public.caller_not_age_blocked())) with check ((select public.caller_not_age_blocked()))', t);
+  end loop;
+end;
+$$;
+
+-- BEYOND-01 source/admin stage. New private any-account content; never reels, athlete tags, money or messages.
+-- Owner: HIGHLIGHTS / BACKEND. Reads recheck PRIV-01 and MINOR-01. Canonical copy is root-owned.
+-- Limits are pilot implementation choices: 5 durable reservations/24h, 24h draft expiry, SDK-requested 60s signed access,
+-- JPEG<=5MiB, video<=50MiB and attested duration<=45s. Storage metadata is not a trusted video decoder:
+-- preprocessing + explicit admin preview are required; actual provider deletion/device behavior remain release evidence.
+
+create table if not exists public.beyond_settings (
+  id boolean primary key default true check(id),
+  changed_at timestamptz,
+  changed_by uuid references public.profiles(id) on delete set null,
+  reason text check(reason is null or char_length(reason) between 5 and 240)
+);
+insert into public.beyond_settings(id) values(true) on conflict do nothing;
+create table if not exists public.beyond_posts (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid references public.profiles(id) on delete set null,
+  owner_user_id uuid references auth.users(id) on delete set null,
+  request_id uuid not null,
+  category text not null check(category in ('workout','service','learning','story')),
+  caption text not null check(char_length(caption) between 1 and 240),
+  audience text not null check(audience in ('friends','everyone')),
+  status text not null default 'draft' check(status in ('draft','pending','approved','held','removed')),
+  revision integer not null default 1 check(revision>0),
+  rights_version text not null check(rights_version='beyond-rights-1'),
+  safety_version text not null check(safety_version='beyond-safety-1'),
+  attested_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  submitted_at timestamptz,
+  reviewed_at timestamptz,
+  reviewer_id uuid references public.profiles(id) on delete set null,
+  review_reason text check(review_reason is null or char_length(review_reason) between 5 and 240),
+  removed_at timestamptz,
+  cleanup text not null default 'not_requested' check(cleanup in ('not_requested','pending','partial','complete')),
+  cleanup_checked_at timestamptz,
+  unique(owner_id,request_id)
+);
+create index if not exists beyond_posts_queue on public.beyond_posts(status,id desc);
+create index if not exists beyond_posts_owner on public.beyond_posts(owner_id,id desc);
+create table if not exists public.beyond_media (
+  id uuid primary key,
+  post_id uuid not null references public.beyond_posts(id) on delete cascade,
+  position integer not null check(position between 0 and 2),
+  kind text not null check(kind in ('photo','video')),
+  path text not null unique,
+  mime text not null check(mime in ('image/jpeg','video/mp4')),
+  bytes bigint not null check(bytes>0 and bytes<=52428800),
+  width integer not null check(width between 1 and 4096),
+  height integer not null check(height between 1 and 4096),
+  duration_ms integer check(duration_ms between 1 and 45000),
+  constraint beyond_media_kind check((kind='photo' and mime='image/jpeg' and bytes<=5242880 and duration_ms is null) or(kind='video' and mime='video/mp4' and position=0 and duration_ms is not null)),
+  unique(post_id,position)
+);
+-- Separate from the post: removing a draft/post never refunds submission capacity.
+create table if not exists public.beyond_submission_quota (
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  request_id uuid not null,
+  reserved_at timestamptz not null default now(),
+  primary key(owner_id,request_id)
+);
+create index if not exists beyond_quota_time on public.beyond_submission_quota(owner_id,reserved_at);
+create table if not exists public.beyond_reports (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references public.beyond_posts(id) on delete cascade,
+  reporter_id uuid references public.profiles(id) on delete set null,
+  reason text not null check(char_length(reason) between 5 and 240),
+  created_at timestamptz not null default now(),
+  unique(post_id,reporter_id)
+);
+create table if not exists public.beyond_admin_events (
+  id uuid primary key default gen_random_uuid(),
+  actor_id uuid references public.profiles(id) on delete set null,
+  post_id uuid references public.beyond_posts(id) on delete set null,
+  action text not null check(action in ('on','off','approve','remove','retention','cleanup')),
+  reason text not null check(char_length(reason) between 5 and 240),
+  created_at timestamptz not null default now()
+);
+
+do $$declare t text;begin
+ foreach t in array array['beyond_settings','beyond_posts','beyond_media','beyond_submission_quota','beyond_reports','beyond_admin_events'] loop
+  execute format('alter table public.%I enable row level security',t);
+  execute format('revoke all on public.%I from public,anon,authenticated,service_role',t);
+ end loop;
+end$$;
+
+-- Helpers are SECURITY DEFINER with an empty search_path and revoked direct execution below.
+create or replace function public.beyond_missing()
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+#variable_conflict use_variable
+declare missing jsonb:='[]';begin
+ if to_regprocedure('public.my_profile_id()') is null then missing:=missing||'"PRIV-01 profiles"'::jsonb;end if;
+ if to_regprocedure('public.are_friends(uuid,uuid)') is null then missing:=missing||'"PRIV-01 friends"'::jsonb;end if;
+ if to_regprocedure('public.is_blocked_between(uuid,uuid)') is null then missing:=missing||'"PRIV-01 blocks"'::jsonb;end if;
+ if to_regprocedure('public.profile_item_visible(uuid,text)') is null then missing:=missing||'"PRIV-01 privacy"'::jsonb;end if;
+ if to_regprocedure('public.profile_age_band(uuid)') is null then missing:=missing||'"MINOR-01 age"'::jsonb;end if;
+ if to_regprocedure('public.is_supervising_guardian(uuid)') is null then missing:=missing||'"MINOR-01 guardian"'::jsonb;end if;
+ return missing;end$$;
+create or replace function public.beyond_enabled()
+returns boolean language plpgsql stable security definer set search_path='' as $$
+#variable_conflict use_variable
+begin
+ return jsonb_array_length(public.beyond_missing())=0 and exists(select 1 from public.app_runtime_config c where c.id='default' and c.published#>'{highlights,beyondGameEnabled}'='true'::jsonb);
+end$$;
+create or replace function public.beyond_actor(expected uuid,allow_guest boolean default false)
+returns uuid language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;begin
+ if auth.uid() is null then
+  if allow_guest and expected is null and coalesce(auth.role(),'anon') in ('anon','') then return null;end if;
+  raise exception 'Sign in to continue.';
+ end if;
+ if auth.role()<>'authenticated' then raise exception 'Sign in to continue.';end if;
+ select p.id into me from public.profiles p where p.user_id=auth.uid() and p.age_blocked_at is null for update;
+ if me is null or expected is null or me<>expected then raise exception 'Your account changed. Reopen this control.';end if;
+ if public.profile_age_band(me)='under_13' then raise exception 'This account is closed.';end if;
+ return me;end$$;
+create or replace function public.beyond_admin(expected uuid)
+returns uuid language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;begin
+ me:=public.beyond_actor(expected);
+ if public.current_user_role()<>'admin' then raise exception 'Admin access required.';end if;
+ return me;end$$;
+create or replace function public.beyond_owner_open(target uuid)
+returns boolean language plpgsql stable security definer set search_path='' as $$
+#variable_conflict use_variable
+begin
+ return exists(select 1 from public.profiles p where p.id=target and p.age_blocked_at is null) and public.profile_age_band(target) not in ('under_13','not_given');
+end$$;
+create or replace function public.beyond_can_view(target uuid)
+returns boolean language plpgsql stable security definer set search_path='' as $$
+#variable_conflict use_variable
+declare p public.beyond_posts;me uuid;begin
+ if jsonb_array_length(public.beyond_missing())<>0 then return false;end if;
+ select * into p from public.beyond_posts where id=target;
+ if not found or p.status='removed' or not public.beyond_owner_open(p.owner_id) then return false;end if;
+ me:=public.my_profile_id();
+ if auth.uid() is not null and (me is null or auth.role()<>'authenticated') then return false;end if;
+ if me is not null and public.is_blocked_between(me,p.owner_id) then return false;end if;
+ -- Owners/admin/confirmed supervision guardians inspect pending media even when the distribution switch is off.
+ if me=p.owner_id or(me is not null and public.current_user_role()='admin') or(me is not null and public.is_supervising_guardian(p.owner_id)) then return true;end if;
+ if not public.beyond_enabled() or p.status<>'approved' then return false;end if;
+ if public.profile_age_band(p.owner_id)<>'adult' and p.audience<>'friends' then return false;end if;
+ if not public.profile_item_visible(p.owner_id,'photo') then return false;end if;
+ if p.audience='friends' then return me is not null and public.are_friends(me,p.owner_id);end if;
+ return p.audience='everyone' and exists(select 1 from public.profiles pr where pr.id=p.owner_id and(pr.account_private=false or public.are_friends(me,p.owner_id)));
+end$$;
+create or replace function public.beyond_post_json(target uuid,admin_detail boolean default false)
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+#variable_conflict use_variable
+declare p public.beyond_posts;result jsonb;begin
+ select * into p from public.beyond_posts where id=target;
+ if not found then return null;end if;
+ result:=jsonb_build_object('id',p.id,'creator_id',p.owner_id,'category',p.category,'caption',p.caption,'audience',p.audience,'status',p.status,'revision',p.revision,'created_at',p.created_at,'submitted_at',p.submitted_at,'rights_version',p.rights_version,'safety_version',p.safety_version,'attested_at',p.attested_at,'cleanup',p.cleanup,'media',coalesce((select jsonb_agg(jsonb_build_object('id',m.id,'position',m.position,'kind',m.kind,'path',m.path,'mime',m.mime,'bytes',m.bytes,'width',m.width,'height',m.height,'duration_ms',m.duration_ms) order by m.position) from public.beyond_media m where m.post_id=p.id),'[]'));
+ if admin_detail or public.my_profile_id()=p.owner_id then result:=result||jsonb_build_object('review_reason',p.review_reason,'reviewed_at',p.reviewed_at,'cleanup_checked_at',p.cleanup_checked_at);end if;
+ if admin_detail then result:=result||jsonb_build_object('report_count',(select count(*) from public.beyond_reports r where r.post_id=p.id));end if;
+ return result;end$$;
+
+create or replace function public.beyond_status(expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;begin
+ me:=public.beyond_actor(expected_actor_id,true);
+ return jsonb_build_object('enabled',public.beyond_enabled(),'missing',public.beyond_missing(),'actor_id',me,'can_submit',me is not null and public.beyond_enabled() and public.beyond_owner_open(me),'friends_only',me is null or public.profile_age_band(me)<>'adult','rights_version','beyond-rights-1','safety_version','beyond-safety-1');end$$;
+create or replace function public.beyond_posts(expected_actor_id uuid,category text,max_rows integer default 30,before_id uuid default null)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;outrows jsonb;lastid uuid;n integer;begin
+ me:=public.beyond_actor(expected_actor_id,true);
+ if category is not null and category not in ('workout','service','learning','story') then raise exception 'Choose a category.';end if;
+ n:=greatest(1,least(coalesce(max_rows,30),50));
+ select coalesce(jsonb_agg(x.dto order by x.id desc),'[]'),(array_agg(x.id order by x.id))[1] into outrows,lastid from (
+ select p.id,public.beyond_post_json(p.id) dto from public.beyond_posts p where p.status='approved' and(category is null or p.category=category) and(before_id is null or p.id<before_id) and public.beyond_enabled() and public.beyond_can_view(p.id) order by p.id desc limit n+1)x;
+ -- Bounded opaque UUID pagination: return <=50, next cursor only when another row exists.
+ if jsonb_array_length(outrows)>n then outrows:=outrows- n;lastid:=(outrows->(n-1)->>'id')::uuid;else lastid:=null;end if;
+ return jsonb_build_object('posts',outrows,'next_id',lastid,'enabled',public.beyond_enabled());end$$;
+-- Legacy discovery is independent of new contribution publication. reels_feed is an owner-privileged view,
+-- not a privacy filter: explicitly check the exact linked athlete AND uploader before projecting card metadata.
+-- Existing profile media uses the 'photo' audience; canonical reels have no per-reel audience column. Known
+-- teen public discovery also needs current public-profile consent; accepted friends retain permitted media access.
+-- No base reel/media URL, roster fallback, private profile fields or paid/Vault metadata leave this RPC.
+create or replace function public.beyond_legacy_posts(expected_actor_id uuid, category text, max_rows integer default 24)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_variable
+declare me uuid; legacy_category text; cards jsonb;
+begin
+  me := public.beyond_actor(expected_actor_id, true);
+  if category is null or category not in ('workout', 'service') then
+    raise exception 'Choose a legacy category: workout or service.';
+  end if;
+  if max_rows is null or max_rows < 1 or max_rows > 24 then
+    raise exception 'Choose a legacy limit from 1 to 24.';
+  end if;
+  if jsonb_array_length(public.beyond_missing()) <> 0
+    or to_regclass('public.reels_feed') is null
+    or to_regprocedure('public.player_hidden_from_viewer(uuid)') is null
+    or to_regprocedure('public.viewer_relationship(uuid)') is null
+    or to_regprocedure('public.minor_has_consent(uuid,text)') is null then
+    raise exception 'Legacy discovery is unavailable until its privacy dependencies are ready.';
+  end if;
+  legacy_category := case category when 'workout' then 'train_like_me' else 'serve_like_me' end;
+  select coalesce(jsonb_agg(x.card order by x.created_at desc, x.id desc), '[]'::jsonb) into cards
+  from (
+    select f.id, f.created_at, jsonb_build_object('id', f.id,
+      'title', left(coalesce(nullif(btrim(f.title), ''), case category when 'workout' then 'Workout' else 'Service' end), 240),
+      'player_id', f.player_id, 'athlete_name', left(coalesce(nullif(btrim(a.full_name), ''), nullif(btrim(pl.name), ''), 'Athlete'), 160),
+      'category', category) as card
+    from public.reels_feed f
+    join public.players pl on pl.id = f.player_id
+    join public.profiles a on a.player_id = f.player_id and a.verification_status = 'verified'
+    join public.profiles up on up.id = f.uploaded_by
+    where f.category = legacy_category and f.tag_status = 'confirmed'
+      and coalesce(f.is_removed, false) = false
+      and coalesce(f.is_vault_only, false) = false and coalesce(f.is_exclusive, false) = false
+      and case when coalesce(f.media_type, 'video') = 'photo_story'
+        then coalesce(f.photo_count, 0) > 0 and coalesce(f.cover_path, '') <> ''
+        else coalesce(f.video_url, '') <> '' end
+      -- PRIV-01 skips its unique index for preexisting duplicate claims; never choose an alternate account.
+      and not exists (select 1 from public.profiles other where other.player_id = f.player_id
+        and other.verification_status = 'verified' and other.id <> a.id)
+      and a.age_blocked_at is null and up.age_blocked_at is null
+      and public.profile_age_band(a.id) not in ('under_13', 'not_given')
+      and public.profile_age_band(up.id) not in ('under_13', 'not_given')
+      and not public.player_hidden_from_viewer(f.player_id)
+      and not public.is_blocked_between(me, a.id) and not public.is_blocked_between(me, up.id)
+      and not public.is_blocked_between(a.id, up.id)
+      and public.profile_item_visible(a.id, 'photo') and public.profile_item_visible(up.id, 'photo')
+      and (public.profile_age_band(a.id) not in ('teen_13_15', 'teen_16_17')
+        or public.viewer_relationship(a.id) in ('self', 'admin', 'guardian', 'friend')
+        or public.minor_has_consent(a.id, 'public_profile'))
+      and (public.profile_age_band(up.id) not in ('teen_13_15', 'teen_16_17')
+        or public.viewer_relationship(up.id) in ('self', 'admin', 'guardian', 'friend')
+        or public.minor_has_consent(up.id, 'public_profile'))
+    order by f.created_at desc, f.id desc
+    limit max_rows
+  ) x;
+  return cards;
+end;
+$$;
+
+create or replace function public.beyond_my_posts(expected_actor_id uuid,max_rows integer default 30,before_id uuid default null)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;items jsonb;n integer;begin
+ me:=public.beyond_actor(expected_actor_id);n:=greatest(1,least(coalesce(max_rows,30),50));
+ select coalesce(jsonb_agg(x.dto order by x.id desc),'[]') into items from(select p.id,public.beyond_post_json(p.id) dto from public.beyond_posts p where p.owner_id=me and(before_id is null or p.id<before_id) order by p.id desc limit n+1)x;
+ return jsonb_build_object('posts',case when jsonb_array_length(items)>n then items-n else items end,'next_id',case when jsonb_array_length(items)>n then items->(n-1)->>'id' else null end,'enabled',public.beyond_enabled());end$$;
+create or replace function public.beyond_reserve(expected_actor_id uuid,request_id uuid,category text,caption text,audience text,media jsonb,rights_version text,safety_version text)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;p public.beyond_posts;m jsonb;i integer:=0;kind text;mid uuid;extension text;oldmedia jsonb;begin
+ me:=public.beyond_actor(expected_actor_id);
+ if not public.beyond_enabled() then raise exception 'Beyond the Game is not switched on.';end if;
+ if not public.beyond_owner_open(me) then raise exception 'Add an eligible age before submitting.';end if;
+ if request_id is null or category is null or category not in ('workout','service','learning','story') or caption is null or char_length(btrim(caption)) not between 1 and 240 or audience is null or audience not in ('friends','everyone') then raise exception 'Check your post details.';end if;
+ if public.profile_age_band(me)<>'adult' and audience<>'friends' then raise exception 'Choose friends for this account.';end if;
+ if rights_version is distinct from 'beyond-rights-1' or safety_version is distinct from 'beyond-safety-1' then raise exception 'Review the current rights and safety notices.';end if;
+ if jsonb_typeof(media) is distinct from 'array' or jsonb_array_length(media) not between 1 and 3 then raise exception 'Choose one video or up to three photos.';end if;
+ for m in select value from jsonb_array_elements(media) loop
+  if jsonb_typeof(m) is distinct from 'object' or exists(select 1 from jsonb_object_keys(m) k where k not in ('id','kind','bytes','width','height','duration_ms')) or jsonb_typeof(m->'id') is distinct from 'string' or jsonb_typeof(m->'kind') is distinct from 'string' or jsonb_typeof(m->'bytes') is distinct from 'number' or jsonb_typeof(m->'width') is distinct from 'number' or jsonb_typeof(m->'height') is distinct from 'number' then raise exception 'Check your media details.';end if;
+  begin mid:=(m->>'id')::uuid;exception when others then raise exception 'Check your media id.';end;
+  if (m->>'bytes') !~ '^[0-9]+$' or(m->>'width') !~ '^[0-9]+$' or(m->>'height') !~ '^[0-9]+$' or(m->>'bytes')::numeric not between 1 and 52428800 or(m->>'width')::numeric not between 1 and 4096 or(m->>'height')::numeric not between 1 and 4096 then raise exception 'Check your media limits.';end if;
+  if m->>'kind'='photo' then
+   if (m->>'bytes')::numeric>5242880 or m ? 'duration_ms' then raise exception 'Check your photo details.';end if;
+  elsif m->>'kind'='video' then
+   if jsonb_array_length(media)<>1 or jsonb_typeof(m->'duration_ms') is distinct from 'number' or(m->>'duration_ms') !~ '^[0-9]+$' or(m->>'duration_ms')::numeric not between 1 and 45000 then raise exception 'Choose a video of at most 45 seconds.';end if;
+  else raise exception 'Choose JPEG photos or an MP4 video.';end if;
+ end loop;
+ if(select count(distinct value->>'id') from jsonb_array_elements(media))<>jsonb_array_length(media) then raise exception 'Choose distinct media.';end if;
+ select * into p from public.beyond_posts bp where bp.owner_id=me and bp.request_id=beyond_reserve.request_id for update;
+ if found then
+  select jsonb_agg(jsonb_strip_nulls(jsonb_build_object('id',bm.id,'kind',bm.kind,'bytes',bm.bytes,'width',bm.width,'height',bm.height,'duration_ms',bm.duration_ms)) order by bm.position) into oldmedia from public.beyond_media bm where bm.post_id=p.id;
+  if p.category<>category or p.caption<>btrim(caption) or p.audience<>audience or oldmedia<>media then raise exception 'This request already contains different details.';end if;
+  return public.beyond_post_json(p.id);
+ end if;
+ if(select count(*) from public.beyond_submission_quota q where q.owner_id=me and q.reserved_at>now()-interval '24 hours')>=5 then raise exception 'You can make 5 submissions per 24 hours. Try later.';end if;
+ insert into public.beyond_submission_quota(owner_id,request_id) values(me,request_id);
+ insert into public.beyond_posts(owner_id,owner_user_id,request_id,category,caption,audience,rights_version,safety_version) values(me,auth.uid(),request_id,category,btrim(caption),audience,rights_version,safety_version) returning * into p;
+ for m in select value from jsonb_array_elements(media) loop
+  mid:=(m->>'id')::uuid;kind:=m->>'kind';extension:=case when kind='photo' then 'jpg' else 'mp4' end;
+  insert into public.beyond_media(id,post_id,position,kind,path,mime,bytes,width,height,duration_ms) values(mid,p.id,i,kind,auth.uid()::text||'/'||p.id::text||'/'||mid::text||'.'||extension,case when kind='photo' then 'image/jpeg' else 'video/mp4' end,(m->>'bytes')::bigint,(m->>'width')::integer,(m->>'height')::integer,(m->>'duration_ms')::integer);i:=i+1;
+ end loop;
+ return public.beyond_post_json(p.id);end$$;
+
+create or replace function public.beyond_identity_removed()
+returns trigger language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+begin
+ if (old.owner_id is not null and new.owner_id is null) or(old.owner_user_id is not null and new.owner_user_id is null) then
+  new.owner_id:=null;new.owner_user_id:=null;new.caption:='Removed account content';new.request_id:=gen_random_uuid();
+  new.status:='removed';new.removed_at:=now();new.cleanup:='pending';new.revision:=old.revision+1;
+  new.review_reason:=null;new.reviewer_id:=null;
+  delete from public.beyond_reports where post_id=old.id;
+  update public.beyond_admin_events set actor_id=null,reason='Account erasure; minimal action and time retained' where post_id=old.id;
+ end if;
+ return new;
+end$$;
+drop trigger if exists beyond_identity_removed on public.beyond_posts;
+create trigger beyond_identity_removed before update on public.beyond_posts for each row execute function public.beyond_identity_removed();
+create or replace function public.beyond_profile_erasure()
+returns trigger language plpgsql security definer set search_path='' as $$
+begin
+ update public.beyond_admin_events set actor_id=null,reason='Account erasure; minimal action and time retained' where actor_id=old.id;
+ update public.beyond_posts set reviewer_id=null,review_reason=case when review_reason is null then null else 'Review decision retained; reviewer identity erased' end where reviewer_id=old.id;
+ update public.beyond_settings set changed_by=null,reason=null where changed_by=old.id;
+ return old;
+end$$;
+drop trigger if exists beyond_profile_erasure on public.profiles;
+create trigger beyond_profile_erasure before delete on public.profiles for each row execute function public.beyond_profile_erasure();
+create or replace function public.beyond_export_my_data(expected_actor_id uuid,section text,max_rows integer default 30,before_id uuid default null)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;items jsonb;n integer;begin
+ me:=public.beyond_actor(expected_actor_id);n:=greatest(1,least(coalesce(max_rows,30),50));
+ if section='posts' then
+  select coalesce(jsonb_agg(x.dto order by x.id desc),'[]') into items from(select p.id,public.beyond_post_json(p.id) dto from public.beyond_posts p where p.owner_id=me and(before_id is null or p.id<before_id) order by p.id desc limit n+1)x;
+ elsif section='reports' then
+  select coalesce(jsonb_agg(x.dto order by x.id desc),'[]') into items from(select r.id,jsonb_build_object('id',r.id,'post_id',r.post_id,'reason',r.reason,'created_at',r.created_at) dto from public.beyond_reports r where r.reporter_id=me and(before_id is null or r.id<before_id) order by r.id desc limit n+1)x;
+ elsif section='quota' then
+  select coalesce(jsonb_agg(x.dto order by x.id desc),'[]') into items from(select q.request_id id,jsonb_build_object('id',q.request_id,'reserved_at',q.reserved_at) dto from public.beyond_submission_quota q where q.owner_id=me and(before_id is null or q.request_id<before_id) order by q.request_id desc limit n+1)x;
+ else raise exception 'Choose an export section.';end if;
+ return jsonb_build_object('section',section,'items',case when jsonb_array_length(items)>n then items-n else items end,'next_id',case when jsonb_array_length(items)>n then items->(n-1)->>'id' else null end);
+end$$;
+create or replace function public.admin_beyond_erase_profile(expected_actor_id uuid,target_profile_id uuid,reason text)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;target_user uuid;ids jsonb;begin
+ me:=public.beyond_admin(expected_actor_id);
+ if reason is null or char_length(btrim(reason)) not between 5 and 240 then raise exception 'Add a support erasure reason.';end if;
+ select user_id into target_user from public.profiles where id=target_profile_id for update;
+ if not found then raise exception 'That account is unavailable.';end if;
+ -- Root-approved exceptional support erasure resets the quota; ordinary owner removal never does.
+ with targets as(select p.id from public.beyond_posts p where p.owner_id=target_profile_id order by p.id limit 50 for update),changed as(update public.beyond_posts p set owner_id=null,owner_user_id=null from targets t where p.id=t.id returning p.id) select coalesce(jsonb_agg(id),'[]') into ids from changed;
+ delete from public.beyond_reports where reporter_id=target_profile_id;
+ delete from public.beyond_submission_quota where owner_id=target_profile_id;
+ update public.beyond_admin_events set actor_id=null,reason='Account erasure; minimal action and time retained' where actor_id=target_profile_id;
+ update public.beyond_posts set reviewer_id=null,review_reason=case when review_reason is null then null else 'Review decision retained; reviewer identity erased' end where reviewer_id=target_profile_id;
+ update public.beyond_settings set changed_by=null,reason=case when changed_by=target_profile_id then null else reason end where id and changed_by=target_profile_id;
+ insert into public.beyond_admin_events(actor_id,action,reason) values(case when me=target_profile_id then null else me end,'retention','Support account erasure; media cleanup remains separately tracked');
+ return jsonb_build_object('removed_post_ids',ids,'more',exists(select 1 from public.beyond_posts p where p.owner_id=target_profile_id),'cleanup_pending',true);
+end$$;
+
+-- Catalog-level INSERT/UPDATE guard closes upload/withdrawal races and defends against unrelated permissive policies.
+create or replace function public.beyond_storage_guard()
+returns trigger language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare m public.beyond_media;p public.beyond_posts;begin
+ if tg_op='UPDATE' and old.bucket_id='beyond_game' then raise exception 'Beyond media is immutable.';end if;
+ if new.bucket_id<>'beyond_game' then return new;end if;
+ if tg_op='UPDATE' then raise exception 'Beyond media is immutable.';end if;
+ select * into m from public.beyond_media where path=new.name;
+ if not found then raise exception 'No reserved media path.';end if;
+ select * into p from public.beyond_posts where id=m.post_id for update;
+ if p.status<>'draft' or p.created_at<=now()-interval '24 hours' or not public.beyond_enabled() or not public.beyond_owner_open(p.owner_id) or auth.role()<>'authenticated' or auth.uid() is distinct from p.owner_user_id or new.owner is distinct from p.owner_user_id then raise exception 'This media reservation is not available.';end if;
+ if new.metadata->>'mimetype' is distinct from m.mime or new.metadata->>'size' is distinct from m.bytes::text then raise exception 'The file metadata does not match its reservation.';end if;
+ return new;end$$;
+drop trigger if exists beyond_storage_guard on storage.objects;
+create trigger beyond_storage_guard before insert or update on storage.objects for each row execute function public.beyond_storage_guard();
+create unique index if not exists beyond_storage_unique on storage.objects(bucket_id,name) where bucket_id='beyond_game';
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('beyond_game','beyond_game',false,52428800,array['image/jpeg','video/mp4']) on conflict(id) do update set public=false,file_size_limit=52428800,allowed_mime_types=array['image/jpeg','video/mp4'];
+create or replace function public.beyond_storage_allowed(object_path text,operation text)
+returns boolean language plpgsql stable security definer set search_path='' as $$
+#variable_conflict use_variable
+declare m public.beyond_media;p public.beyond_posts;me uuid;begin
+ select * into m from public.beyond_media where path=object_path;
+ if not found then return false;end if;
+ select * into p from public.beyond_posts where id=m.post_id;
+ -- Storage DELETE needs SELECT visibility. Only a current open admin may access removed bytes for cleanup;
+ -- no public/owner/guardian preview is restored, and beyond_media_access always refuses removed posts.
+ if operation='read' then return public.beyond_can_view(p.id) or(p.status='removed' and public.my_profile_id() is not null and auth.role()='authenticated' and public.current_user_role()='admin');end if;
+ me:=public.my_profile_id();
+ if auth.role()<>'authenticated' or me is null then return false;end if;
+ if operation='insert' then return p.owner_id=me and p.owner_user_id=auth.uid() and p.status='draft' and p.created_at>now()-interval '24 hours' and public.beyond_enabled() and public.beyond_owner_open(me);end if;
+ if operation='delete' then return p.status='removed' and(me=p.owner_id or public.current_user_role()='admin');end if;
+ return false;end$$;
+-- Each restrictive guard constrains ANY existing generic permissive storage policy.
+drop policy if exists "Beyond private read guard" on storage.objects;
+create policy "Beyond private read guard" on storage.objects as restrictive for select to anon,authenticated using(bucket_id<>'beyond_game' or public.beyond_storage_allowed(name,'read'));
+drop policy if exists "Beyond private insert guard" on storage.objects;
+create policy "Beyond private insert guard" on storage.objects as restrictive for insert to authenticated with check(bucket_id<>'beyond_game' or public.beyond_storage_allowed(name,'insert'));
+drop policy if exists "Beyond private update guard" on storage.objects;
+create policy "Beyond private update guard" on storage.objects as restrictive for update to authenticated using(bucket_id<>'beyond_game') with check(bucket_id<>'beyond_game');
+drop policy if exists "Beyond private delete guard" on storage.objects;
+create policy "Beyond private delete guard" on storage.objects as restrictive for delete to authenticated using(bucket_id<>'beyond_game' or public.beyond_storage_allowed(name,'delete'));
+drop policy if exists "Beyond approved and inspection media" on storage.objects;
+create policy "Beyond approved and inspection media" on storage.objects for select to anon,authenticated using(bucket_id='beyond_game' and public.beyond_storage_allowed(name,'read'));
+drop policy if exists "Beyond reserved owner upload" on storage.objects;
+create policy "Beyond reserved owner upload" on storage.objects for insert to authenticated with check(bucket_id='beyond_game' and public.beyond_storage_allowed(name,'insert'));
+drop policy if exists "Beyond removed cleanup" on storage.objects;
+create policy "Beyond removed cleanup" on storage.objects for delete to authenticated using(bucket_id='beyond_game' and public.beyond_storage_allowed(name,'delete'));
+
+create or replace function public.beyond_finalize(expected_actor_id uuid,post_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;p public.beyond_posts;begin
+ me:=public.beyond_actor(expected_actor_id);
+ select * into p from public.beyond_posts where id=post_id and owner_id=me for update;
+ if not found then raise exception 'That submission is unavailable.';end if;
+ if not public.beyond_enabled() or not public.beyond_owner_open(me) then raise exception 'Beyond the Game is not switched on for this account.';end if;
+ if p.status in ('pending','approved','held') then return public.beyond_post_json(p.id);end if;
+ if p.status<>'draft' or p.created_at<=now()-interval '24 hours' then raise exception 'That draft is no longer available.';end if;
+ if exists(select 1 from public.beyond_media m where m.post_id=p.id and not exists(select 1 from storage.objects o where o.bucket_id='beyond_game' and o.name=m.path and o.owner=p.owner_user_id and o.metadata->>'mimetype'=m.mime and o.metadata->>'size'=m.bytes::text)) then raise exception 'Upload the exact reserved files before submitting.';end if;
+ update public.beyond_posts set status='pending',submitted_at=now(),revision=revision+1 where id=p.id;
+ return public.beyond_post_json(p.id);end$$;
+create or replace function public.beyond_remove(expected_actor_id uuid,post_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;p public.beyond_posts;begin
+ me:=public.beyond_actor(expected_actor_id);
+ select * into p from public.beyond_posts where id=post_id and owner_id=me for update;
+ if not found then raise exception 'That submission is unavailable.';end if;
+ if p.status<>'removed' then update public.beyond_posts set status='removed',removed_at=now(),cleanup='pending',revision=revision+1 where id=p.id;end if;
+ return public.beyond_post_json(p.id);end$$;
+create or replace function public.beyond_report(expected_actor_id uuid,post_id uuid,reason text)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;p public.beyond_posts;begin
+ me:=public.beyond_actor(expected_actor_id);
+ if reason is null or char_length(btrim(reason)) not between 5 and 240 then raise exception 'Add a short concern.';end if;
+ select * into p from public.beyond_posts where id=post_id for update;
+ if not found or p.owner_id=me then raise exception 'That submission is unavailable.';end if;
+ if exists(select 1 from public.beyond_reports r where r.post_id=p.id and r.reporter_id=me) then return jsonb_build_object('received',true);end if;
+ if not public.beyond_can_view(p.id) then raise exception 'That submission is unavailable.';end if;
+ if(select count(*) from public.beyond_reports r where r.reporter_id=me and r.created_at>now()-interval '24 hours')>=20 then raise exception 'Report limit reached. Use Help for another concern.';end if;
+ insert into public.beyond_reports(post_id,reporter_id,reason) values(p.id,me,btrim(reason));
+ update public.beyond_posts set status='held',revision=revision+1 where id=p.id and status<>'removed';
+ return jsonb_build_object('received',true);end$$;
+create or replace function public.beyond_media_access(expected_actor_id uuid,post_id uuid,media_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;m public.beyond_media;begin
+ me:=public.beyond_actor(expected_actor_id,true);
+ if not public.beyond_can_view(post_id) then raise exception 'This media is unavailable.';end if;
+ select * into m from public.beyond_media where id=media_id and public.beyond_media.post_id=beyond_media_access.post_id;
+ if not found or not exists(select 1 from storage.objects o where o.bucket_id='beyond_game' and o.name=m.path and o.metadata->>'size'=m.bytes::text and o.metadata->>'mimetype'=m.mime) then raise exception 'This media is unavailable.';end if;
+ return jsonb_build_object('bucket','beyond_game','path',m.path,'ttl_seconds',60,'post_id',post_id,'media_id',media_id);end$$;
+
+create or replace function public.admin_beyond_status(expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;begin
+ me:=public.beyond_admin(expected_actor_id);
+ return jsonb_build_object('enabled',public.beyond_enabled(),'missing',public.beyond_missing(),'changed_at',(select changed_at from public.beyond_settings where id),'reason',(select reason from public.beyond_settings where id),'pending',(select count(*) from public.beyond_posts where status in ('pending','held')),'cleanup_pending',(select count(*) from public.beyond_posts where status='removed' and cleanup<>'complete'));
+end$$;
+create or replace function public.admin_beyond_set_enabled(expected_actor_id uuid,turn_on boolean,reason text)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;begin
+ me:=public.beyond_admin(expected_actor_id);
+ if turn_on is null or reason is null or char_length(btrim(reason)) not between 5 and 240 then raise exception 'Add a reason of 5 to 240 characters.';end if;
+ if turn_on and jsonb_array_length(public.beyond_missing())>0 then raise exception 'Cannot switch on: missing %',public.beyond_missing();end if;
+ update public.app_runtime_config set published=jsonb_set(published,'{highlights}',coalesce(published->'highlights','{}')||jsonb_build_object('beyondGameEnabled',turn_on)),updated_at=now(),published_at=now() where id='default';
+ if not found then raise exception 'The runtime configuration is unavailable.';end if;
+ update public.beyond_settings set changed_at=now(),changed_by=me,reason=btrim(reason) where id;
+ insert into public.beyond_admin_events(actor_id,action,reason) values(me,case when turn_on then 'on' else 'off' end,btrim(reason));
+ return public.admin_beyond_status(me);end$$;
+create or replace function public.admin_beyond_posts(expected_actor_id uuid,status text default 'pending',max_rows integer default 30,before_id uuid default null)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;items jsonb;n integer;begin
+ me:=public.beyond_admin(expected_actor_id);
+ if status is null or status not in ('draft','pending','approved','held','removed') then raise exception 'Choose a review status.';end if;
+ n:=greatest(1,least(coalesce(max_rows,30),50));
+ select coalesce(jsonb_agg(x.dto order by x.id desc),'[]') into items from(select p.id,public.beyond_post_json(p.id,true) dto from public.beyond_posts p where p.status=admin_beyond_posts.status and(before_id is null or p.id<before_id) order by p.id desc limit n+1)x;
+ return jsonb_build_object('posts',case when jsonb_array_length(items)>n then items-n else items end,'next_id',case when jsonb_array_length(items)>n then items->(n-1)->>'id' else null end,'enabled',public.beyond_enabled());end$$;
+create or replace function public.admin_beyond_review(expected_actor_id uuid,post_id uuid,expected_revision integer,action text,reason text)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;p public.beyond_posts;begin
+ me:=public.beyond_admin(expected_actor_id);
+ if reason is null or char_length(btrim(reason)) not between 5 and 240 or action is null or action not in ('approve','remove') then raise exception 'Choose a decision and add a reason.';end if;
+ select * into p from public.beyond_posts where id=post_id for update;
+ if not found then raise exception 'That submission is unavailable.';end if;
+ if expected_revision is null or p.revision<>expected_revision then raise exception 'This submission changed. Refresh and review again.';end if;
+ if action='approve' then
+  if not public.beyond_enabled() then raise exception 'Beyond the Game is not switched on.';end if;
+  if not public.beyond_owner_open(p.owner_id) then raise exception 'The author account is closed or not eligible.';end if;
+  if p.status not in ('pending','held') then raise exception 'Only submitted content can be approved.';end if;
+  if public.profile_age_band(p.owner_id)<>'adult' and p.audience<>'friends' then raise exception 'This account can publish to friends only.';end if;
+  if not public.beyond_can_view(p.id) then raise exception 'This media is unavailable to this reviewer.';end if;
+  if exists(select 1 from public.beyond_media m where m.post_id=p.id and not exists(select 1 from storage.objects o where o.bucket_id='beyond_game' and o.name=m.path and o.owner=p.owner_user_id and o.metadata->>'mimetype'=m.mime and o.metadata->>'size'=m.bytes::text)) then raise exception 'The submitted files are unavailable.';end if;
+ end if;
+ update public.beyond_posts set status=case when action='approve' then 'approved' else 'removed' end,revision=revision+1,reviewed_at=now(),reviewer_id=me,review_reason=btrim(reason),removed_at=case when action='remove' then now() else removed_at end,cleanup=case when action='remove' then 'pending' else cleanup end where id=p.id;
+ insert into public.beyond_admin_events(actor_id,post_id,action,reason) values(me,p.id,action,btrim(reason));
+ return public.beyond_post_json(p.id,true);end$$;
+create or replace function public.admin_beyond_cleanup_targets(expected_actor_id uuid,post_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;p public.beyond_posts;begin
+ me:=public.beyond_admin(expected_actor_id);select * into p from public.beyond_posts where id=post_id for update;
+ if not found or p.status<>'removed' then raise exception 'Remove the post before cleaning its files.';end if;
+ return jsonb_build_object('post_id',p.id,'paths',coalesce((select jsonb_agg(m.path order by m.position) from public.beyond_media m where m.post_id=p.id),'[]'));
+end$$;
+create or replace function public.admin_beyond_cleanup_finish(expected_actor_id uuid,post_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;p public.beyond_posts;remaining integer;begin
+ me:=public.beyond_admin(expected_actor_id);select * into p from public.beyond_posts where id=post_id for update;
+ if not found or p.status<>'removed' then raise exception 'Remove the post before cleaning its files.';end if;
+ select count(*) into remaining from public.beyond_media m join storage.objects o on o.bucket_id='beyond_game' and o.name=m.path where m.post_id=p.id;
+ if remaining=0 and p.owner_id is null then delete from public.beyond_media where public.beyond_media.post_id=p.id;end if;
+ update public.beyond_posts set cleanup=case when remaining=0 then 'complete' else 'partial' end,cleanup_checked_at=now() where id=p.id;
+ insert into public.beyond_admin_events(actor_id,post_id,action,reason) values(me,p.id,'cleanup','Checked Storage catalog; physical provider deletion is separate evidence');
+ return jsonb_build_object('post_id',p.id,'cleanup',case when remaining=0 then 'complete' else 'partial' end,'remaining',remaining,'basis','storage_catalog');end$$;
+create or replace function public.admin_beyond_retention(expected_actor_id uuid,reason text)
+returns jsonb language plpgsql security definer set search_path='' as $$
+#variable_conflict use_variable
+declare me uuid;ids jsonb;begin
+ me:=public.beyond_admin(expected_actor_id);
+ if reason is null or char_length(btrim(reason)) not between 5 and 240 then raise exception 'Add a retention reason.';end if;
+ with expired as(select p.id from public.beyond_posts p where p.status='draft' and p.created_at<=now()-interval '24 hours' order by p.id limit 100 for update),changed as(update public.beyond_posts p set status='removed',removed_at=now(),cleanup='pending',revision=p.revision+1 from expired e where p.id=e.id returning p.id) select coalesce(jsonb_agg(id),'[]') into ids from changed;
+ delete from public.beyond_submission_quota where reserved_at<now()-interval '35 days';
+ delete from public.beyond_admin_events where created_at<now()-interval '2 years';
+ insert into public.beyond_admin_events(actor_id,action,reason) values(me,'retention',btrim(reason));
+ return jsonb_build_object('expired_post_ids',ids,'cleanup_pending',true);end$$;
+
+-- Supabase defaults grant functions to every API role. Pin all new helper/RPC grants explicitly.
+do $$declare f record;begin
+ for f in select n.nspname,p.proname,pg_get_function_identity_arguments(p.oid) args from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and(p.proname like 'beyond_%' or p.proname like 'admin_beyond_%') loop
+  execute format('revoke all on function public.%I(%s) from public,anon,authenticated,service_role',f.proname,f.args);
+  if f.proname in('beyond_status','beyond_posts','beyond_media_access','beyond_storage_allowed','beyond_legacy_posts') then execute format('grant execute on function public.%I(%s) to anon,authenticated',f.proname,f.args);
+  elsif f.proname in('beyond_my_posts','beyond_reserve','beyond_finalize','beyond_remove','beyond_report','admin_beyond_status','admin_beyond_set_enabled','admin_beyond_posts','admin_beyond_review','admin_beyond_cleanup_targets','admin_beyond_cleanup_finish','admin_beyond_retention','beyond_export_my_data','admin_beyond_erase_profile') then execute format('grant execute on function public.%I(%s) to authenticated',f.proname,f.args);
+  end if;
+ end loop;
+end$$;

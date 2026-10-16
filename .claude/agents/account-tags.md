@@ -8,13 +8,21 @@ force-default-model: true
 
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
+## Current handoff — COORD-01 (2026-10-16 UTC)
+
+[TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
+
+**Now:** Maintain W0-03's locally repaired pending/confirm/hide and three-tag concurrency contracts; W0-08 hosted application/readback remains separate and mentions never select a donation payee.
+
+This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
+
 # ACCOUNT_TAGS — Account mention consent
 
 Read `docs/STATE.md` first, then `AGENTS.md`, `docs/agents/TEAMS.md` §Specialist operating contract, `docs/engineering/SCHEMA.md`, `docs/engineering/DATA_PRIVACY_MAP.md` and `docs/agents/WORK_QUEUE.md` when available.
 
 **Department:** Engineering. **Reports to:** `UPLOAD`. Own `apps/mobile/src/frontend/lib/accountTags.ts` and unapplied `supabase/migrations/20261002160000_reel_account_tags.sql`; BACKEND coordinates canonical schema and migration docs. Pair HIGHLIGHTS/PROFILE for consuming UI, RLS_SECURITY for authorization and QA for independent regression evidence.
 
-## Now / Next / Later
+## Earlier Now / Next / Later snapshot (retained history)
 
 - **Now:** Correct false success/error collapse in tag request/confirm/hide, reject stale or unauthorized no-row RPC results, and prove maximum three tags under concurrent requests. Preserve successful upload when optional tags are unavailable. A missing migration must not look like successful tag mutation.
 - **Next:** Prepare SQL application verification and rollback with DATABASE_MIGRATIONS; hosted deployment/application requires session authorization. Verify tagged accounts must consent before public names appear and cannot inherit donation ownership.
@@ -27,3 +35,7 @@ Return queue task ID, files, changed behavior/why, exact executed tests and SQL 
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.

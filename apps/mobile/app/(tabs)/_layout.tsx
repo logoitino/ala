@@ -1,6 +1,7 @@
 /**
- * Fan tab bar (Highlights / Activity / Spotlight / Drip / Profile) and the global upload sheet.
- * Hidden routes (`local`, `user/[id]`, `receipts`) live in this group but are not bar items.
+ * Fan tab bar (Highlights / Activity / Spotlight / Profile around Upload), the global upload sheet and its
+ * Highlight-or-Beyond chooser. Drip lives in Profile. Hidden routes (`beyond`, `local`, `user/[id]`, `receipts`)
+ * live in this group but are not bar items; Beyond and Local open from the Highlights pill row (owner 2026-10-16).
  */
 
 import { Platform, StyleSheet } from 'react-native';
@@ -8,16 +9,18 @@ import { Tabs } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FanTabBar } from '@/components/UI/FanTabBar';
+import { UploadChoiceSheet } from '@/components/Reels/UploadChoiceSheet';
 import { UploadVideoModal } from '@/components/Reels/UploadVideoModal';
 import { RoleGate } from '@/context/RoleGate';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { colors } from '@/constants/theme';
+import { USER_ROLES } from '@/lib/roles';
 import { useRoster } from '@/hooks/useRoster';
 
 function FanTabs() {
   const { players } = useRoster();
-  const { visible, closeUpload, notifyUploaded } = useUploadSheet();
+  const { visible, chooserVisible, closeChooser, closeUpload, notifyUploaded, openBeyondComposer, openHighlightUpload } = useUploadSheet();
   const { live } = useAppRuntime();
 
   return (
@@ -43,20 +46,27 @@ function FanTabs() {
         }}
       >
         <Tabs.Screen name="index" options={{ title: 'Home', tabBarLabel: 'Home', href: live.tabs.home ? undefined : null }} />
-        {/* Local is reachable from the Highlights pill row now, so it is routable but not a bar item. */}
+        {/* Beyond and Local open from the Highlights pill row, so they are routable but not bar items. */}
+        <Tabs.Screen name="beyond" options={{ title: 'Beyond the Game', href: null }} />
         <Tabs.Screen name="local" options={{ title: 'Local', href: null }} />
         <Tabs.Screen
           name="activity"
           options={{ title: 'Activity', tabBarLabel: 'Activity', href: live.tabs.activity ? undefined : null }}
         />
         <Tabs.Screen name="spotlight" options={{ title: 'Spotlight', tabBarLabel: 'Spotlight', href: live.tabs.spotlight ? undefined : null }} />
-        <Tabs.Screen name="drip" options={{ title: 'Drip', tabBarLabel: 'Drip', href: live.tabs.drip ? undefined : null }} />
+        <Tabs.Screen name="drip" options={{ title: 'Drip', tabBarLabel: 'Drip', href: null }} />
         <Tabs.Screen name="shop" options={{ href: null, title: 'Drip' }} />
         <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarLabel: 'Profile', href: live.tabs.profile ? undefined : null }} />
         <Tabs.Screen name="athlete" options={{ href: null, title: 'Athlete' }} />
         <Tabs.Screen name="user" options={{ href: null, title: 'Athlete' }} />
         <Tabs.Screen name="receipts" options={{ href: null, title: 'Receipts' }} />
       </Tabs>
+      <UploadChoiceSheet
+        visible={Boolean(chooserVisible) && live.tabs.upload}
+        onHighlight={openHighlightUpload}
+        onBeyond={openBeyondComposer}
+        onClose={closeChooser}
+      />
       <UploadVideoModal
         visible={visible && live.tabs.upload}
         players={players}
@@ -69,7 +79,7 @@ function FanTabs() {
 
 export default function FanTabsLayout() {
   return (
-    <RoleGate allow={['guest', 'fan', 'athlete']}>
+    <RoleGate allow={USER_ROLES}>
       <FanTabs />
     </RoleGate>
   );

@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';
 
+import { OperatorCheckinsPanel } from '@/components/Admin/OperatorCheckinsPanel';
 import {
   AdminBtn,
   AdminEmpty,
@@ -283,6 +284,7 @@ export function GamesTool() {
           </AdminRow>
         ))
       )}
+      <OperatorCheckinsPanel />
     </AdminPage>
   );
 }

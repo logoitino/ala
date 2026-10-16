@@ -4,8 +4,9 @@ Companion to [AGENTS.md](../../AGENTS.md) (which owns the directory *law*) and
 [docs/STATE.md](../STATE.md) (current state). This file writes down the naming and placement rules
 the codebase already follows, so they stop being tribal knowledge.
 
-**These are descriptive, not aspirational.** Every rule below was verified against the tree on
-2026-09-28. Where a rule has exceptions, the exceptions are listed — do not silently add more.
+The naming and placement rules describe established project patterns, originally recorded on
+2026-09-28. Later sections include dated standards for new work; they do not claim that all
+historical code has been audited. Where a rule has exceptions, list and explain them.
 
 ---
 
@@ -166,3 +167,12 @@ Back/Next/final action outside the scroll area. Preserve drafts on Back. Show ri
 review before the final action; lock dismissal/submission during upload or payment. Small screens,
 large text and keyboard layouts can still need a short scroll. Check those on real devices.
 Pair every owner with `DOCUMENTATION` for accurate team/docs and code-comment handoff.
+
+## 8. New solutions and understandable handoffs
+
+For new work, [INNOVATION_AND_HANDOFF](INNOVATION_AND_HANDOFF.md) adds the owner-requested
+2026-10-13 operating standard. Record the problem, experiment, outcome and decision; document
+inputs/outputs/errors/side effects/roles and compatibility at the module boundary. Explain new
+shared interfaces or dependencies in the existing design/decision record. Use versioned diagrams,
+the glossary, reproducible checks and explicit readiness/gaps for outside handoff. These are
+forward requirements; their presence does not mean every historical module has been audited.

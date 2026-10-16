@@ -105,15 +105,6 @@ export function rightsReady(
 }
 
 /**
- * @purpose True when this reason, or an athlete/guardian report, should hide the clip now.
- * @param reason Report reason id.
- * @param fromAthleteOrGuardian Reporter is the tagged athlete or their guardian.
- */
-export function reportHidesNow(reason: ReportReasonId, fromAthleteOrGuardian: boolean): boolean {
-  return fromAthleteOrGuardian || IMMEDIATE_HIDE_REASONS.includes(reason);
-}
-
-/**
  * @purpose Keep a queued report reason inside the allowed set.
  * @param value Raw reason from the sheet or an older offline queue row.
  */

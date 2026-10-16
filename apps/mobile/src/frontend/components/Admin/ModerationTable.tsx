@@ -1,13 +1,12 @@
 /**
- * Open flags table on the Expo /admin moderation desk.
- * Target stays the clip. Reason and Athlete or guardian sit on the same row.
+ * Open flags on the Expo /admin moderation desk, using a wide table or complete detail rows.
+ * Keep all stored evidence visible; only Highlight reports offer content removal.
  */
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
+import { ADMIN_REPORT_COLORS as colors } from '@/components/Admin/AdminChrome';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors, radii } from '@/constants/theme';
 import type { AdminFlagRow } from '@/lib/admin';
-import { FOCAL } from '@/theme/motion';
 
 type ModerationTableProps = {
   flags: AdminFlagRow[];
@@ -35,14 +34,17 @@ function formatOpened(iso: string): string {
  * @sideEffects Parent fires `moderate_flagged_reel` or deletes a telemetry row.
  */
 export function ModerationTable({ flags, busyId, onDismiss, onRemove }: ModerationTableProps) {
+  const { width, fontScale } = useWindowDimensions();
+  // Seven columns need room for complete evidence; larger native text reads better as labeled details.
+  const wide = width >= 1100 && fontScale <= 1.1;
   return (
     <View style={styles.panel}>
       <Text style={styles.title}>Open flags</Text>
       <Text style={styles.lede}>
-        User flags from Highlights ⚡ plus stall and reconnect bug reports. Reason is the stored report. Athlete or guardian is Yes when that athlete or their guardian reported the clip. Dismiss keeps the clip live. Remove Content takes it off the feed.
+        User flags from Highlights ⚡. Reason is the stored report. Athlete or guardian is Yes when that athlete or their guardian reported the clip. Dismiss clears a report; Remove Content takes a Highlight off the feed. Client incidents are handled in QA.
       </Text>
 
-      <View style={styles.head} accessibilityRole="header">
+      {wide ? <View style={styles.head}>
         <Text style={[styles.headCell, styles.colKind]}>Kind</Text>
         <Text style={[styles.headCell, styles.colTarget]}>Target</Text>
         <Text style={[styles.headCell, styles.colReason]}>Reason</Text>
@@ -50,7 +52,7 @@ export function ModerationTable({ flags, busyId, onDismiss, onRemove }: Moderati
         <Text style={[styles.headCell, styles.colWho]}>Athlete or guardian</Text>
         <Text style={[styles.headCell, styles.colWhen]}>Opened</Text>
         <Text style={[styles.headCell, styles.colActions]}>Actions</Text>
-      </View>
+      </View> : null}
 
       {flags.length === 0 ? (
         <Text style={styles.empty}>Queue is clear.</Text>
@@ -58,57 +60,94 @@ export function ModerationTable({ flags, busyId, onDismiss, onRemove }: Moderati
         flags.map((row) => {
           const busy = busyId === row.id;
           const canRemove = row.kind === 'highlight';
+          const kind = canRemove ? 'User flag' : 'Bug report';
+          const who = athleteOrGuardianLabel(row.athleteOrGuardian);
+          const opened = formatOpened(row.openedAt);
+          const actions = (
+            <View style={wide ? styles.colActions : styles.detailActions}>
+              {busy ? (
+                <ActivityIndicator color={colors.jade} accessibilityLabel={`Updating ${row.title}`} />
+              ) : (
+                <>
+                  <AnimatedButton
+                    haptic="selection"
+                    accessibilityLabel={`Dismiss ${row.title}`}
+                    style={styles.actionHit}
+                    contentStyle={styles.ghost}
+                    onPress={() => onDismiss(row)}
+                  >
+                    <Text style={styles.ghostLabel}>Dismiss</Text>
+                  </AnimatedButton>
+                  {canRemove ? (
+                    <AnimatedButton
+                      haptic="medium"
+                      accessibilityLabel={`Remove content ${row.title}`}
+                      style={styles.actionHit}
+                      contentStyle={styles.danger}
+                      onPress={() => onRemove(row)}
+                    >
+                      <Text style={styles.dangerLabel}>Remove Content</Text>
+                    </AnimatedButton>
+                  ) : null}
+                </>
+              )}
+            </View>
+          );
+          if (!wide) {
+            return (
+              <View key={row.id} style={styles.detailRow}>
+                <View style={styles.target}>
+                  <Text style={styles.kind} accessibilityLabel={`Kind: ${kind}`}>{kind}</Text>
+                  <Text style={styles.targetTitle}>{row.title}</Text>
+                  <Text style={styles.targetMeta}>{row.subtitle}</Text>
+                </View>
+                <View style={styles.detailField}>
+                  <Text style={styles.detailLabel}>Reason</Text>
+                  <Text style={styles.cell} accessibilityLabel={`Reason: ${row.reasonLabel}`}>{row.reasonLabel}</Text>
+                </View>
+                <View style={styles.details}>
+                  <View style={styles.detailMeta}>
+                    <Text style={styles.detailLabel}>Reports</Text>
+                    <Text style={styles.cell} accessibilityLabel={`Reports: ${row.reportCount}`}>{row.reportCount}</Text>
+                  </View>
+                  <View style={styles.detailMeta}>
+                    <Text style={styles.detailLabel}>Athlete or guardian</Text>
+                    <Text style={styles.cell} accessibilityLabel={`Athlete or guardian: ${who}`}>{who}</Text>
+                  </View>
+                  <View style={styles.detailMeta}>
+                    <Text style={styles.detailLabel}>Opened</Text>
+                    <Text style={styles.cell} accessibilityLabel={`Opened: ${opened}`}>{opened}</Text>
+                  </View>
+                </View>
+                {actions}
+              </View>
+            );
+          }
           return (
             <View key={row.id} style={styles.row}>
-              <Text style={[styles.cell, styles.colKind]}>
-                {row.kind === 'highlight' ? 'User flag' : 'Bug report'}
+              <Text style={[styles.cell, styles.colKind]} accessibilityLabel={`Kind: ${kind}`}>
+                {kind}
               </Text>
               <View style={styles.colTarget}>
-                <Text style={styles.targetTitle} numberOfLines={1}>
+                <Text style={styles.targetTitle}>
                   {row.title}
                 </Text>
-                <Text style={styles.targetMeta} numberOfLines={1}>
+                <Text style={styles.targetMeta}>
                   {row.subtitle}
                 </Text>
               </View>
-              <Text style={[styles.cell, styles.colReason]} numberOfLines={2} accessibilityLabel={`Reason: ${row.reasonLabel}`}>
+              <Text style={[styles.cell, styles.colReason]} accessibilityLabel={`Reason: ${row.reasonLabel}`}>
                 {row.reasonLabel}
               </Text>
-              <Text style={[styles.cell, styles.colCount]}>{row.reportCount}</Text>
+              <Text style={[styles.cell, styles.colCount]} accessibilityLabel={`Reports: ${row.reportCount}`}>{row.reportCount}</Text>
               <Text
                 style={[styles.cell, styles.colWho]}
-                numberOfLines={2}
-                accessibilityLabel={`Athlete or guardian: ${athleteOrGuardianLabel(row.athleteOrGuardian)}`}
+                accessibilityLabel={`Athlete or guardian: ${who}`}
               >
-                {athleteOrGuardianLabel(row.athleteOrGuardian)}
+                {who}
               </Text>
-              <Text style={[styles.cell, styles.colWhen]}>{formatOpened(row.openedAt)}</Text>
-              <View style={styles.colActions}>
-                {busy ? (
-                  <ActivityIndicator color={FOCAL.jadeInk} />
-                ) : (
-                  <>
-                    <AnimatedButton
-                      haptic="selection"
-                      accessibilityLabel={`Dismiss ${row.title}`}
-                      contentStyle={styles.ghost}
-                      onPress={() => onDismiss(row)}
-                    >
-                      <Text style={styles.ghostLabel}>Dismiss</Text>
-                    </AnimatedButton>
-                    {canRemove ? (
-                      <AnimatedButton
-                        haptic="medium"
-                        accessibilityLabel={`Remove content ${row.title}`}
-                        contentStyle={styles.danger}
-                        onPress={() => onRemove(row)}
-                      >
-                        <Text style={styles.dangerLabel}>Remove Content</Text>
-                      </AnimatedButton>
-                    ) : null}
-                  </>
-                )}
-              </View>
+              <Text style={[styles.cell, styles.colWhen]} accessibilityLabel={`Opened: ${opened}`}>{opened}</Text>
+              {actions}
             </View>
           );
         })
@@ -119,12 +158,10 @@ export function ModerationTable({ flags, busyId, onDismiss, onRemove }: Moderati
 
 const styles = StyleSheet.create({
   panel: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
+    borderTopWidth: 1,
     borderColor: colors.border,
-    padding: 16,
-    gap: 10,
+    paddingVertical: 20,
+    gap: 12,
   },
   title: {
     color: colors.text,
@@ -146,7 +183,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   headCell: {
-    color: FOCAL.jadeInk,
+    color: colors.jade,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
@@ -154,9 +191,9 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 8,
-    paddingVertical: 10,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -164,48 +201,100 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 13,
     fontWeight: '700',
+    lineHeight: 19,
+    minWidth: 0,
   },
   colKind: {
-    width: 92,
+    width: 80,
   },
   colTarget: {
     flex: 1,
-    minWidth: 120,
+    minWidth: 0,
+    gap: 4,
   },
   colReason: {
     flex: 1,
-    minWidth: 140,
+    minWidth: 0,
   },
   colCount: {
     width: 64,
   },
   colWho: {
-    width: 128,
+    width: 120,
   },
   colWhen: {
-    width: 96,
+    width: 112,
   },
   colActions: {
-    width: 168,
+    width: 152,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
     justifyContent: 'flex-end',
   },
   targetTitle: {
     color: colors.text,
     fontSize: 14,
     fontWeight: '800',
+    lineHeight: 20,
   },
   targetMeta: {
     color: colors.textMuted,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
+    lineHeight: 19,
+  },
+  detailRow: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingVertical: 16,
+    gap: 14,
+  },
+  target: {
+    gap: 4,
+  },
+  kind: {
+    color: colors.jade,
+    fontSize: 12,
+    fontWeight: '800',
+    lineHeight: 18,
+  },
+  detailField: {
+    gap: 4,
+  },
+  details: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  detailMeta: {
+    flexBasis: 150,
+    flexGrow: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  detailLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  detailActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    alignItems: 'center',
+  },
+  actionHit: {
+    minWidth: 44,
+    minHeight: 44,
   },
   ghost: {
-    minHeight: 32,
-    paddingHorizontal: 10,
-    borderRadius: 999,
+    minHeight: 44,
+    minWidth: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
@@ -213,20 +302,23 @@ const styles = StyleSheet.create({
   },
   ghostLabel: {
     color: colors.text,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
   },
   danger: {
-    minHeight: 32,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: colors.danger,
+    minHeight: 44,
+    minWidth: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.danger,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dangerLabel: {
-    color: colors.text,
-    fontSize: 12,
+    color: colors.danger,
+    fontSize: 13,
     fontWeight: '800',
   },
   empty: {

@@ -20,7 +20,7 @@ Auth (`auth.users`) must exist before `profiles.user_id` can reference it.
 | `get_fan_tip_history(fan_user_id)` | Postgres `get_fan_tip_history(uuid)` → Mālo receipts for the tipper |
 | `search_local_entities(search_query, entity_kind)` | Postgres `search_local_entities(text, text)` → athlete / school / booster hits |
 | `search_schools_and_teams(search_query)` | Postgres `search_schools_and_teams(text)` → HS + NCAA catalog |
-| `current_tier` column | Derived via `get_aura_tier(points)` / `auraTierForPoints()` |
+| `current_tier` column | Derived in the app via `auraTierForPoints()` (`AURA_TIERS`; SQL `get_aura_tier` archived 2026-10-13) |
 | Lock Vault 🔒 / Open Vault 🌐 | `players.vault_locked` + `set_player_vault_locked(target_player_id, is_locked)` |
 | Serve Like Me / Train Like Me | `reels.category` (`game_play` \| `train_like_me` \| `serve_like_me`) |
 | The Crew ⚡ / Your Squad 🛡️ | `crew_follows` + `get_crew_graph` / `toggle_crew_follow` |
@@ -54,7 +54,7 @@ Identity for signed-in users.
 | `legal_terms_accepted_at` | timestamptz | In-app Terms / NIL / minor-safety acknowledgement. Incremental: `supabase/legal_terms_ack.sql`. |
 | `legal_terms_version` | text | Matches `LEGAL_TERMS_VERSION` in `data/legal.ts` (`2026-09-27`). |
 
-**Stripe HTTP (JWT):** Mālo PaymentIntent (`POST /api/create-payment-intent` and Edge `create-payment-intent`) and custodial payouts (`POST /api/create-payout`) require a valid Supabase session JWT (`Authorization: Bearer` → `auth.getUser`). Payout destination is the signed-in row's `stripe_connect_id` (service role or user-scoped read); a client `destinationAccountId` is ignored. Transfers require `payouts_enabled`. Missing `STRIPE_SECRET_KEY` queues for admin disbursement — it never transfers to an arbitrary id. Connect Account Links stay on JWT `create-stripe-account`. Server secret is `STRIPE_SECRET_KEY` only (never `EXPO_PUBLIC_STRIPE_SECRET_KEY`). **2026-09 freeze-switch fix:** `create-payment-intent` also accepts an optional `playerId` (`players.id`); when present it calls `malo_target_frozen(playerId)` via `createAuthedDb` and returns `403` **before calling `stripe.paymentIntents.create`** if that athlete is frozen — the only point in the checkout flow that can stop the charge itself, not just a downstream ledger write. `useTipCheckout.ts` passes `player?.id` on every checkout that has a target athlete (tip, vault unlock, exclusive subscribe); Drip merch and booster sponsorships have no athlete target and omit it. A lookup error (not a confirmed `true`) fails open to Stripe, same as a missing/older schema — `add_user_aura` / `increment_backer_count` / `increment_reel_tips` still catch a frozen target after the fact either way.
+**Stripe HTTP (JWT):** Mālo PaymentIntent (`POST /api/create-payment-intent` and Edge `create-payment-intent`) and custodial payouts (`POST /api/create-payout`) require a valid Supabase session JWT (`Authorization: Bearer`). Checkout verifies ES256 / RS256 tokens locally against the project JWKS and falls back to `auth.getUser`; payouts and Connect always call `auth.getUser` (live session; SCALE-04, logic in `supabase/functions/_shared/money/`). Payout destination is the signed-in row's `stripe_connect_id` (service role or user-scoped read); a client `destinationAccountId` is ignored. Transfers require `payouts_enabled`. Missing `STRIPE_SECRET_KEY` queues for admin disbursement — it never transfers to an arbitrary id. Connect Account Links stay on JWT `create-stripe-account`. Server secret is `STRIPE_SECRET_KEY` only (never `EXPO_PUBLIC_STRIPE_SECRET_KEY`). **2026-09 freeze-switch fix:** `create-payment-intent` also accepts an optional `playerId` (`players.id`); when present it calls `malo_target_frozen(playerId)` via `createAuthedDb` and returns `403` **before calling `stripe.paymentIntents.create`** if that athlete is frozen — the only point in the checkout flow that can stop the charge itself, not just a downstream ledger write. `useTipCheckout.ts` passes `player?.id` on every checkout that has a target athlete (tip, vault unlock, exclusive subscribe); Drip merch and booster sponsorships have no athlete target and omit it. A lookup error (not a confirmed `true`) fails open to Stripe, same as a missing/older schema — `add_user_aura` / `increment_backer_count` / `increment_reel_tips` still catch a frozen target after the fact either way.
 | `school_id` | uuid FK → `schools_and_teams` ON DELETE SET NULL | Athlete onboarding pick (HS or NCAA). Incremental: `supabase/schools_and_teams.sql`. |
 | `athlete_division` | text | Copied from the selected team (`High School` / `NCAA D1`). |
 | `athlete_sport` | text | Football / Basketball / Rugby / Volleyball (`ATHLETE_SPORTS`). |
@@ -405,6 +405,8 @@ Mālo ledger (no separate `video_tips` table).
 | `platform_tip_cents` | integer, default 0 | Optional tip to Tapua'i the donor added at checkout (`0 ≤ x ≤ amount_cents`). 100% platform; never part of the athlete's share. Migration `20260929180000` |
 | `rally_id` | uuid FK → `rallies` ON DELETE SET NULL | Rally goal this donation counts toward. `tips_rally_before_insert` credits the Rally, or nulls this when the Rally is not live / belongs to another athlete |
 | `aura_points` | integer | Fan Aura granted for this tip (`tipAmount * 10`) |
+| `cover_fee_cents` | integer, default 0 | Card fee the donor chose to cover (charged on top; `0 ≤ x ≤ greatest(500, amount_cents)`). Trigger `tips_card_fee_revenue` logs it as a `card_fee` revenue row (100% Tapua'i). BOOKS-01, migration `20261012210000` (not applied) |
+| `stripe_payment_intent_id` | text | `pi_…` from the PaymentSheet client secret, so a Stripe payout can be matched to its donations. Same migration |
 | `created_at` | timestamptz | |
 
 Clip totals still use `increment_reel_tips`, not a rollup column on `tips`.
@@ -576,7 +578,7 @@ Admin finance ledger for `/admin/money`. One row per paid Mālo (`tips`), booste
 | --- | --- | --- |
 | `id` | uuid PK | |
 | `transaction_type` | text | Same as `source` (legacy stub column) |
-| `source` | text | `malo` \| `tip` \| `booster` \| `vault` \| `merch` |
+| `source` | text | `malo` \| `tip` \| `booster` \| `vault` \| `merch` \| `card_fee` (BOOKS-01, not applied) |
 | `source_id` | text | Unique with `source` (tip / sponsorship / subscription / order id) |
 | `label` | text | Human line for the Money desk |
 | `payee_kind` | text | `athlete` \| `operator` \| `none` |
@@ -586,7 +588,7 @@ Admin finance ledger for `/admin/money`. One row per paid Mālo (`tips`), booste
 | `gross_amount` / `platform_cut_amount` / `payout_amount` | numeric | Dollars (legacy stub; kept in sync) |
 | `created_at` | timestamptz | |
 
-**RLS (2026-09 audit):** admin-only SELECT / writes (`anon` bypass dropped — all legitimate writes flow through the SECURITY DEFINER trigger `company_revenue_after_source_insert` / `record_company_revenue`, which is unaffected by table grants). `record_company_revenue` / `sync_company_revenue_logs` EXECUTE also revoked from `anon`/`authenticated` entirely — no client ever called them directly, and `record_company_revenue`'s `on conflict (source, source_id) do update` made it a direct route to overwrite an existing ledger row if it had stayed callable. `gross_cents` / `platform_cents` / `payout_cents` now have `>= 0` CHECK constraints. Incremental: `supabase/company_revenue.sql`. Client: `fetchCompanyRevenueSummary` + `fetchCompanyRevenueLogs` (now require a real authenticated admin session).
+**RLS (2026-09 audit):** admin-only SELECT / writes (`anon` bypass dropped — all legitimate writes flow through the SECURITY DEFINER trigger `company_revenue_after_source_insert` / `record_company_revenue`, which is unaffected by table grants). `record_company_revenue` / `sync_company_revenue_logs` EXECUTE also revoked from `anon`/`authenticated` entirely — no client ever called them directly, and `record_company_revenue`'s `on conflict (source, source_id) do update` made it a direct route to overwrite an existing ledger row if it had stayed callable. `gross_cents` / `platform_cents` / `payout_cents` now have `>= 0` CHECK constraints. Incremental: `supabase/company_revenue.sql`. Clients: the admin reports read the summary through `lib/adminReports.ts` (`get_company_revenue_summary`) and Finance & Books reads the table through `lib/bookkeeping.ts`; both need a real authenticated admin session.
 
 ### `stripe_webhook_events`
 
@@ -598,6 +600,71 @@ Dedup ledger for `supabase/functions/stripe-webhook`, added in the **2026-09 Rou
 | `processed_at` | timestamptz | |
 
 **RLS:** no policies at all for `anon`/`authenticated` — service-role only, since only the Edge Function (using the service key, which bypasses RLS) ever touches this table. The webhook now `insert`s here **first**; a `23505` unique-violation on that insert (not a prior `select`) is what means "another delivery already claimed this event" — atomic because Postgres's own primary-key enforcement decides it, not application code racing a check against a write.
+
+### Data governance closures (DATA-01, `20261013120000_data_governance_closures.sql`, **written 2026-10-13, not applied**; replayed 46/46 on PGlite with `scripts/replay/data01-closures-replay.mjs`)
+
+Every function below is security definer with `set search_path = ''`; admin functions call `require_admin_guard()` first; EXECUTE for `authenticated` only.
+
+| RPC | Closes | What it does | Caller |
+| --- | --- | --- | --- |
+| `admin_upsert_athlete_career_stats(p_player_id, p_sport, p_games_played, p_scoring_value, p_volume_value, p_mvp_badges)` | F1 | Creates or replaces an athlete's career line (0–100,000 each) | Athletes desk → Stats (`AthleteRecordsPanel`) |
+| `admin_add_athlete_game_log(p_player_id, p_played_on, p_opponent_school, p_stat_line, p_scoring_value, p_volume_value)` | F1 | Adds a game line (date not in the future, text ≤ 120) | same |
+| `admin_remove_athlete_game_log(p_log_id)` | F1 | Removes a mistaken game line | same |
+| `clear_my_crew_alerts()` | F2 | Deletes the caller's own `crew_push_queue` rows; returns the count | Activity → Crew alerts (`CrewAlertsCard`) |
+| `admin_list_operator_checkins(p_limit)` | F3 | Expires check-ins older than 30 days, then lists recent ones with latitude / longitude at 2 decimals (~1 km) | Live games desk (`OperatorCheckinsPanel`) |
+| `admin_purge_operator_checkins(p_older_than_days)` | F3 | Clears sooner than 30 days (minimum 7; default 30) through `expire_operator_checkins` | same |
+| `expire_operator_checkins(p_older_than_days)` | F3 | The one retention rule: deletes check-ins older than the window (default 30, never under 7). No client EXECUTE | The trigger and the two admin functions above |
+| `operator_checkins_minimize()` (trigger, before insert on `operator_checkins`) | F3 | Rounds latitude / longitude to 2 decimals, sets `checked_in_at` to the server time, expires old rows (PRIVACY_ENGINEERING decision 2026-10-13: 30 days) | Every check-in insert |
+| `admin_list_school_confirmers(target_school_id)` | F4 | Confirmers for a school without `token_hash` | Schools desk (`SchoolStaffPanel`), which also calls `admin_add_school_confirmer`, `admin_revoke_school_confirmer`, `admin_set_school_branding` |
+
+The People desk's "Revoke and unlink" calls `admin_revoke_verification` (it says "not switched on" where the
+RPC is missing; Unverify stays a badge-only `profiles` update), the Schools desk reads current branding
+before saving it, and the Athletes desk calls `admin_set_custodial_terms`. `get_aura_tier` is dropped (F5).
+Table grants narrowed by the same migration (RLS_SECURITY review): `operator_checkins` keeps client INSERT
+only, through the insert-only policy "Operators insert checkins" (supersedes "Operators write checkins"
+from `20261002120000`), so no client can read exact coordinates; `school_confirmers` SELECT is column-level
+without `token_hash`. `clear_my_crew_alerts` also deletes any alert older than 30 days.
+
+### Books ledger (`ledger_accounts`, `ledger_manual_entries`, `ledger_manual_lines`, `ledger_period_closes`, `ledger_period_reopens`)
+
+BOOKS-01, migration `20261012210000_bookkeeping_ledger.sql` (**written 2026-10-12, revised 2026-10-13 after RLS_SECURITY and CONTROLLER/TAX review, not applied**; replayed 72/72 on PGlite / Postgres 18.6 with `scripts/replay/books01-ledger-replay.mjs`).
+Design: `docs/engineering/design/BOOKKEEPING.md`. The admin Books desk (`/admin/books`) builds a
+double-entry journal in the client from `company_revenue_logs` and paid `disbursements`; these tables
+hold only what cannot be derived.
+
+| Table | Purpose |
+| --- | --- |
+| `ledger_accounts` | Chart of accounts (`code` 4 digits PK, `name`, `account_type` asset / liability / equity / revenue / expense, `active`). Seeded; codes match `CHART_OF_ACCOUNTS` in `packages/shared-types/admin/bookkeeping.ts` (unit test). |
+| `ledger_manual_entries` | Hand-entered entries: `entry_date`, `kind`, `memo`, `reference`, `reverses_id` (one reversal per entry), `voided_at` / `void_reason`, `created_by`. Never edited or deleted. |
+| `ledger_manual_lines` | Lines: `entry_id`, `account_code` FK, `debit_cents` / `credit_cents` (bigint, exactly one above zero), `athlete_ref` (`ath-` + 8 hex, nullable) so a recorded refund or payout reduces the right athlete's held balance. |
+| `ledger_period_closes` | `period` (`YYYY-MM`) PK, `closed_at`, `closed_by`, `note`, `totals` jsonb (the close fingerprint from the desk: net cents per account, `entries` count and `athlete:<ref>` held movement, so later changes are detected). |
+| `ledger_period_reopens` | Every reopen: `period`, `reopened_at`, `reopened_by`, `reason`, `previous_closed_at`, `previous_totals` (the fingerprint it replaced). |
+
+**RLS:** admin-only SELECT (`to authenticated`) on all five; no client INSERT / UPDATE / DELETE grant. **RPCs**
+(security definer, `set search_path = ''`, `require_admin_guard()` first, EXECUTE for `authenticated` only;
+each takes a per-month advisory lock through `ledger_lock_period(p_period)` so close, record, void and
+reopen of the same month serialize):
+`record_ledger_entry(p_entry_date, p_kind, p_memo, p_reference, p_lines jsonb)` — 2–20 lines, each one
+side, ≤ $1M, known active account, optional well-formed `athlete_ref`, debits = credits > 0, date 2020-01-01
+to today (UTC), reserved kinds refused, month open; `void_ledger_entry(p_entry_id,
+p_reason, p_reversal_date)` — posts the mirror entry (athlete references kept) dated 2020-01-01 to today in
+an open month and marks the original voided;
+`close_ledger_period(p_period, p_note, p_totals)` — finished months only; `reopen_ledger_period(p_period,
+p_reason)` — writes a `ledger_period_reopens` row with the replaced totals; `get_ledger_books()` — accounts,
+entries with lines, closes and reopens. Helpers `ledger_period_is_closed(p_day)` and `ledger_lock_period(p_period)`
+are not callable by clients (EXECUTE revoked from `authenticated`).
+
+Same migration: `company_revenue_logs.source` also allows `card_fee` (`company_revenue_bps` 10000), via
+trigger `tips_card_fee_revenue` (AFTER INSERT on `tips`, `tips_card_fee_revenue_ai`), and
+`get_company_revenue_summary` lists it as its own stream so the streams add up to the total.
+`disbursements.paid_at` timestamptz is owned by the server: trigger `disbursements_paid_at` (BEFORE INSERT
+OR UPDATE, `disbursements_paid_at_bu`) sets it when a payout first becomes `paid`, keeps it while paid,
+clears it otherwise, and always replaces a client value; existing paid rows are backfilled from
+`created_at`. `tips.stripe_payment_intent_id` is unique when present (`tips_stripe_payment_intent_key`).
+Pre-existing until `20261013220000` is applied: users with the `parent` role can update any disbursement row
+(policy "Admin write disbursements"); BOOKS-01 closes the backdating route; `20261013220000_disbursements_guardian_scope.sql` (written, not applied) narrows the policy itself: admin-only writes, reads for admins and the athlete's custodial parties. Its trigger
+`disbursements_paid_final()` (BEFORE UPDATE) makes a paid payout final: amount and athlete cannot change except from a trusted
+server session; correct a wrong payment with a new row (BOOKS-01 never edits history). Status may still move (a bank return).
 
 ### `app_runtime_config`
 
@@ -841,11 +908,12 @@ get_received_malo(target_player_id uuid) returns table (
   source_label text,
   reel_id uuid,
   wishlist_item_id uuid,
-  fan_name text
+  fan_name text,
+  family_cents integer   -- 20261013231000 (not applied): what reached the family account
 )
 ```
 
-Gifts sent **to** an athlete. `tips` SELECT is the fan who paid or an admin, so the athlete cannot read their own incoming rows with a table select. This function returns rows only when the caller is an admin, the profile whose `player_id` matches `target_player_id`, or the linked guardian (`players.guardian_id`). Fan display name only. Incremental: `supabase/malo_ledger.sql` (after `supabase/tip_origin.sql`). Client: `useReceivedMalo` + `Profile/ReceivedMaloPanel` (own profile) and Athlete HQ.
+Gifts sent **to** an athlete. `tips` SELECT is the fan who paid or an admin, so the athlete cannot read their own incoming rows with a table select. This function returns rows only when the caller is an admin, the profile whose `player_id` matches `target_player_id`, or the linked guardian (`players.guardian_id`). Fan display name only. Incremental: `supabase/malo_ledger.sql` (after `supabase/tip_origin.sql`). Client: `useReceivedMalo` + `Profile/ReceivedMaloPanel` (own profile) and Athlete HQ. `family_cents` (from `20261013231000_family_share_in_received.sql`, not applied) is the books' recorded payout for that donation (`company_revenue_logs`, source `malo`), falling back to the current split; the panel leads with it instead of the donated total.
 
 Grant: `EXECUTE` to `authenticated` only.
 
@@ -856,7 +924,7 @@ get_admin_malo_breakdown() returns jsonb
 -- { by_origin, by_entry, by_day, recent }
 ```
 
-Admin-only (`current_user_role() = 'admin'`). `by_origin` and `by_entry` are all-time cents and counts. `by_day` is the last 14 UTC days split by origin. `recent` is the latest 40 gifts with athlete name, fan name, channel, item id, and clip id. Incremental: `supabase/malo_ledger.sql`. Clients: Next Money desk (`fetchPortalMaloBreakdown`) and Expo `/admin/money` (`fetchAdminMaloOriginBars`).
+Admin-only (`current_user_role() = 'admin'`). `by_origin` and `by_entry` are all-time cents and counts. `by_day` is the last 14 UTC days split by origin. `recent` is the latest 40 gifts with athlete name, fan name, channel, item id, and clip id. Incremental: `supabase/malo_ledger.sql`. Clients: Next Money desk (`fetchPortalMaloBreakdown`) and Expo `/admin/money` (the Revenue report (`lib/adminReports.ts`)).
 
 Grant: `EXECUTE` to `authenticated` only.
 
@@ -995,7 +1063,7 @@ Requires `auth.uid()`. Writes `players.vault_locked`. Default **true**: Vault cl
 get_aura_tier(points integer) returns jsonb  -- { tier, title, min_points, color }
 ```
 
-Matches `AURA_TIERS` in `aura.ts`. The app also computes locally (`auraTierForPoints`) so the card does not wait on the network. Keep SQL and TypeScript in lockstep.
+**Archived 2026-10-13 (DATA-01-F5, owner approved):** nothing called it — the app computes tiers in `aura.ts` (`auraTierForPoints`). Dropped by `20261013120000_data_governance_closures.sql` (not applied); the definition is kept in `archive/dead-code-2026-10-13/sql/get_aura_tier.archived.sql`. `AURA_TIERS` in `aura.ts` is the single source of truth.
 
 Other RPCs: `increment_backer_count` (`EXECUTE` to `authenticated` only; `supabase/increment_backer.sql` revokes `anon` so a re-run cannot widen it), `increment_player_hype`, `increment_reel_hype` (returns `applied`; no-ops a second Seki / Aura / Flex from the same `auth.uid()`; then `sync_live_spotlight_awards`), `clear_reel_hype` (second tap; deletes the vote, decrements the counter, then `sync_live_spotlight_awards`; `authenticated` only), `increment_reel_tips`, `cast_cheer_vote`, `upsert_cheer_poll`, `update_game_score`, `current_user_role` (returns `admin` when `is_admin` or `roles` includes admin), `get_fan_tip_history`, `tip_origin_label` (immutable channel phrase for receipts and `company_revenue_logs`; execute revoked from `public` and `anon`), `search_local_entities`, `search_schools_and_teams`, `report_reel`, `publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`, `patch_app_runtime_draft`, `publish_app_runtime`, `get_admin_reports`, `company_revenue_bps`, `record_company_revenue`, `sync_company_revenue_logs`, `company_revenue_after_source_insert`, `get_company_revenue_summary`, `submit_app_feedback`, `get_app_feedback`, `triage_app_feedback`, `toggle_reel_vault_status`, `set_player_vault_locked`, `get_active_spotlight_award`, `get_crew_graph`, `toggle_crew_follow`, `set_reel_flash_unlock`, `spotlight_normalize_kind`, `spotlight_window`, `can_confirm_player_tag`, `reels_apply_tag_defaults`, `confirm_reel_player_tag`, `get_pending_player_tags`, `get_spotlight_standings`, `sync_spotlight_period`, `sync_live_spotlight_awards`, `unlock_spotlight_period`, `redeem_team_code`, `request_athlete_verification`, `athlete_is_varsity_verified`, `normalize_team_code`, `team_code_school_key`, `sport_from_team_code_token`, `admin_set_player_guardian` (2026-09 parent-payee security fix — admin-only `players.guardian_id` setter; client `adminSetPlayerGuardian` in `lib/adminCatalog.ts`, called from Expo `/admin/athletes`'s "Link guardian" action, see the `players` guardian section above), `parent_set_player_consent` (2026-09 self-escalation audit follow-up — the linked parent's only remaining path to toggle `players.parental_consent_approved` / `guardian_consent_at`; client: `app/(parent)/parent/index.tsx`'s `toggleConsent`), `admin_approve_player_consent` (same pass — admin-only equivalent for the verification-approve flow; client: `setVerificationStatus` in `lib/adminCatalog.ts`), `guard_profiles_admin_escalation` (`before insert or update` trigger on `profiles`, not a callable RPC — rejects any UPDATE or INSERT that newly grants any of `admin`/`booster`/`operator`/`parent`/`sponsor` unless the calling session is already admin; see the `profiles.is_admin` row above — 2026-09 Round 15: generalized from admin-only). Cheer votes go through `cast_cheer_vote`; admin label edits go through `upsert_cheer_poll`. Re-run `supabase/cheer_polls.sql` after this signature change (`DROP FUNCTION` first):
 
@@ -1021,7 +1089,8 @@ Migration `supabase/migrations/20260929120000_athlete_verification_ladder.sql` (
 | --- | --- | --- |
 | `allow_verification_write()` | internal | Sets the transaction-local flag `app.tapuai_verification_write` that `guard_profiles_verification` honours. |
 | `hash_secret(raw)` | internal | sha256 hex (pgcrypto). Tokens and meet codes are only stored hashed. |
-| `is_admin_or_db()` | internal | True for an admin, `service_role`, or a direct DB session (`auth.role()` null — SQL Editor). |
+| `is_admin_or_db()` | internal | `is_trusted_server()` or an admin. Always true or false. Hardened by `20261013210000_function_access_hardening.sql` (not applied): before it, an `anon` request with no claims also counted as the database, and the four ladder admin functions were still executable by `anon`. |
+| `is_trusted_server()` | internal | The one "server, not a client" test: `service_role`, or a session with no JWT role that did not switch to `anon` / `authenticated` (the SQL Editor). Used by `is_admin_or_db()` and by the caps in `add_user_aura`, `update_game_score`, `chip_in_wishlist_item` and the Stripe-fields guard. Same migration. |
 | `athlete_payout_allowed(target_player_id)` | anon, authenticated | Boolean over `athlete_payout_status` (redefined in the payout-gate migration below). Drives the gift sheet's "held" line. |
 | `athlete_is_varsity_verified(target_player_id)` | anon, authenticated | School confirmed (the public badge) — a school-confirmed account is linked to the roster row. No name matching. Since the payout-gate migration it no longer equals `athlete_payout_allowed`. |
 | `apply_verification(req)` | internal | Marks the requester verified, links `player_id`, school, athlete role. |
@@ -1130,7 +1199,7 @@ All `SECURITY DEFINER`, `search_path = public`. Incremental: `supabase/custodial
 | `request_custodial_withdrawal(target_player_id, amount_cents, note)` | guardian before handover; athlete after | Returns the `custodial_withdrawals` row. Guardian → `pending_athlete`; athlete of age → `approved`. A guardian after handover is refused. |
 | `decide_custodial_withdrawal(request_id, approve)` | the verified athlete | Pending only → `approved` / `declined`. |
 | `cancel_custodial_withdrawal(request_id)` | the requester | Pending only → `cancelled`. |
-| `get_custodial_summary(target_player_id)` | athlete / guardian / admin | jsonb: `viewer_role`, names, `has_account`, `payouts_enabled`, `bank_in_athlete_name`, `handover_age`, `handover_date`, `athlete_controls`, `received_cents` (sum of `tips` for the athlete), last 20 `requests`. Null for anyone else. |
+| `get_custodial_summary(target_player_id)` | athlete / guardian / admin | jsonb: `viewer_role`, names, `has_account`, `payouts_enabled`, `bank_in_athlete_name`, `handover_age`, `handover_date`, `athlete_controls`, `received_cents` (sum of `tips` for the athlete — what fans donated), `family_cents` (the family account's share from the books; `20261013231000`, not applied), last 20 `requests`. Null for anyone else. |
 
 ### `record_reel_view(target_reel_id)` / `get_leaderboards(period_kind)`
 
@@ -1143,7 +1212,7 @@ Incremental: `supabase/leaderboards.sql`. Client: `lib/leaderboards.ts`, `useLea
 
 **Earn rate:** `aura_points += tip_dollars × 10` (`$5` Mālo → `+50`).
 
-Tier = highest band whose minimum the balance meets. Source of truth: `AURA_TIERS` in `apps/mobile/src/frontend/lib/aura.ts` and `get_aura_tier` in SQL.
+Tier = highest band whose minimum the balance meets. Source of truth: `AURA_TIERS` in `apps/mobile/src/frontend/lib/aura.ts` (`get_aura_tier` archived 2026-10-13).
 
 | Tier | Title | Min pts | Hex | Face | Ink | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1192,7 +1261,7 @@ If `aura_points` is unset on a player, the client falls back to `aura_count + se
 | `crew_push_queue` | Own `recipient_id` | INSERT anyone (RPC writes) |
 | `cheer_polls` | Public | **authenticated** admin only (`anon` bypass dropped on the write policy and inside `upsert_cheer_poll`); votes via `cast_cheer_vote` |
 | `verification_requests` | Own request (`requester_user_id`) or booster/admin | INSERT requires the caller's own `requester_user_id` (or null); booster/admin UPDATE / DELETE (`anon` bypass dropped) |
-| `disbursements` | admin/parent only (was public despite being named "Admin read") | admin/parent only (`anon` bypass dropped) |
+| `disbursements` | admin, plus that athlete's custodial parties via `custodial_role(player_id)` (`20261013220000`, not applied; before it every parent read every row) | admin only (`20261013220000`, not applied; before it any parent could insert / update / delete any row) |
 | `sponsor_ads` | Public | **authenticated** sponsor/admin only (`anon` bypass dropped; no client code writes this table today) |
 
 ```sql
@@ -1248,10 +1317,10 @@ Created in `supabase/media_upload.sql`; consolidated into `schema.sql` (2026-09)
 | --- | --- |
 | Bucket id / name | `avatars` |
 | Public | `true` |
-| Object path | Profile photos `{auth.users.id}/{timestamp}.jpg`; booster logos `sponsors/{timestamp}.{ext}` |
+| Object path | Profile photos `{auth.users.id}/{timestamp}.jpg`; booster logos `sponsors/{auth.users.id}/{timestamp}.{ext}` (older builds: `sponsors/{timestamp}.{ext}`) |
 | Writes | `profiles.avatar_url` |
 | RLS SELECT | `storage.objects` where `bucket_id = 'avatars'` (public read, unchanged) |
-| RLS INSERT / UPDATE | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass — was bucket-only/anon-writable; `uploadAvatar` already hard-requires `supabase.auth.getUser()` to return a user before it uploads, so this matches the client contract) |
+| RLS INSERT / UPDATE | same `bucket_id` **and** `auth.role() = 'authenticated'` (2026-09 security pass). Until `20261013230000_avatars_owner_folder.sql` is applied, any signed-in user can overwrite any profile photo. After it: INSERT and UPDATE only in the caller's own folder (`{uid}/…` or `sponsors/{uid}/…`); a new file directly under `sponsors/` may still be inserted (older builds) but never overwritten |
 | `allowed_mime_types` | `image/jpeg`, `image/png`, `image/webp`. The client sends an `ArrayBuffer` plus this type (`imageContentType` in `MediaUploadService.ts`). A React Native `Blob` is not used — `fetch().blob()` labels local photos `text/plain`, which this allow-list rejects. |
 
 ---
@@ -1269,3 +1338,266 @@ Prefer full `schema.sql` on a blank project (includes `profiles` / `tips` / oper
 1. `players.sql` → `game_events.sql` → `games.sql` (+ `games_clock.sql` + `games_operator.sql`)
 2. `increment_backer.sql` → `increment_hype.sql` (`increment_player_hype`)
 3. `reels.sql` → `cheer_polls.sql` → `add_user_aura.sql` → `subscriptions.sql` → `subscriber_requests.sql` → `profile_roles.sql` → `add_user_role.sql` → `auth_fan_profile.sql` → `stripe_connect.sql` → `get_fan_tip_history.sql` → `sponsorships.sql` → `telemetry_logs.sql` → `saved_reels.sql` → `search_local_entities.sql` → `report_reel.sql` → `toggle_reel_vault_status.sql` → `schools_and_teams.sql` → `legal_terms_ack.sql` → `athlete_verification.sql` → `athlete_stats.sql` → `player_vault_lock.sql` → `spotlight_awards.sql` → `reel_category.sql` → `crew_and_flash_unlock.sql` → `reel_hype_votes.sql` → `admin_dashboard.sql` → `admin_portal.sql` → `app_runtime.sql` → `admin_reports.sql` → `spotlight_auto.sql` → `company_revenue.sql` → `app_feedback.sql` → `usage_reports.sql` → `media_upload.sql` → `tip_origin.sql` → `malo_ledger.sql` → `custodial_money.sql` → `leaderboards.sql`
+
+## Engineering Support (DETECT-02, local migration only)
+
+`20261013190000_engineering_support.sql` adds `support_signals`, `support_reviews`,
+`support_audit_events` and `support_releases`. Append-only restricted evidence; no direct client
+writes. `get_engineering_support_snapshot()` reads at most 200 signals, 300 reviews,
+200 audit events and 20 releases. `/admin/support` uses this bounded reader; missing reads stay unknown.
+
+| Function | Contract |
+| --- | --- |
+| `support_code_metadata` | Private fixed event category/severity vocabulary |
+| `guard_support_append_only` | Reject evidence update/delete |
+| `insert_support_signal` | Private validated append helper |
+| `record_support_signal` | Authenticated client, fixed feature/code/environment/release; server actor/time/source; bounded rate |
+| `record_trusted_support_signal` | Service role only; trusted server/security/check observations; confirmed_attack requires security source |
+| `record_support_review` | Admin rationale and occurrence coverage; protected terminal decisions need another admin; new occurrences reopen |
+| `register_support_release` | Admin registers bounded package metadata; no source upload, signing, deployment or restore |
+| `capture_support_audit` | Atomic source-change trigger; actor/role/time, operation/record, changed field names and per-entity hash chain |
+| `get_engineering_support_snapshot` | Admin-only bounded reader, explicit version/read time/limits |
+
+Audit covers the 16 source tables named in the migration, including profiles, app config,
+admin content and money/ledger sources. Audit failure aborts the source mutation. No full row
+values, credentials or payment details are retained. Privileged database operators can alter
+triggers and recompute unsigned chains; this is a stated trust boundary. Evidence has no client
+delete grant; privacy retention/purge requires reviewed operator procedures. The local recovery
+capsule preserves schema/migration hashes; code restoration never executes old SQL or undoes money.
+
+### Rebuilding the schema locally (`scripts/replay/schema-replay.mjs`, 2026-10-13)
+
+`node scripts/replay/schema-replay.mjs <pglite dist>` builds the whole `schema.sql` on an empty Postgres 18.6
+(PGlite, outside the repo) with stubs for Supabase's `auth` / `storage` / `realtime` schemas and roles, applies it
+twice, and checks rules that must hold everywhere: row level security on every public table, a pinned
+`search_path` on every security definer function, no `admin_*` function executable by `anon`, and that a request
+with no JWT claims is never treated as an admin, plus who may call each hardened function (tried as a guest, a
+signed-in fan, an admin and a claimless request) and that a real donation still reaches the books. It found the gaps fixed by
+`20261013210000_function_access_hardening.sql`: guests (and signed-in fans) could write revenue rows into the
+books through `record_company_revenue`, guests could change sport settings and triage feedback, and a request with
+no claims counted as the database. 35/35 with the two October security files; 13/35 on the schema without them. Follow-up (not reachable while
+`profiles` RLS needs `auth.uid()`): the profile role-escalation trigger still skips its check when `auth.role()`
+is null.
+
+### Profile privacy, friends and blocking (PRIV-01, `20261014090000_profile_privacy.sql`, **written 2026-10-14, not applied**)
+
+Design: [PROFILE_PRIVACY_DESIGN.md](design/PROFILE_PRIVACY_DESIGN.md). Replay: `scripts/replay/schema-replay.mjs`.
+`profiles` SELECT is now **own row or admin**; other people's profiles come only through `get_public_profiles` (over
+`profiles_public`, rebuilt on the rule below, `user_id` removed, no direct client reads) and the functions here. Helpers
+that answer about other people (`are_friends`, `is_blocked_between`, `viewer_relationship`) are
+not client-callable. A blocked person sees a guest's view. Photos and full names also stopped leaking through
+`reels_feed`, `get_leaderboards`, `get_top_filmers`, `get_spotlight_standings`, `get_pending_player_tags` and
+`get_donations_to_thank`. `profiles` gains `account_private` (new accounts true),
+`profile_audience` (per item: `everyone` / `friends` / `only_me`), `hide_from_search`, `tag_review`,
+`friend_requests_from` (`everyone` / `teens` / `nobody`; `teens` is the MINOR-01 teen default); trigger
+`profiles_privacy_guard` (`guard_profiles_privacy()`) refuses direct writes to them and mirrors the legacy
+`profile_visibility` switches. The first draft's guardian lock (`privacy_locked_by`, `privacy_lock_active`,
+`guardian_get_privacy`, `guardian_set_privacy`, `admin_release_privacy_lock`) was removed before anything was applied
+(owner 2026-10-14): supervision and approvals replace it (MINOR-01 below).
+
+| Table | Purpose |
+| --- | --- |
+| `friendships` | Requests (`pending`), friendships (`accepted`), declines (`declined`, kept 30 days, hidden from the requester). Unique per pair. Parties read; no direct writes. |
+| `user_blocks` | `(blocker_id, blocked_id)`. The blocker reads their own; no direct writes. |
+| `friend_request_log` | Every request sent; the daily (20) and per-person (3 a week) limits and admin counts read it. No client access. |
+
+| Function | What it does |
+| --- | --- |
+| `my_profile_id()` · `are_friends(a, b)` · `is_blocked_between(a, b)` · `is_guardian_of_profile(target)` | Building blocks (definer). |
+| `viewer_relationship(target)` | `self` / `admin` / `guardian` / `blocked` / `friend` / `stranger` / `guest` for the caller. |
+| `privacy_default_audience()` | Private defaults. |
+| `profile_item_visible(target, item)` | The single rule: audience, private account, blocks. Unknown → hidden. |
+| `player_hidden_from_viewer(player_id)` | A roster athlete's account hides from this caller's search (or blocked them). |
+| `privacy_settings_json(target)` · `apply_privacy_settings(target, settings)` | Read and apply settings (internal). |
+| `get_my_privacy()` · `set_my_privacy(settings)` | Own settings (MINOR-01 redefines both with the teen rules and the minor status). |
+| `friend_requests_enabled()` | Feature switch `privacy.friends` (published config); default on. |
+| `request_friend(target_profile_id)` · `respond_friend(request_id, accept)` · `remove_friend(target_profile_id)` · `list_my_friends()` | Friends: 20 requests a day, "who can send me requests", blocks refuse; accepting a mutual request befriends. |
+| `block_user(target_profile_id)` · `unblock_user(target_profile_id)` · `list_my_blocks()` | Block ends friendship, requests, Crew follows both ways and pending tags / mentions. |
+| `get_public_profiles(profile_ids, player_ids, handle)` | The only read of `profiles_public` for clients: named accounts only (≤ 50 ids each, or one exact handle), so it is no directory and hide-from-search holds. |
+| `audience_allows(rel, is_private, audience, item)` · `visible_avatar_url(target)` | The rule without lookups (the view works the viewer out once per row); one photo or null, for invoker views like `reels_feed`. |
+| `claimed_player_ids(ids)` · `get_aura_board(max_rows)` | Replacements for direct `profiles` reads (roster claimed badge, Aura board respecting privacy). |
+| `crew_follow_blocked(athlete_id)` | Used by the `crew_follows` write policy and `toggle_crew_follow`. `crew_follows` reads: the follower, the athlete's own account, admins. |
+| `admin_get_privacy(target)` · `admin_reset_privacy(target)` · `admin_set_hide_from_search(target, hidden)` · `admin_end_friendship(a, b)` · `admin_privacy_report()` | People desk → Privacy & safety. Counts only, never who. |
+
+Also changed: `search_taggable_accounts` (3-character username prefix; hidden and blocked excluded),
+`search_local_entities` (hidden athletes excluded), `athlete_stats_visible` (stats audience), `get_crew_graph` (finds
+the athlete's account by `player_id`, not by name), `toggle_crew_follow` (refuses a blocked follower).
+
+### Tag approval (PRIV-01 stage 2, `20261014100000_tag_approval.sql`, **written 2026-10-14, not applied**)
+
+| Table / function | What it does |
+| --- | --- |
+| `reel_tag_rejections` | `(reel_id, player_id)` declines with `uploader_id`, `rejected_by` (null = automatic, because of a block), `rejected_at`. `reel_id` is deferred so the trigger can record a block's decline during an insert. No client access. |
+| `tag_party(uploaded_by, player_id)` | Whether the caller is the uploader, the athlete's account, their guardian or an admin (used by `reels_feed`). |
+| `is_school_operator_for(player_id)` | The caller is an operator of the athlete's school (exempt from the five-pending cap for game uploads). |
+| `confirm_reel_player_tag(target_reel_id, tag_action)` | Only pending → confirmed / rejected (admins may undo; rejecting an approved tag that took donations is admin-only). A rejection clears `player_id` and records the decline. |
+| `reels_apply_tag_defaults()` (trigger) | Refuses direct writes to the tag status / confirmed columns, refuses re-tagging a declined clip, bars an uploader after three declines, caps five pending tags per uploader per athlete (operators exempt), ends a blocked uploader's tag exactly like a decline, auto-approves friends when the athlete chose it. |
+| `can_confirm_player_tag(player_id)` | A school operator confirms only for athletes with no verified account. |
+
+Clients write only the app's `reels` columns (column grants: insert `id, video_url, title, player_id, game_id,
+is_exclusive, is_vault_only, category, attested_at, rights_version, media_type`; update `title, category, is_exclusive,
+is_vault_only, flash_unlock_until`); counters and tag status go through functions. A decline (by the athlete, a block
+or `block_user`) leaves `tag_confirmed_by` / `tag_confirmed_at` null, so not even the uploader's own row names who
+declined. `reels_feed.player_id` is null on a pending tag for anyone outside it and on a rejected tag for everyone but admins.
+`get_spotlight_standings` places a clip in the week its tag was approved; `get_leaderboards` counts reactions and views
+from before approval on the approval date, so waiting tags lose no credit.
+
+### Payee verification (VERIFY-02, `20261014120000_payee_verification.sql`, **written 2026-10-14, not applied**)
+
+Plan and owner decisions: [PAYEE_VERIFICATION_PLAN.md](design/PAYEE_VERIFICATION_PLAN.md). **No SSN is ever stored:**
+earners give it to Stripe's hosted onboarding; CHECK constraints refuse SSN-shaped text and non-Stripe references.
+`athlete_payout_status` adds `needs_payee_verification`: the actual payee (`payee_for_player`: the guardian on record
+while they hold the money or the athlete is a minor, otherwise the athlete's account) needs a current Stripe identity +
+TIN check **for the exact Stripe account that would be paid** (for a guardian holding the money, the custodial account,
+which must belong to the guardian on record) and, for a guardian (an adult other than the athlete), the school's
+parent-on-record confirmation or a document review **confirmed by a second admin** (not the recorder, not the subject). `payouts_enabled`
+("transfers active") alone is no longer identity. `looks_like_ssn(value)` (immutable; also used in CHECKs) refuses SSN-shaped text, "SSN … digits" and long digit runs. Triggers: `payee_verifications_append_only` / `payee_verifications_no_truncate` (no deletes or truncate, even by the server),
+`profiles_payout_flags_guard` / `custodial_payout_flags_guard` (`guard_payout_flags()`: payout flags change only from the
+server or an override approved by an independent second admin; the custodial holder cannot change either), `players_payee_supersede` / `profiles_payee_supersede` /
+`custodial_payee_supersede` (`payee_changes_supersede()`: a new guardian on record or Connect account needs new checks).
+
+| Table | Purpose |
+| --- | --- |
+| `payee_verifications` | Append-only checks: subject, athlete, role, method (`stripe_connect_kyc` / `school_parent_confirmation` / `document_review` / `stripe_identity`), provider, Stripe reference, status, yes/no checks, reviewer, reason. No client access. |
+| `payout_flag_overrides` | Requests to turn transfers on or off by hand: reason (10+ characters), requester, second-admin decision, 7-day expiry. No client access. |
+
+| Function | What it does |
+| --- | --- |
+| `payee_for_player(target_player_id)` (payee, role, account) · `current_payee_check(subject, target_player_id, check_methods, stripe_account)` · `payee_missing_checks(target_player_id)` · `payee_hold_reason(target_player_id)` | Who the payee is, which account would be paid, and what they still need (`payee` / `identity` / `relationship`). Server only. |
+| `record_stripe_kyc(account_id, identity_verified, tin_verified, transfers_active, details_due)` | Server only (future `account.updated` webhook): records Stripe's result and mirrors "transfers active". |
+| `supersede_payee_checks(subject, target_player_id, check_methods)` · `guard_payee_verifications()` · `guard_payee_truncate()` · `guard_payout_flags()` · `payee_changes_supersede()` | Internal. |
+| `admin_record_payee_check(target_player_id, subject, check_method, passed, p_reason, provider_ref)` · `admin_confirm_payee_check(verification_id)` · `admin_revoke_payee_check(verification_id, p_reason)` | Admin: school confirmation, document review (not kept), Stripe Identity for disputes — never about yourself; a second admin confirms; revoke. |
+| `admin_request_payout_override(subject, target_player_id, enable, p_reason)` · `admin_decide_payout_override(override_id, approve)` | Two-admin payout override (the requester, the person it affects and the athlete's guardian cannot decide). |
+| `admin_payee_overview(target_profile_id)` · `admin_payee_report()` | People desk: payee picture and counts. |
+
+### Minor accounts (MINOR-01, `20261014110000_minor_accounts.sql`, **written 2026-10-14, not applied**)
+
+Design: [MINOR_ACCOUNTS_DESIGN.md](design/MINOR_ACCOUNTS_DESIGN.md). Replay: `scripts/replay/schema-replay.mjs`.
+`profiles` gains `birth_year` / `birth_month` (no day; replaces the 13+ checkbox as the age signal),
+`birth_recorded_at`, `age_blocked_at` (under 13: the account is closed) and `age_check_required` (false for older
+accounts, so their missing age stays `unknown`; true for new ones, `not_given`). Triggers: `profiles_new_account_rules`
+(`profiles_apply_new_account_rules()`: inserts start on the private defaults; a teen gets `friend_requests_from =
+teens`; a new account with no age takes no requests; an under-13 date refuses the insert), `profiles_age_guard`
+(`guard_profiles_age()`: birth columns only through the functions; a closed account changes nothing),
+`guardian_consents_append_only` / `guardian_consents_no_truncate`, `user_blocks_end_links` (a block ends every guardian
+link between the two). A restrictive policy **"Closed accounts"** on every RLS table and on `storage.objects` uses
+`caller_not_age_blocked()`; new RLS tables must add it too. `my_profile_id()` returns null for a closed account.
+`handle_new_auth_user()` reads `birth_year` / `birth_month` from sign-up metadata. `athlete_payout_status` adds the
+reasons `needs_guardian_consent` and `needs_birth_month` (`minor_payout_hold_reason`).
+
+| Table | Purpose |
+| --- | --- |
+| `guardian_links` | A teen's parent or guardian: `source` invite (the teen confirms, `confirmed_at`) or custodial (the guardian on record). At most two; either side ends it. No client access. |
+| `guardian_invites` | Hashed one-time 8-character codes (48 hours, newest only, 5 a day). No client access. |
+| `guardian_invite_attempts` | Wrong-code tries (10 a day per account). No client access. |
+| `guardian_consents` | Signed consent: form version and SHA-256 of the text, typed name, relationship, permissions (public profile, payouts), revocation. Append-only; outlives the accounts (ids set null). No client access. |
+| `guardian_approval_requests` | Under-16 requests to go public or accept requests from anyone (one pending per change, 14 days). No client access. |
+| `supervision_events` | What the teen and guardian both see (365 days). No client access. |
+
+| Function | What it does |
+| --- | --- |
+| `age_band_from(birth_y, birth_m, on_date)` · `is_minor_band(band)` · `profile_age_band(target)` | Bands `under_13` / `teen_13_15` / `teen_16_17` / `adult` / `not_given` / `unknown`; an age is reached the month after the birth month. |
+| `set_my_birth_month(birth_y, birth_m)` | Record, or correct to a younger age; under 13 closes the account (`close_under_13_account`). |
+| `get_my_privacy()` · `set_my_privacy(settings)` · `request_friend(target_profile_id)` | Redefined: minor status; public needs consent; under-16 public / open requests become approval requests; `teens` refuses everyone not a recorded teen (same refusal message). |
+| `create_guardian_invite()` · `preview_guardian_invite(invite_code)` · `accept_guardian_invite(invite_code, signer_name, relationship, allows_donations, allows_public_profile, form_version, form_sha256)` | Teen code; the adult (recorded 18+) previews and signs; the link waits for the teen. A wrong code returns `bad_code` (the try is kept). |
+| `respond_guardian_link(link_id, accept)` · `end_guardian_link(link_id)` | The teen confirms or declines; either side unlinks. |
+| `sign_guardian_consent(minor_profile_id, …, form_version, form_sha256)` · `revoke_guardian_consent(minor_profile_id)` | Sign again / change permissions (payouts only by the guardian on record); withdraw. One refusal message for every account. |
+| `get_my_supervision()` · `guardian_get_supervision(minor_profile_id)` · `guardian_list_minors()` | The shared summary (settings, counts never who, events since linking for the guardian); the guardian's teens. |
+| `guardian_decide_approval(request_id, approve)` · `cancel_my_approval_request(request_id)` | Under-16 approvals. |
+| `admin_minor_overview(target_profile_id)` · `admin_set_birth_month(target_profile_id, birth_y, birth_m, reason)` · `admin_end_guardian_link(link_id, reason)` · `admin_minor_report()` · `admin_list_age_blocked()` · `admin_purge_minor_records()` | People desk: case file (names), corrections and link endings with a reason, counts and abuse signals, the under-13 deletion list, retention. |
+| `guardian_links_enabled()` · `guardian_consent_form_version()` · `guardian_consent_form_sha256()` | Switch `minors.guardian_links`; the accepted form version and text hash. |
+| `first_name_of` · `minor_has_consent` · `minor_guardian_count` · `minor_link_slots_used` · `is_supervising_guardian` · `is_guardian_of_record` · `log_supervision_event` · `athlete_profile_for_player` · `minor_payout_hold_reason` · `enforce_minor_consent` · `apply_teen_defaults` · `close_under_13_account` · `caller_not_age_blocked` · `minor_status_json` · `guardian_invite_for_code` · `record_guardian_consent` · `close_guardian_link` · `user_blocks_end_guardian_links` · `verified_player_of` · `supervision_json` · `guardian_view` · `guard_consent_records` · `guard_consent_truncate` · `profiles_apply_new_account_rules` · `guard_profiles_age` | Internal helpers and triggers (server only; `caller_not_age_blocked` is callable so the policies can use it).
+
+### Workout challenges (CHAL-01 part 1a, `20261016100000_workout_challenges.sql`, **written 2026-10-16, not applied**)
+
+Design: [WORKOUT_CHALLENGES_DESIGN.md](design/WORKOUT_CHALLENGES_DESIGN.md) §6 ("1a"). Replay:
+`scripts/replay/workout-challenges-replay.mjs` (also builds a database cut before PRIV-01 to prove the switch refuses).
+Preset responses and friend invites on listable, non-Vault, non-Exclusive `train_like_me` posts with an approved athlete
+tag whose verified athlete account allows challenges. Presets `accepted` / `love_it` / `im_in` / `did_it` ("Challenge
+accepted!", "Love this workout", "I'm in", "Did it! 💪"); no free text. Eligible callers: signed in, not closed, any age
+band but under 13 (`unknown` / `not_given` count as 13–15). Every table is RPC-only: RLS on, no client grants, the
+restrictive "Closed accounts" policy (added only when MINOR-01 exists). Functions that use PRIV-01 / MINOR-01 objects
+are plpgsql, so the file applies before them and the switch then refuses. Redefines `supervision_json` (MINOR-01) to add
+`summary.challenge_invites_7d`, only when MINOR-01 is present; re-run the file if MINOR-01 is applied later.
+
+| Table | Purpose |
+| --- | --- |
+| `challenge_responses` | One preset per account per post (primary key `reel_id, responder_id`); changeable or removable; 50 posts a day (rolling 24 hours). |
+| `challenge_nudges` | Invites ("{name} invited you to try {athlete}'s workout"), Activity only. `delivered = false` when dropped by a mute, block or admin mute, kept only so the 5-a-day and 1-per-pair-per-day limits count it. Deleted after 30 days. |
+| `challenge_mutes` | A recipient's mute of one sender, or everyone (`sender_id` null). |
+| `challenge_badges` | "Challenge finisher" (`challenge_finisher`) after "Did it!" on 3 different workouts. Private, noncash. |
+| `challenge_athlete_settings` | "Allow challenges on my workouts". No row = on for adults, off for everyone else. |
+| `challenge_sender_holds` | Admin hold on a sender's invites: `mute` (dropped silently) or `suspend` (refused), with the reason. |
+| `challenge_admin_events` | Append-only admin record: the switch history (newest `switch_on` / `switch_off` is the switch), holds, retention, erasure, each with its reason. Kept 2 years (the newest switch change always). |
+
+| Function | What it does |
+| --- | --- |
+| `challenge_respond(target_reel_id, preset)` | Answer, change, or remove (`preset` null). Refused off a challenge post, on the athlete's own post, across a block, above 50 a day. Returns the counts plus `badge_earned`. |
+| `challenge_counts(target_reel_id)` | Counts per preset, each null below 5; on a minor athlete's post only the athlete and their guardian (MINOR-01 link or guardian on record) see them. Closed responders and responders blocked with the athlete or the viewer are left out; `mine` is the caller's own preset. Guests too. |
+| `challenge_invite(target_reel_id, friend_profile_id)` | Accepted friends only; 5 a day, 1 per pair per day across posts, under a per-sender advisory lock; the same answer whether delivered or dropped; a suspended sender is refused. |
+| `challenge_mute(sender_profile_id, mute)` · `challenge_inbox(max_rows)` · `challenge_my_status()` · `set_allow_challenges(allow)` · `challenge_export_my_data()` | Mutes; Activity invites (30 days, delivered, not muted or blocked, post still open); my setting, mutes and badges; the athlete switch (a minor's change logs a `settings_changed` supervision event, key `allow_challenges`); export of every challenge row about me (sent invites never show `delivered`). |
+| `admin_challenge_status()` · `admin_set_challenges_enabled(turn_on, reason)` | Switch, missing PRIV-01 / MINOR-01 pieces, last change, totals; switch on refused while anything is missing. |
+| `admin_challenge_post_counts(max_rows)` · `admin_challenge_nudge_senders(days)` · `admin_hold_challenge_sender(sender_profile_id, hold, reason)` | Per-post aggregate counts; invite counts per sender (recipients as ids only); mute / suspend / clear with a reason, audited. |
+| `admin_challenge_retention()` · `admin_challenge_erase(target_profile_id, reason)` | Retention (invites 30 days, admin records 2 years); erase one person from every challenge table, audited. |
+| `challenge_missing_dependencies` · `challenge_switch_on` · `challenges_live` · `challenge_me` · `challenge_band` · `challenge_athlete_allows` · `challenge_reel_check` · `challenge_counts_visible` · `challenge_award_badge` · `challenge_counts_json` · `challenge_profile_export` · `challenge_erase_profile` · `challenge_admin_profile` · `guard_challenge_admin_events` | Internal helpers and the append-only trigger (server only). `challenge_erase_profile` is the hook for the account-deletion path (P1-01). |
+
+### CHAL-01 safeguard repair contract (October 15 Denver, local only)
+
+All15 public challenge RPCs now require **first** `expected_actor_id` (canonical profile UUID), checked against the actual nonclosed caller. `challenge_counts` alone accepts null with no authenticated user; no legacy unbound overload remains. Seven admin functions use the same bound nonclosed admin gate. `challenge_expected_profile` is private.
+
+`challenge_response_quota(responder_id,reel_id,last_responded_at)` holds at most50distinct workout identifiers within rolling24hours, independently of response/reel removal. The reel identifier deliberately has no FK; own data export includes the records. Expired entries purge on writes/retention; privileged support erasure/profile deletion clears them, an explicit exceptional reset. `challenge_redact_audit_identity` and `challenge_on_profile_delete` preserve immutable audit action/time/reason/detail while allowing only trusted identity-null deletion updates. Ordinary mutation/truncation remains denied. Late athlete/viewer blocks now hide counts and inbox entries. Replay:42/42 on local PGlite18.6; not hosted enforcement.
+
+### Beyond the Game (BEYOND-01, local unapplied20261016120000)
+
+Design: [BEYOND_GAME_DESIGN.md](design/BEYOND_GAME_DESIGN.md). Six RPC-only tables:
+
+| Table | Purpose |
+| --- | --- |
+| `beyond_settings` | Last contribution-switch administrator/reason/time; sole live enable remains published.highlights.beyondGameEnabled, defaultfalse. RPC-only. |
+| `beyond_posts` | Account-owned immutable revisioned category/caption/audience/review/rights-safety version-time and cleanup state. Pending private, approved exact audience, reported held immediately; erasure anonymizes while retaining cleanup mapping. |
+| `beyond_media` | Exact private immutable user/post/media path, kind/mime/bytes/dimensions/attested video duration. One<=45sec50MiB video or<=3JPEG5MiB photos. This metadata is not content/person/rights verification. Mappings retained until actual Storage absence. |
+| `beyond_submission_quota` | Server reservation UUID/time per canonical owner, durable5perrolling24h regardless of self-removal. Own export;35day write/admin retention; privileged support erasure is an exceptional reset. |
+| `beyond_reports` | Reporter canonical UUID, post/reason/time for immediate distribution hold and protected review; own report export and erasure. Not a public popularity metric. |
+| `beyond_admin_events` | Restricted reason/action/time audit for switch/review/retention/cleanup. Identity references null on account deletion; support erasure sanitizes corresponding reasons. Minimal retained action/time is not counsel-approved retention. |
+
+All public entrypoints carry required `expected_actor_id` and server-check the actual canonical nonclosed caller; guestnull is accepted only for permitted unauthenticated reads. `beyond_game` is a private Storage bucket; no public URL/upsert fallback. Metadata validates scope/type/size, not decoded media or rights. Authorized current admins can read removed mapped bytes strictly for cleanup until real provider erasure; participant/guardian/public media access refuses removed content.
+
+| Function | Contract |
+| --- | --- |
+| `beyond_missing` | Checks required PRIV-01/MINOR-01 dependency functions before operational enable. |
+| `beyond_enabled` | Reads sole published contribution enable; disabled/missing meansfalse. |
+| `beyond_actor` | Private current nonclosed canonical profile and supplied expected actor match; only selected publicreads allow unauthenticated guestnull. |
+| `beyond_admin` | Private current nonclosed admin authority plus expected canonical actor check. |
+| `beyond_owner_open` | Determines owner submission eligibility and closure/age status. |
+| `beyond_can_view` | Private exact owner/admin/guardian or accepted approved audience check with current blocks/privacy/age and switch. |
+| `beyond_post_json` | Server exact post/media projection with optional protected review/report detail; no money/athlete payee identity. |
+| `beyond_status` | Actor-bound feature/dependency/audience/submission capability reader. |
+| `beyond_posts` | Bounded category/UUIDcursor approved accepted-audience list, current viewer rechecked. |
+| `beyond_my_posts` | Bounded own review status/cursor list, canonical actorbound. |
+| `beyond_reserve` | Idempotent private draft reservation, exact media/attestations/audience and durable5rolling24h quota. |
+| `beyond_identity_removed` | Deletion/erasure trigger anonymizes author/caption/review/report identities while preserving removed object cleanup targets. |
+| `beyond_export_my_data` | Bounded section/cursor own-data export for posts/reports/quota; server canonical actorbinding. |
+| `admin_beyond_erase_profile` | Reasoned admin support erasure, up to50owned posts/call; immediately removes distribution and queues preserved media targets. Privileged quota reset exception. |
+| `beyond_storage_guard` | Storage write metadata/type/owner/path guard for immutable reserved media; no decoded content claim. |
+| `beyond_storage_allowed` | Restrictive storage predicate protecting exact draft inserts, current accepted reads, no updates and removed cleanup admin access. |
+| `beyond_finalize` | Exact existing reserved owned-file metadata validation and idempotent pending submission; actual media content review remains required. |
+| `beyond_remove` | Own canonical-actor removal immediately hides distribution, queues physical cleanup without refunding quota. |
+| `beyond_report` | Eligible current viewer concern immediately holds distribution and records reason once per reporter/post. |
+| `beyond_media_access` | Actor-bound exact authorized post/file access, SDK-requested60s TTL; never removed or substituted/external paths. |
+| `admin_beyond_status` | Protected contribution/dependency/switch-change status, pending and cleanup aggregates. |
+| `admin_beyond_set_enabled` | Reasoned nonclosed admin-only sole published contribution switch, dependency-checked, defaultoff. |
+| `admin_beyond_posts` | Bounded review state/cursor queue with protected reports/cleanup metadata. |
+| `admin_beyond_review` | Reasoned approve/remove with immutable expected revision, accepted audience/owner/media/dependency recheck. |
+| `admin_beyond_cleanup_targets` | Protected exact removedpost mapped private paths for real provider erasure, never SQL-only delete claim. |
+| `admin_beyond_cleanup_finish` | Rechecks actual storage catalog absence; complete onlywhen every target absent, partial failures visible. |
+| `admin_beyond_retention` | Reasoned admin24h draft expiry and35day quota purge; expired files remain mapped pending physical cleanup, no deployed schedule. |
+
+Canonical copy/generated maps and independent reviews remain in integration; written SQL is not hosted activation. Retention is explicitly invoked. Previously delivered signed bytes cannot be recalled.
+
+`beyond_profile_erasure`: profile-deletion trusted identity/audit sanitization trigger, server-only.
+
+CHAL participant source extension: `challenge_friends(expected_actor_id,max_rows)` adds a16th actor-bound endpoint for at most50accepted friend choices, excluding blocked/closed/nonaccepted records; minimal profile/name projection. No new table or public graph. Source and replay are reverified before app-ready, preserving the original admin checkpoint.
+
+### Beyond legacy discovery integration (local)
+
+`beyond_legacy_posts(expected_actor_id,category,max_rows)` returns a JSON array of at most24 minimal cards (id, title240codepoints, player_id, athlete_name160codepoints, workout/service category). Internal filters retain Train/Serve categories; exact confirmed linked verified/open athlete and open uploader are required. Both current photo audiences, blocks, age closure and applicable known-teen public consent are checked explicitly; the privileged reels_feed view alone is not an authorization boundary. Ambiguous legacy verified ownership fails closed. Guest null is allowed only without an authenticated actor. No media URL or full profile is returned; contribution enablement is separate. Canonical integration now contains the final migration exactly once; written/unapplied.

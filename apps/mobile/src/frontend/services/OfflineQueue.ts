@@ -1,7 +1,8 @@
 /**
  * Process-wide queue for actions taken without a connection: Aura taps, cheer votes, bookmarks and reports.
- * Stored in AsyncStorage while NetInfo says offline, then replayed to the matching Supabase RPCs on reconnect.
- * @sideEffects AsyncStorage, NetInfo listener, Supabase RPCs on flush.
+ * Stored in AsyncStorage while NetInfo says offline, then replayed on reconnect through the lib/ helpers that own each
+ * call (reelVotes, savedReels, aura, cheerPoll, reels), so this service never holds a database client (PORT-01).
+ * @sideEffects AsyncStorage, NetInfo listener, database calls through lib/ on flush.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,7 +13,10 @@ import { parseReportReason } from '@/data/contentRights';
 import { addUserAura } from '@/lib/aura';
 import { DOUBLE_TAP_AURA_POINTS } from '@/data/highlights';
 import { isReelUuid, reportReelRemote } from '@/lib/reels';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { castCheerVote } from '@/lib/cheerPoll';
+import { sendReelHype, withdrawReelHype } from '@/lib/reelVotes';
+import { removeReelBookmark, saveReelBookmark } from '@/lib/savedReels';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import type { PlayReactionId } from '@/data/players';
 
 const STORAGE_KEY = 'tapuai.offlineQueue';
@@ -89,57 +93,27 @@ export function shouldQueueOffline(error?: { message?: string } | null, connecte
 
 async function persistBookmark(action: OfflineBookmarkAction): Promise<void> {
   if (!isSupabaseConfigured || !isReelUuid(action.reelId)) return;
-  if (action.saved) {
-    const { error } = await supabase.from('saved_reels').insert({
-      user_id: action.userId,
-      reel_id: action.reelId,
-    });
-    if (error && !/duplicate|unique/i.test(error.message)) throw error;
-    return;
-  }
-  const { error } = await supabase
-    .from('saved_reels')
-    .delete()
-    .eq('user_id', action.userId)
-    .eq('reel_id', action.reelId);
+  const { error } = action.saved
+    ? await saveReelBookmark(action.userId, action.reelId)
+    : await removeReelBookmark(action.userId, action.reelId);
   if (error) throw error;
 }
 
 async function persistCheerVote(action: OfflineCheerAction): Promise<void> {
   if (!isSupabaseConfigured) return;
-  let { error } = await supabase.rpc('cast_cheer_vote', {
-    poll_slug: action.slug,
-    side: action.side,
-    previous_side: action.previousSide,
-    home_name: action.homeName,
-    away_name: action.awayName,
-  });
-  if (error) {
-    const retry = await supabase.rpc('cast_cheer_vote', {
-      poll_slug: action.slug,
-      side: action.side,
-      previous_side: action.previousSide,
-    });
-    error = retry.error;
-  }
+  const { error } = await castCheerVote({ slug: action.slug, side: action.side, previousSide: action.previousSide, homeName: action.homeName, awayName: action.awayName });
   if (error) throw error;
 }
 
 async function persistHypeClear(action: OfflineHypeClearAction): Promise<void> {
   if (!isReelUuid(action.reelId) || !isSupabaseConfigured) return;
-  const { error } = await supabase.rpc('clear_reel_hype', {
-    target_reel_id: action.reelId,
-    hype_kind: action.kind,
-  });
+  const { error } = await withdrawReelHype(action.reelId, action.kind);
   if (error) throw error;
 }
 
 async function persistAura(action: OfflineAuraAction): Promise<void> {
   if (!isReelUuid(action.reelId) || !isSupabaseConfigured) return;
-  const { error } = await supabase.rpc('increment_reel_hype', {
-    target_reel_id: action.reelId,
-    hype_kind: action.kind,
-  });
+  const { error } = await sendReelHype(action.reelId, action.kind);
   if (error) throw error;
   if (action.grantAura && action.userId) {
     await addUserAura(action.userId, action.auraPoints ?? DOUBLE_TAP_AURA_POINTS);
@@ -194,6 +168,14 @@ export class OfflineQueue {
       this.connected = state.isConnected;
       if (this.connected !== false) void this.flush();
     });
+  }
+
+  /** @purpose Release the network and app-state listeners (tests and hot reload); queued actions stay saved. */
+  dispose(): void {
+    this.netUnsub?.();
+    this.netUnsub = null;
+    this.appSub?.remove();
+    this.appSub = null;
   }
 
   static getInstance(): OfflineQueue {

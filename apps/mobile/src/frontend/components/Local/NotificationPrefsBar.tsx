@@ -1,3 +1,4 @@
+/** Game-day alert preference chips; uses the shared Calm Island chip look (ink when selected, red stays for LIVE only). */
 import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
@@ -68,8 +69,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   chipSelected: {
-    backgroundColor: FOCAL.ember,
-    borderColor: FOCAL.ember,
+    backgroundColor: FOCAL.ink,
+    borderColor: FOCAL.ink,
   },
   chipLabel: {
     fontSize: 12,

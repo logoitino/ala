@@ -1,18 +1,22 @@
+/** Restricted admin entry preserves the existing gate and offers guests the shared sign-in sheet. */
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { isDevMode } from '@/data/devPersonas';
 import { FOCAL } from '@/theme/motion';
 
 /**
- * @purpose Full-screen lock when `profiles.is_admin` and Studio unlock are both false.
+ * @purpose Full-screen lock when admin access and Studio unlock are both false.
+ * @sideEffects Existing sign-in intent, explicit Studio unlock and Home navigation; none grant admin access.
  */
 export function AccessRestricted() {
   const router = useRouter();
-  const { unlockStudio } = useAuth();
+  const { user, unlockStudio } = useAuth();
+  const { requireAuth } = useSoftWall();
   const canUnlock = isDevMode();
 
   return (
@@ -23,6 +27,12 @@ export function AccessRestricted() {
         This dashboard is only for Tapua'i admins. Sign in with an admin account
         {canUnlock ? ', or unlock Studio on this Expo Go device.' : '.'}
       </Text>
+      {!user ? <AnimatedButton
+        haptic="medium"
+        accessibilityLabel="Sign in"
+        contentStyle={styles.cta}
+        onPress={() => requireAuth({ kind: 'signin', resume: () => router.replace('/admin') })}
+      ><Text style={styles.ctaLabel}>Sign in</Text></AnimatedButton> : null}
       {canUnlock ? (
         <AnimatedButton
           haptic="medium"
@@ -79,6 +89,7 @@ const styles = StyleSheet.create({
   cta: {
     marginTop: 8,
     minHeight: 44,
+    minWidth: 44,
     paddingHorizontal: 22,
     borderRadius: radii.md,
     backgroundColor: FOCAL.neonJade,

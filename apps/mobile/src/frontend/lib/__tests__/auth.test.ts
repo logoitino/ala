@@ -6,6 +6,7 @@ import {
   isNewAuthUser,
   oauthAuthorizeFailure,
   passwordMeetsPolicy,
+  signUpBirthProblem,
   softWallEmailGates,
 } from '@/lib/auth';
 
@@ -92,34 +93,43 @@ describe('demoSignInShouldCreate', () => {
 });
 
 describe('softWallEmailGates', () => {
-  it('never blocks retroactively: Sign in is enabled without the 13+ confirmation', () => {
-    const gates = softWallEmailGates('returning@family.com', 'hunter2password', false);
+  const adult = { year: 1990, month: 4 };
+  it('never blocks retroactively: Sign in is enabled without a birth month', () => {
+    const gates = softWallEmailGates('returning@family.com', 'hunter2password', null);
     expect(gates.canSignIn).toBe(true);
   });
 
-  it('still gates Create account and magic link on the 13+ confirmation', () => {
-    const unconfirmed = softWallEmailGates('new@family.com', 'hunter2password', false);
-    expect(unconfirmed.canCreate).toBe(false);
-    expect(unconfirmed.canMagic).toBe(false);
+  it('gates Create account and magic link on a complete birth month and year (MINOR-01)', () => {
+    const missing = softWallEmailGates('new@family.com', 'hunter2password', null);
+    expect(missing.canCreate).toBe(false);
+    expect(missing.canMagic).toBe(false);
 
-    const confirmed = softWallEmailGates('new@family.com', 'hunter2password', true);
-    expect(confirmed.canCreate).toBe(true);
-    expect(confirmed.canMagic).toBe(true);
+    const given = softWallEmailGates('new@family.com', 'hunter2password', adult);
+    expect(given.canCreate).toBe(true);
+    expect(given.canMagic).toBe(true);
+  });
+
+  it('keeps the button live for an under-13 date, so the form never hints at the age that works', () => {
+    const kid = { year: new Date().getFullYear() - 9, month: 1 };
+    expect(softWallEmailGates('new@family.com', 'hunter2password', kid).canCreate).toBe(true);
+    expect(signUpBirthProblem(kid)).toBe("We can't create your account right now.");
+    expect(signUpBirthProblem(adult)).toBeNull();
+    expect(signUpBirthProblem({ year: new Date().getFullYear() + 1, month: 1 })).toBe('Check your birth month and year.');
   });
 
   it('holds Create account to the password policy but lets a short existing password sign in', () => {
-    const gates = softWallEmailGates('returning@family.com', 'short', true);
+    const gates = softWallEmailGates('returning@family.com', 'short', { year: 1990, month: 4 });
     expect(gates.canCreate).toBe(false);
     expect(gates.canSignIn).toBe(true);
   });
 
   it('needs an email for every path, and a password for the two password paths', () => {
-    expect(softWallEmailGates('   ', 'hunter2password', true)).toEqual({
+    expect(softWallEmailGates('   ', 'hunter2password', { year: 1990, month: 4 })).toEqual({
       canSignIn: false,
       canCreate: false,
       canMagic: false,
     });
-    const noPassword = softWallEmailGates('fan@family.com', '', true);
+    const noPassword = softWallEmailGates('fan@family.com', '', { year: 1990, month: 4 });
     expect(noPassword.canSignIn).toBe(false);
     expect(noPassword.canCreate).toBe(false);
     expect(noPassword.canMagic).toBe(true);

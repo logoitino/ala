@@ -4,6 +4,8 @@ import { Alert } from 'react-native';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import type { Player } from '@/types/database';
 
+const mockSupportCapture = jest.fn();
+jest.mock('@/services/SupportSignalManager', () => ({ supportSignals: { capture: (value: unknown) => mockSupportCapture(value) } }));
 const mockInsert = jest.fn();
 const mockIncrement = jest.fn();
 const mockPresent = jest.fn();
@@ -59,4 +61,54 @@ describe('checkout payment settlement', () => {
     expect(Alert.alert).not.toHaveBeenCalled();
     expect(result.current.busy).toBe(false);
   });
+  it('records the covered card fee and PaymentIntent id, and keeps channel data when those columns are missing', async () => {
+    mockIntent.mockResolvedValue('pi_3QabcDEF12345678_secret_x');
+    mockInsert
+      .mockResolvedValueOnce({ error: { code: 'PGRST204', message: "Could not find the 'cover_fee_cents' column of 'tips' in the schema cache" } })
+      .mockResolvedValueOnce({ error: null });
+    const onBacked = jest.fn();
+    const { result } = await renderHook(() => useTipCheckout());
+    await act(async () => { await result.current.startCheckout({ player, tipAmount: 5, coverFees: true, platformTipPercent: 10, onBacked }); });
+    expect(mockInsert).toHaveBeenCalledTimes(2);
+    const [first] = mockInsert.mock.calls[0];
+    expect(first).toEqual(expect.objectContaining({ amount_cents: 500, stripe_payment_intent_id: 'pi_3QabcDEF12345678', platform_tip_cents: 50 }));
+    expect(first.cover_fee_cents).toBeGreaterThan(0);
+    const [second] = mockInsert.mock.calls[1];
+    expect(second).toEqual(expect.objectContaining({ origin: 'profile', platform_tip_cents: 50, amount_cents: 500 }));
+    expect(second).not.toHaveProperty('cover_fee_cents');
+    expect(second).not.toHaveProperty('stripe_payment_intent_id');
+    expect(onBacked).toHaveBeenCalledWith(2);
+  });
+  it('keeps the donation and logs an issue when the database rejects only the fee or payment id', async () => {
+    const { telemetry } = jest.requireMock('@/services/TelemetryManager');
+    mockIntent.mockResolvedValue('pi_3QabcDEF12345678_secret_x');
+    mockInsert
+      .mockResolvedValueOnce({ error: { code: '23514', message: 'new row violates check constraint "tips_cover_fee_cents_check"' } })
+      .mockResolvedValueOnce({ error: null });
+    const onBacked = jest.fn();
+    const { result } = await renderHook(() => useTipCheckout());
+    await act(async () => { await result.current.startCheckout({ player, tipAmount: 5, coverFees: true, onBacked }); });
+    expect(mockInsert).toHaveBeenCalledTimes(2);
+    expect(mockInsert.mock.calls[1][0]).not.toHaveProperty('cover_fee_cents');
+    expect(telemetry.trackIssue).toHaveBeenCalledWith('checkout.bookkeeping_fields_rejected', 'donate');
+    expect(onBacked).toHaveBeenCalled();
+  });
+
+  it('does not retry on an unrelated check violation', async () => {
+    mockInsert.mockResolvedValue({ error: { code: '23514', message: 'new row violates check constraint "tips_amount_cents_cap_check"' } });
+    const { result } = await renderHook(() => useTipCheckout());
+    await act(async () => { await result.current.startCheckout({ player, tipAmount: 5 }); });
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+    expect(Alert.alert).toHaveBeenCalledWith('Donation not recorded', expect.any(String));
+  });
+});
+
+it('captures cancellation as expected and donation-record failure separately from payment failure', async () => {
+ jest.clearAllMocks(); jest.spyOn(Alert, 'alert').mockImplementation(() => {}); mockIntent.mockResolvedValue('secret'); mockIncrement.mockResolvedValue(2);
+ mockPresent.mockResolvedValue({ error: { code: 'Canceled', message: 'private' } });
+ const first = await renderHook(() => useTipCheckout()); await act(async () => first.result.current.startCheckout({ player, tipAmount: 5 }));
+ expect(mockSupportCapture).toHaveBeenCalledWith({feature:'donation',code:'user_cancelled'});
+ mockSupportCapture.mockClear();mockPresent.mockResolvedValue({});mockInsert.mockResolvedValue({error:{code:'23514',message:'private ledger detail'}});
+ const second = await renderHook(() => useTipCheckout());await act(async () => second.result.current.startCheckout({player,tipAmount:5}));
+ expect(mockSupportCapture).toHaveBeenCalledWith({feature:'donation',code:'data_invalid'});expect(JSON.stringify(mockSupportCapture.mock.calls)).not.toContain('private');
 });

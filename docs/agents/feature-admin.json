@@ -1,0 +1,759 @@
+{
+  "_comment": "Future-feature contracts must be enrolled before app implementation. Empty initially: existing features are not retrospectively certified. This checks registered metadata and local evidence only; see docs/engineering/FEATURE_ADMIN_WORKFLOW.md.",
+  "version": 1,
+  "features": [
+    {
+      "id": "BOOKS-02",
+      "title": "Finance & Books hub, finance data catalog and reconciliation",
+      "owner": "FINANCE_DATA",
+      "status": "admin-ready",
+      "plannedAt": "2026-10-13T15:45:00Z",
+      "exemption": null,
+      "source": {
+        "description": "Canonical sources: company_revenue_logs (all revenue streams), disbursements (paid payouts), and the BOOKS-01 ledger tables via get_ledger_books (recorded entries, closes, reopens). Source tables tips, subscriptions, sponsorships, shop_orders, custodial_withdrawals and filmer_rewards are read for reconciliation. Reads are paged with an exact row count; a failed page discards partial rows; a missing table or column is 'not read', never zero; a missing migration reads as 'not switched on'. Every money column is classified in the finance data catalog (coverage test against schema.sql and every migration).",
+        "paths": [
+          "apps/mobile/src/frontend/lib/bookkeeping.ts",
+          "packages/shared-types/admin/bookkeeping.ts",
+          "packages/shared-types/admin/financeCatalog.ts",
+          "packages/shared-types/admin/financeChecks.ts",
+          "supabase/migrations/20261012210000_bookkeeping_ledger.sql"
+        ]
+      },
+      "admin": {
+        "route": "/admin/books",
+        "actions": [
+          "Record Stripe fees, expenses, payouts to bank, booster operator payments, owner money and whole-charge refunds as balanced entries",
+          "Void an entry by reversal with a reason",
+          "Close a finished month with its fingerprint, and reopen it with a reason kept in an audit table",
+          "Export QuickBooks daily/detail journals, general ledger, chart of accounts, tax pack and filtered transactions (blocked while any source is unread or the books do not balance)"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/Books/BooksScreen.tsx",
+          "apps/mobile/src/frontend/components/Admin/Books/BooksRecordTab.tsx",
+          "apps/mobile/src/frontend/components/Admin/Books/BooksTransactionsTab.tsx",
+          "apps/mobile/app/(admin)/admin/books.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/books",
+        "metrics": [
+          "Tapua'i income, expenses and net for the selected UTC month/quarter/year; money held for families, athletes and operators (opening, added, paid out, closing) with a per-athlete subledger; trial balance; tax-year pack with net per estimated-tax period; reconciliation of every source row to the revenue log (all time). Unread sources show 'Not read', never zero; every table has a complete Data alternative; athlete names on screen only, pseudonymous references in exports. Revenue remains the operational revenue report; this hub is the accounting view and links back to it."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/Books/booksSections.ts",
+          "apps/mobile/src/frontend/components/Admin/Books/BooksReconcileTab.tsx",
+          "apps/mobile/src/frontend/components/Admin/Books/BooksTaxesTab.tsx",
+          "apps/mobile/src/frontend/components/Admin/Books/BooksDataTab.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "No runtime flag: the hub is admin-only and writes nothing until the bookkeeping migration is applied. Repair is by reversal (void) or reopen with a reason; nothing is edited or deleted. Rollback of the migration is listed in its header (card_fee rows must be reclassified first). The checkout fields fall back to the previous insert when the columns are missing, and log an issue when the database rejects them.",
+        "paths": [
+          "supabase/migrations/20261012210000_bookkeeping_ledger.sql",
+          "apps/mobile/src/frontend/hooks/useTipCheckout.ts"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin"
+        ],
+        "deniedBehavior": "Signed-in non-admins and guests see the access notice and load nothing; ledger tables are admin-only under RLS with no client write grant; every ledger RPC calls require_admin_guard first; helpers are not executable by clients. Replayed on Postgres: fan and anon are denied on every RPC and direct write, and RLS returns zero rows to a fan.",
+        "paths": [
+          "apps/mobile/src/frontend/hooks/useBooks.ts",
+          "supabase/migrations/20261012210000_bookkeeping_ledger.sql",
+          "scripts/replay/books01-ledger-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/mobile/src/frontend/hooks/useTipCheckout.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-13T16:28:15Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/BOOKS-02-admin.md",
+              "command": "cd apps/mobile && ../../node_modules/.bin/jest --watchman=false src/frontend/components/Admin/Books src/frontend/lib/__tests__/bookkeeping.test.ts src/frontend/lib/__tests__/financeData.test.ts src/frontend/lib/__tests__/bookkeepingData.test.ts src/frontend/hooks/__tests__/useTipCheckout.test.tsx src/frontend/lib/__tests__/adminNavigation.test.ts src/frontend/components/Admin/__tests__/AdminChrome.test.tsx",
+              "result": "7 suites, 108 tests passed, 0 failed on Node 24.21.0 locally; no hosted database, browser or device."
+            },
+            {
+              "path": "docs/engineering/evidence/BOOKS-02-admin.md",
+              "command": "node scripts/replay/books01-ledger-replay.mjs /tmp/books01-pg/pkg/package/dist supabase/migrations/20261012210000_bookkeeping_ledger.sql",
+              "result": "72 of 72 checks passed on PGlite 0.5.9 (Postgres 18.6); the migration is not applied to staging or development."
+            }
+          ]
+        },
+        "app": null
+      }
+    },
+    {
+      "id": "DETECT-02",
+      "title": "Engineering Support, security review, audit and recovery workspace",
+      "owner": "ADMIN",
+      "status": "app-ready",
+      "plannedAt": "2026-10-13T18:25:00Z",
+      "exemption": null,
+      "source": {
+        "description": "Restricted support signal/review/audit/release RPC with bounded validated snapshots. Existing telemetry and user feedback retain their owning desks and link from Support. Missing/read errors stay unknown; actor/time come from server. No raw credential/payment/user payloads in detection logs. DATA_GOVERNANCE reviews new sources and generated ownership metadata.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/engineeringSupport.ts",
+          "supabase/migrations/20261013190000_engineering_support.sql"
+        ]
+      },
+      "admin": {
+        "route": "/admin/support",
+        "actions": [
+          "Review issues with rationale and occurrence scope; finance/security dispositions need a distinct second reviewer. Register local recovery manifest metadata with authenticated actor/time; follow actual code owner and security/recovery handoffs."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/Support/SupportScreen.tsx",
+          "apps/mobile/app/(admin)/admin/support.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/support",
+        "metrics": [
+          "Bounded issue classifications, confidence and duplicate evidence; dynamic team/source ownership diagram with text alternative; append-only actor/time change history and recovery manifest integrity/compatibility. Missing telemetry/audit/security sources never read as zero or healthy; existing Health/Books/feedback analyses remain linked."
+        ],
+        "paths": [
+          "packages/shared-types/admin/engineeringSupport.ts",
+          "packages/shared-types/admin/supportTopology.json"
+        ]
+      },
+      "disable": {
+        "strategy": "No money/access/publish/destructive auto-repair. Read recovery is capped; render failures contain the affected feature. Missing support SQL is explicit unavailable and capture fails without changing auth/payment outcomes. Recovery packages restore into new isolated previews only, never execute old SQL or replace live code. Incident records and audit changes are appended, never erased.",
+        "paths": [
+          "apps/mobile/src/frontend/services/SupportSignalManager.ts",
+          "scripts/recovery-capsule.mjs"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin"
+        ],
+        "deniedBehavior": "Guest/non-admin reads/writes denied by authenticated role guard and restricted RPC/RLS. Client cannot forge trusted security origin, actor or timestamp. Security/finance review needs independent second actor. Backend replay proves negative access locally; hosted SQL remains unapplied.",
+        "paths": [
+          "apps/mobile/src/frontend/hooks/useEngineeringSupport.ts",
+          "supabase/migrations/20261013190000_engineering_support.sql",
+          "scripts/replay/support-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/mobile/src/frontend/components/Common/FeatureBoundary.tsx",
+          "apps/mobile/src/frontend/services/SupportSignalManager.ts",
+          "apps/mobile/app/_layout.tsx",
+          "apps/mobile/src/frontend/components/Common/SupportRuntimeObserver.tsx",
+          "apps/mobile/src/frontend/services/supportRuntime.ts",
+          "apps/mobile/src/frontend/components/ScreenShell.tsx",
+          "apps/mobile/src/frontend/components/TabScreen.tsx",
+          "apps/mobile/src/frontend/components/Feedback/SuggestionSheet.tsx",
+          "apps/mobile/src/frontend/hooks/useTipCheckout.ts",
+          "apps/mobile/src/frontend/lib/reels.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-13T19:25:14Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/DETECT-02-admin.md",
+              "command": "pnpm --filter @tapuai/mobile exec jest --watchman=false supportAdapter teamFlow useEngineeringSupport engineeringSupport SupportSignalManager FeatureBoundary session supportCapture",
+              "result": "Eight focused suites /99 tests passed locally before fan wiring; SQL replay144/144 and recovery10/10; independent fixes held; no hosted SQL."
+            },
+            {
+              "path": "docs/engineering/evidence/DETECT-02-admin.md",
+              "command": "python3 .smoke/support/browser_qa.py; python3 .smoke/support/browser_resume.py",
+              "result": "Actual source in synthetic Expo harness: 12 tab/width geometry checks, protected second-reviewer behavior, unavailable and partial source states pass; screenshot recorded; fixture read clock corrected."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-13T19:36:59Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/DETECT-02-app.md",
+              "command": "pnpm check",
+              "result": "Local gate passes:115 app suites/827 tests, TypeScript and documentation/ownership/role/security-marker gates; no hosted activation or live money."
+            },
+            {
+              "path": "docs/engineering/evidence/DETECT-02-app.md",
+              "command": "pnpm --filter @tapuai/mobile exec jest --watchman=false supportReels SupportSignalManager",
+              "result": "38/38 pass after independent SDK status-zero and AbortError correction; review found no remaining Important finding in those changes."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "PRIV-01",
+      "title": "Profile privacy: public/private, per-item audiences, two-way friends, blocking, hide from search, tag approval",
+      "owner": "PROFILE",
+      "status": "app-ready",
+      "plannedAt": "2026-10-14T02:47:42Z",
+      "exemption": null,
+      "source": {
+        "description": "Canonical sources: profiles (account_private, profile_audience per item, hide_from_search, tag_review, friend_requests_from), friendships (two-way requests), user_blocks; enforced in SQL. Direct reads of other users' profiles rows are closed; other people's profiles come only through profiles_public and definer RPCs that apply the viewer relationship (self, admin, guardian of record, friend, blocked, stranger, guest). A missing migration reads as 'not switched on'; a failed read never shows hidden fields. Design: docs/engineering/design/PROFILE_PRIVACY_DESIGN.md.",
+        "paths": [
+          "supabase/migrations/20261014090000_profile_privacy.sql",
+          "supabase/migrations/20261014100000_tag_approval.sql",
+          "apps/mobile/src/frontend/lib/privacy.ts",
+          "apps/mobile/src/frontend/lib/rpc.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/people",
+        "actions": [
+          "Read a person's privacy settings, friend count and block counts (never who)",
+          "Reset a person to private defaults",
+          "Hide a person from search"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/PrivacySafetyPanel.tsx",
+          "apps/mobile/src/frontend/components/Admin/PeopleTool.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/people",
+        "metrics": [
+          "Private vs public accounts, friend requests and blocks in the last 7 UTC days; a failed read shows unknown, never zero"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/PrivacySafetyPanel.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Feature switch privacy.friends turns new friend requests off without touching existing settings, friendships or blocks; privacy settings and blocks always stay enforced (they protect people). Admin can reset a person to private defaults.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/privacy.ts"
+        ]
+      },
+      "access": {
+        "roles": [
+          "self",
+          "admin"
+        ],
+        "deniedBehavior": "Only the owner changes their settings (teen rules from MINOR-01 apply in set_my_privacy); admins read and repair. The guardian lock was removed before anything was applied (owner 2026-10-14; MINOR-01 supervision replaces it). Strangers, blocked users and guests get only the always-visible fields (name, username, badges, sport, approved-tagged Highlights, Donate). Enforced by RLS and definer RPCs; wrong-actor tests in scripts/replay/schema-replay.mjs.",
+        "paths": [
+          "supabase/migrations/20261014090000_profile_privacy.sql"
+        ]
+      },
+      "app": {
+        "route": "/profile",
+        "paths": [
+          "apps/mobile/src/frontend/components/Profile/PrivacySettingsSheet.tsx",
+          "apps/mobile/src/frontend/components/Profile/ProfileFriendActions.tsx",
+          "apps/mobile/src/frontend/components/Activity/FriendRequestsCard.tsx",
+          "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-14T03:19:21Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/PRIV-01-admin.md",
+              "command": "node scripts/replay/schema-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "67/67 passed on PGlite (Postgres 18.6), including 24 PRIV-01 privacy checks; no hosted database."
+            },
+            {
+              "path": "docs/engineering/evidence/PRIV-01-admin.md",
+              "command": "cd apps/mobile && ../../node_modules/.bin/jest --watchman=false (PrivacySafetyPanel, privacy, PeopleTool, ReelOwnerPeek, routeClients, public-profile-navigation tests)",
+              "result": "5 suites, 29 tests passed; pnpm check exit 0 (120 suites / 874 tests, all guards). No browser or device."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-14T04:50:17Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/PRIV-01-app.md",
+              "command": "pnpm check",
+              "result": "exit 0: 126 suites / 905 tests and every guard. No browser, device or hosted database."
+            },
+            {
+              "path": "docs/engineering/evidence/PRIV-01-app.md",
+              "command": "node scripts/replay/schema-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "100/100 on PGlite (Postgres 18.6), including the stage 2 re-review checks."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "MINOR-01",
+      "title": "Minor accounts: birth month and year, teen-safe defaults, guardian link and signed consent, supervision and under-16 approvals, under-13 closure",
+      "owner": "PROFILE",
+      "status": "app-ready",
+      "plannedAt": "2026-10-14T04:10:53Z",
+      "exemption": null,
+      "source": {
+        "description": "Canonical sources: profiles (birth_year, birth_month, age_blocked_at, age_check_required), guardian_links, guardian_invites, guardian_invite_attempts, guardian_consents (append-only), guardian_approval_requests, supervision_events; every rule in SQL (definer RPCs, no client table access, a restrictive Closed accounts policy on every RLS table). A missing migration reads as not switched on; the old 13+ checkbox stays there. Design: docs/engineering/design/MINOR_ACCOUNTS_DESIGN.md.",
+        "paths": [
+          "supabase/migrations/20261014110000_minor_accounts.sql",
+          "apps/mobile/src/frontend/lib/minors.ts",
+          "apps/mobile/src/frontend/data/guardianConsent.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/people",
+        "actions": [
+          "Read a person's age band, birth month and year, closed state, guardian links (names), consent records and supervision summary",
+          "Correct a birth month and year with a reason",
+          "End a guardian link with a reason",
+          "Apply the retention schedule"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/MinorAccountsPanel.tsx",
+          "apps/mobile/src/frontend/components/Admin/PrivacySafetyPanel.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/people",
+        "metrics": [
+          "Accounts by age band, teens with a guardian, each consent permission, requests waiting for guardians, codes in 7 days, guardians with more than 3 teens, adult friend requests to teens in 7 days, under-13 accounts waiting for deletion; a failed read shows the error, never zero"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/MinorAccountsPanel.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Published switch minors.guardian_links = false pauses new guardian codes and links; existing links, consent and the teen rules stay enforced (turning it off never loosens anything). Admin repairs: correct a birth month (with a reason), end a link (with a reason).",
+        "paths": [
+          "supabase/migrations/20261014110000_minor_accounts.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "self",
+          "guardian",
+          "admin"
+        ],
+        "deniedBehavior": "Teens change their own settings (public needs a guardian's consent; under-16 public and open requests go to the guardian to approve). A code-linked guardian, once the teen confirms, sees only the shared supervision summary (counts, never who) and decides approvals; they cannot change settings. Only the guardian on record can allow payouts. Admins read and repair. One refusal message for every account; a closed under-13 account is refused by every table. Wrong-actor tests in scripts/replay/schema-replay.mjs.",
+        "paths": [
+          "supabase/migrations/20261014110000_minor_accounts.sql"
+        ]
+      },
+      "app": {
+        "route": "/profile",
+        "paths": [
+          "apps/mobile/src/frontend/components/Auth/SoftWallModal.tsx",
+          "apps/mobile/src/frontend/components/Auth/BirthMonthField.tsx",
+          "apps/mobile/src/frontend/components/Auth/AgeConfirmModal.tsx",
+          "apps/mobile/src/frontend/components/Profile/PrivacySettingsSheet.tsx",
+          "apps/mobile/src/frontend/components/Custodial/GuardianSupervisionPanel.tsx",
+          "apps/mobile/src/frontend/components/Custodial/GuardianConsentForm.tsx",
+          "apps/mobile/src/frontend/components/Custodial/SupervisionSummary.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-14T04:44:05Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/MINOR-01-admin.md",
+              "command": "node scripts/replay/schema-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "100/100 on PGlite (Postgres 18.6), including 20 MINOR-01 checks; no hosted database."
+            },
+            {
+              "path": "docs/engineering/evidence/MINOR-01-admin.md",
+              "command": "cd apps/mobile && ../../node_modules/.bin/jest --watchman=false (MinorAccountsPanel, PrivacySafetyPanel, minors, guardianConsent tests)",
+              "result": "4 suites passed. No browser or device."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-14T04:50:17Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/MINOR-01-app.md",
+              "command": "pnpm check",
+              "result": "exit 0: 126 suites / 905 tests and every guard. No browser, device or hosted database."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "VERIFY-02",
+      "title": "Payee verification: SSN to Stripe only, guardian proof (Stripe + school, two admins), payout gate on the actual payee, two-admin payout override",
+      "owner": "CONNECT",
+      "status": "app-ready",
+      "plannedAt": "2026-10-14T05:10:40Z",
+      "exemption": null,
+      "source": {
+        "description": "Canonical sources: payee_verifications (append-only; never an SSN; looks_like_ssn CHECKs) and payout_flag_overrides; athlete_payout_status reads payee_missing_checks for the account that would be paid. Stripe collects SSN / tax ID in its hosted onboarding; record_stripe_kyc (server only) records yes/no results. A missing migration reads as not switched on. Plan: docs/engineering/design/PAYEE_VERIFICATION_PLAN.md.",
+        "paths": [
+          "supabase/migrations/20261014120000_payee_verification.sql",
+          "apps/mobile/src/frontend/lib/payeeVerification.ts",
+          "scripts/check-no-ssn.mjs"
+        ]
+      },
+      "admin": {
+        "route": "/admin/people",
+        "actions": [
+          "Read a person's payee picture: athletes, what is missing, check history, overrides",
+          "Record a school parent confirmation or document review (never about yourself)",
+          "Confirm another admin's relationship check",
+          "Revoke a check with a reason",
+          "Request or decide a payout override (independent second admin)"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/PayeeVerificationPanel.tsx",
+          "apps/mobile/src/frontend/components/Admin/PrivacySafetyPanel.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/people",
+        "metrics": [
+          "Payees verified by Stripe, parents confirmed, checks waiting for a second admin, Stripe needing more, failed checks in 30 days, overrides waiting; a failed read shows the error, never zero"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/PayeeVerificationPanel.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "No switch loosens these checks (they protect money); payouts stay blocked (503) until the Wave 1 payout path. Repairs: revoke a wrong check (reason), two-admin override of the transfers flag (reason, independent second admin).",
+        "paths": [
+          "supabase/migrations/20261014120000_payee_verification.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "server"
+        ],
+        "deniedBehavior": "No client reads or writes the records; only the server records Stripe results; an admin never records a check about themselves; relationship checks count only after an independent second admin confirms; the override's requester, subject and the athlete's guardian cannot decide it. Wrong-actor tests in scripts/replay/schema-replay.mjs.",
+        "paths": [
+          "supabase/migrations/20261014120000_payee_verification.sql"
+        ]
+      },
+      "app": {
+        "route": "/activity",
+        "paths": [
+          "apps/mobile/src/frontend/components/Verification/AthleteVerificationCard.tsx",
+          "apps/mobile/src/frontend/lib/redact.ts",
+          "apps/mobile/src/frontend/services/TelemetryManager.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-14T05:29:16Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/VERIFY-02-admin.md",
+              "command": "node scripts/replay/schema-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "111/111 on PGlite (Postgres 18.6), including 11 VERIFY-02 checks; no hosted database or Stripe."
+            },
+            {
+              "path": "docs/engineering/evidence/VERIFY-02-admin.md",
+              "command": "cd apps/mobile && ../../node_modules/.bin/jest --watchman=false (PayeeVerificationPanel, payeeVerification tests)",
+              "result": "2 suites, 6 tests passed. No browser or device."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-14T05:34:37Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/VERIFY-02-admin.md",
+              "command": "pnpm check",
+              "result": "exit 0: 129 suites / 914 tests and every guard including security:no-ssn. No device, browser, hosted database or Stripe."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "CHAL-01",
+      "title": "Workout challenges 1a on public Train Like Me posts: preset fan responses, friend invite nudges, private Challenge finisher badge, per-athlete switch (try videos are CHAL-01b, after the Vault lock-down)",
+      "owner": "HIGHLIGHTS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-16T00:33:51Z",
+      "exemption": null,
+      "source": {
+        "description": "CHAL-01a fixed self-report presets, accepted-friend activity invites and private noncash badges. All16 RPCs bind the canonical expected actor. Durable quota prevents removal churn; no try-video upload or reply hiding in1a. Design: docs/engineering/design/WORKOUT_CHALLENGES_DESIGN.md",
+        "paths": [
+          "supabase/migrations/20261016100000_workout_challenges.sql",
+          "packages/shared-types/challenges.ts",
+          "apps/mobile/src/frontend/lib/challenges.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/highlights",
+        "actions": [
+          "challenges.enabled switch (refused until PRIV-01 and MINOR-01 present); per-post aggregate counts; nudge-abuse view with mute / suspend and reasons; retention"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/WorkoutChallengesPanel.tsx",
+          "apps/mobile/src/frontend/components/Admin/HighlightsTool.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/highlights",
+        "metrics": [
+          "Bounded workout preset aggregates and invite counts per sender over selected days; private participant identities never a public ranking. No try-video count in1a."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/WorkoutChallengesPanel.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "challenges.enabled off hides counts and rejects responses/invites; own settings, mutes, badge and export remain accessible. No data deletion or quota refund.",
+        "paths": [
+          "supabase/migrations/20261016100000_workout_challenges.sql",
+          "apps/mobile/src/frontend/components/Admin/WorkoutChallengesPanel.tsx"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "signed-in eligible account",
+          "athlete (own challenge opt-in setting)"
+        ],
+        "deniedBehavior": "RPC-only; preset text only; friends-only nudges; blocks and mutes; counts hidden under 5 and athlete/guardian-only on minor athletes' posts; closed accounts refused.",
+        "paths": [
+          "supabase/migrations/20261016100000_workout_challenges.sql"
+        ]
+      },
+      "app": {
+        "route": "/beyond",
+        "paths": [
+          "apps/mobile/src/frontend/components/Challenges/ChallengeBar.tsx",
+          "apps/mobile/src/frontend/components/Challenges/ChallengeInbox.tsx",
+          "apps/mobile/src/frontend/components/Challenges/ChallengeSettings.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/CHAL-01-admin.md",
+              "command": "node scripts/replay/workout-challenges-replay.mjs /tmp/books01-pg/pkg/package/dist; scoped Jest panel+SDK --watchman=false --runInBand; mobile typecheck; actual independent Data/Development source review",
+              "result": "Real local PGlite42/42; final2suites31tests PASS, mobile typecheck EXIT0, reproduced known-closed and unavailable-success fixes independently rereviewed PASS. No hosted SQL, device, law or release certification."
+            }
+          ],
+          "date": "2026-10-16T01:43:56.059Z"
+        },
+        "app": {
+          "date": "2026-10-16T02:40:27.043Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/CHAL-01-app.md",
+              "command": "pnpm detection:scan; real canonical/reapply PGlite CHAL/Beyond replays; actual independent source/Data/SUPPORT and participant/navigation/role checks",
+              "result": "Local full scan EXIT0:148mobile suites/1188tests and86portaltests, both types/allguards; current realSQL CHAL46/46/Beyond57/57, independent frozen-source acceptance. No hosted/native/counsel/launch certification."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "BEYOND-01",
+      "title": "Beyond the Game: dedicated tab and reviewed fan photo/video contributions",
+      "owner": "HIGHLIGHTS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-16T01:26:03.800Z",
+      "exemption": null,
+      "source": {
+        "description": "Four categories, private moderated media, truthful creator identity and accepted audience; no arbitrary athlete/payee association. Existing visible Train/Serve clips can be discovered.",
+        "paths": [
+          "supabase/migrations/20261016120000_beyond_game.sql",
+          "packages/shared-types/beyondGame.ts",
+          "apps/mobile/src/frontend/lib/beyondGame.ts",
+          "apps/mobile/src/frontend/lib/beyondLegacy.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/highlights",
+        "actions": [
+          "Feature switch with dependency checks",
+          "Review pending posts with reasons",
+          "Reports and immediate hide, removal and private-object cleanup",
+          "Bounded queue and counts"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/BeyondGamePanel.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/highlights",
+        "metrics": [
+          "Pending/approved/removed submissions, media cleanup status and bounded category counts; no behavioral tracking or inferred donation outcomes"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/BeyondGamePanel.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Server feature switch defaults off; reject new posting/publication and mask unavailable participant data without deletion.",
+        "paths": [
+          "supabase/migrations/20261016120000_beyond_game.sql",
+          "apps/mobile/src/frontend/components/Admin/BeyondGamePanel.tsx"
+        ]
+      },
+      "access": {
+        "roles": [
+          "eligible signed-in account",
+          "accepted audience viewer",
+          "nonclosed authenticated admin"
+        ],
+        "deniedBehavior": "Pending posts private; teens friends-only; current account/privacy/block/closed and owned-file checks on every server/storage operation; no public URL fallback.",
+        "paths": [
+          "supabase/migrations/20261016120000_beyond_game.sql"
+        ]
+      },
+      "app": {
+        "route": "/beyond",
+        "paths": [
+          "apps/mobile/app/(tabs)/beyond.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameScreen.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameComposer.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameMedia.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/LegacyWorkoutList.tsx",
+          "apps/mobile/src/frontend/hooks/useBeyondLegacyClips.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-16T01:57:27.195Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/BEYOND-01-admin.md",
+              "command": "Real canonical+reapply beyond-game PGlite replay; scoped SDK/media/admin Jest --watchman=false --runInBand; mobile/shared types; actual independent Data/Engineering/SUPPORT/Infrastructure reviews",
+              "result": "Local real Postgres46/46 and root3suites25tests EXIT0; source/mobile/shared types0; erasure/retained-preview regressions independently resolved, exact canonical copy and separate reviewer receipts PASS. Hosted/native/counsel/signing/physical deletion not certified."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-16T02:40:27.043Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/BEYOND-01-app.md",
+              "command": "pnpm detection:scan; real canonical/reapply PGlite CHAL/Beyond replays; actual independent source/Data/SUPPORT and participant/navigation/role checks",
+              "result": "Local full scan EXIT0:148mobile suites/1188tests and86portaltests, both types/allguards; current realSQL CHAL46/46/Beyond57/57, independent frozen-source acceptance. No hosted/native/counsel/launch certification."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-06",
+      "title": "Beyond and workout presentation polish",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-10-16T03:05:43.976Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Compact existing category controls, token-based action variants and readable composer/history/legacy sections; factual admin publication fallback. No source, writes, permission, runtime, collection, reporting or business behavior changes.",
+        "reviewedBy": "Outside-session Codex engineering_review; legal_review preliminary safety review"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/beyond",
+        "paths": [
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameScreen.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameComposer.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameStyles.ts",
+          "apps/mobile/src/frontend/components/BeyondGame/LegacyWorkoutList.tsx",
+          "apps/mobile/src/frontend/components/Challenges/ChallengeControls.tsx",
+          "apps/mobile/src/frontend/components/Admin/AdminChrome.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-16T03:05:52.217Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-06.md",
+              "command": "Actual engineering_review presentation-only review, independent legal_review preliminary source review and selected planned gate before app edits",
+              "result": "Specific visual/control/copy exemption accepted; no data/business/permission/reporting duties changed. Actual source and 390x844 browser baseline reviewed; local planned gate passed for eight records. Final runtime/device/source checks remain pending."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-16T03:14:52.634Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-06.md",
+              "command": "pnpm detection:scan; targeted participant/Challenge/AdminChrome tests; actual Browser Bridge phone-width and visible category checks; independent six-file legal/content source review",
+              "result": "EXIT0:148 mobile suites/1188tests plus86 Next portal tests; full local gate passed. 390/320 category labels fit with44pixel targets and no overflow; visible Learning & STEM switch verified. Consent/privacy/account/retry/review safeguards preserved. Local presentation pass only: matched-state visual regression, populated composer, native/hosted/assistive-tech and broader Figma/admin work remain explicit gaps."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "SAFETY-01",
+      "title": "Coach-level move safety label for risky workouts",
+      "owner": "HIGHLIGHTS",
+      "status": "planned",
+      "plannedAt": "2026-10-16T15:11:26Z",
+      "exemption": null,
+      "source": {
+        "description": "Canonical safety_label (none | coach_level, default none) on reels and beyond_posts plus an append-only safety_label_events audit; uploader sets only on own new upload, admins change with a reason; RPC-only, RLS on, Closed accounts policy. Missing column or source error reads as unknown, never as unlabelled-safe.",
+        "paths": [
+          "supabase/migrations/20261017090000_coach_level_label.sql",
+          "apps/mobile/src/frontend/lib/safetyLabels.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/highlights",
+        "actions": [
+          "Review the label queue suggested by 'Risky without a coach' reports",
+          "Add or remove the Coach-level label with a recorded reason",
+          "See every label change with actor and time"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/SafetyLabelPanel.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/highlights",
+        "metrics": [
+          "Labelled clips and Beyond workout posts, open label suggestions and median review time for the selected UTC week on the existing Highlights desk; source failure shows unknown, not zero; no behavioural tracking"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/SafetyLabelPanel.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "A runtime flag hides the uploader switch and the report reason; labels already set keep showing because a safety notice is never switched off silently. Admins remove a wrong label with a reason; rollback in the migration header.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/safetyLabels.ts",
+          "supabase/migrations/20261017090000_coach_level_label.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "uploader of the new clip or post",
+          "nonclosed authenticated admin",
+          "every viewer (read the label)"
+        ],
+        "deniedBehavior": "Uploaders cannot change a label after publishing or on someone else's clip; guests and fans cannot write labels; reports only suggest. Server RPCs check actor, ownership and closed accounts; wrong-actor tests required.",
+        "paths": [
+          "supabase/migrations/20261017090000_coach_level_label.sql"
+        ]
+      },
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/mobile/src/frontend/components/Reels/CoachLevelBadge.tsx",
+          "apps/mobile/src/frontend/components/Reels/UploadVideoComposer.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameComposer.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": null,
+        "app": null
+      }
+    }
+  ]
+}

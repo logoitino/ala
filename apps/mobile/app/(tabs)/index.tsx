@@ -25,7 +25,9 @@ import { useUploadSheet } from '@/context/UploadSheetContext';
 import { FOCAL, SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
 import {
   HIGHLIGHT_CLIPS,
+  HIGHLIGHT_FEED_BEYOND,
   HIGHLIGHT_FEED_HOME,
+  isBeyondHighlight,
   isSekiHighlight,
   pinFeedOrder,
   rankHomeFeed,
@@ -51,12 +53,12 @@ type FeedItem = {
   player: Player | null;
 };
 
-const FEED_PILLS: { id: HighlightFeedFilter; label: string }[] = [
-  { id: 'home', label: HIGHLIGHT_FEED_HOME },
-];
+const HOME_PILL: { id: HighlightFeedFilter; label: string } = { id: 'home', label: HIGHLIGHT_FEED_HOME };
+/** Beyond sits beside Home (owner 2026-10-16): athletes' workout and service Highlights in the same pager. */
+const BEYOND_PILL: { id: HighlightFeedFilter; label: string } = { id: 'beyond', label: HIGHLIGHT_FEED_BEYOND };
 
 /**
- * @purpose Full-screen Home feed: Home mix, clip + athlete search, and a Local jump. All and Seki stay off the bar until a later pass. Exclusive mute/Aura gestures, live score banner, donation sheet, Player of the Week spotlight. A guest can watch the opened Highlight and two more swipes, then the account sheet. Pages ride `ReelPage` for card-deck depth on vertical paging and swipe left / right to peek the athlete who owns the clip.
+ * @purpose Full-screen Home feed: Home mix, a Beyond switch (workout + service Highlights, with a link to the Beyond the Game page for fan posts), clip + athlete search, and a Local jump. All and Seki stay off the bar until a later pass. Exclusive mute/Aura gestures, live score banner, donation sheet, Player of the Week spotlight. A guest can watch the opened Highlight and two more swipes, then the account sheet. Pages ride `ReelPage` for card-deck depth on vertical paging and swipe left / right to peek the athlete who owns the clip.
  * @sideEffects `useReels` fetch; `crew_follows` for Home ranking; `clearVideoCacheAsync` on mount; `get_active_spotlight_award` launch popup; `MaloTipModal` PaymentSheet; hide list after Report; Reanimated scroll handler feeds the pager depth math.
  */
 export default function HighlightsTab() {
@@ -68,7 +70,7 @@ export default function HighlightsTab() {
   const { user, profile, loading: authLoading, isGuest } = useAuth();
   const { live: runtime } = useAppRuntime();
   const { requireAuth, visible: accountSheetOpen } = useSoftWall();
-  const { subscribeUploaded } = useUploadSheet();
+  const { subscribeUploaded, openUpload } = useUploadSheet();
   const { players, applyBackerCount } = useRoster();
   const { reels, refresh, setReels, applyReelHype, applyReelTips } = useReels();
   const { receipts } = useFanTipHistory();
@@ -84,6 +86,11 @@ export default function HighlightsTab() {
   const [tipTarget, setTipTarget] = useState<{ player: Player; reelId?: string } | null>(null);
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const [feedFilter, setFeedFilter] = useState<HighlightFeedFilter>('home');
+  const feedPills = useMemo(() => (runtime.tabs.beyond ? [HOME_PILL, BEYOND_PILL] : [HOME_PILL]), [runtime.tabs.beyond]);
+  // A published pause of Beyond drops a fan on the Beyond switch back to Home.
+  useEffect(() => {
+    if (!runtime.tabs.beyond && feedFilter === 'beyond') setFeedFilter('home');
+  }, [feedFilter, runtime.tabs.beyond]);
   const [pendingClipId, setPendingClipId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -160,7 +167,9 @@ export default function HighlightsTab() {
     const ranked =
       feedFilter === 'seki'
         ? current.filter((item) => isSekiHighlight(item.clip))
-        : feedFilter === 'home'
+        : feedFilter === 'beyond'
+          ? current.filter((item) => isBeyondHighlight(item.clip))
+          : feedFilter === 'home'
           ? rankHomeFeed(current, homeContext)
           : current;
     return ranked.map((item) => item.clip.id);
@@ -172,6 +181,7 @@ export default function HighlightsTab() {
   const feedCounts = useMemo<Record<HighlightFeedFilter, number>>(
     () => ({
       home: rankHomeFeed(clips, homeContext).length,
+      beyond: clips.filter((item) => isBeyondHighlight(item.clip)).length,
       all: clips.length,
       seki: clips.filter((item) => isSekiHighlight(item.clip)).length,
     }),
@@ -428,7 +438,9 @@ export default function HighlightsTab() {
   };
 
   const emptyCopy =
-    feedFilter === 'seki'
+    feedFilter === 'beyond'
+      ? 'No workout or service clips yet. Share one, or post your own moment on Beyond the Game.'
+      : feedFilter === 'seki'
       ? 'No Seki plays in the feed yet.'
       : feedFilter === 'home'
         ? 'Your Home mix is quiet. Follow athletes in Crew.'
@@ -447,6 +459,19 @@ export default function HighlightsTab() {
         ) : feed.length === 0 ? (
           <View style={styles.boot}>
             <Text style={styles.empty}>{emptyCopy}</Text>
+            {feedFilter === 'beyond' ? (
+              <View style={styles.emptyActions}>
+                {runtime.tabs.upload ? (
+                  <AnimatedButton haptic="light" accessibilityRole="button" accessibilityLabel="Share a clip" contentStyle={styles.emptyPrimary} onPress={openUpload}>
+                    <Ionicons name="add" size={18} color="#FFFFFF" />
+                    <Text style={styles.emptyPrimaryLabel}>Share a clip</Text>
+                  </AnimatedButton>
+                ) : null}
+                <AnimatedButton haptic="selection" accessibilityRole="link" accessibilityLabel="Open Beyond the Game" contentStyle={styles.emptySecondary} onPress={() => router.push('/beyond')}>
+                  <Text style={styles.emptySecondaryLabel}>Open Beyond the Game</Text>
+                </AnimatedButton>
+              </View>
+            ) : null}
           </View>
         ) : (
           <Animated.FlatList
@@ -615,7 +640,7 @@ export default function HighlightsTab() {
             ) : (
               <View style={styles.feedSwitch} accessibilityRole="tablist" accessibilityLabel="Home feed">
                 <Animated.View pointerEvents="none" style={[styles.feedIndicator, feedIndicatorStyle]} />
-                {FEED_PILLS.map((item) => {
+                {feedPills.map((item) => {
                   const on = feedFilter === item.id;
                   const count = feedCounts[item.id];
                   return (
@@ -668,6 +693,21 @@ export default function HighlightsTab() {
               </View>
             )}
           </View>
+          {feedFilter === 'beyond' && runtime.tabs.beyond && !searchOpen ? (
+            <AnimatedButton
+              haptic="selection"
+              accessibilityRole="link"
+              accessibilityLabel="Open Beyond the Game: fan workouts, service, learning and stories"
+              contentStyle={styles.beyondLink}
+              onPress={() => {
+                trackFeature('feed.beyond_page');
+                router.push('/beyond');
+              }}
+            >
+              <Text style={styles.beyondLinkLabel}>Fan workouts, service, learning and stories</Text>
+              <Ionicons name="chevron-forward" size={13} color={colors.onVideo} />
+            </AnimatedButton>
+          ) : null}
           <SlangGuideBanner />
         </View>
         <HomeSearchOverlay
@@ -808,6 +848,54 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  emptyActions: {
+    marginTop: 18,
+    gap: 10,
+    alignItems: 'center',
+  },
+  emptyPrimary: {
+    minHeight: 44,
+    paddingHorizontal: 20,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: FOCAL.jadeInk,
+  },
+  emptyPrimaryLabel: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  emptySecondary: {
+    minHeight: 44,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.onVideoMuted,
+  },
+  emptySecondaryLabel: {
+    color: colors.onVideo,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  beyondLink: {
+    alignSelf: 'flex-start',
+    minHeight: 32,
+    marginTop: 8,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.videoScrim,
+  },
+  beyondLinkLabel: {
+    color: colors.onVideo,
+    fontSize: 12,
+    fontWeight: '700',
   },
   feedSwitch: {
     flexGrow: 0,

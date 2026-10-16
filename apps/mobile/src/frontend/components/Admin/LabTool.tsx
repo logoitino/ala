@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
 import {
@@ -10,33 +10,32 @@ import {
   AdminPublishBar,
   AdminRow,
   AdminSectionTitle,
+  ADMIN_REPORT_COLORS,
 } from '@/components/Admin/AdminChrome';
-import { colors, radii } from '@/constants/theme';
+import { radii } from '@/constants/theme';
+const colors = ADMIN_REPORT_COLORS;
 import { useAppRuntime } from '@/context/AppRuntimeContext';
-import { fetchAdminOpsInbox } from '@/lib/adminCatalog';
-import { fetchAdminTelemetryDigest } from '@/lib/admin';
 import { fetchAppFeedback, type AppFeedback } from '@/lib/feedback';
-import { EMPTY_COMPANY_REVENUE, fetchCompanyRevenueSummary, type CompanyRevenueSummary } from '@/lib/finance';
 import { applyFeedbackToDraft, parseLabRuntimeJson } from '@/lib/runtime';
-import { formatTipDollars } from '@/lib/reels';
-import { FOCAL } from '@/theme/motion';
 
 /**
  * @purpose Engineer Lab: validated runtime JSON + apply a triaged suggestion, then the same Publish to app.
- * @sideEffects `patch_app_runtime_draft` / `publish_app_runtime`; reads feedback, telemetry, revenue, pending tags.
+ * @sideEffects `patch_app_runtime_draft` / `publish_app_runtime`; reads focused feedback only.
  */
 export function LabTool() {
   const router = useRouter();
+  const { width, fontScale } = useWindowDimensions();
+  const wide = width >= 1100 && fontScale <= 1.3;
   const params = useLocalSearchParams<{ feedbackId?: string | string[] }>();
   const feedbackId = Array.isArray(params.feedbackId) ? params.feedbackId[0] : params.feedbackId;
   const { draft, published, pendingCount, saveDraft } = useAppRuntime();
   const [json, setJson] = useState(() => JSON.stringify(draft, null, 2));
   const [parseError, setParseError] = useState<string | null>(null);
   const [queue, setQueue] = useState<AppFeedback[]>([]);
-  const [revenue, setRevenue] = useState<CompanyRevenueSummary>(EMPTY_COMPANY_REVENUE);
-  const [stalls, setStalls] = useState(0);
-  const [pendingTags, setPendingTags] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [readError, setReadError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
 
   const draftRef = useRef(draft);
   draftRef.current = draft;
@@ -44,16 +43,12 @@ export function LabTool() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [rows, digest, money, inbox] = await Promise.all([
-        fetchAppFeedback(),
-        fetchAdminTelemetryDigest(),
-        fetchCompanyRevenueSummary(),
-        fetchAdminOpsInbox(),
-      ]);
-      setQueue(rows.filter((row) => row.status === 'planned' || row.status === 'shipping' || row.id === feedbackId));
-      setStalls(digest.stalls);
-      setRevenue(money);
-      setPendingTags(inbox.pendingTags);
+      setReadError(null);
+      const rows = await fetchAppFeedback({ strict: true });
+      setQueue(rows.filter(row => row.status === 'planned' || row.status === 'shipping' || row.id === feedbackId));
+    } catch (caught) {
+      setQueue([]);
+      setReadError(caught instanceof Error ? caught.message : 'Could not read feedback.');
     } finally {
       setLoading(false);
     }
@@ -70,6 +65,8 @@ export function LabTool() {
   const unpublished = pendingCount;
 
   const applyJson = async () => {
+    if (savingRef.current) return;
+    savingRef.current = true; setSaving(true);
     try {
       const next = parseLabRuntimeJson(json);
       setParseError(null);
@@ -77,14 +74,18 @@ export function LabTool() {
       setJson(JSON.stringify(next, null, 2));
     } catch (caught) {
       setParseError(caught instanceof Error ? caught.message : 'Could not parse this draft.');
-    }
+    } finally { savingRef.current = false; setSaving(false); }
   };
 
   const applyRow = async (row: AppFeedback) => {
-    const next = applyFeedbackToDraft(draft, row);
-    await saveDraft(next);
-    setJson(JSON.stringify(next, null, 2));
-    setParseError(null);
+    if (savingRef.current) return;
+    savingRef.current = true; setSaving(true);
+    try {
+      const next = applyFeedbackToDraft(draft, row);
+      await saveDraft(next);
+      setJson(JSON.stringify(next, null, 2)); setParseError(null);
+    } catch (caught) { setParseError(caught instanceof Error ? caught.message : 'Could not save feedback to draft.'); }
+    finally { savingRef.current = false; setSaving(false); }
   };
 
   const prettyDiff = useMemo(() => {
@@ -97,31 +98,17 @@ export function LabTool() {
   return (
     <AdminPage
       title="Lab"
-      lede="Edit the live chrome draft as JSON. This is not a git IDE — Publish to app ships the same runtime map Features and Look write."
+      lede="Validate a JSON draft or apply planned feedback to the same App setup configuration."
       saveMode="publish"
+      error={readError}
       refreshing={loading}
       onRefresh={() => void refresh()}
     >
       <AdminPublishBar note="Fans still see published until you hit Publish to app." />
       <Text style={styles.body}>{prettyDiff}</Text>
 
-      <View style={styles.health}>
-        <AdminSectionTitle>Health (read-only)</AdminSectionTitle>
-        <AdminRow title={`QA stalls · ${stalls}`} meta="Open QA for the stall table">
-          <AdminBtn label="QA" onPress={() => router.push('/admin/qa')} />
-        </AdminRow>
-        <AdminRow
-          title={`Gross ${formatTipDollars(revenue.gross_volume_cents)} · net ${formatTipDollars(revenue.company_net_cents)}`}
-          meta="Open Money for the full ledger"
-        >
-          <AdminBtn label="Money" onPress={() => router.push('/admin/money')} />
-        </AdminRow>
-        <AdminRow title={`Pending tags · ${pendingTags}`} meta="That's them queue on Spotlight">
-          <AdminBtn label="Spotlight" onPress={() => router.push('/admin/spotlight')} />
-        </AdminRow>
-      </View>
-
-      <View style={styles.editor}>
+      <View style={[styles.workspace, { flexDirection: wide ? 'row' : 'column' }]}>
+      <View style={[styles.editor, wide && styles.editorWide]}>
         <AdminSectionTitle>Draft JSON</AdminSectionTitle>
         <Text style={styles.body}>Unknown keys and invalid theme hex are rejected. Nested objects merge onto the default map.</Text>
         <TextInput
@@ -137,19 +124,19 @@ export function LabTool() {
           style={styles.json}
         />
         {parseError ? <AdminNotice text={parseError} tone="danger" /> : null}
-        <AdminBtn label="Save JSON to draft" kind="primary" onPress={() => void applyJson()} />
+        <AdminBtn label={saving ? "Saving…" : "Save JSON to draft"} disabled={saving} kind="primary" onPress={() => void applyJson()} />
       </View>
 
-      <View style={styles.editor}>
+      <View style={[styles.editor, wide && styles.editorWide]}>
         <AdminSectionTitle>Apply this feedback</AdminSectionTitle>
-        {focused ? (
+        {loading ? <Text style={styles.body}>Reading planned feedback…</Text> : readError ? <Text style={styles.body}>Feedback is not in this read.</Text> : focused ? (
           <>
             <Text style={styles.body}>{focused.body}</Text>
             <Text style={styles.meta}>
               {focused.status}
               {focused.runtime_path ? ` · ${focused.runtime_path}` : ' · no path — becomes Home banner'}
             </Text>
-            <AdminBtn label="Apply this feedback" kind="primary" onPress={() => void applyRow(focused)} />
+            <AdminBtn label="Apply this feedback" disabled={saving} kind="primary" onPress={() => void applyRow(focused)} />
           </>
         ) : (
           <AdminEmpty text="No planned or shipping suggestions. Pin a runtime path on Feedback first." />
@@ -158,9 +145,11 @@ export function LabTool() {
           .filter((row) => row.id !== focused?.id)
           .map((row) => (
             <AdminRow key={row.id} title={row.body} meta={`${row.status}${row.runtime_path ? ` · ${row.runtime_path}` : ''}`}>
-              <AdminBtn label="Apply" onPress={() => void applyRow(row)} />
+              <AdminBtn label="Apply" disabled={saving} onPress={() => void applyRow(row)} />
             </AdminRow>
           ))}
+        <AdminBtn label="Full feedback queue" onPress={() => router.push('/admin/feedback')} />
+      </View>
       </View>
     </AdminPage>
   );
@@ -174,33 +163,21 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   meta: {
-    color: FOCAL.electricGold,
+    color: colors.electricGold,
     fontSize: 12,
     fontWeight: '700',
   },
-  health: {
-    gap: 10,
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 14,
-  },
-  editor: {
-    gap: 10,
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 14,
-  },
+  workspace: { gap: 28, alignItems: 'flex-start', minWidth: 0 },
+  // Column editors keep their full content height; flex:1 would shrink the JSON block into feedback.
+  editor: { gap: 10, flexShrink: 0, width: '100%', minWidth: 0, paddingVertical: 14, borderTopWidth: 1, borderColor: colors.border },
+  editorWide: { flex: 1 },
   json: {
     minHeight: 280,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.videoSurface,
-    color: colors.onVideo,
+    backgroundColor: '#151c23',
+    color: '#ffffff',
     padding: 12,
     fontSize: 12,
     fontWeight: '600',

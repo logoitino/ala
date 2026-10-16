@@ -9,6 +9,7 @@ import {
   parseBirthDateInput,
   parseDollarInput,
   pendingRequests,
+  receivedLines,
 } from '@/lib/custodial';
 import { formatTipDollars } from '@/lib/reels';
 
@@ -138,7 +139,8 @@ export function GuardianCustodialCard({ playerId }: { playerId: string }) {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>{name}</Text>
-      <Text style={styles.total}>{formatTipDollars(summary.receivedCents)} received</Text>
+      <Text style={styles.total}>{receivedLines(summary.receivedCents, summary.familyCents, formatTipDollars).headline}</Text>
+      <Text style={styles.body}>{receivedLines(summary.receivedCents, summary.familyCents, formatTipDollars).detail}</Text>
       <Text style={styles.body}>
         You hold this for {name} until {formatHandoverDate(summary.handoverDate)}. After that it is
         theirs to move.

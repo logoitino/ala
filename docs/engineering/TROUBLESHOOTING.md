@@ -19,6 +19,57 @@ Or `cd apps/mobile && pnpm start`. Reload Expo Go. Do not use `npx expo start` a
 
 ---
 
+## 0b. Expo CSS error: `Cannot find module '../lightningcss.darwin-arm64.node'`
+
+Lightning CSS first loads its platform package. Its loader catches **any** error from
+that load and then tries a fallback file; the fallback error can hide a macOS `dlopen`
+or quarantine problem. Diagnose the platform package from Expo's dependency context,
+not an unrelated copy at the workspace root:
+
+```bash
+node - <<'NODE'
+const { createRequire } = require('node:module');
+const path = require('node:path');
+const app = createRequire(path.resolve('apps/mobile/package.json'));
+const metro = createRequire(app.resolve('@expo/metro-config'));
+const css = createRequire(metro.resolve('lightningcss'));
+const binding = css.resolve(`lightningcss-${process.platform}-${process.arch}`);
+console.log(process.version, process.platform, process.arch, binding);
+require(binding); // Exposes the original native loading error.
+console.log(metro('lightningcss').transform({
+  filename: 'launch-check.css', code: Buffer.from('.card { display: flex; }'),
+}).code.toString());
+NODE
+```
+
+If the resolved file has `com.apple.quarantine`, inspect it with `xattr -l` and remove
+that attribute from the specific trusted installed file with
+`xattr -d com.apple.quarantine <resolved-file>`. Do not clear attributes across the
+workspace or replace a binary with a different package version. A genuinely absent
+binding needs the matching platform package; a successful transform needs a fresh
+Metro process rather than an unproven reinstall.
+
+Stop the old Metro process, then run from the repo root:
+
+```bash
+pnpm --filter @tapuai/mobile start --clear
+```
+
+**2026-10-12 evidence:** both installed Lightning CSS versions loaded and transformed
+CSS before repair, so the historical first error was not reproduced. Seven installed
+native files had regained Firefox quarantine, which was removed narrowly. Fresh
+Metro with the current packages served web and iOS bundles and the browser rendered
+the app shell. Restart after replacing `node_modules`; an earlier cleanup does not
+survive replacement files. See [AUDIT_REPORT.md](AUDIT_REPORT.md) for verification limits.
+
+**2026-10-13 recheck:** the current Expo/Metro dependency-context transform and fresh
+Metro worker transforms for global CSS and CSS modules pass. The matching 1.33.0
+ARM64 binding has a valid signature and no quarantine attribute. No package reinstall
+or attribute removal was needed for PLAY-01; do not infer a missing binary from an old
+screenshot when the current binding works.
+
+---
+
 ## 1. Empty roster / “No player found”
 
 **Cause:** RLS without a public `SELECT` on `players`, missing seed rows, or the wrong athlete route (`/player/:id` vs `/athlete/:id`).
@@ -58,6 +109,31 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 **Cause:** `expo-av` player or `useCaching: true` on `expo-video`.
 
 **Fix:** Playback through `expo-video` only. The app already calls `clearVideoCacheAsync` on the Reel tab. `expo-av` may remain in `package.json` — do not import it for the feed.
+
+---
+
+## 4a. Browsing errors: aborted play / unsuitable media
+
+**Two separate failures:** Expo Video 57.0.5 web discards the promise from DOM
+`video.play()`, including replacement/replay/follower calls. Rapid pause/replacement
+can reject that promise with AbortError; unsupported media can reject it with
+NotSupportedError and emit media error 4. A caller's try/catch around public
+`player.play(): void` cannot catch a discarded asynchronous rejection.
+
+PLAY-01 registers a versioned web-only dependency patch through root pnpm
+`patchedDependencies`. `pnpm install --frozen-lockfile` reapplies it; do not remove
+the patch or copy arbitrary binaries over installed packages. Reassess the patch on
+an Expo Video upgrade. The app serializes replacement and checks current-source
+readiness/focus before playback; failures show **This Highlight couldn't play.**
+and **Retry**. Expected pause/replace aborts and browser autoplay refusal are
+nonfatal; actual source failures remain visible. There is no global error suppression.
+
+Use a valid local video to distinguish lifecycle failure from invalid hosted media.
+Retry cannot fix a missing, corrupt or unsupported file. The existing hosted legacy
+clip emitted browser media error 4 in this pass; its current response metadata and
+codec were not inspected because automatic approval review blocked that separate
+probe. Route hosted file validation/replacement to STORAGE without claiming that
+the player patch repairs the object. Evidence: [PLAY-01](../agents/PLAY-01.md).
 
 ---
 
@@ -122,3 +198,11 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 **Cause:** RLS blocking `games` UPDATE, or not on `/operator/console/[gameId]`.
 
 **Fix:** Demo policies allow `anon` updates (see `schema.sql`). Confirm `EXPO_PUBLIC_SUPABASE_*` and that the claimed game `id` matches. PIN is `OPERATOR_TEST_PIN` in `apps/mobile/src/frontend/lib/operator.ts`.
+
+---
+
+## 11. Workout challenges say "not switched on" (CHAL-01)
+
+**Cause, in order:** (1) `supabase/migrations/20261016100000_workout_challenges.sql` is not applied, so the Highlights desk → Workout challenges panel and every challenge call say "not switched on"; (2) it is applied but the admin switch `challenges.enabled` is off (the default; counts return `enabled: false`, Activity shows no invites); (3) the switch is refused: the panel lists what is missing — PRIV-01 (`20261014090000`) and MINOR-01 (`20261014110000`) objects, the guardian summary count or the "Closed accounts" policy on the challenge tables.
+
+**Fix:** Apply PRIV-01 and MINOR-01 first. If the challenges file went in before them, run it again (it is safe to re-run) so it adds the guardian summary count and the "Closed accounts" policy; the switch then accepts. Switch on from Highlights → Workout challenges with a reason. A post still shows no chips when it is Vault, Exclusive, not Train Like Me, removed, its tag is not approved, the athlete has no verified account, or the athlete has challenges off (off by default for minors) — `challenge_counts` returns that reason. An invite that "sent" but never arrived was dropped on purpose (the friend muted the sender, a block, or an admin hold); the sender is never told. Replay: `node scripts/replay/workout-challenges-replay.mjs <pglite dist>`.

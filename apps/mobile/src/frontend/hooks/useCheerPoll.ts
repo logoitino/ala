@@ -1,6 +1,7 @@
 /**
  * School Polls: load the active polls, remember which side a fan chose (AsyncStorage) and cast a vote.
- * @sideEffects `cheer_polls` read; `cast_cheer_vote` RPC.
+ * Database reads, the live channel and the vote call all go through `lib/cheerPoll`.
+ * @sideEffects `cheer_polls` read and Realtime; `cast_cheer_vote` RPC (all through lib/).
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -8,7 +9,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 
 import { fetchActiveCheerPollCards } from '@/lib/adminCatalog';
-import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
+import { castCheerVote, fetchCheerPollRow, subscribeCheerPoll } from '@/lib/cheerPoll';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export type CheerSide = 'home' | 'away';
 
@@ -90,29 +92,17 @@ export function useCheerPoll(slug: string, homeLabel: string, awayLabel: string)
     if (!isSupabaseConfigured) return;
 
     const load = async () => {
-      const { data, error } = await supabase.from('cheer_polls').select('*').eq('slug', slug).maybeSingle();
-      if (!mountedRef.current || error || !data) return;
-      setPoll(parsePoll(data as Record<string, unknown>, seed));
+      const row = await fetchCheerPollRow(slug);
+      if (!mountedRef.current || !row) return;
+      setPoll(parsePoll(row, seed));
     };
 
     void load();
 
-    const channel = supabase
-      .channel(nextRealtimeTopic(`cheer_poll_${slug}`))
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'cheer_polls', filter: `slug=eq.${slug}` },
-        (payload) => {
-          const next = payload.new as Record<string, unknown> | null;
-          if (!mountedRef.current || !next) return;
-          setPoll(parsePoll(next, seed));
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return subscribeCheerPoll(slug, (next) => {
+      if (!mountedRef.current) return;
+      setPoll(parsePoll(next, seed));
+    });
   }, [seed, slug]);
 
   const vote = useCallback(
@@ -148,23 +138,7 @@ export function useCheerPoll(slug: string, homeLabel: string, awayLabel: string)
         return true;
       }
 
-      let { data, error } = await supabase.rpc('cast_cheer_vote', {
-        poll_slug: slug,
-        side,
-        previous_side: previous,
-        home_name: homeLabel,
-        away_name: awayLabel,
-      });
-
-      if (error) {
-        const retry = await supabase.rpc('cast_cheer_vote', {
-          poll_slug: slug,
-          side,
-          previous_side: previous,
-        });
-        data = retry.data;
-        error = retry.error;
-      }
+      const { data, error } = await castCheerVote({ slug, side, previousSide: previous, homeName: homeLabel, awayName: awayLabel });
 
       if (error && shouldQueueOffline(error, offlineQueue.getIsConnected())) {
         await offlineQueue.enqueue(payload);

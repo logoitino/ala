@@ -17,24 +17,24 @@ import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
-import { LegalAckToggle } from '@/components/Legal/LegalModal';
+import { BirthMonthField, type BirthDraft } from '@/components/Auth/BirthMonthField';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { COMPLIANCE_ACCOUNT } from '@/data/legal';
-import { DEMO_FAN_EMAIL, DEMO_FAN_PASSWORD, demoFanSignInAvailable, softWallEmailGates } from '@/lib/auth';
+import { DEMO_FAN_EMAIL, DEMO_FAN_PASSWORD, demoFanSignInAvailable, signUpBirthProblem, softWallEmailGates, type BirthMonth } from '@/lib/auth';
+import { AGE_GATE_REFUSAL, isAgeGatePaused, pauseAgeGate } from '@/lib/minors';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 
-const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
 const SHEET_TRAVEL = 480;
 
 type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | 'signup' | null;
 
 /**
- * @purpose Account sheet when a guest uploads, keeps swiping Highlights, donates, joins Crew, or starts a gear goal. Sign-in stays Apple, Google, email, and password. Creating an account is a second step and is where the 13+ confirmation lives. Resumes the stashed action after sign-in.
+ * @purpose Account sheet when a guest uploads, keeps swiping Highlights, donates, joins Crew, or starts a gear goal. Sign-in stays Apple, Google, email, and password. Creating an account is a second step and is where the birth month and year live (MINOR-01: an under-13 date gets a neutral refusal and pauses account creation on this device for 24 hours). Resumes the stashed action after sign-in.
  * @sideEffects Email/password, Apple / Google / Magic Link / Demo Fan via AuthContext; telemetry `auth.*`.
  */
 export function SoftWallModal() {
@@ -51,7 +51,8 @@ export function SoftWallModal() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<'signin' | 'create'>('signin');
-  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [birth, setBirth] = useState<BirthDraft>({ year: null, month: null });
+  const [agePaused, setAgePaused] = useState(false);
   const [busy, setBusy] = useState<AuthBusy>(null);
   // `disabled={busy}` only lands on the next render; this blocks a second tap in the same frame.
   const running = useRef(false);
@@ -67,7 +68,7 @@ export function SoftWallModal() {
       setEmail('');
       setPassword('');
       setMode('signin');
-      setAgeConfirmed(false);
+      setBirth({ year: null, month: null });
       setBusy(null);
       setMessage(null);
       setError(null);
@@ -105,7 +106,7 @@ export function SoftWallModal() {
 
   const body =
     mode === 'create'
-      ? 'Use your email. Confirm you are 13 or older.'
+      ? 'Use your email and your birth month and year.'
       : intent?.kind === 'upload'
         ? 'An account is required to post a Highlight.'
         : intent?.kind === 'browse'
@@ -121,7 +122,20 @@ export function SoftWallModal() {
 
   // Sign in is deliberately not age-gated; Create account and magic link are. See
   // `softWallEmailGates` for why.
-  const { canSignIn, canCreate, canMagic } = softWallEmailGates(email, password, ageConfirmed);
+  const birthValue: BirthMonth | null = birth.year && birth.month ? { year: birth.year, month: birth.month } : null;
+  const gates = softWallEmailGates(email, password, birthValue);
+  const canSignIn = gates.canSignIn;
+  const canCreate = gates.canCreate && !agePaused;
+  const canMagic = gates.canMagic && !agePaused;
+
+  // An under-13 date: the same neutral line every time, and no more tries on this device for a day.
+  const refuseUnder13 = async (): Promise<boolean> => {
+    if (signUpBirthProblem(birthValue) !== AGE_GATE_REFUSAL) return false;
+    await pauseAgeGate();
+    setAgePaused(true);
+    setError(AGE_GATE_REFUSAL);
+    return true;
+  };
 
   const run = async (kind: Exclude<AuthBusy, null>, work: () => Promise<void>) => {
     if (running.current) return;
@@ -257,25 +271,21 @@ export function SoftWallModal() {
                 />
                 {mode === 'create' ? (
                   <>
-                    <LegalAckToggle
-                      checked={ageConfirmed}
-                      onCheckedChange={setAgeConfirmed}
-                      disabled={Boolean(busy)}
-                      label={AGE_GATE_LABEL}
-                    />
+                    <BirthMonthField value={birth} onChange={setBirth} disabled={Boolean(busy) || agePaused} />
                     <Text style={styles.demoHint}>{COMPLIANCE_ACCOUNT}</Text>
                     <AnimatedButton
                       accessibilityLabel="Create an account with email and password"
                       disabled={Boolean(busy) || !canCreate}
                       haptic="medium"
-                      onPress={() =>
-                        void run('signup', async () => {
-                          const signedIn = await signUpWithEmailPassword(email, password, ageConfirmed);
+                      onPress={() => void (async () => {
+                        if (!birthValue || (await refuseUnder13())) return;
+                        await run('signup', async () => {
+                          const signedIn = await signUpWithEmailPassword(email, password, birthValue);
                           if (!signedIn) {
                             setMessage('Account created. Confirm the email, then sign in.');
                           }
-                        })
-                      }
+                        });
+                      })()}
                       contentStyle={[
                         styles.providerBtn,
                         styles.magicBtn,
@@ -292,7 +302,10 @@ export function SoftWallModal() {
                       accessibilityLabel="Send magic link email"
                       disabled={Boolean(busy) || !canMagic}
                       haptic="selection"
-                      onPress={() => void run('magic', () => signInWithMagicLink(email, ageConfirmed))}
+                      onPress={() => void (async () => {
+                        if (!birthValue || (await refuseUnder13())) return;
+                        await run('magic', () => signInWithMagicLink(email, birthValue));
+                      })()}
                       contentStyle={[styles.providerBtn, styles.secondaryBtn, (busy || !canMagic) && styles.disabled]}
                     >
                       {busy === 'magic' ? (
@@ -348,6 +361,12 @@ export function SoftWallModal() {
                   setError(null);
                   setMessage(null);
                   setMode(mode === 'create' ? 'signin' : 'create');
+                  if (mode !== 'create') {
+                    void isAgeGatePaused().then((paused) => {
+                      setAgePaused(paused);
+                      if (paused) setError(AGE_GATE_REFUSAL);
+                    });
+                  }
                 }}
                 style={styles.close}
               >

@@ -42,6 +42,11 @@ export const REEL_REACTIONS = [
 
 type ReelActionOverlayProps = {
   athleteName: string;
+  /**
+   * The athlete tag's state (PRIV-01): an approved tag shows a solid ✓ chip, a pending one a grey dashed "Tag
+   * pending" chip, so viewers can tell them apart. Omitted: no chip.
+   */
+  tagState?: 'approved' | 'pending';
   schoolName?: string;
   /** Actual roster context only; unknown jersey/position values remain absent. */
   jerseyNumber?: number | null;
@@ -84,6 +89,7 @@ type ReelActionOverlayProps = {
  */
 export function ReelActionOverlay({
   athleteName,
+  tagState,
   schoolName,
   jerseyNumber,
   position,
@@ -237,6 +243,14 @@ export function ReelActionOverlay({
             {athleteName}
           </Text>
         </Pressable>
+        {tagState ? (
+          <View style={[styles.tagChip, tagState === 'approved' ? styles.tagChipApproved : styles.tagChipPending]}
+            accessibilityLabel={tagState === 'approved' ? `${athleteName} approved this tag` : 'Tag waiting for the athlete to approve'}>
+            <Text style={[styles.tagChipLabel, tagState === 'pending' && styles.tagChipLabelPending]}>
+              {tagState === 'approved' ? '✓ Tagged' : 'Tag pending'}
+            </Text>
+          </View>
+        ) : null}
         {rosterDetails ? <Text style={styles.rosterDetails} numberOfLines={2}>{rosterDetails}</Text> : null}
         {rail.showSchool && schoolName ? (
           <Text style={styles.school} numberOfLines={2}>
@@ -518,6 +532,11 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
+  tagChip: { alignSelf: 'flex-start', marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, borderWidth: 1 },
+  tagChipApproved: { backgroundColor: 'rgba(0,115,60,0.92)', borderColor: 'rgba(0,115,60,0.92)' },
+  tagChipPending: { backgroundColor: 'rgba(0,0,0,0.35)', borderColor: 'rgba(243,251,247,0.7)', borderStyle: 'dashed' },
+  tagChipLabel: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
+  tagChipLabelPending: { color: 'rgba(243,251,247,0.9)' },
   school: {
     color: 'rgba(243,251,247,0.82)',
     fontSize: 12,

@@ -229,9 +229,6 @@ export function MaloTipModal({
   );
 }
 
-/** @deprecated Prefer `MaloTipModal` — same sheet, blurred backdrop. */
-export const TipSheetModal = MaloTipModal;
-
 const styles = StyleSheet.create({
   backdropWrap: {
     flex: 1,

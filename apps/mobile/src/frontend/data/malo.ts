@@ -128,7 +128,7 @@ export function maloAthleteSheetSubtitle(athleteName?: string | null): string {
 }
 
 export const MALO_PENDING_TAG_TOAST =
-  'Confirm the athlete on this clip before donating. Donations go to the athlete in it, not the uploader.';
+  'This tag is waiting for the athlete to approve it. Donations open once they do, and go to the athlete in the clip, not the uploader.';
 
 export const MALO_UNTAGGED_TOAST =
   'Tag the athlete in this clip before donating. Tap the name when a roster row is linked.';

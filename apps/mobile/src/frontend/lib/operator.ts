@@ -2,18 +2,21 @@
  * Sideline scorer helpers: listing live games, saving the GPS check-in, quarter and scoring-step constants,
  * sideline callouts, and the Realtime channel + payload for broadcasting a play to fans watching the game.
  * Used by app/operator/** and `hooks/useGameEventBroadcast`. `OPERATOR_TEST_PIN` is a testing PIN only.
- * @sideEffects Reads `games`, writes `operator_checkins`, AsyncStorage.
+ * The operator routes reach the database and Realtime only through this file (PORT-01).
+ * @sideEffects Reads `games` and `players`, writes `games`, `game_events` and `operator_checkins`, Realtime channels
+ *   on `games` and `game_events_${gameId}`, AsyncStorage.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
+  buildPlayEventPayload,
   displayValue,
   parseClockToSeconds,
   playerBelongsToSchool,
   type Player,
 } from '@/data/players';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
 import type { Game } from '@/types/database';
 
 export const OPERATOR_TEST_PIN = '1234';
@@ -86,7 +89,9 @@ export async function saveOperatorCheckIn(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   if (!isSupabaseConfigured) return { ok: false, message: 'The operator database is not configured.' };
   try {
-    const { error } = await supabase.from('operator_checkins').insert({ latitude, longitude });
+    // About 1 km is all anyone reads, so exact GPS never leaves the phone; the database rounds again anyway.
+    const coarse = (value: number) => Math.round(value * 100) / 100;
+    const { error } = await supabase.from('operator_checkins').insert({ latitude: coarse(latitude), longitude: coarse(longitude) });
     if (error) return { ok: false, message: error.message || 'Could not save this field check-in.' };
     return { ok: true };
   } catch {
@@ -104,12 +109,6 @@ export type OperatorAction = {
   eventType: string;
   points: number;
 };
-
-export const OPERATOR_SCORE_STEPS = [
-  { points: 1, label: '+1', hint: 'Try' },
-  { points: 3, label: '+3', hint: 'Field Goal' },
-  { points: 6, label: '+6', hint: 'Touchdown' },
-] as const;
 
 export type OperatorCallout = {
   id: string;
@@ -222,17 +221,6 @@ export async function sendGameEventBroadcast(
     void supabase.removeChannel(channel);
   }
 }
-
-export const OPERATOR_CALLOUT_TYPES = OPERATOR_CALLOUTS.map((item) => item.eventType);
-
-export const OPERATOR_ACTIONS: OperatorAction[] = [
-  { id: 'td', label: 'Touchdown +6', eventType: 'Touchdown', points: 6 },
-  { id: 'fg', label: 'Field Goal +3', eventType: 'Field Goal', points: 3 },
-  { id: 'xp', label: 'Extra Point +1', eventType: 'Extra Point', points: 1 },
-  { id: 'safety', label: '+2 Safety / Conv', eventType: 'Safety', points: 2 },
-  { id: 'tackle', label: 'Big Tackle', eventType: 'Tackle', points: 0 },
-  { id: 'int', label: 'Interception', eventType: 'Interception', points: 0 },
-];
 
 const CLAIM_PREFIX = 'tapuai.operatorClaim.';
 
@@ -429,10 +417,6 @@ export async function persistOperatorClock(
   return (data as Game | null) ?? { ...game, ...patch, clock: patch.clock ?? game.clock };
 }
 
-export function isOperatorCallout(eventType: string): boolean {
-  return OPERATOR_CALLOUT_TYPES.includes(eventType);
-}
-
 /**
  * @purpose Persist a sideline callout onto `game_events` for play-by-play history (best-effort; fans use Broadcast).
  * @sideEffects INSERT `game_events` (player_id null).
@@ -490,4 +474,165 @@ export async function insertOperatorEvent(args: {
   }
 
   return (data as { id: string } | null)?.id ?? null;
+}
+
+// Operator screen reads and live channels. They live here (PORT-01) so the routes never hold a Supabase client and a
+// host change rewrites this file, not app/operator/**.
+
+/**
+ * @purpose Load every player row the sideline roster picker shows.
+ * @returns Players, or an empty list plus the database message when the read fails.
+ * @sideEffects Reads `players`.
+ */
+export async function fetchOperatorPlayers(): Promise<{ players: Player[]; error: string | null }> {
+  const { data, error } = await supabase.from('players').select('*');
+  if (error) return { players: [], error: error.message };
+  return { players: (data as Player[] | null) ?? [], error: null };
+}
+
+/**
+ * @purpose Load one game for the scorekeeper screen.
+ * @param gameId `games.id` from the route.
+ * @returns The game, or null plus a message ("Game not found." when the row is missing).
+ * @sideEffects Reads `games`.
+ */
+export async function fetchOperatorGame(gameId: string): Promise<{ game: Game | null; error: string | null }> {
+  const { data, error } = await supabase.from('games').select('*').eq('id', gameId).single();
+  if (error || !data) return { game: null, error: error?.message ?? 'Game not found.' };
+  return { game: data as Game, error: null };
+}
+
+/**
+ * @purpose Load the active games the sideline scorer can pick from, home team A to Z.
+ * @returns Games, or an empty list plus the database message when the read fails.
+ * @sideEffects Reads `games`.
+ */
+export async function fetchScorerGames(): Promise<{ games: Game[]; error: string | null }> {
+  const { data, error } = await supabase
+    .from('games')
+    .select('*')
+    .eq('is_active', true)
+    .order('home_team', { ascending: true });
+  if (error) return { games: [], error: error.message };
+  return { games: (data as Game[] | null) ?? [], error: null };
+}
+
+/**
+ * @purpose Save one tapped play from the sideline scorer to `game_events`.
+ * @param eventType Play label, e.g. `Touchdown` or `Live Alert`.
+ * @param player Player the play is credited to.
+ * @param gameId Game the play belongs to, when one is selected.
+ * @returns Null on success, otherwise the database message for the screen.
+ * @sideEffects INSERT `game_events`.
+ */
+export async function insertScorerPlayEvent(eventType: string, player: Player, gameId?: string): Promise<string | null> {
+  const { error } = await supabase.from('game_events').insert(buildPlayEventPayload(eventType, player, gameId));
+  return error ? error.message : null;
+}
+
+/**
+ * @purpose Write a scoreboard change from the sideline scorer, stamping `updated_at`.
+ * @param gameId `games.id` to update.
+ * @param patch Fields to change, e.g. `{ home_score: 14 }`.
+ * @returns Null on success, otherwise the database message for the screen.
+ * @sideEffects UPDATE `games`.
+ */
+export async function patchScorerGame(gameId: string, patch: Partial<Game>): Promise<string | null> {
+  const { error } = await supabase
+    .from('games')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', gameId);
+  return error ? error.message : null;
+}
+
+/**
+ * @purpose Re-run the operator game list whenever any game row changes.
+ * @param onChange Called with no arguments after each change.
+ * @returns Unsubscribe; a no-op when the database is not configured.
+ * @sideEffects Realtime `postgres_changes` channel on `games`.
+ */
+export function subscribeOperatorGames(onChange: () => void): () => void {
+  if (!isSupabaseConfigured) return () => undefined;
+  // A unique name per mount, so a remount never joins a channel the old screen is still leaving.
+  const channel = supabase
+    .channel(`operator_games_${Date.now()}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, () => {
+      onChange();
+    })
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+/**
+ * @purpose Stream changed game rows to the sideline scorer list.
+ * @param onRow Called with each new or updated row that has an id.
+ * @returns Unsubscribe; a no-op when the database is not configured.
+ * @sideEffects Realtime `postgres_changes` channel `scorer_games` on `games`.
+ */
+export function subscribeScorerGames(onRow: (game: Game) => void): () => void {
+  if (!isSupabaseConfigured) return () => undefined;
+  const channel = supabase
+    .channel('scorer_games')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, (payload) => {
+      const next = payload.new as Game | undefined;
+      if (!next?.id) return;
+      onRow(next);
+    })
+    .subscribe();
+  return () => {
+    void supabase.removeChannel(channel);
+  };
+}
+
+/**
+ * @purpose Stream changes to the one game the scorekeeper has open.
+ * @param gameId `games.id` to watch.
+ * @param onRow Called with the new row after each change.
+ * @returns Unsubscribe; a no-op when the database is not configured.
+ * @sideEffects Realtime `postgres_changes` channel on `games` filtered to `gameId`.
+ */
+export function subscribeOperatorGame(gameId: string, onRow: (game: Game) => void): () => void {
+  if (!isSupabaseConfigured) return () => undefined;
+  const channel = supabase
+    .channel(nextRealtimeTopic(`operator_scorekeeper_${gameId}`))
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
+      (payload) => {
+        if (!payload.new) return;
+        onRow(payload.new as Game);
+      },
+    )
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+export type GameEventsBroadcaster = {
+  send: (payload: GameEventBroadcastPayload) => Promise<unknown>;
+  close: () => void;
+};
+
+/**
+ * @purpose Keep the callout channel joined while the scorekeeper is open, so a callout goes out at once instead of
+ *   paying for a fresh join each time (`sendGameEventBroadcast` is the slower fallback).
+ * @param gameId Active `games.id`.
+ * @returns A sender and a close function; null when the database is not configured.
+ * @sideEffects Realtime Broadcast channel `game_events_${gameId}`.
+ */
+export function openGameEventsBroadcaster(gameId: string): GameEventsBroadcaster | null {
+  if (!isSupabaseConfigured) return null;
+  const channel = supabase.channel(gameEventsChannelName(gameId), {
+    config: { broadcast: { ack: true } },
+  });
+  channel.subscribe();
+  return {
+    send: (payload) => channel.send({ type: 'broadcast', event: GAME_EVENTS_BROADCAST_EVENT, payload }),
+    close: () => {
+      supabase.removeChannel(channel);
+    },
+  };
 }

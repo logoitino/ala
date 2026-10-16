@@ -1,9 +1,14 @@
+/**
+ * Bookmark state for one Highlight: local-first for guests and seeded clips, synced to `saved_reels` through
+ * `lib/savedReels` for signed-in fans, with the offline queue catching dropped connections.
+ */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
 import { isReelUuid } from '@/lib/reels';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { fetchReelSaved, removeReelBookmark, saveReelBookmark } from '@/lib/savedReels';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 function storageKey(reelId: string, userId?: string | null) {
   return userId ? `tapuai.savedReel.${userId}.${reelId}` : `tapuai.savedReel.guest.${reelId}`;
@@ -28,16 +33,11 @@ export function useSavedReel(reelId: string | undefined) {
 
     try {
       if (user?.id && isSupabaseConfigured && isReelUuid(reelId)) {
-        const { data, error } = await supabase
-          .from('saved_reels')
-          .select('reel_id')
-          .eq('user_id', user.id)
-          .eq('reel_id', reelId)
-          .maybeSingle();
+        const { saved: onServer, error } = await fetchReelSaved(user.id, reelId);
 
         if (!error) {
-          setSaved(Boolean(data));
-          await AsyncStorage.setItem(storageKey(reelId, user.id), data ? '1' : '0');
+          setSaved(onServer);
+          await AsyncStorage.setItem(storageKey(reelId, user.id), onServer ? '1' : '0');
           return;
         }
       }
@@ -78,11 +78,8 @@ export function useSavedReel(reelId: string | undefined) {
           return;
         }
         if (next) {
-          const { error } = await supabase.from('saved_reels').insert({
-            user_id: user.id,
-            reel_id: reelId,
-          });
-          if (error && !/duplicate|unique/i.test(error.message)) {
+          const { error } = await saveReelBookmark(user.id, reelId);
+          if (error) {
             if (shouldQueueOffline(error, offlineQueue.getIsConnected())) {
               await offlineQueue.enqueue(payload);
               return;
@@ -91,11 +88,7 @@ export function useSavedReel(reelId: string | undefined) {
             await AsyncStorage.setItem(storageKey(reelId, user.id), '0');
           }
         } else {
-          const { error } = await supabase
-            .from('saved_reels')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('reel_id', reelId);
+          const { error } = await removeReelBookmark(user.id, reelId);
           if (error) {
             if (shouldQueueOffline(error, offlineQueue.getIsConnected())) {
               await offlineQueue.enqueue(payload);

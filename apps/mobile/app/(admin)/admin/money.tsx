@@ -1,6 +1,5 @@
+/** Payout administration keeps its saved Money route. Revenue owns financial activity and Books owns accounting. */
 import { MoneyTool } from '@/components/Admin/MoneyTool';
-
-/** @purpose `/admin/money` — company revenue widgets, stream splits, Mālo ledger, disbursements. */
 export default function AdminMoneyScreen() {
   return <MoneyTool />;
 }

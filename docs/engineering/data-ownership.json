@@ -1,0 +1,1445 @@
+{
+  "_comment": "Data ownership registry (DATA-01). Owned by DATA_GOVERNANCE; DATA_LINEAGE generates docs/engineering/DATA_MAP.md from it plus the schema and code (scripts/data-map.mjs); CODE_HYGIENE keeps exportsTriage honest. Every table, view and Storage bucket needs an owner (a registered agent call) and a purpose. Functions inherit the owner of the table they touch most unless listed under functions.",
+  "version": 1,
+  "tables": {
+    "app_feedback": {
+      "owner": "SUPPORT",
+      "purpose": "Fan suggestions and bug reports from the app; triaged in the Feedback desk."
+    },
+    "app_runtime_config": {
+      "owner": "RUNTIME_CONFIG",
+      "purpose": "Draft and published app switches, copy and catalogs (Publish to app)."
+    },
+    "athlete_birthdates": {
+      "owner": "CUSTODIAL",
+      "purpose": "Private athlete birth dates that decide when money control passes to the athlete."
+    },
+    "athlete_career_stats": {
+      "owner": "ATHLETE_STATS",
+      "purpose": "Career stat lines shown on athlete profiles."
+    },
+    "athlete_game_logs": {
+      "owner": "ATHLETE_STATS",
+      "purpose": "Per-game stat lines shown on athlete profiles."
+    },
+    "athlete_vouches": {
+      "owner": "ATHLETE_VERIFICATION",
+      "purpose": "Vouches that move an athlete up the verification ladder."
+    },
+    "challenge_admin_events": {
+      "owner": "ADMIN",
+      "purpose": "Immutable action/time/reason/detail admin record retained2years (latest switch retained); trusted profile deletion/support erasure may only null identity references. Arbitrary client mutation and truncation denied."
+    },
+    "challenge_athlete_settings": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "The athlete's \"Allow challenges on my workouts\" (no row: on for adults, off for minors and unknown ages). No client access."
+    },
+    "challenge_badges": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Private, noncash \"Challenge finisher\" badge after \"Did it!\" on 3 workouts (CHAL-01 1a). No client access."
+    },
+    "challenge_mutes": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "A recipient's mute of challenge invites from one sender or everyone (CHAL-01 1a). No client access."
+    },
+    "challenge_nudges": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Friend invites to try a workout, shown in Activity (CHAL-01 1a); dropped ones kept with delivered = false only for the limits; deleted after 30 days. No client access."
+    },
+    "challenge_responses": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "One current preset per account per Train Like Me workout; rolling50distinct-workout limit held separately in challenge_response_quota so removal does not refund capacity. RPC-only."
+    },
+    "challenge_sender_holds": {
+      "owner": "ADMIN",
+      "purpose": "Admin mute or suspend of one sender's challenge invites, with the reason (CHAL-01 1a nudge-abuse view). No client access."
+    },
+    "cheer_polls": {
+      "owner": "POLLS",
+      "purpose": "School-versus-school cheer matchups and their votes."
+    },
+    "company_revenue_logs": {
+      "owner": "LEDGER",
+      "purpose": "One row per revenue event (donation, tip for Tapua'i, card fee, Vault, booster, Drip); the books are built from it."
+    },
+    "crew_follows": {
+      "owner": "CREW",
+      "purpose": "Fans who joined an athlete's Crew."
+    },
+    "crew_push_queue": {
+      "owner": "NOTIFICATIONS",
+      "purpose": "Queued Crew notifications waiting to be sent."
+    },
+    "custodial_accounts": {
+      "owner": "CUSTODIAL",
+      "purpose": "One guardian-held money account per athlete, with handover rules."
+    },
+    "custodial_withdrawals": {
+      "owner": "CUSTODIAL",
+      "purpose": "Guardian or adult-athlete withdrawal requests and approvals."
+    },
+    "disbursements": {
+      "owner": "TREASURY",
+      "purpose": "Payouts to family accounts (queued, paid, failed)."
+    },
+    "donation_thanks": {
+      "owner": "DONATION_THANKS",
+      "purpose": "Preset thank-you messages athletes send donors."
+    },
+    "filmer_props": {
+      "owner": "FILMER_REWARDS",
+      "purpose": "Non-cash Props fans give filmers."
+    },
+    "filmer_rewards": {
+      "owner": "FILMER_REWARDS",
+      "purpose": "Filmer Aura rewards (cash column reserved, always Tapua'i-funded)."
+    },
+    "friend_request_log": {
+      "owner": "PROFILE",
+      "purpose": "Every friend request sent (PRIV-01), so the 20-a-day and 3-per-person-a-week limits cannot be reset by cancelling and asking again; admin request counts read it. No client access."
+    },
+    "friendships": {
+      "owner": "PROFILE",
+      "purpose": "Two-way friend requests and friendships (PRIV-01); decides the \"friends\" audience on profiles. Written only through request_friend / respond_friend / remove_friend; a decline is kept 30 days so the requester cannot re-ask, and is never shown to them."
+    },
+    "game_events": {
+      "owner": "OPERATOR",
+      "purpose": "Per-play events the sideline scorer records."
+    },
+    "games": {
+      "owner": "LOCAL",
+      "purpose": "Local match board: teams, scores, clock, status."
+    },
+    "guardian_approval_requests": {
+      "owner": "PROFILE",
+      "purpose": "Under-16 requests for the guardian to approve or decline (going public, friend requests from anyone); one pending per change, 14 days. No client access; decided ones trimmed after 90 days."
+    },
+    "guardian_consents": {
+      "owner": "CUSTODIAL",
+      "purpose": "Signed guardian consent records (MINOR-01): form version and text hash, typed-name signature, relationship, permissions (public profile, payouts), revocation. Append-only; kept after account deletion for the period counsel sets (LEGAL row AA). No client access."
+    },
+    "guardian_invite_attempts": {
+      "owner": "PROFILE",
+      "purpose": "Wrong guardian-code tries, so 8-character codes cannot be guessed (10 a day per account). No client access; trimmed after 2 days."
+    },
+    "guardian_invites": {
+      "owner": "PROFILE",
+      "purpose": "Hashed one-time guardian codes a teen shares (48 hours, newest only, 5 a day). No client access; trimmed after 30 days by the desk's retention purge."
+    },
+    "guardian_links": {
+      "owner": "PROFILE",
+      "purpose": "A teen's linked parent or guardian (MINOR-01): from the teen's invite code (counts once the teen confirms) or the admin-set guardian on record; at most two; either side ends it, and a block ends it. Supervision only, never control. No client access."
+    },
+    "ledger_accounts": {
+      "owner": "CONTROLLER",
+      "purpose": "Chart of accounts for the books."
+    },
+    "ledger_manual_entries": {
+      "owner": "CONTROLLER",
+      "purpose": "Hand-recorded journal entries (expenses, Stripe fees, refunds, payouts)."
+    },
+    "ledger_manual_lines": {
+      "owner": "CONTROLLER",
+      "purpose": "Debit and credit lines of recorded entries."
+    },
+    "ledger_period_closes": {
+      "owner": "CONTROLLER",
+      "purpose": "Closed months with their totals fingerprint."
+    },
+    "ledger_period_reopens": {
+      "owner": "CONTROLLER",
+      "purpose": "Audit trail of reopened months."
+    },
+    "operator_checkins": {
+      "owner": "OPERATOR",
+      "purpose": "GPS check-ins of game-day operators."
+    },
+    "operator_gigs": {
+      "owner": "OPERATOR",
+      "purpose": "Game-day gigs operators can claim (Wave 3)."
+    },
+    "payee_verifications": {
+      "owner": "CONNECT",
+      "purpose": "Append-only record of how each payee was verified (VERIFY-02): Stripe identity and tax ID result, the school's parent-on-record confirmation, document reviews (document not kept), Stripe Identity for disputes; status, reviewer, reason. Never an SSN. No client access."
+    },
+    "payout_flag_overrides": {
+      "owner": "CONNECT",
+      "purpose": "Two-admin requests to turn a payee's transfers on or off by hand (VERIFY-02): reason, requester, second-admin decision, 7-day expiry. No client access."
+    },
+    "players": {
+      "owner": "ROSTERS",
+      "purpose": "Athlete roster that fans tag and donate to."
+    },
+    "profiles": {
+      "owner": "PROFILE",
+      "purpose": "Account profiles, roles and settings."
+    },
+    "profiles_public": {
+      "owner": "PROFILE",
+      "purpose": "Public-safe view of profiles for other accounts."
+    },
+    "rallies": {
+      "owner": "RALLY",
+      "purpose": "Donation goals for a named sports cost."
+    },
+    "reel_account_tags": {
+      "owner": "ACCOUNT_TAGS",
+      "purpose": "Account mentions on a Highlight."
+    },
+    "reel_hype_votes": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Seki / Aura / Flex taps per Highlight per account."
+    },
+    "reel_photos": {
+      "owner": "PHOTO_STORIES",
+      "purpose": "Photos inside a photo-story Highlight."
+    },
+    "reel_photos_feed": {
+      "owner": "PHOTO_STORIES",
+      "purpose": "Feed view of story photos with Vault gating."
+    },
+    "reel_reports": {
+      "owner": "MODERATION",
+      "purpose": "Reports on a Highlight and their reasons."
+    },
+    "reel_tag_rejections": {
+      "owner": "ACCOUNT_TAGS",
+      "purpose": "Each athlete-tag decline (PRIV-01 stage 2): the same athlete cannot be re-tagged on that clip, and after three declines that uploader cannot tag that athlete. Written by confirm_reel_player_tag, read by the tag trigger. No client access."
+    },
+    "reel_views": {
+      "owner": "PLAYBACK",
+      "purpose": "Counted Highlight views (3 s rule, one per account per day)."
+    },
+    "reels": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Highlights: clips and photo stories with their tags and counters."
+    },
+    "reels_feed": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Feed view of Highlights with Vault gating."
+    },
+    "saved_reels": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Highlights a fan saved."
+    },
+    "school_confirmers": {
+      "owner": "ATHLETE_VERIFICATION",
+      "purpose": "School staff allowed to confirm athletes, with hashed link tokens."
+    },
+    "schools_and_teams": {
+      "owner": "SCHOOL_PARTNERS",
+      "purpose": "High school and college catalog with crests and colours."
+    },
+    "shop_orders": {
+      "owner": "DRIP",
+      "purpose": "Drip store orders."
+    },
+    "shop_products": {
+      "owner": "DRIP",
+      "purpose": "Drip store catalog."
+    },
+    "sponsor_ads": {
+      "owner": "SPONSOR_ADS",
+      "purpose": "Sponsor placements on game-day surfaces."
+    },
+    "sponsorships": {
+      "owner": "PARTNERSHIPS",
+      "purpose": "Booster sponsorships (business, tier, amount)."
+    },
+    "sport_configs": {
+      "owner": "ATHLETE_STATS",
+      "purpose": "Scoring, periods and stat fields per sport."
+    },
+    "spotlight_awards": {
+      "owner": "SPOTLIGHT",
+      "purpose": "Player of the Week / Month / Year awards."
+    },
+    "stripe_webhook_events": {
+      "owner": "LEDGER",
+      "purpose": "Stripe events the webhook already processed (deduplication)."
+    },
+    "subscriber_requests": {
+      "owner": "BILLING",
+      "purpose": "Requests to subscribe to an athlete's Vault."
+    },
+    "subscriptions": {
+      "owner": "BILLING",
+      "purpose": "Vault / Exclusive purchases."
+    },
+    "supervision_events": {
+      "owner": "PROFILE",
+      "purpose": "What a teen and their linked guardian both see changing (MINOR-01): age added, links, consent, settings keys, approvals. Kept 365 days. No client access."
+    },
+    "support_audit_events": {
+      "owner": "THREAT_DETECTION",
+      "purpose": "Atomic selected-table change audit: server actor/time/role, operation, record reference, changed field names and per-entity hashes; no row values."
+    },
+    "support_releases": {
+      "owner": "RECOVERY",
+      "purpose": "Admin-registered bounded local package manifest; server reporting identity/time, unsigned integrity and schema/migration provenance."
+    },
+    "support_reviews": {
+      "owner": "INCIDENT_TRIAGE",
+      "purpose": "Append-only occurrence-scoped dispositions, false-positive rationale and independent protected review."
+    },
+    "support_signals": {
+      "owner": "TELEMETRY",
+      "purpose": "Append-only bounded fixed-code observations; server actor/time, distinct client and trusted sources. No raw error or personal payload."
+    },
+    "telemetry_logs": {
+      "owner": "TELEMETRY",
+      "purpose": "App events: taps, dwell, errors, checkout latency."
+    },
+    "tips": {
+      "owner": "LEDGER",
+      "purpose": "Donations (code name tips), with channel, Rally, tip for Tapua'i and covered fee."
+    },
+    "user_blocks": {
+      "owner": "PROFILE",
+      "purpose": "Who blocked whom (PRIV-01). A blocked person sees a private-guest view, cannot request friendship, join the Crew or tag; they are not told. Admins see counts only."
+    },
+    "verification_requests": {
+      "owner": "ATHLETE_VERIFICATION",
+      "purpose": "Athlete claim and verification requests."
+    },
+    "wishlist_items": {
+      "owner": "WISHLIST",
+      "purpose": "Gear goals fans donate to."
+    },
+    "challenge_response_quota": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Private rolling24h distinct-workout response capacity per responder, independent of removed responses or deleted reels. Own export; expiry purge; profile erasure/deletion clears it. Privileged support erasure is an explicit reset exception."
+    },
+    "beyond_settings": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Last contribution-switch administrator/reason/time; sole live enable remains published.highlights.beyondGameEnabled, defaultfalse. RPC-only."
+    },
+    "beyond_posts": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Account-owned immutable revisioned category/caption/audience/review/rights-safety version-time and cleanup state. Pending private, approved exact audience, reported held immediately; erasure anonymizes while retaining cleanup mapping."
+    },
+    "beyond_media": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Exact private immutable user/post/media path, kind/mime/bytes/dimensions/attested video duration. One<=45sec50MiB video or<=3JPEG5MiB photos. This metadata is not content/person/rights verification. Mappings retained until actual Storage absence."
+    },
+    "beyond_submission_quota": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Server reservation UUID/time per canonical owner, durable5perrolling24h regardless of self-removal. Own export;35day write/admin retention; privileged support erasure is an exceptional reset."
+    },
+    "beyond_reports": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Reporter canonical UUID, post/reason/time for immediate distribution hold and protected review; own report export and erasure. Not a public popularity metric."
+    },
+    "beyond_admin_events": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Restricted reason/action/time audit for switch/review/retention/cleanup. Identity references null on account deletion; support erasure sanitizes corresponding reasons. Minimal retained action/time is not counsel-approved retention."
+    }
+  },
+  "buckets": {
+    "reels": {
+      "owner": "UPLOAD",
+      "purpose": "Public Highlight videos (reels/<uid>/\u2026) and photo-story photos (<uid>/stories/\u2026)."
+    },
+    "game_highlights": {
+      "owner": "UPLOAD",
+      "purpose": "Fallback bucket for Highlight uploads when reels is unavailable."
+    },
+    "avatars": {
+      "owner": "PROFILE",
+      "purpose": "Profile pictures and booster/sponsor logos."
+    },
+    "reel_vault": {
+      "owner": "VAULT",
+      "purpose": "Private Vault clips, read only through short-lived signed URLs."
+    },
+    "beyond_game": {
+      "owner": "UPLOAD",
+      "purpose": "Private reviewed fan media only: immutable <auth-user>/<post>/<media>.jpg|mp4, reserved before upload, exact audience/actor/closure/block checks andSDK-requested60s signed URLs. Removed bytes inaccessible to users; current open admins have narrow read/delete cleanup access until confirmed physical deletion."
+    }
+  },
+  "functions": {
+    "support_code_metadata": {
+      "owner": "TELEMETRY",
+      "use": "Fixed SQL vocabulary used by support capture and validation."
+    },
+    "guard_support_append_only": {
+      "owner": "RLS_SECURITY",
+      "use": "Trigger denies mutation/deletion of retained support evidence."
+    },
+    "insert_support_signal": {
+      "owner": "TELEMETRY",
+      "use": "Private helper validates and appends client/trusted observations."
+    },
+    "record_support_signal": {
+      "owner": "TELEMETRY",
+      "use": "Authenticated bounded client observation RPC; UI service calls it."
+    },
+    "record_trusted_support_signal": {
+      "owner": "THREAT_DETECTION",
+      "use": "Service-role capture only; verified auth handler captures failures."
+    },
+    "record_support_review": {
+      "owner": "INCIDENT_TRIAGE",
+      "use": "Admin review action with independent protected confirmation."
+    },
+    "register_support_release": {
+      "owner": "RECOVERY",
+      "use": "Admin manifest registration; never executes restore."
+    },
+    "capture_support_audit": {
+      "owner": "THREAT_DETECTION",
+      "use": "Transactional change trigger on selected admin/financial tables."
+    },
+    "get_engineering_support_snapshot": {
+      "owner": "ADMIN",
+      "use": "Admin-only bounded reader used by Engineering Support desk."
+    },
+    "admin_end_friendship": {
+      "owner": "TRUST_SAFETY",
+      "use": "SQL Editor only, for a safety case (for example a guardian report): ends the friendship between two named profiles. The People desk deliberately never shows who is friends with whom, so it has no button."
+    },
+    "challenge_expected_profile": {
+      "owner": "HIGHLIGHTS",
+      "use": "Private helper binds the supplied canonical profile to the actual nonclosed authenticated caller; only counts permit a no-auth guest null."
+    },
+    "challenge_redact_audit_identity": {
+      "owner": "HIGHLIGHTS",
+      "use": "Private trusted deletion/erasure helper nulls identity references while preserving audit action/time/reason/detail."
+    },
+    "challenge_on_profile_delete": {
+      "owner": "HIGHLIGHTS",
+      "use": "Profile-deletion trigger invokes narrow identity redaction; no client call."
+    },
+    "challenge_admin_profile": {
+      "owner": "HIGHLIGHTS",
+      "use": "Private expected-actor matched nonclosed admin gate for all7 challenge admin RPCs."
+    },
+    "beyond_missing": {
+      "owner": "HIGHLIGHTS",
+      "use": "Checks required PRIV-01/MINOR-01 dependency functions before operational enable."
+    },
+    "beyond_enabled": {
+      "owner": "HIGHLIGHTS",
+      "use": "Reads sole published contribution enable; disabled/missing meansfalse."
+    },
+    "beyond_actor": {
+      "owner": "HIGHLIGHTS",
+      "use": "Private current nonclosed canonical profile and supplied expected actor match; only selected publicreads allow unauthenticated guestnull."
+    },
+    "beyond_admin": {
+      "owner": "HIGHLIGHTS",
+      "use": "Private current nonclosed admin authority plus expected canonical actor check."
+    },
+    "beyond_owner_open": {
+      "owner": "HIGHLIGHTS",
+      "use": "Determines owner submission eligibility and closure/age status."
+    },
+    "beyond_can_view": {
+      "owner": "HIGHLIGHTS",
+      "use": "Private exact owner/admin/guardian or accepted approved audience check with current blocks/privacy/age and switch."
+    },
+    "beyond_post_json": {
+      "owner": "HIGHLIGHTS",
+      "use": "Server exact post/media projection with optional protected review/report detail; no money/athlete payee identity."
+    },
+    "beyond_status": {
+      "owner": "HIGHLIGHTS",
+      "use": "Actor-bound feature/dependency/audience/submission capability reader."
+    },
+    "beyond_posts": {
+      "owner": "HIGHLIGHTS",
+      "use": "Bounded category/UUIDcursor approved accepted-audience list, current viewer rechecked."
+    },
+    "beyond_my_posts": {
+      "owner": "HIGHLIGHTS",
+      "use": "Bounded own review status/cursor list, canonical actorbound."
+    },
+    "beyond_reserve": {
+      "owner": "HIGHLIGHTS",
+      "use": "Idempotent private draft reservation, exact media/attestations/audience and durable5rolling24h quota."
+    },
+    "beyond_identity_removed": {
+      "owner": "HIGHLIGHTS",
+      "use": "Deletion/erasure trigger anonymizes author/caption/review/report identities while preserving removed object cleanup targets."
+    },
+    "beyond_export_my_data": {
+      "owner": "HIGHLIGHTS",
+      "use": "Bounded section/cursor own-data export for posts/reports/quota; server canonical actorbinding."
+    },
+    "admin_beyond_erase_profile": {
+      "owner": "ADMIN",
+      "use": "Reasoned admin support erasure, up to50owned posts/call; immediately removes distribution and queues preserved media targets. Privileged quota reset exception."
+    },
+    "beyond_storage_guard": {
+      "owner": "HIGHLIGHTS",
+      "use": "Storage write metadata/type/owner/path guard for immutable reserved media; no decoded content claim."
+    },
+    "beyond_storage_allowed": {
+      "owner": "HIGHLIGHTS",
+      "use": "Restrictive storage predicate protecting exact draft inserts, current accepted reads, no updates and removed cleanup admin access."
+    },
+    "beyond_finalize": {
+      "owner": "HIGHLIGHTS",
+      "use": "Exact existing reserved owned-file metadata validation and idempotent pending submission; actual media content review remains required."
+    },
+    "beyond_remove": {
+      "owner": "HIGHLIGHTS",
+      "use": "Own canonical-actor removal immediately hides distribution, queues physical cleanup without refunding quota."
+    },
+    "beyond_report": {
+      "owner": "HIGHLIGHTS",
+      "use": "Eligible current viewer concern immediately holds distribution and records reason once per reporter/post."
+    },
+    "beyond_media_access": {
+      "owner": "HIGHLIGHTS",
+      "use": "Actor-bound exact authorized post/file access, SDK-requested60s TTL; never removed or substituted/external paths."
+    },
+    "admin_beyond_status": {
+      "owner": "ADMIN",
+      "use": "Protected contribution/dependency/switch-change status, pending and cleanup aggregates."
+    },
+    "admin_beyond_set_enabled": {
+      "owner": "ADMIN",
+      "use": "Reasoned nonclosed admin-only sole published contribution switch, dependency-checked, defaultoff."
+    },
+    "admin_beyond_posts": {
+      "owner": "ADMIN",
+      "use": "Bounded review state/cursor queue with protected reports/cleanup metadata."
+    },
+    "admin_beyond_review": {
+      "owner": "ADMIN",
+      "use": "Reasoned approve/remove with immutable expected revision, accepted audience/owner/media/dependency recheck."
+    },
+    "admin_beyond_cleanup_targets": {
+      "owner": "ADMIN",
+      "use": "Protected exact removedpost mapped private paths for real provider erasure, never SQL-only delete claim."
+    },
+    "admin_beyond_cleanup_finish": {
+      "owner": "ADMIN",
+      "use": "Rechecks actual storage catalog absence; complete onlywhen every target absent, partial failures visible."
+    },
+    "admin_beyond_retention": {
+      "owner": "ADMIN",
+      "use": "Reasoned admin24h draft expiry and35day quota purge; expired files remain mapped pending physical cleanup, no deployed schedule."
+    },
+    "beyond_profile_erasure": {
+      "owner": "HIGHLIGHTS",
+      "use": "Profile-deletion trigger nulls removed actor references and sanitizes affected event reasons while preserving cleanup mappings; server-only."
+    },
+    "challenge_friends": {
+      "owner": "HIGHLIGHTS",
+      "use": "Authenticated expected-actor bounded<=50 accepted-friend choice RPC for workout invitations; current blocks/closed/friendship rechecked, minimalprofile/name projection, no legacy unbound SDK read."
+    },
+    "beyond_legacy_posts": {
+      "owner": "HIGHLIGHTS",
+      "use": "Bounded <=24 minimal workout/service discovery cards, canonical expected actor including explicit guest null. Exact confirmed verified athlete/link; both athlete/uploader current photo audience/block/closure/teen consent, no media URL/full profile. Contribution switch independent."
+    }
+  },
+  "exceptions": {
+    "guardian_invite_attempts": {
+      "noReader": "Read only inside guardian_invite_for_code (the 10-a-day wrong-code limit) and purged by admin_purge_minor_records; no screen needs it."
+    },
+    "ledger_accounts": {
+      "noWriter": "Seeded once by migration 20261012210000; accounts change only through a new migration (CONTROLLER)."
+    },
+    "operator_gigs": {
+      "noWriter": "Parked by owner decision (2026-09-29 launch order): game-day gigs are Wave 3, so nothing creates gigs yet. Check-ins may reference a gig.",
+      "noReader": "Parked with game-day gigs (Wave 3); the operator check-in reader shows whether a check-in has a gig."
+    },
+    "reel_tag_rejections": {
+      "noReader": "Read only inside the tag trigger (no re-tag, 3-decline bar) and confirm_reel_player_tag (admin undo restores the athlete); who declined is never shown."
+    },
+    "beyond_admin_events": {
+      "noReader": "Restricted atomic admin event history retained for authorized database support/audit cases; current desk reads last switch reason/time from beyond_settings and review/report status from posts. No public metric or automatic event reader is implemented."
+    },
+    "bucket:beyond_game": {
+      "noWriter": "SDK lib/beyondGame.ts uploadReservedBeyondMedia uses a per-operation JWT-pinned Storage client returned by actorStorage, not the global supabase.storage expression recognized by this regex map. Private reserve/finalize source/replay verifies exact immutable scope.",
+      "noReader": "SDK lib/beyondGame.ts signBeyondMedia/adminBeyondCleanup use the same per-operation JWT-pinned client for60s signed reads and removed-file deletion; the regex map does not trace the client factory. Exact current server authorization and postcheck apply."
+    }
+  },
+  "exportsTriage": [
+    {
+      "file": "apps/mobile/src/backend/services/payouts.ts",
+      "name": "disburseAthleteFunds",
+      "decision": "keep",
+      "reason": "Payout service alias held for the Wave 1 payout path (payouts are blocked by decision).",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/contentRights.ts",
+      "name": "REPORTS_BEFORE_HIDE",
+      "decision": "keep",
+      "reason": "Mirrors the SQL rule (three distinct reporters hide a clip) so copy and docs have one constant.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/finance.ts",
+      "name": "BOOSTER_OPERATOR_SHARE_BPS",
+      "decision": "keep",
+      "reason": "Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/finance.ts",
+      "name": "MERCH_PAYOUT_BPS",
+      "decision": "keep",
+      "reason": "Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/finance.ts",
+      "name": "VAULT_ATHLETE_SHARE_BPS",
+      "decision": "keep",
+      "reason": "Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/finance.ts",
+      "name": "platformBpsForSource",
+      "decision": "keep",
+      "reason": "Tested split lookup kept with the split constants.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/finance.ts",
+      "name": "splitRevenueCents",
+      "decision": "keep",
+      "reason": "Canonical split arithmetic mirrored by SQL record_company_revenue; reference for COMMERCE and CONTROLLER.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/highlights.ts",
+      "name": "HIGHLIGHT_FEED_ALL",
+      "decision": "keep",
+      "reason": "Feed switch parked while All is off the Highlight bar (owner, 2026-10-11).",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/highlights.ts",
+      "name": "HIGHLIGHT_FEED_SEKI",
+      "decision": "keep",
+      "reason": "Feed switch parked while Seki is off the Highlight bar (owner, 2026-10-11).",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/hooks/useStoryPhotos.ts",
+      "name": "resetStoryPhotoCache",
+      "decision": "keep",
+      "reason": "Test hook (clears the story cache between tests).",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/adminCatalog.ts",
+      "name": "setShopProductActive",
+      "decision": "keep",
+      "reason": "Drip desk action for when Drip turns on (Wave 1).",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/leaderboards.ts",
+      "name": "resetReelViewSessionForTests",
+      "decision": "keep",
+      "reason": "Test hook.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/payouts.ts",
+      "name": "requestPayout",
+      "decision": "keep",
+      "reason": "Wave 1 payout request (payouts are blocked by decision).",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/photoStories.ts",
+      "name": "resetPhotoStoriesProbe",
+      "decision": "keep",
+      "reason": "Test hook.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/runtime.ts",
+      "name": "discardAppRuntimeDraft",
+      "decision": "keep",
+      "reason": "\"Discard draft\" action not yet wired into Publish; RUNTIME_CONFIG to wire or archive.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/admin/financeCatalog.ts",
+      "name": "catalogCoverage",
+      "decision": "keep",
+      "reason": "Used by the finance data catalog coverage test.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/admin/financeCatalog.ts",
+      "name": "schemaColumnsFromSql",
+      "decision": "keep",
+      "reason": "Used by the finance data catalog coverage test.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/admin/analytics.ts",
+      "name": "knownSources",
+      "decision": "keep",
+      "reason": "Used by the analytics catalog test to prove no chart reads an invented measure.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/guardianConsent.ts",
+      "name": "guardianConsentTemplate",
+      "decision": "keep",
+      "reason": "The exact signed text; guardianConsent.test.ts hashes it and pins it to the migration's guardian_consent_form_sha256 (MINOR-01).",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/media.ts",
+      "name": "resolveMediaUrl",
+      "decision": "keep",
+      "reason": "PORT-01: the reader for stored media values (references and legacy URLs); lib/reels.ts playback moves onto it after PLAY-01 releases that file (SCALE-02); tested in media.test.ts.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/services/BeyondGameMediaService.ts",
+      "name": "uploadBeyondSubmission",
+      "decision": "keep",
+      "reason": "Reviewed lower-level orchestrator retained for explicit external integration; participant composer deliberately calls each SDK hop with lifecycle acceptance between steps. Not used by the current participant UI.",
+      "status": "kept"
+    }
+  ],
+  "archived": [
+    {
+      "file": "apps/admin-portal/components/ColumnChart.tsx",
+      "name": "ColumnChart",
+      "kind": "whole file",
+      "to": "archive/dead-code-2026-10-13/apps/admin-portal/components/ColumnChart.archived.tsx",
+      "reason": "Replaced by TrendChart variant \"columns\" (ADM-01).",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/admin-portal/components/PortalShell.tsx",
+      "name": "BarRow",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/admin-portal/components/PortalShell.archived.tsx",
+      "reason": "No caller; portal charts use the chart kit. (second archive pass, DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/admin-portal/lib/reports.test.ts",
+      "name": "tests for maloChannel",
+      "kind": "tests",
+      "to": "archive/dead-code-2026-10-13/apps/admin-portal/lib/reports.test.archived.ts",
+      "reason": "Test cases that only covered maloChannel, archived beside it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/admin-portal/lib/supabase.ts",
+      "name": "getSupabaseAnonClient",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/admin-portal/lib/supabase.archived.ts",
+      "reason": "No caller; the read-only portal uses the signed-in session client. An unused anonymous client is attack surface.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/AdminCharts.tsx",
+      "name": "AdminBarChart",
+      "kind": "whole file",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/components/Admin/AdminCharts.archived.tsx",
+      "reason": "Replaced by the report chart kit in components/Admin/Reports (ADM-02).",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/AdminCharts.tsx",
+      "name": "AdminMixChart",
+      "kind": "whole file",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/components/Admin/AdminCharts.archived.tsx",
+      "reason": "Replaced by the report chart kit in components/Admin/Reports (ADM-02).",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/AdminChrome.tsx",
+      "name": "AdminBusy",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/components/Admin/AdminChrome.archived.tsx",
+      "reason": "No desk uses this spinner since the report shell owns loading states.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/AdminOverview.tsx",
+      "name": "AdminOverview",
+      "kind": "whole file",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/components/Admin/AdminOverview.archived.tsx",
+      "reason": "The old admin home; replaced by the report Home in ADM-02.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/TelemetryCards.tsx",
+      "name": "TelemetryCards",
+      "kind": "whole file",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/components/Admin/TelemetryCards.archived.tsx",
+      "reason": "Only the archived admin overview rendered it. (cascade of DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Local/TopAuraBoosters.tsx",
+      "name": "TICK",
+      "kind": "unused local",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/components/Local/TopAuraBoosters.archived.tsx",
+      "reason": "Declared but never used; found by the second pass (tsc --noUnusedLocals).",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Profile/ExclusivePaywall.tsx",
+      "name": "ExclusivePaywall",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/components/Profile/ExclusivePaywall.archived.tsx",
+      "reason": "Exclusive banner no longer rendered; VaultLockedCard in the same file stays. (second archive pass, DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Profile/ExclusivePaywall.tsx",
+      "name": "ExclusivePaywallProps",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/components/Profile/ExclusivePaywall.archived.tsx",
+      "reason": "Private helper used only by ExclusivePaywall, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/TipSheetModal.tsx",
+      "name": "TipSheetModal",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/components/TipSheetModal.archived.tsx",
+      "reason": "Alias of MaloTipModal; every caller imports MaloTipModal. (second archive pass, DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/constants/theme.ts",
+      "name": "DARK_COLORS",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/constants/theme.archived.ts",
+      "reason": "Night palette never wired; Daylight is the only theme. (second archive pass, DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/constants/theme.ts",
+      "name": "paletteFromTheme",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/constants/theme.archived.ts",
+      "reason": "Look-desk palette mapping no longer called; confirm with DESIGN before archiving.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/__tests__/contentRights.test.ts",
+      "name": "tests for reportHidesNow",
+      "kind": "tests",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/__tests__/contentRights.test.archived.ts",
+      "reason": "Test cases that only covered reportHidesNow, archived beside it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/athleteStats.ts",
+      "name": "emptyPhysicals",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/athleteStats.archived.ts",
+      "reason": "Empty measurables helper with no caller.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/contentRights.ts",
+      "name": "reportHidesNow",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/contentRights.archived.ts",
+      "reason": "Only tests use it; the hide decision is made in SQL (report_reel).",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/crew.ts",
+      "name": "JOIN_CREW_SIGN_IN",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/crew.archived.ts",
+      "reason": "Crew sign-in copy no longer shown.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/devPersonas.ts",
+      "name": "personaByHandle",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/devPersonas.archived.ts",
+      "reason": "Developer persona lookup with no caller.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/exclusive.ts",
+      "name": "EXCLUSIVE_KIND_LABEL",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/exclusive.archived.ts",
+      "reason": "Old Exclusive copy, superseded by the Vault screens.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/exclusive.ts",
+      "name": "EXCLUSIVE_POSTS",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/exclusive.archived.ts",
+      "reason": "Old Exclusive mock content; Vault reads real clips.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/exclusive.ts",
+      "name": "EXCLUSIVE_SUBSCRIBE_LABEL",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/exclusive.archived.ts",
+      "reason": "Old Exclusive copy, superseded by the Vault screens.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/exclusive.ts",
+      "name": "EXCLUSIVE_UNLOCK_TOAST",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/exclusive.archived.ts",
+      "reason": "Old Exclusive copy, superseded by the Vault screens.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/exclusive.ts",
+      "name": "EXCLUSIVE_VAULT_CALLOUT",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/exclusive.archived.ts",
+      "reason": "Old Exclusive copy, superseded by the Vault screens.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/exclusive.ts",
+      "name": "VAULT_UNLOCK_LABEL",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/exclusive.archived.ts",
+      "reason": "Old Exclusive copy, superseded by the Vault screens.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/finance.ts",
+      "name": "splitLabelForSource",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/finance.archived.ts",
+      "reason": "Only the archived revenue defaults used it; stream wording comes from shared-types streamSplitText (cascade of DATA-01-F6).",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/highlights.ts",
+      "name": "taggedReelsForAthlete",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/highlights.archived.ts",
+      "reason": "Mock-data filter with no caller; profiles read tagged clips from the database.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/players.ts",
+      "name": "emptyReactionCounts",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/players.archived.ts",
+      "reason": "No caller.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/players.ts",
+      "name": "formatGameStatus",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/players.archived.ts",
+      "reason": "Game status formatting moved to the games code.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/players.ts",
+      "name": "formatQuarterClock",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/players.archived.ts",
+      "reason": "Game clock formatting moved to the games/operator code.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/players.ts",
+      "name": "formatTipTotal",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/players.archived.ts",
+      "reason": "Retired money wording helper; donation totals use formatTipDollars / booksUsd.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/players.ts",
+      "name": "formatQuarterTag",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/players.archived.ts",
+      "reason": "Private helper used only by formatQuarterClock, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/regions.ts",
+      "name": "regionForZip",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/regions.archived.ts",
+      "reason": "No caller; Local uses schools and games, not ZIP regions.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/shop.ts",
+      "name": "SHOP_ITEMS",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/shop.archived.ts",
+      "reason": "Deprecated alias of DRIP_ITEMS with no remaining imports.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/sports.ts",
+      "name": "DEFAULT_PERIOD_SECONDS",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/sports.archived.ts",
+      "reason": "Sport periods now come from sport_configs.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/sports.ts",
+      "name": "sportBadge",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/sports.archived.ts",
+      "reason": "No caller.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/data/wishlist.ts",
+      "name": "WISHLIST_CHIP_IN_ACTION",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/data/wishlist.archived.ts",
+      "reason": "Retired \"Chip In\" wording (VOICE bans it); gear goals say Donate.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/hooks/useActivityFeed.ts",
+      "name": "centsToUsd",
+      "kind": "unused local",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/hooks/useActivityFeed.archived.ts",
+      "reason": "Declared but never used; found by the second pass (tsc --noUnusedLocals).",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/hooks/useAthleteSubscription.ts",
+      "name": "useHasSubscriberPass",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/hooks/useAthleteSubscription.archived.ts",
+      "reason": "No caller.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__tests__/finance.test.ts",
+      "name": "tests for revenueSourceTitle",
+      "kind": "tests",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/__tests__/finance.test.archived.ts",
+      "reason": "Test cases that only covered revenueSourceTitle, archived beside it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__tests__/verification.test.ts",
+      "name": "tests for fetchPlayerVerified",
+      "kind": "tests",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/__tests__/verification.test.archived.ts",
+      "reason": "Test cases that only covered fetchPlayerVerified, archived beside it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/admin.ts",
+      "name": "buildAdminHealth",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/admin.archived.ts",
+      "reason": "Only the archived admin overview used it; Health owns the threshold checks. (cascade of DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/admin.ts",
+      "name": "fetchAdminReports",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/admin.archived.ts",
+      "reason": "Only the archived admin overview used it; reports load through lib/adminReports. (cascade of DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/admin.ts",
+      "name": "overviewLedeForLens",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/admin.archived.ts",
+      "reason": "Only the archived admin overview used it. (cascade of DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/admin.ts",
+      "name": "EMPTY_REPORTS",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/admin.archived.ts",
+      "reason": "Private helper used only by fetchAdminReports / buildAdminHealth, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/admin.ts",
+      "name": "asLeaders",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/admin.archived.ts",
+      "reason": "Private helper used only by fetchAdminReports / buildAdminHealth, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/admin.ts",
+      "name": "asSection",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/admin.archived.ts",
+      "reason": "Private helper used only by fetchAdminReports / buildAdminHealth, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/admin.ts",
+      "name": "band",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/admin.archived.ts",
+      "reason": "Private helper used only by fetchAdminReports / buildAdminHealth, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/admin.ts",
+      "name": "parseLeaders",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/admin.archived.ts",
+      "reason": "Private helper used only by fetchAdminReports / buildAdminHealth, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/admin.ts",
+      "name": "parseSeries",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/admin.archived.ts",
+      "reason": "Private helper used only by fetchAdminReports / buildAdminHealth, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/adminCatalog.ts",
+      "name": "fetchAdminMaloOriginBars",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/adminCatalog.archived.ts",
+      "reason": "Only tests use it; origin analysis moved to the Revenue report.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/adminCatalog.ts",
+      "name": "fetchAdminOpsInbox",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/adminCatalog.archived.ts",
+      "reason": "Only the archived admin overview inbox used it. (cascade of DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/adminCatalog.ts",
+      "name": "fetchAdminTips",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/adminCatalog.archived.ts",
+      "reason": "Only tests use it; donation history moved to Revenue and Finance & Books.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/adminCoverage.ts",
+      "name": "coverageHealth",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/adminCoverage.archived.ts",
+      "reason": "Only the archived admin overview used it. (cascade of DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/aura.ts",
+      "name": "AURA_CARD_FACE",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/aura.archived.ts",
+      "reason": "No caller.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/donationThanks.ts",
+      "name": "fetchMyDonationThanks",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/donationThanks.archived.ts",
+      "reason": "No caller; confirm with DONATION_THANKS whether Activity should use it before archiving.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/feedback.ts",
+      "name": "countNewAppFeedback",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/feedback.archived.ts",
+      "reason": "Fed the old admin overview inbox (removed in ADM-02).",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "EMPTY_COMPANY_REVENUE",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Only the archived revenue-summary parser and its removed test mock used it (cascade of DATA-01-F6).",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "fetchCompanyRevenueLogs",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Only tests use it; Finance & Books reads the log through lib/bookkeeping.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "fetchCompanyRevenueSummary",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Only archived desks used it; reports read the summary through lib/adminReports. (cascade of DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "revenueSourceTitle",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Only tests use it; stream names come from shared-types streamName.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "EMPTY_STREAMS",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Private helper used only by fetchCompanyRevenueLogs / fetchCompanyRevenueSummary, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "asInt",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Private helper used only by fetchCompanyRevenueLogs / fetchCompanyRevenueSummary, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "asText",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Private helper used only by fetchCompanyRevenueLogs / fetchCompanyRevenueSummary, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "dollarsToCents",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Private helper used only by fetchCompanyRevenueLogs / fetchCompanyRevenueSummary, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "parseLog",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Private helper used only by fetchCompanyRevenueLogs / fetchCompanyRevenueSummary, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "parseStream",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Private helper used only by fetchCompanyRevenueLogs / fetchCompanyRevenueSummary, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/finance.ts",
+      "name": "parseSummary",
+      "kind": "helper",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/finance.archived.ts",
+      "reason": "Private helper used only by fetchCompanyRevenueLogs / fetchCompanyRevenueSummary, archived with it.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/leaderboards.ts",
+      "name": "VIEW_DWELL_MS",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/leaderboards.archived.ts",
+      "reason": "Deprecated alias of VIEW_PLAY_MS with no callers.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/operator.ts",
+      "name": "OPERATOR_ACTIONS",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/operator.archived.ts",
+      "reason": "Unused by the operator console; Wave 3 game-day design should restate what it needs.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/operator.ts",
+      "name": "OPERATOR_CALLOUT_TYPES",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/operator.archived.ts",
+      "reason": "Only the archived isOperatorCallout used it. (cascade of DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/operator.ts",
+      "name": "OPERATOR_SCORE_STEPS",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/operator.archived.ts",
+      "reason": "Unused by the operator console; Wave 3 game-day design should restate what it needs.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/operator.ts",
+      "name": "isOperatorCallout",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/operator.archived.ts",
+      "reason": "Unused by the operator console.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/rallies.ts",
+      "name": "rallyShareMessage",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/rallies.archived.ts",
+      "reason": "No caller; Rally sharing uses the gift link.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/reels.ts",
+      "name": "HIGHLIGHTS_BUCKET",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/reels.archived.ts",
+      "reason": "No caller; uploads name their bucket in MediaUploadService.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/roster.ts",
+      "name": "isOwnAthleteSheet",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/roster.archived.ts",
+      "reason": "No caller.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/runtime.ts",
+      "name": "getRuntimePathValue",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/runtime.archived.ts",
+      "reason": "No caller.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/spotlight.ts",
+      "name": "utcMonthStart",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/spotlight.archived.ts",
+      "reason": "No caller; month windows are computed in SQL.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/spotlight.ts",
+      "name": "utcYearStart",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/spotlight.archived.ts",
+      "reason": "No caller; year windows are computed in SQL.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/verification.ts",
+      "name": "fetchPlayerVerified",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/lib/verification.archived.ts",
+      "reason": "Only tests use it; the badge comes from useSchoolBadge.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/frontend/services/MediaUploadService.ts",
+      "name": "MediaUploadService",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/apps/mobile/src/frontend/services/MediaUploadService.archived.ts",
+      "reason": "Bundle object nobody imports; callers import each upload function directly. (second archive pass, DATA-01-F6)",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "packages/shared-types/admin/reports.ts",
+      "name": "maloChannel",
+      "kind": "export",
+      "to": "archive/dead-code-2026-10-13/packages/shared-types/admin/reports.archived.ts",
+      "reason": "Only tests use it; channel labels come from donationChannel / tipChannelLabel.",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "apps/mobile/src/backend/db/schema.sql",
+      "name": "get_aura_tier",
+      "kind": "database function",
+      "to": "archive/dead-code-2026-10-13/sql/get_aura_tier.archived.sql",
+      "reason": "Never called; the app computes Aura tiers in lib/aura.ts. Dropped by 20261013120000_data_governance_closures.sql (DATA-01-F5).",
+      "approved": "owner, 2026-10-13"
+    },
+    {
+      "file": "supabase/migrations/20261014090000_profile_privacy.sql",
+      "name": "privacy_lock_active",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-14/sql/privacy_lock_active.archived.sql",
+      "reason": "Guardian lock (stricter-only) replaced before anything was applied: owner 2026-10-14, a guardian supervises and approves a few changes instead (MINOR-01).",
+      "approved": "owner, 2026-10-14"
+    },
+    {
+      "file": "supabase/migrations/20261014090000_profile_privacy.sql",
+      "name": "guardian_get_privacy",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-14/sql/guardian_get_privacy.archived.sql",
+      "reason": "Guardian lock (stricter-only) replaced before anything was applied: owner 2026-10-14, a guardian supervises and approves a few changes instead (MINOR-01).",
+      "approved": "owner, 2026-10-14"
+    },
+    {
+      "file": "supabase/migrations/20261014090000_profile_privacy.sql",
+      "name": "guardian_set_privacy",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-14/sql/guardian_set_privacy.archived.sql",
+      "reason": "Guardian lock (stricter-only) replaced before anything was applied: owner 2026-10-14, a guardian supervises and approves a few changes instead (MINOR-01).",
+      "approved": "owner, 2026-10-14"
+    },
+    {
+      "file": "supabase/migrations/20261014090000_profile_privacy.sql",
+      "name": "admin_release_privacy_lock",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-14/sql/admin_release_privacy_lock.archived.sql",
+      "reason": "Guardian lock (stricter-only) replaced before anything was applied: owner 2026-10-14, a guardian supervises and approves a few changes instead (MINOR-01).",
+      "approved": "owner, 2026-10-14"
+    },
+    {
+      "file": "supabase/migrations/20261014090000_profile_privacy.sql",
+      "name": "audience_rank",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-14/sql/audience_rank.archived.sql",
+      "reason": "Only the removed stricter-only guardian lock used it (MINOR-01 replaced the lock).",
+      "approved": "owner, 2026-10-14"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Custodial/GuardianPrivacyCard.tsx",
+      "name": "GuardianPrivacyCard",
+      "kind": "whole file",
+      "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/components/Custodial/GuardianPrivacyCard.archived.tsx",
+      "reason": "Parent HQ Lock / Unlock card for the removed guardian lock; replaced by GuardianSupervisionPanel (MINOR-01). Never committed.",
+      "approved": "owner, 2026-10-14"
+    }
+  ],
+  "unusedLocalsBaseline": [
+    {
+      "file": "apps/mobile/src/frontend/components/Reels/ReelCard.tsx",
+      "name": "hype",
+      "owner": "PLAYBACK",
+      "reason": "Player-level hype state is set but never read; ReelCard is under PLAY-01's open claim, so PLAYBACK removes it there."
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Reels/__tests__/UploadVideoModal.test.tsx",
+      "name": "view",
+      "owner": "UPLOAD",
+      "reason": "Two unused `view` bindings in tests under PLAY-01's Reels test claim; drop the bindings when that claim is released."
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-import { resolveTipOrigin, revenueSourceTitle, tipChannelLabel } from '@/lib/finance';
+import { paymentIntentIdFromSecret, resolveTipOrigin, tipChannelLabel } from '@/lib/finance';
 
 describe('resolveTipOrigin', () => {
   it('tags a Rally donation as rally (a gear goal still wins)', () => {
@@ -11,6 +11,14 @@ describe('resolveTipOrigin', () => {
 
   it('labels the Rally channel and the tip revenue stream', () => {
     expect(tipChannelLabel('rally', 'in_app', 'New cleats')).toMatch(/Rally/);
-    expect(revenueSourceTitle('tip')).toBe("Tip to Tapua'i");
+  });
+});
+
+describe('paymentIntentIdFromSecret', () => {
+  it('keeps only a well-formed PaymentIntent id', () => {
+    expect(paymentIntentIdFromSecret('pi_3QabcDEF12345678_secret_xyz')).toBe('pi_3QabcDEF12345678');
+    expect(paymentIntentIdFromSecret('seti_123_secret_x')).toBeNull();
+    expect(paymentIntentIdFromSecret('pi_bad id_secret_x')).toBeNull();
+    expect(paymentIntentIdFromSecret(undefined)).toBeNull();
   });
 });

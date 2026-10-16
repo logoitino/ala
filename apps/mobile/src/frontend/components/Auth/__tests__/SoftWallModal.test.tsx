@@ -32,6 +32,14 @@ jest.mock('@/context/AuthContext', () => ({
 jest.mock('@/hooks/useSheetFrame', () => ({ useSheetFrame: () => ({ dock: {}, card: {} }) }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn() } }));
 jest.mock('expo-blur', () => ({ BlurView: 'BlurView' }));
+// MINOR-01: the under-13 device pause lives in AsyncStorage; keep it in memory per test (`?.`: the Supabase client
+// reads storage while modules load, before this map exists).
+const mockStore = new Map<string, string>();
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(async (key: string) => mockStore?.get(key) ?? null),
+  setItem: jest.fn(async (key: string, value: string) => { mockStore?.set(key, value); }),
+  removeItem: jest.fn(async (key: string) => { mockStore?.delete(key); }),
+}));
 
 const EMAIL = 'returning@family.com';
 const PASSWORD = 'hunter2password';
@@ -56,13 +64,15 @@ async function typePassword(password = PASSWORD) {
 const signInButton = () => screen.getByLabelText('Sign in with email and password');
 const createButton = () => screen.getByLabelText('Create an account with email and password');
 const magicButton = () => screen.getByLabelText('Send magic link email');
-// expo-checkbox renders its own checkbox node inside the toggle's Pressable, so match
-// on the accessible name to get the row that actually carries the press handler.
-const ageCheckbox = () =>
-  screen.getByRole('checkbox', { name: 'I confirm I am 13 years of age or older.' });
+// MINOR-01: birth month and year replace the 13+ checkbox.
+async function enterBirth(year: number | string = 1990, month = 'Apr') {
+  await fireEvent.press(screen.getByLabelText(`Birth month: ${month}`));
+  await fireEvent.changeText(screen.getByLabelText('Birth year'), String(year));
+}
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockStore.clear();
 });
 
 describe('SoftWallModal email form', () => {
@@ -71,14 +81,14 @@ describe('SoftWallModal email form', () => {
     await typeEmail();
     await typePassword();
 
-    expect(screen.queryByRole('checkbox', { name: 'I confirm I am 13 years of age or older.' })).toBeNull();
+    expect(screen.queryByLabelText('Birth year')).toBeNull();
     expect(signInButton()).toBeEnabled();
 
     await fireEvent.press(signInButton());
     expect(mockSignInWithEmailPassword).toHaveBeenCalledWith(EMAIL, PASSWORD);
   });
 
-  it('keeps Create account disabled until the 13+ box is checked', async () => {
+  it('keeps Create account disabled until a birth month and year are given', async () => {
     await openSheet();
     await typeEmail();
     await typePassword();
@@ -86,11 +96,25 @@ describe('SoftWallModal email form', () => {
 
     expect(createButton()).toBeDisabled();
 
-    await fireEvent.press(ageCheckbox());
+    await enterBirth();
     expect(createButton()).toBeEnabled();
 
     await fireEvent.press(createButton());
-    expect(mockSignUpWithEmailPassword).toHaveBeenCalledWith(EMAIL, PASSWORD, true);
+    expect(mockSignUpWithEmailPassword).toHaveBeenCalledWith(EMAIL, PASSWORD, { year: 1990, month: 4 });
+  });
+
+  it('refuses an under-13 date neutrally, creates nothing, and pauses this device', async () => {
+    await openSheet();
+    await typeEmail();
+    await typePassword();
+    await openCreate();
+    await enterBirth(new Date().getFullYear() - 9, 'Jan');
+
+    await fireEvent.press(createButton());
+    expect(await screen.findByText("We can't create your account right now.")).toBeTruthy();
+    expect(mockSignUpWithEmailPassword).not.toHaveBeenCalled();
+    expect(createButton()).toBeDisabled();
+    expect(mockStore.size).toBe(1);
   });
 
   it('keeps the magic link gated too, since signInWithOtp can create the account', async () => {
@@ -101,7 +125,7 @@ describe('SoftWallModal email form', () => {
 
     expect(magicButton()).toBeDisabled();
 
-    await fireEvent.press(ageCheckbox());
+    await enterBirth();
     expect(magicButton()).toBeEnabled();
   });
 
@@ -121,7 +145,7 @@ describe('SoftWallModal email form', () => {
 
     expect(signInButton()).toBeEnabled();
     await openCreate();
-    await fireEvent.press(ageCheckbox());
+    await enterBirth();
 
     expect(createButton()).toBeDisabled();
   });

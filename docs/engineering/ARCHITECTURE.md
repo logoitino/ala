@@ -6,9 +6,9 @@ Current state and hand-off: [STATE.md](../STATE.md) (read first). System overvie
 
 | Package | Path | Role |
 | --- | --- | --- |
-| `@tapuai/mobile` | `apps/mobile/` | Expo Router SDK 57 fan app + production Expo `/admin` control plane |
+| `@tapuai/mobile` | `apps/mobile/` | Expo Router SDK 57 fan app + main Expo `/admin`: selected report design, dashboards and all administration desks |
 | `@tapuai/admin-portal` | `apps/admin-portal/` | Next.js web admin, **read-only oversight** (Home / Trends / Audience / Revenue / Health / Product, plus Analytics and Departments). Analytics is eight dashboards from `get_admin_reports` and `get_company_revenue_summary`. Features/Profile display `app_runtime_config` with no toggle. Every write happens only in Expo `/admin` |
-| `@tapuai/shared-types` | `packages/shared-types/` | Shared TypeScript contracts (Profile / Soft-Wall gates / Profile chrome / Spotlight / RPC shapes) |
+| `@tapuai/shared-types` | `packages/shared-types/` | Shared TypeScript contracts plus platform-neutral admin report parsers, catalogs, dashboard models and chart scales (`/admin` export) |
 | SQL / Edge | `supabase/` | Migrations, Edge Functions, seed SQL (shared backend) |
 
 ```text
@@ -24,8 +24,17 @@ apps/admin-portal ─┘
 
 ## Runtime responsibilities
 
+**Main admin (ADM-02, owner decision 2026-10-12):** Expo `/admin` combines the report
+design selected at the local `:3033` preview with all existing administration controls.
+Home, Trends, Audience, Revenue, Health, Product, Analytics and Departments sit alongside
+Manage desks. Product includes Features/Profile/Sign-in/People oversight; editing stays
+in the existing desks. The Next application remains a compatible read-only client.
+Shared report models live in `packages/shared-types/admin/`; Next server loaders remain
+server-only and Expo uses its current authenticated SDK. See
+[MAIN_ADMIN_PORTAL.md](design/MAIN_ADMIN_PORTAL.md) and [ADM-02.md](../agents/ADM-02.md).
+
 - **Mobile (Expo):** Highlights ⚡, Activity, Spotlight, Drip, Profile (same `AthleteProfileView` as `/user/[id]`; hamburger on own hub; Local is a pill on Highlights), Donate PaymentSheet (code name Mālo; discloses 90 / 10, optional tip for Tapua'i), Rally goals and preset Say thanks (`components/Rally/`, `components/Thanks/`), custodial money cards (`components/Custodial/`), athlete verification (`components/Verification/`), Soft-Wall auth (browse-first guests), operator console (Features-gated), and the live **Admin** desks under `app/(admin)/admin` (Coverage Soft-Wall + Profile surfaces, Features Soft-Wall board, Look Profile chrome, People Fans filter).
-- **Admin portal (Next):** Web app at `pnpm admin` → `http://localhost:3001`. **Analytics** (`/analytics`) is eight dashboards and a measure catalog from the same reads. **Trends** (`/reports`, `get_admin_reports`) and **Revenue** (`/money`, `get_company_revenue_summary` and `get_admin_malo_breakdown`) are the browser desks for behavior, the company ledger, and each donation by surface. **Health** is `/operations` and **Departments** is `/manage`. Product's Features / Profile / Sign-in / People display live status on this read-only plane. Every chart comes from the inline-SVG kit in `apps/admin-portal/components/charts/` (scales in `lib/chartScale.ts`) and carries a written summary and a Data table. Expo `/admin/features` and `/admin/look` publish changes into `app_runtime_config.published`. Edit games, Drip SKUs, sports, and catalogs in Expo `/admin`.
+- **Admin portal (Next):** Web app at `pnpm admin` → `http://localhost:3001`. **Analytics** (`/analytics`) is eight dashboards and a measure catalog from the same reads. **Trends** (`/reports`, `get_admin_reports`) and **Revenue** (`/money`, `get_company_revenue_summary` and `get_admin_malo_breakdown`) are the browser desks for behavior, the company ledger, and each donation by surface. **Health** is `/operations` and **Departments** is `/manage`. Product's Features / Profile / Sign-in / People display live status on this read-only plane. Every chart comes from the inline-SVG kit in `apps/admin-portal/components/charts/` (shared scales in `packages/shared-types/admin/chartScale.ts`; Next `lib/chartScale.ts` is a compatibility export) and carries a written summary and a Data table. Expo `/admin/features` and `/admin/look` publish changes into `app_runtime_config.published`. Edit games, Drip SKUs, sports, and catalogs in Expo `/admin`.
 - **Departments and specialists:** Resolve the primary functional owner in [TEAM_HIERARCHY.md](../agents/TEAM_HIERARCHY.md) and [TEAMS.md](../agents/TEAMS.md); dispatch a bounded task from [WORK_QUEUE.md](../agents/WORK_QUEUE.md). The registry in `.claude/agents/registry.json` and `agents:check` keep files, reporting relationships and documentation aligned. Leads integrate shared changes; QA independently gates release.
 - **Shared types:** Import `@tapuai/shared-types` (or `@shared/*`) for cross-app domain types, including `SOFT_WALL_GATES` / `SoftWallOversight`. Mobile keeps the manually maintained `Database` helpers in `apps/mobile/src/frontend/types/database.ts`.
 - **Auth:** Supabase session + `alasports://auth/callback`. Soft wall on Donate / Crew / gear-goal donate only; fan profile via `handle_new_auth_user` + `ensureFanProfile`.
@@ -56,6 +65,21 @@ The composer keeps the draft and upload in `UploadVideoModal` and renders short 
 choices and optional game/account/Vault settings replace inline expanded lists. Header and footer
 stay outside the active page scroll. This changes interaction only; storage, tagging and payment
 contracts stay in their existing services.
+
+## Highlight playback reliability
+
+PLAY-01 keeps source/readiness/focus ownership in the Reels feature. Replacement
+completion is separate from decoder readiness; stale source completions cannot start a
+new card or count a view. Photo stories retain their independent image player.
+
+Expo Video 57.0.5's web implementation discards browser `play()` promises, so callers
+cannot catch cancelled or unsupported playback through its public void API. A versioned
+pnpm patch under root `patches/`, registered in `package.json` and `pnpm-lock.yaml`, owns
+those promises and preserves immediate pause intent. Only expected AbortError and
+NotAllowedError are nonfatal; actual current-source failures remain player error events.
+Native SDK code is unchanged. Reassess the patch on dependency upgrades rather than
+editing installed files. Evidence, source review and remaining hosted/device checks:
+[PLAY-01](../agents/PLAY-01.md).
 
 
 ## Donation and menu presentation

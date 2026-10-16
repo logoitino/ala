@@ -4,7 +4,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { formatTipDollars as formatUsd } from '@/lib/reels';
 import { useCustodial } from '@/hooks/useCustodial';
-import { athleteMoneyNotice, pendingRequests, type CustodialWithdrawal } from '@/lib/custodial';
+import { athleteMoneyNotice, pendingRequests, receivedLines, type CustodialWithdrawal } from '@/lib/custodial';
 
 import { WithdrawalHistory } from './WithdrawalHistory';
 
@@ -43,10 +43,13 @@ export function AthleteMoneyCard({ playerId }: { playerId: string | null | undef
     );
   };
 
+  const received = receivedLines(summary.receivedCents, summary.familyCents, formatUsd);
+
   return (
     <View style={styles.card} accessibilityLabel="Your money">
-      <Text style={styles.kicker}>{summary.athleteControls ? 'Your money' : 'Held for you'}</Text>
-      <Text style={styles.total}>{formatUsd(summary.receivedCents)} received</Text>
+      <Text style={styles.kicker}>{summary.athleteControls ? 'Your money' : 'Your donations'}</Text>
+      <Text style={styles.total}>{received.headline}</Text>
+      <Text style={styles.body}>{received.detail}</Text>
       <Text style={styles.body}>{athleteMoneyNotice(summary)}</Text>
 
       {pending.map((request) => (

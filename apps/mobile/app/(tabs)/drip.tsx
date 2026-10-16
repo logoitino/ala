@@ -14,7 +14,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { DRIP_FILTERS, type DripFilter, type DripItem } from '@/data/shop';
 import { useDripCatalog } from '@/hooks/useDripCatalog';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
-import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { TAB_ACCENTS } from '@/theme/motion';
 
 /**
  * @purpose Drip marketplace: category pills, GearCard 0.96 press, ProductSheet checkout. Cards zig-zag in from
@@ -96,8 +96,6 @@ export default function DripTab() {
             setFilter(next);
           }}
           accessibilityLabel="Drip categories"
-          accent={FOCAL.emberInk}
-          mist={FOCAL.mistEmber}
         />
         {loading && catalog.length === 0 ? (
           <View style={styles.loading}>

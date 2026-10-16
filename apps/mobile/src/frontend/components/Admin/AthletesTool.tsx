@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { AthleteRecordsPanel } from '@/components/Admin/AthleteRecordsPanel';
 import { Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 
@@ -242,6 +243,7 @@ export function AthletesTool() {
         {form.id ? <AdminBtn label="Clear form" onPress={() => setForm(empty)} /> : null}
         <AdminNotice text={message} />
       </AdminPanel>
+      {form.id ? <AthleteRecordsPanel key={form.id} playerId={form.id} name={form.name || 'Athlete'} defaultSport={sport} /> : null}
       {linkingPlayer ? (
         <AdminPanel title={`Link guardian · ${linkingPlayer.name}`}>
           <AdminNotice

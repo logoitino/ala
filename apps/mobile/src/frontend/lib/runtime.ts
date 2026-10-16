@@ -19,6 +19,7 @@ import { APP_RUNTIME_FLAG_GROUPS } from '@tapuai/shared-types';
 
 export type AppRuntimeTabs = {
   home: boolean;
+  beyond: boolean;
   local: boolean;
   activity: boolean;
   spotlight: boolean;
@@ -78,6 +79,8 @@ export type AppRuntimeProfile = {
 export type HighlightRailItem = 'seki' | 'aura' | 'flex' | 'malo' | 'more';
 
 export type AppRuntimeHighlights = {
+  /** Protected moderation switch; the Beyond desk changes it through its dependency-aware RPC. */
+  beyondGameEnabled: boolean;
   railSide: 'left' | 'right';
   namePlacement: 'top' | 'bottom';
   showSchool: boolean;
@@ -194,7 +197,7 @@ export const APP_FLAG_GROUPS: AppFlagGroup[] = APP_RUNTIME_FLAG_GROUPS.filter(
 }));
 
 export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
-  tabs: { home: true, local: true, activity: true, spotlight: true, drip: false, profile: true, upload: true },
+  tabs: { home: true, beyond: true, local: true, activity: true, spotlight: true, drip: false, profile: true, upload: true },
   buttons: {
     seki: true,
     aura: true,
@@ -251,6 +254,7 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     statsFirst: false,
   },
   highlights: {
+    beyondGameEnabled: false,
     railSide: 'right',
     namePlacement: 'bottom',
     showSchool: true,
@@ -297,14 +301,8 @@ export const THEME_PRESETS: { id: string; label: string; hint: string; theme: Ap
   {
     id: 'daylight',
     label: 'Daylight (default)',
-    hint: 'Shipping look — light canvas, deep jade. Reset here to leave night mode.',
-    theme: {
-      background: '#F3FAF6',
-      surface: '#FFFFFF',
-      jade: '#00733C',
-      gold: '#8A6400',
-      text: '#0F1416',
-    },
+    hint: 'Shipping look — Calm Island: warm light canvas, deep jade. Reset here to leave night mode.',
+    theme: { ...DAYLIGHT_THEME },
   },
   {
     id: 'tapuai',
@@ -457,6 +455,7 @@ function parseHighlights(raw: unknown): AppRuntimeHighlights {
   const record = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
   const fallback = DEFAULT_APP_RUNTIME.highlights;
   return {
+    beyondGameEnabled: record.beyondGameEnabled === true,
     railSide: record.railSide === 'left' ? 'left' : 'right',
     namePlacement: record.namePlacement === 'top' ? 'top' : 'bottom',
     showSchool: asBool(record.showSchool, fallback.showSchool),
@@ -675,13 +674,6 @@ export function applyRuntimePath(config: AppRuntimeConfig, path: string, value: 
   return next;
 }
 
-export function getRuntimePathValue(config: AppRuntimeConfig, path: string): unknown {
-  const [group, key] = path.split('.') as [string, string];
-  if (!group || !key) return undefined;
-  const bag = (config as unknown as Record<string, Record<string, unknown>>)[group];
-  return bag ? bag[key] : undefined;
-}
-
 const RUNTIME_ROOT_KEYS = ['tabs', 'buttons', 'layouts', 'theme', 'profile', 'highlights', 'copy', 'catalog'] as const;
 
 function assertKnownObjectKeys(record: Record<string, unknown>, allowed: string[], label: string) {
@@ -787,6 +779,7 @@ export function moveHighlightRailItem(order: HighlightRailItem[], id: HighlightR
 
 const TAB_HREF: Record<keyof AppRuntimeTabs, string> = {
   home: '/',
+  beyond: '/beyond',
   local: '/local',
   activity: '/activity',
   spotlight: '/spotlight',
@@ -799,8 +792,8 @@ const TAB_HREF: Record<keyof AppRuntimeTabs, string> = {
  * @purpose First live fan-bar destination when a published tab is turned off.
  */
 export function firstEnabledFanHref(config: AppRuntimeConfig): string {
-  // Fan-bar order. Local is a Home pill now, not a bar tab, so it is not a fallback target.
-  const order: (keyof AppRuntimeTabs)[] = ['home', 'activity', 'spotlight', 'drip', 'profile'];
+  // Beyond and Local open from the Highlights pill row now; the Beyond page stays a valid fallback. Drip is a Profile link.
+  const order: (keyof AppRuntimeTabs)[] = ['home', 'beyond', 'activity', 'spotlight', 'profile'];
   const hit = order.find((key) => config.tabs[key]);
   return hit ? TAB_HREF[hit] : '/profile';
 }

@@ -1,3 +1,8 @@
+/**
+ * Field operator control center for one claimed game: score buttons, period chips, clock and callouts from the sport
+ * playbook. Database reads and live channels go through `lib/operator` so this screen holds no Supabase client.
+ */
+
 import * as Haptics from 'expo-haptics';
 import { type Href, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -15,20 +20,23 @@ import { displayValue, formatClock, type Player } from '@/data/players';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import type { SportScoreAction } from '@/data/sports';
 import {
-  GAME_EVENTS_BROADCAST_EVENT,
   clockSeconds,
-  gameEventsChannelName,
+  fetchOperatorGame,
+  fetchOperatorPlayers,
   hasOperatorClaim,
   insertOperatorCallout,
   insertOperatorEvent,
+  openGameEventsBroadcaster,
   rosterForScoringSide,
   sendGameEventBroadcast,
+  subscribeOperatorGame,
   updateGameScore,
   updateOperatorQuarter,
+  type GameEventsBroadcaster,
   type OperatorAction,
   type OperatorCallout,
 } from '@/lib/operator';
-import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import type { Game } from '@/types/database';
 
 const CONFIG_ERROR =
@@ -64,7 +72,7 @@ export default function OperatorScorekeeperScreen() {
   const runningRef = useRef(running);
   const gameRef = useRef(game);
   const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const broadcastRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const broadcastRef = useRef<GameEventsBroadcaster | null>(null);
 
   remainingRef.current = remaining;
   runningRef.current = running;
@@ -109,21 +117,18 @@ export default function OperatorScorekeeperScreen() {
       return;
     }
 
-    const [gameResult, playersResult] = await Promise.all([
-      supabase.from('games').select('*').eq('id', gameId).single(),
-      supabase.from('players').select('*'),
-    ]);
+    const [gameResult, playersResult] = await Promise.all([fetchOperatorGame(gameId), fetchOperatorPlayers()]);
 
-    if (gameResult.error || !gameResult.data) {
+    if (!gameResult.game) {
       setGame(null);
-      setError(gameResult.error?.message ?? 'Game not found.');
+      setError(gameResult.error ?? 'Game not found.');
       setLoading(false);
       return;
     }
 
-    const nextGame = gameResult.data as Game;
+    const nextGame = gameResult.game;
     setGame(nextGame);
-    setPlayers((playersResult.data as Player[] | null) ?? []);
+    setPlayers(playersResult.players);
     const playbook = configFor(nextGame.sport);
     setRemaining(clockSeconds(nextGame, playbook.clockSeconds));
     setRunning(Boolean(nextGame.is_clock_running));
@@ -136,37 +141,23 @@ export default function OperatorScorekeeperScreen() {
   }, [allowed, loadGame]);
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !gameId || !allowed) return;
-    const channel = supabase
-      .channel(nextRealtimeTopic(`operator_scorekeeper_${gameId}`))
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
-        (payload) => {
-          if (!payload.new) return;
-          const next = payload.new as Game;
-          setGame(next);
-          if (!runningRef.current) setRemaining(clockSeconds(next, configFor(next.sport).clockSeconds));
-          setRunning(Boolean(next.is_clock_running));
-          if (next.quarter?.trim()) setSelectedQuarter(next.quarter.trim());
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    if (!gameId || !allowed) return;
+    return subscribeOperatorGame(gameId, (next) => {
+      setGame(next);
+      if (!runningRef.current) setRemaining(clockSeconds(next, configFor(next.sport).clockSeconds));
+      setRunning(Boolean(next.is_clock_running));
+      if (next.quarter?.trim()) setSelectedQuarter(next.quarter.trim());
+    });
   }, [allowed, configFor, gameId]);
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !gameId || !allowed) return;
-    const channel = supabase.channel(gameEventsChannelName(gameId), {
-      config: { broadcast: { ack: true } },
-    });
-    channel.subscribe();
-    broadcastRef.current = channel;
+    if (!gameId || !allowed) return;
+    const broadcaster = openGameEventsBroadcaster(gameId);
+    if (!broadcaster) return;
+    broadcastRef.current = broadcaster;
     return () => {
       broadcastRef.current = null;
-      supabase.removeChannel(channel);
+      broadcaster.close();
     };
   }, [allowed, gameId]);
 
@@ -268,11 +259,7 @@ export default function OperatorScorekeeperScreen() {
     try {
       const live = broadcastRef.current;
       if (live) {
-        await live.send({
-          type: 'broadcast',
-          event: GAME_EVENTS_BROADCAST_EVENT,
-          payload,
-        });
+        await live.send(payload);
       } else {
         await sendGameEventBroadcast(current.id, payload);
       }
@@ -311,12 +298,12 @@ export default function OperatorScorekeeperScreen() {
     setPendingAction(action);
     setSendError(null);
     if (!isSupabaseConfigured) return;
-    const { data, error: rosterError } = await supabase.from('players').select('*');
-    if (rosterError) {
-      setSendError(rosterError.message);
+    const roster = await fetchOperatorPlayers();
+    if (roster.error) {
+      setSendError(roster.error);
       return;
     }
-    setPlayers((data as Player[] | null) ?? []);
+    setPlayers(roster.players);
   };
 
   const tagPlayer = async (player: Player) => {

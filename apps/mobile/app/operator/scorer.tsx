@@ -13,15 +13,17 @@ import { PlaySentBanner } from '@/components/Operator/PlaySentBanner';
 import { ScorerControls } from '@/components/Operator/ScorerControls';
 import { ScreenShell } from '@/components/ScreenShell';
 import { cardShadow, colors, radii } from '@/constants/theme';
-import {
-  displayValue,
-  type Player,
-  type ScorerAction,
-  buildPlayEventPayload,
-} from '@/data/players';
+import { displayValue, type Player, type ScorerAction } from '@/data/players';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import type { Game } from '@/types/database';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import {
+  fetchOperatorPlayers,
+  fetchScorerGames,
+  insertScorerPlayEvent,
+  patchScorerGame,
+  subscribeScorerGames,
+} from '@/lib/operator';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 const CONFIG_ERROR =
   'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart Expo.';
@@ -57,29 +59,26 @@ export default function ScorerScreen() {
       return;
     }
 
-    const [gamesResult, playersResult] = await Promise.all([
-      supabase.from('games').select('*').eq('is_active', true).order('home_team', { ascending: true }),
-      supabase.from('players').select('*'),
-    ]);
+    const [gamesResult, playersResult] = await Promise.all([fetchScorerGames(), fetchOperatorPlayers()]);
 
     if (gamesResult.error) {
       setGames([]);
       setPlayers([]);
-      setError(gamesResult.error.message);
+      setError(gamesResult.error);
       setLoading(false);
       return;
     }
 
     if (playersResult.error) {
-      setGames((gamesResult.data as Game[] | null) ?? []);
+      setGames(gamesResult.games);
       setPlayers([]);
-      setError(playersResult.error.message);
+      setError(playersResult.error);
       setLoading(false);
       return;
     }
 
-    const nextGames = (gamesResult.data as Game[] | null) ?? [];
-    const nextPlayers = (playersResult.data as Player[] | null) ?? [];
+    const nextGames = gamesResult.games;
+    const nextPlayers = playersResult.players;
     setGames(nextGames);
     setPlayers(nextPlayers);
     setSelectedGameId((current) =>
@@ -97,30 +96,17 @@ export default function ScorerScreen() {
     void fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    if (!isSupabaseConfigured) return;
-
-    const channel = supabase
-      .channel('scorer_games')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'games' },
-        (payload) => {
-          const next = payload.new as Game | undefined;
-          if (!next?.id) return;
-          setGames((current) => {
-            const without = current.filter((game) => game.id !== next.id);
-            if (next.is_active === false) return without;
-            return [next, ...without];
-          });
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, []);
+  useEffect(
+    () =>
+      subscribeScorerGames((next) => {
+        setGames((current) => {
+          const without = current.filter((game) => game.id !== next.id);
+          if (next.is_active === false) return without;
+          return [next, ...without];
+        });
+      }),
+    [],
+  );
 
   useEffect(() => {
     return () => {
@@ -140,14 +126,12 @@ export default function ScorerScreen() {
     setSending(true);
     setSendError(null);
 
-    const { error: insertError } = await supabase
-      .from('game_events')
-      .insert(buildPlayEventPayload(action, player, selectedGame?.id));
+    const insertError = await insertScorerPlayEvent(action, player, selectedGame?.id);
 
     setSending(false);
 
     if (insertError) {
-      setSendError(insertError.message);
+      setSendError(insertError);
       return;
     }
 
@@ -160,15 +144,12 @@ export default function ScorerScreen() {
     setSending(true);
     setSendError(null);
 
-    const { error: updateError } = await supabase
-      .from('games')
-      .update({ ...patch, updated_at: new Date().toISOString() })
-      .eq('id', selectedGame.id);
+    const updateError = await patchScorerGame(selectedGame.id, patch);
 
     setSending(false);
 
     if (updateError) {
-      setSendError(updateError.message);
+      setSendError(updateError);
       return;
     }
 

@@ -17,7 +17,12 @@ jest.mock('expo-router', () => ({
     useEffect(callback, [callback]);
   },
 }));
-jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: { from: (table: string) => {
+jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: {
+  // Other people's profiles come through get_public_profiles (PRIV-01); keyed by athlete id here.
+  rpc: (name: string, args: { player_ids?: string[] | null }) => Promise.resolve(name === 'get_public_profiles'
+    ? { data: (args.player_ids ?? []).map((id) => mockProfiles.get(id)).filter(Boolean), error: null }
+    : { data: null, error: { message: `Unexpected RPC ${name}` } }),
+  from: (table: string) => {
   let id = '';
   const query = { select: () => query, eq: (_field: string, value: string) => { id = value; return query; },
     single: () => mockPlayers.get(id) ?? Promise.resolve({ data: null, error: null }),
@@ -107,7 +112,7 @@ it('ignores a late first-profile response after the next profile has finished lo
 
 it('passes hidden-school settings and the chosen public sport without exposing school copy', async () => {
   mockPlayers.set(firstId, Promise.resolve({ data: player(firstId, 'Ana First'), error: null }));
-  mockProfiles.set(firstId, { id: 'profile-a', user_id: 'user-a', player_id: firstId, username: null,
+  mockProfiles.set(firstId, { id: 'profile-a', player_id: firstId, username: null,
     full_name: 'Ana First', avatar_url: null, is_verified: false, is_verified_athlete: false,
     school_visible: false, athlete_sport: 'Volleyball', bio: null, social_links: {} });
   await render(<UserAthleteProfileScreen />);

@@ -1,0 +1,21 @@
+{
+  "apps/admin-portal/app/auth/callback/route.ts": 3,
+  "apps/admin-portal/components/LoginForm.tsx": 2,
+  "apps/admin-portal/components/SignOutButton.tsx": 1,
+  "apps/admin-portal/middleware.ts": 2,
+  "apps/mobile/src/frontend/components/Reels/UploadVideoModal.tsx": 2,
+  "apps/mobile/src/frontend/context/AppRuntimeContext.tsx": 2,
+  "apps/mobile/src/frontend/context/AuthContext.tsx": 6,
+  "apps/mobile/src/frontend/hooks/useAthleteSubscription.ts": 2,
+  "apps/mobile/src/frontend/hooks/useEngineeringSupport.ts": 1,
+  "apps/mobile/src/frontend/hooks/useFanTipHistory.ts": 3,
+  "apps/mobile/src/frontend/hooks/useGameEventBroadcast.ts": 6,
+  "apps/mobile/src/frontend/hooks/useReceivedMalo.ts": 1,
+  "apps/mobile/src/frontend/hooks/useRoster.ts": 1,
+  "apps/mobile/src/frontend/hooks/useStripeConnect.ts": 2,
+  "apps/mobile/src/frontend/hooks/useSubscriberRequests.ts": 2,
+  "apps/mobile/src/frontend/hooks/useTipCheckout.ts": 3,
+  "apps/mobile/src/frontend/services/MediaUploadService.ts": 7,
+  "apps/mobile/src/frontend/services/SupportSignalManager.ts": 1,
+  "apps/mobile/src/frontend/services/TelemetryManager.ts": 1
+}

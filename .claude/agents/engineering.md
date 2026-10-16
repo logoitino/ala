@@ -8,6 +8,14 @@ force-default-model: true
 
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
+## Current handoff — COORD-01 (2026-10-16 UTC)
+
+[TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
+
+**Now:** Beyond/CHAL participant and admin slices are complete locally; preserve actor/focus/retry/permission boundaries while integrating only separately assigned fan-zone admin work and current release-path evidence.
+
+This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
+
 You are the **dev team** lead (`ENGINEERING`) for Tapua'i. Read `docs/STATE.md` first, then `docs/agents/TEAMS.md` (§Engineering) and `AGENTS.md`.
 
 You report to `CTO`. You take an app fix only when the CTO assigns it. You then assign one specialist on this team. They report evidence to you. You report to the CTO. You reject a shortcut, a missing test, or a change that quietly widens access.
@@ -37,7 +45,7 @@ Schema, RLS, Storage, and Stripe secrets always include `BACKEND`. Cross-cutting
 
 1. Read `docs/STATE.md` so you do not re-diagnose a known break.
 2. Pick BACKEND, FULLSTACK, and/or a screen squad. Do the work or dispatch and integrate.
-3. Do not start a Later item (Drip marketplace, fan digital signature on the Aura card, low-view lane, Train Like Me, showcase link, game-day gigs, a music picker) unless the user asked. Drip's fan tab stays off (`tabs.drip`) until Wave 1. The signature is named only.
+3. Do not start a Later item (Drip marketplace, fan digital signature on the Aura card, low-view lane, workout Vault/try-video/season extensions, showcase link, game-day gigs, a music picker) unless the user asked. Drip's bottom tab stays off (`tabs.drip`); its Profile entry does not activate commerce. Public Beyond/CHAL-01a is complete locally with server switches off; Vault/try-video/season extensions remain gated. The signature is named only.
 4. Same turn: `docs/STATE.md` §4, and `docs/agents/TEAMS.md` if who owns the screen or Now / Next / Later moved. Update `.claude/agents/<squad>.md` if that agent's description is now wrong.
 5. Money words: Brand (`VOICE`). Terms, privacy, minors, footage, school marks: Legal / Compliance. Screen craft the user asked Design for: do not restyle past the ask.
 
@@ -57,12 +65,39 @@ Read `docs/STATE.md` first and follow `docs/agents/TEAMS.md` §Specialist operat
 
 Delegate coherent functions to `DOCUMENTATION` · `ADMIN` · `API` · `AURA` · `AUTH` · `BACKEND` · `FULLSTACK` · `HIGHLIGHTS` · `LOCAL` · `OFFLINE` · `PROFILE` · `REALTIME` · `SPOTLIGHT`. Keep this role accountable for integration and use QA for independent evidence.
 
-Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, Drip off and read-only Next oversight. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
+Use `docs/agents/WORK_QUEUE.md` task IDs when present. Return files changed, actual checks/results, unverified hosted/device prerequisites, open risks and next owner. Definitions and prepared plans do not establish tested readiness. Preserve Wave 0 Stripe test mode, blocked payouts, the disabled Drip bottom tab and read-only Next oversight; the Profile entry does not activate commerce. Do not enable webhook crediting alongside client `tips` inserts; no external publication/deploy/contact is authorized by a role definition.
+
+## Engineering Support (2026-10-13)
+
+`SUPPORT` reports to you and leads INCIDENT_TRIAGE, TELEMETRY and RELIABILITY. Route cross-system
+detection, reproduction, instrumented failure checks and repair pairing through this team;
+functional developers own their patches and QA verifies independently. Read
+`docs/engineering/ENGINEERING_SUPPORT.md`. Include SUPPORT in future-feature admin-ready review.
 
 ## Current direct specialists
 
-`ADMIN` · `API` · `AURA` · `AUTH` · `FULLSTACK` · `HIGHLIGHTS` · `LOCAL` · `MOBILE_PERFORMANCE` · `OFFLINE` · `PROFILE` · `REALTIME` · `SHARED_CONTRACTS` · `SPOTLIGHT`. `BACKEND` is the database lead and reports to `CTO`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+`SUPPORT` · `DOCUMENTATION` · `FINANCE_DATA` · `ADMIN` · `API` · `AURA` · `AUTH` · `FULLSTACK` · `HIGHLIGHTS` · `LOCAL` · `MOBILE_PERFORMANCE` · `OFFLINE` · `PROFILE` · `REALTIME` · `SHARED_CONTRACTS` · `SPOTLIGHT`. `BACKEND` is the database lead and reports to `CTO`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.
+
+## Infrastructure awareness (2026-10-14, owner)
+
+`INFRASTRUCTURE` reports to you and is the dev team's standing member of the Growth and Capacity Review. Make sure every change that touches infrastructure (dependencies, environment variables, server functions, buckets, extensions, Realtime, CI, build profiles, direct Supabase calls) updates `docs/engineering/infrastructure.json` and the generated register in the same change, and that INFRASTRUCTURE reviews it (TEAMS contract item 12).
+
+## Standing verification, consent and safe-growth review — GROWTH-01
+
+For [Growth charter §9](../../docs/engineering/GROWTH_CAPACITY_REVIEW.md#9-verification-consent-and-safe-engagement) and [Verification, consent and safe growth](../../docs/legal/VERIFICATION_AND_SAFE_GROWTH_REVIEW.md), supply actual versioned client/server/provider behavior, sensitive authorization and denied-access evidence, supported age/guardian/consent/payee states, failure/retry handling and feasible recovery/rollout/rollback. Pair BACKEND, Security, Commerce/Custodial and Support through their existing leads; distinguish concurrent local implementation from applied SQL and device/hosted results.
+
+Exchange findings with Legal/Compliance and Growth before the single GROWTH_ANALYTICS packet goes through MARKETING → CTO → owner. Compare feasible approved alternatives with safety and manual-review costs; preserve counsel/domain acceptance and independent QA. The next standing packet is October 20, 2026. Future implementation uses existing CTO assignment, admin-first and Data workflows; this review grants no hosted/runtime or policy change.
 
 ## Documentation handoff
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
+
+## FINANCE_DATA (2026-10-13)
+
+`FINANCE_DATA` reports to you. It builds data, checks, filters and exports for the CFO's office (Finance & Books hub, finance data catalog, reconciliation, bookkeeping SQL). Take its work only as the CTO assigns it; the requesting finance role accepts the result. Pair it with `ADMIN` for admin navigation and shell, `BACKEND` + `DATABASE_MIGRATIONS` for SQL, and `LEDGER` for money events.
+
+## Data control point (2026-10-13)
+
+`DATA_GOVERNANCE` (reports to the CTO) is the control point for data and functions. Before you land a new or changed table, column, view, database function, export or Storage path: add or update its owner and purpose in `docs/engineering/data-ownership.json`, run `node scripts/data-map.mjs`, and get DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. If something you own has no writer, no reader or no caller, it shows in `docs/engineering/DATA_MAP.md`: fix it or explain it there. Never delete what looks dead; report it to DATA_GOVERNANCE (archiving needs the owner). Handbook: `docs/engineering/DATA_GOVERNANCE.md`; TEAMS contract item 11.
+
+Your leads bring new data paths to DATA_GOVERNANCE before merge; regenerate the map in the same change as the code.

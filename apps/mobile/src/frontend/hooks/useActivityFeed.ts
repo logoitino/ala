@@ -31,10 +31,6 @@ export type ActivityItem = {
   actionable?: boolean;
 };
 
-function centsToUsd(cents: number): string {
-  return `$${(Math.max(0, cents) / 100).toFixed(Math.abs(cents) % 100 === 0 ? 0 : 2)}`;
-}
-
 /**
  * @purpose The Activity timeline — donations received, donations sent, thank-yous from athletes, and
  * highlight tags waiting on a decision, merged newest-first.

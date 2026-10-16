@@ -32,7 +32,8 @@ import {
   type SponsorTier,
 } from '@/data/sponsorships';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
-import { uploadSponsorLogo, type RecordSponsorshipInput } from '@/hooks/useSponsorships';
+import type { RecordSponsorshipInput } from '@/hooks/useSponsorships';
+import { uploadSponsorLogo } from '@/lib/sponsorships';
 import { SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
 import type { SponsorshipTierId } from '@/types/database';
 

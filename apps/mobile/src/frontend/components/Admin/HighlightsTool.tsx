@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { type Href, useFocusEffect, useRouter } from 'expo-router';
+import {  useFocusEffect, useRouter } from 'expo-router';
 
 import {
   AdminBtn,
@@ -11,6 +11,8 @@ import {
   AdminPills,
   AdminRow,
 } from '@/components/Admin/AdminChrome';
+import { WorkoutChallengesPanel } from '@/components/Admin/WorkoutChallengesPanel';
+import { BeyondGamePanel } from '@/components/Admin/BeyondGamePanel';
 import { labeledReelCategories, parseReelCategory, type ReelCategory } from '@/data/highlights';
 import { fetchAdminHighlights, patchHighlight, setHighlightRemoved, type AdminHighlightRow } from '@/lib/adminCatalog';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -20,8 +22,10 @@ import { formatTipDollars, toggleReelVaultStatus } from '@/lib/reels';
 type ClipFilter = 'all' | 'public' | 'vault' | 'removed' | 'flagged' | 'pending';
 
 /**
- * @purpose Production Highlights desk: filter, retitle, retag, vault, remove, restore.
- * @sideEffects `reels` UPDATE; `toggle_reel_vault_status`.
+ * @purpose Production Highlights desk: filter, retitle, retag, vault, remove, restore; plus the Workout challenges
+ *   section (CHAL-01: switch, per-post counts, nudge-abuse view, retention), and private Beyond the Game
+ *   review/consent/cleanup handling. These protected desks establish the operational contract before participant UI.
+ * @sideEffects `reels` UPDATE; `toggle_reel_vault_status`; the challenge admin functions (WorkoutChallengesPanel).
  */
 export function HighlightsTool() {
   const router = useRouter();
@@ -172,6 +176,8 @@ export function HighlightsTool() {
           </AdminRow>
         ))
       )}
+      <WorkoutChallengesPanel />
+      <BeyondGamePanel />
     </AdminPage>
   );
 }

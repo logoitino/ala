@@ -41,10 +41,6 @@ export const PLAY_REACTIONS = [
 
 export type PlayReactionId = (typeof PLAY_REACTIONS)[number]['id'];
 
-export function emptyReactionCounts(): Record<PlayReactionId, number> {
-  return { aura: 0, flex: 0, seki: 0 };
-}
-
 export type QuickReaction = (typeof QUICK_REACTIONS)[number];
 
 export const SCORER_ACTIONS = ['Touchdown', 'Tackle', 'Sack'] as const;
@@ -53,12 +49,6 @@ export type ScorerAction = (typeof SCORER_ACTIONS)[number];
 
 export function getPlayerFirstName(name: string): string {
   return name.split(' ')[0] ?? name;
-}
-
-export function formatTipTotal(amount: number, includeFee: boolean, feeAmount = FEE_AMOUNT): string {
-  const fee = includeFee ? feeAmount : 0;
-  const total = amount + fee;
-  return `Total: $${total.toFixed(2)} ($${amount.toFixed(2)} donation + $${fee.toFixed(2)} fee)`;
 }
 
 export function displayValue(value: string | number | null | undefined, fallback = '—'): string {
@@ -147,45 +137,9 @@ export function formatClock(totalSeconds: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
-export function formatQuarterClock(
-  game: { status?: string | null; quarter?: string | null; clock?: string | null },
-  remainingSeconds?: number,
-): string {
-  const quarter = getQuarterCode(game);
-  if (quarter === 'FINAL' || quarter === 'HALFTIME') return quarter;
-  const seconds = remainingSeconds ?? parseClockToSeconds(game.clock) ?? 4 * 60 + 15;
-  return `${quarter} ${formatClock(seconds)}`;
-}
-
 export function formatActionTag(eventType: string): string {
   const label = eventType.trim() || 'Play';
   return `[${label}]`;
-}
-
-export function formatGameStatus(
-  gameOrStatus: string | { status?: string | null; quarter?: string | null },
-): string {
-  if (typeof gameOrStatus === 'string') {
-    return formatQuarterTag(gameOrStatus);
-  }
-
-  const status = (gameOrStatus.status ?? '').trim();
-  const quarter = (gameOrStatus.quarter ?? '').trim();
-  if (status.toLowerCase() === 'final' || quarter.toLowerCase() === 'final') return 'FINAL';
-  if (status.toLowerCase() === 'halftime' || quarter.toLowerCase() === 'halftime') {
-    return 'HALFTIME';
-  }
-  return formatQuarterTag(quarter || status);
-}
-
-function formatQuarterTag(value: string): string {
-  const normalized = value.trim();
-  if (!normalized) return 'LIVE';
-  if (normalized.toLowerCase() === 'final') return 'FINAL';
-  if (normalized.toLowerCase() === 'halftime') return 'HALFTIME';
-  if (normalized.toLowerCase() === 'live') return 'LIVE';
-  if (normalized.toUpperCase().startsWith('LIVE')) return normalized.toUpperCase();
-  return `LIVE ${normalized.toUpperCase()}`;
 }
 
 export function gameMatchesQuery(

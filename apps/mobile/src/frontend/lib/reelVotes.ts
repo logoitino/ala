@@ -1,12 +1,14 @@
 /**
  * One vote per kind (Seki / Aura / Flex) per fan per clip. Reads the fan's votes local-first, then from
  * `reel_hype_votes`. AsyncStorage writes are queued per key so two quick taps cannot overwrite each other.
- * @sideEffects AsyncStorage; `reel_hype_votes` and `clear_reel_hype`.
+ * The raw hype RPCs the offline queue replays live here too (PORT-01), so no service calls the database directly.
+ * @sideEffects AsyncStorage; `reel_hype_votes`, `increment_reel_hype` and `clear_reel_hype`.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { PlayReactionId } from '@/data/players';
+import { untypedRpc, type RpcError } from '@/lib/rpc';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export type ReelVoteMap = Record<PlayReactionId, boolean>;
@@ -108,4 +110,27 @@ export async function clearReelVote(
   userId?: string | null,
 ): Promise<ReelVoteMap> {
   return updateVotes(reelId, userId, { [kind]: false });
+}
+
+/**
+ * @purpose Send one Seki / Aura / Flex to the server and hand back its error untouched, so the offline queue can tell
+ *   a dropped connection (keep the tap queued) from a real refusal (drop it).
+ * @param reelId `reels.id` (uuid).
+ * @param kind Hype kind the fan tapped.
+ * @sideEffects `increment_reel_hype` RPC (one vote per fan per kind, deduped in the database).
+ */
+export async function sendReelHype(reelId: string, kind: PlayReactionId): Promise<{ error: RpcError }> {
+  const { error } = await untypedRpc('increment_reel_hype', { target_reel_id: reelId, hype_kind: kind });
+  return { error };
+}
+
+/**
+ * @purpose Take back one Seki / Aura / Flex on the server and hand back its error untouched (see `sendReelHype`).
+ * @param reelId `reels.id` (uuid).
+ * @param kind Hype kind the fan tapped again.
+ * @sideEffects `clear_reel_hype` RPC.
+ */
+export async function withdrawReelHype(reelId: string, kind: PlayReactionId): Promise<{ error: RpcError }> {
+  const { error } = await untypedRpc('clear_reel_hype', { target_reel_id: reelId, hype_kind: kind });
+  return { error };
 }

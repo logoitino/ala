@@ -1,5 +1,5 @@
 /**
- * Colour and style tokens for the whole app. `palette` holds the raw hexes; `LIGHT_COLORS` / `DARK_COLORS` map them to
+ * Colour and style tokens for the whole app. `palette` holds the raw hexes; `LIGHT_COLORS` maps them to
  * roles (background, surface, text, accent); `colors` is the light set that components import. `DAYLIGHT_THEME` is the
  * default look the owner can override from Expo /admin → Look. Focal and motion tokens live in `theme/motion.ts`.
  */
@@ -57,15 +57,15 @@ export type ThemeColors = {
   backdrop: string;
 };
 
-/** Default mode: Daylight. Jade stays the primary CTA; gold kickers + ember LIVE sit beside it. */
+/** Default mode: Daylight in the Calm Island palette. Deep jade is the one primary colour; gold marks awards and ember marks LIVE. */
 export const LIGHT_COLORS: ThemeColors = {
   background: palette.daylight,
   surface: '#FFFFFF',
-  border: '#D8E2DD',
-  text: '#0F1416',
-  textMuted: '#5C6B66',
+  border: '#E3E1D9',
+  text: FOCAL.ink,
+  textMuted: '#5B6460',
   primary: palette.jadeInk,
-  primaryMuted: '#00A34A',
+  primaryMuted: '#138A63',
   deepGreen: palette.jadeInk,
   accent: palette.jadeInk,
   accentSoft: FOCAL.mistJade,
@@ -77,46 +77,15 @@ export const LIGHT_COLORS: ThemeColors = {
   glow: palette.neonJade,
   night: palette.midnightObsidian,
   onAccent: '#FFFFFF',
-  photoPlaceholder: '#E4EBE7',
+  photoPlaceholder: '#ECEAE3',
   success: palette.jadeInk,
   danger: palette.emberInk,
   videoSurface: palette.midnightObsidian,
-  videoScrim: 'rgba(15,20,22,0.86)',
-  videoScrimSoft: 'rgba(15,20,22,0.55)',
-  onVideo: '#F3FBF7',
+  videoScrim: 'rgba(14,19,21,0.86)',
+  videoScrimSoft: 'rgba(14,19,21,0.55)',
+  onVideo: '#F4F7F5',
   onVideoMuted: '#9EB0AA',
-  backdrop: 'rgba(15,20,22,0.55)',
-};
-
-/** Obsidian mode, kept for the Look desk preset and any surface that opts into dark chrome. */
-export const DARK_COLORS: ThemeColors = {
-  background: palette.midnightObsidian,
-  surface: palette.slateCharcoal,
-  border: '#2E3A40',
-  text: '#F3FBF7',
-  textMuted: '#9EB0AA',
-  primary: palette.neonJade,
-  primaryMuted: '#00B85C',
-  deepGreen: palette.neonJade,
-  accent: palette.neonJade,
-  accentSoft: '#16342C',
-  gold: palette.electricGold,
-  electricGold: palette.electricGold,
-  goldSoft: '#2A2410',
-  ember: palette.ember,
-  emberSoft: '#3A1218',
-  glow: palette.neonJade,
-  night: palette.midnightObsidian,
-  onAccent: FOCAL.ink,
-  photoPlaceholder: '#2A3439',
-  success: palette.neonJade,
-  danger: '#FF6B6B',
-  videoSurface: palette.midnightObsidian,
-  videoScrim: 'rgba(15,20,22,0.86)',
-  videoScrimSoft: 'rgba(15,20,22,0.55)',
-  onVideo: '#F3FBF7',
-  onVideoMuted: '#9EB0AA',
-  backdrop: 'rgba(15,20,22,0.78)',
+  backdrop: 'rgba(20,25,27,0.55)',
 };
 
 export const colors = LIGHT_COLORS;
@@ -131,11 +100,11 @@ export type ThemeTokens = {
 
 /** Shipping Daylight tokens — Look desk "Reset to default" and `DEFAULT_APP_RUNTIME.theme`. */
 export const DAYLIGHT_THEME: ThemeTokens = {
-  background: '#F3FAF6',
+  background: FOCAL.backgroundBase,
   surface: '#FFFFFF',
-  jade: '#00733C',
-  gold: '#8A6400',
-  text: '#0F1416',
+  jade: FOCAL.jadeInk,
+  gold: FOCAL.goldInk,
+  text: FOCAL.ink,
 };
 
 function channelLuminance(hex: string): number {
@@ -154,27 +123,6 @@ function channelLuminance(hex: string): number {
  */
 export function isLightCanvas(hex: string): boolean {
   return channelLuminance(hex) >= 0.55;
-}
-
-/**
- * @purpose Map Look-desk theme tokens onto the full palette. Light canvases keep Daylight chrome; dark canvases keep Obsidian chrome. Highlights ⚡ video surfaces stay `videoSurface` in both.
- */
-export function paletteFromTheme(theme: ThemeTokens): ThemeColors {
-  const light = isLightCanvas(theme.background);
-  const base = light ? LIGHT_COLORS : DARK_COLORS;
-  return {
-    ...base,
-    background: theme.background,
-    surface: theme.surface,
-    text: theme.text,
-    primary: theme.jade,
-    primaryMuted: theme.jade,
-    deepGreen: theme.jade,
-    accent: theme.jade,
-    gold: theme.gold,
-    electricGold: light ? FOCAL.electricGold : theme.gold,
-    onAccent: light ? '#FFFFFF' : FOCAL.ink,
-  };
 }
 
 export const radii = {
@@ -206,7 +154,7 @@ export const SCREEN_BOTTOM_GAP = 52;
 
 export const cardShadow: ViewStyle = Platform.select({
   ios: {
-    shadowColor: '#0F1416',
+    shadowColor: FOCAL.ink,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
@@ -215,6 +163,6 @@ export const cardShadow: ViewStyle = Platform.select({
     elevation: 4,
   },
   default: {
-    boxShadow: '0px 8px 16px rgba(15, 20, 22, 0.12)',
+    boxShadow: '0px 8px 16px rgba(20, 25, 27, 0.12)',
   },
 }) as ViewStyle;

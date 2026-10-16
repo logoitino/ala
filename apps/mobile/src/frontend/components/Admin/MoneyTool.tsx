@@ -1,41 +1,31 @@
+/**
+ * Money owns disbursement requests and status changes. Ledger totals, streams and donation history belong
+ * to the Revenue report so the editing desk does not fetch or repeat a second financial dashboard.
+ * @sideEffects Existing disbursement reads, queue insertion and confirmed status updates.
+ */
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';
 
 import {
   AdminBtn,
   AdminEmpty,
   AdminField,
-  AdminMetrics,
   AdminNotice,
   AdminPage,
   AdminPanel,
   AdminRow,
   AdminSuggest,
 } from '@/components/Admin/AdminChrome';
-import { AdminBarChart } from '@/components/Admin/AdminCharts';
-import { colors, radii } from '@/constants/theme';
 import { useRoster } from '@/hooks/useRoster';
 import {
   centsFromDollarsInput,
   fetchAdminDisbursements,
-  fetchAdminMaloOriginBars,
-  fetchAdminTips,
   queueDisbursement,
   setDisbursementStatus,
-  type MaloOriginBar,
 } from '@/lib/adminCatalog';
-import {
-  EMPTY_COMPANY_REVENUE,
-  fetchCompanyRevenueLogs,
-  fetchCompanyRevenueSummary,
-  revenueSourceTitle,
-  tipChannelLabel,
-  type CompanyRevenueSummary,
-} from '@/lib/finance';
 import { formatTipDollars } from '@/lib/reels';
-import { FOCAL } from '@/theme/motion';
-import type { Disbursement, TipLedgerEntry } from '@/types/database';
+import type { Disbursement } from '@/types/database';
 
 const QUICK = [
   { id: '25', label: '$25', cents: 2500 },
@@ -45,15 +35,12 @@ const QUICK = [
 ];
 
 /**
- * @purpose Financial control plane: gross volume, company net, athlete/operator payouts, stream splits, Mālo by surface, and disbursements.
- * @sideEffects `get_company_revenue_summary`; `company_revenue_logs` SELECT; `tips` SELECT; `disbursements` INSERT / UPDATE.
+ * @purpose Queue and review disbursements; Revenue is the destination for financial reporting.
+ * @sideEffects `disbursements` SELECT / INSERT / UPDATE.
  */
 export function MoneyTool() {
   const router = useRouter();
   const { players } = useRoster();
-  const [summary, setSummary] = useState<CompanyRevenueSummary>(EMPTY_COMPANY_REVENUE);
-  const [tips, setTips] = useState<TipLedgerEntry[]>([]);
-  const [originBars, setOriginBars] = useState<MaloOriginBar[]>([]);
   const [payouts, setPayouts] = useState<Disbursement[]>([]);
   const [playerId, setPlayerId] = useState('');
   const [playerQuery, setPlayerQuery] = useState('');
@@ -67,22 +54,9 @@ export function MoneyTool() {
     setLoading(true);
     setError(null);
     try {
-      const [nextSummary, nextLogs, nextTips, nextPayouts, nextOrigins] = await Promise.all([
-        fetchCompanyRevenueSummary(),
-        fetchCompanyRevenueLogs(),
-        fetchAdminTips(),
-        fetchAdminDisbursements(),
-        fetchAdminMaloOriginBars(),
-      ]);
-      setSummary({
-        ...nextSummary,
-        recent: nextLogs.length > 0 ? nextLogs : nextSummary.recent,
-      });
-      setTips(nextTips);
-      setPayouts(nextPayouts);
-      setOriginBars(nextOrigins);
+      setPayouts(await fetchAdminDisbursements());
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not load money.');
+      setError(caught instanceof Error ? caught.message : 'Could not load disbursements.');
     } finally {
       setLoading(false);
     }
@@ -100,32 +74,6 @@ export function MoneyTool() {
   );
   const selected = players.find((row) => row.id === playerId);
   const nameFor = (id: string | null) => players.find((row) => row.id === id)?.name || 'Athlete';
-  const maloTotal = tips.reduce((sum, row) => sum + row.amount_cents, 0);
-
-  const metrics = [
-    {
-      id: 'gross',
-      label: 'Gross Platform Volume',
-      value: formatTipDollars(summary.gross_volume_cents),
-      hint: 'All donations, boosters, Vault, and Drip that hit Stripe.',
-    },
-    {
-      id: 'net',
-      label: 'Company Net Revenue',
-      value: formatTipDollars(summary.company_net_cents),
-      hint: 'Platform cut kept by Tapua\'i.',
-    },
-    {
-      id: 'payouts',
-      label: 'Athlete & Operator Payouts',
-      value: formatTipDollars(summary.payouts_cents),
-      hint:
-        summary.stripe_paid_cents > 0
-          ? `Allocated share. Stripe marked paid: ${formatTipDollars(summary.stripe_paid_cents)}.`
-          : 'Allocated athlete / operator share. Mark disbursements paid to record Stripe out.',
-    },
-  ];
-
   const queue = async () => {
     setMessage(null);
     try {
@@ -165,54 +113,16 @@ export function MoneyTool() {
 
   return (
     <AdminPage
-      title="Money"
-      lede="Gross in, company cut, athlete and operator share out. Preset donation amounts and exclusive prices live on Catalogs."
+      title="Payouts"
+      lede="Queue and review disbursements. Check Stripe before marking a payout paid."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
-      saveMode="instant"
     >
-      <AdminMetrics items={metrics} />
-      <AdminBtn label="Edit donation amounts + exclusive prices" onPress={() => router.push('/admin/catalog' as Href)} />
-
-      <AdminPanel title="Revenue streams">
-        <View style={styles.table} accessibilityRole="summary">
-          <View style={styles.thead}>
-            <Text style={[styles.th, styles.colStream]}>Source</Text>
-            <Text style={[styles.th, styles.colAmt]}>Gross</Text>
-            <Text style={[styles.th, styles.colAmt]}>Company</Text>
-            <Text style={[styles.th, styles.colAmt]}>Payout</Text>
-          </View>
-          {summary.streams.map((row) => (
-            <View key={row.source} style={styles.trow}>
-              <View style={styles.colStream}>
-                <Text style={styles.streamTitle}>{row.label}</Text>
-                <Text style={styles.streamSplit}>{row.split}</Text>
-              </View>
-              <Text style={[styles.td, styles.colAmt]}>{formatTipDollars(row.gross_cents)}</Text>
-              <Text style={[styles.td, styles.colAmt, styles.tdJade]}>{formatTipDollars(row.platform_cents)}</Text>
-              <Text style={[styles.td, styles.colAmt]}>{formatTipDollars(row.payout_cents)}</Text>
-            </View>
-          ))}
-        </View>
-        <Text style={styles.caveat}>
-          Same split the fan sees: the donate sheet discloses 90% to the family account and 10% to Tapua'i (MALO_DISCLAIMER). The optional tip for Tapua'i is its own stream. Wording still with counsel (LEGAL rows L, R).
-        </Text>
-      </AdminPanel>
-
-      <AdminPanel title={`Recent transactions · ${summary.recent.length}`}>
-        {summary.recent.length === 0 ? (
-          <AdminEmpty text="No company revenue logs yet. Paid donations, boosters, Vault, and Drip land here." />
-        ) : (
-          summary.recent.map((row) => (
-            <AdminRow
-              key={row.id}
-              title={row.label || revenueSourceTitle(String(row.source))}
-              meta={`${revenueSourceTitle(String(row.source))} · ${formatTipDollars(row.gross_cents)} gross · ${formatTipDollars(row.platform_cents)} company · ${formatTipDollars(row.payout_cents)} payout · ${row.created_at.slice(0, 16).replace('T', ' ')}`}
-            />
-          ))
-        )}
-      </AdminPanel>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        <AdminBtn label="View revenue report" onPress={() => router.push('/admin/revenue' as Href)} />
+        <AdminBtn label="Edit donation amounts + exclusive prices" onPress={() => router.push('/admin/catalog' as Href)} />
+      </View>
 
       <AdminPanel title="Queue disbursement">
         <AdminSuggest
@@ -243,8 +153,8 @@ export function MoneyTool() {
         <AdminBtn label="Queue payout" kind="primary" onPress={() => void queue()} />
         <AdminNotice text={message} />
       </AdminPanel>
-      <AdminPanel title={`Disbursements · ${payouts.length}`}>
-        {payouts.length === 0 ? (
+      <AdminPanel title="Disbursements">
+        {loading ? <AdminNotice text="Reading disbursements…" /> : error ? null : payouts.length === 0 ? (
           <AdminEmpty text="No disbursements yet." />
         ) : (
           payouts.map((row) => (
@@ -273,99 +183,6 @@ export function MoneyTool() {
           ))
         )}
       </AdminPanel>
-      <AdminPanel title="Where donations start">
-        <AdminBarChart
-          title="All gifts by surface"
-          points={originBars.map((row) => ({ day: `${row.label} · ${row.count}`, value: row.cents }))}
-          formatValue={formatTipDollars}
-          accent={FOCAL.electricGold}
-        />
-      </AdminPanel>
-      <AdminPanel title={`Recent donations · ${formatTipDollars(maloTotal)}`}>
-        {tips.length === 0 ? (
-          <AdminEmpty text="No donations yet." />
-        ) : (
-          tips.map((row) => (
-            <AdminRow
-              key={row.id}
-              title={nameFor(row.player_id)}
-              meta={`${formatTipDollars(row.amount_cents)} · ${tipChannelLabel(row.origin, row.entry, row.source_label)} · ${row.created_at.slice(0, 16).replace('T', ' ')}`}
-            />
-          ))
-        )}
-      </AdminPanel>
     </AdminPage>
   );
 }
-
-const styles = StyleSheet.create({
-  table: {
-    gap: 0,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    overflow: 'hidden',
-    backgroundColor: FOCAL.backgroundBase,
-  },
-  thead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  trow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  th: {
-    color: FOCAL.jadeInk,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  td: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  tdJade: {
-    color: FOCAL.jadeInk,
-  },
-  colStream: {
-    flex: 1.6,
-    minWidth: 140,
-  },
-  colAmt: {
-    flex: 0.7,
-    minWidth: 72,
-    textAlign: 'right',
-  },
-  streamTitle: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  streamSplit: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  caveat: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
-    lineHeight: 16,
-    marginTop: 8,
-  },
-});

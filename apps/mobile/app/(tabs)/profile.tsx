@@ -42,11 +42,13 @@ import { setPlayerVaultLocked } from '@/lib/vault';
 import { fetchRecentTips } from '@/lib/finance';
 import { FOCAL } from '@/theme/motion';
 import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
+import { PrivacySettingsSheet } from '@/components/Profile/PrivacySettingsSheet';
+import { ChallengeSettings } from '@/components/Challenges/ChallengeSettings';
 
 const FAN_SELF_PREFIX = 'fan-self';
 
 /**
- * @purpose Own Profile tab uses the same `AthleteProfileView` as `/user/[id]` — hamburger opens account settings; compact sections expose owner tools without borrowing another athlete. Pull past the top stretches the hero (`ScrollFxParallax`).
+ * @purpose Own Profile tab uses the same `AthleteProfileView` as `/user/[id]` — hamburger opens account settings; compact sections expose owner tools without borrowing another athlete. CHAL-01 own workout settings/private badge/export and enabled Drip access stay on this own-profile route. Pull past the top stretches the hero (`ScrollFxParallax`).
  * @sideEffects Soft-Wall sign-in; Stripe PaymentSheet; `RoleSwitcherModal`; `LegalModal`; `VerifyAthleteModal`; `PayoutSetupCard`; receipts; vault lock; roster claim map.
  */
 export default function MyHubTab() {
@@ -69,6 +71,7 @@ export default function MyHubTab() {
   const [legalOpen, setLegalOpen] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [flipOpen, setFlipOpen] = useState(false);
   const [vaultLockBusy, setVaultLockBusy] = useState(false);
@@ -255,6 +258,9 @@ export default function MyHubTab() {
         },
       });
     }
+    if (live.tabs.drip) {
+      items.push({ id: 'drip', label: 'Drip', hint: 'Browse team gear', onPress: () => router.push('/drip' as Href) });
+    }
     if (isAdmin) {
       items.push({
         id: 'admin',
@@ -328,6 +334,7 @@ export default function MyHubTab() {
     live.buttons.suggest,
     live.copy.receiptsKicker,
     live.layouts.receipts,
+    live.tabs.drip,
     live.profile.showCard,
     profile,
     requireAuth,
@@ -440,6 +447,7 @@ export default function MyHubTab() {
           }}
         />
         </ScrollFxParallax>
+        <ChallengeSettings />
         <FilmerCard stats={filmerStats} own onFilm={uploadSheet ? uploadSheet.openUpload : undefined} />
       </ScrollFxScrollView>
       <ProfileMenuSheet
@@ -457,7 +465,8 @@ export default function MyHubTab() {
       <RoleSwitcherModal visible={roleSheetOpen} onClose={() => setRoleSheetOpen(false)} />
       <LegalModal visible={legalOpen} onClose={() => setLegalOpen(false)} />
       <VerifyAthleteModal visible={verifyOpen} onClose={() => setVerifyOpen(false)} />
-      <EditProfileModal visible={editProfileOpen} onClose={() => setEditProfileOpen(false)} />
+      <EditProfileModal visible={editProfileOpen} onClose={() => setEditProfileOpen(false)} onOpenPrivacy={() => setPrivacyOpen(true)} />
+      <PrivacySettingsSheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
       <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />
     </TabScreen>
   );

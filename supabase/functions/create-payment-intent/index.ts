@@ -1,19 +1,22 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.116.0';
 import Stripe from 'https://esm.sh/stripe@22.6.2?target=deno';
 
+import { createAccessTokenVerifier, type AccessTokenVerifier } from '../_shared/money/accessToken.ts';
+import { INVALID_SESSION_MESSAGE, errorResult, refuseLiveStripeKey, readBearerLoose, thrownMessage, type CoreResult } from '../_shared/money/http.ts';
+import { PAYMENT_SIGN_IN_MESSAGE, runCreatePaymentIntent } from '../_shared/money/paymentIntent.ts';
+import { resolveSession } from '../_shared/money/session.ts';
+
 /**
- * 2026-09 Round 10 sweep: this function was a stale duplicate of
- * `apps/mobile/src/backend/api/createPaymentIntent.ts` (the Metro API route `stripeIntent.ts`
- * actually calls) — it never got the `playerId` / `malo_target_frozen` pre-charge freeze check
- * added to that route for the Mālo-freeze compliance feature. Unused today (nothing in the app
- * calls this Edge Function), but it is still a live, deployable public endpoint, and an earlier
- * deploy checklist for this repo said to deploy all three `supabase/functions/*` — doing that for
- * this one, unfixed, would have shipped a way to pay a frozen athlete that bypassed the same check
- * every other path enforces. Brought to parity rather than left to drift further.
+ * Edge Function adapter for donation checkout — the primary checkout path: `lib/stripeIntent.ts` invokes this
+ * function first and only falls back to the Metro route when it is not deployed, because an installed EAS build has
+ * no Metro server to answer `/api/*`. Deploy it to every project testers use.
  *
- * 2026-09-29: now the primary checkout path. `lib/stripeIntent.ts` invokes this function first and only
- * falls back to the Metro route when it is not deployed, because an installed EAS build has no Metro
- * server to answer `/api/*`. Deploy it to every project testers use. Keep it in step with the Metro route.
+ * SCALE-04: the validation, freeze check and PaymentIntent shape are the shared money core
+ * (`../_shared/money/paymentIntent.ts`), the same code the Metro route runs, so the two can no longer drift (the
+ * 2026-09 Round 10 sweep found this copy missing the `malo_target_frozen` pre-charge check). This file keeps only what
+ * is Deno-specific: `Deno.env`, `Deno.serve`, CORS, the `esm.sh` SDKs and this function's order of checks
+ * (configuration before the session). The session uses the local WebCrypto token check first and falls back to
+ * `getUser`; checkout creates an intent but moves no money.
  */
 
 const corsHeaders = {
@@ -21,13 +24,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+function respond(result: CoreResult): Response {
+  return json(result.body, result.status);
+}
+
+/** One local verifier (and JWKS cache) per isolate, rebuilt only if the project URL changes. */
+let verifier: { supabaseUrl: string; verify: AccessTokenVerifier } | null = null;
+function localVerifier(supabaseUrl: string, anonKey: string): AccessTokenVerifier {
+  if (verifier?.supabaseUrl !== supabaseUrl) {
+    verifier = {
+      supabaseUrl,
+      verify: createAccessTokenVerifier({
+        supabaseUrl,
+        apiKey: anonKey,
+        fetch: (url, init) => fetch(url, init),
+        subtle: globalThis.crypto?.subtle,
+      }),
+    };
+  }
+  return verifier.verify;
 }
 
 Deno.serve(async (req) => {
@@ -37,9 +59,9 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
-    const jwt = authHeader.replace(/^Bearer\s+/i, '').trim();
+    const jwt = readBearerLoose(authHeader);
     if (!jwt) {
-      return json({ error: 'Sign in to complete payment.' }, 401);
+      return respond(errorResult(PAYMENT_SIGN_IN_MESSAGE, 401));
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -47,67 +69,39 @@ Deno.serve(async (req) => {
     const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 
     if (!supabaseUrl || !anonKey) {
-      return json({ error: 'Missing SUPABASE_URL or SUPABASE_ANON_KEY.' }, 500);
+      return respond(errorResult('Missing SUPABASE_URL or SUPABASE_ANON_KEY.', 500));
     }
     if (!stripeSecret) {
-      return json({ error: 'Missing STRIPE_SECRET_KEY.' }, 500);
+      return respond(errorResult('Missing STRIPE_SECRET_KEY.', 500));
     }
+    const liveKey = refuseLiveStripeKey(stripeSecret);
+    if (liveKey) return respond(liveKey);
 
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { data: authData, error: authError } = await userClient.auth.getUser(jwt);
-    if (authError || !authData.user) {
-      return json({ error: 'Invalid or expired session.' }, 401);
-    }
-
-    const body = (await req.json()) as { amount?: number; playerId?: string; platformTipCents?: number };
-    const amount = Number(body.amount);
-    const playerId = typeof body.playerId === 'string' ? body.playerId.trim() : '';
-    // Optional tip to Tapua'i already included in `amount` — metadata only (same as the Metro route).
-    const platformTipCents = Number(body.platformTipCents ?? 0);
-
-    if (!Number.isInteger(amount) || amount < 50) {
-      return json({ error: 'amount must be an integer number of cents (min 50).' }, 400);
-    }
-    if (!Number.isInteger(platformTipCents) || platformTipCents < 0 || platformTipCents >= amount) {
-      return json({ error: 'platformTipCents must be whole cents, less than amount.' }, 400);
-    }
-
-    if (playerId) {
-      if (!UUID_RE.test(playerId)) {
-        return json({ error: 'playerId must be a uuid.' }, 400);
-      }
-      const { data: frozen, error: frozenError } = await userClient.rpc('malo_target_frozen', {
-        target_player_id: playerId,
-      });
-      // Same fail-open-on-lookup-error reasoning as the Metro route: a missing RPC or transient DB
-      // issue must not block every checkout, and the RPC-level checks in `add_user_aura` /
-      // `increment_backer_count` / `increment_reel_tips` still catch a frozen athlete regardless.
-      if (!frozenError && frozen === true) {
-        return json({ error: 'This athlete cannot currently receive Mālo.' }, 403);
-      }
-    }
-
-    const stripe = new Stripe(stripeSecret, {
-      httpClient: Stripe.createFetchHttpClient(),
-    });
-
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: 'usd',
-      payment_method_types: ['card'],
-      metadata: {
-        tapuai_user_id: authData.user.id,
-        ...(playerId ? { tapuai_player_id: playerId } : {}),
-        ...(platformTipCents > 0 ? { tapuai_platform_tip_cents: String(platformTipCents) } : {}),
+    const session = await resolveSession(jwt, {
+      getUser: async (token) => {
+        const { data, error } = await userClient.auth.getUser(token);
+        return { user: data.user ? { id: data.user.id, email: data.user.email ?? null } : null, error };
       },
+      verifyLocally: localVerifier(supabaseUrl, anonKey),
     });
+    if (!session.ok) {
+      return respond(errorResult(INVALID_SESSION_MESSAGE, 401));
+    }
 
-    return json({ clientSecret: paymentIntent.client_secret });
+    const body: unknown = await req.json();
+    return respond(
+      await runCreatePaymentIntent({
+        userId: session.user.id,
+        body,
+        isTargetFrozen: (playerId) => userClient.rpc('malo_target_frozen', { target_player_id: playerId }),
+        getStripe: () => new Stripe(stripeSecret, { httpClient: Stripe.createFetchHttpClient() }),
+      }),
+    );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unexpected error';
-    return json({ error: message }, 400);
+    return respond(errorResult(thrownMessage(error), 400));
   }
 });

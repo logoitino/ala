@@ -22,19 +22,15 @@ type FilterPillsProps<T extends string> = {
   onChange: (id: T | null) => void;
   allowDeselect?: boolean;
   accessibilityLabel?: string;
-  /** Active pill fill. Defaults to jade; pass gold/ember/cyan for tab-specific chrome. */
-  accent?: string;
-  /** Idle pill wash. Defaults to mist jade. */
-  mist?: string;
 };
 
 
 /**
- * @purpose Horizontal filter chips with a sliding accent indicator that `withSpring`s to the active pill.
+ * @purpose Horizontal filter chips with a sliding indicator that `withSpring`s to the active pill. One chip style
+ * everywhere (Calm Island, owner 2026-10-15): ink fill + white label when selected, white outlined pill when idle.
  * @param items Pill ids and labels.
  * @param value Currently selected id.
  * @param onChange Fires on press; `null` only when `allowDeselect`.
- * @param accent Selected fill (jade / gold / cyan / ember).
  * @sideEffects Selection haptic on each pill via `AnimatedButton`.
  */
 export function FilterPills<T extends string>({
@@ -43,8 +39,6 @@ export function FilterPills<T extends string>({
   onChange,
   allowDeselect = false,
   accessibilityLabel = 'Filters',
-  accent = FOCAL.jadeInk,
-  mist = FOCAL.mistJade,
 }: FilterPillsProps<T>) {
   const layouts = useRef<Partial<Record<string, { x: number; width: number }>>>({});
   const placed = useRef(false);
@@ -96,7 +90,7 @@ export function FilterPills<T extends string>({
       <View style={styles.row}>
         <Animated.View
           pointerEvents="none"
-          style={[styles.indicator, { backgroundColor: accent }, indicatorStyle]}
+          style={[styles.indicator, indicatorStyle]}
         />
         {items.map((item) => {
           const selected = value === item.id;
@@ -121,7 +115,7 @@ export function FilterPills<T extends string>({
                 }}
                 contentStyle={[
                   styles.pill,
-                  selected ? styles.pillOn : [styles.pillIdle, { backgroundColor: mist }],
+                  selected ? styles.pillOn : styles.pillIdle,
                 ]}
               >
                 <Text style={[styles.label, selected && styles.labelOn]}>{item.label}</Text>
@@ -160,6 +154,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 0,
     borderRadius: 999,
+    backgroundColor: FOCAL.ink,
   },
   pill: {
     minHeight: 44,
@@ -176,12 +171,13 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   pillIdle: {
+    backgroundColor: colors.surface,
     borderColor: colors.border,
   },
   label: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
   },
   labelOn: {
     color: colors.onAccent,

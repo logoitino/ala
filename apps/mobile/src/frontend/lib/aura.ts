@@ -1,9 +1,13 @@
+/**
+ * Aura: tiers and badge copy, booster rows, in-app Aura change events, awarding Aura (`add_user_aura`) and the top
+ * boosters board (`get_aura_board`, moved here from `hooks/useAuraBoosters` in PORT-01).
+ * @sideEffects `add_user_aura` and `get_aura_board` RPCs; `profiles` SELECT on databases without the board function.
+ */
 import type { Player } from '@/types/database';
+import { isMissingFunction } from '@/lib/dbErrors';
+import { untypedRpc } from '@/lib/rpc';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { FOCAL } from '@/theme/motion';
-
-/** Default light collectible face when a tier wash is not yet resolved. */
-export const AURA_CARD_FACE = FOCAL.mistJade;
 
 export type AuraTier = {
   tier: 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -187,4 +191,33 @@ export async function addUserAura(targetUserId: string, pointsToAdd: number): Pr
 
   if (error) return fallback;
   return parseAuraAward(data, fallback);
+}
+
+function parseBoosterRows(rows: unknown): AuraBooster[] {
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .map((row) => boosterFromProfile(row as Parameters<typeof boosterFromProfile>[0]))
+    .filter((row): row is AuraBooster => Boolean(row));
+}
+
+/**
+ * @purpose Load the top Aura boosters for the Local leaderboard rail.
+ * @param maxRows How many boosters to return.
+ * @returns Boosters, highest Aura first; empty when the read failed (the caller shows its demo rail).
+ * @sideEffects `get_aura_board` RPC. The board respects each person's Aura audience, hide-from-search and blocks
+ *   (PRIV-01); only a database without that function falls back to reading `profiles` directly, and a profile table
+ *   without `username` falls back again to the basic columns.
+ */
+export async function fetchAuraBoard(maxRows: number): Promise<AuraBooster[]> {
+  const board = await untypedRpc('get_aura_board', { max_rows: maxRows });
+  if (!board.error) {
+    const rows = Array.isArray(board.data) ? board.data : [];
+    return parseBoosterRows(rows.map((row) => ({ ...(row as Record<string, unknown>), full_name: (row as { display_name?: unknown }).display_name })));
+  }
+  if (!isMissingFunction(board.error)) return [];
+  const full = await supabase.from('profiles').select('id, username, full_name, aura_points').order('aura_points', { ascending: false }).limit(maxRows);
+  const source = full.error
+    ? await supabase.from('profiles').select('id, full_name, aura_points').order('aura_points', { ascending: false }).limit(maxRows)
+    : full;
+  return parseBoosterRows(source.data);
 }

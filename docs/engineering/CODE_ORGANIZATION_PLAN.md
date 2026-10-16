@@ -79,6 +79,10 @@ production database is only safe once the schema can be rebuilt from migrations.
 
 ### R3 — production environment
 
+Hosting options (stay on Supabase, self-host on AWS / Azure, or managed cloud services), the environment table
+and the merge-to-deploy pipeline are in [ENVIRONMENTS_AND_HOSTING.md](ENVIRONMENTS_AND_HOSTING.md) (2026-10-13);
+its phases E0–E3 implement R2's CI replay and the R3 checklist below.
+
 The table describes the **target**, not the current deployment. Development and staging
 projects exist, but `app.json` is still static, automatic database deployment is not configured,
 production is not created and side-by-side installation is not verified. All R3 checkboxes
@@ -237,20 +241,15 @@ tests passing unchanged. They are the proof that nothing moved.
 
 ## Staying portable (so a future move is cheap)
 
-Where Supabase is baked in today, measured 2026-09-29:
-
-| Coupling | Size | Keep it movable by |
-| --- | --- | --- |
-| Postgres tables, RLS, RPCs | most of `schema.sql` | Keep new changes in `supabase/migrations/`. Their auth roles/functions, extensions and Storage references need a verified adapter on another host. |
-| `auth.uid()` / `auth.role()` in SQL | 105 / 61 uses (historical) | On another host, verify JWT validation, request identity, grants and RLS semantics before providing compatible functions. Document additional Supabase-specific dependencies. |
-| `storage.*` policies | 25 lines | Storage buckets are Supabase-specific; client code goes through `services/MediaUploadService`, so a move touches that one file plus these policies. |
-| Realtime | 4 publication lines (historical) | Keep subscriptions in hooks/lib; inventory current channels, private Broadcast authorization and publication settings before moving providers. |
-| Edge Functions | 3 (`create-payment-intent`, `create-stripe-account`, `stripe-webhook`; historical count) | Deno HTTP handlers need runtime, secrets and authorization verified on another host. Keep Stripe logic in handlers, not SQL. |
-| Client calls | `lib/supabase.ts` imported in 65 files | **Rule:** screens and components call `lib/*` or `hooks/*`, never `supabase.from/rpc` directly. Then a move rewrites `lib/`, not the UI. **2 Expo route files still break this as of 2026-10-10:** `app/operator/scorer.tsx` and `app/operator/[gameId].tsx` (7 direct calls). Athlete HQ, Parent HQ, Profile, and the public athlete sheet moved into `lib/` on 2026-10-10. `components/Reels/UploadVideoModal.tsx` is the component exception. Sponsor, Booster and operator check-in moved into `lib/` on 2026-09-29. Guest match queries/Realtime moved to `lib/guestGames.ts` and guest player lookup to `lib/roster.ts` on 2026-10-07; the baseline fell from 17 to 12 direct calls, then to 7. `pnpm app:data-boundaries` records exact route call counts and fails if debt grows. Move the operator queries into `lib/` when those files are next touched and lower the baseline in the same change. |
+Moved to **[PORTABILITY.md](PORTABILITY.md)** (PORT-01, 2026-10-14): the measured list of Supabase ties (PostgREST,
+sign-in, Realtime, Storage, server functions, direct client calls), the two exits (self-hosted Supabase vs a different
+provider), what already protects us, and the next steps. The counts that used to live here (2026-09-29 / 2026-10-10)
+are superseded there. `pnpm app:data-boundaries` now guards direct Supabase use across routes, hooks, components,
+context, services and the admin portal's pages.
 
 Habits that keep this true: every table and RPC documented in `docs/engineering/SCHEMA.md` (CI enforces);
 every SQL change a dated file with a header; secrets only in env / the SQL Editor; no vendor SDK
-imported outside `lib/` and `services/`.
+imported outside `lib/` and `services/`; media URLs built through `lib/media.ts`.
 
 ## Order
 

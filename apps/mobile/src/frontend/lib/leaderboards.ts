@@ -2,6 +2,7 @@ import { isAuraUuid } from '@/lib/aura';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { TopFilmerRow } from '@/lib/filmers';
 import type { SpotlightPeriodKind } from '@/types/database';
+import { isMissingFunction } from '@/lib/dbErrors';
 
 /**
  * ROADMAP Mission M1 — leaderboards and friendly competition.
@@ -80,9 +81,6 @@ export type LeaderboardsResult =
  */
 export const VIEW_PLAY_MS = 3000;
 
-/** @deprecated Old name kept for callers; views now need real playback, see `VIEW_PLAY_MS`. */
-export const VIEW_DWELL_MS = VIEW_PLAY_MS;
-
 /**
  * @purpose Played time that makes a view for a clip of this length.
  * @param durationSec `VideoPlayer.duration` (0 / NaN until the clip loads).
@@ -102,11 +100,6 @@ const EMPTY_BOARDS: Omit<Leaderboards, 'periodKind'> = {
   schools: [],
   fans: [],
 };
-
-function rpcMissing(error: { message?: string; code?: string } | null | undefined): boolean {
-  if (!error) return false;
-  return /could not find the function|schema cache|42883|PGRST202/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
-}
 
 function asText(value: unknown): string {
   return typeof value === 'string' ? value : '';
@@ -225,7 +218,7 @@ export async function fetchLeaderboards(kind: SpotlightPeriodKind = 'week'): Pro
   if (!isSupabaseConfigured) return { status: 'unavailable' };
   const { data, error } = await supabase.rpc('get_leaderboards', { period_kind: kind });
   if (error) {
-    if (rpcMissing(error)) return { status: 'unavailable' };
+    if (isMissingFunction(error)) return { status: 'unavailable' };
     throw new Error(error.message || 'Could not load the boards.');
   }
   return { status: 'ok', boards: parseLeaderboards(data, kind) };
@@ -251,7 +244,7 @@ export function recordReelView(reelId: string | null | undefined, signedIn: bool
   viewedThisSession.add(reelId);
   void Promise.resolve(supabase.rpc('record_reel_view', { target_reel_id: reelId }))
     .then(({ error }) => {
-      if (rpcMissing(error)) viewRpcMissing = true;
+      if (isMissingFunction(error)) viewRpcMissing = true;
     })
     .catch(() => undefined);
   return true;

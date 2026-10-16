@@ -1,7 +1,12 @@
+/**
+ * Local tab scoreboard: active games, kept current over Realtime, filtered by a ZIP / school search. Database reads and
+ * the live channel go through `lib/liveGames`.
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { gameMatchesQuery } from '@/data/players';
-import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
+import { fetchDiscoveryGames, subscribeGamesChanges } from '@/lib/liveGames';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import type { Game } from '@/types/database';
 
 // 2026-09 fix: this used to be shown directly in the Local tab's empty state (`lede={error}`),
@@ -37,28 +42,19 @@ export function useLiveScores() {
       return;
     }
 
-    const live = await supabase
-      .from('games')
-      .select('*')
-      .eq('is_active', true)
-      .order('home_team', { ascending: true });
-
-    const source =
-      live.error && /is_active/i.test(live.error.message)
-        ? await supabase.from('games').select('*').order('home_team', { ascending: true })
-        : live;
+    const source = await fetchDiscoveryGames();
 
     if (!mountedRef.current) return;
 
     if (source.error) {
-      console.warn('[useLiveScores]', source.error.message);
+      console.warn('[useLiveScores]', source.error);
       setGames([]);
       setError(FRIENDLY_ERROR);
       setLoading(false);
       return;
     }
 
-    setGames((source.data as Game[] | null) ?? []);
+    setGames(source.games);
     setLoading(false);
   }, []);
 
@@ -72,21 +68,13 @@ export function useLiveScores() {
       };
     }
 
-    const channelTopic = nextRealtimeTopic('games_discovery');
-    const channel = supabase
-      .channel(channelTopic)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'games' },
-        () => {
-          void refresh(false);
-        },
-      )
-      .subscribe();
+    const unsubscribe = subscribeGamesChanges('games_discovery', () => {
+      void refresh(false);
+    });
 
     return () => {
       mountedRef.current = false;
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [refresh]);
 

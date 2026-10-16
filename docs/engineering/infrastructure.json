@@ -1,0 +1,234 @@
+{
+  "_comment": "Infrastructure inventory (PORT-01 / INFRA-01). Owned by INFRASTRUCTURE (reports to ENGINEERING; standing dev member of the Growth and Capacity Review). scripts/infra-register.mjs reads this plus the code and writes docs/engineering/INFRASTRUCTURE_REGISTER.md; `pnpm infra:register:check` fails when the code uses a dependency, server function, API route, environment variable, bucket or database extension that no entry here claims, or when the register is out of date. Plans, prices and regions are owner-reported or unverified unless a dated source says otherwise.",
+  "services": [
+    {
+      "id": "supabase",
+      "name": "Supabase (managed)",
+      "role": "PostgreSQL database, PostgREST API, Auth (GoTrue), Storage, Realtime, Edge Functions (Deno)",
+      "status": "in use",
+      "environments": [
+        "development (ulfapgtabidorgwfjvwz)",
+        "staging (tucioqipfejqqqtuakdi)",
+        "production: not created yet"
+      ],
+      "plan": "Free (owner-reported 2026-10-13; unverified)",
+      "decision": "Owner 2026-10-14: stay on managed Supabase; self-hosted Supabase is the drilled exit (HOSTING_DECISION_BRIEF \u00a79, PORTABILITY.md); BEYOND-01 new private bucket/source written locally October15Denver, default-off and not applied/activated; no plan/spend change.",
+      "packages": [
+        "@supabase/supabase-js",
+        "@supabase/ssr"
+      ],
+      "env": [
+        "EXPO_PUBLIC_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY",
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "functions": [
+        "create-payment-intent",
+        "create-stripe-account",
+        "stripe-webhook"
+      ],
+      "extensions": [
+        "pgcrypto"
+      ],
+      "buckets": [
+        "reels",
+        "avatars",
+        "game_highlights",
+        "reel_vault",
+        "beyond_game"
+      ],
+      "source": "docs/engineering/HOSTING_DECISION_BRIEF.md"
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe (PaymentSheet, Connect)",
+      "role": "Donations, Connect payouts (blocked), identity / TIN checks for payees (VERIFY-02)",
+      "status": "in use, test mode",
+      "environments": [
+        "test mode only"
+      ],
+      "plan": "Pay per transaction (unverified)",
+      "decision": "In use; payouts blocked until STATE \u00a76 item 8",
+      "packages": [
+        "@stripe/stripe-react-native",
+        "stripe"
+      ],
+      "env": [
+        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET"
+      ],
+      "apiRoutes": [
+        "create-payment-intent",
+        "create-payout",
+        "create-stripe-account"
+      ],
+      "source": "docs/engineering/design/PAYEE_VERIFICATION_PLAN.md"
+    },
+    {
+      "id": "expo-eas",
+      "name": "Expo / EAS (builds, over-the-air updates)",
+      "role": "App builds, OTA updates (u.expo.dev), store submission; planned push notifications (SCALE-07)",
+      "status": "in use",
+      "environments": [
+        "development, preview, production build profiles"
+      ],
+      "plan": "Free build quota (unverified)",
+      "decision": "In use",
+      "packages": [
+        "expo",
+        "expo-updates",
+        "expo-router",
+        "@expo/metro-runtime"
+      ],
+      "env": [
+        "EXPO_PUBLIC_APP_ENV",
+        "EXPO_PUBLIC_API_ORIGIN"
+      ],
+      "source": "docs/engineering/ENVIRONMENTS_AND_HOSTING.md"
+    },
+    {
+      "id": "sign-in-providers",
+      "name": "Apple and Google sign-in (OAuth)",
+      "role": "Sign in with Apple / Google through Supabase Auth",
+      "status": "Apple on; Google off on development and staging",
+      "environments": [
+        "development",
+        "staging"
+      ],
+      "plan": "Apple Developer $99/yr (owner-reported)",
+      "decision": "In use",
+      "packages": [
+        "expo-apple-authentication",
+        "expo-auth-session",
+        "expo-web-browser",
+        "expo-crypto"
+      ],
+      "source": "docs/STATE.md"
+    },
+    {
+      "id": "video-host",
+      "name": "Managed video host (Mux provisional first experiment; Bunny / Cloudflare compared)",
+      "role": "Streaming, transcoding and delivery of Highlights",
+      "status": "candidate, not selected",
+      "environments": [],
+      "plan": "Not purchased",
+      "decision": "Experiment recommended (HOSTING_DECISION_BRIEF \u00a711); no provider selected",
+      "source": "docs/engineering/HOSTING_DECISION_BRIEF.md"
+    },
+    {
+      "id": "github-actions",
+      "name": "GitHub (repository, Actions CI)",
+      "role": "Source, CI gates (ci-checks.yml), future deploy approvals",
+      "status": "in use (CI); repository plan and deploy environments undecided",
+      "environments": [
+        "CI"
+      ],
+      "plan": "Undecided (ENVIRONMENTS_AND_HOSTING \u00a79)",
+      "decision": "In use for CI",
+      "workflows": [
+        "ci-checks.yml"
+      ],
+      "source": "docs/engineering/ENVIRONMENTS_AND_HOSTING.md"
+    },
+    {
+      "id": "admin-portal-hosting",
+      "name": "Next.js admin portal hosting",
+      "role": "Read-only oversight portal",
+      "status": "local only; host undecided",
+      "environments": [
+        "local :3001"
+      ],
+      "plan": "Undecided",
+      "decision": "Open (ENVIRONMENTS_AND_HOSTING \u00a79)",
+      "packages": [
+        "next"
+      ],
+      "source": "docs/engineering/ENVIRONMENTS_AND_HOSTING.md"
+    },
+    {
+      "id": "engineering-support",
+      "name": "Engineering Support release and sensor settings",
+      "role": "Release / environment labels and the runtime sensor switch for the support desk",
+      "status": "in use (local)",
+      "environments": [
+        "all"
+      ],
+      "plan": "No vendor",
+      "decision": "In use",
+      "env": [
+        "EXPO_PUBLIC_SUPPORT_SENSORS_ENABLED",
+        "EXPO_PUBLIC_SUPPORT_RELEASE",
+        "EXPO_PUBLIC_SUPPORT_ENVIRONMENT",
+        "SUPPORT_RELEASE_ID",
+        "SUPPORT_ENVIRONMENT"
+      ],
+      "source": "docs/engineering/ENGINEERING_SUPPORT.md"
+    }
+  ],
+  "appConfig": {
+    "_comment": "Environment variables that configure the app but name no outside service.",
+    "env": [
+      "NODE_ENV",
+      "EXPO_PUBLIC_DEMO_FAN_EMAIL",
+      "EXPO_PUBLIC_DEMO_FAN_PASSWORD",
+      "ANALYTICS_TEST_RESOLVER"
+    ]
+  },
+  "localLibraries": {
+    "_comment": "Dependencies that run inside the app and call no outside service. A new dependency must be classified here or under a service.",
+    "packages": [
+      "@expo/vector-icons",
+      "@react-native-async-storage/async-storage",
+      "@react-native-community/netinfo",
+      "@react-native-picker/picker",
+      "@shopify/react-native-skia",
+      "@tapuai/shared-types",
+      "@testing-library/react-native",
+      "@types/jest",
+      "@types/react",
+      "@types/react-dom",
+      "@types/node",
+      "@tailwindcss/postcss",
+      "babel-preset-expo",
+      "expo-blur",
+      "expo-checkbox",
+      "expo-clipboard",
+      "expo-constants",
+      "expo-file-system",
+      "expo-font",
+      "expo-haptics",
+      "expo-image-picker",
+      "expo-linking",
+      "expo-location",
+      "expo-media-library",
+      "expo-sqlite",
+      "expo-status-bar",
+      "expo-video",
+      "jest",
+      "jest-expo",
+      "react",
+      "react-dom",
+      "react-native",
+      "react-native-canvas",
+      "react-native-compressor",
+      "react-native-confetti-cannon",
+      "react-native-gesture-handler",
+      "react-native-qrcode-svg",
+      "react-native-reanimated",
+      "react-native-safe-area-context",
+      "react-native-screens",
+      "react-native-svg",
+      "react-native-url-polyfill",
+      "react-native-web",
+      "react-native-webview",
+      "react-native-worklets",
+      "tailwindcss",
+      "typescript"
+    ]
+  }
+}

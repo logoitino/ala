@@ -1,6 +1,6 @@
 /**
- * Shared Island Daylight decoration and compact progress chips for fan menus and pages.
- * Decorative art cannot intercept touches; progress describes the current page without navigation.
+ * Shared quiet sheet wash and compact progress chips for fan menus. Pages carry no decoration (Calm Island,
+ * owner 2026-10-15); sheets keep one soft accent wash. It cannot intercept touches; progress describes the current page.
  */
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, MENU_METRICS } from '@/constants/theme';
@@ -19,8 +19,6 @@ export type MenuAccent = keyof typeof accents;
 export function MenuBackdrop({ accent = 'jade' }: { accent?: MenuAccent }) {
   return <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.art}>
     <View style={[styles.orb, { backgroundColor: accents[accent].wash }]} />
-    <View style={styles.goldDot} />
-    <View style={styles.violetDot} />
   </View>;
 }
 
@@ -41,8 +39,6 @@ export function MenuStepIndicator({ labels, current }: { labels: string[]; curre
 const styles = StyleSheet.create({
   art: { position: 'absolute', top: 0, right: 0, width: 160, height: 110, overflow: 'hidden' },
   orb: { position: 'absolute', width: 150, height: 150, borderRadius: 75, top: -60, right: -38 },
-  goldDot: { position: 'absolute', width: 14, height: 14, borderRadius: 7, top: 26, right: 34, backgroundColor: FOCAL.electricGold, opacity: 0.55 },
-  violetDot: { position: 'absolute', width: 7, height: 7, borderRadius: 4, top: 56, right: 16, backgroundColor: FOCAL.electricViolet, opacity: 0.45 },
   steps: { flexDirection: 'row', gap: 6, paddingBottom: 12 },
   step: { flex: 1, minHeight: 38, paddingHorizontal: 6, paddingVertical: 8, borderRadius: MENU_METRICS.controlRadius, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   stepActive: { backgroundColor: colors.accentSoft, borderColor: colors.primary },

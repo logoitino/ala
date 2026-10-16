@@ -5,7 +5,12 @@
   "main": "index.ts",
   "types": "index.ts",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./challenges": "./challenges.ts",
+    "./admin": "./admin/index.ts",
+    "./admin/*": "./admin/*.ts",
+    "./admin/supportTopology.json": "./admin/supportTopology.json",
+    "./beyondGame": "./beyondGame.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

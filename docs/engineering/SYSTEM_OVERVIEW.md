@@ -2,13 +2,19 @@
 
 **Product:** Tapua'i (“Back Every Athlete.”)  
 **Repo:** pnpm monorepo — `@tapuai/mobile` (Expo, the only place admin data changes) · `@tapuai/admin-portal` (Next, read-only oversight) · `@tapuai/shared-types`
-**Runtime:** Expo SDK 57 · React Native · TypeScript (fan app); Next.js Soft-Wall / Profile / Features / People oversight for web admin
+**Runtime:** Expo SDK 57 · React Native · TypeScript (fan app and main admin); Next.js retains compatible read-only reporting
 **Start here:** [docs/STATE.md](../STATE.md) (current state + hand-off) · [Voice](../product/VOICE.md) (money words)  
 **Companions:** [Architecture](ARCHITECTURE.md) · [Onboarding](../ONBOARDING.md) · [Schema](SCHEMA.md) · [Teams / departments](../agents/TEAMS.md) · [ALA brief](../company/ALA_TEAM_BRIEF.md) · [Product facts](../product/PRODUCT_FACTS.md) · [Public one-pager](../product/PUBLIC.md) · [Investor briefing](../company/INVESTOR.md) · [Legal briefing](../legal/LEGAL_BRIEFING.md) · [Data privacy map](DATA_PRIVACY_MAP.md) · [Company phases](../company/COMPANY_PHASES.md) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](../../CHANGELOG.md) · [Conventions](../../AGENTS.md) · [Audit](AUDIT_REPORT.md) · [Roadmap](../product/ROADMAP.md) · [Story](../product/STORY.md) · [Staging runbook](STAGING_RUNBOOK.md) · [Tester script](TESTER_SCRIPT.md)
 
 ---
 
 ## Executive Summary
+
+The main administration application is Expo `/admin` (ADM-02). It combines the
+owner-selected Community Impact/report design with dashboards, eight Analytics boards,
+department oversight and all existing editing desks. The local `:3033` format preview
+is the visual reference. Shared report models support both Expo and the separate
+read-only Next client. Current execution evidence is in [ADM-02.md](../agents/ADM-02.md).
 
 Tapua'i is a Polynesian-inspired **Fan & Athlete Hub** for high-school game day. Continuity for this product is three loops:
 
@@ -29,8 +35,9 @@ Roles: `guest`, `fan`, `athlete`, `parent`, `operator`, `booster`, `sponsor`, `a
 | Layer | Spec |
 | --- | --- |
 | Mobile | **Expo (React Native)** Router in `apps/mobile/`, SDK 57, StyleSheet + `apps/mobile/src/frontend/constants/theme.ts` (Daylight default; springs + focal colors in `apps/mobile/src/frontend/theme/motion.ts`) |
-| Admin portal | **Next web admin** in `apps/admin-portal/` — **read-only oversight**: Overview / **Reports** / **Money** / Soft-Wall / Profile / Features / People at `pnpm admin` (`http://localhost:3001`). Reports = `get_admin_reports` (behavior). Money = `get_company_revenue_summary`. Features/Profile pages display `app_runtime_config` state, no toggle affordance. Every write — Features/Look flags, Games, Drip SKUs, Catalogs, everything — happens only in Expo `/admin` |
-| Shared | `@tapuai/shared-types` — Profile / Soft-Wall gates / Profile chrome / Spotlight / common RPC shapes |
+| Main admin | **Expo `/admin`** combines Home, Trends, Audience, Revenue, Health, Product, Analytics and Departments with a consolidated Manage desk directory that preserves existing editor routes. Finance & Books and Engineering Support provide their owned operational tools. Product includes Features, Profile, Sign-in and People oversight; configuration drafts still require Publish. See `docs/engineering/design/ADMIN_DATA_CONSOLIDATION.md` and `docs/agents/DETECT-02.md` for scope/evidence. |
+| Reporting client | **Next web** in `apps/admin-portal/` — compatible **read-only oversight** at `pnpm admin` (`http://localhost:3001`). It shares report models with Expo: behavior from `get_admin_reports`, Revenue from `get_company_revenue_summary` and `get_admin_malo_breakdown`, and live configuration from `app_runtime_config`. Every editing workflow stays in Expo `/admin`. |
+| Shared | `@tapuai/shared-types` — Profile / Soft-Wall gates / Profile chrome / Spotlight / common RPC shapes; the `admin` subpath supplies platform-neutral report parsers, measure catalogs, labels and dashboard builders. |
 | Graphics | **`@shopify/react-native-skia`** 2.6.2 — `Effects/GlowingNeonBorder` SweepGradient + BlurMask on the Aura trading card (Expo web loads CanvasKit via `WithSkiaWeb` + `apps/mobile/public/canvaskit.wasm`) |
 | Video | **`expo-video` only** (do not use `expo-av` for the feed; do not set `useCaching: true`) |
 | Backend | **Supabase** — Auth, Postgres, Realtime WebSockets (`games`, `game_events`, `cheer_polls`), Storage (`game_highlights`, `reels`, `avatars`) |
@@ -78,7 +85,7 @@ apps/mobile/app/                  Expo Router
     athlete/[id].tsx              Redirect → `/user/[id]`
   gift/[handle].tsx               Public family gift landing (`https://tapuai.app/gift/{handle}`)
   operator/                       Field portal (`index`, `[gameId]` scorekeeper, `scorer`)
-  (admin)/admin                   Production control plane (`/admin`). Marketing / Owner / Engineer / All lens. Pinned **Home** plus business groups: Operations (games / sports / polls / boosters / publish), Content (highlights / spotlight / moderation), Commerce (drip / wishlist / money), Audience (athletes / schools / people), Growth (reports Health + Usage, feedback, **coverage** — every fan control mapped to a desk / flag / taps), System (features / look / **catalogs** / studio; lab / qa stay as hidden deep links). Every desk has Back / Home / Open in app. `profiles.is_admin` or Studio unlock. Fan chrome has no Dev role bar. Tabs, Daylight colors, copy, catalogs, Profile layout, and Highlights rail wait on **Publish to app**; sports, Drip, schools, games, and wishlist save instantly. Engineer Lab is the JSON power editor — not a git IDE.
+  (admin)/admin                   Main control plane (`/admin`): report navigation and consolidated Manage directory with role lenses, search and Back / Home / Open in app. Editing stays in the owned desks; saved routes remain available. App setup combines configuration controls; Finance & Books owns accounting, Engineering Support owns issue/flow/audit/recovery handling. Actual menu/access mapping: `src/frontend/lib/admin.ts` and `components/Admin/AdminShell.tsx`.
   api/*+api.ts                    Stripe
 
 apps/mobile/src/frontend/components/  Grouped by consuming feature: Admin/, Auth/, Common/, Custodial/, Drip/, Effects/, Feedback/, Filmers/, Legal/, Local/, Onboarding/, Operator/, Profile/, Rally/, Reels/, Spotlight/, Thanks/, UI/, Verification/ plus a few flat cross-cutting pieces (TipSheetModal / MaloTipModal, TipCheckout, FeeCheckbox, PlayCard, ScreenShell, …). Full current list: AGENTS.md "Directory Hierarchy Rules" — keep it there, not here
@@ -86,12 +93,12 @@ apps/mobile/src/frontend/hooks/       Data hooks (useTipCheckout, useReels, useR
 apps/mobile/src/frontend/context/     AuthContext, SoftWallContext, CelebrationContext, RoleGate, UploadSheetContext, AppRuntimeContext, AdminLensContext
 apps/mobile/src/frontend/lib/         Client SDK wrappers — one file per domain (supabase.ts, stripe*.ts, finance.ts, rallies.ts, donationThanks.ts, custodial.ts, verification.ts, filmers.ts, …). Screens call lib/, never Supabase directly. Full current list: AGENTS.md
 apps/mobile/src/frontend/theme/       motion.ts (`SPRING_*`, Island FOCAL + TAB_ACCENTS, mist washes); hypeFx.ts (Seki / Aura / Flex)
-apps/mobile/src/frontend/services/    TelemetryManager (batched `telemetry_logs`); OfflineQueue (AsyncStorage + NetInfo flush); MediaUploadService (`react-native-compressor` + Storage `reels` / `avatars`)
+apps/mobile/src/frontend/services/    TelemetryManager; OfflineQueue; MediaUploadService; opt-in auth-scoped SupportSignalManager and passive supportRuntime observation. Support capture/durable-hosted gaps: ENGINEERING_SUPPORT.md and detection-sensors.json.
 apps/mobile/src/backend/db/schema.sql Canonical Postgres + RLS
 
-apps/admin-portal/                Next web admin, read-only oversight (Overview / Reports / Money / Soft-Wall / Profile / Features / People) at :3001. Reports + Money RPCs match Expo. Every write happens only in Expo `/admin`
+apps/admin-portal/                Next read-only reporting client (Home / Trends / Audience / Revenue / Health / Product / Analytics / Departments) at :3001. Report sources match Expo; every write stays in Expo `/admin`.
 packages/shared-types/            @tapuai/shared-types
-scripts/                          Node generators (`sync-front-docs.mjs` → product facts; reads apps/mobile constants)
+scripts/                          Generators and local guards; sync-front-docs.mjs for product facts, data-map.mjs for lineage, detection.mjs for retained checks and recovery-capsule.mjs for verified source packages/isolated previews.
 supabase/                         Incremental SQL (DROP FUNCTION before return-type changes); new changes go in migrations/
 supabase/migrations/              Timestamped migrations (the target single source of truth — CODE_ORGANIZATION_PLAN readiness phase R2)
 supabase/functions/               Edge Functions (`create-stripe-account` JWT Connect, `create-payment-intent` JWT, `stripe-webhook`)

@@ -1,22 +1,24 @@
 # Menu and page style coverage
 
-**Aligned:** 2026-10-07 · UX-02 / UX-03 · Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
+**Current source alignment:** 2026-10-15 America/Denver · Calm Island after UX-06; earlier UX-02/UX-03 evidence below remains dated history. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
 `ACCESSIBILITY`, `DEVICE_QA` review; `DOCUMENTATION` keeps this map current.
 
 This is a source inventory of shared presentation coverage. It is not a rendered-device audit.
 Every modal-bearing component is listed, including intentional full-screen video/celebration
 surfaces. A shared primitive can update many consumers without each file needing a local edit.
 
+Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATUS.md); actual documentation/coordination claims and checks: [COORD-01](../agents/COORD-01.md#whole-team-refresh--2026-10-15-americadenver). The 107-role briefing is assignment coverage, not execution or human delivery. The [UI checkpoint](design/UI_UX_FIGMA_POLISH.md) separates the original empty Figma draft, later colour file, local source and rendered evidence.
+
 ## Shared API and design rules
 
 | API | Purpose |
 | --- | --- |
 | `constants/theme.ts` → `MENU_METRICS` | Sheet 28px, card 20px, control 16px radius; 44px touch-target reference |
-| `UI/MenuChrome.tsx` → `MenuBackdrop({ accent? })` | Non-interactive jade/cyan/gold/violet/ember wash with gold/violet accents; hidden from assistive technology |
+| `UI/MenuChrome.tsx` → `MenuBackdrop({ accent? })` | Non-interactive single soft wash for popup sheets (no dot accents since 2026-10-15); hidden from assistive technology. Tab pages (`TabScreen`, `ScreenShell`) no longer draw it. |
 | `UI/MenuChrome.tsx` → `MenuStepIndicator({ labels, current })` | Named, non-clickable step chips; one-based current stage announced to assistive technology |
 | `hooks/useSheetFrame.ts` | Centered sheets up to 440px, compact gutters, home-indicator clearance, common radius/border/shadow |
-| `ScreenShell.tsx` / `TabScreen.tsx` | Daylight decoration on light canvases; dark video layouts retain contrast |
-| `ScreenHeading.tsx` | Shared kicker/accent dot and heading underline |
+| `ScreenShell.tsx` / `TabScreen.tsx` | Calm Island light page canvas without MenuBackdrop/corner decoration; dark video layouts retain contrast |
+| `ScreenHeading.tsx` | Existing kicker/accent dot and heading underline; caller accent or published gold remains authoritative |
 
 Donation uses Amount → Options → Review in the same popup. Upload uses Video → Details →
 Review with optional settings/selection subpages. Persistent navigation stays outside page
@@ -66,9 +68,19 @@ wash are rendered by its child `UploadVideoComposer`; donation steps live in chi
 | `Verification/SchoolCrest.tsx` | accent wash, shared metrics | Proof sheet receives shared accents; crest colors remain school-owned. |
 ## Additional shared consumers
 
+`Reels/UploadChoiceSheet.tsx` (2026-10-16): the Upload ＋ chooser uses the shared sheet chrome (`useSheetFrame`, `SheetRise`, `SheetHandle`, one jade `MenuBackdrop` wash) with two full-width options and Cancel; it only chooses which existing composer opens.
+
+UX-06's dated first pass, followed by Calm Island: `BeyondGame/BeyondGameStyles.ts` binds discovery, composer, legacy athlete cards and
+the existing `BeyondButton` to the shared Calm Island colors and MENU_METRICS. `BeyondButton` adds
+optional primary/quiet/danger/choice/chip presentation variants; selected/disabled defaults,
+button semantics and callbacks stay intact. Caption/media/audience/full-attestation sections
+remain in the same draft lifetime. `Challenges/ChallengeControls.tsx` uses the same token
+rhythm. See [UX-06](../agents/UX-06.md) for actual source/browser/test evidence and limitations.
+Its six-file manifest predates the newer colour edits; preserve that receipt as history rather than asserting current appearance. Source confirms unavailable refresh visibility in Beyond discovery/legacy and ChallengeInbox/Settings; ChallengeBar/composer retain their existing disabled/unavailable controls.
+
 `UploadVideoComposer` renders upload progress/wash. `HomeSearchOverlay` receives the menu wash
 without hosting a native Modal itself. `UI/EmptyState` uses shared art/card geometry;
-`UI/FilterPills` and `UI/SheetHandle` align control geometry. Donate amount chips (`TipButton`)
+`UI/FilterPills` and `UI/SheetHandle` align control geometry. Since 2026-10-15 every filter chip uses one look (ink fill + white label when selected, white outlined when idle): `FilterPills` no longer takes per-screen `accent` / `mist`, and Beyond / game-alert chips match it. Donate amount chips (`TipButton`)
 and optional card-fee control (`FeeCheckbox`) receive consistent colors and larger targets.
 The fee control’s accessible label includes the exact optional fee and unchanged family share.
 None of these decorative changes changes catalog, amount, rights or payment rules.
@@ -112,7 +124,13 @@ reject stale results; school-visible=false gates crest and roster fallback. The 
 flag remains backward compatible in storage but no longer relocates compact Profile actions.
 Design artifacts and scope are in ARCHITECTURE; browser/device evidence in AUDIT_REPORT.
 
-## Evidence and next verification
+## Current verification boundary
+
+Calm Island's current `FOCAL`/`LIGHT_COLORS`/`DAYLIGHT_THEME` and the Look Daylight preset are locally implemented; source identity/provenance is in [UI_UX_FIGMA_POLISH](design/UI_UX_FIGMA_POLISH.md). STATE records the producer's 148-suite/1,188-test check and `.smoke/redesign/` captures. The retained UX-06 detection run and older numbers below predate these changes. Root owns the final COORD-01 gate; DESIGN/ACCESSIBILITY/DEVICE_QA own configured-state/native verification. Runtime publication is a separate authorized admin action; the older published five-colour override and staging status were not reverified in this doc pass. No data, consent, money, model or release authority changes follow from palette coverage.
+
+MAIN's existing report/control-map and Books exports remain separate from unintegrated fan-zone custom dates, CSV/XLSX analysis exports and Product personal workspace. Do not treat that separate worktree's screenshots/gates as current MAIN coverage. Review its source/ownership through a scoped handoff first.
+
+## Historical evidence and next verification
 
 UX-02 local integration passes both app typechecks and full Jest (50 suites / 242 tests). The latest
 recipient callback guard also passes all 8 targeted checkout tests; independent review found
@@ -136,3 +154,45 @@ Home’s accepted format now supplies the frame, font hierarchy, navigation and 
 | Charts, KPI values, meters, ledgers and department status | Open dividers; full summaries, source disclosures, Data rows, missing-state words and legal ledger notes retained. Enlarged text may wrap labels and values. |
 
 Local evidence and remaining browser-tool coverage limits: [COMMUNITY_DASHBOARD_QA.md](design/COMMUNITY_DASHBOARD_QA.md).
+
+## Main Expo admin — ADM-02 (2026-10-12)
+
+The owner selected the report format at `http://localhost:3033/` for the main portal.
+Expo `/admin` now integrates that reporting experience with its existing editing desks.
+Status and fresh evidence: [ADM-02.md](../agents/ADM-02.md).
+
+| Coverage | Ownership and presentation |
+| --- | --- |
+| Home, Trends, Audience, Revenue, Health, Product, Analytics, Departments | `AdminShell` gates access; `AdminReportHeader` sits inside the page scroll owner. `components/Admin/Reports/` supplies the open report design and universal SVG figures. |
+| Product Features, Profile, Sign-in, People, Control map | Oversight views link to the owning editing desks; nested trails identify the current page. |
+| All existing Operations/Content/Commerce/Audience/Growth/System desks | Existing controls use `AdminPage` and `AdminChrome` in the selected report palette; immediate edits, drafts, confirmations and explicit Publish remain owned by their tools. |
+| QA, Studio and Lab | QA/Studio appear once in Tools; Lab is in the four-tab App setup workspace and searchable by its original name. QA owns incident/queue actions; Lab owns validated draft/feedback actions. Period-wide analysis is in Health/Product. |
+| Report values and chart Data | Shared parsers preserve missing/empty/zero and source errors. Summaries and full values accompany charts. |
+| Manage desk discovery | Groups browse without leaving the report. Search matches existing names, descriptions and groups inside the chosen lens, including QA/Studio and App setup members. Desk rows use open dividers and retain their original editor routes. View/Group filters avoid repeated menu headings; selecting a desk closes the directory, including the current desk. |
+| Long report navigation and refresh | “In this report” shortcuts focus the current scroll owner's sections. Analytics includes both catalogs. Every report, including Home, exposes Refresh and disables it during a read or unavailable access. |
+| Financial editing and report ownership | Payouts (`/admin/money`) contains the existing disbursement queue/status controls and links to Revenue/Catalogs. Ledger totals, stream splits, transactions, origins and donation history render in Revenue. Books owns the separate accounting journal, liabilities, closes and exports. |
+| Legacy Reports route | `/admin/reports` opens Analytics. It remains resolvable for saved links and is excluded from every editing lens; 18 merged entries remain in Manage desks, covering all 24 saved routes including Books and Reports/Coverage redirects. |
+
+### Current consolidation coverage
+
+| Surface | Complete information and space use |
+| --- | --- |
+| App setup / Highlights & review | Workspace tabs preserve original editors. Search supports workspace/member labels. Existing lenses filter discovery, with no authorization change. |
+| Analytics / Trends / Revenue / Departments | One complete selected board, collapsed global catalogs, unique comparisons and a combined stream chart. All 64 measures plus future numeric keys, four series, distinct windows, full Data/privacy/reconciliation/API details remain. |
+| Product Profile / Control map | Six settings once with meanings. Complete control registry and handoffs; shared telemetry readings appear once with surface names, top-eight/partial warnings and unknown missing values. |
+| Health | Thirteen nullable operational checks and corrective links; passing checks open on request. Exact low-stock count and normalized runtime state match editor contracts. |
+| Moderation / Lab | Complete labeled evidence on phones; wide moderation table and two-column Lab when text fits. Phone/tablet Lab columns keep natural, nonshrinking heights; sibling positions are checked as well as width. Approved readable inks replace pale status text. |
+| Future app features | Mandatory enrolled admin-first contract/checkpoints; reuse existing desks/reports. [Workflow](FEATURE_ADMIN_WORKFLOW.md) defines the reviewed presentation-only exemption and gate limitations. |
+
+Source/verification inventory: [ADMIN_DATA_CONSOLIDATION](design/ADMIN_DATA_CONSOLIDATION.md).
+
+## Beyond the Game — local approved navigation
+
+| Surface | Reuse / choice | Verification boundary |
+| --- | --- | --- |
+| Fan bar | Highlights · Beyond · Activity · Spotlight · Profile; separate existing Upload slot; full accessible Beyond name | Actual RNTL visibility/routing tests; device layout not certified. |
+| Drip | Existing route via enabled Profile account-menu item | Existing sheet dismissal sequencing preserved; runtime flag still applies. |
+| Beyond categories / posts | Compact wrapping chips, token-based actions, grouped composer and explicit media load | Dated UX-06 account/focus/source tests and narrow 320/390 layout/switch evidence; newer palette requires current rendered review. No new playback controller or behavioral tracking. |
+| Legacy workout/service cards | Bounded actor-bound read; existing athlete profile supplies viewing/support | Public cards exclude media URLs, full profiles, new payee selection and rankings. |
+
+This UI is local source, with unapplied migrations/defaultoff contributions. Native/web rendering remains a release check.

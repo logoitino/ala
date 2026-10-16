@@ -11,6 +11,7 @@ import {
   fetchCustodialSummary,
   parseBirthDateInput,
   parseCustodialSummary,
+  receivedLines,
   parseDollarInput,
   pendingRequests,
   requestWithdrawal,
@@ -121,4 +122,22 @@ describe('RPC calls', () => {
     mockRpc.mockResolvedValue({ data: null, error: { message: 'Only the athlete can decide' } });
     await expect(decideWithdrawal('r1', true)).rejects.toThrow('Only the athlete can decide');
   });
+});
+
+describe('receivedLines (what reaches the family account)', () => {
+  const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  it('reads the family share from the summary, or null on an older database', () => {
+    expect(parseCustodialSummary({ ...RAW, family_cents: 11250 })?.familyCents).toBe(11250);
+    expect(parseCustodialSummary(RAW)?.familyCents).toBeNull();
+  });
+  it('leads with the family share and shows the donated total beside it', () => {
+    expect(receivedLines(12500, 11250, money)).toEqual({ headline: '$112.50 recorded for your family account so far', detail: "Fans donated $125.00. Tapua'i kept $12.50 to run the app, including card processing." });
+  });
+  it('states the split instead of a guessed number when the share is unknown', () => {
+    expect(receivedLines(12500, null, money)).toEqual({ headline: '$125.00 donated', detail: "90% of each donation is recorded for the family account. Tapua'i keeps 10% to run the app, including card processing." });
+  });
+});
+
+it('says all of it is recorded when Tapua\'i kept nothing (for example the App Store fallback of 0%)', () => {
+  expect(receivedLines(5000, 5000, (c) => `$${c / 100}`).detail).toBe('Fans donated $50. All of it is recorded for your family account.');
 });

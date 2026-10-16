@@ -54,8 +54,11 @@ it('loads the newest donations and a public profile, or nothing when the read fa
     return chain({ data: { player_id: 'player-1' }, error: null });
   });
   await expect(fetchRecentTips()).resolves.toEqual([{ id: 'tip-1' }]);
+  // Other people's profiles come through get_public_profiles, which applies their privacy (PRIV-01).
+  mockRpc.mockResolvedValueOnce({ data: [{ player_id: 'player-1' }], error: null });
   await expect(fetchPublicProfileForPlayer('player-1')).resolves.toEqual({ player_id: 'player-1' });
+  expect(mockRpc).toHaveBeenLastCalledWith('get_public_profiles', { profile_ids: null, player_ids: ['player-1'], handle: null });
 
-  mockFrom.mockReturnValue(chain({ data: null, error: { message: 'missing' } }));
+  mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'permission denied' } });
   await expect(fetchPublicProfileForPlayer('player-1')).resolves.toBeNull();
 });

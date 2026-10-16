@@ -55,15 +55,6 @@ const RIVALRY_PAIRS: Array<[string, string]> = [
   ['olympus', 'highland'],
 ];
 
-export function regionForZip(zip: string): UtahRegion | null {
-  const needle = zip.trim();
-  if (needle.length < 5) return null;
-  return (
-    UTAH_REGIONS.find((region) => region.zipPrefixes.some((prefix) => needle.startsWith(prefix))) ??
-    null
-  );
-}
-
 export function gameInRegion(
   game: {
     home_team: string;

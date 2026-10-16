@@ -1,3 +1,9 @@
+/**
+ * Profile photo circle with the owner's camera-roll picker. The stored `profiles.avatar_url` (legacy full URL or
+ * `sb:` reference, SCALE-02) and a just-picked local photo both display through `mediaUri` from lib/media; a blank or
+ * unreadable value shows the initials placeholder passed as children.
+ * @sideEffects `expo-image-picker`; Storage `avatars` upload via `uploadAvatar`; `refreshProfile`.
+ */
 import * as ImagePicker from 'expo-image-picker';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from 'react-native';
@@ -7,6 +13,7 @@ import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { AVATAR_PICKER_LABEL, AVATAR_UPLOADING } from '@/data/media';
+import { mediaUri } from '@/lib/media';
 import { uploadAvatar } from '@/services/MediaUploadService';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
@@ -28,7 +35,7 @@ type ProfileAvatarPickerProps = {
 
 /**
  * @purpose Camera-roll 1:1 crop for the Profile hero. Uploads to Storage `avatars` and stamps `profiles.avatar_url`.
- * @param uri Current public avatar URL.
+ * @param uri Stored avatar value (full URL or `sb:` reference).
  * @param editable Own hub only — guests hit Soft-Wall first.
  * @param children Initials / crest overlay when there is no photo yet.
  * @sideEffects `expo-image-picker`; Storage `avatars`; `profiles` UPDATE; `refreshProfile`.
@@ -44,7 +51,7 @@ export function ProfileAvatarPicker({
   const { requireAuth } = useSoftWall();
   const [busy, setBusy] = useState(false);
   const [localUri, setLocalUri] = useState<string | null>(null);
-  const shown = localUri || uri;
+  const shown = mediaUri(localUri || uri);
 
   const pick = async () => {
     if (!editable || busy) return;
@@ -69,11 +76,11 @@ export function ProfileAvatarPicker({
       const nextUri = result.assets[0].uri;
       setLocalUri(nextUri);
       setBusy(true);
-      const publicUrl = await uploadAvatar(nextUri);
+      const stored = await uploadAvatar(nextUri);
       telemetry.trackFeature('profile_avatar', 'profile');
-      setLocalUri(publicUrl);
+      setLocalUri(stored);
       await refreshProfile();
-      onUploaded?.(publicUrl);
+      onUploaded?.(stored);
     } catch (caught) {
       setLocalUri(uri ?? null);
       Alert.alert(

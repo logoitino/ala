@@ -18,7 +18,8 @@ jest.mock('@/lib/supabase', () => ({
       select: (columns: string) => ({
         order: () => {
           const result = mockSelect(columns);
-          return Object.assign(Promise.resolve(result), { eq: () => Promise.resolve(result) });
+          const response = Object.assign(Promise.resolve(result), { retry: () => Promise.resolve(result) });
+          return Object.assign(response, { eq: () => response });
         },
       }),
     }),

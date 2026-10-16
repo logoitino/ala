@@ -8,7 +8,6 @@ import type { WishlistItem } from '@/types/database';
 export const WISHLIST_TITLE = '👟 Locker Room Wishlist';
 export const WISHLIST_LEDE = 'Gear this athlete needs. Donate toward it or buy it outright.';
 export const WISHLIST_GIFT_ACTION = '🎁 Buy this item for them';
-export const WISHLIST_CHIP_IN_ACTION = '⚡ Donate $5 to this goal';
 
 /**
  * @purpose Chip In label. Catalogs desk first Mālo preset can change the dollar amount after Publish to app.

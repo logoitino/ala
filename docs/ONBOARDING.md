@@ -21,12 +21,18 @@ points you at the few documents that matter in your first week.
 
 Everything else is listed in the [docs index](README.md).
 
+For an outside engineering company, legal reviewer or investor, use the audience reading paths
+and evidence requirements in [Innovation and outside handoff](engineering/INNOVATION_AND_HANDOFF.md).
+The owner grants the appropriate document subset; this index does not grant access to private material.
+
 **Your first day:**
 
 - [ ] App running in a development client against the development Supabase project (sections 1–4).
       Use a staging preview build for installed-build acceptance; Expo Go covers only supported
       browsing and upload fallback behavior, without native Stripe or video compression.
 - [ ] `pnpm check` passes on your machine.
+- [ ] Read [Innovation and outside handoff](engineering/INNOVATION_AND_HANDOFF.md): explain one feature's source, owner, permissions, failure/recovery path and evidence; record any unclear step.
+- [ ] Skim [DATA_MAP.md](engineering/DATA_MAP.md) for the tables you will touch, and read [DATA_GOVERNANCE.md](engineering/DATA_GOVERNANCE.md) before adding a table, function or export (`DATA_GOVERNANCE` is the data control point).
 - [ ] You can find, for one screen, its route in `apps/mobile/app/`, its components in
       `src/frontend/components/<Feature>/`, its hook, and the `lib/` call that reaches Supabase.
 - [ ] You know the three environments: **development** (your `.env.local`), **staging** (tester
@@ -88,7 +94,7 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
 ```
 
-Do not put `STRIPE_SECRET_KEY` in `.env.local`: Expo writes loaded env values to `.expo/dev/logs/start.log`. Checkout and Connect use the Edge Functions, which read the Supabase secret (`STAGING_RUNBOOK` §secrets). For the local Metro fallback only, keep the key in a private file outside the repo and run `set -a; source ~/.config/ala-sports/stripe-secret.env; set +a; pnpm mobile`. It is server-only for JWT-gated `POST /api/create-payment-intent` and `POST /api/create-payout` (and Connect). Do not set `EXPO_PUBLIC_STRIPE_SECRET_KEY`. Sign in before Mālo or payouts — handlers call `supabase.auth.getUser` on the Bearer token.
+Do not put `STRIPE_SECRET_KEY` in `.env.local`: Expo writes loaded env values to `.expo/dev/logs/start.log`. Checkout and Connect use the Edge Functions, which read the Supabase secret (`STAGING_RUNBOOK` §secrets). For the local Metro fallback only, keep the key in a private file outside the repo and run `set -a; source ~/.config/ala-sports/stripe-secret.env; set +a; pnpm mobile`. It is server-only for JWT-gated `POST /api/create-payment-intent` and `POST /api/create-payout` (and Connect). Do not set `EXPO_PUBLIC_STRIPE_SECRET_KEY`. Sign in before Mālo or payouts — checkout verifies the Bearer token locally (falling back to `supabase.auth.getUser`); payouts and Connect always call `getUser`.
 
 ### Soft-Wall auth (Supabase Dashboard)
 
@@ -102,13 +108,21 @@ Browse-first guests can open Highlights, cards, and Locker Room without an accou
 
 Client entry points: `apps/mobile/src/frontend/lib/auth.ts`, `AuthContext`, `SoftWallContext`, route `apps/mobile/app/auth/callback.tsx`.
 
-Admin oversight: Expo Coverage → Soft-Wall auth + Profile hamburger/roster, Features Soft-Wall board, Look Profile chrome, People Fans filter. Next portal (`pnpm admin`) Overview / Soft-Wall / Profile / Features / People mirrors live flags + fan/claim counts (`SOFT_WALL_GATES` + `PROFILE_CHROME_FLAGS` in `@tapuai/shared-types`). Grok Bot ALA roles: [`docs/company/ALA_TEAM_BRIEF.md`](company/ALA_TEAM_BRIEF.md).
+Admin oversight: the main Expo `/admin/product` contains Features, Profile, Sign-in and People reports. Coverage, Features, Look and People remain the owning editors under Manage desks. The compatible Next reporting client (`pnpm admin`) mirrors live flags and fan/claim counts (`SOFT_WALL_GATES` + `PROFILE_CHROME_FLAGS` in `@tapuai/shared-types`). Grok Bot ALA roles: [`docs/company/ALA_TEAM_BRIEF.md`](company/ALA_TEAM_BRIEF.md).
 
 ### Operator console (paused by default)
 
 `layouts.operatorConsole` defaults to **off** in `DEFAULT_APP_RUNTIME`. `/operator` stays in the binary but shows `RuntimePaused` until Admin → **Features** turns it on and you **Publish to app**. Existing remotes that already published `true` keep that value until you flip Features off + Publish.
 
-### Admin portal (Next Soft-Wall plane)
+### Main admin and the separate reporting client
+
+Use Expo `/admin` for the main administration experience: reports and analytics in the
+owner-selected report design, together with every editing desk. It uses the same
+signed-in admin session as Expo. Main report tabs are Home, Trends, Audience, Revenue,
+Health and Product; Analytics, Departments and Manage desks are also available.
+Features/Look/catalog drafts still require an explicit Publish to app.
+
+The separate Next application is retained for read-only reporting:
 
 ```bash
 cp apps/admin-portal/.env.example apps/admin-portal/.env.local
@@ -119,9 +133,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ```
 
-Then `pnpm admin` → http://localhost:3001 — Overview, Reports, Money, Soft-Wall, Profile
-(claimed athletes + published Look chrome status), Features (published flag status), and People
-(recent Soft-Wall fans, Claimed / Varsity). This portal is read-only. Toggle and Publish to app
+Then `pnpm admin` → http://localhost:3001 — Home, Trends, Audience, Revenue, Health,
+Product, Analytics and Departments, with Product's Features/Profile/Sign-in/People
+oversight. This separate client is read-only. Toggle and Publish to app
 from Expo `/admin/features` or `/admin/look`; edit games, Drip, sports and catalogs in Expo
 `/admin`. Use the same project URL and anon key as `apps/mobile/.env.local`.
 ---
@@ -134,7 +148,7 @@ Run Expo from `apps/mobile/` through the workspace commands below. The root `app
 `Unable to resolve module ../../App from …/expo/AppEntry.js`.
 
 ```bash
-# Expo (fan app + Expo /admin) — always via workspace filter
+# Expo (fan app + main admin at /admin) — always via workspace filter
 pnpm mobile
 # same as: pnpm start
 
@@ -167,7 +181,7 @@ After changing media buckets, run `supabase/media_upload.sql` so Storage `reels`
 Before every PR:
 
 ```bash
-pnpm check      # typechecks, mobile tests, docs/links, copy, boundaries, headers, agents, client-key guard
+pnpm check      # typechecks, mobile tests, docs/links, copy, boundaries, headers, feature registry, data map, agents, client-key guard
 ```
 
 After changing donation amounts, the 90 / 10 split, Aura tiers, PIN, Connect identity, or Highlight labels:

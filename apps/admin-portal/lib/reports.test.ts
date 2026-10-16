@@ -21,7 +21,6 @@ import {
   donationBandRows,
   donationBandsSentence,
   formatMinutes,
-  maloChannel,
   maloEntryTitle,
   maloOriginTitle,
   parseBreakdown,
@@ -112,7 +111,6 @@ test('money labels follow VOICE: donation and gear goal, never "Mālo" or "tip" 
   assert.equal(maloEntryTitle('qr_link'), 'QR donation link');
   assert.equal(maloEntryTitle('in_app'), 'In the app');
   assert.equal(maloOriginTitle('wishlist'), 'Gear goal');
-  assert.equal(maloChannel('wishlist', 'qr_link', ''), 'Gear goal via QR');
   for (const [key, label] of Object.entries(REPORT_LABELS)) {
     assert.ok(!/m[aā]lo/i.test(label), `${key}: "${label}" uses Mālo as a money word`);
     assert.ok(!/\btip/i.test(label), `${key}: "${label}" uses tip for a donation`);

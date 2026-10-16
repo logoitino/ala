@@ -33,8 +33,10 @@ import {
   signInWithDemoAccount as demoSignIn,
   signOutRemote,
   subscribeAuthDeepLinks,
+  type BirthMonth,
 } from '@/lib/auth';
 import { deriveRoles, isAdminAccess, isUserRole, ROLE_HOME, addUserRoleRemote, parseRoles } from '@/lib/roles';
+import { recordMyBirthMonth } from '@/lib/minors';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { subscribeProfileAura } from '@/lib/aura';
 import {
@@ -54,6 +56,9 @@ export type ProfileEditPatch = {
 };
 
 const DEV_ROLE_KEY = 'tapuai.devRole';
+/** MINOR-01: an older account that taps Not now on the birth-month card is asked again after this long (owner 2026-10-14: "ask to confirm every now and then"). */
+const BIRTH_PROMPT_SNOOZE_MS = 3 * 24 * 60 * 60 * 1000;
+const birthPromptKey = (userId: string) => `tapuai.birthPrompt.snoozedUntil.${userId}`;
 const STUDIO_KEY = 'tapuai.studioUnlocked';
 
 type AuthContextValue = {
@@ -70,8 +75,17 @@ type AuthContextValue = {
   /** True only right after a brand-new account's first sign-in (Apple/Google skip the sign-up form)
    * when the COPPA 13+ self-attestation has not been captured yet. Never true for a returning user. */
   needsAgeConfirmation: boolean;
-  /** Records the COPPA 13+ self-attestation for the signed-in fan (`AgeConfirmModal`). */
+  /** Records the COPPA 13+ self-attestation for the signed-in fan (`AgeConfirmModal`, databases without MINOR-01). */
   confirmAge13Plus: () => Promise<void>;
+  /**
+   * MINOR-01 one-time birth month card: 'required' for an account made after the update with no age yet (it cannot
+   * friend or be friended until it adds one), 'optional' for an older account (skippable this session), else null.
+   */
+  birthPrompt: 'required' | 'optional' | null;
+  /** Saves the birth month and year; 'blocked' (under 13) signs the account out. */
+  recordBirthMonth: (year: number, month: number) => Promise<'ok' | 'blocked'>;
+  /** Hides the optional card for three days on this device; it comes back until an age is added. */
+  dismissBirthPrompt: () => void;
   /** Local Studio session so `/admin` stays open while previewing Fan / Operator. */
   studioUnlocked: boolean;
   canReceiveTips: boolean;
@@ -96,8 +110,8 @@ type AuthContextValue = {
   signInWithGoogle: () => Promise<void>;
   signInWithEmailPassword: (email: string, password: string, ageConfirmed13Plus?: boolean) => Promise<void>;
   /** Creates a fan account. Resolves without a session when email confirmation is still required. */
-  signUpWithEmailPassword: (email: string, password: string, ageConfirmed13Plus: boolean) => Promise<boolean>;
-  signInWithMagicLink: (email: string, ageConfirmed13Plus?: boolean) => Promise<void>;
+  signUpWithEmailPassword: (email: string, password: string, birth: BirthMonth) => Promise<boolean>;
+  signInWithMagicLink: (email: string, birth: BirthMonth) => Promise<void>;
   signInWithDemoAccount: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -297,8 +311,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signUpWithEmailPassword = useCallback(
-    async (email: string, password: string, ageConfirmed13Plus: boolean) => {
-      const next = await passwordSignUp(email, password, ageConfirmed13Plus);
+    async (email: string, password: string, birth: BirthMonth) => {
+      const next = await passwordSignUp(email, password, birth);
       if (!next) return false;
       await hydrateSession(next);
       return true;
@@ -306,8 +320,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [hydrateSession],
   );
 
-  const signInWithMagicLink = useCallback(async (email: string, ageConfirmed13Plus?: boolean) => {
-    await magicLinkSignIn(email, ageConfirmed13Plus);
+  const signInWithMagicLink = useCallback(async (email: string, birth: BirthMonth) => {
+    await magicLinkSignIn(email, birth);
   }, []);
 
   const signInWithDemoAccount = useCallback(async () => {
@@ -337,18 +351,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // form to collect the checkbox on). A returning user always has `session.user` last_sign_in_at
   // far from created_at, so this stays false for every pre-existing account regardless of the
   // stored `age_confirmed_13_plus` value — see `.claude/agents/backend.md` "do not retroactively block".
-  const needsAgeConfirmation = Boolean(
-    session?.user &&
-      profile &&
-      profile.age_confirmed_13_plus !== true &&
-      isNewAuthUser(session.user),
-  );
+  // MINOR-01: the birth columns exist only once the minor-accounts update is applied; until then the 13+ card stays.
+  const hasBirthColumns = Boolean(profile && 'birth_year' in profile);
+  const [birthPromptDismissed, setBirthPromptDismissed] = useState(false);
+  const userIdForPrompt = session?.user?.id;
+  useEffect(() => {
+    if (!userIdForPrompt) return;
+    let live = true;
+    void AsyncStorage.getItem(birthPromptKey(userIdForPrompt)).then((until) => {
+      if (live) setBirthPromptDismissed(Number(until) > Date.now());
+    });
+    return () => { live = false; };
+  }, [userIdForPrompt]);
+  const birthPrompt: 'required' | 'optional' | null =
+    !session?.user || !profile || !hasBirthColumns || profile.birth_year != null || profile.age_blocked_at
+      ? null
+      : profile.age_check_required === true
+        ? 'required'
+        : birthPromptDismissed
+          ? null
+          : 'optional';
+  const needsAgeConfirmation = hasBirthColumns
+    ? birthPrompt === 'required'
+    : Boolean(session?.user && profile && profile.age_confirmed_13_plus !== true && isNewAuthUser(session.user));
+  const dismissBirthPrompt = useCallback(() => {
+    setBirthPromptDismissed(true);
+    if (userIdForPrompt) void AsyncStorage.setItem(birthPromptKey(userIdForPrompt), String(Date.now() + BIRTH_PROMPT_SNOOZE_MS));
+  }, [userIdForPrompt]);
 
   const confirmAge13Plus = useCallback(async () => {
     if (!session?.user.id) return;
     await confirmAge13PlusRemote(session.user.id);
     setProfile((current) => (current ? { ...current, age_confirmed_13_plus: true } : current));
   }, [session?.user.id]);
+
+  const recordBirthMonth = useCallback(async (year: number, month: number) => {
+    const outcome = await recordMyBirthMonth(year, month);
+    if (outcome === 'blocked') {
+      await signOut();
+      return outcome;
+    }
+    setProfile((current) => (current ? { ...current, birth_year: year, birth_month: month, age_confirmed_13_plus: true } : current));
+    return outcome;
+  }, [signOut]);
   const canReceiveTips = isAthlete;
   const activeRole: 'fan' | 'athlete' = useMemo(() => {
     if (!isAthlete) return 'fan';
@@ -444,6 +489,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isGuest,
       needsAgeConfirmation,
       confirmAge13Plus,
+      birthPrompt,
+      recordBirthMonth,
+      dismissBirthPrompt,
       studioUnlocked,
       canReceiveTips,
       isVerified,
@@ -474,6 +522,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canReceiveTips,
       completeAthleteOnboarding,
       confirmAge13Plus,
+      birthPrompt,
+      recordBirthMonth,
+      dismissBirthPrompt,
       isAthlete,
       isAdmin,
       isGuest,

@@ -1,15 +1,16 @@
 /**
  * Live game state: subscribes to one `games` row over Realtime so fan screens follow the operator's score and
- * clock, and ticks the clock locally between updates.
- * @sideEffects Supabase Realtime subscription.
+ * clock, and ticks the clock locally between updates. Reads and the live channel go through `lib/liveGames`.
+ * @sideEffects Realtime subscription (through lib/).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { formatClock, isGameClockLive, parseClockToSeconds } from '@/data/players';
-import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
+import { fetchLiveGameRow, resolveFeaturedGameId, subscribeLiveGame } from '@/lib/liveGames';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { telemetry } from '@/services/TelemetryManager';
-import type { Game, GameEvent } from '@/types/database';
+import type { Game } from '@/types/database';
 
 export type LivePlayEvent = {
   id: string;
@@ -89,40 +90,9 @@ export function useLiveGame(gameId?: string | null, options?: { enabled?: boolea
 
     let cancelled = false;
 
-    const resolveFeaturedId = async (): Promise<string | null> => {
-      if (gameId) return gameId;
-
-      const running = await supabase
-        .from('games')
-        .select('id')
-        .eq('is_clock_running', true)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!cancelled && !running.error && running.data?.id) return String(running.data.id);
-
-      const active = await supabase
-        .from('games')
-        .select('id')
-        .eq('is_active', true)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!cancelled && !active.error && active.data?.id) return String(active.data.id);
-
-      const newest = await supabase
-        .from('games')
-        .select('id')
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (cancelled || newest.error || !newest.data?.id) return null;
-      return String(newest.data.id);
-    };
-
     const load = async () => {
       setLoading(true);
-      const id = await resolveFeaturedId();
+      const id = gameId || (await resolveFeaturedGameId());
       if (cancelled) return;
       if (!id) {
         gameRef.current = null;
@@ -131,9 +101,9 @@ export function useLiveGame(gameId?: string | null, options?: { enabled?: boolea
         return;
       }
 
-      const { data, error } = await supabase.from('games').select('*').eq('id', id).maybeSingle();
+      const row = await fetchLiveGameRow(id);
       if (cancelled) return;
-      if (!error && data) applyGame(data as Game, true);
+      if (row) applyGame(row, true);
       setLoading(false);
     };
 
@@ -147,35 +117,24 @@ export function useLiveGame(gameId?: string | null, options?: { enabled?: boolea
   useEffect(() => {
     if (!enabled || !isSupabaseConfigured || !resolvedId) return;
 
-    const channelName = nextRealtimeTopic(`live_game_${resolvedId}`);
     let attempts = 0;
     let tearingDown = false;
 
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'games', filter: `id=eq.${resolvedId}` },
-        (payload) => {
-          if (!mountedRef.current || !payload.new) return;
-          applyGame(payload.new as Game, false);
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'game_events', filter: `game_id=eq.${resolvedId}` },
-        (payload) => {
-          const row = payload.new as GameEvent | null;
-          if (!mountedRef.current || !row) return;
-          setLastPlay({
-            id: row.id,
-            eventType: row.event_type,
-            description: row.description,
-            gameId: row.game_id ?? resolvedId,
-          });
-        },
-      )
-      .subscribe((status) => {
+    const unsubscribe = subscribeLiveGame(resolvedId, {
+      onGame: (row) => {
+        if (!mountedRef.current) return;
+        applyGame(row, false);
+      },
+      onPlay: (row) => {
+        if (!mountedRef.current) return;
+        setLastPlay({
+          id: row.id,
+          eventType: row.event_type,
+          description: row.description,
+          gameId: row.game_id ?? resolvedId,
+        });
+      },
+      onStatus: (status, channelName) => {
         if (tearingDown) return;
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
           attempts += 1;
@@ -186,11 +145,12 @@ export function useLiveGame(gameId?: string | null, options?: { enabled?: boolea
           telemetry.trackSocketReconnect(channelName, attempts);
           attempts = 0;
         }
-      });
+      },
+    });
 
     return () => {
       tearingDown = true;
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [applyGame, enabled, resolvedId]);
 

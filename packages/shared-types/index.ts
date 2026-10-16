@@ -77,14 +77,6 @@ export type SpotlightAward = {
   shot_by?: string | null;
 };
 
-/** `get_aura_tier(points)` JSON payload. */
-export type GetAuraTierRpc = {
-  tier: number;
-  title: string;
-  min_points: number;
-  color: string;
-};
-
 /** `cast_cheer_vote` return payload. */
 export type CastCheerVoteRpc = {
   home_votes: number;
@@ -104,10 +96,6 @@ export type FanTipHistoryRpc = {
 };
 
 export type TapuaiRpcMap = {
-  get_aura_tier: {
-    Args: { points: number };
-    Returns: GetAuraTierRpc;
-  };
   cast_cheer_vote: {
     Args: {
       poll_slug: string;
@@ -306,10 +294,11 @@ export const APP_RUNTIME_FLAG_GROUPS: AppRuntimeFlagGroup[] = [
     hint: 'Hide a tab for a campaign. Draft until you hit Publish to app.',
     flags: [
       { path: 'tabs.home', label: 'Home', hint: 'Highlights ⚡ feed' },
+      { path: 'tabs.beyond', label: 'Beyond the Game', hint: 'Workouts, service, learning and stories' },
       { path: 'tabs.local', label: 'Local', hint: 'Home pill: matches, polls, boosters' },
       { path: 'tabs.activity', label: 'Activity', hint: 'Donations received / made, pending tags' },
       { path: 'tabs.spotlight', label: 'Spotlight', hint: 'Player of the Week board' },
-      { path: 'tabs.drip', label: 'Drip', hint: 'Marketplace' },
+      { path: 'tabs.drip', label: 'Drip', hint: 'Marketplace reached from Profile' },
       { path: 'tabs.profile', label: 'Profile', hint: 'Athlete sheet + hamburger hub' },
       { path: 'tabs.upload', label: 'Upload +', hint: 'Center plus on the fan bar' },
     ],

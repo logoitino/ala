@@ -1,6 +1,7 @@
 /**
  * Local discovery scoreboard: recorded teams, sport and game state above the roster action.
  * Neutral letter tiles identify teams without pretending to be approved school crests.
+ * Booster logos display through `mediaUri` (legacy full URL or `sb:` reference, SCALE-02); no logo shows initials.
  * @sideEffects Light haptic through AnimatedPressable; parent owns match navigation.
  */
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -9,6 +10,7 @@ import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { gameScore, gameScoreboardStatus, gameTeamName } from '@/components/Local/gamePresentation';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { initialsForBusiness } from '@/data/sponsorships';
+import { mediaUri } from '@/lib/media';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 import type { Game, Sponsorship } from '@/types/database';
 
@@ -102,15 +104,18 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
       {sponsors.length > 0 ? (
         <View style={styles.sponsorRow}>
           <Text style={styles.sponsorCaption}>Boosted by</Text>
-          {sponsors.slice(0, 4).map((sponsor) => (
-            <View key={sponsor.id} style={styles.sponsorLogo}>
-              {sponsor.logo_url ? (
-                <Image source={{ uri: sponsor.logo_url }} style={styles.sponsorImage} />
-              ) : (
-                <Text style={styles.sponsorInitials}>{initialsForBusiness(sponsor.business_name)}</Text>
-              )}
-            </View>
-          ))}
+          {sponsors.slice(0, 4).map((sponsor) => {
+            const logo = mediaUri(sponsor.logo_url);
+            return (
+              <View key={sponsor.id} style={styles.sponsorLogo}>
+                {logo ? (
+                  <Image source={{ uri: logo }} style={styles.sponsorImage} />
+                ) : (
+                  <Text style={styles.sponsorInitials}>{initialsForBusiness(sponsor.business_name)}</Text>
+                )}
+              </View>
+            );
+          })}
         </View>
       ) : null}
     </AnimatedPressable>

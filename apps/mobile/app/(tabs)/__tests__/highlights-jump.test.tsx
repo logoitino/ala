@@ -7,6 +7,8 @@ import HighlightsTab from '../index';
  *  1. a search result must land even when the target pill is already active
  *  2. Spotlight "Watch Full Highlight" must not silently no-op when the award's
  *     clip is filtered out of the current feed
+ * Also covers the Beyond switch on the Home bar (owner 2026-10-16): workout + service clips only,
+ * a link to the Beyond the Game page, and no switch while Beyond is paused.
  */
 
 const mockPush = jest.fn();
@@ -188,6 +190,7 @@ async function mountTab() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (mockRuntime.live.tabs as Record<string, boolean>).beyond = false;
   mockSpotlight.award = null;
   mockSpotlight.visible = false;
   mockSpotlight.dismiss = jest.fn(async () => undefined);
@@ -230,5 +233,24 @@ describe('Spotlight Watch Full Highlight from the Highlights tab', () => {
 
     await waitFor(() => expect(mockPush).toHaveBeenCalled());
     expect(String(mockPush.mock.calls[0][0])).toContain(playerId);
+  });
+});
+
+describe('Beyond switch on the Home bar', () => {
+  it('plays only workout and service clips and links to the Beyond the Game page', async () => {
+    (mockRuntime.live.tabs as Record<string, boolean>).beyond = true;
+    await mountTab();
+
+    await fireEvent.press(pill('Beyond'));
+    await waitFor(() => expect(screen.getByText('active:hl-3')).toBeTruthy());
+    expect(screen.queryByText('active:hl-1')).toBeNull();
+
+    await fireEvent.press(screen.getByLabelText(/^Open Beyond the Game: fan workouts/));
+    expect(mockPush).toHaveBeenCalledWith('/beyond');
+  });
+
+  it('hides the Beyond switch while Beyond is paused', async () => {
+    await mountTab();
+    expect(screen.queryByRole('tab', { name: /^Beyond,/ })).toBeNull();
   });
 });

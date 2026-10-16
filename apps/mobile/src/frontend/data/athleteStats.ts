@@ -6,7 +6,7 @@
 import { GENERIC_SPORT_CONFIG, SPORT_CONFIG_SEEDS, statLabelFor, visibleStatFields,
   type SportConfig, type SportStatSource } from '@/data/sports';
 import type { AthleteSport } from '@/data/teams';
-import type { Player } from '@/types/database';
+import type { AthleteGameLog, Player } from '@/types/database';
 
 export type CareerColumns = {
   scoring: string;
@@ -42,6 +42,24 @@ export type AthleteGameLogRow = {
   scoringValue: number;
   volumeValue: number;
 };
+
+/**
+ * @purpose `athlete_game_logs` rows → newest-first game lines. Shared by the profile Stats tab and the admin
+ *   Stats panel so both read a game line the same way.
+ */
+export function mapGameLogs(rows: Pick<AthleteGameLog, 'id' | 'played_on' | 'opponent_school' | 'stat_line' | 'scoring_value' | 'volume_value'>[] | null | undefined): AthleteGameLogRow[] {
+  return (rows ?? [])
+    .slice()
+    .sort((left, right) => Date.parse(right.played_on) - Date.parse(left.played_on))
+    .map((row) => ({
+      id: row.id,
+      playedOn: row.played_on,
+      opponentSchool: row.opponent_school,
+      statLine: row.stat_line,
+      scoringValue: row.scoring_value,
+      volumeValue: row.volume_value,
+    }));
+}
 
 export type AthleteStatsBundle = {
   physicals: AthletePhysicals;
@@ -203,8 +221,4 @@ export function demoAthleteStats(player: Player, targetSport?: string | null): A
     logs,
     topThree: careerPreviewStats(career),
   };
-}
-
-export function emptyPhysicals(): AthletePhysicals {
-  return { height: EMPTY, weight: EMPTY, fortyYard: EMPTY, verticalJump: EMPTY };
 }
