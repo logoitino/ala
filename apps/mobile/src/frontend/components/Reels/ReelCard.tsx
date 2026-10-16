@@ -725,6 +725,7 @@ function ReelCardImpl({
       <View pointerEvents="box-none" style={[styles.actionsLayer, { top: overlayInsetTop }]}>
         <ReelActionOverlay
           athleteName={playerName}
+          tagState={clip.tagStatus === 'pending' ? 'pending' : clip.playerId && clip.tagStatus !== 'rejected' ? 'approved' : undefined}
           schoolName={schoolName}
           jerseyNumber={player?.jersey_number}
           position={player?.position}

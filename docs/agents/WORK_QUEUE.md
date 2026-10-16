@@ -342,8 +342,12 @@ Status, claims and acceptance: [PLAY-01.md](PLAY-01.md). Hosted source metadata/
 repair (ENV-02) remains separately limited; no public-demo admin grant is implied.
 HEALTH-01 evaluation: frozen source/controller/SDK patch implemented and locally checked
 (3 suites /38 tests; earlier full gate 98 suites /646 tests, native exports and patch/lock
-validation). Final browser interaction, device playback and complete clean install remain
-unverified in PLAY-01; keep its existing claims until that owner supplies close-out.
+validation). Close-out 2026-10-16 (Muse session): patch marker, offline frozen-lockfile
+validation, Reels 9/89, full `pnpm check` exit 0 (150 suites /1,197 tests), portal 86/86,
+web + iOS/Android Hermes exports and `git diff --check` all re-pass on the current tree;
+PRIV-01 tagState handoff done (typecheck + 89/89 re-pass). PLAY-01 releases its file
+claims; final browser interaction, device playback, clean install and ENV-02 hosted media
+verification stay owner-gated. Evidence: [PLAY-01.md](PLAY-01.md).
 
 ### ADM-02 — unified main admin (owner request, 2026-10-12)
 

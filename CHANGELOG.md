@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-16 — Approved vs pending tag chip on Highlights
+
+Highlight cards now show whether the athlete approved the tag: a solid "✓ Tagged" chip for approved tags and a grey dashed "Tag pending" chip while waiting for approval. Untagged clips show no chip.
+
 ## 2026-10-16 — Beyond follow-up: catch-up plan, safety label design, phrase test
 
 A step-by-step checklist now brings the development database up to date so Beyond posting can be switched on there (not run yet). A "Coach-level move" safety label for risky workouts is designed and registered for the admin-first build, with wording for Legal to choose. Four phrases for "my Beyond workout for the day" — Seki Set, Extra Rep, OT and Two-a-Day — go to users for a test before one is picked.

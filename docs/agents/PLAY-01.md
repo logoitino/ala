@@ -1,6 +1,6 @@
 # PLAY-01 — browser playback errors
 
-Last updated: 2026-10-13. Status: **investigation and implementation in progress**.
+Last updated: 2026-10-16. Status: **locally verified and closed**; final browser interaction, device playback, clean install and hosted media verification remain owner-gated (see Close-out).
 
 The owner supplied launch and browsing error screenshots: Lightning CSS native-module
 loading, aborted media fetches and an unsuitable source at `ReelCard.tsx`'s play call.
@@ -17,6 +17,7 @@ Owner-authorized Codex outside sessions do not replace the registry's model pins
 | Codex profile_creative_design | ReelCard video lifecycle, scoped Reels helpers/tests; editable expo-video 57.0.5 web source/build under `/tmp/ala-play01-expo-video` | Claimed 2026-10-13; actual-library rejection reproduction and targeted fix |
 | Codex profile_sport_stats | Read-only native CSS probe and dependency/native playback compatibility review | CSS direct/worker transforms pass; no reinstall or quarantine removal justified |
 | Codex sports_accessibility_review | Read-only browser reproduction, existing playback events and controlled local media | Owns Browser Bridge serially; external media probe blocked by automatic review |
+| Muse session (2026-10-16) | Close-out re-verification of patch/tests/exports; PRIV-01 tagState handoff (one prop) | Local verification complete, claim released; browser/device/hosted/clean-install stay owner-gated |
 
 Preserve concurrent admin/Books/schema work. Root owns shared documentation and package
 configuration. Check file modification times before every shared edit; release claims
@@ -107,7 +108,33 @@ that pnpm's diff omitted. A complete clean install was not run; it still needs a
 working registry or complete package store. This is a reproducible manifest/lock/patch
 change, with the current installed files updated without rebuilding unrelated modules.
 
-## Hand-off from PRIV-01 (Claude, 2026-10-14) — not a claim on ReelCard
+## Close-out verification (2026-10-16, Muse session)
+
+Re-verified every locally checkable PLAY-01 claim on the current tree; no Codex-session
+file activity since 2026-10-13 (only the owner-approved 2026-10-16 badge line touched
+ReelCard since). Evidence, all observed this session:
+
+- Patch: `patches/expo-video@57.0.5.patch` on disk (untracked), registered in
+  `package.json` / `pnpm-lock.yaml` (uncommitted); the PLAY-01 marker is confirmed in
+  the installed 57.0.5 build that `apps/mobile` resolves to. Offline frozen-lockfile
+  validation re-passed; `git diff --check` clean.
+- Tests: Reels focused 9 suites / 89 tests pass; full `pnpm check` exit 0 with
+  150 suites / 1,197 mobile tests; admin-portal unit tests 86/86.
+- Exports: web (3 API routes), iOS (9.4 MB `.hbc`) and Android (9.5 MB `.hbc`)
+  each pass separately with `EXPO_NO_DOTENV=1`; combined export not attempted.
+- The 2026-10-13 `/tmp` native-validation evidence file is gone (tmp cleaned); the
+  runs above regenerate that evidence on current source.
+- PRIV-01 tagState handoff done: one `tagState` prop on `<ReelActionOverlay>` in
+  `ReelCard.tsx`; mobile typecheck clean, Reels 89/89 re-pass.
+
+Still open, all owner/environment-gated: final browser interaction (owner's Chrome via
+Bridge — headless Chrome cannot launch here), native/device playback (simulator is not
+tappable), complete clean install (npm registry blocked), hosted media metadata probe
+(ENV-02, previously blocked by automatic review). PLAY-01 releases its hold on
+`ReelCard.tsx`, `reelPlayback.ts` and `lib/reels.ts`; the coordinated commit pass may
+now treat PLAY-01 as released alongside DETECT-02.
+
+## Hand-off from PRIV-01 (Claude, 2026-10-14) — done 2026-10-16, not a claim on ReelCard
 
 When the PLAY-01 claim on `components/Reels/ReelCard.tsx` is released, PLAYBACK (or whoever holds ReelCard next) adds
 one prop to its `<ReelActionOverlay …>`: `tagState={clip.tagStatus === 'pending' ? 'pending' : clip.playerId && clip.tagStatus !== 'rejected' ? 'approved' : undefined}`.
