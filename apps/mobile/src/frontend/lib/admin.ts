@@ -3,6 +3,7 @@
  * (Marketing / Owner / Engineer / All) shows, plus the admin reads and actions behind the desks (Spotlight awards,
  * flagged-clip moderation, platform metrics, telemetry digest, reports and health checks).
  * Editing groups exclude the legacy Reports dashboard so top-level reporting has one navigation owner.
+ * The quiz desk is labelled Trivia (2026-10-15); its route and search terms keep the old Sport Pop Quiz name working.
  * @sideEffects Reads and writes through the shared Supabase client; admin role enforced by RLS.
  */
 
@@ -37,6 +38,8 @@ export type AdminNavHref =
   | '/admin/money'
   | '/admin/books'
   | '/admin/polls'
+  | '/admin/sport-quiz'
+  | '/admin/fan-zone'
   | '/admin/reports'
   | '/admin/trends'
   | '/admin/audience'
@@ -77,6 +80,9 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: '/admin/games', label: 'Live games', hint: 'Local match board' },
       { href: '/admin/sports', label: 'Sports', hint: 'Scoring, periods, stats per sport' },
       { href: '/admin/polls', label: 'Polls', hint: 'School cheer matchups' },
+      // Trivia (2026-10-15): the desk keeps its saved /admin/sport-quiz address; search still finds the old name.
+      { href: '/admin/sport-quiz', label: 'Trivia', hint: 'Questions, Life Playbook, groups and switches', searchTerms: 'trivia quiz questions Life Playbook Sport Pop Quiz drafts review chapters' },
+      { href: '/admin/fan-zone', label: 'Fan Zone', hint: 'Testing campaigns, private entry review, free ballots and tracked removal' },
       { href: '/admin/boosters', label: 'Boosters', hint: 'Local sponsorships' },
       { href: '/admin/publish', label: 'Publish queue', hint: 'Content readiness and go-live queue' },
     ],
@@ -210,6 +216,8 @@ export const ADMIN_LENSES: { id: AdminLens; label: string; hint: string }[] = [
 
 const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
   marketing: [
+    '/admin/sport-quiz',
+    '/admin/fan-zone',
     '/admin/lab',
     '/admin/look',
     '/admin/features',
@@ -224,6 +232,8 @@ const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
     '/admin/coverage',
   ],
   owner: [
+    '/admin/sport-quiz',
+    '/admin/fan-zone',
     '/admin/support',
     '/admin/lab',
     '/admin/money',
@@ -246,6 +256,8 @@ const LENS_HREFS: Record<Exclude<AdminLens, 'all'>, AdminNavHref[]> = {
     '/admin/catalog',
   ],
   engineer: [
+    '/admin/sport-quiz',
+    '/admin/fan-zone',
     '/admin/support',
     '/admin/lab',
     '/admin/features',
@@ -288,6 +300,7 @@ export function adminAnalysisForPath(pathname: string): AdminNavItem[] {
   if (['/admin/features', '/admin/look', '/admin/catalog', '/admin/lab'].includes(path)) return [report('/admin/product', 'Published product'), report('/admin/product/coverage', 'Control map')];
   if (['/admin/qa', '/admin/feedback', '/admin/moderation', '/admin/support'].includes(path)) return [report('/admin/health', 'Health report')];
   if (['/admin/games', '/admin/sports', '/admin/polls', '/admin/publish', '/admin/highlights', '/admin/spotlight'].includes(path)) return [report('/admin/analytics', 'Full analytics')];
+  if (['/admin/fan-zone', '/admin/sport-quiz', '/admin/games', '/admin/sports', '/admin/polls', '/admin/publish', '/admin/highlights', '/admin/spotlight'].includes(path)) return [report('/admin/analytics', 'Full analytics')];
   return [];
 }
 
@@ -299,6 +312,8 @@ const FAN_HREF_BY_DESK: Partial<Record<AdminNavHref, string>> = {
   '/admin/games': '/local',
   '/admin/sports': '/operator',
   '/admin/polls': '/local',
+  '/admin/sport-quiz': '/sport-quiz',
+  '/admin/fan-zone': '/fan-zone',
   '/admin/boosters': '/local',
   '/admin/publish': '/local',
   '/admin/spotlight': '/spotlight',

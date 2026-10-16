@@ -1601,3 +1601,397 @@ CHAL participant source extension: `challenge_friends(expected_actor_id,max_rows
 ### Beyond legacy discovery integration (local)
 
 `beyond_legacy_posts(expected_actor_id,category,max_rows)` returns a JSON array of at most24 minimal cards (id, title240codepoints, player_id, athlete_name160codepoints, workout/service category). Internal filters retain Train/Serve categories; exact confirmed linked verified/open athlete and open uploader are required. Both current photo audiences, blocks, age closure and applicable known-teen public consent are checked explicitly; the privileged reels_feed view alone is not an authorization boundary. Ambiguous legacy verified ownership fails closed. Guest null is allowed only without an authenticated actor. No media URL or full profile is returned; contribution enablement is separate. Canonical integration now contains the final migration exactly once; written/unapplied.
+## FUN-01 / QUIZ-01 — locally written testing pilots
+
+Default-off, approved account testing only; no hosted SQL applied. [Fan Zone design](design/FAN_ZONE_DESIGN.md), [Sport Pop Quiz design](design/SPORT_POP_QUIZ_DESIGN.md), task evidence FUN-01/QUIZ-01. No payment/Aura/contest release.
+
+| Table | Purpose |
+| --- | --- |
+| `fan_zone_campaigns` | Default-off testing-only fan award campaigns, approved tester audience, immutable rules/windows and free-ballot result revisions. |
+| `fan_zone_entries` | Private fan-video drafts/revisions, server-reserved immutable storage paths, verified media metadata, review and withdrawal state. |
+| `fan_zone_consents` | Immutable exact-entry assent/guardian permission/revocation receipts tied to scope/media revision and active confirmed supervision link. |
+| `fan_zone_ballots` | One current versioned free ballot per canonical eligible profile/campaign, with restricted invalidation rationale. |
+| `fan_zone_requests` | Caller/request/argument-bound ballot retry receipts, capped60/window and expired30days after vote close. |
+| `fan_zone_cases` | Private bounded report/appeal/deletion cases with hashed reporter receipt secret/30day receipt access, actual removal completion and escalation. |
+| `fan_zone_audit` | Immutable server actor/time Fan Zone configuration/review/consent/ballot/result/removal trace; restricted corrective access. |
+| `fan_zone_reflections` | Voluntary private preset service reflection receipts, deletable by owner; no beneficiary detail or payment condition. |
+| `sport_quiz_settings` | Default-paused/testing-only quiz switch with approved canonical-profile tester allowlist. |
+| `sport_quiz_questions` | Human-reviewed immutable family/version, sport or optional fun topic, bounded sources, four choices and explanation; draft/approved/archive/void. |
+| `sport_quiz_attempts` | Own timed30/90-second immutable question/result lifecycle per account UTC week; hash-only active capability; old untimed attempts historical. |
+| `sport_quiz_badges` | Private equal right/wrong Trivia Explorer completion; historical Sport Learner preserved; no Aura wallet, vote/payment value; correction may void. |
+| `sport_quiz_audit` | Immutable editorial/admin correction history; protected erasure removes own participant learning associations; admin export redacts participant actor/question/attempt links. |
+
+| Function | Use (narrow caller/admin/service guard; helpers internal) |
+| --- | --- |
+| `fun_eligible` | Internal canonical-profile known-age/open-account eligibility predicate for fan actions. |
+| `fun_actor` | Internal authenticated canonical profile/age guard; never assumes profile ID equals Auth user ID. |
+| `fun_admin_guard` | Internal admin/known-age guard for corrective Fan Zone operations. |
+| `fun_pilot` | Internal testing-only campaign/tester-audience authorization, empty allowlist denies by default. |
+| `fun_scope` | Internal exact revision/digest/alias/caption/campaign/audience/form/no-reuse consent scope. |
+| `fun_guardian` | Internal currently active confirmed supervision-link predicate; does not prove legal guardianship. |
+| `fun_permission_valid` | Internal current exact-entry assent/guardian-link/grant/revocation validity. |
+| `fun_candidate` | Internal accepted/currentverified/media-present/permission-valid candidate eligibility predicate. |
+| `fun_entry_json` | Internal redacted private own/guardian/admin entry DTO including tracked media revision removal list. |
+| `fun_campaign_json` | Internal campaign DTO with approved tester identities restricted to admins. |
+| `fun_case_json` | Internal minimal secret-authorized case receipt projection; no other case text. |
+| `fun_audit` | Internal append-only trusted actor/time corrective event capture. |
+| `fun_signature` | Internal hash of ballot request arguments for caller-bound exact retry. |
+| `fun_admin_campaign` | Admin create/configure/testing-open/pause/close/finalize/recount; winners derived from valid free totals. |
+| `fun_entry` | Caller-owned private reserve/edit/verified-submit/withdraw with immutable revision paths and server entry window. |
+| `fun_permission` | Exact expected-scope assent/linked guardian grant/revoke; edit/stale form/link ending invalidates publication. |
+| `fun_vote` | Atomic one free ballot/account/window; version CAS, caller/request/args retry binding, no-self vote and capped mutations. |
+| `fun_admin_entry` | Admin normal decisions compare exact reviewed scope atomically; explicit current-entry emergency suspension with rationale; no winner selection. |
+| `fun_admin_ballot` | Admin proven ballot invalidation with reason and recount-required audit. |
+| `fun_media_access` | Caller-scoped exact revision read/verify/remove authorization before server private storage access. |
+| `fun_verify_media` | Service-only sanitized digest/bytes/duration commit to still-authorized immutable draft; no client media assertion. |
+| `fun_complete_removal` | Service-only actual object-absence completion across all tracked entry revisions/deletion cases. |
+| `fun_case` | Bounded report/appeal/removal request with hashed secret; public report saturation cannot deny owner deletion. |
+| `fun_case_status` | Secret-authorized unexpired minimal case status; no private target existence leak. |
+| `fun_admin_case` | Admin case resolve/escalation with reason; completion only server-confirmed deletion. |
+| `fun_reflection` | Own private voluntary preset service receipt create/delete, separate from badges/money. |
+| `fun_snapshot` | Own/guardian plus enrolled-pilot campaign/candidate/result/story; eligible is known age, can_participate is own tester capability; private guardian queue independent. |
+| `fun_admin_snapshot` | Complete selected bounded campaign Data with independently paged cases/audit, campaign-bound timestamp/ID JSON cursors and defined counts; corrective identity scope. |
+| `fan_zone_private.upload_allowed` | Private-schema Storage INSERT policy helper; schema usage denied to API roles, only policy-bound execute; owner editable reserved path/window and no existing object. |
+| `fun_page_time` | Insert trigger ensures timestamp-page ordering without same-transaction skipped case/audit rows. |
+| `fun_immutable_record` | Trigger protects exact consent/audit receipts against mutation/truncate; identity nulling handled for deletion. |
+| `fun_prune_receipts` | Service-only explicit expiry cleanup for bounded ballot retry records; no scheduler or hosted execution established. |
+| `quiz_week` | Internal authoritative UTC Monday start for one weekly assignment/badge. |
+| `quiz_actor` | Internal canonical account/knownage/closed check; no client-supplied participant identity. |
+| `quiz_admin_actor` | Internal protected quiz content/settings admin guard. |
+| `quiz_require_testing` | Internal default-paused/tester allowlist/production-refusal guard for quiz participation. |
+| `quiz_guard_question` | Trigger freezes issued question wording/answers; edits become new reviewed versions. |
+| `quiz_guard_audit` | Trusted editorial/admin audit immutable; protected own-learning erasure removes participant audit associations, with FK nulling on identity deletion. |
+| `quiz_snapshot` | Current v2 own account/week/preferences, prompt-free attempt summary, exact unseen pools and history revision/counts; active question never appears. |
+| `quiz_start` | Current v2 atomic unseen approved family once per expected canonical account/UTCweek; only exact original Start capability returns an active prompt with fixed server deadline. Refresh cannot resume a round. |
+| `quiz_answer` | Current v2 original capability/expected profile and server deadline authorize one committed answer; exact option/request recovery preserves one private equal participation badge. |
+| `quiz_skip` | Current v2 expected-profile/week Skip consumes an unspent weekly opportunity without prompt/reward; already-spent returns authoritative status, active closure uses End. Not now is separate local invitation dismissal. |
+| `quiz_admin_settings` | Admin default-paused testing audience/settings change with authoritative rationale. |
+| `quiz_admin_question` | Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction. |
+| `quiz_admin_snapshot` | Complete <=100 question-version bank, defined current-week counts and bigint-paged audit; no participant answer list. |
+
+| `fun_storage_guard` | Campaign→entry Storage INSERT/UPDATE mutation fence, including service writes; stale/path-moving/post-withdrawal/deletion/verified writes refused. Actual provider compensation still needs hosted proof. |
+
+| `fun_guardian_grant_valid` | Current pinned exact guardian receipt/link/scope check; a replacement requires a fresh explicit grant after revocation/link loss. |
+
+`fan_zone_entries.guardian_consent_id` is a nullable private FK to the relied-on exact consent receipt. First valid grant stays pinned; older other grants cannot replace it automatically. A fresh explicit replacement does not let the earlier actor’s stale revoke disable the replacement.
+
+| `quiz_normalize_options` | Protected option whitespace canonicalization; legacy invalid options remain visible for audited admin correction, deny assignment/completion. |
+
+Fan admin correction changes unapplied RPC signatures together: `fun_admin_entry(uuid,text,text,jsonb)` requires exact displayed scope for normal decisions; null scope is explicit emergency Suspend only. `fun_admin_snapshot(uuid,text)` accepts version1 campaign-bound JSON cursors with independent case/audit timestamp/ID markers. Old signatures are explicitly dropped and only new signatures granted. Existing timestamp insert guards remain; tied recovery/import rows also page completely.
+
+## QUIZ-02 timed trivia mapping
+
+New migration `20261014150000_timed_sport_trivia.sql` replaces untimed authority; root canonical
+append and actual verification are recorded in [QUIZ-02](../agents/QUIZ-02.md). Prior QUIZ-01
+checkpoints remain historical. First legacy upgrade resets admission to paused/testing-only/empty cohort; repeated canonical application preserves existing timed settings, live deadlines/capabilities, preferences and history.
+
+| New private table | Purpose and boundaries |
+| --- | --- |
+| `sport_quiz_preferences` | Default-off invitations, sports/mix, notice, preference CAS, retained monotonic history revision and once-weekly claim. |
+| `sport_quiz_exposures` | Unique account/family first issuance with immutable version; includes ended/expired/void; erased with learning history. |
+| `sport_quiz_week_guards` | Profile/week/spent/prune only,35days; retained after disclosed history erasure, cascades on account deletion. |
+| `sport_quiz_requests` | Private bounded exact request/input recovery/cancelled Start, expected week; no plaintext token/prompt; erasable. |
+
+| New function | Authority/purpose |
+| --- | --- |
+| `quiz_week_at` | Internal UTC Monday from explicit locked/read server instant. |
+| `quiz_expected_actor` | Internal canonical current JWT equality with expected participant/admin ID and current permission. |
+| `quiz_cursor` | Internal exact bounded version/stream/timestamp/ID cursor validation before casts. |
+| `quiz_lock` | Internal settings/account serialization; caller captures clock after acquiring locks. |
+| `quiz_preferences_dto` | Internal own default/retained preference and revision projection. |
+| `quiz_summary` | Internal prompt-free immutable attempt metadata/effective expiry at supplied server instant. |
+| `quiz_question_dto` | Internal immutable content projection; only authorized Start/terminal history can expose it. |
+| `quiz_result_dto` | Internal own terminal result/explanation; no active correct-answer projection. |
+| `quiz_digest` | Internal normalized-input SHA binding without plaintext secret storage. |
+| `quiz_receipt_dto` | Internal minimal exact receipt/terminal result, never active question. |
+| `quiz_save_request` | Internal bounded caller/request receipt insertion and original outcome. |
+| `quiz_spend` | Internal atomic35-day minimal weekly quota. |
+| `quiz_expire` | Internal persisted terminal expiry under lifecycle lock, no snapshot writes. |
+| `quiz_fun_slot` | Internal deterministic account/UTC-week4sports/1optional fun slots without inferred-interest tracking. |
+| `quiz_fun_available` | Internal reviewed unseen optional-topic availability without fallback or repeat. |
+| `quiz_bump_history` | Protected material learning-change revision under settings/account serialization; stale erase rejects, exact retries do not bump. |
+| `quiz_preferences` | Participant expected-profile/CAS/request preference/notice write; Off separate from End. |
+| `quiz_invitation` | Participant optional once-weekly quiet card claim; no prompt/deadline or draw. |
+| `quiz_history` | Own terminal learning/badge/correction pages; no active prompt or other child's history. |
+| `quiz_erase_history` | Own expected-profile/history CAS: ends current/pending week, removes learning/exposures/badges/receipts/participant audit; retains disclosed preference/revision and quota. |
+| `quiz_admin_retention` | Expected-current-admin reasoned bounded expired receipt/quota pruning; preserves unexpired guards. |
+
+Replaced `quiz_snapshot()` is read-only v2 own availability/preferences/pools/week and sanitized
+attempt status, never an active prompt. `quiz_start` binds expected profile/week/notice/topic,
+duration30/90, request UUID and memory-only256-bit token hash. Exact original Start recovery
+keeps the deadline; ordinary receipt/history cannot resume. `quiz_answer` accepts only a valid
+owned active token before the locked deadline; exact committed recovery remains readable.
+`quiz_end` accepts exactly one attempt or Start UUID and no secret, including a cancellation
+fence before delayed Start. `quiz_skip` explicitly closes the expected week; Not now does not.
+
+Admin settings/question/retention writes require captured canonical admin equality, reason and
+current permission. Pause permanently ends active rounds; re-enable cannot resume them. Source
+approval requires explicit family review and source notes; corrections preserve issued versions.
+`quiz_admin_snapshot` pages50 questions and50 audit independently with full totals/effective
+expiry. Helpers/direct private tables are revoked from clients; dropped old untimed overloads
+fail closed. UUID receipts are capped60/account/week with57 ordinary slots and protected answer,
+Off and End slots; exact committed retries precede capacity checks. Erasure uses CAS without a
+UUID receipt; unknown deletion requires Refresh/reconfirm rather than auto-newrevision erase.
+
+## QUIZ-03 trivia play together (`20261014160000_trivia_play_together.sql`, **written 2026-10-14, not applied**)
+
+Design: [TRIVIA_PLAY_TOGETHER_DESIGN.md](design/TRIVIA_PLAY_TOGETHER_DESIGN.md) (§9 overrides §1–§7). Appended to
+`schema.sql` after QUIZ-02. Settings stay paused, testing-only and empty-cohort; both new switches start off.
+Replays: `node scripts/replay/trivia-play-together-replay.mjs <pglite dist>` (QUIZ-03 actors) and
+`node scripts/replay/timed-trivia-replay.mjs <pglite dist> --with-quiz03` (every QUIZ-02 check on top of QUIZ-03).
+
+| New private table | Purpose and boundaries |
+| --- | --- |
+| `sport_quiz_round_items` | The attempt stays the weekly round (`mode = 'round'`); one row per issued question (position 1–5) with its own `issued_at` / `expires_at`, private answer, status `issued` / `answered` / `expired` / `ended` / `void`. Unissued positions do not exist, so they stay in the pool. |
+| `sport_quiz_groups` | Family-challenge group: preset `name_key` only (`family`, `friends`, `team_fans`, `cousins`, `game_day_crew`, `home_team`), optional sport theme, current `owner_id` (hand-over on creator deletion), `active` / `closed`. No search, no listing. |
+| `sport_quiz_group_members` | Membership (max 12; an account belongs to at most 5, creates at most 3). `removed` rows (creator, block or admin) bar rejoining; leaving deletes the row. |
+| `sport_quiz_group_codes` | One SHA-256 hashed 8-character code per group, valid 7 days; deleted when the group is full and on any removal (rotation). |
+| `sport_quiz_group_join_attempts` | Joined / wrong code / refused (+ private reason: `teen_rule`, `blocked`, `full`, `removed`, `closed`); 10 wrong-or-refused tries and 5 joins per account per day; purged after 35 days. |
+| `sport_quiz_group_sets` | Shared group-week set, drawn at random from the theme without reading any member's exposures; purged at week end + 35 days. |
+| `sport_quiz_group_cases` | Append-only safety log: `report` (fixed reason), `admin_view`, `admin_removal`, `admin_close`, `member_removed`, `blocked_removed`, `handover`, `dissolved`. No FK on `group_id`, so it survives the group purge. |
+
+Changed tables: `sport_quiz_settings` gains `round_size` (1–5, default 5), `groups_enabled` (`trivia.groups`) and
+`images_enabled` (`trivia.images`), both default off. `sport_quiz_questions` gains `question_type` (`choice4` |
+`true_false` | `image_choice`), 2–4 options with `correct_option < option count`, `true_false` fixed to
+`["True","False"]`, and image rights fields (`media_path`, `media_licence`, `media_source`, `media_attribution`,
+`media_alt_text`, `media_size_bytes ≤ 307200`, `media_has_person = false`, `media_reviewed_by`); type and media join
+the immutability trigger; `image_choice` approval raises `quiz_images_off` while the switch is off and images are
+never drawn (no bucket, no delivery). `sport_quiz_attempts` gains `round_state` (`item` | `between`), `position`,
+`planned_items`, `round_size`, `next_by`, `topic_category`, `sport_filter`, `group_id`. `sport_quiz_badges` becomes
+unique per `(profile_id, label, period)` with `kind` (`weekly`, `sport`, `family`, `season`), `sport` and
+`visibility` `private` | `groups`. `sport_quiz_requests` adds operation `next`. `supervision_events` adds
+`trivia_group_joined` / `trivia_group_left`.
+
+| New or redefined function | Authority/purpose |
+| --- | --- |
+| `quiz_start` (redefined, same signature) | Starts a round: `planned_items = min(round_size, unseen)`; issues item 1 only; refuses (`quiz_week_closing`) unless items × duration + gaps fit before the UTC week ends. Response adds `active_item`. |
+| `quiz_group_start` | Same weekly opportunity, started only from a group page; shared set unless the member has seen that family, then a private replacement. Refused while `trivia.groups` is off. |
+| `quiz_next` | Request UUID + expected position + session secret. Issues the next item with its own deadline; an exact replay returns the same item only before its deadline; re-checks the week (`week_closed`) and closes short when the pool runs out. |
+| `quiz_answer` / `quiz_end` (redefined) | Answer the open item (bounded by its option count); a round waits in `between` for 2 minutes, then closes. A round with at least one committed, non-void answer is `completed`; leaving ends the whole round. |
+| `quiz_snapshot`, `quiz_history` (redefined) | Effective round state is computed read-only; history lists closed items with private results, never an open item. Snapshot adds `round_size`, `groups_available`. |
+| `quiz_badge_shelf`, `quiz_badge_visibility` | Own badges; opt one in or out of group pages. |
+| `quiz_season_recap` | Own calendar-quarter recap: facts by sport and topic, rounds, badges. |
+| `quiz_group_create`, `quiz_group_join`, `quiz_group_leave` | Preset names; one-time code; joins follow MINOR-01's friend-request setting for every teen both ways plus PRIV-01 blocks; every refusal reads `refused`. |
+| `quiz_group_remove_member`, `quiz_group_renew_code`, `quiz_group_set_theme` | Creator only; removal bars rejoining and rotates the code. |
+| `quiz_group_page`, `quiz_groups_mine`, `quiz_group_report` | Live page: played-this-week mark per member, group totals only, opt-in badges, member ids only to the creator; removed members get only the removal notice. Report carries the group id and a fixed reason. |
+| `quiz_admin_play_settings` | Admin round size and the two switches, audited. |
+| `quiz_admin_group_case`, `quiz_admin_group_remove` | Admin audited case view (member ids, age bands, refusal reasons, case log; each read logged) and removal / close with a reason. |
+| `quiz_admin_question`, `quiz_admin_settings`, `quiz_admin_snapshot`, `quiz_admin_retention`, `quiz_erase_history` (redefined) | 300 cap counting draft + approved; per-item void; round-aware pause; snapshot adds `active_total`, `forecast`, `groups`, `reports`, round/badge counts; retention also purges codes, sets, join attempts and closed groups; erasure also leaves groups (hand-over/dissolve), removes join attempts, sets of dissolved groups and every badge. |
+| `supervision_json` (MINOR-01, redefined by copy) | Adds `summary.trivia_groups` (count only); joined/left events arrive through `supervision_events`. |
+
+Internal helpers (revoked from every client role, `search_path` pinned): `quiz_round_gap`, `quiz_week_end`,
+`quiz_quarter_of`, `quiz_normalize_options` (now 2–4 options), `quiz_guard_question`, `quiz_question_dto`,
+`quiz_fun_available`, `quiz_unseen_count`, `quiz_facts`, `quiz_played`, `quiz_round_view`, `quiz_summary`,
+`quiz_result_dto`, `quiz_round_items_dto`, `quiz_round_close`, `quiz_round_settle`, `quiz_expire`, `quiz_round_pick`,
+`quiz_round_issue`, `quiz_active_item`, `quiz_round_begin`, `quiz_sync_badges`, `quiz_badge_defaults` (trigger),
+`quiz_group_code_new`, `quiz_group_active_count`, `quiz_group_issue_code`, `quiz_teen_accepts`, `quiz_group_refusal`,
+`quiz_group_case`, `quiz_group_handover`, `quiz_group_mark_removed`, `quiz_group_display_name`, `quiz_group_page_dto`,
+`quiz_group_ensure_set`, `quiz_group_owned`, `quiz_admin_forecast`, `quiz_groups_on_block` (trigger on
+`user_blocks`: removes the blocked party), `quiz_group_owner_gone` (trigger: creator deletion hand-over),
+`quiz_guard_group_case` (trigger: append-only log).
+
+Access: no table grants; RLS plus the MINOR-01 restrictive "Closed accounts" policy on every new table; lock order
+settings → group → account → attempt; advisory lock per group while a shared set is drawn.
+
+**Security review fixes (RLS_SECURITY + MINOR_SAFETY + PRIVACY, 2026-10-14).** Teen rules are re-checked after a join:
+`quiz_group_recheck` (trigger `quiz_groups_on_profile` on `profiles` birth month/year, `friend_requests_from`,
+`age_blocked_at`), `quiz_group_recheck_pair` (triggers `quiz_groups_on_friendship` on unfriend / accepted→other and
+`quiz_groups_on_guardian_link` when `ended_at` is set) and lazily `quiz_group_needs_recheck` / `quiz_group_recheck_group`
+in `quiz_group_page` (now volatile) and group Start, which covers birthdays. An age correction removes the account
+that changed; a setting change, unfriend or ended link removes the party the teen's rule refuses (`quiz_pair_ok`).
+Removals use reason `teen_rule` (case `rule_removed`, no rejoin bar; the join check decides). An under-13 closure
+(`quiz_profile_closed`) removes every membership with reason `closed` (case `account_closed`), and a closed account
+never appears on a page. Erasure keeps `sport_quiz_group_join_attempts` (returns `retained_join_attempts`) so limits
+and refusal evidence survive. Group pages: fact totals are null until 3 members played this week, then rounded down to
+multiples of 5; a closed group lists no members; `member_ref` is an opaque per-group reference (`quiz_member_ref`,
+SHA-256 of a private per-group `ref_salt`, group id and profile id) and `quiz_group_remove_member(uuid,text,uuid)`
+takes it. Codes come from pgcrypto `gen_random_bytes` with rejection sampling. Image rights add required
+`media_no_marks` and `media_exif_stripped` (true), and `quiz_admin_question(..., 'review_media', ...)` records
+`media_reviewed_by` / `media_reviewed_at` by a second admin; approval raises `quiz_media_review_required` without it
+(audit action `question_review_media`).
+
+**Intentional QUIZ-02 behaviour changes** (the `--with-quiz03` run marks them `quiz03 ?`): (1) Start issues a round
+of up to `round_size` questions (default 5) instead of one; with a one-question pool the round behaves exactly like
+QUIZ-02. (2) The bank cap is 300 and counts only draft and approved versions (was 100 counting every version);
+`question_total` still counts every version for paging and `active_total` is new. (3) An answer in a round that
+has more questions returns outcome `answered` with the round waiting for Next, and history lists a round only
+once it closes. (4) Leaving after at least one answer closes the round as `completed` (keeps the badge), not
+`ended`. (5) A correction voids one item; the round is voided only when no committed answer remains. Harness-only
+adjustment: the QUIZ-02 backdate helper also backdates the open round item, because a round's deadline lives there.
+
+## QUIZ-04 Life Playbook and personal progress (`20261014180000_life_playbook.sql` + `20261014190000_life_playbook_bank.sql`, **written 2026-10-14, simplified 2026-10-15, not applied**)
+
+Design: [LIFE_PLAYBOOK_DESIGN.md](design/LIFE_PLAYBOOK_DESIGN.md) (§8 owner simplification overrides §2–§7). Appended to
+`schema.sql` after the QUIZ-03 starter bank. `trivia.life` (`sport_quiz_settings.life_enabled`) starts off; settings stay
+paused / testing-only. The bank file is generated by `node scripts/life-bank-sql.mjs` from
+`supabase/content/life_playbook_bank.json` (40 drafts, 10 per chapter, all 13+); every chapter stays closed after it
+loads. Replay: `node scripts/replay/life-playbook-replay.mjs <pglite dist>`.
+
+**Owner simplification (2026-10-15).** Life questions are simple facts with no money numbers, approved by one admin the
+same way as sports trivia. Removed before anything was applied (excerpts in
+`archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql`, registry `data-ownership.json` → `archived`): the
+CPA sign-off (`quiz_life_signoffs`, `quiz_admin_life_signoff`, `quiz_admin_life_signoff_confirm`,
+`quiz_life_signoff_current`, `quiz_life_signoff_dto`, `quiz_guard_life_signoff`), named finance / tax reviewers
+(`quiz_content_reviewers`, `quiz_admin_reviewer`, `quiz_life_active_grant`, `quiz_life_is_author`, `quiz_guard_reviewer`),
+allow-listed sources (`quiz_life_source_ok`), the re-review action and the January withdrawal (`quiz_life_due_on`,
+`quiz_life_today`, `quiz_life_item_current`, `quiz_life_tax_year_ok`), the 16+ / 18 bands (`quiz_life_band_rank`,
+`quiz_life_age_cap`) and the illustrative-figure marker (`quiz_life_field_marked`).
+
+| New private table | Purpose and boundaries |
+| --- | --- |
+| `sport_quiz_life_chapters` | Four chapters seeded closed, all 13+: `money_huddle` (Money Huddle), `savings_season` (Savings Season), `scam_defense` (Scam Defense), `smart_plays` (Smart Plays). Columns `id`, `title`, `framing`, `open`, `position`, `updated_at`, `updated_by`. `open` switches on only when the chapter has 5 approved questions (one round; trigger `quiz_guard_life_chapter`); the id never changes; no delete. |
+| `sport_quiz_levels` | Highest level reached per account (`track = 'overall'`) and per Life chapter; only goes up (`quiz_guard_level`); removed only by history erasure or account deletion. |
+
+Changed tables: `sport_quiz_settings` gains `life_enabled` and `level_thresholds` (Rookie 0, Varsity 15, All-Star 40,
+Pro 80, Hall of Fame 150; strictly increasing). `sport_quiz_questions` allows `topic_category = 'life'` and gains
+`chapter`, `min_age_band` (`13` only) and `education_only`; all three are immutable on a version. `sport_quiz_attempts`,
+`sport_quiz_week_guards` and `sport_quiz_requests` gain `round_kind` (`personal` | `group` | `life`); attempts are
+unique per `(profile_id, week_start, round_kind)` and guards keyed the same way. `sport_quiz_preferences` gains the
+private `life_opt_in`, `life_notice_version` (`life-playbook-v1-testing`), `life_opted_in_at`, `life_version`. Badges add
+kind `life` (`<Chapter> Playbook`, lifetime, always private). Audit adds `life_settings` and `life_chapter`.
+
+| New or redefined function | Authority/purpose |
+| --- | --- |
+| `quiz_life_start` | Life round (kind `life`, 90 s default, 30 allowed, optional chapter): `trivia.life`, Life notice and opt-in, open chapters. A closed or empty chapter reads `quiz_no_question`. |
+| `quiz_life_snapshot`, `quiz_life_chapters`, `quiz_life_progress`, `quiz_level` | Own Life availability (`off`, `not_opted_in`, `empty`, `ready`, …), the four chapters with open state and unseen counts, chapter progress (share of approved questions seen) and level (highest of stored and current). |
+| `quiz_life_preferences` | Private opt-in with its own CAS version; opting out ends an open Life round; not audited. |
+| `quiz_start`, `quiz_group_start` (redefined) | Kind `personal` (explicit topics sport / science / geography / general) and `group` (needs ≥ 2 active members: `quiz_group_too_small`). |
+| `quiz_end(uuid,uuid,date,text,uuid,uuid,text)` (new signature) | Takes the round kind; a pending Start is cancelled against that kind's guard; an attempt must match (`quiz_end_invalid`). The 6-argument version is dropped. |
+| `quiz_next`, `quiz_answer`, `quiz_skip`, `quiz_receipt`, `quiz_history`, `quiz_badge_shelf`, `quiz_badge_visibility`, `quiz_erase_history`, `quiz_snapshot` (redefined) | Next re-checks Life access (`access_revoked`); trivia-eligible accounts, plus 13+ accounts without a recorded age (`not_given` / `unknown`), can play Life (the latter Life only); Life badges cannot be shown to groups; erasure removes levels and spends all three guards; the snapshot adds `week_spent_by_kind`, `active_round_kind` and returns the open round of any kind. |
+| `quiz_admin_question` (redefined) | Life fields (chapter, `min_age_band` 13, `education_only`); Life cap 200 (trivia cap 300 excludes Life). One admin approves, as for trivia; the trigger requires the education-only attestation and runs the Life copy rules (`quiz_life_copy: <rules>`). Control tower (2026-10-15): action `edit_replace` is the review queue's Edit in one transaction under the same locks — refused with `quiz_replace_draft_only` unless the replaced row is still a draft; archives it, creates the new draft version through the create / edit checks (family, content, lengths, Life fields, caps counted after the archive) and, for Life, requires the attestation and a clean copy-rule check at save; writes `question_edit` (new id) and `question_archive` (replaced id) audit rows; the receipt adds `replaced_id` and `replaced_status`. Any refusal rolls back both. |
+| `quiz_admin_snapshot` (redefined) | `active_total` counts trivia only; adds `life_active_total`, `life_cap`, `week_rounds_personal`; participant counts and the audit feed exclude Life. Control tower (2026-10-15): adds `bank_counts` = `{topics, sports, chapters}`, each row a label (`topic_category` / `sport` / `chapter`, every chapter listed) with `draft_count` and `approved_count` over the whole bank, so the review queue counts unloaded drafts. Content counts only (no participant data, no threshold); admin-only like the rest of the read. |
+| `quiz_admin_life_settings`, `quiz_admin_life_chapter`, `quiz_admin_life_snapshot` | Switch and thresholds (off ends open Life rounds); open / close a chapter, refused with "needs N more approved questions" until 5; the Life desk read with chapters and aggregate-only statistics. |
+
+Internal helpers (revoked from every client role, `search_path` pinned): `quiz_level_keys`, `quiz_level_label`,
+`quiz_thresholds_ok`, `quiz_level_rank`, `quiz_life_band_ok` (trivia-eligible bands plus `not_given` / `unknown`), `quiz_life_open_at` (5 approved questions open a chapter), `quiz_life_copy_problems`, `quiz_life_approved_count`,
+`quiz_life_chapter_state`, `quiz_life_chapter_open`, `quiz_life_pool`, `quiz_life_unseen_count`, `quiz_life_actor`,
+`quiz_life_expected_actor`, `quiz_trivia_band`, `quiz_life_access`, `quiz_life_preferences_dto`, `quiz_save_receipt`,
+`quiz_group_facts`, `quiz_attempt_qualifies`, `quiz_spend` (4-argument), `quiz_life_copy_rules`, `quiz_life_normalize`,
+`quiz_life_phrase_re`, `quiz_life_strip`, `quiz_life_alt`, `quiz_life_figure_re`, `quiz_audit_is_life`, triggers
+`quiz_guard_life_chapter`, `quiz_guard_level`, `quiz_guard_truncate`. Redefined helpers: `quiz_guard_question`,
+`quiz_summary` (adds `round_kind`), `quiz_preferences_dto` (no Life fields), `quiz_fun_available` (explicit topics),
+`quiz_played` (group rounds only), `quiz_round_pick`, `quiz_round_begin`, `quiz_sync_badges`, `quiz_group_page_dto`,
+`quiz_save_request` (wrapper).
+
+**Life copy ruleset (SQL at approval, `quiz_life_copy_problems(prompt, options, explanation, chapter)`; CI over the JSON
+with `pnpm life:bank:check`).** One rule list, `supabase/content/life_copy_rules.json` (version 4), embedded as
+`quiz_life_copy_rules()`; the check fails if the copies differ and runs the probe cases in JS. Text is normalized first
+(`quiz_life_normalize`: NFKC, zero-width removed, plain spaces / quotes, lowercase), and every rule but `non_latin_text`
+matches the macron-stripped copy (`quiz_life_strip`; phrases via `quiz_life_alt` / `quiz_life_phrase_re`). Rules:
+`non_latin_text` (letters outside ASCII and the allowed macron / dash forms), `advice_you_should` (you should /
+shouldn't / must / need to …), `brand_name`, `tapuai_money_word` (Tapua'i variants, donate / donation / donor, Rally,
+family account, payout, Aura, gift, Mālo / Malo), `nil_eligibility` (NIL, eligible / eligibility), `tax_loan_credit`
+(tax, loan, credit score, APR), `money_figure` (any money amount, price, percentage, rate or k / grand / million figure,
+`quiz_life_figure_re`; no illustrative exception), `year` (a calendar year), `scam_missing_report_line` (Scam Defense
+explanations end "Tell a trusted adult and use Report."), `prompt_too_long` (over 120 characters) and
+`explanation_too_long` (over 200).
+
+**Other rules.** Life participant audit rows keep chapter and position in `reason`, never the question id; Life numbers
+live in `quiz_admin_life_snapshot` behind its thresholds. Request budgets: `capacity_class` adds `round` — 20 round
+requests (Start, Next, answer, End) per kind per week and 111 ordinary saves, then the reserved answer / off / end slots
+per (week, kind). `quiz_end` refuses a pending cancel for a kind the caller cannot start (`quiz_round_closed`, nothing
+written). Re-running `20261014160000` alone after QUIZ-04 stops with `quiz_rerun_after_quiz04`; `schema.sql` wraps the
+QUIZ blocks in one transaction with a transaction-local `quiz.full_schema`, so the whole file still re-applies and a
+failed paste leaves nothing on. New tables carry the restrictive "Closed accounts" policy and are RPC-only. The QUIZ-04 file also adds that policy to any RLS-enabled `sport_quiz_*` table missing it (QUIZ-02's four tables, applied in migration order).
+
+**Privacy.** `quiz_admin_life_snapshot` statistics are aggregate only: per-question numbers only with ≥ 20 responders,
+age band × chapter and level cells under 10 come back `null` with `hidden: true`, the opt-in count is hidden under 10,
+and nothing lists or links a participant.
+
+**Intentional QUIZ-03 behaviour changes** (the QUIZ-03 replay was updated for each): (1) three weekly opportunities
+instead of one — a personal, a group and a Life round no longer consume each other; (2) group "played", Family
+Challenger and group fact totals count group rounds only (a personal round no longer marks a member played);
+(3) a group round needs at least two active members; (4) `quiz_end` takes `p_round_kind` and the 6-argument version is
+gone; (5) the admin `active_total` and the 300 cap exclude Life questions; (6) the weekly request cap is 171 with
+reserved slots per (week, kind); (7) Trivia Explorer is one per week and re-points to another qualifying round of that
+week before a void withdraws it; (8) the trivia snapshot's `attempt` is the open round of any kind, else this week's
+personal attempt; (9) erasure spends all three weekly opportunities and clears levels; (10) QUIZ-03's widened checks
+are re-added `NOT VALID` so QUIZ-04 rows survive a re-run.
+
+## QUIZ-05 Fresh questions: self-healing trivia, Know your athlete and refills (`20261015210000_trivia_fresh_questions.sql`, **written 2026-10-15, not applied**)
+
+Design [TRIVIA_FRESH_QUESTIONS_DESIGN](design/TRIVIA_FRESH_QUESTIONS_DESIGN.md) (§6 design review overrides §1–§5). The one
+rule: nothing reaches players without an admin approving it; spotting, pausing, drafting and alerting are automatic.
+Switch `trivia.athlete_questions` (`sport_quiz_settings.athlete_questions_enabled`) starts off and the fun-fact share
+(`athlete_share_pct`, 0–10) at 0. Appended to `schema.sql` inside the QUIZ transaction; `20261014180000` now refuses a lone
+re-run after this file (`quiz_rerun_after_quiz05`).
+
+| Table / column | Purpose |
+| --- | --- |
+| `quiz_athlete_facts` | An athlete's fun facts: `athlete_id`, `prompt_key` (six prompts), `answer_text` (2–40 characters; the **only** place the athlete's words live, cleared to null on withdrawal, unlink, under-13 block), `status` (`waiting_guardian`, `guardian_review`, `admin_review`, `approved`, `declined`, `withdrawn`, `removed`), `look_reasons`, guardian request / decision, admin decision, `decline_reason`, `question_id`, `cleared_at` / `clear_cause`. At most 3 live and one live per prompt. |
+| `sport_quiz_question_stats` | Per question version: distinct `responders`, `right_count`, `timeouts`, `difficulty` (easy / medium / hard from `min_responders`), `flags` (`too_easy`, `confusing` type-aware, `too_long`), `dismissed_flags`, pause state (`paused_at`, `pause_reason`), `queued_at` (daily cap), `restored_at` / `restored_by`, `reviewed_at`. Aggregates only. |
+| `sport_quiz_reports` | Question reports: `question_id`, `topic_category`, `reporter_id` (cleared at 90 days), `reason` (`wrong_answer`, `confusing`, `not_okay`, `private` on fun facts only), `is_fact`, `counted` / `not_counted_reason` (`new_account`, `no_completed_round`, `blocked_pair`). One per account per question; deleted at 180 days and by erasure. |
+| `sport_quiz_imports` | One row per real bulk import (actor, reason, totals); dry runs write nothing. |
+| `sport_quiz_questions.fact_id`, topic `athlete` | A fun-fact question holds `{name}` in the prompt and `{answer}` as the correct option, never the athlete's words; filled per viewer at read time. Excluded from the bank pages and the 300 cap. |
+| `sport_quiz_round_items.shown_order`, `answered_position` | The shown order generated at issue (null for true / false and older items) and the shown position answered; `answered_option` stays the stored index. |
+| `sport_quiz_attempts.learn_athlete_id` | The athlete whose Learn card started the personal round (validated at Start). |
+| `sport_quiz_settings` | `athlete_questions_enabled`, `athlete_share_pct`, `reports_paused`, `self_heal` (five editable thresholds within bounds), `fact_salt` (private; never returned). |
+| `guardian_approval_requests.change_key` | Also `fun_fact:<fact id>` (MINOR-01 approval type `fun_fact`). |
+| `privacy_default_audience` | Adds `fun_facts: friends`; 13–15 are capped at friends when drawing. |
+
+| RPC | Behaviour |
+| --- | --- |
+| `quiz_learn_start` | Personal weekly round from an athlete's Learn card; the athlete player id is validated (verified, open, no block) and joins the Start digest. |
+| `quiz_answer` (redefined) | `p_option` is the **shown** position; mapped through the item's `shown_order`; both kept on the item and in the receipt result (`answered_position`, `correct_position`, `shown_order` after the reveal). A fun fact is re-checked at the reveal and voided (`fact_unavailable`) if it no longer passes. Fun-fact answer audit rows carry no question id. |
+| `quiz_report` | After a closed round item only; fixed reasons; once per question; 10 per day; intake pause returns `paused` and records nothing; auto-pause at 2 counted reporters (1 `not_okay` / `private` on a fun fact), 3 new after a restore, at most 10 per topic per UTC day (then `queued_at` + one `report_alert`). The reply never says whether it counted. |
+| `quiz_fact_submit`, `quiz_fact_withdraw`, `quiz_fact_mine`, `quiz_fact_counts`, `quiz_fact_export` | Athlete: submit (server text filter, 13–15 to the guardian or a waiting draft, no recorded age refused), withdraw (athlete only; clears the text and voids the question and unrevealed items), own facts (with "paused"), completed-month buckets (5+ / 10+ / 25+, under 5 hidden; athlete, guardians, admins and testers never counted), export of facts and decisions. |
+| `quiz_fact_guardian_pending`, `quiz_fact_guardian_decide` | Supervising guardian only: see and approve / decline; never write, edit or withdraw. `guardian_decide_approval` (redefined) routes `fun_fact` keys the same way, refuses admins for them and changes no privacy setting. |
+| `quiz_admin_fact_queue`, `quiz_admin_fact_decide` | Admin queue (200 newest, guardian status, look reasons, withdrawn shown without text) and decision: approve needs the checklist (no sponsor or business, no place, no schedule), the guardian's approval for 13–15 and a clean server text check; it builds the question from the prompt template, three curated wrong options not near the answer and `{answer}`, shuffled. Decline takes a reason code. |
+| `quiz_admin_needs_look`, `quiz_admin_needs_look_action` | Paused, queued, flagged and reported questions with reasons and counts (responders and percentages only from `min_responders`; never a reporter). Actions `restore`, `dismiss`, `archive` (a fun fact is declined and its question voided). Edit = `quiz_admin_question` `edit_replace`, now also for an approved question that needs a look. |
+| `quiz_admin_fresh_settings` | Switch, share (0–10), report intake and self-heal thresholds, with a reason; audited `fresh_settings`. |
+| `quiz_admin_import` | 200 rows / 64 KB; server re-check; dry run; refuses athlete / image rows, unknown columns and cells starting with `= + - @`; exact duplicates after cleanup (all statuses, versions, families, topics, and the batch) block, near matches (80%+ shared words) warn; caps; passing rows land as shuffled drafts. No approve-all. |
+| `quiz_admin_snapshot` (redefined) | Adds `refill` (weeks left per topic, sport and Life chapter; `refill_needed` under 4 weeks; assumed pace of one round a week without recent play) and `fresh` (settings, report rules, Needs a look / paused counts, fact queue counts, today's alert topics); strips `fact_salt`; bank pages and counts exclude fun-fact questions; participant fact audit rows stay out of the feed. |
+| `quiz_admin_retention` / `quiz_erase_history` (redefined) | Reporter ids cleared at 90 days, reports deleted at 180 (`cleared_reporters`, `removed_reports`); erasure removes the caller's reports (`removed_reports`). |
+| `supervision_json` (redefined) | Adds `fun_facts_shared` (live approved facts; the same for teen and guardian). |
+
+Redefined draws and DTOs: `quiz_round_begin` (12 arguments; the QUIZ-04 11-argument form is dropped), `quiz_start`,
+`quiz_group_start`, `quiz_life_start`, `quiz_next`, `quiz_round_pick` (fun-fact slot, paused never drawn, at most two
+hard), `quiz_round_issue` (shown order), `quiz_unseen_count`, `quiz_fun_available`, `quiz_life_pool`,
+`quiz_group_ensure_set` (two-hard cap without reading members' history), `quiz_result_dto`, `quiz_round_items_dto`,
+`quiz_guard_question` (draft → approved may permute options with the same texts and correct text; fact shape),
+`quiz_admin_question` (approval shuffle; caps exclude fun facts; fun facts approved only through the fact queue).
+Helpers: `quiz_fresh_norm`, `quiz_levenshtein`, `quiz_near_match`, `quiz_word_overlap`, `quiz_random_order`,
+`quiz_shuffle_options`, `quiz_same_options`, `quiz_bucket`, `quiz_self_heal_defaults`, `quiz_self_heal_ok`,
+`quiz_report_rules`, `quiz_fact_prompts`, `quiz_fact_prompt`, `quiz_fact_not_okay_words`, `quiz_fact_text_problems`,
+`quiz_fact_look_reasons`, `quiz_fact_audience_ok`, `quiz_fact_viewer_ok`, `quiz_fact_visible`, `quiz_fact_fill`,
+`quiz_fact_slot`, `quiz_fact_pick`, `quiz_fact_void_items`, `quiz_fact_retire_question`, `quiz_fact_clear`,
+`quiz_fact_actor`, `quiz_fact_request_open`, `quiz_fact_owner_dto`, `quiz_fact_month_bucket`, `quiz_question_stats_refresh`,
+`quiz_question_paused`, `quiz_question_hard`, `quiz_round_hard_count`, `quiz_open_reports`, `quiz_needs_look`,
+`quiz_shown_position`, `quiz_item_question_dto`, `quiz_item_result_dto`, `quiz_admin_refill`. Triggers:
+`quiz_items_stats` (counters when an answer or time-out commits), `quiz_fact_on_approval` (guardian-only decisions move
+the fact), `quiz_facts_on_profile` (unlink / under-13 block clears text), `quiz_facts_on_delete` (account deletion voids
+the question), `quiz_facts_on_block` (a block voids unrevealed items between the two).
+
+**Drawing.** Personal rounds only, never group sets or Life; at most one per round; the slot is deterministic per
+player-week from the private salt (`quiz_bucket < least(share × round_size, 34)`, never position 1); at most one per
+athlete per viewer per UTC month; verified athlete with a recorded 13+ age (13–15 with the guardian's approval); the
+viewer follows the athlete (Crew) or started from that athlete's Learn card; the `fun_facts` audience allows; no block.
+Checked at issue (else an ordinary question) and at the reveal (else the item is voided).
+
+**Intentional behaviour changes.** (1) `quiz_answer`'s option is the shown position for round items; results add the
+positions and the client adapter reads them (QUIZ-03 replay answers by option text); (2) approval reorders a choice
+question's stored options; (3) paused questions are never drawn and at most two hard questions appear in a round;
+(4) bank pages, counts and the 300 cap exclude fun-fact questions; (5) `edit_replace` accepts an approved question that
+needs a look; (6) `guardian_decide_approval` (MINOR-01, edited in place, and QUIZ-05's copy) changes the friend setting
+only for `friend_requests_everyone` and refuses unknown approval types; MINOR-01 refuses a lone re-run after QUIZ-05
+(`minor01_rerun_after_quiz05`; `schema.sql` wraps it with `quiz.full_schema`).
+
+**Security review (RLS_SECURITY, 2026-10-15), applied.** Fun-fact `not_okay` / `private` reports always pause (past the
+daily cap; the alert is still recorded). The text filter folds lookalike letters (`quiz_fold_lookalikes`: dotless i,
+Cyrillic, Greek), reads a letters-only collapsed copy for profanity ("f u c k", "sh!t", "Phuck"), refuses spelled
+contacts ("dot com", "at gmail", "insta" / "snap" + a handle, three spelled digits) and schedules ("Sat mornings",
+"seven pm"), and refuses distinctive 4+ letter words of the athlete's school, team, mascot or town (generic words such as
+high, school, academy excluded); borderline schedule / place words and hidden weaker words are look reasons. A
+timed-out or unanswered fun-fact item is re-checked (`quiz_item_fact_ok`) before anything is filled: on failure the
+option reads "Not available" and the result has `item_status` `fact_unavailable`, no positions and no athlete card.
+`quiz_admin_question` refuses every action on a fun-fact question (`quiz_fact_admin_path`; use the fact queue or Needs a
+look). Import: formula check after NFKC and leading whitespace; `non_latin_text` refusal; `quiz_fresh_norm` folds
+lookalikes and keeps other letters. The fun-fact pick keeps the two-hard limit. Only a validated Learn-card athlete
+skips the fun-slot rotation. `quiz_admin_retention` purges declined fact text 30 days after the decision
+(`clear_cause` `declined_purged`, `purged_declined_facts`). Counts drop viewers blocked either way. A block removes the
+athlete card (`fun_fact`) from saved receipts between the pair. Re-review: one scan, `quiz_fact_word_scan`, feeds both the
+refusals and the look reasons — profanity refuses only as a whole word (swaps undone) or a run of spaced single letters,
+otherwise it is a look ("Crush it", "Scunthorpe" pass); spelled digits refuse only when phone-like (7+, or 4+ with 3 that
+are not "oh"); street abbreviations / Street / Highway refuse after a capitalised name or a number, road / drive / court /
+lane only after a number (a capitalised name before them is a look); sport names and varsity / boys / girls / team words
+are generic for the school and team check.

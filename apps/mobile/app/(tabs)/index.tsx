@@ -16,6 +16,7 @@ import { SpotlightModal } from '@/components/Spotlight/SpotlightModal';
 import { SlangGuideBanner } from '@/components/Onboarding/SlangGuideBanner';
 import { MaloTipModal } from '@/components/TipSheetModal';
 import { TabScreen } from '@/components/TabScreen';
+import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
@@ -708,6 +709,7 @@ export default function HighlightsTab() {
               <Ionicons name="chevron-forward" size={13} color={colors.onVideo} />
             </AnimatedButton>
           ) : null}
+          <FamilyFunDiscovery />
           <SlangGuideBanner />
         </View>
         <HomeSearchOverlay

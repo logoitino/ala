@@ -3,6 +3,12 @@
 import { Platform, Text, useWindowDimensions, View } from 'react-native';
 import { formatCount, formatUsd, homeKpis, isMeasured, weekChange, type HomeKpi } from '@tapuai/shared-types/admin';
 import type { AdminReportData } from '@/lib/adminReports';
+ * change comes from the shared dashboard input; a zero prior week has no invented percent.
+ * Desk status cards from the Home route (Trivia, 2026-10-15) sit after the weekly summary. */
+import { Platform, Text, useWindowDimensions, View } from 'react-native';
+import { formatCount, formatUsd, homeKpis, isMeasured, weekChange, type HomeKpi } from '@tapuai/shared-types/admin';
+import type { AdminReportData } from '@/lib/adminReports';
+import { AdminHomeCards } from '@/components/Admin/AdminHomeCards';
 import { AdminReportFigure } from './AdminReportFigure';
 import { AdminReportLink, AdminReportSection } from './AdminReportSection';
 import { homeInput, PAGE_TITLES, reportPageSections } from './reportPages';
@@ -62,6 +68,7 @@ export function AdminReportHomeBody({ data }: { data: AdminReportData }) {
     <View style={[s.row, { borderLeftWidth: 2, borderLeftColor: c.jade, paddingLeft: 16, alignItems: 'flex-start', gap: 24 }]}>
       <Text style={s.kicker}>At a glance</Text><Text style={s.sentence}>{isMeasured(input.donations7dCents) && isMeasured(input.clips7d) ? `${formatUsd(input.donations7dCents)} in recorded donations and ${formatCount(input.clips7d)} ${input.clips7d === 1 ? 'clip' : 'clips'} uploaded over the last 7 days.` : 'One or more weekly totals were not in this read.'}</Text>
     </View>
+    <AdminHomeCards />
     {sections.slice(2).map(section => <AdminReportSection key={section.id} section={section} />)}
   </View>;
 }

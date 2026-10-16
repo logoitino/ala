@@ -366,6 +366,8 @@ type AdminFieldProps = {
   multiline?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   autoCorrect?: boolean;
+  /** false shows the field read-only (for example a feature behind a switch that is off); default editable. */
+  editable?: boolean;
 };
 
 export function AdminField({
@@ -378,6 +380,7 @@ export function AdminField({
   multiline,
   autoCapitalize = 'none',
   autoCorrect = false,
+  editable = true,
 }: AdminFieldProps) {
   return (
     <View style={styles.fieldWrap}>
@@ -392,7 +395,9 @@ export function AdminField({
         multiline={multiline}
         autoCapitalize={autoCapitalize}
         autoCorrect={autoCorrect}
-        style={[styles.field, multiline && styles.fieldMulti]}
+        editable={editable}
+        accessibilityState={editable ? undefined : { disabled: true }}
+        style={[styles.field, multiline && styles.fieldMulti, !editable && { opacity: 0.55 }]}
       />
     </View>
   );

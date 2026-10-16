@@ -1,4 +1,6 @@
-/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
+ * QUIZ-05: athletes also see "Share a fun fact?" here (FunFactShare saves on its own; it hides itself when the server
+ * says this account can't share or fun facts are off). */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -27,6 +29,7 @@ import { RESERVED_BADGE_MARKS, RESERVED_BADGE_MARKS_ERROR } from '@/data/verific
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 import type { ProfileVisibility } from '@/types/database';
 import { fetchMyPrivacy } from '@/lib/privacy';
+import { FunFactShare } from '@/components/Profile/FunFactShare';
 
 const SHEET_TRAVEL = 520;
 const BIO_MAX = 500;
@@ -67,7 +70,7 @@ type EditProfileModalProps = {
  */
 export function EditProfileModal({ visible, onClose, onOpenPrivacy }: EditProfileModalProps) {
   const frame = useSheetFrame();
-  const { profile, updateProfile } = useAuth();
+  const { profile, updateProfile, isAthlete } = useAuth();
   const { showToast } = useCelebration();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -223,6 +226,7 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy }: EditProfil
                   <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                 </Pressable>
               ) : null}
+              {isAthlete && visible ? <FunFactShare /> : null}
               {privacyReady ? null : <>
               <Text style={styles.sectionLabel}>Show or hide from other users</Text>
               <Text style={styles.sectionHint}>

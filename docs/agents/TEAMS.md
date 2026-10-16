@@ -861,3 +861,39 @@ Engineering Support under Dev owns the issue/repair workflow; Security independe
 suspicious evidence, false-positive safeguards, audit integrity and safe recovery.
 Definition: [.claude/agents/threat-detection.md](../../.claude/agents/threat-detection.md).
 Operating design: [ENGINEERING_SUPPORT_CONSOLE.md](../engineering/design/ENGINEERING_SUPPORT_CONSOLE.md).
+
+
+## Current FUN-01 / QUIZ-01 / QUIZ-02 implementation handoff — 2026-10-14
+
+Current local source and evidence are in [FUN-01](FUN-01.md), historical
+[QUIZ-01](QUIZ-01.md) and current [QUIZ-02](QUIZ-02.md), on isolated codex/fan-zone.
+Earlier brainstorming and untimed checks remain dated history. Fan Zone retains its
+actual admin checkpoint2026-10-14T13:42:36Z and local app checkpoint14:49:04Z.
+Untimed QUIZ-01 retains admin06:09:57Z and unset app readiness; its source is historical.
+
+Owner-approved optional timed trivia offers30/90 seconds, default-off/manual/weekly
+participation, reviewed unseen families and equal private Trivia Explorer badges.
+QUIZ-02's actual admin checkpoint16:53:17Z and selected admin-ready exit0 preceded
+participant source. The final correction53a6104 and combined independent source,
+specification/quality/Data/Privacy/Safety/SUPPORT review pass. Root full round4 passes
+150 suites/1,219tests, both app types and all guards; unchanged canonical105/Fan154/
+historical34/timed50 actor replays pass. Selected local app-ready passes at recorded
+2026-10-14T18:23:47Z, after the preserved admin date. Actual final Documentation
+and VP continuation pass; the local source and coordination handoff is complete.
+
+POLLS with ADMIN/UPLOAD/BACKEND owns operations; Content/VOICE reviews facts and family
+grouping. Data/Privacy, Safety/Legal and SUPPORT review actor access, notices, history,
+corrections, removal, stopping and safe recovery. QA owns actual behavior and release
+evidence. Existing Fan discovery and its private guardian shortcut remain preserved.
+Historical Sport Learner and new private Trivia Explorer acknowledgments are separate
+from Aura, earnings, public rankings, fan ballots and voluntary service.
+
+Growth includes fans, filmers, athletes, families, friends, guardians and personal use
+by donors, boosters, sponsors, staff and operators without institutional privilege.
+GROWTH_ANALYTICS gathers the October20 packet: opt-in/return and onboarding friction,
+interruptions, corrections/support burden, exhausted content and operational costs.
+Real baselines remain unknown; recommendations route through Growth → Marketing → CTO
+→ owner. DOCUMENTATION/VP_OPERATIONS records actual executors, evidence and next owners.
+Defaults remain paused/testing-only/empty cohort. Hosted/device/accessibility, reviewed
+seed facts, counsel/age-region/retention, staffing and owner release are separate gates.
+No money/service expansion, spending, scheduler or external outreach is authorized here.

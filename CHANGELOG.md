@@ -27,6 +27,116 @@ Approved dedicated bottom tab: workouts, service, learning/STEM and stories; Hig
 
 Independent source/Data/SUPPORT reviews resolved quota/erasure/closed-account/stale-action/privacy and integration findings. Full local detection scan passed148mobile suites/1,188tests plus86portaltests; real database replay57Beyond/46CHAL. Admin-before-app checkpoints and final local evidence in [BEYOND-01](docs/agents/BEYOND-01.md). Migrations remain unapplied and contribution/challenge switches off; hosted/device/Utah legal release and later Vault/season/try-video work remain pending.
 
+## 2026-10-15 — Fresh trivia and athlete fun facts (QUIZ-05)
+
+Trivia now looks after itself. Players can report a question that seems wrong, confusing or not okay; questions with
+enough reports pause until an admin checks them, and answers come in a different order for each player. Athletes can
+choose to share up to three fun facts from a short list of prompts, such as their hype song or pre-game meal. Each one
+is checked by an admin, and a parent or guardian approves first for under-16s. Their fans may then meet a "Fun fact"
+question now and then, shown only to people the athlete's privacy settings allow, and an athlete can remove one any
+time. Admins can paste in a batch of new questions as drafts. Migrations written, not applied; athlete fun facts start
+switched off.
+
+## 2026-10-15 — Trivia feels like game day
+
+Trivia rounds are now playful: questions pop in, a shot-clock bar counts down, and every right answer gets a sports
+cheer ("Touchdown!", "Nothing but net!", "Ace!") with confetti. A miss gets an encouraging "Good hustle!" and the fact.
+Finishing a round, or reaching a new level, gets its own celebration. On the web there are soft, short sounds; phones give a
+gentle buzz for now. A Sound on / off switch is on the trivia screen, and phones set to reduce motion get calm fades
+instead.
+
+## 2026-10-15 — Life Playbook and never-held-back trivia (QUIZ-04)
+
+Trivia now gives everyone three separate weekly rounds: your own round, one group round, and, if you turn it on, a
+Life Playbook round. Group play never uses up your own round, and your level (Rookie → Varsity → All-Star → Pro → Hall
+of Fame) only goes up. Life Playbook is optional, simple and fun: short true / false and four-choice facts about everyday
+life skills, in sports terms, in four chapters for everyone 13+: Money Huddle, Savings Season, Scam Defense and Smart
+Plays. Questions never give advice, name brands, mention Tapua'i donations, or use money amounts or dates, and scam
+questions always say to tell a trusted adult and use Report. 40 Life drafts are ready, and the sports starter questions
+were simplified too. Nothing is asked before an admin approves it. Migrations written, not applied; trivia stays paused
+for testers.
+
+## 2026-10-14 — Trivia, play together (QUIZ-03)
+
+Trivia now comes as a weekly round of up to five quick questions (still 30 or 90 seconds each, chosen before you start),
+with true / false questions alongside four-choice ones. Athlete profiles offer "Learn {sport} with {name}" so families
+and fans can learn the game their athlete plays. Families and friends can start a private challenge group with a code,
+play the same weekly round, and see who played — never scores, speed or rankings. A private badge shelf and season recap
+show what you have learned. Groups follow the teen safety rules (an adult stranger cannot share a group with a teen), and
+blocking someone removes them. A 60-question starter bank is ready for review; nothing is asked before an admin approves
+it. Migrations written, not applied; trivia stays paused for testers.
+
+## 2026-10-14 — Optional timed trivia player
+
+Trivia now offers explicit30- or90-second rounds, manual play or optional weekly invitations, reviewed unseen questions, private participation badges and private history controls. Leaving clears the question; interrupted responses recover only permitted committed results. Clear-history explains retained preferences/notices and the35-day weekly quota. Final independent source review accepts the participant corrections, including safe initial status loading. Root150-suite/1,219-test full check, both app types and all guards pass. Selected local app-ready passes after the preserved admin checkpoint; actual final Documentation/VP handoff passes and the pilot remains paused.
+
+## 2026-10-14 — Timed trivia admin acceptance
+
+Reviewed trivia administration now includes full bank/audit paging, permanent Pause, correction and bounded retention. Local server and SDK privacy fixes pass independent review; canonical105/Fan154/historical34/timed50 pass. Timed player implementation follows actual QUIZ-02 admin-ready.
+
+## 2026-10-14 — Approved timed trivia admin development
+
+The owner approved optional sports-first30/90-second learning. QUIZ-02 was enrolled before
+source. The new admin desk supports complete paged facts/family review, effective expiry,
+pause, correction and bounded retention; strict SDK/admin checks pass50tests and mobile
+types. Timed actor source is being finalized and independently reviewed. Player changes
+wait for a new verified admin checkpoint. Both pilots stay paused/empty; no hosted rollout.
+
+## 2026-10-14 — Fan local source acceptance
+
+Independent133-path source/coherence/Data/Safety/SUPPORT review passes, with actual
+Documentation/VP scope reviews. Root148-suite/1,146-assertion full check and105/154/34
+local replays pass. Selected local Fan app-ready exits0 at metadata date2026-10-14T14:49:04Z,
+after actual admin. Final status continuation is retained. Timed trivia remains an
+owner-review draft; revised Quiz app readiness stays unset and pilots stay inactive.
+
+## 2026-10-14 — Timed trivia decision draft and final source repairs
+
+Owner selected 30 seconds with a longer accessible option. New indexed proposal recommends
+90 seconds, explicit opt-in, sports-first reviewed questions and account exposure history.
+Current Quiz remains untimed; revised app readiness is pending design/admin-first work.
+Fan shared consumer review passes. Byte-identical fixture relocation preserves all real tests;
+full check round2 passes 1,146 assertions before an unused test import stops later guards.
+Import-only repair b7fd0c resolves it; root full rerun exits0 with148 suites/1,146 assertions and all guards. No pilot activation.
+
+## 2026-10-14 — Fan and Quiz shared account activities
+
+Fan Zone now joins the optional Quiz in Home and four role HQs, with generic/private history
+links in profile and explicit root Back/Home navigation. Private guardian review remains
+visible independently of participant dismissal, including paused/unenrolled guardians.
+Fan stale-permission refusal resets video/caption review before authoritative refresh; its
+35 focused tests and independent correction review pass. Shared source 8179b7b passes final
+affected discovery/Home/HQ checks (53), coverage test and typecheck. Final broad/full/app gates
+and Documentation/VP closure remain pending; pilots stay inactive local source.
+
+## 2026-10-14 — Fan participant source and private review control
+
+Fan Zone now has local private submission, exact-scope teen/guardian review, free ballot recovery,
+optional athlete stories/service, concern receipts and tracked removal. Participant checks pass
+29 tests; the separate uncached authorized video review control passes 13 and independent producer
+review. Full caller review requires stale-permission refresh/reset correction before shared Home
+and account discovery. The weekly quiz is already connected and independently reviewed.
+Data map validates all new consumed exports; final full gates and Documentation/VP remain pending.
+
+## 2026-10-14 — Fan admin gate passes before participant source
+
+Exact displayed scope now binds normal review; explicit emergency suspension is separate. Composite per-stream cursors preserve recovery ties. The 154 actor, 45 SDK/admin and 105 root canonical checks pass; actual independent technical/operational acceptance and selected admin-ready gate precede Fan participant source. Quiz shared discovery independently passes. Local source only; full gates pending.
+
+## 2026-10-14 — Weekly quiz participant and discovery source
+
+Optional weekly Sport Quiz page includes explanations, private completion badges, honest Skip/retry and account isolation;23local tests and independent review pass. Home/four HQ/profile integration passes44local tests and typecheck, with consumer review/full gates pending. Fan admin review requests stale-revision safety guards before its admin checkpoint; composite paging strengthens recovery robustness, while existing timestamp guards already protect normal writes. No hosted activation.
+
+## 2026-10-14 — Weekly Sport Quiz local admin checkpoint
+
+Question bank, paused tester controls, complete Data/audit and private correction rules pass independent local review. Quiz actor34/34, two admin/adapter suites30tests and root canonical105/105 pass. Actual QUIZ admin-ready gate passes before participant page/card work. Learning badges are noncash/private; migrations remain unapplied.
+
+## 2026-10-14 — Fan Zone backend/media correction review
+
+Private Fan Zone source now has explicit guardian approval binding, safe upload retry, tracked removal available despite reporting quotas, blocked-owner admin deletion intake and a Storage mutation fence. Scoped independent source review passes; local135actor/14API/105canonical checks pass. Admin and quiz contract correction are in progress; no fan UI or hosted activation yet. Weekly Sport Quiz learning direction added to the per-user engagement playbook.
+
+## 2026-10-14 — Fan Zone implementation enrolled; Finance catalog repair
+
+Owner authorizes the recommended first Fan Zone. FUN-01 design/plan and planned admin-first contract are recorded in an isolated checkout; no feature or release readiness yet. Corrected the existing payout_flag_overrides.payouts_enabled catalog omission as a CONNECT control (no journal/money movement); focused existing Finance coverage 15/15 passes. No SQL application or payee behavior change.
 
 ## 2026-10-13 — Refine the family-fun journey
 

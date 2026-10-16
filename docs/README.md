@@ -21,6 +21,8 @@ order, then dip into the folders as you need them.
 | [CONVENTIONS.md](engineering/CONVENTIONS.md) | Folder rules, file naming, where code goes, the comment standard (§5). |
 | [INNOVATION_AND_HANDOFF.md](engineering/INNOVATION_AND_HANDOFF.md) | Test new solutions, retain decisions and evidence, and prepare understandable engineering/legal/investor handoffs. |
 | [SCHEMA.md](engineering/SCHEMA.md) | Every table, RPC, policy and storage bucket. Checked by `pnpm docs:check`. |
+| [Timed trivia plan](engineering/design/TIMED_TRIVIA_IMPLEMENTATION_PLAN.md) | Approved 30/90-second server/admin/player work and local verification. |
+| [QUIZ-02](agents/QUIZ-02.md) | New timed trivia enrollment and actual readiness; QUIZ-01 remains historical. |
 | [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md) | The engineering readiness plan: readiness phases R1–R4, from dev-only to a separate production environment. |
 | [ENVIRONMENTS_AND_HOSTING.md](engineering/ENVIRONMENTS_AND_HOSTING.md) | Dev / staging / prod, stay on Supabase or move to AWS / Azure (options, cost, exit drill), and the merge-to-deploy pipeline (phases E0–E3). |
 | [HOSTING_DECISION_BRIEF.md](engineering/HOSTING_DECISION_BRIEF.md) | Prior engineering recommendations plus the owner's $50/month follow-up (§10): phased costs, Supabase/AWS/Azure/own-server options, video workload, operating effort and a prepared Claude review. Prices unverified. |
@@ -48,8 +50,13 @@ order, then dip into the folders as you need them.
 | [DATA_GOVERNANCE.md](engineering/DATA_GOVERNANCE.md) | DATA-01: the data control point, the rule (owner, writer, reader, purpose), how to change data, open findings. |
 | [DATA_MAP.md](engineering/DATA_MAP.md) | Generated master data map: every table, view and database function with owner, writers, readers, triggers and screens; dead-code triage. |
 | [BOOKS01_STAGING_REHEARSAL.md](engineering/BOOKS01_STAGING_REHEARSAL.md) | W0-10: apply the bookkeeping migration on staging, read-only checks, a practice month and a QuickBooks sandbox import. |
+| [TRIVIA_STAGING_APPLY.md](engineering/TRIVIA_STAGING_APPLY.md) | Apply trivia (QUIZ-01 to QUIZ-04) and its prerequisites on staging by hand: 16 files in order, a read-only check after each, rollback notes, then the in-app tester steps. |
 | [design/BOOKKEEPING.md](engineering/design/BOOKKEEPING.md) | BOOKS-01/02: Finance & Books hub, double-entry journal from the money tables, QuickBooks export, monthly routine and tax questions for the CPA. |
 | [FEATURE_ADMIN_WORKFLOW.md](engineering/FEATURE_ADMIN_WORKFLOW.md) | Future features: admin contracts, implementation/evidence before app work, and registered lifecycle gates. |
+| [evidence/FAMILY_FUN_BUILD_DECISIONS.md](engineering/evidence/FAMILY_FUN_BUILD_DECISIONS.md) | Concrete Fan Zone and quiz build decisions, reasons and cost of changing them. |
+| [evidence/QUIZ-01-app.md](engineering/evidence/QUIZ-01-app.md) | Actual local quiz participant/integration checks and remaining final gates. |
+| [evidence/FUN-01-admin.md](engineering/evidence/FUN-01-admin.md) | Local Fan admin source/checks and independent gate recording. |
+| [evidence/FUN-01-app.md](engineering/evidence/FUN-01-app.md) | Fan account journey, accepted local source checks and separate release work. |
 | [design/ADMIN_DATA_CONSOLIDATION.md](engineering/design/ADMIN_DATA_CONSOLIDATION.md) | All desk/report data ownership, safe menu merges and analysis preservation evidence. |
 | [design/MAIN_ADMIN_PORTAL.md](engineering/design/MAIN_ADMIN_PORTAL.md) | ADM-02: selected report design and all administration controls in one main Expo portal. |
 | [design/COMMUNITY_DASHBOARD_QA.md](engineering/design/COMMUNITY_DASHBOARD_QA.md) | Community Home and report-format design QA: source/render comparison and local browser checks (screenshots in `design/community-preview/`). |
@@ -147,3 +154,23 @@ with these files.
 | [BEYOND-01 admin evidence](engineering/evidence/BEYOND-01-admin.md) | Actual private contribution/moderation checks, source limits and checkpoint. |
 | [CHAL-01 app evidence](engineering/evidence/CHAL-01-app.md) | Actual local workout participant verification and release limits. |
 | [BEYOND-01 app evidence](engineering/evidence/BEYOND-01-app.md) | Actual local dedicated-tab/contribution verification and release limits. |
+## Fan Zone pilot
+
+| Document | Purpose |
+| --- | --- |
+| [FUN-01](agents/FUN-01.md) | Actual build/review/evidence and release gaps. |
+| [Fan Zone design](engineering/design/FAN_ZONE_DESIGN.md) | Private entry, exact permission, free ballots, media and admin contracts. |
+| [Fan Zone plan](engineering/design/FAN_ZONE_IMPLEMENTATION_PLAN.md) | Owned implementation stages, admin before fan. |
+
+## Weekly Sport Pop Quiz
+
+| Document | Purpose |
+| --- | --- |
+| [QUIZ-01](agents/QUIZ-01.md) | Actual weekly pop quiz implementation/evidence. |
+| [Sport Pop Quiz design](engineering/design/SPORT_POP_QUIZ_DESIGN.md) | Optional weekly questions, noncash badge and correction contracts. |
+
+| [QUIZ-02 admin evidence](engineering/evidence/QUIZ-02-admin.md) | Timed authority/admin local acceptance, actor checks and actual checkpoint; participant follows selected gate. |
+| [QUIZ-02 app evidence](engineering/evidence/QUIZ-02-app.md) | Actual timed account/full-check verification, review handoff and explicit release gaps. |
+| [QUIZ-01 admin evidence](engineering/evidence/QUIZ-01-admin.md) | Local weekly quiz admin source, independent acceptance and actual checks; no hosted release. |
+
+| [Timed trivia proposal](engineering/design/TIMED_TRIVIA_PROPOSAL.md) | Owner-approved design: opt-in, sports-first topics, 30/90 timing, question history and admin-first requirements. |

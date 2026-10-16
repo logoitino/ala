@@ -4,6 +4,8 @@
  * year, and for 13–17 the parent or guardian link (invite code, confirm, unlink), the consent status, requests waiting
  * for the guardian (under 16) and "What your guardian sees". Adults can open the guardian panel to link a teen. The
  * database enforces every rule; this sheet explains them.
+ * QUIZ-05: athletes get a "Fun facts" audience (same control as the other items) when the server has it; for 13–15
+ * "Everyone" is not offered because the server caps fun facts at friends.
  * @sideEffects `get_my_privacy`, `set_my_privacy`, `list_my_blocks`, `unblock_user` (lib/privacy) and the guardian
  *   functions in lib/minors; `set_my_birth_month` through AuthContext.
  */
@@ -275,6 +277,21 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
                   />
                 </View>
               ))}
+              {isAthlete && draft.funFacts ? (
+                <View style={styles.item}>
+                  <Text style={styles.itemLabel}>Fun facts</Text>
+                  <Text style={styles.hint}>
+                    {under16 ? 'Trivia fun facts you share. Under 16, fun facts go to friends at most.' : 'Trivia fun facts you share.'}
+                  </Text>
+                  <Choices
+                    label="Fun facts"
+                    value={under16 && draft.funFacts === 'everyone' ? 'friends' : draft.funFacts}
+                    options={AUDIENCES.map((value) => ({ value, label: AUDIENCE_LABEL[value] }))}
+                    onChange={(next) => setDraft({ ...draft, funFacts: next })}
+                    disabled={(option) => under16 && option === 'everyone'}
+                  />
+                </View>
+              ) : null}
 
               <Text style={styles.section}>Finding you</Text>
               <Choices

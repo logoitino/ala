@@ -1730,6 +1730,664 @@
         "Gear-goal configuration, donation allocation and confirmed progress"
       ],
       "model": "grok-4.7-medium"
+    },
+    {
+      "call": "ADMIN",
+      "file": ".claude/agents/admin.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/app/(admin)",
+        "apps/admin-portal",
+        "apps/admin-portal/app/(protected)/reports/page.tsx",
+        "apps/admin-portal/lib/reports.ts",
+        "apps/mobile/src/frontend/components/Admin/AdminShell.tsx",
+        "apps/mobile/src/frontend/components/Admin/AdminChrome.tsx",
+        "apps/mobile/src/frontend/lib/adminReports.ts",
+        "apps/mobile/src/frontend/hooks/useAdminReports.ts",
+        "apps/mobile/src/frontend/components/Admin/Support",
+        "apps/mobile/src/frontend/hooks/useEngineeringSupport.ts",
+        "apps/mobile/src/frontend/lib/engineeringSupport.ts",
+        "apps/mobile/app/(admin)/admin/support.tsx"
+      ],
+      "tasks": [
+        "Expo write control plane and read-only Next oversight; Next Trends (/reports) and lib/reports.ts",
+        "ADM-02 main Expo admin: selected report design plus all editing desks, authenticated report loaders and integration; Next remains read-only"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "ANALYST",
+      "file": ".claude/agents/analyst.md",
+      "department": "Engineering",
+      "lead": "ADMIN",
+      "owns": [
+        "apps/admin-portal/lib/analytics.ts",
+        "apps/admin-portal/app/(protected)/analytics/page.tsx",
+        "apps/admin-portal/components/AnalyticsBoard.tsx",
+        "packages/shared-types/admin/analytics.ts",
+        "apps/mobile/src/frontend/components/Admin/Reports/AdminReportAnalytics.tsx"
+      ],
+      "tasks": [
+        "Shared read-only Expo/Next measure catalog and eight analytics dashboards; ANALYST reviews meaning, SHARED_CONTRACTS owns shared implementation",
+        "Review shared Expo/Next measure definitions, source provenance, units/window/population/denominator and missing-value meaning for the single GROWTH_ANALYTICS packet; only clips/donations have current prior-week pairs, and MAU/retention/conversion remain unmeasured as defined."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "API",
+      "file": ".claude/agents/api.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/backend/api",
+        "apps/mobile/src/backend/services",
+        "apps/mobile/app/api",
+        "apps/mobile/src/frontend/lib/edgeFunction.ts",
+        "apps/mobile/src/frontend/lib/apiUrl.ts"
+      ],
+      "tasks": [
+        "Own request validation, JWT verification, authorization, typed responses and server error boundaries."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "BACKEND",
+      "file": ".claude/agents/backend.md",
+      "department": "Database",
+      "lead": "CTO",
+      "owns": [
+        "apps/mobile/src/backend/db",
+        "supabase",
+        "supabase/migrations/20261013190000_engineering_support.sql",
+        "scripts/replay/support-replay.mjs"
+      ],
+      "tasks": [
+        "Database architecture, migrations, RPCs, Storage layout and pairing with Security"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "CFO",
+      "file": ".claude/agents/cfo.md",
+      "department": "Finance and Accounting",
+      "lead": "FACILITATOR",
+      "owns": [
+        "docs/company/FINANCE_OPERATIONS.md",
+        "docs/engineering/design/BOOKKEEPING.md",
+        "docs/agents/BOOKS-01.md"
+      ],
+      "tasks": [
+        "Run the Finance and Accounting department: CONTROLLER, TAX, TREASURY and FPA report here; owner decisions go up to FACILITATOR",
+        "Request finance data and admin screens through the CTO (CTO -> ENGINEERING -> FINANCE_DATA) and give finance acceptance on the result",
+        "Required finance reviewer on any change to splits, the revenue log, the chart of accounts, posting rules, payouts or tax wording"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "CI",
+      "file": ".claude/agents/ci.md",
+      "department": "IT infrastructure",
+      "lead": "OPERATIONS",
+      "owns": [
+        ".github/workflows",
+        "scripts",
+        "package.json"
+      ],
+      "tasks": [
+        "Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "COMMERCE",
+      "file": ".claude/agents/commerce.md",
+      "department": "Finance",
+      "lead": "CTO",
+      "owns": [
+        "apps/mobile/src/frontend/lib/finance.ts",
+        "apps/mobile/src/backend/api",
+        "apps/admin-portal/app/(protected)/money/page.tsx",
+        "apps/admin-portal/components/revenue"
+      ],
+      "tasks": [
+        "Financial design and payment specialist integration; Next Revenue (/money) and its components/revenue"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "CONNECT",
+      "file": ".claude/agents/connect.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "supabase/functions/create-stripe-account",
+        "apps/mobile/src/frontend/hooks/useStripeConnect.ts",
+        "apps/mobile/src/frontend/lib/payoutGate.ts",
+        "apps/mobile/app/stripe-connect.tsx"
+      ],
+      "tasks": [
+        "Own JWT-gated Express links, bank onboarding state and verification/payout readiness."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "CONTENT_RIGHTS",
+      "file": ".claude/agents/content-rights.md",
+      "department": "Legal and Compliance",
+      "lead": "LEGAL",
+      "owns": [
+        "apps/mobile/src/frontend/components/Reels",
+        "docs/legal/LEGAL_BRIEFING.md"
+      ],
+      "tasks": [
+        "Own implementation of approved filming, audio, mark permissions and rights-report language."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "DATABASE_MIGRATIONS",
+      "file": ".claude/agents/database-migrations.md",
+      "department": "Database",
+      "lead": "BACKEND",
+      "owns": [
+        "apps/mobile/src/backend/db/schema.sql",
+        "supabase/migrations",
+        "docs/engineering/SCHEMA.md"
+      ],
+      "tasks": [
+        "Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "DESIGN",
+      "file": ".claude/agents/design.md",
+      "department": "Design",
+      "lead": "CTO",
+      "owns": [
+        "apps/mobile/src/frontend/theme",
+        "apps/mobile/src/frontend/components",
+        "apps/mobile/src/frontend/constants/theme.ts",
+        "apps/mobile/src/frontend/hooks/useSheetFrame.ts"
+      ],
+      "tasks": [
+        "Visual design and interaction integration"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "DESIGN_TOOLING",
+      "file": ".claude/agents/design-tooling.md",
+      "department": "Design",
+      "lead": "DESIGN",
+      "owns": [
+        ".mcp.json",
+        "docs/engineering/TOOLING.md"
+      ],
+      "tasks": [
+        "Own MCP/design-tool workflows: Figma/Canva handoff, Playwright screenshot evidence setup and Expo MCP build tooling.",
+        "Never connect to production or grant write access without owner approval."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "DRIP",
+      "file": ".claude/agents/drip.md",
+      "department": "Finance",
+      "lead": "COMMERCE",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useDripCatalog.ts",
+        "apps/mobile/src/frontend/components/Drip",
+        "apps/mobile/app/(tabs)/drip.tsx"
+      ],
+      "tasks": [
+        "Own marketplace catalog, order lifecycle and unavailable/retry presentation."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "ENGINEERING",
+      "file": ".claude/agents/engineering.md",
+      "department": "Engineering",
+      "lead": "CTO",
+      "owns": [
+        "apps/mobile",
+        "apps/admin-portal",
+        "packages/shared-types",
+        "supabase"
+      ],
+      "tasks": [
+        "Technical architecture, typed contracts and specialist integration",
+        "Supply actual versioned client/server/provider/access, supported state, failure/retry and feasible recovery evidence for Growth charter §9; exchange Legal/Growth findings before decision, retaining domain/QA acceptance and existing implementation gates."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "FILMER_REWARDS",
+      "file": ".claude/agents/filmer-rewards.md",
+      "department": "Engineering",
+      "lead": "HIGHLIGHTS",
+      "owns": [
+        "apps/mobile/src/frontend/lib/filmers.ts",
+        "apps/mobile/src/frontend/hooks/useFilmerStats.ts",
+        "apps/mobile/src/frontend/components/Filmers"
+      ],
+      "tasks": [
+        "Own Filmed by credit, Props/Aura noncash rewards and Top Filmers eligibility.",
+        "Supply casual-uploader/repeat-filmer growth evidence and honest uploader-versus-camera attribution; distinguish confirmed eligibility/pending/error/removed/self-award states, public recognition permission and manipulation risks; retagging/new recognition/reversals/cash are proposals or later-wave gated, not implemented.",
+        "Review owner-selected free fan-ballot recognition/badge design: staff eligibility/rights/safety, valid votes choose winner, direct newcomers/private acknowledgment, honest credit/Aura eligibility and tie/correction/appeal/network tradeoffs; voluntary service and money/paid work remain separate, with no new award implementation.",
+        "Keep new private Sport Learner completion acknowledgments and fan recognition recap separate from existing filmer Aura/cash eligibility; participation and voluntary service/posting never unlock earnings or add votes."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "FINANCE_DATA",
+      "file": ".claude/agents/finance-data.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/src/frontend/lib/bookkeeping.ts",
+        "apps/mobile/src/frontend/hooks/useBooks.ts",
+        "packages/shared-types/admin/financeCatalog.ts",
+        "supabase/migrations/20261012210000_bookkeeping_ledger.sql",
+        "scripts/replay/books01-ledger-replay.mjs"
+      ],
+      "tasks": [
+        "Finance data catalog and its schema coverage test; a new money column cannot land unclassified",
+        "Books data layer: bounded reads, source reconciliation, filters and CSV exports in the Finance & Books hub",
+        "Bookkeeping SQL with BACKEND and DATABASE_MIGRATIONS, replayed on Postgres (scripts/replay) before the owner applies it",
+        "Supply Books/catalog cost completeness, environment/payment-mode and reconciliation evidence for the single Growth and Capacity Review packet; Finance accepts economic meaning and donation rows are not settled income."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "FULLSTACK",
+      "file": ".claude/agents/fullstack.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile",
+        "packages/shared-types"
+      ],
+      "tasks": [
+        "Cross-feature implementation and end-to-end integration"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "GROWTH_ANALYTICS",
+      "file": ".claude/agents/growth-analytics.md",
+      "department": "Marketing",
+      "lead": "MARKETING",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useSurfaceUsage.ts",
+        "docs/product/PRODUCT_FACTS.md",
+        "docs/engineering/GROWTH_CAPACITY_REVIEW.md",
+        "docs/agents/GROWTH-01.md"
+      ],
+      "tasks": [
+        "Own the single Growth and Capacity Review packet and versioned follow-up through MARKETING to CTO and owner; reuse Analytics/Audience, Health/Support and Finance & Books, with verified or explicitly unknown sources.",
+        "Weekly/on-receipt, monthly-invoice and confirmed-trigger reviews after source quality/false-positive checks; integrate product, capacity/recovery and loaded cost evidence, domain reviews, CTO disposition and owner decision. Initial $50 ceiling and MAU/quota checkpoints do not authorize spending, collector activation or automatic upgrades.",
+        "Own standing Legal/Growth/Engineering verification/consent review in the single packet; pair friction/permitted engagement with safety/disputes/recovery and loaded manual-review costs, record disagreements/domain acceptance/owner decisions and next October 20 packet; product options remain proposed.",
+        "Maintain one Growth plan card for every overlapping user segment and gated/internal capacity: acquisition, first useful action, repeat/contribution, qualifying outcomes/gaps, action safeguards, loaded costs and next owner/decision; preserve non-donating fan value and authorized casual uploads; next October 20 packet, authorization-relative 30/60/90 stages.",
+        "Extend family-fun segment cards in the October 20 packet with owner-selected free fan-ballot winners: staff checks eligibility/rights/safety, public candidate consent/private acknowledgment, honest newcomer/network tradeoffs, proportionate abuse/capacity costs and next trusted ballot design; badge/Aura/money and voluntary service remain separate proposals.",
+        "Include current FUN-01/QUIZ-01 implementation status in October20 evidence packet with per-user optional completion/return, onboarding friction, correction/support burden and capacity; keep unknown actual measurements explicit; propose expansion only with Legal/Safety/Dev evidence and owner decisions."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "HIGHLIGHTS",
+      "file": ".claude/agents/highlights.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/app/(tabs)/index.tsx",
+        "apps/mobile/src/frontend/components/Reels"
+      ],
+      "tasks": [
+        "Highlights feed and media specialist integration",
+        "Integrate actual family-fun media/credit/status gaps for owner-selected fan-ballot awards; staff checks eligibility/rights/safety, votes choose winner, per-entry public candidate consent/private acknowledgment and withdrawal/recap corrections precede implementation; newcomer/network and trusted tally gaps stay explicit.",
+        "Integrate current authorized curated free athlete stories and account Fan Zone/quiz discovery with Product/Privacy; never copy private fan media to public reels or substitute an unauthorized story; preserve optional existing Donate navigation."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "INFO_RETURNS",
+      "file": ".claude/agents/info-returns.md",
+      "department": "Finance and Accounting",
+      "lead": "TAX",
+      "owns": [
+        "packages/shared-types/admin/financeTax.ts"
+      ],
+      "tasks": [
+        "Payees to review: year totals per payee and the 1099 review threshold (confirm each January)",
+        "Specify W-9 collection (guardian for a minor) before any payout path goes live, with CUSTODIAL, CONNECT and PRIVACY_ENGINEERING"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "LEADERBOARDS",
+      "file": ".claude/agents/leaderboards.md",
+      "department": "Engineering",
+      "lead": "AURA",
+      "owns": [
+        "apps/mobile/src/frontend/lib/leaderboards.ts",
+        "apps/mobile/src/frontend/hooks/useLeaderboards.ts"
+      ],
+      "tasks": [
+        "Own donor/filmer ranking aggregation, windows, ties and privacy-safe display.",
+        "Propose owner-selected fan-ballot tally/results with staff eligibility/rights/safety, most valid free ballots wins, no spend/view/follower/stat points, trusted limits/windows/idempotency/corrections/ties, newcomer/network fairness and public-entry consent/private acknowledgment; later school scoring/Aura/money remain distinct.",
+        "Review valid free-ballot finalization, shared ties, zero-ballot no award and recount after invalidation/revocation; weekly private quiz completion is not a public proficiency or school rank; later school scoring still requires its own design."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "LOCAL",
+      "file": ".claude/agents/local.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "apps/mobile/app/(tabs)/local",
+        "apps/mobile/src/frontend/components/Local",
+        "apps/mobile/src/frontend/lib/guestGames.ts"
+      ],
+      "tasks": [
+        "Game-day fan surfaces and live engagement integration",
+        "Typed guest game claims, check-ins and roster access through guestGames.ts; route-layer data boundaries",
+        "Coordinate owner-selected free fan-ballot design and separate later school scoring; staff eligibility/rights/safety, votes choose winner, similar school nominations/newcomers with honest network advantage, per-entry publicity/private acknowledgment and proportionate trusted ballot controls; no implementation.",
+        "Coordinate Fan Zone game/week context and all-role discovery with POLLS/Product; preserve the separate school-poll source and later school competition gates; actual source readiness and evidence supersede earlier brainstorming tasks."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "MARKETING",
+      "file": ".claude/agents/marketing.md",
+      "department": "Marketing",
+      "lead": "CTO",
+      "owns": [
+        "docs/product/PUBLIC.md",
+        "docs/product/STORY.md",
+        "docs/product/VOICE.md"
+      ],
+      "tasks": [
+        "Own consented family-story positioning and accurate release communications.",
+        "Route the single GROWTH_ANALYTICS Growth and Capacity Review packet to CTO and owner; verify product claims and retain dated review, gaps and next owners without competing vendor decisions.",
+        "Route standing joint verification/consent/safe-engagement review after Legal/Growth/Engineering exchange; require one evidence-based Growth packet with safety/manual-load tradeoffs, counsel/domain acceptance and owner decision; next standing review October 20, 2026.",
+        "Route all user-segment growth cards and exchanged Product/Dev/Legal/Growth evidence through one packet; preserve truthful capability/credit/reward states, non-donating fan value, permission/cost/decision gates and October 20 follow-up; campaigns and proposed feature bridges remain separately authorized.",
+        "Route owner-selected free fan-ballot design through the single Growth packet: staff checks eligibility/rights/safety, votes choose winner; truthful candidate/profile privacy, newcomer/network limits, ethical invitations and separate voluntary service/badge/Aura/money paths; no campaign or implementation.",
+        "Route FUN-01/QUIZ-01 source and per-user learning/fun plans through the single Growth packet; use actual reviewed local readiness, Content/VOICE fact approval and Data/Safety/SUPPORT acceptance; no institutional advantage, public badge claim, outreach or hosted launch without its existing authorization."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "MINOR_SAFETY",
+      "file": ".claude/agents/minor-safety.md",
+      "department": "Trust and Safety",
+      "lead": "TRUST_SAFETY",
+      "owns": [
+        "apps/mobile/src/frontend/components/Custodial",
+        "apps/mobile/src/frontend/components/Verification",
+        "docs/legal/LEGAL_BRIEFING.md"
+      ],
+      "tasks": [
+        "Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "MODERATION",
+      "file": ".claude/agents/moderation.md",
+      "department": "Trust and Safety",
+      "lead": "TRUST_SAFETY",
+      "owns": [
+        "apps/mobile/src/frontend/components/Reels/ReportContentModal.tsx",
+        "apps/mobile/app/(admin)/admin/moderation.tsx"
+      ],
+      "tasks": [
+        "Own report reasons, immediate-hide versus review threshold, review evidence and appeals design."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "ONBOARDING",
+      "file": ".claude/agents/onboarding.md",
+      "department": "Engineering",
+      "lead": "AUTH",
+      "owns": [
+        "apps/mobile/src/frontend/components/Onboarding",
+        "apps/mobile/src/frontend/components/Auth",
+        "apps/mobile/src/frontend/context/SoftWallContext.tsx"
+      ],
+      "tasks": [
+        "Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "PLAYBACK",
+      "file": ".claude/agents/playback.md",
+      "department": "Engineering",
+      "lead": "HIGHLIGHTS",
+      "owns": [
+        "apps/mobile/src/frontend/components/Reels",
+        "apps/mobile/src/frontend/lib/reels.ts",
+        "apps/mobile/src/frontend/hooks/useReelViewTracker.ts"
+      ],
+      "tasks": [
+        "Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "POLLS",
+      "file": ".claude/agents/polls.md",
+      "department": "Engineering",
+      "lead": "LOCAL",
+      "owns": [
+        "apps/mobile/src/frontend/hooks/useCheerPoll.ts",
+        "apps/mobile/src/frontend/components/Local/CheerPollCard.tsx"
+      ],
+      "tasks": [
+        "Own cheer eligibility, vote math, poll lifecycle and offline vote semantics.",
+        "Design owner-selected fan-ballot validity with one free eligible-account ballot/window, server limits/idempotency/closure/freeze/ties/corrections/appeals and proportionate abuse without blanket Stripe KYC; staff checks entry eligibility/rights/safety, votes choose winner; current cheer counts unreliable and no unique-person claim or implementation.",
+        "Implement and maintain FUN-01 free ballot/consent-linked operational source and QUIZ-01 weekly private noncash learning with ADMIN/BACKEND; preserve server limits, pause, exact retries and audited corrections; actual admin-first evidence precedes participant integration, no hosted or money authority."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "PORTAL",
+      "file": ".claude/agents/portal.md",
+      "department": "Engineering",
+      "lead": "ADMIN",
+      "owns": [
+        "apps/admin-portal/app/(protected)/page.tsx",
+        "apps/admin-portal/app/(protected)/audience/page.tsx",
+        "apps/admin-portal/app/(protected)/product/page.tsx",
+        "apps/admin-portal/app/(protected)/manage/page.tsx",
+        "apps/admin-portal/app/(protected)/operations/page.tsx",
+        "apps/admin-portal/components/PortalShell.tsx",
+        "apps/admin-portal/components/charts",
+        "apps/admin-portal/lib/chartScale.ts",
+        "apps/admin-portal/lib/chartScale.test.ts",
+        "apps/admin-portal/lib/measureColors.ts",
+        "apps/admin-portal/lib/measureColors.test.ts",
+        "apps/admin-portal/lib/eventLabels.ts",
+        "apps/admin-portal/lib/eventLabels.test.ts",
+        "apps/admin-portal/lib/dashboard.ts",
+        "apps/admin-portal/lib/departments.ts",
+        "apps/admin-portal/lib/operations.ts",
+        "apps/mobile/src/frontend/components/Admin/Reports"
+      ],
+      "tasks": [
+        "Own read-only Next portal shell, Home/Audience/Health/Departments/Product, chart presentation and owner-adopted report format; ADMIN owns Trends and COMMERCE Revenue. SHARED_CONTRACTS owns shared report helpers in packages/shared-types/admin (measureColors, chartScale, eventLabels); PORTAL maintains their Next lib compatibility exports and presentation integration with DESIGN/ACCESSIBILITY review.",
+        "ADM-02 universal report presentation in main Expo admin, with DESIGN/ACCESSIBILITY and ANALYST/COMMERCE review"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "PRIVACY_ENGINEERING",
+      "file": ".claude/agents/privacy-engineering.md",
+      "department": "Legal and Compliance",
+      "lead": "COMPLIANCE",
+      "owns": [
+        "docs/engineering/DATA_PRIVACY_MAP.md",
+        "apps/mobile/src/frontend/lib/socialLinks.ts",
+        "apps/mobile/src/backend/db/schema.sql"
+      ],
+      "tasks": [
+        "Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "PRODUCT",
+      "file": ".claude/agents/product.md",
+      "department": "Product",
+      "lead": "CTO",
+      "owns": [
+        "docs/product/ROADMAP.md",
+        "docs/product/STORY.md",
+        "docs/STATE.md"
+      ],
+      "tasks": [
+        "Translate the family donation and recruitment mission into acceptance criteria and dependencies.",
+        "Define per-segment jobs, first/repeat/cross-user value, accepted outcomes and capability gaps with Growth/Research/domain owners; retain action safeguards, loaded support/service costs, proposals and authorization-relative 30/60/90 acceptance/stop decisions without imposing athlete/payee gates on unrelated permitted fan activity.",
+        "Refine family-fun entry and owner-selected fan-ballot Game/Week design: staff eligibility/rights/safety, most valid free votes wins, per-entry publicity/private acknowledgment, one eligible-account ballot/window, trusted limits/closure/ties/corrections/appeals, proportional abuse and honest newcomer/network fairness; no enrollment.",
+        "Integrate authorized FUN-01 and QUIZ-01 account journeys for fans/filmers/families/friends/athletes/guardians and optional personal learning by donor/booster/sponsor/staff/operator accounts; keep Not now/Skip/no pressure, consent and private completion badges clear; actual admin-first gates precede app source."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "QA",
+      "file": ".claude/agents/qa.md",
+      "department": "Quality",
+      "lead": "CTO",
+      "owns": [
+        "docs/engineering/AUDIT_REPORT.md",
+        "docs/engineering/TESTER_SCRIPT.md"
+      ],
+      "tasks": [
+        "Independent final verification gate"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "RUNTIME_CONFIG",
+      "file": ".claude/agents/runtime-config.md",
+      "department": "Engineering",
+      "lead": "ADMIN",
+      "owns": [
+        "apps/mobile/src/frontend/lib/runtime.ts",
+        "apps/mobile/src/frontend/context/AppRuntimeContext.tsx",
+        "apps/mobile/src/frontend/context/AdminLensContext.tsx"
+      ],
+      "tasks": [
+        "Own draft/published flag states, pause behavior, role lenses and fan control coverage."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "STORAGE",
+      "file": ".claude/agents/storage.md",
+      "department": "Database",
+      "lead": "BACKEND",
+      "owns": [
+        "apps/mobile/src/backend/db/schema.sql",
+        "apps/mobile/src/frontend/services/MediaUploadService.ts"
+      ],
+      "tasks": [
+        "Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "TAX",
+      "file": ".claude/agents/tax.md",
+      "department": "Finance and Accounting",
+      "lead": "CFO",
+      "owns": [
+        "packages/shared-types/admin/financeTax.ts",
+        "docs/company/FINANCE_OPERATIONS.md"
+      ],
+      "tasks": [
+        "Tax calendar and deadlines (financeTax.ts) and the Taxes tab of the Finance & Books hub",
+        "Year-end tax pack, quarterly estimated-tax figures and the CPA question list (BOOKKEEPING.md §8)",
+        "1099-K reconciliation: Stripe gross versus Tapua'i receipts plus pass-through money"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "TRUST_SAFETY",
+      "file": ".claude/agents/trust-safety.md",
+      "department": "Trust and Safety",
+      "lead": "CTO",
+      "owns": [
+        "docs/legal/LEGAL_BRIEFING.md",
+        "apps/mobile/src/frontend/components/Verification"
+      ],
+      "tasks": [
+        "Coordinate moderation, identity, minor safety and rights safeguards as independent release gates."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "UPLOAD",
+      "file": ".claude/agents/upload.md",
+      "department": "Engineering",
+      "lead": "HIGHLIGHTS",
+      "owns": [
+        "apps/mobile/src/frontend/services/MediaUploadService.ts",
+        "apps/mobile/src/frontend/context/UploadSheetContext.tsx",
+        "apps/mobile/src/frontend/components/Filmers",
+        "apps/mobile/src/frontend/components/Reels/UploadVideoModal.tsx",
+        "apps/mobile/src/frontend/components/Reels/HighlightPickerModal.tsx",
+        "apps/mobile/src/frontend/components/Reels/UploadVideoComposer.tsx"
+      ],
+      "tasks": [
+        "Own staged video selection, details, review and optional settings; preserve required rights, draft navigation and safe publishing.",
+        "Own compression, MIME/bucket routing, upload progress/cancellation and athlete/account tag consent.",
+        "Supply actual permitted casual-video versus athlete-required-photo workflows, rights/audience/age checks and publication/tag/reward/error states to per-user growth plans; identify retag/share/public-byte/removal/retry gaps and feasible reviewed bridges with support/service costs; no implementation or new rewards implied.",
+        "Supply actual casual-video/photo/right/age/audience behavior for fan-ballot entries; staff eligibility/rights/safety and per-entry public candidate consent/private acknowledgment, restricted media/status/withdrawal and trusted ballot gaps remain proposed; no blanket Stripe KYC or implemented workflow.",
+        "Maintain private Fan Zone reserved MP4 upload, sanitized verification, revocable viewing and all-revision tracked removal with BACKEND/Safety; casual learning/upload needs no athlete/Stripe/school status; hosted provider/device/access/deletion proof remains required."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "VAULT",
+      "file": ".claude/agents/vault.md",
+      "department": "Engineering",
+      "lead": "PROFILE",
+      "owns": [
+        "apps/mobile/src/frontend/lib/vault.ts",
+        "apps/mobile/src/frontend/hooks/useAthleteSubscription.ts",
+        "apps/mobile/src/frontend/hooks/useSubscriberRequests.ts"
+      ],
+      "tasks": [
+        "Own private video entitlements, signed playback URLs and subscription-request access."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "VP_OPERATIONS",
+      "file": ".claude/agents/vp-operations.md",
+      "department": "Office of the CTO",
+      "lead": "CTO",
+      "owns": [
+        "docs/agents/TEAMS.md",
+        "docs/agents/WORK_QUEUE.md",
+        "docs/agents/DEPARTMENT_PLANS.md",
+        "docs/agents/EXPERT_STANDARDS.md",
+        ".claude/agents/registry.json",
+        ".claude/agents/vp-operations.md",
+        "docs/agents/TEAM_HIERARCHY.md",
+        "docs/agents/COORD-01.md"
+      ],
+      "tasks": [
+        "Reconcile roles, reporting lines, protocols and current priorities on assigned changes and affected handoffs; pair with DOCUMENTATION, preserve model pins/domain authority and report drift to CTO.",
+        "Record actual executor, checked documents/roles/priorities, changed paths, dated check results, unresolved drift and next owner in the existing task ledger; release shared claims after integration/checks. Definitions are task-triggered, with no unattended scheduler configured."
+      ],
+      "model": "grok-4.7-medium"
     }
   ]
 }

@@ -22,7 +22,6 @@ const { PGlite } = await import(pathToFileURL(path.join(dist, 'index.js')).href)
 const { pgcrypto } = await import(pathToFileURL(path.join(dist, 'contrib', 'pgcrypto.js')).href);
 const db = new PGlite({ extensions: { pgcrypto } });
 
-
 const results = [];
 const record = (name, pass, detail = '') => results.push({ name, pass, detail });
 const rows = async (sql) => (await db.query(sql)).rows;

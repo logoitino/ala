@@ -92,3 +92,21 @@ it('gives the finance team a lens with only the money desks, and links editors t
   expect(adminTrailForPath('/admin/books').desk.label).toBe('Finance & Books');
   expect(adminAnalysisForPath('/admin/money').map((item: { href: string }) => item.href)).toEqual(['/admin/revenue', '/admin/books']);
 });
+
+
+it('makes the weekly Sport Quiz desk discoverable with its account route and analytics trail', () => {
+  const { adminAnalysisForPath } = require('@/lib/admin');
+  expect(adminTrailForPath('/admin/sport-quiz').desk.label).toBe('Trivia');
+  expect(adminTrailForPath('/admin/sport-quiz').fanHref).toBe('/sport-quiz');
+  for (const lens of ['all', 'owner', 'marketing', 'engineer'] as const) {
+    expect(navGroupsForLens(lens).flatMap(group => group.items.map(item => item.href))).toContain('/admin/sport-quiz');
+  }
+  expect(adminAnalysisForPath('/admin/sport-quiz').map((item: { href: string }) => item.href)).toContain('/admin/analytics');
+});
+it('makes the private Fan Zone desk discoverable without replacing Sport Quiz or financial lenses', () => {
+ const { adminAnalysisForPath } = require('@/lib/admin');
+ expect(adminTrailForPath('/admin/fan-zone').desk.label).toBe('Fan Zone');expect(adminTrailForPath('/admin/fan-zone').fanHref).toBe('/fan-zone');
+ for(const lens of ['all','owner','marketing','engineer'] as const)expect(navGroupsForLens(lens).flatMap(group=>group.items.map(item=>item.href))).toContain('/admin/fan-zone');
+ expect(navGroupsForLens('finance').flatMap(group=>group.items.map(item=>item.href))).not.toContain('/admin/fan-zone');expect(ADMIN_DESK_DIRECTORY.map(item=>item.href)).toContain('/admin/sport-quiz');
+ expect(adminAnalysisForPath('/admin/fan-zone').map((item:{href:string})=>item.href)).toContain('/admin/analytics');
+});

@@ -20,6 +20,69 @@ export type RecordSponsorshipInput = {
   tier: SponsorshipTierId;
 };
 
+function asText(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value.trim() : fallback;
+}
+
+function parseSponsorship(row: Record<string, unknown>): Sponsorship | null {
+  const id = asText(row.id);
+  const businessName = asText(row.business_name);
+  if (!id || !businessName) return null;
+  const tierRaw = asText(row.tier, 'silver').toLowerCase();
+  const tier: SponsorshipTierId =
+    tierRaw === 'gold' || tierRaw === 'platinum' ? tierRaw : 'silver';
+  const cents = Number(row.amount_cents);
+  const aura = Number(row.aura_points);
+  return {
+    id,
+    sponsor_user_id: asText(row.sponsor_user_id) || null,
+    business_name: businessName,
+    logo_url: asText(row.logo_url),
+    school_team: asText(row.school_team),
+    tier,
+    amount_cents: Number.isFinite(cents) ? Math.max(0, Math.round(cents)) : 0,
+    aura_points: Number.isFinite(aura) ? Math.max(0, Math.round(aura)) : 0,
+    billing_interval: asText(row.billing_interval, 'month') || 'month',
+    status: asText(row.status, 'active') || 'active',
+    created_at: asText(row.created_at) || undefined,
+  };
+}
+
+function parseRows(rows: unknown): Sponsorship[] {
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .map((row) => (row && typeof row === 'object' ? parseSponsorship(row as Record<string, unknown>) : null))
+    .filter((row): row is Sponsorship => Boolean(row));
+}
+
+/**
+ * @purpose Upload a booster logo to Storage `avatars` under `sponsors/{user id}/`.
+ * `game_highlights` only allows video MIME types, and a React Native Blob is `text/plain`.
+ * @param localUri Image picker URI.
+ * @returns Public URL, or the original URI when Storage is missing.
+ * @sideEffects Supabase Storage upload.
+ */
+export async function uploadSponsorLogo(localUri: string): Promise<string> {
+  if (!isSupabaseConfigured) return localUri;
+  if (/^https?:\/\//i.test(localUri)) return localUri;
+  try {
+    const contentType = imageContentType(localUri);
+    const ext = contentType === 'image/png' ? 'png' : contentType === 'image/webp' ? 'webp' : 'jpg';
+    const body = await bytesFromUri(localUri);
+    // Own folder: Storage only lets a user overwrite files under sponsors/{their id}/ (20261013230000).
+    const { data: auth } = await supabase.auth.getUser();
+    const path = auth.user?.id ? `sponsors/${auth.user.id}/${Date.now()}.${ext}` : `sponsors/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from(AVATARS_BUCKET).upload(path, body, {
+      contentType,
+      upsert: true,
+    });
+    if (error) return localUri;
+    return supabase.storage.from(AVATARS_BUCKET).getPublicUrl(path).data.publicUrl || localUri;
+  } catch {
+    return localUri;
+  }
+}
+
 /**
  * @purpose Load active Local Team Boosters from `sponsorships` (demo rail when empty / RPC missing).
  * @returns `{ sponsors, loading, refresh, recordSponsorship }`.

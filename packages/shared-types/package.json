@@ -10,7 +10,9 @@
     "./admin": "./admin/index.ts",
     "./admin/*": "./admin/*.ts",
     "./admin/supportTopology.json": "./admin/supportTopology.json",
-    "./beyondGame": "./beyondGame.ts"
+    "./beyondGame": "./beyondGame.ts",
+    "./fan-zone": "./fanZone.ts",
+    "./sport-quiz": "./sportQuiz.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

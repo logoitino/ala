@@ -402,3 +402,50 @@ not close those hosted/fleet/device/retention gaps.
   build, on staging.
 - Ask 3–5 families if they would run a real Rally in the next wave — those become the consented
   stories STORY.md calls for.
+
+
+## Family activity release rehearsal — FUN-01 / QUIZ-01
+
+These are new required manual checks, not an execution receipt. Local source in codex/fan-zone
+is newer than the earlier preview builds. Both pilots start inactive with empty tester cohorts.
+Owner-approved hosted SQL/API setup, bounded approved accounts, facts/terms, staffed contact
+and school/subject permissions must be ready before an authorized hosted rehearsal. Do not
+interpret missing campaigns/questions or an unavailable API as a healthy zero.
+
+1. Check Home, parent/booster/sponsor/operator HQ and profile from each eligible role. Open
+   the root activities, use Back and account Home, and check small screens, keyboard and
+   screen readers. A guest or unlisted account must not acquire private campaign access.
+2. Quiz: choose a sport explicitly; answer one question, including an incorrect answer.
+   Check the explanation and private Sport Learner completion badge. Retry a lost answer
+   response with the same request/choice; another sport must not issue a second question
+   that week. No money, Aura, fan vote or public school points change.
+3. Compare local Not now with server-confirmed Skip this week. Simulate a failed Skip/read:
+   do not claim it saved. Refresh and check private prior badges/corrections while paused.
+   Verify the canonical UTC Monday boundary on the server; device clock is not authority.
+4. Fan entry: reserve a private clip revision, check compression/sanitization/verification,
+   and interrupt the response. Retry without overwriting the reserved object. Review the
+   exact video/caption/scope. Change that scope from another authorized session; the old
+   grant must be refused and fresh playback plus confirmation required. Test unavailable
+   refresh and ensure an old grant-capable permission panel cannot remain.
+5. Teen/guardian: keep assent and grant separate. An active linked guardian can review the
+   selected campaign privately even when not enrolled to participate. End/revoke the link
+   or change the media revision; subsequent reads/exposure must fail. A different historic
+   grant must not silently replace the explicitly relied-on grant.
+6. Free ballot: test one account ballot, replacement version, lost response and a second
+   device change. The final current ballot comes from a fresh server read, not the replay
+   receipt. Check close deadlines, self-vote refusal, invalidated votes, ties, zero votes
+   and reviewed recount. Donations must not buy entries, ballots or award advantage.
+7. Help & Safety: submit a real bounded concern and save receipt/secret. Check expiry,
+   authorized contact and explicit missing guest fallback. Withdraw separately from
+   requesting removal; remove every tracked historical revision and confirm actual Storage
+   absence before declaring completion. Exercise partial removal and provider failures.
+8. Curated story navigation must open the same authorized athlete profile/Donate path.
+   Optional private service reflections can be deleted and must add no money, Aura, votes
+   or public badge. Change accounts during reads/actions and ensure no old private state,
+   draft or late media bytes attach to the new identity.
+
+ADMIN/SUPPORT and independent QA record actual dates, actors, platform, source/deployment
+hashes, failures and repair evidence. Legal/Privacy/Minor Safety/Content/Rights/School review
+release terms and permissions; Growth checks accepted return/participation/support/cost
+measures in the October 20 packet. These source checks do not certify real-world guardianship,
+moderation capacity, hosted deletion or growth uplift.

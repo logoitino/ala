@@ -58,6 +58,10 @@ function RuntimeApp() {
           <Stack.Screen name="auth/callback" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="gift/[handle]" options={{ title: 'Share & Donate ⚡' }} />
           <Stack.Screen name="school-confirm" options={{ title: 'Confirm athletes' }} />
+          <Stack.Screen name="sport-quiz" options={{ headerShown: false }} />
+          <Stack.Screen name="fan-zone" options={{ headerShown: false }} />
+          {/* Dev-only QUIZ-04 demo page; the route itself redirects to Home in production builds. */}
+          <Stack.Screen name="dev/trivia-preview" options={{ headerShown: false }} />
         </Stack>
         <StudioPreviewBar />
         <BackedCelebration />

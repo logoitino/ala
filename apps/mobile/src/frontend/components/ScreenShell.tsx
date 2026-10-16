@@ -27,6 +27,7 @@ export function ScreenShell({
   const pathname = usePathname();
   return (
     <SafeAreaView edges={edges} style={[styles.root, { backgroundColor: live.theme.background }, style]}>
+      {isLightCanvas(live.theme.background) ? <MenuBackdrop /> : null}
       <FeatureBoundary feature={supportFeatureForPath(pathname)} resetKey={pathname}>{children}</FeatureBoundary>
     </SafeAreaView>
   );

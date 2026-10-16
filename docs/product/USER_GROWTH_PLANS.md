@@ -215,3 +215,55 @@ Owner selected a dedicated bottom tab; local implementation, independent source 
 | Administrator | Review bounded queues and explicit unavailable states | Reasoned approve/remove, pause, reports, retention/export/support erasure and actual private-file cleanup; no extra dashboard or vendor. |
 
 Growth brings voluntary user feedback, actual navigation/task outcomes and existing accepted report data to the October20packet. No new engagement tracker, inferred donation lift, moderation throughput, latency forecast or cost baseline is claimed. Product/Growth align with Legal/Privacy and dev before broadening audiences, awarding recognition or adding telemetry. Vault protection precedes try videos and season access under the existing roadmap.
+
+## Weekly learning alongside each account path — QUIZ-01
+
+Owner-authorized local build adds optional sport learning, following the account’s usual
+journey. [Playbook §13](FAMILY_FUN_PLAYBOOK.md#13-earlier-untimed-sport-pop-quiz-source)
+defines one weekly approved random question, explanation, private Sport Learner completion
+badge, local Not now and persisted Skip when the active quiz can save it. No perfection or
+streak pressure, money/Aura/ballot weight, institutional privilege or compulsory service.
+
+| Segment | Growth opportunity | Decision evidence to gather after approved pilot |
+| --- | --- | --- |
+| Casual fan, family or friend | Learn a rule, recognize a moment at the game, come back for another simple question | Voluntary completion/return and support burden; do not assume this increases donations. |
+| Filmer | Learn context for a clip without athlete or payee setup | Whether clear rules help participation/upload confidence; no extra badge for publishing a child’s video. |
+| Athlete | Welcome other-sport curiosity alongside their own story | Untimed comprehension feedback; avoid public proficiency/performance ranks. |
+| Guardian or parent | Understand the sport together while keeping each account’s answer private | Consent/friction feedback and usable corrections; no access to a child’s answer through a new report. |
+| Donor, booster or sponsor | Learn personally before choosing optional existing support actions | Return/correction feedback; purchases and donations never improve quiz or voting standing. |
+| Operator, staff or admin account | Optional personal learning alongside operational work | Whether discovery interferes with work; keep it dismissible and nonblocking. |
+| New or accessibility user | Four plain options and an explanation after any answer | Accessible controls, easy leave/Skip and consented feedback; never claim mastery from participation. |
+
+Growth proposes measures, Content/VOICE approves rule context, Legal/Safety reviews age/privacy
+and recognition wording, Dev builds weekly/retry/skip/correction controls, and Support tracks
+pause/errors/correction workload. Current source status and actual local gates are in
+[QUIZ-01](../agents/QUIZ-01.md). Real completion/return/donation/capacity measures remain
+unknown; no new tracking collector or live experiment is introduced. The October20 joint
+packet brings evidence and feasible options to the owner before expansion.
+
+## Local implementation continuation — FUN-01 / QUIZ-01
+
+The first Game/Week Fan Zone and weekly private learning prototype are built in the isolated
+checkout; actual source/check/review status is in [FUN-01](../agents/FUN-01.md) and
+[QUIZ-01](../agents/QUIZ-01.md). This does not mean every proposed segment experiment or
+future reward is built. Friendly school scoring, Month/Year awards, persistent fan badges,
+creator earnings and expanded service posts retain focused design/domain gates.
+
+The October 20 joint packet uses each segment's permitted first action and return plan, plus
+actual correction/support capacity and provider costs when available. Fan private entry and
+guardian review, free ballots, optional stories/service and Quiz explanations/Skip now have
+local operating controls. Content/Legal/Safety confirms facts, rights, age and terms; Dev/Data/
+Support verifies hosted stop/removal/access and failure recovery; Growth compares lawful
+engagement options and Finance verifies loaded costs. Contributors bring disagreements and
+feasible options to the CTO/owner. Real uplift, review throughput and cost remain unknown;
+no automatic outreach, telemetry collection, spending or hosted pilot starts from these plans.
+
+
+The Sport Quiz rows above describe earlier untimed source. The owner approved
+[optional timed trivia](../engineering/design/TIMED_TRIVIA_PROPOSAL.md): default-off weekly
+invitations, sports-first topics and30/90 seconds available to everyone. [QUIZ-02](../agents/QUIZ-02.md)
+backend/admin has independent acceptance and actual local admin-ready16:53:17Z plus selected
+gate exit0 before participant work. Timed participant and final independent source review plus root full150suites/1,219tests/all guards pass. Selected local app-ready passes after admin; actual final Documentation/VP continuation passes; local handoff is complete.
+[Family playbook §§14–15](FAMILY_FUN_PLAYBOOK.md) supplies per-account voluntary learning/story/
+activity return plans for the October20 joint Growth/Legal/Dev/capacity packet; no live uplift
+or additional rewards are inferred.

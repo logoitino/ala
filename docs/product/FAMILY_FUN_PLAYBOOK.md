@@ -478,3 +478,80 @@ copy such as the ＋ chooser and the Beyond empty state ("Post your …"); the p
 No streaks, rankings or rewards tied to the phrase without MINOR_SAFETY review. Results belong in
 the Growth packet (charter §11).
 
+
+## 13. Earlier untimed Sport Pop Quiz source
+
+Owner addition: a simple question about a chosen sport can appear weekly on an account.
+Accepted local build uses a dismissible Home card and an account learning page; no surprise
+modal or interruption while uploading or donating. One server-random approved question per
+UTC Monday–Sunday week, four answer choices, and an explanation. For American football:
+“How many points is a touchdown before any extra point or conversion?” Answer: 6.
+
+Completing earns a private **Sport Learner** badge, including after a wrong answer. You may
+always ignore or leave the quiz. Not now dismisses the invitation locally; saving Skip for the
+week requires an active authorized quiz source and must report a failed save honestly. The badge acknowledges participation; it is not a proficiency rank, Aura,
+money, school standing or an advantage in fan voting. Badges and voluntary service stay separate.
+
+| User path | Welcoming activity and return opportunity | Boundary / team decision |
+| --- | --- | --- |
+| Casual fan or filmer | Learn one rule, then enjoy filming/cheering; return next week for another question | No athlete, school or Stripe setup to learn; no upload requirement. |
+| Family, friend or guardian | Learn about a young athlete’s sport; talk about the explanation together | Each account has its own private answer/badge; no household leaderboard or public child answer. |
+| Athlete or school supporter | Learn another sport and celebrate fair play alongside weekly fan activities | No athletic eligibility/proficiency claim or unofficial school endorsement. |
+| Newcomer or accessibility user | Four plain choices, untimed response, explanation after any answer, easy Skip | Content names rule context; accessible labels and device review required before release. |
+| Donor, booster, sponsor, staff or operator | Enjoy optional personal sport learning alongside their account’s usual tasks | Same account eligibility; no organization privilege, donation advantage or public school rank. |
+
+Content owns fact review and approval, Legal/Minor Safety owns age/privacy/reward wording,
+Dev owns weekly assignment/retry/skip/correction, Support owns pause and reported errors,
+and Growth proposes how to measure optional completion and return against support burden.
+A joint checkpoint decides expansion after real evidence; no donation target, pressure to
+complete or invented engagement uplift. Wrong facts can be voided with a private correction.
+
+Source progress and actual local gates live in [QUIZ-01](../agents/QUIZ-01.md) and the
+[quiz design](../engineering/design/SPORT_POP_QUIZ_DESIGN.md). This section describes the
+earlier approved untimed source. The approved timed-trivia source below now supersedes the untimed product recommendation. The local quiz and first Game/Week Fan Zone source are built; their
+actual checks and pending final acceptance are in the feature ledgers. Hosted deployment,
+approved seed facts, Month/Year awards, school scoring and new money rewards remain separate.
+
+
+## 14. Sports-first timed trivia refinement
+
+Owner approved 30 seconds or 90 seconds available to everyone, after a Ready invitation and explicit
+Start. Use default-off manual/weekly participation,
+reviewed sports questions with an optional fun-topic mix, account no-repeat history and private
+participation badges including wrong answers. Leaving closes the round locally; missed lifecycle
+events and outside assistance cannot be fully detected. Calls and interruptions get no penalty.
+
+[Timed trivia proposal](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) records invitation
+wording, question-family history, server deadlines, lost-response handling and the joint
+Legal/Data/Dev/Growth decision. [QUIZ-02](../agents/QUIZ-02.md) is enrolled before timed source.
+The timed implementation passed its selected admin-ready gate before participant changes.
+Final independent participant/source review and root full150suites/1,219tests/all guards
+pass. Selected local app-ready passes after admin; actual final Documentation/VP handoff passes and is recorded in QUIZ-02. Prior untimed evidence is historical. Hosted enablement is separate.
+
+## 15. Welcoming fans through learning and small activities
+
+Connect the existing Fan Zone and approved trivia through a simple invitation: learn a rule,
+enjoy the game, celebrate someone, and return when you want. Trivia stays private and optional;
+no badge or donation is required to upload a permitted video or cheer. The ideas below are
+growth experiments for the October 20 packet, not new implemented scoring or notifications.
+
+| Account path | First enjoyable step | Reason to return / decision to evaluate |
+| --- | --- | --- |
+| New or casual fan | Manual trivia, then watch one approved game-day story | A fresh weekly question and free Fan Zone vote; evaluate optional return without repeated prompts. |
+| Family or friend | Read an athlete's approved story; discuss a trivia explanation after the round | “What did we learn?” game-night conversation, optional cheering or existing Donate; no child answer disclosure. |
+| Filmer | Capture one respectful fan moment with rights/subject permission | A weekly creativity theme and reviewed submission feedback; track review capacity and safe repeat contributions. |
+| Athlete | Learn a rule from another sport and share an approved milestone | A story about effort, team support or goals; no need to publish private hardships or compete for donations. |
+| School supporter | Free voting and inclusive game-day theme | Proposed school spirit showcase with newcomer entry; marks/official affiliation permission and ballot integrity precede expansion. |
+| Guardian | Review the exact entry permission and family story | Easy private review/withdrawal; measure unresolved permission requests and handling time alongside participation. |
+| Donor or community member | Enjoy a story and choose optional support through existing Donate | A preset thank-you or voluntary private service reflection; no service/payment obligation or paid vote advantage. |
+
+Suggested themes: **Best welcome**, **Kindest sideline moment**, **Creative team colors**,
+**Learn another sport**, and **Community helper**. Recognition requires its own approved
+rules and permissions; trivia completion does not automatically award a public fan title.
+Voluntary service may be a private preset reflection; public posts and actual monetary earning
+have separate consent/payee rules. Keep families free to enjoy the app without paying or posting.
+
+Content supplies reviewed fresh questions/stories; Dev reports failed starts, interruptions and
+pool exhaustion; Support reports correction/permission backlog; Legal/Privacy reviews notices,
+subjects and child access; Growth compares optional return with those costs. The same decision
+packet chooses adopt/revise/stop and a named owner, with unknown live baselines stated plainly.

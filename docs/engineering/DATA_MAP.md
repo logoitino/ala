@@ -29,6 +29,14 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `CONNECT` | `payee_verifications`, `payout_flag_overrides` | 9 |
 | `CONTROLLER` | `ledger_accounts`, `ledger_manual_entries`, `ledger_manual_lines`, `ledger_period_closes`, `ledger_period_reopens` | 6 |
 | `CREW` | `crew_follows` | 2 |
+| `ADMIN` | `sport_quiz_imports` | 10 |
+| `ATHLETE_STATS` | `athlete_career_stats`, `athlete_game_logs`, `sport_configs` | 4 |
+| `ATHLETE_VERIFICATION` | `athlete_vouches`, `school_confirmers`, `verification_requests` | 11 |
+| `AURA` | `sport_quiz_badges`, `sport_quiz_levels` | 7 |
+| `BILLING` | `subscriber_requests`, `subscriptions` | 0 |
+| `CONNECT` | `payee_verifications`, `payout_flag_overrides` | 8 |
+| `CONTROLLER` | `ledger_accounts`, `ledger_manual_entries`, `ledger_manual_lines`, `ledger_period_closes`, `ledger_period_reopens` | 6 |
+| `CREW` | `crew_follows` | 3 |
 | `CUSTODIAL` | `athlete_birthdates`, `custodial_accounts`, `custodial_withdrawals`, `guardian_consents` | 13 |
 | `DONATION_THANKS` | `donation_thanks` | 3 |
 | `DRIP` | `shop_orders`, `shop_products` | 0 |
@@ -38,6 +46,12 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `LEDGER` | `company_revenue_logs`, `stripe_webhook_events`, `tips` | 7 |
 | `LOCAL` | `games` | 2 |
 | `MODERATION` | `reel_reports` | 0 |
+| `HIGHLIGHTS` | `reel_hype_votes`, `reels`, `saved_reels`, `reels_feed` | 12 |
+| `INCIDENT_TRIAGE` | `support_reviews` | 1 |
+| `LEDGER` | `company_revenue_logs`, `stripe_webhook_events`, `tips` | 7 |
+| `LOCAL` | `games` | 2 |
+| `MINOR_SAFETY` | `fan_zone_consents`, `sport_quiz_group_cases` | 16 |
+| `MODERATION` | `fan_zone_cases`, `reel_reports` | 6 |
 | `NOTIFICATIONS` | `crew_push_queue` | 0 |
 | `OPERATOR` | `game_events`, `operator_checkins`, `operator_gigs` | 1 |
 | `PARTNERSHIPS` | `sponsorships` | 0 |
@@ -48,6 +62,12 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `RALLY` | `rallies` | 7 |
 | `RECOVERY` | `support_releases` | 1 |
 | `ROSTERS` | `players` | 20 |
+| `POLLS` | `cheer_polls`, `fan_zone_ballots`, `fan_zone_campaigns`, `fan_zone_reflections`, `fan_zone_requests`, `quiz_athlete_facts`, `sport_quiz_attempts`, `sport_quiz_exposures`, `sport_quiz_group_codes`, `sport_quiz_group_members`, `sport_quiz_group_sets`, `sport_quiz_groups`, `sport_quiz_life_chapters`, `sport_quiz_question_stats`, `sport_quiz_questions`, `sport_quiz_reports`, `sport_quiz_requests`, `sport_quiz_round_items`, `sport_quiz_settings`, `sport_quiz_week_guards` | 114 |
+| `PROFILE` | `friend_request_log`, `friendships`, `guardian_approval_requests`, `guardian_invite_attempts`, `guardian_invites`, `guardian_links`, `profiles`, `sport_quiz_preferences`, `supervision_events`, `user_blocks`, `profiles_public` | 89 |
+| `RALLY` | `rallies` | 7 |
+| `RECOVERY` | `support_releases` | 1 |
+| `RLS_SECURITY` | `fan_zone_audit`, `sport_quiz_audit`, `sport_quiz_group_join_attempts` | 16 |
+| `ROSTERS` | `players` | 21 |
 | `RUNTIME_CONFIG` | `app_runtime_config` | 4 |
 | `SCHOOL_PARTNERS` | `schools_and_teams` | 2 |
 | `SPONSOR_ADS` | `sponsor_ads` | 0 |
@@ -56,6 +76,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `TELEMETRY` | `support_signals`, `telemetry_logs` | 3 |
 | `THREAT_DETECTION` | `support_audit_events` | 2 |
 | `TREASURY` | `disbursements` | 0 |
+| `UPLOAD` | `fan_zone_entries` | 4 |
 | `WISHLIST` | `wishlist_items` | 2 |
 
 ## Tables and views
@@ -262,6 +283,9 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: `@/lib/crew.ts`; database functions: `get_admin_reports`, `get_crew_graph`, `set_reel_flash_unlock`
 - Removed by: `@/lib/crew.ts`, `block_user`, `toggle_crew_follow`
 - Screens: `/`, `/admin`, `/admin/analytics`, `/admin/audience`, `/admin/departments`, `/admin/health`, `/admin/product`, `/admin/product/coverage`, `/admin/product/features`, `/admin/product/people` +14 more
+- Read by: `@/lib/crew.ts`; database functions: `get_admin_reports`, `get_crew_graph`, `quiz_fact_viewer_ok`, `set_reel_flash_unlock`
+- Removed by: `@/lib/crew.ts`, `block_user`, `toggle_crew_follow`
+- Screens: `/`, `/admin`, `/admin/analytics`, `/admin/audience`, `/admin/departments`, `/admin/health`, `/admin/product`, `/admin/product/coverage`, `/admin/product/features`, `/admin/product/people` +20 more
 
 ### `crew_push_queue`
 
@@ -306,6 +330,76 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `get_donations_to_thank`, `get_my_donation_thanks`
 - Screens: `/activity`, `/parent`, `/profile`, `/user/[id]`
 
+### `fan_zone_audit`
+
+**Owner:** `RLS_SECURITY` · Immutable server actor/time Fan Zone configuration/review/consent/ballot/result/removal trace; restricted corrective access.
+
+- Written by: —; database functions: `fun_audit`
+- Read by: —; database functions: `fun_admin_snapshot`, `fun_complete_removal`, `fun_entry_json`, `fun_media_access`, `fun_page_time`
+- Triggers: `fan_zone_audit_time → fun_page_time`, `fan_zone_audit_immutable → fun_immutable_record`
+- Screens: `/`, `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
+
+### `fan_zone_ballots`
+
+**Owner:** `POLLS` · One current versioned free ballot per canonical eligible profile/campaign, with restricted invalidation rationale.
+
+- Written by: —; database functions: `fun_admin_ballot`, `fun_vote`
+- Read by: —; database functions: `fun_admin_campaign`, `fun_admin_snapshot`, `fun_signature`, `fun_snapshot`
+- Screens: `/`, `/admin/fan-zone`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
+
+### `fan_zone_campaigns`
+
+**Owner:** `POLLS` · Default-off testing-only fan award campaigns, approved tester audience, immutable rules/windows and free-ballot result revisions.
+
+- Written by: —; database functions: `fun_admin_ballot`, `fun_admin_campaign`, `fun_admin_entry`, `fun_complete_removal`, `fun_entry`, `fun_permission`
+- Read by: —; database functions: `fan_zone_private.upload_allowed`, `fun_admin_case`, `fun_admin_snapshot`, `fun_case`, `fun_media_access`, `fun_pilot` +5 more
+- Screens: `/`, `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
+
+### `fan_zone_cases`
+
+**Owner:** `MODERATION` · Private bounded report/appeal/deletion cases with hashed reporter receipt secret/30day receipt access, actual removal completion and escalation.
+
+- Written by: —; database functions: `fun_admin_case`, `fun_case`, `fun_complete_removal`
+- Read by: —; database functions: `fun_admin_snapshot`, `fun_case_status`, `fun_media_access`, `fun_page_time`, `fun_storage_guard`
+- Triggers: `fan_zone_case_time → fun_page_time`
+- Screens: `/`, `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
+
+### `fan_zone_consents`
+
+**Owner:** `MINOR_SAFETY` · Immutable exact-entry assent/guardian permission/revocation receipts tied to scope/media revision and active confirmed supervision link.
+
+- Written by: —; database functions: `fun_permission`
+- Read by: —; database functions: `fun_guardian_grant_valid`, `fun_permission_valid`
+- Triggers: `fan_zone_consent_immutable → fun_immutable_record`
+- Screens: `/`, `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
+
+### `fan_zone_entries`
+
+**Owner:** `UPLOAD` · Private fan-video drafts/revisions, server-reserved immutable storage paths, verified media metadata, review and withdrawal state. Private guardian_consent_id pins the current exact grant; no automatic historical guardian substitution.
+
+- Written by: —; database functions: `fun_admin_entry`, `fun_complete_removal`, `fun_entry`, `fun_permission`, `fun_verify_media`
+- Read by: —; database functions: `fan_zone_private.upload_allowed`, `fun_admin_campaign`, `fun_admin_case`, `fun_admin_snapshot`, `fun_case`, `fun_media_access` +4 more
+- Screens: `/`, `/admin/fan-zone`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
+
+### `fan_zone_reflections`
+
+**Owner:** `POLLS` · Voluntary private preset service reflection receipts, deletable by owner; no beneficiary detail or payment condition.
+
+- Written by: —; database functions: `fun_reflection`
+- Read by: —; database functions: `fun_snapshot`
+- Removed by: `fun_reflection`
+- Screens: `/`, `/admin/fan-zone`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
+
+### `fan_zone_requests`
+
+**Owner:** `POLLS` · Caller/request/argument-bound ballot retry receipts, capped60/window and expired30days after vote close.
+
+- Written by: —; database functions: `fun_vote`
+- Read by: —; database functions: —
+- Removed by: `fun_prune_receipts`
+- Screens: `/`, `/admin/fan-zone`, `/booster`, `/fan-zone`, `/operator`, `/parent`, `/sponsor`
+- Exception: noReader — fun_vote actually selects caller/request retry receipts while also writing them; the map classifies this mixed function as a writer. Raw retry signatures are intentionally not exported to admin/fan reports.
+
 ### `filmer_props`
 
 **Owner:** `FILMER_REWARDS` · Non-cash Props fans give filmers.
@@ -338,6 +432,10 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `admin_get_privacy`, `admin_privacy_report`, `are_friends`, `challenge_friends`, `list_my_friends`, `request_friend` +2 more
 - Removed by: `admin_end_friendship`, `block_user`, `close_under_13_account`, `remove_friend`, `request_friend`
 - Screens: `/`, `/activity`, `/admin/highlights`, `/admin/people`, `/beyond`, `/local`, `/parent`, `/profile`, `/spotlight`, `/user/[id]`
+- Read by: —; database functions: `admin_get_privacy`, `admin_privacy_report`, `are_friends`, `list_my_friends`, `request_friend`, `respond_friend` +1 more
+- Removed by: `admin_end_friendship`, `block_user`, `close_under_13_account`, `remove_friend`, `request_friend`
+- Triggers: `quiz_groups_friendship_rules → quiz_groups_on_friendship`
+- Screens: `/`, `/activity`, `/admin/people`, `/booster`, `/dev/trivia-preview`, `/local`, `/operator`, `/parent`, `/profile`, `/sponsor` +3 more
 
 ### `game_events`
 
@@ -363,6 +461,11 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `admin_minor_report`, `guardian_decide_approval`, `guardian_list_minors`, `minor_status_json`
 - Removed by: `admin_purge_minor_records`
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +43 more
+- Written by: —; database functions: `cancel_my_approval_request`, `enforce_minor_consent`, `guardian_decide_approval`, `quiz_fact_clear`, `quiz_fact_guardian_decide`, `quiz_fact_submit` +1 more
+- Read by: —; database functions: `admin_minor_report`, `guardian_decide_approval`, `guardian_list_minors`, `minor_status_json`, `quiz_fact_guardian_pending`, `quiz_fact_request_open`
+- Removed by: `admin_purge_minor_records`
+- Triggers: `quiz_fact_approval → quiz_fact_on_approval`
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +46 more
 
 ### `guardian_consents`
 
@@ -399,6 +502,9 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `accept_guardian_invite`, `close_guardian_link`, `respond_guardian_link`, `sign_guardian_consent`
 - Read by: —; database functions: `admin_end_guardian_link`, `admin_minor_overview`, `admin_minor_report`, `close_guardian_link`, `close_under_13_account`, `end_guardian_link` +12 more
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +43 more
+- Read by: —; database functions: `admin_end_guardian_link`, `admin_minor_overview`, `admin_minor_report`, `close_guardian_link`, `close_under_13_account`, `end_guardian_link` +19 more
+- Triggers: `quiz_groups_guardian_rules → quiz_groups_on_guardian_link`
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +50 more
 
 ### `ledger_accounts`
 
@@ -495,6 +601,18 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: `portal/lib/authz.ts`, `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `apps/mobile/src/backend/api/createPayout.ts`, `apps/mobile/src/backend/api/createStripeAccount.ts`, `@/context/AuthContext.tsx` +10 more; database functions: `admin_add_school_confirmer`, `admin_beyond_erase_profile`, `admin_challenge_nudge_senders`, `admin_hold_challenge_sender`, `admin_list_age_blocked`, `admin_minor_overview` +109 more
 - Triggers: `guard_profiles_admin_escalation → guard_profiles_admin_escalation`, `guard_profiles_verification → guard_profiles_verification`, `profiles_privacy_guard → guard_profiles_privacy`, `profiles_new_account_rules → profiles_apply_new_account_rules`, `profiles_age_guard → guard_profiles_age`, `profiles_payout_flags_guard → guard_payout_flags` +3 more
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +64 more
+- Read by: `portal/lib/authz.ts`, `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `apps/mobile/src/backend/api/createPayout.ts`, `apps/mobile/src/backend/api/createStripeAccount.ts`, `@/context/AuthContext.tsx` +10 more; database functions: `admin_add_school_confirmer`, `admin_list_age_blocked`, `admin_minor_overview`, `admin_minor_report`, `admin_payee_overview`, `admin_privacy_report` +113 more
+- Triggers: `guard_profiles_admin_escalation → guard_profiles_admin_escalation`, `guard_profiles_verification → guard_profiles_verification`, `profiles_privacy_guard → guard_profiles_privacy`, `profiles_new_account_rules → profiles_apply_new_account_rules`, `profiles_age_guard → guard_profiles_age`, `profiles_payout_flags_guard → guard_payout_flags` +3 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +71 more
+
+### `quiz_athlete_facts`
+
+**Owner:** `POLLS` · QUIZ-05 athlete fun facts (minors' personal data at 13-17): the only place the athlete's words live (2-40 characters, server-filtered); status through guardian (under 16, MINOR-01 approval type fun_fact) and one-admin approval; cleared at once on withdrawal (athlete only), unlink or an under-13 block, deleted with the account; filled into fun-fact questions per viewer at read time where the fun_facts audience allows; never in the audit log; exported by quiz_fact_export. PROFILE / CUSTODIAL / MINOR_SAFETY review.
+
+- Written by: —; database functions: `quiz_admin_fact_decide`, `quiz_admin_needs_look_action`, `quiz_admin_retention`, `quiz_fact_clear`, `quiz_fact_on_approval`, `quiz_fact_submit`
+- Read by: —; database functions: `quiz_admin_fact_decide`, `quiz_admin_fact_queue`, `quiz_admin_needs_look`, `quiz_admin_snapshot`, `quiz_fact_clear`, `quiz_fact_counts` +17 more
+- Triggers: `quiz_facts_delete → quiz_facts_on_delete`
+- Screens: `/`, `/admin`, `/admin/people`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor` +1 more
 
 ### `rallies`
 
@@ -634,6 +752,195 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Removed by: `delete_sport_config`
 - Screens: `/`, `/admin/athletes`, `/admin/games`, `/admin/sports`, `/game/[id]`, `/local/game/[id]`, `/operator/[gameId]`, `/operator/scorer`, `/profile`, `/user/[id]`
 
+### `sport_quiz_attempts`
+
+**Owner:** `POLLS` · Own private timed30/90-second immutable question/result lifecycle per account UTC week; legacy untimed history remains historical. Active capability hash never exported.
+
+- Written by: —; database functions: `quiz_admin_question`, `quiz_admin_settings`, `quiz_answer`, `quiz_end`, `quiz_expire`, `quiz_fact_void_items` +5 more
+- Read by: —; database functions: `quiz_active_item`, `quiz_admin_life_settings`, `quiz_admin_life_snapshot`, `quiz_admin_snapshot`, `quiz_answer`, `quiz_attempt_qualifies` +30 more
+- Removed by: `quiz_erase_history`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor`, `/sport-quiz` +1 more
+
+### `sport_quiz_audit`
+
+**Owner:** `RLS_SECURITY` · Authoritative quiz settings/content/correction history remains immutable. Own participant learning associations are erased only under protected history-erasure context; admin export redacts participant actor/question/attempt links and never exports answers.
+
+- Written by: —; database functions: `quiz_admin_fact_decide`, `quiz_admin_fresh_settings`, `quiz_admin_import`, `quiz_admin_life_chapter`, `quiz_admin_life_settings`, `quiz_admin_needs_look_action` +12 more
+- Read by: —; database functions: `quiz_admin_needs_look`, `quiz_admin_snapshot`, `quiz_audit_is_life`
+- Removed by: `quiz_erase_history`
+- Triggers: `quiz_audit_guard → quiz_guard_audit`, `quiz_audit_truncate_guard → quiz_guard_audit`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor`, `/sport-quiz`
+
+### `sport_quiz_badges`
+
+**Owner:** `AURA` · Private noncash Trivia Explorer weekly completion, equal right/wrong; historical Sport Learner preserved. No Aura wallet, vote/payment value; erroneous content corrections. QUIZ-03: unique per (profile, label, period); sport explorer (5 facts), Family Challenger (week), Season Learner (10 rounds per quarter); opt-in visibility to own groups.
+
+- Written by: —; database functions: `quiz_admin_question`, `quiz_badge_visibility`, `quiz_sync_badges`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_badge_shelf`, `quiz_badge_visibility`, `quiz_group_page_dto`, `quiz_history`, `quiz_season_recap` +1 more
+- Removed by: `quiz_erase_history`
+- Triggers: `quiz_badge_defaults → quiz_badge_defaults`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor`, `/sport-quiz` +1 more
+
+### `sport_quiz_exposures`
+
+**Owner:** `POLLS` · Unique own account/question-family issuance history including ended/expired/void rounds; avoids repeats while retained. Removed by explicit learning-history erasure.
+
+- Written by: —; database functions: `quiz_round_issue`
+- Read by: —; database functions: `quiz_admin_forecast`, `quiz_admin_refill`, `quiz_admin_snapshot`, `quiz_fact_pick`, `quiz_fun_available`, `quiz_life_pool` +4 more
+- Removed by: `quiz_erase_history`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor`, `/sport-quiz` +1 more
+
+### `sport_quiz_group_cases`
+
+**Owner:** `MINOR_SAFETY` · QUIZ-03 append-only group safety log: reports (fixed reason), audited admin case views, removals, block removals, hand-overs. Survives group purge; FK nulling only on account deletion.
+
+- Written by: —; database functions: `quiz_group_case`, `quiz_group_owner_gone`
+- Read by: —; database functions: `quiz_admin_group_case`, `quiz_admin_snapshot`, `quiz_group_report`
+- Triggers: `quiz_group_case_guard → quiz_guard_group_case`, `quiz_group_case_truncate_guard → quiz_guard_group_case`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
+
+### `sport_quiz_group_codes`
+
+**Owner:** `POLLS` · QUIZ-03 one SHA-256 hashed 8-character join code per group, 7 days; dies when the group is full, rotates on removal; purged on expiry by retention.
+
+- Written by: —; database functions: `quiz_group_issue_code`
+- Read by: —; database functions: `quiz_admin_group_case`, `quiz_admin_snapshot`, `quiz_group_page_dto`
+- Removed by: `quiz_admin_group_remove`, `quiz_admin_retention`, `quiz_group_handover`, `quiz_group_issue_code`, `quiz_group_join`, `quiz_group_mark_removed` +1 more
+- Screens: `/admin`, `/admin/sport-quiz`, `/sport-quiz`
+
+### `sport_quiz_group_join_attempts`
+
+**Owner:** `RLS_SECURITY` · QUIZ-03 join limits (10 wrong tries, 5 joins a day) and private refusal reasons for the admin case view; kept through history erasure so limits and evidence survive; purged after 35 days.
+
+- Written by: —; database functions: `quiz_group_join`
+- Read by: —; database functions: `quiz_admin_group_case`, `quiz_admin_snapshot`, `quiz_erase_history`
+- Removed by: `quiz_admin_retention`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
+
+### `sport_quiz_group_members`
+
+**Owner:** `POLLS` · QUIZ-03 group membership (max 12, belong to at most 5); removed rows are a rejoin bar (creator, block or admin). Leaving deletes the row.
+
+- Written by: —; database functions: `quiz_group_create`, `quiz_group_join`, `quiz_group_mark_removed`
+- Read by: —; database functions: `quiz_admin_group_case`, `quiz_admin_group_remove`, `quiz_admin_retention`, `quiz_admin_snapshot`, `quiz_end`, `quiz_group_active_count` +17 more
+- Removed by: `quiz_erase_history`, `quiz_group_leave`
+- Screens: `/`, `/admin`, `/admin/people`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor` +1 more
+
+### `sport_quiz_group_sets`
+
+**Owner:** `POLLS` · QUIZ-03 shared group-week question set drawn without reading member exposures; purged at week end + 35 days and when a group dissolves on erasure.
+
+- Written by: —; database functions: `quiz_group_ensure_set`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_round_pick`
+- Removed by: `quiz_admin_retention`, `quiz_erase_history`
+- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+
+### `sport_quiz_groups`
+
+**Owner:** `POLLS` · QUIZ-03 family-challenge groups: preset name only, sport theme, current owner (hand-over on creator deletion), status. No search or listing; purged 35 days after closing.
+
+- Written by: —; database functions: `quiz_admin_group_remove`, `quiz_erase_history`, `quiz_group_create`, `quiz_group_handover`, `quiz_group_issue_code`, `quiz_group_leave` +2 more
+- Read by: —; database functions: `quiz_admin_group_case`, `quiz_admin_group_remove`, `quiz_admin_snapshot`, `quiz_end`, `quiz_group_create`, `quiz_group_ensure_set` +17 more
+- Removed by: `quiz_admin_retention`
+- Triggers: `quiz_group_owner_gone → quiz_group_owner_gone`
+- Screens: `/`, `/admin`, `/admin/people`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor` +1 more
+
+### `sport_quiz_imports`
+
+**Owner:** `ADMIN` · QUIZ-05 one row per real bulk import (admin, reason, row totals); dry runs write nothing. Read as the 30-day import count in the admin snapshot.
+
+- Written by: —; database functions: `quiz_admin_import`
+- Read by: —; database functions: `quiz_admin_snapshot`
+- Screens: `/admin`, `/admin/sport-quiz`
+
+### `sport_quiz_levels`
+
+**Owner:** `AURA` · QUIZ-04 highest trivia level reached per account (track overall) and per Life chapter; only goes up; removed only by history erasure or account deletion. Private to the account; admin sees level counts with cells under 10 hidden.
+
+- Written by: —; database functions: `quiz_sync_badges`
+- Read by: —; database functions: `quiz_admin_life_snapshot`, `quiz_level`, `quiz_life_progress`
+- Removed by: `quiz_erase_history`
+- Triggers: `quiz_level_guard → quiz_guard_level`, `quiz_level_truncate_guard → quiz_guard_truncate`
+- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+
+### `sport_quiz_life_chapters`
+
+**Owner:** `POLLS` · QUIZ-04 Life Playbook chapters (4 seeded closed, all 13+: Money Huddle, Savings Season, Scam Defense, Smart Plays): title, framing, position, admin open switch. Opens only with 5 approved items (one round); owner simplification 2026-10-15 (design §8).
+
+- Written by: —; database functions: `quiz_admin_life_chapter`
+- Read by: —; database functions: `quiz_admin_import`, `quiz_admin_life_snapshot`, `quiz_admin_question`, `quiz_admin_refill`, `quiz_admin_snapshot`, `quiz_guard_question` +6 more
+- Triggers: `quiz_life_chapter_guard → quiz_guard_life_chapter`
+- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+
+### `sport_quiz_preferences`
+
+**Owner:** `PROFILE` · Optional default-off weekly invitations, sports/mix choice, versioned notice acceptance, once-weekly invitation claim and CAS history revision. No inferred interests or disability reason.
+
+- Written by: —; database functions: `quiz_bump_history`, `quiz_erase_history`, `quiz_invitation`, `quiz_life_preferences`, `quiz_preferences`
+- Read by: —; database functions: `quiz_admin_life_snapshot`, `quiz_admin_snapshot`, `quiz_invitation`, `quiz_life_access`, `quiz_life_preferences`, `quiz_life_preferences_dto` +3 more
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor`, `/sport-quiz` +1 more
+
+### `sport_quiz_question_stats`
+
+**Owner:** `POLLS` · QUIZ-05 per question version: distinct responders, right, time-outs, flags (too easy, confusing, too long), difficulty and the auto-pause / restore / review state for Needs a look. Aggregates only; refreshed by a trigger when an answer or time-out commits.
+
+- Written by: —; database functions: `quiz_admin_needs_look_action`, `quiz_question_stats_refresh`, `quiz_report`
+- Read by: —; database functions: `quiz_admin_needs_look`, `quiz_admin_needs_look_action`, `quiz_admin_snapshot`, `quiz_needs_look`, `quiz_open_reports`, `quiz_question_hard` +2 more
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor`, `/sport-quiz` +1 more
+
+### `sport_quiz_questions`
+
+**Owner:** `POLLS` · Human-reviewed sport question versions, draft/approved/archive/void state and stable issued answer/explanation.
+
+- Written by: —; database functions: `quiz_admin_fact_decide`, `quiz_admin_import`, `quiz_admin_needs_look_action`, `quiz_admin_question`, `quiz_fact_retire_question`
+- Read by: —; database functions: `quiz_admin_forecast`, `quiz_admin_life_snapshot`, `quiz_admin_needs_look`, `quiz_admin_needs_look_action`, `quiz_admin_question`, `quiz_admin_refill` +28 more
+- Triggers: `quiz_question_guard → quiz_guard_question`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor`, `/sport-quiz` +1 more
+
+### `sport_quiz_reports`
+
+**Owner:** `POLLS` · QUIZ-05 question reports with fixed reasons (no free text), counted or why not; reporter id cleared at 90 days and rows deleted at 180 by quiz_admin_retention; erasure removes the reporter's own; admins see counts by reason only.
+
+- Written by: —; database functions: `quiz_admin_retention`, `quiz_report`
+- Read by: —; database functions: `quiz_admin_needs_look`, `quiz_open_reports`
+- Removed by: `quiz_admin_retention`, `quiz_erase_history`
+- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+
+### `sport_quiz_requests`
+
+**Owner:** `POLLS` · Private bounded caller/request/normalized-input exact mutation recovery and cancelled Start fence; no plaintext secret/prompt. Erasable learning receipts with expected-week protection.
+
+- Written by: —; database functions: `quiz_facts_on_block`, `quiz_save_receipt`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_answer`, `quiz_end`, `quiz_invitation`, `quiz_next`, `quiz_preferences` +3 more
+- Removed by: `quiz_admin_retention`, `quiz_erase_history`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
+
+### `sport_quiz_round_items`
+
+**Owner:** `POLLS` · QUIZ-03 per-question items of a weekly round (position 1-5, issued/expires, private answer, status incl. per-item void). Own history only; erased with learning history.
+
+- Written by: —; database functions: `quiz_admin_question`, `quiz_answer`, `quiz_fact_void_items`, `quiz_round_close`, `quiz_round_issue`, `quiz_round_settle`
+- Read by: —; database functions: `quiz_active_item`, `quiz_admin_life_snapshot`, `quiz_admin_snapshot`, `quiz_answer`, `quiz_attempt_qualifies`, `quiz_fact_month_bucket` +20 more
+- Triggers: `quiz_round_items_stats → quiz_items_stats`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor`, `/sport-quiz` +1 more
+
+### `sport_quiz_settings`
+
+**Owner:** `POLLS` · Default-paused/testing-only quiz switch with approved canonical-profile tester allowlist.
+
+- Written by: —; database functions: `quiz_admin_fresh_settings`, `quiz_admin_life_settings`, `quiz_admin_play_settings`, `quiz_admin_settings`
+- Read by: —; database functions: `quiz_admin_fact_decide`, `quiz_admin_fresh_settings`, `quiz_admin_group_case`, `quiz_admin_group_remove`, `quiz_admin_import`, `quiz_admin_life_chapter` +41 more
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor`, `/sport-quiz` +1 more
+
+### `sport_quiz_week_guards`
+
+**Owner:** `POLLS` · Minimal profile/week/spent/prune quota record for35days, disclosed after learning-history erasure; no question/answer/receipt/token. Account deletion cascades; retention never removes unexpired guard.
+
+- Written by: —; database functions: `quiz_spend`
+- Read by: —; database functions: `quiz_admin_snapshot`, `quiz_end`, `quiz_erase_history`, `quiz_life_snapshot`, `quiz_round_begin`, `quiz_skip` +1 more
+- Removed by: `quiz_admin_retention`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/profile`, `/sponsor`, `/sport-quiz` +1 more
+
 ### `spotlight_awards`
 
 **Owner:** `SPOTLIGHT` · Player of the Week / Month / Year awards.
@@ -735,6 +1042,8 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Removed by: `unblock_user`
 - Triggers: `user_blocks_end_links → user_blocks_end_guardian_links`
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +44 more
+- Triggers: `user_blocks_end_links → user_blocks_end_guardian_links`, `quiz_groups_block → quiz_groups_on_block`, `quiz_facts_block → quiz_facts_on_block`
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +51 more
 
 ### `verification_requests`
 
@@ -785,6 +1094,11 @@ Writers and readers are app / portal / Edge Function files that call the table d
 | `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +47 more |
 | `reel_vault` | `VAULT` | Private Vault clips, read only through short-lived signed URLs. | `@/services/MediaUploadService.ts` | `@/lib/reels.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +47 more |
 | `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). | `@/services/MediaUploadService.ts` | `@/lib/photoStories.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +47 more |
+| `avatars` | `PROFILE` | Profile pictures and booster/sponsor logos. | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `@/hooks/useSponsorships.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
+| `fan_zone` | `UPLOAD` | Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal. | `apps/mobile/src/backend/api/fanZoneMedia.ts`, `@/hooks/useFanZone.ts` | `apps/mobile/src/backend/services/fanZoneMedia.ts` | `/`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/booster`, `/fan-zone` +3 more |
+| `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
+| `reel_vault` | `VAULT` | Private Vault clips, read only through short-lived signed URLs. | `@/services/MediaUploadService.ts` | `@/lib/reels.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
+| `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). | `@/services/MediaUploadService.ts` | `@/lib/photoStories.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +49 more |
 
 ## Feature switches
 
@@ -894,6 +1208,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `apply_verification` | `PROFILE` | `sql:admin_decide_verification`, `sql:school_confirm_athlete` | `profiles` | — |
 | `approve_rally` | `RALLY` | `@/lib/rallies.ts` | `rallies` | `profiles` |
 | `are_friends` | `PROFILE` | `sql:beyond_can_view`, `sql:beyond_missing`, `sql:challenge_invite` +3 more | — | `friendships` |
+| `are_friends` | `PROFILE` | `sql:quiz_fact_audience_ok`, `sql:quiz_teen_accepts`, `sql:reels_apply_tag_defaults` +1 more | — | `friendships` |
 | `athlete_controls_money` | `BACKEND` | `sql:athlete_payout_status`, `sql:create_rally`, `sql:guardian_setup_custodial` +2 more | — | — |
 | `athlete_handover_date` | `CUSTODIAL` | `sql:athlete_controls_money`, `sql:get_custodial_summary` | — | `athlete_birthdates`, `custodial_accounts` |
 | `athlete_highlight_views` | `HIGHLIGHTS` | `@/lib/leaderboards.ts` | — | `reels` |
@@ -988,6 +1303,43 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `filmer_stats` | `FILMER_REWARDS` | `@/lib/filmers.ts` | — | `filmer_props`, `filmer_rewards`, `profiles` +1 more |
 | `first_name_of` | `PROFILE` | `sql:accept_guardian_invite`, `sql:challenge_friends`, `sql:challenge_inbox` +9 more | — | `profiles` |
 | `friend_requests_enabled` | `RUNTIME_CONFIG` | `sql:admin_privacy_report`, `sql:request_friend` | — | `app_runtime_config` |
+| `fan_zone_private.upload_allowed` | `RLS_SECURITY` | By hand: Private-schema Storage INSERT policy helper; schema usage denied to API roles, only policy-bound execute; owner editable reserved path/window and no existing object. | — | `fan_zone_campaigns`, `fan_zone_entries` |
+| `filmer_stats` | `FILMER_REWARDS` | `@/lib/filmers.ts` | — | `filmer_props`, `filmer_rewards`, `profiles` +1 more |
+| `first_name_of` | `PROFILE` | `sql:accept_guardian_invite`, `sql:close_guardian_link`, `sql:guardian_list_minors` +10 more | — | `profiles` |
+| `friend_requests_enabled` | `RUNTIME_CONFIG` | `sql:admin_privacy_report`, `sql:request_friend` | — | `app_runtime_config` |
+| `fun_actor` | `AUTH` | By hand: Internal authenticated canonical profile/age guard; never assumes profile ID equals Auth user ID. | — | — |
+| `fun_admin_ballot` | `POLLS` | By hand: Admin proven ballot invalidation with reason and recount-required audit. | `fan_zone_ballots`, `fan_zone_campaigns` | — |
+| `fun_admin_campaign` | `POLLS` | By hand: Admin create/configure/testing-open/pause/close/finalize/recount; winners derived from valid free totals. | `fan_zone_campaigns` | `fan_zone_ballots`, `fan_zone_entries` |
+| `fun_admin_case` | `MODERATION` | By hand: Admin case resolve/escalation with reason; completion only server-confirmed deletion. | `fan_zone_cases` | `fan_zone_campaigns`, `fan_zone_entries` |
+| `fun_admin_entry` | `MODERATION` | By hand: Admin normal eligibility/rights/safety decisions compare the exact reviewed scope atomically; explicit current-entry emergency suspension with private rationale; no winner selection. | `fan_zone_campaigns`, `fan_zone_entries` | — |
+| `fun_admin_guard` | `ADMIN` | By hand: Internal admin/known-age guard for corrective Fan Zone operations. | — | — |
+| `fun_admin_snapshot` | `ADMIN` | By hand: Complete selected bounded campaign Data with independently paged cases/audit, exact campaign-bound timestamp/ID JSON cursors and defined counts; corrective identity scope. | — | `fan_zone_audit`, `fan_zone_ballots`, `fan_zone_campaigns` +2 more |
+| `fun_audit` | `RLS_SECURITY` | By hand: Internal append-only trusted actor/time corrective event capture. | `fan_zone_audit` | — |
+| `fun_campaign_json` | `POLLS` | By hand: Internal campaign DTO with approved tester identities restricted to admins. | — | — |
+| `fun_candidate` | `MODERATION` | By hand: Internal accepted/currentverified/media-present/permission-valid candidate eligibility predicate. | — | — |
+| `fun_case` | `MODERATION` | By hand: Bounded report/appeal/removal request with hashed secret; public report saturation cannot deny owner deletion. | `fan_zone_cases` | `fan_zone_campaigns`, `fan_zone_entries` |
+| `fun_case_json` | `MODERATION` | By hand: Internal minimal secret-authorized case receipt projection; no other case text. | — | — |
+| `fun_case_status` | `MODERATION` | By hand: Secret-authorized unexpired minimal case status; no private target existence leak. | — | `fan_zone_cases` |
+| `fun_complete_removal` | `UPLOAD` | By hand: Service-only actual object-absence completion across all tracked entry revisions/deletion cases. | `fan_zone_campaigns`, `fan_zone_cases`, `fan_zone_entries` | `fan_zone_audit` |
+| `fun_eligible` | `AUTH` | By hand: Internal canonical-profile known-age/open-account eligibility predicate for fan actions. | — | `profiles` |
+| `fun_entry` | `UPLOAD` | By hand: Caller-owned private reserve/edit/verified-submit/withdraw with immutable revision paths and server entry window. | `fan_zone_campaigns`, `fan_zone_entries` | — |
+| `fun_entry_json` | `UPLOAD` | By hand: Internal redacted private own/guardian/admin entry DTO including tracked media revision removal list. | — | `fan_zone_audit` |
+| `fun_guardian` | `MINOR_SAFETY` | By hand: Internal currently active confirmed supervision-link predicate; does not prove legal guardianship. | — | `guardian_links` |
+| `fun_guardian_grant_valid` | `MINOR_SAFETY` | By hand: Internal exact relied-on guardian consent receipt/link/scope validity; historical other grants do not substitute after revocation/link loss. | — | `fan_zone_consents`, `guardian_links` |
+| `fun_immutable_record` | `RLS_SECURITY` | By hand: Trigger protects exact consent/audit receipts against mutation/truncate; identity nulling handled for deletion. | — | — |
+| `fun_media_access` | `RLS_SECURITY` | By hand: Caller-scoped exact revision read/verify/remove authorization before server private storage access. | — | `fan_zone_audit`, `fan_zone_campaigns`, `fan_zone_cases` +1 more |
+| `fun_page_time` | `RLS_SECURITY` | By hand: Insert trigger ensures timestamp-page ordering without same-transaction skipped case/audit rows. | — | `fan_zone_audit`, `fan_zone_cases` |
+| `fun_permission` | `MINOR_SAFETY` | By hand: Exact expected-scope assent/linked guardian grant/revoke; edit/stale form/link ending invalidates publication. | `fan_zone_campaigns`, `fan_zone_consents`, `fan_zone_entries` | `guardian_links` |
+| `fun_permission_valid` | `MINOR_SAFETY` | By hand: Internal current exact-entry assent/guardian-link/grant/revocation validity. | — | `fan_zone_consents` |
+| `fun_pilot` | `RLS_SECURITY` | By hand: Internal testing-only campaign/tester-audience authorization, empty allowlist denies by default. | — | `fan_zone_campaigns` |
+| `fun_prune_receipts` | `POLLS` | By hand: Service-only explicit expiry cleanup for bounded ballot retry records; no scheduler or hosted execution established. | — | — |
+| `fun_reflection` | `POLLS` | By hand: Own private voluntary preset service receipt create/delete, separate from badges/money. | `fan_zone_reflections` | `fan_zone_campaigns` |
+| `fun_scope` | `MINOR_SAFETY` | By hand: Internal exact revision/digest/alias/caption/campaign/audience/form/no-reuse consent scope. | — | — |
+| `fun_signature` | `RLS_SECURITY` | By hand: Internal hash of ballot request arguments for caller-bound exact retry. | — | `fan_zone_ballots`, `fan_zone_entries` |
+| `fun_snapshot` | `POLLS` | By hand: Own/guardian plus enrolled-pilot campaign/candidate/result/curated-story projection; eligible is known-age, can_participate is caller enrollment capability; no tester list/voter identity exposure. | — | `fan_zone_ballots`, `fan_zone_campaigns`, `fan_zone_entries` +3 more |
+| `fun_storage_guard` | `RLS_SECURITY` | By hand: Private Fan Zone Storage INSERT/UPDATE trigger locks campaign then entry; blocks stale/path-moving/service writes after withdrawal/deletion or verification. Catalog fence only, hosted provider compensation still unverified. | — | `fan_zone_campaigns`, `fan_zone_cases`, `fan_zone_entries` +1 more |
+| `fun_verify_media` | `UPLOAD` | By hand: Service-only sanitized digest/bytes/duration commit to still-authorized immutable draft; no client media assertion. | `fan_zone_entries` | `fan_zone_campaigns` |
+| `fun_vote` | `POLLS` | By hand: Atomic one free ballot/account/window; version CAS, caller/request/args retry binding, no-self vote and capped mutations. | `fan_zone_ballots`, `fan_zone_requests` | `fan_zone_campaigns`, `fan_zone_entries` |
 | `get_active_rally` | `RALLY` | `@/lib/rallies.ts` | — | `rallies` |
 | `get_active_spotlight_award` | `ROSTERS` | `@/lib/spotlight.ts` | — | `players`, `profiles`, `reels` +2 more |
 | `get_admin_malo_breakdown` | `ROSTERS` | `portal/lib/reports.ts`, `@/lib/adminReports.ts` | — | `players`, `profiles`, `tips` |
@@ -1065,6 +1417,10 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `malo_target_frozen` | `PROFILE` | `apps/mobile/src/backend/api/createPaymentIntent.ts`, `sql:RLS policy`, `sql:add_user_aura` +6 more | — | `profiles`, `schools_and_teams` |
 | `minor_guardian_count` | `PROFILE` | `sql:admin_minor_report`, `sql:enforce_minor_consent`, `sql:respond_guardian_link` +1 more | — | `guardian_links` |
 | `minor_has_consent` | `CUSTODIAL` | `sql:admin_minor_report`, `sql:beyond_legacy_posts`, `sql:enforce_minor_consent` +4 more | — | `guardian_consents`, `guardian_links`, `players` +1 more |
+| `log_supervision_event` | `PROFILE` | `sql:admin_set_birth_month`, `sql:cancel_my_approval_request`, `sql:close_guardian_link` +18 more | `supervision_events` | — |
+| `malo_target_frozen` | `PROFILE` | `apps/mobile/src/backend/api/createPaymentIntent.ts`, `sql:RLS policy`, `sql:add_user_aura` +6 more | — | `profiles`, `schools_and_teams` |
+| `minor_guardian_count` | `PROFILE` | `sql:admin_minor_report`, `sql:enforce_minor_consent`, `sql:quiz_fact_mine` +3 more | — | `guardian_links` |
+| `minor_has_consent` | `CUSTODIAL` | `sql:admin_minor_report`, `sql:enforce_minor_consent`, `sql:fun_snapshot` +4 more | — | `guardian_consents`, `guardian_links`, `players` +1 more |
 | `minor_link_slots_used` | `PROFILE` | `sql:accept_guardian_invite`, `sql:create_guardian_invite`, `sql:sign_guardian_consent` | — | `guardian_links` |
 | `minor_payout_hold_reason` | `CUSTODIAL` | `sql:athlete_payout_status` | — | `athlete_birthdates`, `profiles` |
 | `minor_status_json` | `PROFILE` | `sql:cancel_my_approval_request`, `sql:get_my_privacy`, `sql:get_my_supervision` +4 more | — | `guardian_approval_requests`, `guardian_consents`, `guardian_links` +1 more |
@@ -1089,6 +1445,215 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `profiles_apply_new_account_rules` | `BACKEND` | `trigger:profiles_new_account_rules on profiles` | — | — |
 | `publish_app_runtime` | `RUNTIME_CONFIG` | `@/lib/runtime.ts` | `app_runtime_config` | — |
 | `publish_spotlight_award` | `SPOTLIGHT` | `@/lib/admin.ts`, `sql:check constraint` | `spotlight_awards` | `players`, `profiles`, `reels` |
+| `payee_for_player` | `CUSTODIAL` | `sql:admin_payee_overview`, `sql:payee_missing_checks` | — | `athlete_birthdates`, `custodial_accounts`, `players` |
+| `payee_hold_reason` | `BACKEND` | `sql:athlete_payout_status`, `sql:check constraint` | — | — |
+| `payee_missing_checks` | `BACKEND` | `sql:admin_payee_overview`, `sql:check constraint`, `sql:payee_hold_reason` | — | — |
+| `player_hidden_from_viewer` | `PROFILE` | `sql:search_local_entities` | — | `profiles` |
+| `preview_guardian_invite` | `PROFILE` | `@/lib/minors.ts` | — | `guardian_invites`, `profiles` |
+| `privacy_default_audience` | `BACKEND` | `sql:admin_reset_privacy`, `sql:apply_privacy_settings`, `sql:audience_allows` +4 more | — | — |
+| `privacy_settings_json` | `PROFILE` | `sql:admin_get_privacy`, `sql:apply_privacy_settings`, `sql:get_my_privacy` +2 more | — | `profiles` |
+| `profile_age_band` | `PROFILE` | `sql:RLS policy`, `sql:accept_guardian_invite`, `sql:admin_minor_overview` +42 more | — | `profiles` |
+| `profile_item_visible` | `PROFILE` | `sql:athlete_stats_visible`, `sql:get_aura_board`, `sql:get_leaderboards` +3 more | — | `profiles` |
+| `profiles_apply_new_account_rules` | `BACKEND` | `trigger:profiles_new_account_rules on profiles` | — | — |
+| `publish_app_runtime` | `RUNTIME_CONFIG` | `@/lib/runtime.ts` | `app_runtime_config` | — |
+| `publish_spotlight_award` | `SPOTLIGHT` | `@/lib/admin.ts`, `sql:check constraint` | `spotlight_awards` | `players`, `profiles`, `reels` |
+| `quiz_active_item` | `POLLS` | By hand: QUIZ-03 internal open item metadata for Start/Next responses. | — | `sport_quiz_attempts`, `sport_quiz_round_items` |
+| `quiz_actor` | `AUTH` | By hand: Internal canonical account/knownage/closed check; no client-supplied participant identity. | — | — |
+| `quiz_admin_actor` | `ADMIN` | By hand: Internal protected quiz content/settings admin guard. | — | — |
+| `quiz_admin_fact_decide` | `POLLS` | `@/lib/freshQuestions.ts` | `quiz_athlete_facts`, `sport_quiz_audit`, `sport_quiz_questions` | `quiz_athlete_facts`, `sport_quiz_settings` |
+| `quiz_admin_fact_queue` | `PROFILE` | `@/lib/freshQuestions.ts` | — | `profiles`, `quiz_athlete_facts` |
+| `quiz_admin_forecast` | `POLLS` | By hand: QUIZ-03 internal per-sport weeks-left forecast for the admin snapshot. | — | `sport_quiz_exposures`, `sport_quiz_questions` |
+| `quiz_admin_fresh_settings` | `POLLS` | `@/lib/freshQuestions.ts` | `sport_quiz_audit`, `sport_quiz_settings` | `sport_quiz_settings` |
+| `quiz_admin_group_case` | `MINOR_SAFETY` | By hand: QUIZ-03 admin audited case view: member ids, age bands, refusal reasons, case log; each read logged. | — | `sport_quiz_group_cases`, `sport_quiz_group_codes`, `sport_quiz_group_join_attempts` +3 more |
+| `quiz_admin_group_remove` | `MINOR_SAFETY` | By hand: QUIZ-03 admin removal of one member or closing a whole group, with a recorded reason. | `sport_quiz_groups` | `sport_quiz_group_members`, `sport_quiz_groups`, `sport_quiz_settings` |
+| `quiz_admin_import` | `RLS_SECURITY` | `@/lib/freshQuestions.ts` | `sport_quiz_audit`, `sport_quiz_imports`, `sport_quiz_questions` | `sport_quiz_life_chapters`, `sport_quiz_settings` |
+| `quiz_admin_life_chapter` | `ADMIN` | By hand: QUIZ-04 open / close a Life chapter; refused with a plain reason ("needs N more approved questions") until 5 approved items. | `sport_quiz_audit`, `sport_quiz_life_chapters` | `sport_quiz_settings` |
+| `quiz_admin_life_settings` | `ADMIN` | By hand: QUIZ-04 trivia.life switch and level thresholds with an audited reason; switching off ends open Life rounds. | `sport_quiz_audit`, `sport_quiz_settings` | `sport_quiz_attempts`, `sport_quiz_settings` |
+| `quiz_admin_life_snapshot` | `ADMIN` | By hand: QUIZ-04 admin Life desk: switch, thresholds, chapters with reasons (open at 5) and aggregate-only statistics (>= 20 responders per question, cells under 10 hidden, no per-user rows). | — | `sport_quiz_attempts`, `sport_quiz_levels`, `sport_quiz_life_chapters` +4 more |
+| `quiz_admin_needs_look` | `POLLS` | `@/lib/freshQuestions.ts` | — | `quiz_athlete_facts`, `sport_quiz_audit`, `sport_quiz_question_stats` +3 more |
+| `quiz_admin_needs_look_action` | `POLLS` | `@/lib/freshQuestions.ts` | `quiz_athlete_facts`, `sport_quiz_audit`, `sport_quiz_question_stats` +1 more | `sport_quiz_question_stats`, `sport_quiz_questions`, `sport_quiz_settings` |
+| `quiz_admin_play_settings` | `POLLS` | By hand: QUIZ-03 admin round size (1-5) and trivia.groups / trivia.images switches with an audited reason. | `sport_quiz_audit`, `sport_quiz_settings` | `sport_quiz_settings` |
+| `quiz_admin_question` | `POLLS` | By hand: Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction; QUIZ-04 edit_replace saves a new draft version and archives the replaced draft in one transaction (review queue Edit). | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_badges` +2 more | `sport_quiz_life_chapters`, `sport_quiz_questions`, `sport_quiz_settings` |
+| `quiz_admin_refill` | `POLLS` | `sql:quiz_admin_snapshot` | — | `sport_quiz_exposures`, `sport_quiz_life_chapters`, `sport_quiz_questions` +1 more |
+| `quiz_admin_retention` | `ADMIN` | By hand: Reasoned bounded expired receipt/quota pruning with actual removal totals; no unexpired quota deletion or hidden learning erasure. | `quiz_athlete_facts`, `sport_quiz_audit`, `sport_quiz_reports` | `sport_quiz_group_members`, `sport_quiz_settings` |
+| `quiz_admin_settings` | `ADMIN` | By hand: Admin default-paused testing audience/settings change with authoritative rationale. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_settings` | `profiles` |
+| `quiz_admin_snapshot` | `ADMIN` | By hand: Complete100-slot bank through50-row opaque question paging, independent50-row bigint audit, full topic/lifecycle totals and effective expiry; no individual answer/token list. QUIZ-04 bank_counts: whole-bank draft/approved version counts by topic, sport and Life chapter (content counts only). | — | `quiz_athlete_facts`, `sport_quiz_attempts`, `sport_quiz_audit` +17 more |
+| `quiz_answer` | `POLLS` | By hand: Canonical expected-profile/token-bound predeadline answer commit with exact option/request recovery; equal private noncash badge, no proficiency/earnings claim. | `sport_quiz_attempts`, `sport_quiz_audit`, `sport_quiz_round_items` | `sport_quiz_attempts`, `sport_quiz_questions`, `sport_quiz_requests` +1 more |
+| `quiz_attempt_qualifies` | `POLLS` | `sql:quiz_report`, `sql:quiz_sync_badges` | — | `sport_quiz_attempts`, `sport_quiz_round_items` |
+| `quiz_audit_is_life` | `POLLS` | `sql:quiz_admin_snapshot` | — | `sport_quiz_attempts`, `sport_quiz_audit` |
+| `quiz_badge_defaults` | `AURA` | By hand: QUIZ-03 trigger fills kind/period for QUIZ-02 badge inserts. | — | — |
+| `quiz_badge_shelf` | `AURA` | By hand: QUIZ-03 own badge shelf (non-void badges with visibility). | — | `sport_quiz_badges` |
+| `quiz_badge_visibility` | `AURA` | By hand: QUIZ-03 own opt-in of one badge to group pages (private | groups). | `sport_quiz_badges` | `sport_quiz_badges` |
+| `quiz_bucket` | `BACKEND` | `sql:quiz_fact_slot` | — | — |
+| `quiz_bump_history` | `PROFILE` | By hand: Protected settings/account-serialized monotonic learning revision on material issuance, terminal, badge/correction/pause changes; exact retries do not bump. Prevents stale erasure deleting new learning. | `sport_quiz_preferences` | — |
+| `quiz_cursor` | `POLLS` | By hand: Internal bounded exact version/stream/timestamp/ID cursor validation for full inventory/history paging. | — | — |
+| `quiz_digest` | `RLS_SECURITY` | By hand: Internal normalized request input SHA binding, never plaintext token persistence. | — | — |
+| `quiz_end` | `POLLS` | By hand: QUIZ-04 End takes the round kind: a pending unknown Start is cancelled against that kind's guard only; an attempt must match the kind. | `sport_quiz_attempts`, `sport_quiz_audit` | `sport_quiz_attempts`, `sport_quiz_group_members`, `sport_quiz_groups` +3 more |
+| `quiz_erase_history` | `PROFILE` | By hand: Owned history CAS erasure terminalizes current/pending round, removes learning/exposures/badges/receipts/own participant audit associations, increments retained revision and preserves preferences/notices/disclosed35-day minimal quota. Editorial audit remains immutable. QUIZ-03: also leaves groups and removes badges; keeps join attempts until their 35-day prune. | `sport_quiz_groups`, `sport_quiz_preferences` | `sport_quiz_group_join_attempts`, `sport_quiz_settings`, `sport_quiz_week_guards` |
+| `quiz_expected_actor` | `AUTH` | By hand: Internal canonical current JWT equality with expected participant/admin ID and known-age/current authorization. | — | — |
+| `quiz_expire` | `POLLS` | By hand: Internal persisted terminal expiry under lifecycle lock; ordinary snapshots stay read-only. | `sport_quiz_attempts` | — |
+| `quiz_fact_actor` | `PROFILE` | `sql:quiz_fact_submit` | — | `profiles` |
+| `quiz_fact_audience_ok` | `PROFILE` | `sql:quiz_fact_viewer_ok`, `sql:quiz_fact_visible` | — | `guardian_links`, `players`, `profiles` |
+| `quiz_fact_clear` | `POLLS` | `sql:quiz_fact_withdraw`, `sql:quiz_facts_on_profile` | `guardian_approval_requests`, `quiz_athlete_facts`, `sport_quiz_audit` | `quiz_athlete_facts` |
+| `quiz_fact_counts` | `POLLS` | `@/lib/freshQuestions.ts` | — | `quiz_athlete_facts` |
+| `quiz_fact_export` | `POLLS` | `@/lib/freshQuestions.ts` | — | `quiz_athlete_facts` |
+| `quiz_fact_fill` | `PROFILE` | `sql:quiz_item_question_dto`, `sql:quiz_item_result_dto` | — | `profiles`, `quiz_athlete_facts`, `sport_quiz_questions` |
+| `quiz_fact_guardian_decide` | `PROFILE` | `@/lib/freshQuestions.ts` | `guardian_approval_requests`, `sport_quiz_audit` | `quiz_athlete_facts`, `sport_quiz_settings` |
+| `quiz_fact_guardian_pending` | `PROFILE` | `@/lib/freshQuestions.ts` | — | `guardian_approval_requests`, `quiz_athlete_facts` |
+| `quiz_fact_look_reasons` | `BACKEND` | `sql:quiz_fact_submit` | — | — |
+| `quiz_fact_mine` | `PROFILE` | `@/lib/freshQuestions.ts` | — | `profiles`, `quiz_athlete_facts`, `sport_quiz_settings` |
+| `quiz_fact_month_bucket` | `PROFILE` | `sql:quiz_fact_counts` | — | `guardian_links`, `players`, `profiles` +5 more |
+| `quiz_fact_not_okay_words` | `BACKEND` | `sql:quiz_fact_look_reasons`, `sql:quiz_fact_text_problems` | — | — |
+| `quiz_fact_on_approval` | `POLLS` | `trigger:quiz_fact_approval on guardian_approval_requests` | `quiz_athlete_facts` | `guardian_links` |
+| `quiz_fact_owner_dto` | `POLLS` | `sql:quiz_fact_mine`, `sql:quiz_fact_submit`, `sql:quiz_fact_withdraw` | — | `quiz_athlete_facts` |
+| `quiz_fact_pick` | `POLLS` | `sql:quiz_round_pick` | — | `quiz_athlete_facts`, `sport_quiz_attempts`, `sport_quiz_exposures` +2 more |
+| `quiz_fact_prompt` | `BACKEND` | `sql:quiz_admin_fact_decide`, `sql:quiz_admin_fact_queue`, `sql:quiz_fact_guardian_pending` +4 more | — | — |
+| `quiz_fact_prompts` | `BACKEND` | `sql:quiz_fact_mine`, `sql:quiz_fact_prompt` | — | — |
+| `quiz_fact_request_open` | `PROFILE` | `sql:quiz_admin_fact_queue`, `sql:quiz_fact_guardian_decide`, `sql:quiz_fact_guardian_pending` +3 more | — | `guardian_approval_requests` |
+| `quiz_fact_retire_question` | `POLLS` | `sql:quiz_admin_needs_look_action`, `sql:quiz_fact_clear`, `sql:quiz_facts_on_delete` | `sport_quiz_questions` | — |
+| `quiz_fact_slot` | `POLLS` | `sql:quiz_round_pick` | — | `sport_quiz_attempts`, `sport_quiz_settings` |
+| `quiz_fact_submit` | `POLLS` | `@/lib/freshQuestions.ts` | `guardian_approval_requests`, `quiz_athlete_facts`, `sport_quiz_audit` | `quiz_athlete_facts`, `sport_quiz_settings` |
+| `quiz_fact_text_problems` | `ROSTERS` | `sql:quiz_admin_fact_decide`, `sql:quiz_fact_submit` | — | `players`, `profiles`, `schools_and_teams` |
+| `quiz_fact_viewer_ok` | `CREW` | `sql:quiz_answer`, `sql:quiz_fact_pick`, `sql:quiz_item_fact_ok` | — | `crew_follows`, `profiles`, `quiz_athlete_facts` +2 more |
+| `quiz_fact_visible` | `PROFILE` | `sql:quiz_fact_fill` | — | `profiles`, `quiz_athlete_facts` |
+| `quiz_fact_void_items` | `POLLS` | `sql:quiz_fact_retire_question`, `sql:quiz_facts_on_block`, `sql:quiz_report` | `sport_quiz_attempts`, `sport_quiz_round_items` | — |
+| `quiz_fact_withdraw` | `POLLS` | `@/lib/freshQuestions.ts` | — | `quiz_athlete_facts`, `sport_quiz_settings` |
+| `quiz_fact_word_scan` | `BACKEND` | `sql:quiz_fact_look_reasons`, `sql:quiz_fact_text_problems` | — | — |
+| `quiz_facts` | `POLLS` | By hand: QUIZ-03 internal facts learned in a week range (rounds + single-question). | — | `sport_quiz_attempts`, `sport_quiz_round_items` |
+| `quiz_facts_on_block` | `POLLS` | `trigger:quiz_facts_block on user_blocks` | `sport_quiz_requests` | `profiles`, `quiz_athlete_facts`, `sport_quiz_questions` |
+| `quiz_facts_on_delete` | `BACKEND` | `trigger:quiz_facts_delete on quiz_athlete_facts` | — | — |
+| `quiz_facts_on_profile` | `POLLS` | `trigger:quiz_facts_profile_rules on profiles` | — | `quiz_athlete_facts` |
+| `quiz_fold_lookalikes` | `BACKEND` | `sql:quiz_fact_look_reasons`, `sql:quiz_fact_text_problems`, `sql:quiz_fact_word_scan` +1 more | — | — |
+| `quiz_fresh_norm` | `BACKEND` | `sql:quiz_admin_import`, `sql:quiz_fact_submit`, `sql:quiz_fact_text_problems` +2 more | — | — |
+| `quiz_fun_available` | `POLLS` | By hand: Internal reviewed unseen optional-topic availability; no silent sports/fun substitution when exhausted. | — | `sport_quiz_exposures`, `sport_quiz_questions` |
+| `quiz_fun_slot` | `POLLS` | By hand: Internal deterministic account/UTC-week4sports/1optional fun scheduling; no inferred interest or extra tracking counter. | — | — |
+| `quiz_group_active_count` | `POLLS` | By hand: QUIZ-03 internal active member count. | — | `sport_quiz_group_members` |
+| `quiz_group_case` | `POLLS` | By hand: QUIZ-03 internal case-log insert. | `sport_quiz_group_cases` | — |
+| `quiz_group_code_new` | `POLLS` | By hand: QUIZ-03 internal 8-character code generator. | — | — |
+| `quiz_group_create` | `POLLS` | By hand: QUIZ-03 create a preset-named group (create <= 3, belong <= 5); code returned once; exact request retry returns the page without a code. | `sport_quiz_group_members`, `sport_quiz_groups` | `sport_quiz_groups`, `sport_quiz_questions`, `sport_quiz_settings` |
+| `quiz_group_display_name` | `POLLS` | By hand: QUIZ-03 internal first name (teens first name only). | — | `profiles` |
+| `quiz_group_ensure_set` | `POLLS` | By hand: QUIZ-03 internal shared set draw without reading exposures (advisory lock per group held by caller). | `sport_quiz_group_sets` | `sport_quiz_groups`, `sport_quiz_questions` |
+| `quiz_group_facts` | `POLLS` | `sql:quiz_group_page_dto` | — | `sport_quiz_attempts`, `sport_quiz_round_items` |
+| `quiz_group_handover` | `POLLS` | By hand: QUIZ-03 internal hand-over to oldest member or dissolve. | `sport_quiz_groups` | `sport_quiz_group_members` |
+| `quiz_group_issue_code` | `POLLS` | By hand: QUIZ-03 internal hashed code rotation; none when full. | `sport_quiz_group_codes`, `sport_quiz_groups` | — |
+| `quiz_group_join` | `POLLS` | By hand: QUIZ-03 join by hashed code with MINOR-01 teen rules both ways and PRIV-01 blocks; 10 wrong tries / 5 joins a day; refusals return (counted) with one ordinary outcome. | `sport_quiz_group_join_attempts`, `sport_quiz_group_members` | `sport_quiz_groups`, `sport_quiz_settings` |
+| `quiz_group_leave` | `POLLS` | By hand: QUIZ-03 leave any time; creator leaving hands over to the oldest member or dissolves. | `sport_quiz_groups` | `sport_quiz_groups`, `sport_quiz_settings` |
+| `quiz_group_mark_removed` | `POLLS` | By hand: QUIZ-03 internal removal with tombstone, supervision event, code rotation. | `sport_quiz_group_members`, `sport_quiz_groups` | — |
+| `quiz_group_needs_recheck` | `MINOR_SAFETY` | By hand: QUIZ-03 internal lazy drift test (birthdays) for group page and group Start. | — | `sport_quiz_group_members` |
+| `quiz_group_owned` | `POLLS` | By hand: QUIZ-03 internal creator check with lock order. | — | `sport_quiz_groups`, `sport_quiz_settings` |
+| `quiz_group_owner_gone` | `POLLS` | By hand: QUIZ-03 trigger: creator account deletion hands the group over or dissolves it. | `sport_quiz_group_cases` | `sport_quiz_group_members` |
+| `quiz_group_page` | `POLLS` | By hand: QUIZ-03 member group page: played-this-week mark per member, group totals, opt-in badges; removed members get only the removal notice. | — | `sport_quiz_group_members`, `sport_quiz_groups`, `sport_quiz_settings` |
+| `quiz_group_page_dto` | `POLLS` | By hand: QUIZ-03 internal live group page projection. | — | `sport_quiz_badges`, `sport_quiz_group_codes`, `sport_quiz_group_members` +1 more |
+| `quiz_group_recheck` | `MINOR_SAFETY` | By hand: QUIZ-03 internal re-check of one account in every group after an age correction, setting change or closure. | — | `sport_quiz_group_members`, `sport_quiz_groups`, `sport_quiz_settings` |
+| `quiz_group_recheck_group` | `MINOR_SAFETY` | By hand: QUIZ-03 internal lazy group-wide re-check removing closed accounts and refused parties. | — | `sport_quiz_group_members` |
+| `quiz_group_recheck_pair` | `MINOR_SAFETY` | By hand: QUIZ-03 internal re-check of two accounts after an unfriend or an ended guardian link. | — | `sport_quiz_group_members`, `sport_quiz_groups`, `sport_quiz_settings` |
+| `quiz_group_refusal` | `POLLS` | By hand: QUIZ-03 internal join refusal reason (closed, removed, full, blocked, teen rule). | — | `sport_quiz_group_members`, `sport_quiz_groups` |
+| `quiz_group_remove_member` | `POLLS` | By hand: QUIZ-03 creator removes a member (rejoin bar) and receives the rotated code. | — | `sport_quiz_group_members`, `sport_quiz_groups` |
+| `quiz_group_renew_code` | `POLLS` | By hand: QUIZ-03 creator renews the 7-day code; refused while full or paused. | — | `sport_quiz_groups`, `sport_quiz_settings` |
+| `quiz_group_report` | `POLLS` | By hand: QUIZ-03 Report group with a fixed reason (members and removed members), 5 a day. | — | `sport_quiz_group_cases`, `sport_quiz_group_members` |
+| `quiz_group_set_theme` | `POLLS` | By hand: QUIZ-03 creator sets the sport-filter theme for sets not yet drawn. | `sport_quiz_groups` | `sport_quiz_groups`, `sport_quiz_questions` |
+| `quiz_group_start` | `POLLS` | By hand: QUIZ-03 group round from a group page: same weekly opportunity, shared set with private replacements; refused while trivia.groups is off. | — | — |
+| `quiz_groups_mine` | `POLLS` | By hand: QUIZ-03 own groups, removal notices and limits. | — | `sport_quiz_group_members`, `sport_quiz_groups`, `sport_quiz_settings` |
+| `quiz_groups_on_block` | `RLS_SECURITY` | By hand: QUIZ-03 trigger: a block removes the blocked party from shared groups. | — | `sport_quiz_group_members`, `sport_quiz_groups`, `sport_quiz_settings` |
+| `quiz_groups_on_friendship` | `MINOR_SAFETY` | By hand: QUIZ-03 trigger on friendships: re-check shared groups after an unfriend. | — | — |
+| `quiz_groups_on_guardian_link` | `MINOR_SAFETY` | By hand: QUIZ-03 trigger on guardian_links: re-check shared groups when a link ends. | — | — |
+| `quiz_groups_on_profile` | `MINOR_SAFETY` | By hand: QUIZ-03 trigger on profiles: re-check groups after age, setting or closure changes. | — | `sport_quiz_group_members` |
+| `quiz_guard_audit` | `RLS_SECURITY` | By hand: Trigger keeps trusted quiz audit immutable; allowed FK nulling on identity deletion. | — | — |
+| `quiz_guard_group_case` | `RLS_SECURITY` | By hand: QUIZ-03 trigger keeps the group case log append-only (FK nulling allowed). | — | — |
+| `quiz_guard_level` | `AURA` | By hand: QUIZ-04 trigger: levels only go up; erasure / account deletion removes them. | — | — |
+| `quiz_guard_life_chapter` | `POLLS` | By hand: QUIZ-04 trigger: a chapter opens only when ready (5 approved items); its id is fixed and it is never deleted. | — | — |
+| `quiz_guard_question` | `POLLS` | By hand: Trigger freezes issued question wording/answers; edits become new reviewed versions. | — | `sport_quiz_life_chapters`, `sport_quiz_settings` |
+| `quiz_guard_truncate` | `BACKEND` | `trigger:quiz_level_truncate_guard on sport_quiz_levels` | — | — |
+| `quiz_history` | `PROFILE` | By hand: Own paged immutable terminal learning history/private badges/corrections; no active prompt or institutional answer export. | — | `sport_quiz_attempts`, `sport_quiz_badges` |
+| `quiz_invitation` | `POLLS` | By hand: Owned opt-in once-per-UTC-week quiet invitation claim and exact receipt; reveals no question or deadline. | `sport_quiz_preferences` | `sport_quiz_preferences`, `sport_quiz_requests` |
+| `quiz_item_fact_ok` | `POLLS` | `sql:quiz_item_question_dto`, `sql:quiz_item_result_dto` | — | `sport_quiz_attempts`, `sport_quiz_questions`, `sport_quiz_round_items` |
+| `quiz_item_question_dto` | `POLLS` | `sql:quiz_next`, `sql:quiz_round_begin`, `sql:quiz_round_items_dto` | — | `sport_quiz_attempts`, `sport_quiz_questions`, `sport_quiz_round_items` |
+| `quiz_item_result_dto` | `POLLS` | `sql:quiz_result_dto`, `sql:quiz_round_items_dto` | — | `sport_quiz_attempts`, `sport_quiz_questions`, `sport_quiz_round_items` |
+| `quiz_items_stats` | `BACKEND` | `trigger:quiz_round_items_stats on sport_quiz_round_items` | — | — |
+| `quiz_learn_start` | `BACKEND` | `@/lib/freshQuestions.ts` | — | — |
+| `quiz_level` | `AURA` | By hand: QUIZ-04 own personal level across every round kind (highest of stored and current), next threshold. | — | `sport_quiz_levels`, `sport_quiz_settings` |
+| `quiz_level_keys` | `BACKEND` | `sql:quiz_admin_life_snapshot`, `sql:quiz_level`, `sql:quiz_level_rank` +3 more | — | — |
+| `quiz_level_label` | `BACKEND` | `sql:quiz_admin_life_snapshot`, `sql:quiz_level`, `sql:quiz_life_progress` | — | — |
+| `quiz_level_rank` | `BACKEND` | `sql:quiz_level`, `sql:quiz_life_progress`, `sql:quiz_sync_badges` | — | — |
+| `quiz_levenshtein` | `BACKEND` | `sql:quiz_near_match` | — | — |
+| `quiz_life_access` | `PROFILE` | `sql:quiz_end`, `sql:quiz_next`, `sql:quiz_round_begin` | — | `sport_quiz_preferences`, `sport_quiz_settings` |
+| `quiz_life_actor` | `BACKEND` | `sql:quiz_badge_shelf`, `sql:quiz_history`, `sql:quiz_level` +4 more | — | — |
+| `quiz_life_alt` | `BACKEND` | `sql:quiz_life_figure_re`, `sql:quiz_life_phrase_re` | — | — |
+| `quiz_life_approved_count` | `POLLS` | `sql:quiz_life_chapter_state`, `sql:quiz_life_progress` | — | `sport_quiz_questions` |
+| `quiz_life_band_ok` | `MINOR_SAFETY` | By hand: QUIZ-04 Life eligibility: trivia bands plus 13+ accounts without a recorded age (not_given / unknown); never under 13. | — | — |
+| `quiz_life_chapter_open` | `BACKEND` | `sql:quiz_life_chapters`, `sql:quiz_life_pool`, `sql:quiz_life_snapshot` | — | — |
+| `quiz_life_chapter_state` | `POLLS` | `sql:quiz_admin_life_chapter`, `sql:quiz_admin_life_snapshot`, `sql:quiz_guard_life_chapter` +1 more | — | `sport_quiz_life_chapters` |
+| `quiz_life_chapters` | `POLLS` | By hand: QUIZ-04 the four chapters with effective open state and unseen counts (own read; no admin fields). | — | `sport_quiz_life_chapters` |
+| `quiz_life_copy_problems` | `VOICE` | By hand: QUIZ-04 Life copy ruleset at approval (v4, design §8): lookalike letters, advice, brands, Tapua'i money words, NIL / eligibility, tax / loan / credit score / APR, money figures, years, the Scam Defense line, prompt <= 120 and explanation <= 200 characters. | — | — |
+| `quiz_life_copy_rules` | `VOICE` | By hand: QUIZ-04 the Life copy rule list, embedded from supabase/content/life_copy_rules.json (pnpm life:bank:check fails on drift). | — | — |
+| `quiz_life_expected_actor` | `BACKEND` | `sql:quiz_answer`, `sql:quiz_end`, `sql:quiz_erase_history` +4 more | — | — |
+| `quiz_life_figure_re` | `BACKEND` | `sql:quiz_life_copy_problems` | — | — |
+| `quiz_life_normalize` | `VOICE` | By hand: QUIZ-04 text normalization before the copy rules: NFKC, zero-width removed, plain spaces and quotes, lowercase. | — | — |
+| `quiz_life_open_at` | `POLLS` | By hand: QUIZ-04 the number of approved items that opens a Life chapter (5, one round; owner simplification 2026-10-15). | — | — |
+| `quiz_life_phrase_re` | `VOICE` | By hand: QUIZ-04 whole-word pattern for a rule phrase list (same pattern as the JS check). | — | — |
+| `quiz_life_pool` | `POLLS` | By hand: QUIZ-04 internal unseen drawable Life questions for an account now (approved, open chapter, chapter filter). | — | `sport_quiz_exposures`, `sport_quiz_life_chapters`, `sport_quiz_questions` |
+| `quiz_life_preferences` | `PRIVACY_ENGINEERING` | By hand: QUIZ-04 private Life opt-in with its own CAS version; opting out ends an open Life round; not audited. | `sport_quiz_preferences` | `sport_quiz_attempts`, `sport_quiz_preferences` |
+| `quiz_life_preferences_dto` | `PROFILE` | `sql:quiz_life_preferences`, `sql:quiz_life_snapshot` | — | `sport_quiz_preferences` |
+| `quiz_life_progress` | `AURA` | By hand: QUIZ-04 own chapter progress: share of approved questions seen, facts and the highest chapter level reached. | — | `sport_quiz_attempts`, `sport_quiz_exposures`, `sport_quiz_levels` +4 more |
+| `quiz_life_snapshot` | `POLLS` | By hand: QUIZ-04 own Life availability, private opt-in, this week's Life attempt and open-chapter / unseen counts. | — | `sport_quiz_attempts`, `sport_quiz_life_chapters`, `sport_quiz_settings` +1 more |
+| `quiz_life_start` | `POLLS` | By hand: QUIZ-04 Life round Start (kind life, 90 s default, 30 allowed, optional chapter): trivia.life on, Life notice + opt-in, eligible account, open chapters; same exact recovery as Start. | — | — |
+| `quiz_life_strip` | `BACKEND` | `sql:quiz_fact_look_reasons`, `sql:quiz_fact_text_problems`, `sql:quiz_fact_word_scan` +3 more | — | — |
+| `quiz_life_unseen_count` | `BACKEND` | `sql:quiz_life_chapters`, `sql:quiz_life_snapshot`, `sql:quiz_round_begin` | — | — |
+| `quiz_lock` | `RLS_SECURITY` | By hand: Internal settings/account serialization before lifecycle mutations and clock capture. | — | `sport_quiz_settings` |
+| `quiz_member_ref` | `POLLS` | By hand: QUIZ-03 internal opaque per-group member reference for the creator. | — | `sport_quiz_groups` |
+| `quiz_near_match` | `BACKEND` | `sql:quiz_admin_fact_decide`, `sql:quiz_fact_text_problems` | — | — |
+| `quiz_needs_look` | `POLLS` | `sql:quiz_admin_needs_look`, `sql:quiz_admin_needs_look_action`, `sql:quiz_admin_question` +1 more | — | `sport_quiz_question_stats` |
+| `quiz_next` | `POLLS` | By hand: QUIZ-03 Next: exact request/expected-position/session-secret recovery issues the following item with its own deadline; replay returns the same item only before its deadline; re-checks the week boundary. | `sport_quiz_attempts` | `sport_quiz_attempts`, `sport_quiz_requests`, `sport_quiz_round_items` +1 more |
+| `quiz_normalize_options` | `POLLS` | By hand: Protected Unicode/ECMAScript-whitespace option canonicalization for new content/approval/assignment; malformed legacy question rows stay admin-correctable and cannot issue or complete. | — | — |
+| `quiz_open_reports` | `POLLS` | `sql:quiz_needs_look` | — | `sport_quiz_question_stats`, `sport_quiz_reports` |
+| `quiz_pair_ok` | `MINOR_SAFETY` | By hand: QUIZ-03 internal both-ways teen rule for one pair. | — | — |
+| `quiz_played` | `POLLS` | By hand: QUIZ-03 internal played-this-week (at least one committed answer). | — | `sport_quiz_attempts`, `sport_quiz_round_items` |
+| `quiz_preferences` | `PROFILE` | By hand: Canonical expected-profile/CAS/request-bound optional invitation/topic/notice settings. Off affects invitation scheduling, not manual play or active round. | `sport_quiz_preferences` | `sport_quiz_preferences`, `sport_quiz_requests` |
+| `quiz_preferences_dto` | `PROFILE` | By hand: Internal own preference/notice/history-revision defaults and retained projection. | — | `sport_quiz_preferences` |
+| `quiz_profile_closed` | `POLLS` | By hand: QUIZ-03 internal closed (under-13) account test. | — | `profiles` |
+| `quiz_quarter_of` | `POLLS` | By hand: QUIZ-03 internal calendar-quarter key. | — | — |
+| `quiz_question_dto` | `POLLS` | By hand: Internal immutable content projection for original authorized Start or own terminal learning only. | — | `sport_quiz_questions` |
+| `quiz_question_hard` | `POLLS` | `sql:quiz_fact_pick`, `sql:quiz_group_ensure_set`, `sql:quiz_round_hard_count` +1 more | — | `sport_quiz_question_stats` |
+| `quiz_question_paused` | `POLLS` | `sql:quiz_admin_fact_queue`, `sql:quiz_admin_refill`, `sql:quiz_admin_snapshot` +8 more | — | `sport_quiz_question_stats` |
+| `quiz_question_stats_refresh` | `POLLS` | `sql:quiz_items_stats` | `sport_quiz_question_stats` | `profiles`, `quiz_athlete_facts`, `sport_quiz_attempts` +3 more |
+| `quiz_random_order` | `BACKEND` | `sql:quiz_round_issue`, `sql:quiz_shuffle_options` | — | — |
+| `quiz_receipt` | `POLLS` | By hand: Own minimal mutation recovery or committed terminal result; never active prompt/capability. | — | — |
+| `quiz_receipt_dto` | `POLLS` | By hand: Internal minimal owned exact receipt/terminal learning projection, never active question/token. | — | `sport_quiz_requests` |
+| `quiz_report` | `POLLS` | `@/lib/freshQuestions.ts` | `sport_quiz_audit`, `sport_quiz_question_stats`, `sport_quiz_reports` | `profiles`, `quiz_athlete_facts`, `sport_quiz_attempts` +4 more |
+| `quiz_report_rules` | `BACKEND` | `sql:quiz_admin_fresh_settings`, `sql:quiz_admin_snapshot`, `sql:quiz_report` | — | — |
+| `quiz_require_testing` | `RLS_SECURITY` | By hand: Internal default-paused/tester allowlist/production-refusal guard for quiz participation. | — | `sport_quiz_settings` |
+| `quiz_result_dto` | `POLLS` | By hand: Internal own terminal answer/explanation projection without active correct-answer leakage. | — | `sport_quiz_attempts`, `sport_quiz_questions`, `sport_quiz_round_items` |
+| `quiz_round_begin` | `POLLS` | By hand: QUIZ-04 internal Start core for every round kind (personal, group, life): one guard per (week, kind), one active round at a time, group >= 2 members, Life eligibility / opt-in / chapter gating; settings -> group -> account lock order. | `sport_quiz_attempts`, `sport_quiz_audit` | `profiles`, `sport_quiz_attempts`, `sport_quiz_group_members` +7 more |
+| `quiz_round_close` | `POLLS` | By hand: QUIZ-03 internal round closure; completed when at least one committed non-void answer. | `sport_quiz_attempts`, `sport_quiz_round_items` | `sport_quiz_attempts` |
+| `quiz_round_gap` | `POLLS` | By hand: QUIZ-03 internal 2-minute Next window. | — | — |
+| `quiz_round_hard_count` | `POLLS` | `sql:quiz_fact_pick`, `sql:quiz_round_pick` | — | `sport_quiz_round_items` |
+| `quiz_round_issue` | `POLLS` | By hand: QUIZ-03 internal item + exposure insert. | `sport_quiz_exposures`, `sport_quiz_round_items` | `sport_quiz_questions` |
+| `quiz_round_items_dto` | `POLLS` | By hand: QUIZ-03 internal closed-item history projection; never an open item. | — | `sport_quiz_round_items` |
+| `quiz_round_pick` | `POLLS` | By hand: QUIZ-03 internal draw: shared set unless seen, else private replacement; personal random unseen. | — | `sport_quiz_attempts`, `sport_quiz_exposures`, `sport_quiz_group_sets` +1 more |
+| `quiz_round_settle` | `POLLS` | By hand: QUIZ-03 internal persisted expiry chain under the lifecycle lock. | `sport_quiz_attempts`, `sport_quiz_round_items` | `sport_quiz_attempts`, `sport_quiz_round_items` |
+| `quiz_round_view` | `POLLS` | By hand: QUIZ-03 internal read-only effective round state (item expiry, missed Next). | — | `sport_quiz_attempts`, `sport_quiz_round_items` |
+| `quiz_same_options` | `BACKEND` | `sql:quiz_guard_question` | — | — |
+| `quiz_save_receipt` | `POLLS` | By hand: QUIZ-04 internal receipt writer: round operations have 20 per kind per week, ordinary saves 111, then reserved answer / off / end slots per (week, kind). | `sport_quiz_requests` | `sport_quiz_attempts` |
+| `quiz_save_request` | `POLLS` | By hand: Internal bounded caller/request/input exact receipt persistence and cancellation fencing. | — | — |
+| `quiz_season_recap` | `POLLS` | By hand: QUIZ-03 own calendar-quarter recap: facts by sport/topic, rounds, badges. Own data only. | — | `sport_quiz_attempts`, `sport_quiz_badges`, `sport_quiz_questions` +1 more |
+| `quiz_self_heal_defaults` | `BACKEND` | `sql:quiz_question_stats_refresh` | — | — |
+| `quiz_self_heal_ok` | `BACKEND` | `sql:check constraint`, `sql:quiz_admin_fresh_settings` | — | — |
+| `quiz_shown_position` | `BACKEND` | `sql:quiz_item_result_dto` | — | — |
+| `quiz_shuffle_options` | `BACKEND` | `sql:quiz_admin_fact_decide`, `sql:quiz_admin_import`, `sql:quiz_admin_question` | — | — |
+| `quiz_skip` | `POLLS` | By hand: Explicit owned expected-week quota closure without prompt or reward; exact request retry. Invitation dismissal alone does not call it. | `sport_quiz_attempts`, `sport_quiz_audit` | `sport_quiz_attempts`, `sport_quiz_requests`, `sport_quiz_week_guards` |
+| `quiz_snapshot` | `POLLS` | By hand: Read-only sanitized own v2 availability/preferences/week/attempt summary/pools/history revision at one server instant; never active prompt. | — | `sport_quiz_attempts`, `sport_quiz_badges`, `sport_quiz_exposures` +4 more |
+| `quiz_spend` | `POLLS` | By hand: Internal atomic disclosed35-day minimal weekly quota enforcement. | `sport_quiz_week_guards` | — |
+| `quiz_start` | `POLLS` | By hand: Atomic unseen reviewed family and30/90 deadline under account/settings locks; exact request/profile/week/notice/token-bound original-view recovery only before expiry. | — | — |
+| `quiz_summary` | `POLLS` | By hand: Internal active-prompt-free attempt metadata and effective expiry at one server instant. | — | `sport_quiz_attempts` |
+| `quiz_sync_badges` | `AURA` | By hand: QUIZ-03 internal badge derivation from live rows (issue, void, re-earn). | `sport_quiz_badges`, `sport_quiz_levels` | `sport_quiz_attempts`, `sport_quiz_group_members`, `sport_quiz_groups` +4 more |
+| `quiz_teen_accepts` | `POLLS` | By hand: QUIZ-03 internal MINOR-01 friend-request rule for sharing a group. | — | `guardian_links`, `profiles` |
+| `quiz_thresholds_ok` | `BACKEND` | `sql:check constraint`, `sql:quiz_admin_life_settings` | — | — |
+| `quiz_trivia_band` | `BACKEND` | `sql:quiz_answer`, `sql:quiz_end`, `sql:quiz_next` | — | — |
+| `quiz_unseen_count` | `POLLS` | By hand: QUIZ-03 internal unseen deliverable family count for a topic/sport. | — | `sport_quiz_exposures`, `sport_quiz_questions` |
+| `quiz_week` | `POLLS` | By hand: Internal authoritative UTC Monday start for one weekly assignment/badge. | — | — |
+| `quiz_week_at` | `POLLS` | By hand: Internal UTC week from explicit server instant, captured after locks for mutations. | — | — |
+| `quiz_week_end` | `POLLS` | By hand: QUIZ-03 internal UTC week end instant. | — | — |
+| `quiz_word_overlap` | `BACKEND` | `sql:quiz_admin_import` | — | — |
 | `rally_manager_role` | `ROSTERS` | `sql:RLS policy`, `sql:approve_rally`, `sql:close_rally` +5 more | — | `players`, `profiles` |
 | `record_company_revenue` | `LEDGER` | `sql:check constraint`, `sql:company_revenue_after_source_insert` | `company_revenue_logs` | — |
 | `record_guardian_consent` | `CUSTODIAL` | `sql:accept_guardian_invite`, `sql:sign_guardian_consent` | `guardian_consents` | `guardian_links` |
@@ -1134,6 +1699,8 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `submit_app_feedback` | `SUPPORT` | `@/lib/feedback.ts` | `app_feedback` | — |
 | `supersede_payee_checks` | `CONNECT` | `sql:check constraint`, `sql:payee_changes_supersede` | `payee_verifications` | — |
 | `supervision_json` | `HIGHLIGHTS` | `sql:admin_minor_overview`, `sql:challenge_missing_dependencies`, `sql:get_my_supervision` +1 more | — | `challenge_nudges`, `friendships`, `profiles` +3 more |
+| `supersede_payee_checks` | `CONNECT` | `sql:admin_record_payee_check`, `sql:check constraint`, `sql:payee_changes_supersede` +1 more | `payee_verifications` | — |
+| `supervision_json` | `PROFILE` | `sql:admin_minor_overview`, `sql:get_my_supervision`, `sql:guardian_view` | — | `friendships`, `profiles`, `quiz_athlete_facts` +5 more |
 | `support_code_metadata` | `TELEMETRY` | By hand: Fixed SQL vocabulary used by support capture and validation. | — | — |
 | `sync_company_revenue_logs` | `LEDGER` | `sql:check constraint`, `sql:get_company_revenue_summary` | `company_revenue_logs` | `players`, `shop_orders`, `shop_products` +3 more |
 | `sync_live_spotlight_awards` | `BACKEND` | `sql:clear_reel_hype`, `sql:confirm_reel_player_tag`, `sql:get_active_spotlight_award` +1 more | — | — |
@@ -1189,6 +1756,19 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | `shared/admin/analytics.ts` | `knownSources` | keep | Used by the analytics catalog test to prove no chart reads an invented measure. |
 | `shared/admin/financeCatalog.ts` | `catalogCoverage` | keep | Used by the finance data catalog coverage test. |
 | `shared/admin/financeCatalog.ts` | `schemaColumnsFromSql` | keep | Used by the finance data catalog coverage test. |
+| `@/lib/freshQuestions.ts` | `exportMyFunFacts` | keep | QUIZ-05 participant / guardian wrapper built admin-first for the app agent (fun-fact opt-in, report button, Learn card, guardian panel); covered by lib tests; screens come with the app-ready step. |
+| `@/lib/leaderboards.ts` | `resetReelViewSessionForTests` | keep | Test hook. |
+| `@/lib/payouts.ts` | `requestPayout` | keep | Wave 1 payout request (payouts are blocked by decision). |
+| `@/lib/photoStories.ts` | `resetPhotoStoriesProbe` | keep | Test hook. |
+| `@/lib/runtime.ts` | `discardAppRuntimeDraft` | keep | "Discard draft" action not yet wired into Publish; RUNTIME_CONFIG to wire or archive. |
+| `@/services/MediaUploadService.ts` | `stripJpegMetadata` | keep | Tested wrapper over parseJpeg/buildCleanJpeg; its byte-rule tests prove the GPS/EXIF stripping uploadStoryPhoto performs (privacy). |
+| `shared/admin/analytics.ts` | `knownSources` | keep | Used by the analytics catalog test to prove no chart reads an invented measure. |
+| `shared/admin/financeCatalog.ts` | `catalogCoverage` | keep | Used by the finance data catalog coverage test. |
+| `shared/admin/financeCatalog.ts` | `schemaColumnsFromSql` | keep | Used by the finance data catalog coverage test. |
+| `shared/freshQuestions.ts` | `FUN_FACT_MAX_LIVE` | keep | QUIZ-05 wire constant mirroring the SQL rule (limits, report labels per design §6.13, self-heal defaults) for the app screens and tests; one place for the copy. |
+| `shared/freshQuestions.ts` | `FRESH_SELF_HEAL_DEFAULTS` | keep | QUIZ-05 wire constant mirroring the SQL rule (limits, report labels per design §6.13, self-heal defaults) for the app screens and tests; one place for the copy. |
+| `shared/lifePlaybook.ts` | `LIFE_DURATIONS` | keep | QUIZ-04 shared Life constants mirrored from SQL as the documented contract; the participant screens (QUIZ-04 app) read durations and thresholds from the server instead. |
+| `shared/lifePlaybook.ts` | `LIFE_DEFAULT_THRESHOLDS` | keep | QUIZ-04 shared Life constants mirrored from SQL as the documented contract; the participant screens (QUIZ-04 app) read durations and thresholds from the server instead. |
 
 ## Rule failures
 

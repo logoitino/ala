@@ -378,3 +378,18 @@ baselines remain unknown and new participant tracking needs Data/Privacy accepta
 
 Include the focused next design choices and actual review evidence in GROWTH-01 and the
 October20 packet. This duty establishes no automated campaign or public contest.
+
+## 12. Optional trivia and per-account return paths
+
+[QUIZ-02](../agents/QUIZ-02.md) implements approved private30/90-second learning after a new
+admin checkpoint. Playbook §§14–15 connects optional trivia with fans, filmers, families,
+friends, athletes, school supporters and donors. Treat each path as a bounded experiment:
+first enjoyable action, voluntary reason to return, friction/cost, and adopt/revise/stop.
+
+Content reports reviewed unseen inventory and editorial capacity; Dev/Support reports failed
+starts, interruptions, exhausted pools, corrections and permission backlog; Data/Privacy
+reviews aggregate opt-in/start/completion/return sources and missing baselines. Legal/Safety
+reviews notices/child subjects/rewards; Cost Operations compares query/receipt/storage/support
+burden. No duration-based disability inference or raw child answer export. Growth routes the
+joint recommendation through Marketing → CTO → owner in the October20 packet, keeping optional
+Donate and service separate from participation, badge value and free voting.

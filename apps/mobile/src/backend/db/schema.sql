@@ -20251,3 +20251,8113 @@ do $$declare f record;begin
   end if;
  end loop;
 end$$;
+
+-- FUN-01: default-off, approved-account testing pilot, private immutable media, exact permission and free ballots.
+-- Design: docs/engineering/design/FAN_ZONE_DESIGN.md. Written/replayed locally; never applied by this script.
+-- Rollback: pause campaigns, retain consent/audit/case records, revoke fun_* API grants and archive media via approved removal.
+-- Dependencies: MINOR-01 profile age/guardian links and PRIV-01 profile/block helpers. No financial data is changed.
+
+create table if not exists public.fan_zone_campaigns (
+  id uuid primary key default gen_random_uuid(),
+  title text not null check (char_length(title) between 1 and 80),
+  theme text not null check (char_length(theme) between 1 and 240),
+  period text not null check (period in ('game','week')),
+  status text not null default 'draft' check (status in ('draft','open','paused','closed','finalized')),
+  testing_only boolean not null default true check (testing_only),
+  pilot_accounts uuid[] not null default '{}' check (cardinality(pilot_accounts) <= 100),
+  entry_opens_at timestamptz not null,
+  entry_closes_at timestamptz not null,
+  vote_opens_at timestamptz not null,
+  vote_closes_at timestamptz not null,
+  rules text not null check (char_length(rules) between 10 and 4000),
+  support_contact text not null default '' check (char_length(support_contact) <= 200),
+  story_reel_id uuid references public.reels(id) on delete set null,
+  opened_at timestamptz,
+  results jsonb not null default '[]',
+  result_signature text,
+  recount_required boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (entry_opens_at < entry_closes_at and vote_opens_at < vote_closes_at and entry_closes_at <= vote_closes_at)
+);
+create table if not exists public.fan_zone_entries (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.fan_zone_campaigns(id),
+  owner_id uuid not null references public.profiles(id),
+  revision integer not null default 1 check (revision between 1 and 100),
+  path text not null unique,
+  alias text not null default '' check (char_length(alias) <= 40),
+  caption text not null default '' check (char_length(caption) <= 240),
+  rights_confirmed boolean not null default false,
+  status text not null default 'draft' check (status in ('draft','submitted','accepted','changes','rejected','suspended','withdrawn')),
+  reason text check (char_length(reason) <= 500),
+  verified boolean not null default false,
+  digest text check (digest ~ '^[a-f0-9]{64}$'),
+  bytes integer check (bytes between 1 and 20971520),
+  duration_ms integer check (duration_ms between 1000 and 30000),
+  removed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (campaign_id,owner_id)
+);
+create table if not exists public.fan_zone_consents (
+  id uuid primary key default gen_random_uuid(),
+  sequence_id bigint generated always as identity,
+  entry_id uuid not null references public.fan_zone_entries(id),
+  revision integer not null,
+  actor_id uuid not null references public.profiles(id),
+  link_id uuid references public.guardian_links(id),
+  action text not null check (action in ('assent','grant','revoke')),
+  scope jsonb not null,
+  created_at timestamptz not null default now()
+);
+-- Explicit publication binding: historical grants cannot replace a revoked or ended relied-on grant.
+alter table public.fan_zone_entries add column if not exists guardian_consent_id uuid references public.fan_zone_consents(id);
+create table if not exists public.fan_zone_ballots (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.fan_zone_campaigns(id),
+  voter_id uuid not null references public.profiles(id),
+  entry_id uuid not null references public.fan_zone_entries(id),
+  version integer not null check (version > 0),
+  invalidated_at timestamptz,
+  invalid_reason text check (char_length(invalid_reason) between 5 and 500),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(campaign_id,voter_id)
+);
+create table if not exists public.fan_zone_requests (
+  request_id uuid not null,
+  voter_id uuid not null references public.profiles(id),
+  campaign_id uuid not null references public.fan_zone_campaigns(id),
+  entry_id uuid not null,
+  expected_version integer not null,
+  receipt jsonb not null,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  primary key(voter_id,request_id)
+);
+create table if not exists public.fan_zone_cases (
+  id uuid primary key default gen_random_uuid(),
+  entry_id uuid not null references public.fan_zone_entries(id),
+  revision integer not null,
+  path text not null,
+  reporter_id uuid references public.profiles(id),
+  kind text not null check(kind in ('report','appeal','deletion')),
+  details text not null check(char_length(details) between 3 and 1000),
+  secret_hash text not null unique,
+  status text not null default 'open' check(status in ('open','escalated','resolved','completed')),
+  reason text check(char_length(reason) between 5 and 500),
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default now()+interval '30 days',
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.fan_zone_audit (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.fan_zone_campaigns(id),
+  actor_id uuid references public.profiles(id),
+  action text not null,
+  subject_id uuid,
+  detail jsonb not null default '{}',
+  created_at timestamptz not null default now()
+);
+create table if not exists public.fan_zone_reflections (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references public.fan_zone_campaigns(id),
+  owner_id uuid not null references public.profiles(id),
+  idea text not null check(idea in ('encourage','help_at_home','serve_together','thank_someone')),
+  created_at timestamptz not null default now()
+);
+create index if not exists fan_zone_consents_entry on public.fan_zone_consents(entry_id,revision,created_at desc);
+create index if not exists fan_zone_cases_page on public.fan_zone_cases(entry_id,created_at desc);
+-- One deletion request covers every historical revision; exact retries reuse its receipt rather than adding cases.
+create unique index if not exists fan_zone_one_deletion on public.fan_zone_cases(entry_id) where kind='deletion';
+create index if not exists fan_zone_audit_page on public.fan_zone_audit(campaign_id,created_at desc);
+
+-- Table grants are closed even under Supabase's permissive default privileges. Definer APIs enforce actor gates.
+do $$ declare t text; begin
+  foreach t in array array['campaigns','entries','consents','ballots','requests','cases','audit','reflections'] loop
+    execute format('alter table public.fan_zone_%I enable row level security',t);
+    execute format('revoke all on public.fan_zone_%I from public, anon, authenticated',t);
+    execute format('grant all on public.fan_zone_%I to service_role',t);
+    execute format('drop policy if exists fan_zone_closed_account on public.fan_zone_%I',t);
+    execute format('create policy fan_zone_closed_account on public.fan_zone_%I as restrictive for all to authenticated using (public.my_profile_id() is not null) with check (public.my_profile_id() is not null)',t);
+  end loop;
+end $$;
+
+create or replace function public.fun_eligible(p_profile uuid) returns boolean language sql stable security definer set search_path='' as $$
+  -- Check the stored closure marker and age band directly; calling this helper from itself recurses.
+  select exists(select 1 from public.profiles p where p.id=p_profile and p.age_blocked_at is null
+    and public.profile_age_band(p.id) in ('adult','teen_13_15','teen_16_17'));
+$$;
+create or replace function public.fun_actor() returns uuid language plpgsql stable security definer set search_path='' as $$
+declare me uuid:=public.my_profile_id(); begin
+  if not public.fun_eligible(me) then raise exception 'FUN_ACCOUNT_INELIGIBLE'; end if; return me;
+end $$;
+create or replace function public.fun_admin_guard() returns uuid language plpgsql stable security definer set search_path='' as $$
+declare me uuid:=public.fun_actor(); begin
+  if not coalesce(public.current_user_role()='admin',false) then raise exception 'FUN_ADMIN_REQUIRED'; end if; return me;
+end $$;
+create or replace function public.fun_pilot(p_campaign uuid,p_profile uuid) returns boolean language sql stable security definer set search_path='' as $$
+ select public.fun_eligible(p_profile) and exists(select 1 from public.fan_zone_campaigns c where c.id=p_campaign and p_profile=any(c.pilot_accounts));
+$$;
+create or replace function public.fun_scope(p_entry public.fan_zone_entries) returns jsonb language sql stable security definer set search_path='' as $$
+ select jsonb_build_object('campaign_id',p_entry.campaign_id,'revision',p_entry.revision,'digest',p_entry.digest,
+ 'alias',p_entry.alias,'caption',p_entry.caption,'audience','approved_pilot_accounts','form_version','fan-zone-v1-testing','reuse',false);
+$$;
+create or replace function public.fun_guardian(p_owner uuid,p_actor uuid) returns boolean language sql stable security definer set search_path='' as $$
+ select public.fun_eligible(p_actor) and public.profile_age_band(p_actor)='adult' and public.fun_eligible(p_owner)
+ and public.is_minor_band(public.profile_age_band(p_owner)) and not public.is_blocked_between(p_actor,p_owner)
+ and exists(select 1 from public.guardian_links l where l.minor_id=p_owner and l.guardian_id=p_actor and l.confirmed_at is not null and l.ended_at is null);
+$$;
+create or replace function public.fun_guardian_grant_valid(p_entry public.fan_zone_entries) returns boolean language sql stable security definer set search_path='' as $$
+ select exists(select 1 from public.fan_zone_consents s join public.guardian_links l on l.id=s.link_id
+ where s.id=p_entry.guardian_consent_id and s.entry_id=p_entry.id and s.revision=p_entry.revision
+ and s.scope=public.fun_scope(p_entry) and s.action='grant'
+ and l.minor_id=p_entry.owner_id and l.guardian_id=s.actor_id and l.confirmed_at is not null and l.ended_at is null
+ and public.fun_guardian(p_entry.owner_id,s.actor_id) and not exists(select 1 from public.fan_zone_consents x
+ where x.entry_id=s.entry_id and x.revision=s.revision and x.actor_id=s.actor_id and x.sequence_id>s.sequence_id));
+$$;
+create or replace function public.fun_permission_valid(p_entry public.fan_zone_entries) returns boolean language sql stable security definer set search_path='' as $$
+ select public.fun_eligible(p_entry.owner_id) and p_entry.verified and p_entry.removed_at is null and exists(
+ select 1 from public.fan_zone_consents s where s.entry_id=p_entry.id and s.revision=p_entry.revision and s.actor_id=p_entry.owner_id
+ and s.scope=public.fun_scope(p_entry) and s.action='assent' and not exists(select 1 from public.fan_zone_consents x where x.entry_id=s.entry_id and x.revision=s.revision and x.actor_id=s.actor_id and x.sequence_id>s.sequence_id))
+ and (public.profile_age_band(p_entry.owner_id)='adult' or public.fun_guardian_grant_valid(p_entry));
+$$;
+create or replace function public.fun_candidate(p_entry public.fan_zone_entries) returns boolean language sql stable security definer set search_path='' as $$
+ select p_entry.status='accepted' and public.fun_pilot(p_entry.campaign_id,p_entry.owner_id) and public.fun_permission_valid(p_entry);
+$$;
+create or replace function public.fun_entry_json(p_entry public.fan_zone_entries) returns jsonb language sql stable security definer set search_path='' as $$
+ select to_jsonb(p_entry)||jsonb_build_object('consent_scope',public.fun_scope(p_entry),'permission_valid',public.fun_permission_valid(p_entry),'media_revisions',coalesce((select jsonb_agg(jsonb_build_object('revision',(a.detail->>'revision')::int,'path',a.detail->>'path','present',exists(select 1 from storage.objects o where o.bucket_id='fan_zone' and o.name=a.detail->>'path')) order by a.created_at) from public.fan_zone_audit a where a.subject_id=p_entry.id and a.action='entry_revision'),'[]'::jsonb));
+$$;
+create or replace function public.fun_campaign_json(p_campaign public.fan_zone_campaigns) returns jsonb language sql stable security definer set search_path='' as $$
+ select to_jsonb(p_campaign)-'pilot_accounts'-'result_signature';
+$$;
+create or replace function public.fun_case_json(p_case public.fan_zone_cases) returns jsonb language sql stable security definer set search_path='' as $$
+ select jsonb_build_object('id',p_case.id,'entry_id',p_case.entry_id,'revision',p_case.revision,'kind',p_case.kind,'status',p_case.status,'created_at',p_case.created_at,'expires_at',p_case.expires_at);
+$$;
+create or replace function public.fun_audit(p_campaign uuid,p_action text,p_subject uuid,p_detail jsonb default '{}') returns void language sql security definer set search_path='' as $$
+ insert into public.fan_zone_audit(campaign_id,actor_id,action,subject_id,detail) values(p_campaign,public.my_profile_id(),p_action,p_subject,p_detail);
+$$;
+create or replace function public.fun_signature(p_campaign uuid) returns text language sql stable security definer set search_path='' as $$
+ select md5(coalesce((select string_agg(e.id::text||':'||e.revision::text,',' order by e.id) from public.fan_zone_entries e where e.campaign_id=p_campaign and public.fun_candidate(e)),'')||'|'||coalesce((select string_agg(b.id::text||':'||b.version::text,',' order by b.id) from public.fan_zone_ballots b join public.fan_zone_entries e on e.id=b.entry_id where b.campaign_id=p_campaign and b.invalidated_at is null and public.fun_pilot(p_campaign,b.voter_id) and public.fun_candidate(e) and b.voter_id<>e.owner_id and not public.is_blocked_between(b.voter_id,e.owner_id)),''));
+$$;
+
+create or replace function public.fun_admin_campaign(p_id uuid,p_action text,p_payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.fun_admin_guard(); c public.fan_zone_campaigns; tally jsonb;
+begin
+ if p_action='create' then
+  insert into public.fan_zone_campaigns(title,theme,period,entry_opens_at,entry_closes_at,vote_opens_at,vote_closes_at,rules,support_contact,story_reel_id,pilot_accounts)
+  values(p_payload->>'title',p_payload->>'theme',p_payload->>'period',(p_payload->>'entry_opens_at')::timestamptz,(p_payload->>'entry_closes_at')::timestamptz,(p_payload->>'vote_opens_at')::timestamptz,(p_payload->>'vote_closes_at')::timestamptz,p_payload->>'rules',coalesce(p_payload->>'support_contact',''),(p_payload->>'story_reel_id')::uuid,coalesce(array(select jsonb_array_elements_text(p_payload->'pilot_accounts')::uuid),'{}')) returning * into c;
+ else
+  select * into c from public.fan_zone_campaigns where id=p_id for update;
+  if not found then raise exception 'FUN_CAMPAIGN_UNAVAILABLE'; end if;
+  if p_action='configure' then
+   if c.opened_at is not null then raise exception 'FUN_RULES_IMMUTABLE'; end if;
+   update public.fan_zone_campaigns set title=coalesce(p_payload->>'title',title),theme=coalesce(p_payload->>'theme',theme),period=coalesce(p_payload->>'period',period),rules=coalesce(p_payload->>'rules',rules),support_contact=coalesce(p_payload->>'support_contact',support_contact),
+   entry_opens_at=coalesce((p_payload->>'entry_opens_at')::timestamptz,entry_opens_at),entry_closes_at=coalesce((p_payload->>'entry_closes_at')::timestamptz,entry_closes_at),vote_opens_at=coalesce((p_payload->>'vote_opens_at')::timestamptz,vote_opens_at),vote_closes_at=coalesce((p_payload->>'vote_closes_at')::timestamptz,vote_closes_at),
+   story_reel_id=case when p_payload?'story_reel_id' then (p_payload->>'story_reel_id')::uuid else story_reel_id end,pilot_accounts=case when p_payload?'pilot_accounts' then array(select jsonb_array_elements_text(p_payload->'pilot_accounts')::uuid) else pilot_accounts end where id=c.id;
+  elsif p_action='open' then
+   if c.status not in ('draft','paused') or now()>=c.vote_closes_at or char_length(trim(c.support_contact))<5 or cardinality(c.pilot_accounts)=0
+   or exists(select 1 from unnest(c.pilot_accounts) p where not public.fun_eligible(p)) then raise exception 'FUN_TESTING_OPEN_DENIED'; end if;
+   update public.fan_zone_campaigns set status='open',opened_at=coalesce(opened_at,now()) where id=c.id;
+  elsif p_action='pause' then
+   if c.status<>'open' then raise exception 'FUN_STATE_INVALID'; end if;
+   update public.fan_zone_campaigns set status='paused' where id=c.id;
+  elsif p_action='close' then
+   if c.status not in ('open','paused') then raise exception 'FUN_STATE_INVALID'; end if;
+   update public.fan_zone_campaigns set status='closed' where id=c.id;
+  elsif p_action in ('finalize','recount') then
+   if now()<c.vote_closes_at or c.opened_at is null then raise exception 'FUN_VOTING_NOT_ENDED'; end if;
+   with counts as (select e.id,count(b.id)::int votes from public.fan_zone_entries e left join public.fan_zone_ballots b on b.entry_id=e.id and b.invalidated_at is null and public.fun_pilot(c.id,b.voter_id) and b.voter_id<>e.owner_id and not public.is_blocked_between(b.voter_id,e.owner_id) where e.campaign_id=c.id and public.fun_candidate(e) group by e.id)
+   select coalesce(jsonb_agg(jsonb_build_object('entry_id',id,'votes',votes) order by id),'[]') into tally from counts where votes>0 and votes=(select max(votes) from counts);
+   update public.fan_zone_campaigns set status='finalized',results=tally,recount_required=false,result_signature=public.fun_signature(c.id) where id=c.id;
+  else raise exception 'FUN_ACTION_INVALID'; end if;
+  update public.fan_zone_campaigns set updated_at=now() where id=c.id returning * into c;
+ end if;
+ perform public.fun_audit(c.id,'campaign_'||p_action,c.id);
+ return jsonb_build_object('ok',true,'campaign',to_jsonb(c)-'result_signature');
+end $$;
+
+create or replace function public.fun_entry(p_campaign_id uuid,p_entry_id uuid,p_action text,p_payload jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.fun_actor(); c public.fan_zone_campaigns; e public.fan_zone_entries; eid uuid:=gen_random_uuid();
+begin
+ select * into c from public.fan_zone_campaigns where id=p_campaign_id for update;
+ if not found then raise exception 'FUN_ENTRY_UNAVAILABLE'; end if;
+ if p_action='reserve' then
+  if not public.fun_pilot(c.id,me) or c.status<>'open' or now()<c.entry_opens_at or now()>=c.entry_closes_at then raise exception 'FUN_ENTRY_WINDOW_CLOSED'; end if;
+  if (select count(*) from public.fan_zone_entries where campaign_id=c.id)>=100 then raise exception 'FUN_ENTRY_CAP'; end if;
+  insert into public.fan_zone_entries(id,campaign_id,owner_id,path) values(eid,c.id,me,eid::text||'/1/'||gen_random_uuid()::text||'.mp4') returning * into e;
+ else
+  select * into e from public.fan_zone_entries where id=p_entry_id and campaign_id=c.id and owner_id=me for update;
+  if not found then raise exception 'FUN_ENTRY_UNAVAILABLE'; end if;
+  if p_action='withdraw' then
+   update public.fan_zone_entries set status='withdrawn',updated_at=now() where id=e.id returning * into e;
+   update public.fan_zone_campaigns set recount_required=true where id=c.id;
+  else
+   if not public.fun_pilot(c.id,me) or c.status<>'open' or now()<c.entry_opens_at or now()>=c.entry_closes_at or e.status='withdrawn' then raise exception 'FUN_ENTRY_WINDOW_CLOSED'; end if;
+   if p_action='edit' then
+    -- A changed revision never points at old sanitized bytes or old public permission.
+    update public.fan_zone_entries set revision=revision+1,path=id::text||'/'||(revision+1)::text||'/'||gen_random_uuid()::text||'.mp4',alias=coalesce(p_payload->>'alias',''),caption=coalesce(p_payload->>'caption',''),rights_confirmed=coalesce((p_payload->>'rights_confirmed')::boolean,false),status='draft',reason=null,verified=false,digest=null,bytes=null,duration_ms=null,removed_at=null,guardian_consent_id=null,updated_at=now() where id=e.id returning * into e;
+    update public.fan_zone_campaigns set recount_required=true where id=c.id;
+   elsif p_action='submit' then
+    if e.status<>'draft' or not e.verified or e.removed_at is not null or not e.rights_confirmed or char_length(trim(e.alias))<1 or char_length(trim(e.caption))<1 then raise exception 'FUN_VERIFIED_RIGHTS_REQUIRED'; end if;
+    update public.fan_zone_entries set status='submitted',updated_at=now() where id=e.id returning * into e;
+   else raise exception 'FUN_ACTION_INVALID'; end if;
+  end if;
+ end if;
+ if p_action in ('reserve','edit') then perform public.fun_audit(c.id,'entry_revision',e.id,jsonb_build_object('revision',e.revision,'path',e.path)); end if;
+ perform public.fun_audit(c.id,'entry_'||p_action,e.id,jsonb_build_object('revision',e.revision));
+ return jsonb_build_object('ok',true,'entry',public.fun_entry_json(e));
+end $$;
+
+create or replace function public.fun_permission(p_entry_id uuid,p_revision integer,p_action text,p_expected_scope jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.fun_actor(); e public.fan_zone_entries; c public.fan_zone_campaigns; link uuid; scope jsonb; receipt_id uuid; bind_grant boolean:=false;
+begin
+ select c0.* into c from public.fan_zone_campaigns c0 join public.fan_zone_entries e0 on e0.campaign_id=c0.id where e0.id=p_entry_id for update of c0;
+ select * into e from public.fan_zone_entries where id=p_entry_id for update;
+ if not found or (e.owner_id<>me and not public.fun_guardian(e.owner_id,me)) then raise exception 'FUN_PERMISSION_UNAVAILABLE'; end if;
+ scope:=public.fun_scope(e);
+ if e.revision<>p_revision or p_expected_scope is distinct from scope then raise exception 'FUN_PERMISSION_SCOPE_STALE'; end if;
+ if p_action='assent' then
+  if me<>e.owner_id then raise exception 'FUN_PERMISSION_UNAVAILABLE'; end if;
+ elsif p_action='grant' then
+  if not public.fun_guardian(e.owner_id,me) then raise exception 'FUN_PERMISSION_UNAVAILABLE'; end if;
+  select id into link from public.guardian_links where minor_id=e.owner_id and guardian_id=me and confirmed_at is not null and ended_at is null;
+  -- A different guardian's receipt is retained but cannot replace a still-valid relied-on guardian.
+  bind_grant:=not public.fun_guardian_grant_valid(e) or exists(select 1 from public.fan_zone_consents s where s.id=e.guardian_consent_id and s.actor_id=me);
+ elsif p_action='revoke' then
+  if me<>e.owner_id then select id into link from public.guardian_links where minor_id=e.owner_id and guardian_id=me and confirmed_at is not null and ended_at is null; end if;
+ else raise exception 'FUN_ACTION_INVALID'; end if;
+ if p_action<>'revoke' and (not e.verified or e.removed_at is not null or e.status='withdrawn' or not public.fun_pilot(c.id,e.owner_id)) then raise exception 'FUN_PERMISSION_UNAVAILABLE'; end if;
+ insert into public.fan_zone_consents(entry_id,revision,actor_id,link_id,action,scope) values(e.id,e.revision,me,link,p_action,scope) returning id into receipt_id;
+ if bind_grant then update public.fan_zone_entries set guardian_consent_id=receipt_id,updated_at=now() where id=e.id returning * into e; end if;
+ update public.fan_zone_campaigns set recount_required=true where id=e.campaign_id;
+ perform public.fun_audit(e.campaign_id,'permission_'||p_action,e.id,jsonb_build_object('revision',e.revision));
+ return jsonb_build_object('ok',true,'entry',public.fun_entry_json(e));
+end $$;
+
+create or replace function public.fun_vote(p_campaign_id uuid,p_entry_id uuid,p_request_id uuid,p_expected_version integer) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.fun_actor(); c public.fan_zone_campaigns; e public.fan_zone_entries; b public.fan_zone_ballots; r public.fan_zone_requests; receipt jsonb;
+begin
+ -- The campaign lock serializes ballots with review, withdrawal, pause, invalidation and finalization.
+ select * into c from public.fan_zone_campaigns where id=p_campaign_id for update;
+ if not found or p_request_id is null or p_expected_version is null or p_expected_version<0 then raise exception 'FUN_BALLOT_INVALID'; end if;
+ select * into r from public.fan_zone_requests where voter_id=me and request_id=p_request_id;
+ if found then
+  if r.campaign_id<>p_campaign_id or r.entry_id<>p_entry_id or r.expected_version<>p_expected_version or now()>=r.expires_at then raise exception 'FUN_REQUEST_REUSED'; end if; return r.receipt;
+ end if;
+ if not public.fun_pilot(c.id,me) or c.status<>'open' or now()<c.vote_opens_at or now()>=c.vote_closes_at then raise exception 'FUN_VOTE_WINDOW_CLOSED'; end if;
+ if (select count(*) from public.fan_zone_requests where voter_id=me and campaign_id=c.id)>=60 then raise exception 'FUN_BALLOT_RATE_LIMIT'; end if;
+ select * into e from public.fan_zone_entries where id=p_entry_id and campaign_id=c.id;
+ if not found or not public.fun_candidate(e) or e.owner_id=me or public.is_blocked_between(me,e.owner_id) then raise exception 'FUN_CANDIDATE_UNAVAILABLE'; end if;
+ select * into b from public.fan_zone_ballots where campaign_id=c.id and voter_id=me for update;
+ if coalesce(b.version,0)<>p_expected_version then raise exception 'FUN_BALLOT_VERSION_STALE'; end if;
+ if b.invalidated_at is not null then raise exception 'FUN_BALLOT_INVALIDATED'; end if;
+ insert into public.fan_zone_ballots(campaign_id,voter_id,entry_id,version) values(c.id,me,e.id,1)
+ on conflict(campaign_id,voter_id) do update set entry_id=excluded.entry_id,version=fan_zone_ballots.version+1,updated_at=now() returning * into b;
+ receipt:=jsonb_build_object('ok',true,'request_id',p_request_id,'ballot',jsonb_build_object('id',b.id,'campaign_id',b.campaign_id,'entry_id',b.entry_id,'version',b.version,'invalidated',false));
+ insert into public.fan_zone_requests(request_id,voter_id,campaign_id,entry_id,expected_version,receipt,expires_at) values(p_request_id,me,c.id,e.id,p_expected_version,receipt,c.vote_closes_at+interval '30 days');
+ return receipt;
+end $$;
+
+-- Remove the unpublished old overload before restoring narrow API grants.
+drop function if exists public.fun_admin_entry(uuid,text,text);
+create or replace function public.fun_admin_entry(p_entry_id uuid,p_action text,p_reason text,p_expected_scope jsonb) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.fun_admin_guard(); e public.fan_zone_entries; c public.fan_zone_campaigns; target text;
+begin
+ select c0.* into c from public.fan_zone_campaigns c0 join public.fan_zone_entries e0 on e0.campaign_id=c0.id where e0.id=p_entry_id for update of c0;
+ select * into e from public.fan_zone_entries where id=p_entry_id for update;
+ if not found then raise exception 'FUN_ENTRY_UNAVAILABLE'; end if;
+ if p_reason is null or char_length(trim(p_reason)) not between 5 and 500 then raise exception 'FUN_REASON_REQUIRED'; end if;
+ -- Normal review applies only to the exact media/copy seen; explicit emergency suspension stops the current entry.
+ if p_expected_scope is distinct from public.fun_scope(e) and not (p_action='suspend' and p_expected_scope is null) then raise exception 'FUN_REVIEW_SCOPE_STALE'; end if;
+ target:=case p_action when 'accept' then 'accepted' when 'changes' then 'changes' when 'reject' then 'rejected' when 'suspend' then 'suspended' end;
+ if target is null or e.status='withdrawn' or (target='accepted' and (e.status not in ('submitted','suspended') or not e.verified or not e.rights_confirmed or e.removed_at is not null)) then raise exception 'FUN_STATE_INVALID'; end if;
+ update public.fan_zone_entries set status=target,reason=p_reason,updated_at=now() where id=e.id returning * into e;
+ update public.fan_zone_campaigns set recount_required=true where id=e.campaign_id;
+ perform public.fun_audit(e.campaign_id,'review_'||p_action,e.id,jsonb_build_object('reason',p_reason,'revision',e.revision));
+ return jsonb_build_object('ok',true,'entry',public.fun_entry_json(e));
+end $$;
+create or replace function public.fun_admin_ballot(p_ballot_id uuid,p_reason text) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.fun_admin_guard(); b public.fan_zone_ballots;
+begin
+ perform 1 from public.fan_zone_campaigns c join public.fan_zone_ballots b0 on b0.campaign_id=c.id where b0.id=p_ballot_id for update of c;
+ if p_reason is null or char_length(trim(p_reason)) not between 5 and 500 then raise exception 'FUN_REASON_REQUIRED'; end if;
+ update public.fan_zone_ballots set invalidated_at=coalesce(invalidated_at,now()),invalid_reason=p_reason where id=p_ballot_id returning * into b;
+ if not found then raise exception 'FUN_BALLOT_UNAVAILABLE'; end if;
+ update public.fan_zone_campaigns set recount_required=true where id=b.campaign_id;
+ perform public.fun_audit(b.campaign_id,'ballot_invalidate',b.id,jsonb_build_object('reason',p_reason));
+ return jsonb_build_object('ok',true,'ballot',to_jsonb(b));
+end $$;
+
+create or replace function public.fun_media_access(p_entry_id uuid,p_revision integer,p_intent text) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.my_profile_id(); e public.fan_zone_entries; media_path text;
+begin
+ select * into e from public.fan_zone_entries where id=p_entry_id;
+ if not found or not public.fun_eligible(me) then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
+ if p_intent='remove' then
+  if me<>e.owner_id and not public.fun_guardian(e.owner_id,me) and not coalesce(public.current_user_role()='admin',false) then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
+  if not exists(select 1 from public.fan_zone_cases k where k.entry_id=e.id and k.kind='deletion' and k.status in ('open','escalated')) then raise exception 'FUN_REMOVAL_NOT_REQUESTED'; end if;
+  select a.detail->>'path' into media_path from public.fan_zone_audit a where a.subject_id=e.id and a.action='entry_revision' and (a.detail->>'revision')::int=p_revision order by a.created_at desc limit 1;
+  if media_path is null then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
+ else
+  if e.revision<>p_revision or e.removed_at is not null then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
+  media_path:=e.path;
+  if p_intent='verify' then
+   -- Only the owner may reauthorize a current draft; an existing digest permits a receipt retry, never another Storage write.
+   if me<>e.owner_id or not public.fun_pilot(e.campaign_id,me) or e.status<>'draft' or not exists(select 1 from public.fan_zone_campaigns c where c.id=e.campaign_id and c.status='open' and now()>=c.entry_opens_at and now()<c.entry_closes_at) then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
+  elsif p_intent='read' then
+   if not e.verified or (me<>e.owner_id and not public.fun_guardian(e.owner_id,me) and not coalesce(public.current_user_role()='admin',false)
+    and not (public.fun_pilot(e.campaign_id,me) and public.fun_candidate(e) and not public.is_blocked_between(me,e.owner_id))) then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
+   if e.status='withdrawn' and me<>e.owner_id and not coalesce(public.current_user_role()='admin',false) then raise exception 'FUN_MEDIA_UNAVAILABLE'; end if;
+  else raise exception 'FUN_ACTION_INVALID'; end if;
+ end if;
+ return jsonb_build_object('ok',true,'bucket','fan_zone','path',media_path,'entry_id',e.id,'revision',p_revision,'digest',case when e.revision=p_revision then e.digest end,'bytes',case when e.revision=p_revision then e.bytes end,'duration_ms',case when e.revision=p_revision then e.duration_ms end);
+end $$;
+create or replace function public.fun_verify_media(p_entry_id uuid,p_revision integer,p_digest text,p_bytes integer,p_duration_ms integer) returns jsonb language plpgsql security definer set search_path='' as $$
+declare e public.fan_zone_entries; c public.fan_zone_campaigns;
+begin
+ if auth.role() is distinct from 'service_role' then raise exception 'FUN_SERVICE_REQUIRED'; end if;
+ select c0.* into c from public.fan_zone_campaigns c0 join public.fan_zone_entries e0 on e0.campaign_id=c0.id where e0.id=p_entry_id for update of c0;
+ select * into e from public.fan_zone_entries where id=p_entry_id for update;
+ if not found or e.revision<>p_revision or e.status<>'draft' or e.verified or not public.fun_pilot(c.id,e.owner_id)
+ or c.status<>'open' or now()<c.entry_opens_at or now()>=c.entry_closes_at or not exists(select 1 from storage.objects o where o.bucket_id='fan_zone' and o.name=e.path) then raise exception 'FUN_VERIFY_STALE'; end if;
+ if p_digest is null or p_digest !~ '^[a-f0-9]{64}$' or p_bytes is null or p_bytes not between 1 and 20971520 or p_duration_ms is null or p_duration_ms not between 1000 and 30000 then raise exception 'FUN_MEDIA_INVALID'; end if;
+ update public.fan_zone_entries set verified=true,digest=p_digest,bytes=p_bytes,duration_ms=p_duration_ms,updated_at=now() where id=e.id returning * into e;
+ perform public.fun_audit(e.campaign_id,'media_verified',e.id,jsonb_build_object('revision',e.revision));
+ return jsonb_build_object('ok',true,'entry',public.fun_entry_json(e));
+end $$;
+create or replace function public.fun_complete_removal(p_entry_id uuid,p_revision integer) returns jsonb language plpgsql security definer set search_path='' as $$
+declare e public.fan_zone_entries; media_path text; complete boolean;
+begin
+ if auth.role() is distinct from 'service_role' then raise exception 'FUN_SERVICE_REQUIRED'; end if;
+ perform 1 from public.fan_zone_campaigns c join public.fan_zone_entries e0 on e0.campaign_id=c.id where e0.id=p_entry_id for update of c;
+ select * into e from public.fan_zone_entries where id=p_entry_id for update;
+ if not found or not exists(select 1 from public.fan_zone_cases k where k.entry_id=e.id and k.kind='deletion') then raise exception 'FUN_REMOVAL_NOT_REQUESTED'; end if;
+ select a.detail->>'path' into media_path from public.fan_zone_audit a where a.subject_id=e.id and a.action='entry_revision' and (a.detail->>'revision')::int=p_revision order by a.created_at desc limit 1;
+ if media_path is null or exists(select 1 from storage.objects where bucket_id='fan_zone' and name=media_path) then raise exception 'FUN_OBJECT_STILL_PRESENT'; end if;
+ if p_revision=e.revision then update public.fan_zone_entries set verified=false,removed_at=now(),status='withdrawn',updated_at=now() where id=e.id; end if;
+ complete:=not exists(select 1 from storage.objects where bucket_id='fan_zone' and name like e.id::text||'/%');
+ if complete then update public.fan_zone_cases set status='completed',reason='Server confirmed all entry objects removed',updated_at=now() where entry_id=e.id and kind='deletion' and status in ('open','escalated'); end if;
+ update public.fan_zone_campaigns set recount_required=true where id=e.campaign_id;
+ perform public.fun_audit(e.campaign_id,'media_removed',e.id,jsonb_build_object('revision',p_revision));
+ return jsonb_build_object('ok',true,'entry_id',e.id,'revision',p_revision,'completed',complete);
+end $$;
+
+create or replace function public.fun_case(p_entry_id uuid,p_kind text,p_details text,p_secret uuid) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.my_profile_id(); e public.fan_zone_entries; k public.fan_zone_cases; h text; staff boolean:=coalesce(public.current_user_role()='admin',false);
+begin
+ if p_secret is null or p_details is null or char_length(trim(p_details)) not between 3 and 1000 or p_kind not in ('report','appeal','deletion') or p_kind is null then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
+ if auth.uid() is not null and not public.fun_eligible(me) then raise exception 'FUN_ACCOUNT_INELIGIBLE'; end if;
+ h:=encode(public.digest(p_secret::text,'sha256'),'hex');
+ -- All entry/case mutations take campaign then entry, before a case lock or its audit campaign FK lock.
+ perform 1 from public.fan_zone_campaigns c join public.fan_zone_entries e0 on e0.campaign_id=c.id where e0.id=p_entry_id for update of c;
+ select * into e from public.fan_zone_entries where id=p_entry_id for update;
+ if not found or not coalesce((me=e.owner_id or public.fun_guardian(e.owner_id,me) or coalesce(public.current_user_role()='admin',false)
+  or (p_kind='report' and public.fun_candidate(e) and (me is null or public.fun_pilot(e.campaign_id,me)) and not public.is_blocked_between(me,e.owner_id))),false) then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
+ if p_kind='appeal' and not coalesce((me=e.owner_id or public.fun_guardian(e.owner_id,me)),false) then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
+ if p_kind='deletion' and not coalesce((me=e.owner_id or public.fun_guardian(e.owner_id,me) or staff),false) then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
+ if staff then perform public.fun_admin_guard(); end if;
+ -- Global intake accounting follows campaign/entry locks; it never blocks the path to an existing removal request.
+ perform pg_advisory_xact_lock(710014);
+ -- Receipt lookup can be foreign to this entry; read it without taking a foreign case lock out of order.
+ select * into k from public.fan_zone_cases where secret_hash=h;
+ if found then
+  if k.entry_id<>e.id or k.kind<>p_kind or k.details<>p_details or k.reporter_id is distinct from me or now()>=k.expires_at then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
+  return jsonb_build_object('ok',true,'case',public.fun_case_json(k));
+ end if;
+ if p_kind='deletion' and exists(select 1 from public.fan_zone_cases where entry_id=e.id and kind='deletion') then raise exception 'FUN_DELETION_ALREADY_REQUESTED'; end if;
+ -- Public report volume must not prevent the owner from requesting actual removal.
+ if (p_kind='report' and ((select count(*) from public.fan_zone_cases where entry_id=e.id and kind='report' and created_at>now()-interval '1 day')>=5
+ or (select count(*) from public.fan_zone_cases where kind='report' and status in ('open','escalated'))>=500))
+ or (p_kind<>'deletion' and me is not null and (select count(*) from public.fan_zone_cases where reporter_id=me and kind<>'deletion' and created_at>now()-interval '1 day')>=10) then raise exception 'FUN_CASE_RATE_LIMIT'; end if;
+ insert into public.fan_zone_cases(entry_id,revision,path,reporter_id,kind,details,secret_hash) values(e.id,e.revision,e.path,me,p_kind,p_details,h) returning * into k;
+ perform public.fun_audit(e.campaign_id,'case_'||p_kind,k.id);
+ return jsonb_build_object('ok',true,'case',public.fun_case_json(k));
+end $$;
+create or replace function public.fun_case_status(p_case_id uuid,p_secret uuid) returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare k public.fan_zone_cases;
+begin
+ select * into k from public.fan_zone_cases where id=p_case_id and secret_hash=encode(public.digest(p_secret::text,'sha256'),'hex') and now()<expires_at;
+ if not found then raise exception 'FUN_CASE_UNAVAILABLE'; end if;
+ return jsonb_build_object('ok',true,'case',public.fun_case_json(k));
+end $$;
+create or replace function public.fun_admin_case(p_case_id uuid,p_action text,p_reason text) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.fun_admin_guard(); k public.fan_zone_cases; campaign uuid;
+begin
+ -- Match entry/permission/removal mutation lock order; audit insertion needs the already-held campaign FK lock.
+ perform 1 from public.fan_zone_campaigns c join public.fan_zone_entries e on e.campaign_id=c.id join public.fan_zone_cases k0 on k0.entry_id=e.id where k0.id=p_case_id for update of c;
+ perform 1 from public.fan_zone_entries e join public.fan_zone_cases k0 on k0.entry_id=e.id where k0.id=p_case_id for update of e;
+ select * into k from public.fan_zone_cases where id=p_case_id for update;
+ if not found or k.status not in ('open','escalated') or p_reason is null or char_length(trim(p_reason)) not between 5 and 500 or p_action not in ('resolve','escalate') or p_action is null then raise exception 'FUN_CASE_INVALID'; end if;
+ if k.kind='deletion' and p_action='resolve' then raise exception 'FUN_ACTUAL_REMOVAL_REQUIRED'; end if;
+ update public.fan_zone_cases set status=case p_action when 'resolve' then 'resolved' else 'escalated' end,reason=p_reason,updated_at=now() where id=k.id returning * into k;
+ select campaign_id into campaign from public.fan_zone_entries where id=k.entry_id;
+ perform public.fun_audit(campaign,'case_'||p_action,k.id,jsonb_build_object('reason',p_reason));
+ return jsonb_build_object('ok',true,'case',public.fun_case_json(k));
+end $$;
+create or replace function public.fun_reflection(p_campaign_id uuid,p_id uuid,p_idea text,p_action text) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.fun_actor(); r public.fan_zone_reflections;
+begin
+ if p_action='create' then
+  if not public.fun_pilot(p_campaign_id,me) or not exists(select 1 from public.fan_zone_campaigns where id=p_campaign_id and opened_at is not null) or p_idea is null or p_idea not in ('encourage','help_at_home','serve_together','thank_someone') then raise exception 'FUN_REFLECTION_INVALID'; end if;
+  perform pg_advisory_xact_lock(hashtext(me::text));
+  if (select count(*) from public.fan_zone_reflections where owner_id=me and campaign_id=p_campaign_id)>=20 then raise exception 'FUN_REFLECTION_CAP'; end if;
+  insert into public.fan_zone_reflections(campaign_id,owner_id,idea) values(p_campaign_id,me,p_idea) returning * into r;
+  return jsonb_build_object('ok',true,'reflection',to_jsonb(r)-'owner_id');
+ elsif p_action='delete' then
+  delete from public.fan_zone_reflections where id=p_id and owner_id=me and campaign_id=p_campaign_id returning * into r;
+  if not found then raise exception 'FUN_REFLECTION_UNAVAILABLE'; end if;
+  return jsonb_build_object('ok',true,'deleted_id',r.id);
+ else raise exception 'FUN_ACTION_INVALID'; end if;
+end $$;
+
+create or replace function public.fun_snapshot(p_campaign_id uuid default null) returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare me uuid:=public.my_profile_id(); c public.fan_zone_campaigns; own jsonb; ballot jsonb; candidates jsonb; results jsonb; story jsonb; queue jsonb; reflections jsonb;
+begin
+ select * into c from public.fan_zone_campaigns x where (p_campaign_id is null or x.id=p_campaign_id) and public.fun_eligible(me)
+ and (public.fun_pilot(x.id,me) or coalesce(public.current_user_role()='admin',false) or exists(select 1 from public.fan_zone_entries e where e.campaign_id=x.id and (e.owner_id=me or public.fun_guardian(e.owner_id,me))))
+ and (x.opened_at is not null or coalesce(public.current_user_role()='admin',false)) order by x.created_at desc,x.id desc limit 1;
+ if c.id is null then return jsonb_build_object('ok',true,'campaign',null,'candidates','[]'::jsonb,'results','[]'::jsonb,'entry',null,'ballot',null,'guardian_queue','[]'::jsonb,'reflections','[]'::jsonb,'story',null,'eligible',public.fun_eligible(me),'can_participate',false); end if;
+ select public.fun_entry_json(e) into own from public.fan_zone_entries e where campaign_id=c.id and owner_id=me;
+ select jsonb_build_object('id',b.id,'campaign_id',b.campaign_id,'entry_id',b.entry_id,'version',b.version,'invalidated',b.invalidated_at is not null) into ballot from public.fan_zone_ballots b where b.campaign_id=c.id and b.voter_id=me;
+ select coalesce(jsonb_agg(jsonb_build_object('id',e.id,'revision',e.revision,'alias',e.alias,'caption',e.caption) order by md5(e.id::text||current_date::text)),'[]') into candidates from public.fan_zone_entries e where e.campaign_id=c.id and public.fun_pilot(c.id,me) and public.fun_candidate(e) and not public.is_blocked_between(me,e.owner_id);
+ results:='[]';
+ if c.status='finalized' and not c.recount_required and c.result_signature=public.fun_signature(c.id) and public.fun_pilot(c.id,me) then
+  select coalesce(jsonb_agg(j),'[]') into results from jsonb_array_elements(c.results) j join public.fan_zone_entries e on e.id=(j->>'entry_id')::uuid where public.fun_candidate(e) and not public.is_blocked_between(me,e.owner_id);
+ end if;
+ select coalesce(jsonb_agg(public.fun_entry_json(e) order by e.created_at),'[]') into queue from public.fan_zone_entries e where e.campaign_id=c.id and public.fun_guardian(e.owner_id,me) and e.status<>'withdrawn';
+ select coalesce(jsonb_agg(to_jsonb(r)-'owner_id' order by r.created_at desc),'[]') into reflections from public.fan_zone_reflections r where r.campaign_id=c.id and r.owner_id=me;
+ -- A curated story must remain free/public; no alternative athlete is substituted when its source becomes private.
+ select jsonb_build_object('id',r.id,'player_id',r.player_id,'video_url',r.video_url,'title',r.title) into story from public.reels r join public.profiles p on p.id=r.uploaded_by
+ where r.id=c.story_reel_id and r.tag_status='confirmed' and r.media_type='video' and not r.is_removed and not r.is_flagged and not r.is_vault_only and not r.is_exclusive and not p.account_private and public.fun_eligible(p.id) and (public.profile_age_band(p.id)='adult' or public.minor_has_consent(p.id,'public_profile')) and not public.is_blocked_between(me,p.id);
+ return jsonb_build_object('ok',true,'campaign',public.fun_campaign_json(c)||jsonb_build_object('results',results,'recount_required',c.recount_required or (c.result_signature is not null and c.result_signature<>public.fun_signature(c.id))),
+ 'candidates',candidates,'results',results,'entry',own,'ballot',ballot,'guardian_queue',queue,'reflections',reflections,'story',story,'eligible',public.fun_eligible(me),'can_participate',public.fun_pilot(c.id,me));
+end $$;
+drop function if exists public.fun_admin_snapshot(uuid,timestamptz);
+create or replace function public.fun_admin_snapshot(p_campaign_id uuid default null,p_before text default null) returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare me uuid:=public.fun_admin_guard(); c public.fan_zone_campaigns; campaigns jsonb; entries jsonb; cases jsonb; audit jsonb; ballots jsonb; counts jsonb;
+ cursor jsonb; marker jsonb; case_at timestamptz; case_id uuid; audit_at timestamptz; audit_id uuid; case_next jsonb; audit_next jsonb; combined jsonb;
+begin
+ select coalesce(jsonb_agg(to_jsonb(x)-'result_signature' order by x.created_at desc),'[]') into campaigns from (select * from public.fan_zone_campaigns order by created_at desc limit 100) x;
+ select * into c from public.fan_zone_campaigns where p_campaign_id is null or id=p_campaign_id order by created_at desc,id desc limit 1;
+ -- Independent composite markers also preserve imported rows with identical timestamps.
+ if p_before is not null then
+  begin
+   if char_length(p_before)>2000 then raise exception 'FUN_CURSOR_INVALID'; end if;
+   cursor:=p_before::jsonb;
+   if jsonb_typeof(cursor)<>'object' or cursor->'v' is distinct from '1'::jsonb or jsonb_typeof(cursor->'campaign') is distinct from 'string'
+    or cursor->>'campaign' is distinct from c.id::text or not (cursor ? 'cases' or cursor ? 'audit')
+    or exists(select 1 from jsonb_object_keys(cursor) k where k not in ('v','campaign','cases','audit')) then raise exception 'FUN_CURSOR_INVALID'; end if;
+   for marker in select value from jsonb_each(cursor) where key in ('cases','audit') loop
+    if jsonb_typeof(marker)<>'object' or jsonb_typeof(marker->'at') is distinct from 'string' or jsonb_typeof(marker->'id') is distinct from 'string'
+     or exists(select 1 from jsonb_object_keys(marker) k where k not in ('at','id'))
+     or (marker->>'at') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,6})?(Z|[+-][0-9]{2}:[0-9]{2})$'
+     or (marker->>'id') !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' then raise exception 'FUN_CURSOR_INVALID'; end if;
+   end loop;
+   case_at:=(cursor->'cases'->>'at')::timestamptz;case_id:=(cursor->'cases'->>'id')::uuid;
+   audit_at:=(cursor->'audit'->>'at')::timestamptz;audit_id:=(cursor->'audit'->>'id')::uuid;
+  exception when others then raise exception 'FUN_CURSOR_INVALID'; end;
+ end if;
+ select coalesce(jsonb_agg(public.fun_entry_json(e)||jsonb_build_object('media_revisions',coalesce((select jsonb_agg(jsonb_build_object('revision',(a.detail->>'revision')::int,'path',a.detail->>'path','present',exists(select 1 from storage.objects o where o.bucket_id='fan_zone' and o.name=a.detail->>'path')) order by a.created_at) from public.fan_zone_audit a where a.subject_id=e.id and a.action='entry_revision'),'[]'::jsonb)) order by e.created_at),'[]') into entries from public.fan_zone_entries e where e.campaign_id=c.id;
+ select coalesce(jsonb_agg(to_jsonb(x)-'secret_hash' order by x.created_at desc,x.id desc),'[]') into cases from (select k.* from public.fan_zone_cases k join public.fan_zone_entries e on e.id=k.entry_id where e.campaign_id=c.id and (case_at is null or (k.created_at,k.id)<(case_at,case_id)) order by k.created_at desc,k.id desc limit 50) x;
+ select coalesce(jsonb_agg(to_jsonb(x) order by x.created_at desc,x.id desc),'[]') into audit from (select * from public.fan_zone_audit where campaign_id=c.id and (audit_at is null or (created_at,id)<(audit_at,audit_id)) order by created_at desc,id desc limit 50) x;
+ select coalesce(jsonb_agg(to_jsonb(b)||jsonb_build_object('valid',b.invalidated_at is null and public.fun_pilot(c.id,b.voter_id) and public.fun_candidate(e) and b.voter_id<>e.owner_id and not public.is_blocked_between(b.voter_id,e.owner_id)) order by b.created_at),'[]') into ballots from public.fan_zone_ballots b join public.fan_zone_entries e on e.id=b.entry_id where b.campaign_id=c.id;
+ select jsonb_build_object('entries',(select count(*) from public.fan_zone_entries where campaign_id=c.id),'ballots',(select count(*) from public.fan_zone_ballots where campaign_id=c.id),'valid_ballots',(select count(*) from public.fan_zone_ballots b join public.fan_zone_entries e on e.id=b.entry_id where b.campaign_id=c.id and b.invalidated_at is null and public.fun_pilot(c.id,b.voter_id) and public.fun_candidate(e) and b.voter_id<>e.owner_id and not public.is_blocked_between(b.voter_id,e.owner_id)),
+ 'cases',(select count(*) from public.fan_zone_cases k join public.fan_zone_entries e on e.id=k.entry_id where e.campaign_id=c.id),'open_cases',(select count(*) from public.fan_zone_cases k join public.fan_zone_entries e on e.id=k.entry_id where e.campaign_id=c.id and k.status in ('open','escalated')),'audit',(select count(*) from public.fan_zone_audit where campaign_id=c.id),
+ 'entry_statuses',coalesce((select jsonb_object_agg(status,n) from (select status,count(*) n from public.fan_zone_entries where campaign_id=c.id group by status) x),'{}'::jsonb)) into counts;
+ if jsonb_array_length(cases)=50 then case_next:=jsonb_build_object('v',1,'campaign',c.id,'cases',jsonb_build_object('at',cases->49->>'created_at','id',cases->49->>'id')); end if;
+ if jsonb_array_length(audit)=50 then audit_next:=jsonb_build_object('v',1,'campaign',c.id,'audit',jsonb_build_object('at',audit->49->>'created_at','id',audit->49->>'id')); end if;
+ if case_next is not null or audit_next is not null then combined:=coalesce(case_next,'{}')||coalesce(audit_next,'{}'); end if;
+ return jsonb_build_object('ok',true,'campaigns',campaigns,'campaign',case when c.id is not null then to_jsonb(c)-'result_signature' end,'entries',entries,'ballots',ballots,'cases',cases,'audit',audit,'counts',counts,'next_cursor',combined::text,'case_next_cursor',case_next::text,'audit_next_cursor',audit_next::text);
+end $$;
+
+-- Storage checks use an unexposed namespace: callers can execute the policy, but cannot resolve/call its helper.
+create schema if not exists fan_zone_private;
+revoke all on schema fan_zone_private from public,anon,authenticated;
+create or replace function fan_zone_private.upload_allowed(p_name text,p_owner uuid) returns boolean language sql stable security definer set search_path='' as $$
+ select public.fun_eligible(public.my_profile_id()) and (p_owner is null or p_owner=auth.uid()) and exists(
+ select 1 from public.fan_zone_entries e join public.fan_zone_campaigns c on c.id=e.campaign_id
+ where e.path=p_name and e.owner_id=public.my_profile_id() and e.status='draft' and not e.verified and e.removed_at is null and public.fun_pilot(c.id,e.owner_id)
+ and c.status='open' and now()>=c.entry_opens_at and now()<c.entry_closes_at)
+ and not exists(select 1 from storage.objects o where o.bucket_id='fan_zone' and o.name=p_name);
+$$;
+revoke all on function fan_zone_private.upload_allowed(text,uuid) from public,anon,authenticated;
+grant execute on function fan_zone_private.upload_allowed(text,uuid) to authenticated;
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('fan_zone','fan_zone',false,20971520,array['video/mp4']) on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
+create unique index if not exists fan_zone_object_unique on storage.objects(bucket_id,name) where bucket_id='fan_zone';
+-- A service upsert must also obey the reserved draft invariant: a late upload cannot recreate removed media.
+-- This protects Storage catalog rows; physical provider writes/metadata compatibility require hosted verification.
+create or replace function public.fun_storage_guard() returns trigger language plpgsql security definer set search_path='' as $$
+declare e public.fan_zone_entries; c public.fan_zone_campaigns; owner_user uuid;
+begin
+ if tg_op='UPDATE' and (old.bucket_id='fan_zone' or new.bucket_id='fan_zone')
+ and (new.bucket_id,new.name,new.owner) is distinct from (old.bucket_id,old.name,old.owner) then raise exception 'FUN_STORAGE_IMMUTABLE'; end if;
+ if new.bucket_id<>'fan_zone' then return new; end if;
+ select c0.* into c from public.fan_zone_campaigns c0 join public.fan_zone_entries e0 on e0.campaign_id=c0.id where e0.path=new.name for update of c0;
+ select * into e from public.fan_zone_entries where path=new.name for update;
+ if not found or e.status<>'draft' or e.verified or e.removed_at is not null or not public.fun_pilot(c.id,e.owner_id)
+ or c.status<>'open' or now()<c.entry_opens_at or now()>=c.entry_closes_at
+ or exists(select 1 from public.fan_zone_cases k where k.entry_id=e.id and k.kind='deletion') then raise exception 'FUN_STORAGE_IMMUTABLE'; end if;
+ select user_id into owner_user from public.profiles where id=e.owner_id;
+ if new.owner is not null and new.owner is distinct from owner_user then raise exception 'FUN_STORAGE_IMMUTABLE'; end if;
+ return new;
+end $$;
+drop trigger if exists fan_zone_storage_guard on storage.objects;
+create trigger fan_zone_storage_guard before insert or update on storage.objects for each row execute function public.fun_storage_guard();
+drop policy if exists fan_zone_insert on storage.objects;
+create policy fan_zone_insert on storage.objects for insert to authenticated with check(bucket_id='fan_zone' and fan_zone_private.upload_allowed(name,owner));
+drop policy if exists fan_zone_insert_boundary on storage.objects;
+create policy fan_zone_insert_boundary on storage.objects as restrictive for insert to anon,authenticated with check(bucket_id<>'fan_zone' or fan_zone_private.upload_allowed(name,owner));
+drop policy if exists fan_zone_no_read on storage.objects;
+create policy fan_zone_no_read on storage.objects as restrictive for select to anon,authenticated using(bucket_id<>'fan_zone');
+drop policy if exists fan_zone_no_update on storage.objects;
+create policy fan_zone_no_update on storage.objects as restrictive for update to anon,authenticated using(bucket_id<>'fan_zone') with check(bucket_id<>'fan_zone');
+drop policy if exists fan_zone_no_delete on storage.objects;
+create policy fan_zone_no_delete on storage.objects as restrictive for delete to anon,authenticated using(bucket_id<>'fan_zone');
+
+
+
+-- Timestamp-only API cursors need a strict order even when many records share one SQL transaction.
+create or replace function public.fun_page_time() returns trigger language plpgsql security definer set search_path='' as $$
+begin
+ if tg_table_name='fan_zone_audit' then
+  perform pg_advisory_xact_lock(710016);
+  select greatest(clock_timestamp(),coalesce(max(created_at)+interval '1 microsecond',clock_timestamp())) into new.created_at from public.fan_zone_audit;
+ else
+  perform pg_advisory_xact_lock(710015);
+  select greatest(clock_timestamp(),coalesce(max(created_at)+interval '1 microsecond',clock_timestamp())) into new.created_at from public.fan_zone_cases;
+ end if;
+ return new;
+end $$;
+create unique index if not exists fan_zone_audit_timestamp on public.fan_zone_audit(created_at);
+create unique index if not exists fan_zone_case_timestamp on public.fan_zone_cases(created_at);
+drop trigger if exists fan_zone_audit_time on public.fan_zone_audit;
+create trigger fan_zone_audit_time before insert on public.fan_zone_audit for each row execute function public.fun_page_time();
+drop trigger if exists fan_zone_case_time on public.fan_zone_cases;
+create trigger fan_zone_case_time before insert on public.fan_zone_cases for each row execute function public.fun_page_time();
+
+create or replace function public.fun_immutable_record() returns trigger language plpgsql security definer set search_path='' as $$
+begin raise exception 'FUN_RECORD_IMMUTABLE'; end $$;
+drop trigger if exists fan_zone_consent_immutable on public.fan_zone_consents;
+create trigger fan_zone_consent_immutable before update or delete on public.fan_zone_consents for each row execute function public.fun_immutable_record();
+drop trigger if exists fan_zone_audit_immutable on public.fan_zone_audit;
+create trigger fan_zone_audit_immutable before update or delete on public.fan_zone_audit for each row execute function public.fun_immutable_record();
+revoke all on sequence public.fan_zone_consents_sequence_id_seq from public,anon,authenticated;
+
+-- This bounded operational helper needs a trusted runner; no scheduler or hosted cleanup is started here.
+create or replace function public.fun_prune_receipts() returns jsonb language plpgsql security definer set search_path='' as $$
+declare n integer; begin
+ if auth.role() is distinct from 'service_role' then raise exception 'FUN_SERVICE_REQUIRED'; end if;
+ delete from public.fan_zone_requests where expires_at<now(); get diagnostics n=row_count;
+ return jsonb_build_object('ok',true,'deleted_requests',n);
+end $$;
+
+-- Every public function loses PostgreSQL PUBLIC and Supabase default direct grants before explicit API grants.
+do $$ declare f record; begin
+ for f in select p.oid::regprocedure sig from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'fun_%' loop
+  execute format('revoke all on function %s from public,anon,authenticated,service_role',f.sig);
+ end loop;
+end $$;
+grant execute on function public.fun_snapshot(uuid),public.fun_case(uuid,text,text,uuid),public.fun_case_status(uuid,uuid) to anon,authenticated;
+grant execute on function public.fun_admin_snapshot(uuid,text),public.fun_admin_campaign(uuid,text,jsonb),public.fun_entry(uuid,uuid,text,jsonb),public.fun_permission(uuid,integer,text,jsonb),public.fun_vote(uuid,uuid,uuid,integer),public.fun_admin_entry(uuid,text,text,jsonb),public.fun_admin_ballot(uuid,text),public.fun_admin_case(uuid,text,text),public.fun_reflection(uuid,uuid,text,text),public.fun_media_access(uuid,integer,text) to authenticated;
+grant execute on function public.fun_prune_receipts() to service_role;
+grant execute on function public.fun_verify_media(uuid,integer,text,integer,integer),public.fun_complete_removal(uuid,integer) to service_role;
+
+
+-- schema.sql applies the QUIZ blocks together in one transaction, so QUIZ-03's lone re-run stop (quiz_rerun_after_quiz04)
+-- stands down here. The setting is transaction-local: a failed or partial paste rolls back and leaves nothing on.
+begin;
+select set_config('quiz.full_schema','on',true);
+
+-- QUIZ-01: optional weekly private sport learning, isolated from money, Aura and Fan Zone votes.
+-- Requires MINOR-01 helpers; ordered after FUN-01. Written locally, not applied anywhere.
+-- All settings start paused with an empty <=100 canonical-profile tester allowlist. No production mode.
+-- Admin facts are draft until reviewed. Edits create new versions; voids invalidate affected completion badges.
+-- Rollback: drop the five sport_quiz_* tables and quiz_* functions below; no existing money/media data changes.
+
+create table if not exists public.sport_quiz_settings (
+  singleton boolean primary key default true check (singleton),
+  enabled boolean not null default false,
+  testing_only boolean not null default true check (testing_only),
+  pilot_accounts uuid[] not null default '{}' check (cardinality(pilot_accounts) <= 100),
+  reason text not null default 'Paused; local testing only.' check (char_length(reason) between 10 and 500),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references public.profiles(id) on delete set null,
+  check (not enabled or cardinality(pilot_accounts) > 0)
+);
+insert into public.sport_quiz_settings(singleton) values (true) on conflict do nothing;
+
+create table if not exists public.sport_quiz_questions (
+  id uuid primary key default gen_random_uuid(),
+  question_key uuid not null default gen_random_uuid(),
+  version integer not null check (version > 0),
+  sport text not null check (char_length(btrim(sport)) between 2 and 80),
+  prompt text not null check (char_length(btrim(prompt)) between 10 and 280),
+  options jsonb not null check (jsonb_typeof(options) = 'array' and jsonb_array_length(options) = 4),
+  correct_option integer not null check (correct_option between 0 and 3),
+  explanation text not null check (char_length(btrim(explanation)) between 10 and 500),
+  status text not null default 'draft' check (status in ('draft','approved','archived','void')),
+  reason text not null check (char_length(btrim(reason)) between 10 and 500),
+  created_at timestamptz not null default now(),
+  created_by uuid references public.profiles(id) on delete set null,
+  reviewed_at timestamptz,
+  reviewed_by uuid references public.profiles(id) on delete set null,
+  unique(question_key,version)
+);
+
+create table if not exists public.sport_quiz_attempts (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  week_start date not null check (extract(isodow from week_start) = 1),
+  question_id uuid references public.sport_quiz_questions(id),
+  status text not null check (status in ('issued','completed','skipped','void')),
+  issued_at timestamptz not null default now(),
+  answered_option integer check (answered_option between 0 and 3),
+  request_id uuid unique,
+  completed_at timestamptz,
+  voided_at timestamptz,
+  correction_reason text,
+  unique(profile_id,week_start),
+  check (status <> 'completed' or (question_id is not null and answered_option is not null and request_id is not null and completed_at is not null)),
+  check (status <> 'issued' or question_id is not null)
+);
+
+create table if not exists public.sport_quiz_badges (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  attempt_id uuid not null unique references public.sport_quiz_attempts(id) on delete cascade,
+  week_start date not null,
+  label text not null default 'Sport Learner' check (label = 'Sport Learner'),
+  visibility text not null default 'private' check (visibility = 'private'),
+  issued_at timestamptz not null default now(),
+  voided_at timestamptz,
+  unique(profile_id,week_start)
+);
+
+create table if not exists public.sport_quiz_audit (
+  id bigint generated always as identity primary key,
+  actor_id uuid references public.profiles(id) on delete set null,
+  action text not null check (action in ('settings','question_create','question_edit','question_approve','question_archive','question_void','start','answer','skip')),
+  question_id uuid references public.sport_quiz_questions(id),
+  attempt_id uuid,
+  reason text,
+  created_at timestamptz not null default now()
+);
+
+create or replace function public.quiz_week()
+returns date language sql stable set search_path = '' as $$
+  select date_trunc('week', now() at time zone 'UTC')::date;
+$$;
+
+create or replace function public.quiz_actor()
+returns uuid language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id();
+begin
+  if auth.role() is distinct from 'authenticated' or auth.uid() is null or me is null
+     or public.profile_age_band(me) not in ('adult','teen_13_15','teen_16_17') then
+    raise exception 'quiz_ineligible';
+  end if;
+  return me;
+end;
+$$;
+
+create or replace function public.quiz_admin_actor()
+returns uuid language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_actor();
+begin
+  if public.current_user_role() is distinct from 'admin' then raise exception 'quiz_admin_only'; end if;
+  return me;
+end;
+$$;
+
+create or replace function public.quiz_require_testing(me uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare s public.sport_quiz_settings%rowtype;
+begin
+  -- User writes share this lock; admin pause/allowlist/void serializes before any new completion.
+  select * into s from public.sport_quiz_settings where singleton for share;
+  if not found or s.testing_only is not true then raise exception 'quiz_unavailable'; end if;
+  if s.enabled is not true then raise exception 'quiz_paused'; end if;
+  if not (me = any(s.pilot_accounts)) then raise exception 'quiz_not_enrolled'; end if;
+end;
+$$;
+
+-- Options use ECMAScript trim whitespace and Unicode codepoint lengths, matching the desk.
+-- Other stored text retains the table's ASCII-space btrim/char_length contract for legacy rows.
+create or replace function public.quiz_normalize_options(p_options jsonb)
+returns jsonb language plpgsql immutable set search_path = '' as $$
+declare item jsonb; normalized jsonb := '[]'; option_text text;
+begin
+  if jsonb_typeof(p_options) is distinct from 'array' then return null; end if;
+  if jsonb_array_length(p_options) <> 4 then return null; end if;
+  for item in select value from jsonb_array_elements(p_options) loop
+    if jsonb_typeof(item) <> 'string' then return null; end if;
+    option_text := btrim(item #>> '{}',U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF');
+    if char_length(option_text) not between 1 and 100 then return null; end if;
+    normalized := normalized || jsonb_build_array(option_text);
+  end loop;
+  if (select count(distinct value) from jsonb_array_elements(normalized)) <> 4 then return null; end if;
+  return normalized;
+end;
+$$;
+
+create or replace function public.quiz_guard_question()
+returns trigger language plpgsql set search_path = '' as $$
+declare normalized jsonb;
+begin
+  if tg_op = 'UPDATE' and (new.question_key,new.version,new.sport,new.prompt,new.options,new.correct_option,new.explanation,new.created_at)
+    is distinct from (old.question_key,old.version,old.sport,old.prompt,old.options,old.correct_option,old.explanation,old.created_at) then
+    raise exception 'quiz_immutable: edit creates a new draft version';
+  end if;
+  if tg_op = 'UPDATE' and old.status = 'void' and new.status <> 'void' then raise exception 'quiz_void_final'; end if;
+  normalized := public.quiz_normalize_options(new.options);
+  -- Legacy malformed bytes remain inspectable and immutable; archive/void must still permit audited repair.
+  if normalized is null and tg_op = 'UPDATE' and new.status in ('archived','void') then return new; end if;
+  if normalized is null then raise exception 'quiz_options_invalid'; end if;
+  if tg_op = 'INSERT' then new.options := normalized; end if;
+  return new;
+end;
+$$;
+drop trigger if exists quiz_question_guard on public.sport_quiz_questions;
+create trigger quiz_question_guard before insert or update on public.sport_quiz_questions for each row execute function public.quiz_guard_question();
+
+create or replace function public.quiz_guard_audit()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  -- Account deletion may null the FK; no audit content may otherwise be rewritten or erased.
+  if tg_op = 'UPDATE' and pg_trigger_depth() > 1 and old.actor_id is not null and new.actor_id is null
+    and (to_jsonb(new)-'actor_id') = (to_jsonb(old)-'actor_id') then return new; end if;
+  raise exception 'quiz_audit_immutable';
+end;
+$$;
+drop trigger if exists quiz_audit_guard on public.sport_quiz_audit;
+create trigger quiz_audit_guard before update or delete on public.sport_quiz_audit for each row execute function public.quiz_guard_audit();
+drop trigger if exists quiz_audit_truncate_guard on public.sport_quiz_audit;
+create trigger quiz_audit_truncate_guard before truncate on public.sport_quiz_audit for each statement execute function public.quiz_guard_audit();
+
+create or replace function public.quiz_snapshot()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  me uuid := public.my_profile_id();
+  s public.sport_quiz_settings%rowtype;
+  a public.sport_quiz_attempts%rowtype;
+  q public.sport_quiz_questions%rowtype;
+  availability text; sports jsonb := '[]'; badges jsonb := '[]'; corrections jsonb := '[]'; attempt jsonb := null;
+begin
+  if auth.role() is distinct from 'authenticated' or auth.uid() is null then raise exception 'quiz_ineligible'; end if;
+  select * into s from public.sport_quiz_settings where singleton;
+  availability := case
+    when me is null or public.profile_age_band(me) not in ('adult','teen_13_15','teen_16_17') then 'ineligible'
+    when s.singleton is null or s.testing_only is not true then 'unavailable'
+    when not s.enabled then 'paused'
+    when not (me = any(s.pilot_accounts)) then 'not_enrolled'
+    else 'ready' end;
+  if availability not in ('ineligible','unavailable') then
+    select * into a from public.sport_quiz_attempts where profile_id = me and week_start = public.quiz_week();
+    if a.id is not null then
+      select * into q from public.sport_quiz_questions where id = a.question_id;
+      if a.status = 'issued' and (q.id is null or public.quiz_normalize_options(q.options) is null) and availability = 'ready' then availability := 'unavailable'; end if;
+      attempt := jsonb_build_object('id',a.id,'week_start',a.week_start,'sport',q.sport,'status',a.status,
+        'unavailable_reason',case when a.status = 'issued' and (q.id is null or public.quiz_normalize_options(q.options) is null)
+          then 'This question is unavailable while its answer choices are corrected.' else null end,
+        'question',case when q.id is not null and a.status <> 'void' and (availability = 'ready' or a.status = 'completed') then
+          jsonb_build_object('id',q.id,'question_key',q.question_key,'version',q.version,'sport',q.sport,'prompt',q.prompt,'options',q.options) else null end,
+        'result',case when a.status = 'completed' then jsonb_build_object('option',a.answered_option,'correct_option',q.correct_option,
+          'was_correct',a.answered_option = q.correct_option,'explanation',q.explanation,'completed_at',a.completed_at,'request_id',a.request_id) else null end);
+    end if;
+    select coalesce(jsonb_agg(jsonb_build_object('id',b.id,'attempt_id',b.attempt_id,'week_start',b.week_start,
+      'label',b.label,'visibility',b.visibility,'issued_at',b.issued_at) order by b.week_start desc),'[]') into badges
+      from public.sport_quiz_badges b where b.profile_id = me and b.voided_at is null;
+    select coalesce(jsonb_agg(jsonb_build_object('attempt_id',x.id,'week_start',x.week_start,'reason',x.correction_reason,'voided_at',x.voided_at) order by x.week_start desc),'[]')
+      into corrections from public.sport_quiz_attempts x where x.profile_id = me and x.status = 'void';
+  end if;
+  if availability = 'ready' then
+    select coalesce(jsonb_agg(x.sport order by x.sport),'[]') into sports from (select distinct sport from public.sport_quiz_questions where status = 'approved' and public.quiz_normalize_options(options) is not null) x;
+    -- An empty approved pool cannot offer a new question. Already-issued versions remain stable and answerable.
+    if jsonb_array_length(sports) = 0 and a.id is null then availability := 'unavailable'; end if;
+  end if;
+  return jsonb_build_object('availability',availability,'testing_only',true,'week_start',public.quiz_week(),'week_end',public.quiz_week()+7,
+    'status',case when a.id is not null then a.status when availability = 'ready' then 'available' else 'unavailable' end,
+    'sports',sports,'attempt',attempt,'badges',badges,'corrections',corrections);
+end;
+$$;
+
+create or replace function public.quiz_start(p_sport text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_actor(); qid uuid; aid uuid;
+begin
+  perform public.quiz_require_testing(me);
+  -- Serializes start/skip for this canonical profile across sport changes and request retries.
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz:' || me::text,0));
+  if exists(select 1 from public.sport_quiz_attempts where profile_id = me and week_start = public.quiz_week()) then return public.quiz_snapshot(); end if;
+  select id into qid from public.sport_quiz_questions where status = 'approved' and sport = btrim(p_sport)
+    and public.quiz_normalize_options(options) is not null order by random() limit 1 for share;
+  if qid is null then raise exception 'quiz_no_question'; end if;
+  insert into public.sport_quiz_attempts(profile_id,week_start,question_id,status) values(me,public.quiz_week(),qid,'issued') returning id into aid;
+  insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id) values(me,'start',qid,aid);
+  return public.quiz_snapshot();
+end;
+$$;
+
+create or replace function public.quiz_answer(p_attempt_id uuid,p_option integer,p_request_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_actor(); a public.sport_quiz_attempts%rowtype; q public.sport_quiz_questions%rowtype;
+begin
+  perform public.quiz_require_testing(me);
+  if p_option is null or p_option not between 0 and 3 or p_request_id is null then raise exception 'quiz_answer_invalid'; end if;
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id and profile_id = me for update;
+  if a.id is null then raise exception 'quiz_attempt_not_owned'; end if;
+  if a.week_start <> public.quiz_week() then raise exception 'quiz_week_closed'; end if;
+  select * into q from public.sport_quiz_questions where id = a.question_id for share;
+  if a.status = 'void' or q.status = 'void' then raise exception 'quiz_question_void'; end if;
+  if a.status = 'completed' then
+    if a.request_id = p_request_id and a.answered_option = p_option then return public.quiz_snapshot(); end if;
+    raise exception 'quiz_answer_already_committed';
+  end if;
+  if a.status <> 'issued' then raise exception 'quiz_attempt_not_issued'; end if;
+  if q.id is null or public.quiz_normalize_options(q.options) is null then raise exception 'quiz_question_unavailable: answer choices need correction'; end if;
+  if exists(select 1 from public.sport_quiz_attempts where request_id = p_request_id) then raise exception 'quiz_request_reused'; end if;
+  update public.sport_quiz_attempts set status = 'completed',answered_option = p_option,request_id = p_request_id,completed_at = now() where id = a.id;
+  insert into public.sport_quiz_badges(profile_id,attempt_id,week_start) values(me,a.id,a.week_start);
+  insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id) values(me,'answer',a.question_id,a.id);
+  return public.quiz_snapshot();
+end;
+$$;
+
+create or replace function public.quiz_skip()
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_actor(); aid uuid;
+begin
+  perform public.quiz_require_testing(me);
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz:' || me::text,0));
+  insert into public.sport_quiz_attempts(profile_id,week_start,status) values(me,public.quiz_week(),'skipped')
+    on conflict(profile_id,week_start) do update set status = 'skipped'
+      where sport_quiz_attempts.status = 'issued' returning id into aid;
+  if aid is not null then insert into public.sport_quiz_audit(actor_id,action,attempt_id) values(me,'skip',aid); end if;
+  return public.quiz_snapshot();
+end;
+$$;
+
+create or replace function public.quiz_admin_settings(p_payload jsonb,p_reason text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_admin_actor(); testers uuid[]; next_enabled boolean;
+begin
+  if jsonb_typeof(p_payload) <> 'object' or jsonb_typeof(p_payload->'enabled') is distinct from 'boolean'
+     or jsonb_typeof(p_payload->'pilot_accounts') is distinct from 'array' or char_length(btrim(coalesce(p_reason,''))) not between 10 and 500
+     or exists(select 1 from jsonb_object_keys(p_payload) k where k not in ('enabled','pilot_accounts')) then raise exception 'quiz_settings_invalid'; end if;
+  if jsonb_array_length(p_payload->'pilot_accounts') > 100 then raise exception 'quiz_testers_limit'; end if;
+  select coalesce(array_agg(x::uuid),'{}'::uuid[]) into testers from jsonb_array_elements_text(p_payload->'pilot_accounts') x;
+  next_enabled := (p_payload->>'enabled')::boolean;
+  if cardinality(testers) <> (select count(distinct x) from unnest(testers) x) then raise exception 'quiz_testers_duplicate'; end if;
+  -- Pause must remain available after a listed tester closes; re-enabling still requires a valid eligible audience.
+  if next_enabled and exists(select 1 from unnest(testers) x where not exists(select 1 from public.profiles p where p.id = x and p.age_blocked_at is null
+     and public.profile_age_band(p.id) in ('adult','teen_13_15','teen_16_17'))) then raise exception 'quiz_testers_ineligible'; end if;
+  if next_enabled and cardinality(testers) = 0 then raise exception 'quiz_testers_required'; end if;
+  update public.sport_quiz_settings set enabled = next_enabled, pilot_accounts = testers,reason = btrim(p_reason),updated_at = now(),updated_by = me where singleton;
+  insert into public.sport_quiz_audit(actor_id,action,reason) values(me,'settings',btrim(p_reason));
+  return jsonb_build_object('enabled',next_enabled,'testing_only',true,'pilot_accounts',testers);
+end;
+$$;
+
+create or replace function public.quiz_admin_question(p_id uuid,p_action text,p_payload jsonb)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_admin_actor(); q public.sport_quiz_questions%rowtype; nextq public.sport_quiz_questions%rowtype; why text := btrim(p_payload->>'reason');
+begin
+  if p_action is null or p_action not in ('create','edit','approve','archive','void') or char_length(coalesce(why,'')) not between 10 and 500 then raise exception 'quiz_question_action_invalid'; end if;
+  -- All question/config mutations lock settings first, matching user-write lock order.
+  perform 1 from public.sport_quiz_settings where singleton for update;
+  if p_action <> 'create' then
+    select * into q from public.sport_quiz_questions where id = p_id for update;
+    if q.id is null then raise exception 'quiz_question_missing'; end if;
+  elsif p_id is not null then raise exception 'quiz_create_id_invalid'; end if;
+  if p_action in ('create','edit') then
+    if (select count(*) from public.sport_quiz_questions) >= 100 then raise exception 'quiz_bank_full'; end if;
+    if p_action = 'edit' then
+      update public.sport_quiz_questions set status = 'archived',reason = why where question_key = q.question_key and status = 'approved';
+    end if;
+    insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,created_by)
+      values(case when p_action = 'edit' then q.question_key else gen_random_uuid() end,
+        case when p_action = 'edit' then (select max(version)+1 from public.sport_quiz_questions where question_key = q.question_key) else 1 end,
+        btrim(p_payload->>'sport'),btrim(p_payload->>'prompt'),p_payload->'options',(p_payload->>'correct_option')::integer,btrim(p_payload->>'explanation'),why,me)
+      returning * into nextq;
+  else
+    if q.status = 'void' then raise exception 'quiz_void_final'; end if;
+    if p_action = 'approve' and q.status <> 'draft' then raise exception 'quiz_approve_draft_only'; end if;
+    if p_action = 'approve' then update public.sport_quiz_questions set status = 'archived',reason = why where question_key = q.question_key and status = 'approved'; end if;
+    update public.sport_quiz_questions set status = case p_action when 'approve' then 'approved' when 'archive' then 'archived' else 'void' end,
+      reason = why,reviewed_at = now(),reviewed_by = me where id = q.id returning * into nextq;
+    if p_action = 'void' then
+      update public.sport_quiz_attempts set status = 'void',voided_at = now(),correction_reason = why where question_id = q.id and status in ('issued','completed');
+      update public.sport_quiz_badges set voided_at = now() where attempt_id in (select id from public.sport_quiz_attempts where question_id = q.id) and voided_at is null;
+    end if;
+  end if;
+  insert into public.sport_quiz_audit(actor_id,action,question_id,reason) values(me,'question_'||p_action,nextq.id,why);
+  return jsonb_build_object('id',nextq.id,'question_key',nextq.question_key,'version',nextq.version,'status',nextq.status);
+end;
+$$;
+
+create or replace function public.quiz_admin_snapshot(p_before bigint default null)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_admin_actor(); bank jsonb; audit jsonb; next_before text;
+begin
+  select coalesce(jsonb_agg(to_jsonb(q) order by q.sport,q.question_key,q.version),'[]') into bank from public.sport_quiz_questions q;
+  select coalesce(jsonb_agg(jsonb_build_object('id',x.id::text,'action',x.action,'actor_id',case when x.action = 'settings' or x.action like 'question_%' then x.actor_id else null end,
+    'question_id',x.question_id,'reason',x.reason,'created_at',x.created_at) order by x.id desc),'[]') into audit
+    from (select * from public.sport_quiz_audit where p_before is null or id < p_before order by id desc limit 50) x;
+  if jsonb_array_length(audit) = 50 and exists(select 1 from public.sport_quiz_audit where id < (audit->49->>'id')::bigint) then next_before := audit->49->>'id'; end if;
+  return jsonb_build_object('generated_at',now(),'week_start',public.quiz_week(),'week_end',public.quiz_week()+7,
+    'settings',(select to_jsonb(s)-'singleton' from public.sport_quiz_settings s where singleton),'questions',bank,'audit',audit,'next_before',next_before,
+    'counts',jsonb_build_object(
+      'questions_draft',(select count(*) from public.sport_quiz_questions where status = 'draft'),
+      'questions_approved',(select count(*) from public.sport_quiz_questions where status = 'approved'),
+      'questions_archived',(select count(*) from public.sport_quiz_questions where status = 'archived'),
+      'questions_void',(select count(*) from public.sport_quiz_questions where status = 'void'),
+      'week_issued',(select count(*) from public.sport_quiz_attempts where week_start = public.quiz_week() and status = 'issued'),
+      'week_completed',(select count(*) from public.sport_quiz_attempts where week_start = public.quiz_week() and status = 'completed'),
+      'week_skipped',(select count(*) from public.sport_quiz_attempts where week_start = public.quiz_week() and status = 'skipped'),
+      'week_void',(select count(*) from public.sport_quiz_attempts where week_start = public.quiz_week() and status = 'void'),
+      'badges_issued',(select count(*) from public.sport_quiz_badges where voided_at is null),
+      'badges_void',(select count(*) from public.sport_quiz_badges where voided_at is not null)));
+end;
+$$;
+
+-- Draft-only seeds: human fact/context approval is required before a question can be assigned.
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason)
+select '10000000-0000-0000-0000-000000000001',1,'American football',
+  'In American football, how many points is a touchdown before any extra point or conversion?',
+  '["3","6","7","2"]',1,'A touchdown is worth six points. The extra-point or two-point conversion attempt is scored separately.',
+  'Draft factual example; content owner must verify context before approval.'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '10000000-0000-0000-0000-000000000001');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason)
+select '10000000-0000-0000-0000-000000000002',1,'Basketball',
+  'In standard five-on-five basketball, how many players from each team are on the court?',
+  '["4","5","6","7"]',1,'Standard five-on-five basketball has five players from each team on the court.',
+  'Draft factual example; content owner must verify five-on-five context before approval.'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '10000000-0000-0000-0000-000000000002');
+
+do $$
+declare tab text; fn text;
+begin
+  foreach tab in array array['sport_quiz_settings','sport_quiz_questions','sport_quiz_attempts','sport_quiz_badges','sport_quiz_audit'] loop
+    execute format('alter table public.%I enable row level security',tab);
+    execute format('revoke all on public.%I from public, anon, authenticated, service_role',tab);
+    execute format('drop policy if exists "Closed accounts" on public.%I',tab);
+    execute format('create policy "Closed accounts" on public.%I as restrictive for all to authenticated using (public.caller_not_age_blocked()) with check (public.caller_not_age_blocked())',tab);
+  end loop;
+  revoke all on sequence public.sport_quiz_audit_id_seq from public,anon,authenticated,service_role;
+  foreach fn in array array['public.quiz_week()','public.quiz_actor()','public.quiz_admin_actor()','public.quiz_require_testing(uuid)','public.quiz_normalize_options(jsonb)','public.quiz_guard_question()','public.quiz_guard_audit()',
+    'public.quiz_snapshot()','public.quiz_start(text)','public.quiz_answer(uuid,integer,uuid)','public.quiz_skip()',
+    'public.quiz_admin_snapshot(bigint)','public.quiz_admin_question(uuid,text,jsonb)','public.quiz_admin_settings(jsonb,text)'] loop
+    execute format('revoke all on function %s from public,anon,authenticated,service_role',fn);
+  end loop;
+  foreach fn in array array['public.quiz_snapshot()','public.quiz_start(text)','public.quiz_answer(uuid,integer,uuid)','public.quiz_skip()',
+    'public.quiz_admin_snapshot(bigint)','public.quiz_admin_question(uuid,text,jsonb)','public.quiz_admin_settings(jsonb,text)'] loop
+    execute format('grant execute on function %s to authenticated',fn);
+  end loop;
+end;
+$$;
+
+
+-- QUIZ-02: private timed trivia replaces untimed authority; local-only, no hosted application.
+-- Requires QUIZ-01/MINOR-01. Reset to paused, empty <=100 tester cohort before revised admin review.
+-- Approved contract: docs/engineering/design/TIMED_TRIVIA_PROPOSAL.md §7.
+-- Repair: pause, retain evidence and use a reviewed forward migration; no automatic untimed restoration.
+-- No money/Aura/public badge. Settings fence precedes account/attempt locks; helpers are never client APIs.
+
+-- The mode column is the durable transition marker. Capture it before structural additions.
+-- This private DDL context is overwritten here; a repeat must not reset an already timed cohort/history.
+do $$ begin
+ perform set_config('quiz.initial_upgrade',(not exists(select 1 from pg_attribute where attrelid='public.sport_quiz_attempts'::regclass and attname='mode' and not attisdropped))::text,true);
+end $$;
+
+alter table public.sport_quiz_questions add column if not exists topic_category text not null default 'sport'
+  check(topic_category in ('sport','science','geography','general'));
+alter table public.sport_quiz_questions add column if not exists source_notes text not null default '' check(char_length(source_notes)<=1000);
+alter table public.sport_quiz_attempts drop constraint if exists sport_quiz_attempts_status_check;
+alter table public.sport_quiz_attempts add constraint sport_quiz_attempts_status_check check(status in ('issued','completed','skipped','void','ended','expired'));
+alter table public.sport_quiz_attempts add column if not exists mode text not null default 'legacy' check(mode in ('legacy','timed'));
+alter table public.sport_quiz_attempts add column if not exists duration_seconds integer check(duration_seconds in (30,90));
+alter table public.sport_quiz_attempts add column if not exists started_at timestamptz;
+alter table public.sport_quiz_attempts add column if not exists expires_at timestamptz;
+alter table public.sport_quiz_attempts add column if not exists session_hash text check(session_hash ~ '^[0-9a-f]{64}$');
+alter table public.sport_quiz_attempts add column if not exists closed_at timestamptz;
+alter table public.sport_quiz_attempts add column if not exists close_reason text;
+alter table public.sport_quiz_attempts drop constraint if exists quiz_timed_window;
+alter table public.sport_quiz_attempts add constraint quiz_timed_window check(mode<>'timed' or status='skipped' or
+  (duration_seconds is not null and started_at is not null and expires_at is not null and expires_at=started_at+duration_seconds*interval '1 second'));
+alter table public.sport_quiz_attempts drop constraint if exists quiz_timed_capability;
+alter table public.sport_quiz_attempts add constraint quiz_timed_capability check(mode<>'timed' or status<>'issued' or session_hash is not null);
+alter table public.sport_quiz_badges drop constraint if exists sport_quiz_badges_label_check;
+-- NOT VALID: on a re-run after QUIZ-03 (which widens these lists) existing rows must not stop the migration; new rows are
+-- still checked, and QUIZ-03 re-adds the wider list.
+alter table public.sport_quiz_badges add constraint sport_quiz_badges_label_check check(label in ('Sport Learner','Trivia Explorer')) not valid;
+alter table public.sport_quiz_audit drop constraint if exists sport_quiz_audit_action_check;
+alter table public.sport_quiz_audit add constraint sport_quiz_audit_action_check check(action in
+  ('settings','question_create','question_edit','question_approve','question_archive','question_void','start','answer','skip','end','retention')) not valid;
+
+create table if not exists public.sport_quiz_preferences (
+ profile_id uuid primary key references public.profiles(id) on delete cascade,
+ invitation_mode text not null default 'off' check(invitation_mode in ('off','weekly')),
+ topic_mode text not null default 'sports' check(topic_mode in ('sports','mix')),
+ notice_version text check(notice_version='timed-trivia-v1-testing'), notice_accepted_at timestamptz,
+ version bigint not null default 0 check(version>=0), history_version bigint not null default 0 check(history_version>=0),
+ last_invited_week date, updated_at timestamptz not null default now()
+);
+create table if not exists public.sport_quiz_exposures (
+ profile_id uuid not null references public.profiles(id) on delete cascade,
+ question_key uuid not null, question_id uuid not null references public.sport_quiz_questions(id), first_issued_at timestamptz not null,
+ primary key(profile_id,question_key)
+);
+create table if not exists public.sport_quiz_week_guards (
+ profile_id uuid not null references public.profiles(id) on delete cascade,
+ week_start date not null check(extract(isodow from week_start)=1), spent_at timestamptz not null,
+ prune_after timestamptz not null, primary key(profile_id,week_start),
+ check(prune_after=spent_at+interval '35 days')
+);
+create table if not exists public.sport_quiz_requests (
+ profile_id uuid not null references public.profiles(id) on delete cascade, request_id uuid not null,
+ operation text not null check(operation in ('preferences','invitation','start','answer','end','skip')),
+ week_start date not null, payload_digest text check(payload_digest ~ '^[0-9a-f]{64}$'),
+ attempt_id uuid references public.sport_quiz_attempts(id) on delete cascade,
+ receipt jsonb not null check(jsonb_typeof(receipt)='object'), created_at timestamptz not null,
+ prune_after timestamptz not null check(prune_after=created_at+interval '35 days'),
+ capacity_class text not null default 'ordinary' check(capacity_class in ('ordinary','answer','off','end')),
+ primary key(profile_id,request_id)
+);
+create index if not exists quiz_requests_prune on public.sport_quiz_requests(prune_after);
+create unique index if not exists quiz_reserved_request_slot on public.sport_quiz_requests(profile_id,week_start,capacity_class) where capacity_class<>'ordinary';
+create index if not exists quiz_guards_prune on public.sport_quiz_week_guards(prune_after);
+create index if not exists quiz_history_order on public.sport_quiz_attempts(profile_id,week_start desc,id desc);
+create index if not exists quiz_bank_order on public.sport_quiz_questions(created_at desc,id desc);
+
+-- Backfill all exposed families, including voided versions; old active rounds cannot become timed.
+do $$ begin
+if current_setting('quiz.initial_upgrade',true)='true' then
+insert into public.sport_quiz_exposures(profile_id,question_key,question_id,first_issued_at)
+ select distinct on(a.profile_id,q.question_key) a.profile_id,q.question_key,q.id,a.issued_at
+ from public.sport_quiz_attempts a join public.sport_quiz_questions q on q.id=a.question_id
+ order by a.profile_id,q.question_key,a.issued_at,a.id on conflict do nothing;
+insert into public.sport_quiz_week_guards(profile_id,week_start,spent_at,prune_after)
+ select profile_id,week_start,issued_at,issued_at+interval '35 days' from public.sport_quiz_attempts
+ where issued_at+interval '35 days'>statement_timestamp() on conflict do nothing;
+update public.sport_quiz_attempts set status='ended',closed_at=statement_timestamp(),close_reason='legacy_transition',session_hash=null where status='issued';
+update public.sport_quiz_attempts set closed_at=coalesce(completed_at,voided_at,issued_at) where status<>'issued' and closed_at is null;
+update public.sport_quiz_settings set enabled=false,pilot_accounts='{}',reason='Paused for timed trivia admin review.',updated_at=statement_timestamp();
+insert into public.sport_quiz_preferences(profile_id,history_version) select distinct profile_id,1 from public.sport_quiz_attempts on conflict do nothing;
+end if;
+perform set_config('quiz.initial_upgrade','false',true);
+end $$;
+
+create or replace function public.quiz_week_at(p_time timestamptz)
+returns date language sql immutable set search_path='' as $$ select date_trunc('week',p_time at time zone 'UTC')::date $$;
+create or replace function public.quiz_expected_actor(p_expected uuid,p_admin boolean default false)
+returns uuid language plpgsql stable security definer set search_path='' as $$
+declare me uuid;
+begin
+ me:=case when p_admin then public.quiz_admin_actor() else public.quiz_actor() end;
+ if p_expected is null or me is distinct from p_expected then raise exception 'quiz_identity_changed'; end if;
+ return me;
+end $$;
+
+create or replace function public.quiz_cursor(p_cursor text,p_stream text)
+returns jsonb language plpgsql immutable set search_path='' as $$
+declare c jsonb;
+begin
+ if p_cursor is null then return null;end if;
+ if char_length(p_cursor)>300 then raise exception 'quiz_cursor_invalid';end if;
+ c:=p_cursor::jsonb;
+ if jsonb_typeof(c) is distinct from 'object' or c->'v' is distinct from '1'::jsonb or c->>'stream' is distinct from p_stream
+  or (select count(*) from jsonb_object_keys(c))<>4 or jsonb_typeof(c->'at') is distinct from 'string' or jsonb_typeof(c->'id') is distinct from 'string'
+  or (c->>'id') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then raise exception 'quiz_cursor_invalid';end if;
+ if p_stream='history' then
+  if (c->>'at') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' then raise exception 'quiz_cursor_invalid';end if;perform (c->>'at')::date;
+ elsif p_stream='questions' then
+  if (c->>'at') !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,6})?(Z|[+-][0-9]{2}:[0-9]{2})$' then raise exception 'quiz_cursor_invalid';end if;perform (c->>'at')::timestamptz;
+ else raise exception 'quiz_cursor_invalid';end if;
+ perform (c->>'id')::uuid;return c;
+exception when others then raise exception 'quiz_cursor_invalid';
+end $$;
+
+create or replace function public.quiz_history(p_before text default null)
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare me uuid:=public.quiz_actor();at timestamptz:=statement_timestamp();c jsonb:=public.quiz_cursor(p_before,'history');items jsonb;next_before text;
+ last_id uuid;last_week date;total bigint;
+begin
+ select count(*) into total from public.sport_quiz_attempts where profile_id=me and (status<>'issued' or expires_at<=at);
+ select coalesce(jsonb_agg(jsonb_build_object('attempt',public.quiz_summary(a.id,at),'question',public.quiz_question_dto(a.question_id),
+  'result',public.quiz_result_dto(a.id,at),'badge',(select to_jsonb(b)-'profile_id'-'attempt_id'-'week_start' from public.sport_quiz_badges b where attempt_id=a.id))
+  order by a.week_start desc,a.id desc),'[]') into items
+ from(select * from public.sport_quiz_attempts where profile_id=me and (status<>'issued' or expires_at<=at)
+  and (c is null or (week_start,id)<((c->>'at')::date,(c->>'id')::uuid)) order by week_start desc,id desc limit 50)a;
+ if jsonb_array_length(items)=50 then
+  last_id:=(items->49->'attempt'->>'id')::uuid;last_week:=(items->49->'attempt'->>'week_start')::date;
+  if exists(select 1 from public.sport_quiz_attempts where profile_id=me and (status<>'issued' or expires_at<=at) and (week_start,id)<(last_week,last_id)) then
+   next_before:=jsonb_build_object('v',1,'stream','history','at',last_week,'id',last_id)::text;
+  end if;
+ end if;
+ return jsonb_build_object('contract_version',2,'profile_id',me,'server_now',at,'history_version',(public.quiz_preferences_dto(me)->>'history_version')::bigint,
+  'total',total,'items',items,'next_before',next_before);
+end $$;
+
+create or replace function public.quiz_guard_audit()
+returns trigger language plpgsql set search_path='' as $$
+begin
+ if tg_op='DELETE' and old.action in ('start','answer','skip','end') and old.actor_id::text=current_setting('quiz.erase_profile',true) then return old;end if;
+ if tg_op='UPDATE' and pg_trigger_depth()>1 and old.actor_id is not null and new.actor_id is null and (to_jsonb(new)-'actor_id')=(to_jsonb(old)-'actor_id') then return new;end if;
+ raise exception 'quiz_audit_immutable';
+end $$;
+
+create or replace function public.quiz_erase_history(p_expected_history_version bigint,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.quiz_expected_actor(p_expected_profile_id);at timestamptz;w date;rev bigint;na bigint;ne bigint;nb bigint;nr bigint;nau bigint;prune timestamptz;
+begin
+ perform public.quiz_lock(me);at:=clock_timestamp();w:=public.quiz_week_at(at);
+ insert into public.sport_quiz_preferences(profile_id) values(me) on conflict do nothing;
+ select history_version into rev from public.sport_quiz_preferences where profile_id=me for update;
+ if rev is distinct from p_expected_history_version then raise exception 'quiz_history_stale';end if;
+ -- Spend even if a pending Start has not arrived: clearing history also ends this week's opportunity.
+ perform public.quiz_spend(me,w,at);
+ select prune_after into prune from public.sport_quiz_week_guards where profile_id=me and week_start=w;
+ select count(*) into na from public.sport_quiz_attempts where profile_id=me;
+ select count(*) into nb from public.sport_quiz_badges where profile_id=me;
+ delete from public.sport_quiz_requests where profile_id=me;get diagnostics nr=row_count;
+ delete from public.sport_quiz_exposures where profile_id=me;get diagnostics ne=row_count;
+ perform set_config('quiz.erase_profile',me::text,true);
+ delete from public.sport_quiz_audit where actor_id=me and action in ('start','answer','skip','end');get diagnostics nau=row_count;
+ perform set_config('quiz.erase_profile','',true);
+ delete from public.sport_quiz_attempts where profile_id=me;
+ update public.sport_quiz_preferences set history_version=history_version+1,updated_at=at where profile_id=me;
+ return jsonb_build_object('contract_version',2,'profile_id',me,'history_version',rev+1,'week_start',w,'week_spent',true,'quota_prune_after',prune,
+  'removed_attempts',na,'removed_exposures',ne,'removed_badges',nb,'removed_requests',nr,'removed_audit',nau);
+end $$;
+
+create or replace function public.quiz_guard_question()
+returns trigger language plpgsql set search_path='' as $$
+declare normalized jsonb;
+begin
+ if tg_op='UPDATE' and (new.question_key,new.version,new.sport,new.prompt,new.options,new.correct_option,new.explanation,new.created_at,new.topic_category,new.source_notes)
+  is distinct from (old.question_key,old.version,old.sport,old.prompt,old.options,old.correct_option,old.explanation,old.created_at,old.topic_category,old.source_notes) then raise exception 'quiz_immutable';end if;
+ if tg_op='UPDATE' and old.status='void' and new.status<>'void' then raise exception 'quiz_void_final';end if;
+ normalized:=public.quiz_normalize_options(new.options);
+ if normalized is null and tg_op='UPDATE' and new.status in ('archived','void') then return new;end if;
+ if normalized is null then raise exception 'quiz_options_invalid';end if;
+ if new.status='approved' and char_length(btrim(new.source_notes)) not between 10 and 1000 then raise exception 'quiz_sources_required';end if;
+ if tg_op='INSERT' then new.options:=normalized;end if;return new;
+end $$;
+
+create or replace function public.quiz_admin_settings(p_payload jsonb,p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.quiz_expected_actor(p_expected_actor_id,true);testers uuid[];next_enabled boolean;at timestamptz;affected uuid;
+begin
+ if jsonb_typeof(p_payload) is distinct from 'object' or jsonb_typeof(p_payload->'enabled') is distinct from 'boolean'
+  or jsonb_typeof(p_payload->'pilot_accounts') is distinct from 'array' or char_length(btrim(coalesce(p_reason,''))) not between 10 and 500
+  or exists(select 1 from jsonb_object_keys(p_payload)k where k not in ('enabled','pilot_accounts')) then raise exception 'quiz_settings_invalid';end if;
+ if jsonb_array_length(p_payload->'pilot_accounts')>100 then raise exception 'quiz_testers_limit';end if;
+ if exists(select 1 from jsonb_array_elements(p_payload->'pilot_accounts')v where jsonb_typeof(v)<>'string' or (v#>>'{}') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') then raise exception 'quiz_settings_invalid';end if;
+ select coalesce(array_agg(x::uuid),'{}'::uuid[]) into testers from jsonb_array_elements_text(p_payload->'pilot_accounts')x;
+ next_enabled:=(p_payload->>'enabled')::boolean;
+ if cardinality(testers)<>(select count(distinct x) from unnest(testers)x) then raise exception 'quiz_testers_duplicate';end if;
+ if next_enabled and cardinality(testers)=0 then raise exception 'quiz_testers_required';end if;
+ if next_enabled and exists(select 1 from unnest(testers)x where public.profile_age_band(x) not in ('adult','teen_13_15','teen_16_17') or
+  not exists(select 1 from public.profiles p where p.id=x and p.age_blocked_at is null)) then raise exception 'quiz_testers_ineligible';end if;
+ perform 1 from public.sport_quiz_settings where singleton for update;if not found then raise exception 'quiz_unavailable';end if;at:=clock_timestamp();
+ update public.sport_quiz_settings set enabled=next_enabled,pilot_accounts=testers,reason=btrim(p_reason),updated_at=at,updated_by=me where singleton;
+ -- Pausing/removing an audience is terminal, so an old capability cannot revive after re-enable.
+ for affected in select distinct profile_id from public.sport_quiz_attempts where status='issued' and (not next_enabled or not(profile_id=any(testers))) order by profile_id loop
+  perform public.quiz_lock(affected);
+ end loop;
+ for affected in with changed as (update public.sport_quiz_attempts set status=case when expires_at<=at then 'expired' else 'ended' end,
+  closed_at=case when expires_at<=at then expires_at else at end,close_reason=case when expires_at<=at then 'deadline' when not next_enabled then 'paused' else 'access_revoked' end,session_hash=null
+  where status='issued' and (not next_enabled or not(profile_id=any(testers))) returning profile_id) select distinct profile_id from changed order by profile_id loop
+  perform public.quiz_bump_history(affected);
+ end loop;
+ insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'settings',btrim(p_reason),at);
+ return jsonb_build_object('contract_version',2,'enabled',next_enabled,'testing_only',true,'pilot_accounts',testers);
+end $$;
+
+create or replace function public.quiz_admin_question(p_id uuid,p_action text,p_payload jsonb,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.quiz_expected_actor(p_expected_actor_id,true);q public.sport_quiz_questions%rowtype;nextq public.sport_quiz_questions%rowtype;
+ why text:=btrim(p_payload->>'reason');family uuid;at timestamptz;affected uuid;
+begin
+ if jsonb_typeof(p_payload) is distinct from 'object' or coalesce(p_action,'') not in ('create','edit','approve','archive','void') or char_length(coalesce(why,'')) not between 10 and 500
+  or exists(select 1 from jsonb_object_keys(p_payload)k where k not in ('reason','sport','prompt','options','correct_option','explanation','topic_category','source_notes','family_action','question_key')) then raise exception 'quiz_question_action_invalid';end if;
+ perform 1 from public.sport_quiz_settings where singleton for update;if not found then raise exception 'quiz_unavailable';end if;at:=clock_timestamp();
+ if p_action='void' then
+  for affected in select distinct profile_id from public.sport_quiz_attempts where question_id=p_id order by profile_id loop perform public.quiz_lock(affected);end loop;
+ end if;
+ if p_action<>'create' then select * into q from public.sport_quiz_questions where id=p_id for update;if not found then raise exception 'quiz_question_missing';end if;
+ elsif p_id is not null then raise exception 'quiz_create_id_invalid';end if;
+ if p_action in ('create','edit') then
+  if (select count(*) from public.sport_quiz_questions)>=100 then raise exception 'quiz_bank_full';end if;
+  if p_action='create' then
+   if coalesce(p_payload->>'family_action','') not in ('new','existing') then raise exception 'quiz_family_required';end if;
+   if p_payload->>'family_action'='new' then
+    if p_payload?'question_key' then raise exception 'quiz_family_invalid';end if;family:=gen_random_uuid();
+   else
+    if coalesce(p_payload->>'question_key','') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then raise exception 'quiz_family_invalid';end if;
+    family:=(p_payload->>'question_key')::uuid;if not exists(select 1 from public.sport_quiz_questions where question_key=family) then raise exception 'quiz_family_invalid';end if;
+   end if;
+  else
+   family:=q.question_key;
+   if (p_payload?'question_key' and p_payload->>'question_key'<>family::text) or (p_payload?'family_action' and p_payload->>'family_action'<>'existing') then raise exception 'quiz_family_invalid';end if;
+  end if;
+  if coalesce(p_payload->>'topic_category','') not in ('sport','science','geography','general') or char_length(btrim(coalesce(p_payload->>'source_notes',''))) not between 10 and 1000
+   or jsonb_typeof(p_payload->'correct_option') is distinct from 'number' or (p_payload->>'correct_option') !~ '^[0-3]$' then raise exception 'quiz_question_content_invalid';end if;
+  if exists(select 1 from unnest(array['sport','prompt','explanation','source_notes'])k where jsonb_typeof(p_payload->k) is distinct from 'string') then raise exception 'quiz_question_content_invalid';end if;
+  update public.sport_quiz_questions set status='archived',reason=why where question_key=family and status='approved';
+  insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,created_by,topic_category,source_notes)
+   values(family,coalesce((select max(version)+1 from public.sport_quiz_questions where question_key=family),1),
+    btrim(p_payload->>'sport'),btrim(p_payload->>'prompt'),p_payload->'options',(p_payload->>'correct_option')::integer,btrim(p_payload->>'explanation'),why,me,p_payload->>'topic_category',btrim(p_payload->>'source_notes')) returning * into nextq;
+ else
+  if q.status='void' then raise exception 'quiz_void_final';end if;
+  if p_action='approve' and q.status<>'draft' then raise exception 'quiz_approve_draft_only';end if;
+  if p_action='approve' then update public.sport_quiz_questions set status='archived',reason=why where question_key=q.question_key and status='approved';end if;
+  update public.sport_quiz_questions set status=case p_action when 'approve' then 'approved' when 'archive' then 'archived' else 'void' end,
+   reason=why,reviewed_at=at,reviewed_by=me where id=q.id returning * into nextq;
+  if p_action='void' then
+   for affected in with changed as (update public.sport_quiz_attempts set status='void',voided_at=at,closed_at=coalesce(closed_at,at),correction_reason=why,session_hash=null
+    where question_id=q.id and status<>'skipped' returning profile_id) select distinct profile_id from changed order by profile_id loop perform public.quiz_bump_history(affected);end loop;
+   update public.sport_quiz_badges set voided_at=at where attempt_id in(select id from public.sport_quiz_attempts where question_id=q.id) and voided_at is null;
+  end if;
+ end if;
+ insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'question_'||p_action,nextq.id,why,at);
+ return jsonb_build_object('id',nextq.id,'question_key',nextq.question_key,'version',nextq.version,'status',nextq.status);
+end $$;
+create or replace function public.quiz_lock(p_me uuid)
+returns void language plpgsql security definer set search_path='' as $$
+begin
+ perform 1 from public.sport_quiz_settings where singleton for share;
+ if not found then raise exception 'quiz_unavailable'; end if;
+ perform pg_advisory_xact_lock(hashtextextended('sport-quiz:'||p_me,0));
+end $$;
+create or replace function public.quiz_bump_history(p_me uuid)
+returns void language plpgsql security definer set search_path='' as $$
+begin
+ -- The same settings/account fence protects erasure and every material history revision.
+ perform public.quiz_lock(p_me);
+ insert into public.sport_quiz_preferences(profile_id) values(p_me) on conflict do nothing;
+ update public.sport_quiz_preferences set history_version=history_version+1,updated_at=clock_timestamp() where profile_id=p_me;
+end $$;
+create or replace function public.quiz_preferences_dto(p_me uuid)
+returns jsonb language sql stable security definer set search_path='' as $$
+ select coalesce((select to_jsonb(p)-'profile_id'-'updated_at' from public.sport_quiz_preferences p where profile_id=p_me),
+ jsonb_build_object('invitation_mode','off','topic_mode','sports','notice_version',null,'notice_accepted_at',null,'version',0,'history_version',0,'last_invited_week',null))
+$$;
+create or replace function public.quiz_summary(p_attempt uuid,p_asof timestamptz)
+returns jsonb language sql stable security definer set search_path='' as $$
+ select jsonb_build_object('id',id,'week_start',week_start,'mode',mode,
+ 'status',case when status='issued' and expires_at<=p_asof then 'expired' else status end,
+ 'started_at',started_at,'expires_at',expires_at,'duration_seconds',duration_seconds,'closed_at',closed_at,'close_reason',close_reason,
+ 'effective_expired',status='issued' and expires_at<=p_asof,'correction_reason',correction_reason)
+ from public.sport_quiz_attempts where id=p_attempt
+$$;
+create or replace function public.quiz_question_dto(p_question uuid)
+returns jsonb language sql stable security definer set search_path='' as $$
+ select jsonb_build_object('id',id,'question_key',question_key,'version',version,'topic_category',topic_category,'sport',sport,'prompt',prompt,'options',options)
+ from public.sport_quiz_questions where id=p_question
+$$;
+create or replace function public.quiz_result_dto(p_attempt uuid,p_asof timestamptz)
+returns jsonb language sql stable security definer set search_path='' as $$
+ select jsonb_build_object('answered_option',a.answered_option,'correct_option',q.correct_option,
+ 'was_correct',case when a.answered_option is null then null else a.answered_option=q.correct_option end,
+ 'explanation',q.explanation,'completed_at',a.completed_at)
+ from public.sport_quiz_attempts a join public.sport_quiz_questions q on q.id=a.question_id
+ where a.id=p_attempt and (a.status<>'issued' or a.expires_at<=p_asof)
+$$;
+create or replace function public.quiz_digest(p_payload jsonb)
+returns text language sql immutable set search_path='' as $$ select encode(public.digest(p_payload::text,'sha256'),'hex') $$;
+create or replace function public.quiz_receipt_dto(p_me uuid,p_request uuid,p_asof timestamptz)
+returns jsonb language sql stable security definer set search_path='' as $$
+ select r.receipt || jsonb_build_object('attempt',public.quiz_summary(r.attempt_id,p_asof),'result',public.quiz_result_dto(r.attempt_id,p_asof))
+ from public.sport_quiz_requests r where profile_id=p_me and request_id=p_request
+$$;
+create or replace function public.quiz_save_request(p_me uuid,p_request uuid,p_operation text,p_week date,p_digest text,p_attempt uuid,p_outcome text,p_at timestamptz,p_preferences jsonb default null)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare receipt jsonb; budget text:='ordinary';
+begin
+ receipt:=jsonb_build_object('contract_version',2,'profile_id',p_me,'request_id',p_request,'operation',p_operation,'outcome',p_outcome,
+ 'week_start',p_week,'committed_at',p_at,'attempt',public.quiz_summary(p_attempt,p_at),'result',public.quiz_result_dto(p_attempt,p_at),'preferences',p_preferences);
+ -- Reserve three slots for one answer, Off transition and End. Nothing silently loses its receipt.
+ if (select count(*) from public.sport_quiz_requests where profile_id=p_me and week_start=p_week)>=57 then
+  budget:=case when p_operation='end' then 'end' when p_operation='answer' or (p_operation='start' and p_outcome='cancelled') then 'answer'
+   when p_outcome='saved_off' then 'off' else 'ordinary' end;
+  if budget='ordinary' or exists(select 1 from public.sport_quiz_requests r where r.profile_id=p_me and r.week_start=p_week and r.capacity_class=budget)
+   then raise exception 'quiz_request_limit';end if;
+ end if;
+ insert into public.sport_quiz_requests values(p_me,p_request,p_operation,p_week,p_digest,p_attempt,receipt,p_at,p_at+interval '35 days',budget);
+ return receipt;
+end $$;
+
+drop function if exists public.quiz_start(text);
+drop function if exists public.quiz_answer(uuid,integer,uuid);
+drop function if exists public.quiz_skip();
+drop function if exists public.quiz_admin_snapshot(bigint);
+drop function if exists public.quiz_admin_settings(jsonb,text);
+drop function if exists public.quiz_admin_question(uuid,text,jsonb);
+
+create or replace function public.quiz_start(p_topic_category text,p_sport text,p_duration_seconds integer,p_expected_week date,
+ p_notice_version text,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.quiz_expected_actor(p_expected_profile_id);at timestamptz; d text; r public.sport_quiz_requests%rowtype;
+ a public.sport_quiz_attempts%rowtype;q public.sport_quiz_questions%rowtype;p public.sport_quiz_preferences%rowtype;receipt jsonb;active jsonb;w date;
+begin
+ if p_request_id is null or coalesce(p_topic_category,'') not in ('sport','science','geography','general') or p_duration_seconds is null or p_duration_seconds not in (30,90)
+  or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' or p_notice_version is distinct from 'timed-trivia-v1-testing'
+  or (p_sport is not null and char_length(btrim(p_sport)) not between 2 and 80) or (p_topic_category<>'sport' and p_sport is not null) then raise exception 'quiz_start_invalid';end if;
+ perform public.quiz_lock(me);at:=clock_timestamp();w:=public.quiz_week_at(at);
+ if p_expected_week is distinct from w then raise exception 'quiz_week_changed';end if;
+ d:=public.quiz_digest(jsonb_build_array(p_topic_category,case when p_sport is null then null else btrim(p_sport) end,p_duration_seconds,p_expected_week,p_notice_version,p_session_secret));
+ select * into r from public.sport_quiz_requests where profile_id=me and request_id=p_request_id;
+ if found then
+  if r.operation<>'start' or (r.payload_digest is not null and r.payload_digest is distinct from d) then raise exception 'quiz_request_conflict';end if;
+  perform public.quiz_expire(me,at);
+  select * into a from public.sport_quiz_attempts where id=r.attempt_id for update;
+  if a.status='issued' and a.expires_at>at and a.session_hash=encode(public.digest(p_session_secret,'sha256'),'hex')
+   and exists(select 1 from public.sport_quiz_settings where singleton and enabled and me=any(pilot_accounts)) then
+   select * into q from public.sport_quiz_questions where id=a.question_id for share;
+   if q.status<>'void' then active:=public.quiz_question_dto(q.id);end if;
+  end if;
+  receipt:=public.quiz_receipt_dto(me,p_request_id,at);
+  return receipt||jsonb_build_object('server_now',at,'active_question',active);
+ end if;
+ -- A guard survives erasure/cancellation. It is checked before assignment, regardless of receipts.
+ if exists(select 1 from public.sport_quiz_week_guards where profile_id=me and week_start=w) then
+  select id into a.id from public.sport_quiz_attempts where profile_id=me and week_start=w;
+  receipt:=public.quiz_save_request(me,p_request_id,'start',w,d,a.id,'week_spent',at);
+  return receipt||jsonb_build_object('server_now',at,'active_question',null);
+ end if;
+ perform public.quiz_require_testing(me);
+ perform public.quiz_expire(me,at);
+ if at+p_duration_seconds*interval '1 second'>((w+7)::timestamp at time zone 'UTC') then raise exception 'quiz_week_closing';end if;
+ if exists(select 1 from public.sport_quiz_attempts where profile_id=me and status='issued') then raise exception 'quiz_round_active';end if;
+ select * into p from public.sport_quiz_preferences where profile_id=me;
+ if p.notice_version is distinct from p_notice_version then raise exception 'quiz_notice_required';end if;
+ if (p_topic_category<>'sport' and not public.quiz_fun_slot(me,w)) or (p_topic_category='sport' and public.quiz_fun_slot(me,w) and public.quiz_fun_available(me)) then raise exception 'quiz_topic_not_allowed';end if;
+ select b.* into q from public.sport_quiz_questions b where b.status='approved' and b.topic_category=p_topic_category
+  and (p_sport is null or b.sport=btrim(p_sport)) and public.quiz_normalize_options(b.options) is not null and char_length(btrim(b.source_notes))>=10
+  and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id=me and e.question_key=b.question_key)
+  order by random() limit 1 for share;
+ if not found then raise exception 'quiz_no_question';end if;
+ at:=clock_timestamp();w:=public.quiz_week_at(at);
+ if w is distinct from p_expected_week then raise exception 'quiz_week_changed';end if;
+ if at+p_duration_seconds*interval '1 second'>((w+7)::timestamp at time zone 'UTC') then raise exception 'quiz_week_closing';end if;
+ perform public.quiz_spend(me,w,at);
+ insert into public.sport_quiz_attempts(profile_id,week_start,question_id,status,issued_at,mode,duration_seconds,started_at,expires_at,session_hash)
+  values(me,w,q.id,'issued',at,'timed',p_duration_seconds,at,at+p_duration_seconds*interval '1 second',encode(public.digest(p_session_secret,'sha256'),'hex')) returning * into a;
+ insert into public.sport_quiz_exposures values(me,q.question_key,q.id,at);
+ perform public.quiz_bump_history(me);
+ insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,created_at) values(me,'start',q.id,a.id,at);
+ receipt:=public.quiz_save_request(me,p_request_id,'start',w,d,a.id,'started',at);
+ return receipt||jsonb_build_object('server_now',at,'active_question',public.quiz_question_dto(q.id));
+end $$;
+
+create or replace function public.quiz_answer(p_attempt_id uuid,p_option integer,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.quiz_expected_actor(p_expected_profile_id);at timestamptz;d text;r public.sport_quiz_requests%rowtype;
+ a public.sport_quiz_attempts%rowtype;q public.sport_quiz_questions%rowtype;
+begin
+ if p_request_id is null or p_attempt_id is null or p_option is null or p_option not between 0 and 3 or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' then raise exception 'quiz_answer_invalid';end if;
+ perform public.quiz_lock(me);select * into a from public.sport_quiz_attempts where id=p_attempt_id and profile_id=me for update;
+ at:=clock_timestamp();d:=public.quiz_digest(jsonb_build_array(p_attempt_id,p_option,p_session_secret));
+ select * into r from public.sport_quiz_requests where profile_id=me and request_id=p_request_id;
+ if found then if r.operation<>'answer' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict';end if;return public.quiz_receipt_dto(me,p_request_id,at);end if;
+ if a.id is null or a.mode<>'timed' then raise exception 'quiz_round_closed';end if;
+ perform public.quiz_require_testing(me);
+ if a.status='issued' and a.session_hash is distinct from encode(public.digest(p_session_secret,'sha256'),'hex') then raise exception 'quiz_capability_invalid';end if;
+ if a.status='issued' and a.expires_at<=at then
+  perform public.quiz_expire(me,at);return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at);
+ end if;
+ if a.status<>'issued' then return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,a.status,at);end if;
+ select * into q from public.sport_quiz_questions where id=a.question_id for share;
+ if q.status='void' or public.quiz_normalize_options(q.options) is null then raise exception 'quiz_question_unavailable';end if;
+ at:=clock_timestamp();
+ if a.expires_at<=at then perform public.quiz_expire(me,at);return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at);end if;
+ update public.sport_quiz_attempts set status='completed',answered_option=p_option,request_id=p_request_id,completed_at=at,closed_at=at,close_reason='answered',session_hash=null where id=a.id;
+ insert into public.sport_quiz_badges(profile_id,attempt_id,week_start,label,issued_at) values(me,a.id,a.week_start,'Trivia Explorer',at);
+ perform public.quiz_bump_history(me);
+ insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,created_at) values(me,'answer',q.id,a.id,at);
+ return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'completed',at);
+end $$;
+
+create or replace function public.quiz_end(p_attempt_id uuid,p_start_request_id uuid,p_expected_week date,p_reason text,p_request_id uuid,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.quiz_expected_actor(p_expected_profile_id);at timestamptz;d text;r public.sport_quiz_requests%rowtype;
+ source public.sport_quiz_requests%rowtype;a public.sport_quiz_attempts%rowtype;outcome text;w date;
+begin
+ if (p_attempt_id is null)=(p_start_request_id is null) or p_request_id is null or p_request_id=p_start_request_id
+  or coalesce(p_reason,'') not in ('user_end','left_page','background','identity_change') then raise exception 'quiz_end_invalid';end if;
+ perform public.quiz_lock(me);at:=clock_timestamp();w:=public.quiz_week_at(at);
+ d:=public.quiz_digest(jsonb_build_array(p_attempt_id,p_start_request_id,p_expected_week,p_reason));
+ select * into r from public.sport_quiz_requests where profile_id=me and request_id=p_request_id;
+ if found then if r.operation<>'end' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict';end if;return public.quiz_receipt_dto(me,p_request_id,at);end if;
+ if p_expected_week is null or p_expected_week>w then raise exception 'quiz_week_changed';end if;
+ if p_start_request_id is not null then
+  select * into source from public.sport_quiz_requests where profile_id=me and request_id=p_start_request_id;
+  if found and (source.operation<>'start' or source.week_start<>p_expected_week) then raise exception 'quiz_request_conflict';end if;
+  if source.request_id is null then
+   if p_expected_week<>w then raise exception 'quiz_round_closed';end if;
+   -- A pending unknown Start can be cancelled once. Existing active rounds retain their End slot.
+   if exists(select 1 from public.sport_quiz_week_guards where profile_id=me and week_start=w) then raise exception 'quiz_round_closed';end if;
+   perform public.quiz_spend(me,w,at);
+   perform public.quiz_bump_history(me);
+   perform public.quiz_save_request(me,p_start_request_id,'start',w,null,null,'cancelled',at);
+   return public.quiz_save_request(me,p_request_id,'end',w,d,null,'cancelled',at);
+  end if;
+  p_attempt_id:=source.attempt_id;
+  if p_attempt_id is null then return public.quiz_save_request(me,p_request_id,'end',p_expected_week,d,null,'cancelled',at);end if;
+ end if;
+ select * into a from public.sport_quiz_attempts where id=p_attempt_id and profile_id=me and week_start=p_expected_week for update;
+ if a.id is null then raise exception 'quiz_round_closed';end if;
+ at:=clock_timestamp();
+ if a.status='issued' then
+  outcome:=case when a.expires_at<=at then 'expired' else 'ended' end;
+  update public.sport_quiz_attempts set status=outcome,closed_at=case when outcome='expired' then expires_at else at end,
+   close_reason=case when outcome='expired' then 'deadline' else p_reason end,session_hash=null where id=a.id;
+  perform public.quiz_bump_history(me);
+  insert into public.sport_quiz_audit(actor_id,action,attempt_id,created_at) values(me,'end',a.id,at);
+ else outcome:=a.status;end if;
+ return public.quiz_save_request(me,p_request_id,'end',a.week_start,d,a.id,outcome,at);
+end $$;
+
+create or replace function public.quiz_skip(p_expected_week date,p_request_id uuid,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.quiz_expected_actor(p_expected_profile_id);at timestamptz;d text;r public.sport_quiz_requests%rowtype;a public.sport_quiz_attempts%rowtype;
+begin
+ if p_request_id is null then raise exception 'quiz_request_invalid';end if;perform public.quiz_lock(me);at:=clock_timestamp();
+ if p_expected_week is distinct from public.quiz_week_at(at) then raise exception 'quiz_week_changed';end if;
+ d:=public.quiz_digest(jsonb_build_array(p_expected_week));select * into r from public.sport_quiz_requests where profile_id=me and request_id=p_request_id;
+ if found then if r.operation<>'skip' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict';end if;return public.quiz_receipt_dto(me,p_request_id,at);end if;
+ perform public.quiz_require_testing(me);select * into a from public.sport_quiz_attempts where profile_id=me and week_start=p_expected_week for update;
+ if exists(select 1 from public.sport_quiz_week_guards where profile_id=me and week_start=p_expected_week) then
+  return public.quiz_save_request(me,p_request_id,'skip',p_expected_week,d,a.id,'week_spent',at);
+ end if;
+ perform public.quiz_spend(me,p_expected_week,at);
+ insert into public.sport_quiz_attempts(profile_id,week_start,status,issued_at,mode,closed_at,close_reason)
+  values(me,p_expected_week,'skipped',at,'timed',at,'skip') returning * into a;
+ perform public.quiz_bump_history(me);
+ insert into public.sport_quiz_audit(actor_id,action,attempt_id,created_at) values(me,'skip',a.id,at);
+ return public.quiz_save_request(me,p_request_id,'skip',p_expected_week,d,a.id,'skipped',at);
+end $$;
+
+create or replace function public.quiz_receipt(p_request_id uuid)
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare me uuid:=public.quiz_actor();result jsonb;
+begin
+ result:=public.quiz_receipt_dto(me,p_request_id,statement_timestamp());
+ if result is null then raise exception 'quiz_receipt_unavailable';end if;return result;
+end $$;
+create or replace function public.quiz_spend(p_me uuid,p_week date,p_at timestamptz)
+returns void language sql security definer set search_path='' as $$
+ insert into public.sport_quiz_week_guards values(p_me,p_week,p_at,p_at+interval '35 days') on conflict do nothing
+$$;
+create or replace function public.quiz_expire(p_me uuid,p_at timestamptz)
+returns void language plpgsql security definer set search_path='' as $$
+declare changed bigint;
+begin
+ update public.sport_quiz_attempts set status='expired',closed_at=expires_at,close_reason='deadline',session_hash=null
+ where profile_id=p_me and status='issued' and expires_at<=p_at;
+ get diagnostics changed=row_count;
+ if changed>0 then perform public.quiz_bump_history(p_me);end if;
+end
+$$;
+
+create or replace function public.quiz_fun_slot(p_me uuid,p_week date)
+returns boolean language sql stable security definer set search_path='' as $$
+ select (public.quiz_preferences_dto(p_me)->>'topic_mode')='mix' and (((p_week-date '1970-01-05')/7%5+5)%5)=4
+$$;
+create or replace function public.quiz_fun_available(p_me uuid)
+returns boolean language sql stable security definer set search_path='' as $$
+ select exists(select 1 from public.sport_quiz_questions q where status='approved' and topic_category<>'sport'
+  and char_length(btrim(source_notes))>=10 and public.quiz_normalize_options(options) is not null
+  and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id=p_me and e.question_key=q.question_key))
+$$;
+
+create or replace function public.quiz_snapshot()
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare me uuid:=public.my_profile_id(); at timestamptz:=statement_timestamp(); w date:=public.quiz_week_at(at);
+ s public.sport_quiz_settings%rowtype; pref jsonb; available text; pools jsonb:='[]'; aid uuid; scheduled text;
+begin
+ select * into s from public.sport_quiz_settings where singleton;
+ if auth.uid() is null or me is null or public.profile_age_band(me) not in ('adult','teen_13_15','teen_16_17') then me:=null;available:='ineligible';
+ elsif s.singleton is null then available:='unavailable';
+ elsif not s.enabled then available:='paused';
+ elsif not(me=any(s.pilot_accounts)) then available:='not_enrolled'; else available:='ready'; end if;
+ pref:=public.quiz_preferences_dto(me);
+ scheduled:=case when public.quiz_fun_slot(me,w) then 'fun' else 'sport' end;
+ if available='ready' then
+  select coalesce(jsonb_agg(jsonb_build_object('topic_category',x.topic_category,'sport',x.sport,'unseen_count',x.n,
+   'allowed',case when x.topic_category='sport' then scheduled='sport' or not public.quiz_fun_available(me) else scheduled='fun' end) order by x.topic_category,x.sport),'[]') into pools
+  from(select q.topic_category,q.sport,count(*) filter(where not exists(select 1 from public.sport_quiz_exposures e where e.profile_id=me and e.question_key=q.question_key)) n
+   from public.sport_quiz_questions q where q.status='approved' and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes))>=10 group by q.topic_category,q.sport)x;
+  if not exists(select 1 from jsonb_array_elements(pools) p where (p->>'unseen_count')::int>0 and (p->>'allowed')::boolean) then available:='unavailable'; end if;
+ end if;
+ if me is not null and s.singleton is not null then select id into aid from public.sport_quiz_attempts where profile_id=me and week_start=w; end if;
+ return jsonb_build_object('contract_version',2,'profile_id',me,'server_now',at,'week_start',w,'week_end',w+7,'testing_only',true,
+ 'availability',available,'preferences',pref,'attempt',public.quiz_summary(aid,at),
+ 'week_spent',me is not null and exists(select 1 from public.sport_quiz_week_guards where profile_id=me and week_start=w),
+ 'scheduled_topic',scheduled,'pools',pools,'history_version',(pref->>'history_version')::bigint,
+ 'history_count',(select count(*) from public.sport_quiz_attempts where profile_id=me and (status<>'issued' or expires_at<=at)),
+ 'badge_count',(select count(*) from public.sport_quiz_badges where profile_id=me and voided_at is null),
+ 'correction_count',(select count(*) from public.sport_quiz_attempts where profile_id=me and status='void'));
+end $$;
+
+create or replace function public.quiz_preferences(p_payload jsonb,p_expected_version bigint,p_request_id uuid,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.quiz_expected_actor(p_expected_profile_id); at timestamptz; d text; r public.sport_quiz_requests%rowtype; p public.sport_quiz_preferences%rowtype;
+begin
+ if p_request_id is null or jsonb_typeof(p_payload) is distinct from 'object' or
+  coalesce(p_payload->>'invitation_mode','') not in ('off','weekly') or coalesce(p_payload->>'topic_mode','') not in ('sports','mix') or
+  p_payload->>'notice_version' is distinct from 'timed-trivia-v1-testing' or exists(select 1 from jsonb_object_keys(p_payload)k where k not in ('invitation_mode','topic_mode','notice_version')) then raise exception 'quiz_preferences_invalid'; end if;
+ perform public.quiz_lock(me);at:=clock_timestamp(); d:=public.quiz_digest(jsonb_build_array(p_payload,p_expected_version));
+ select * into r from public.sport_quiz_requests where profile_id=me and request_id=p_request_id;
+ if found then if r.operation<>'preferences' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict';end if;return public.quiz_receipt_dto(me,p_request_id,at);end if;
+ if p_payload->>'invitation_mode'='weekly' then perform public.quiz_require_testing(me);end if;
+ -- Off remains usable while paused/unlisted; it grants no participation authority.
+ insert into public.sport_quiz_preferences(profile_id) values(me) on conflict do nothing;
+ select * into p from public.sport_quiz_preferences where profile_id=me for update;
+ if p.version is distinct from p_expected_version then raise exception 'quiz_preferences_stale';end if;
+ update public.sport_quiz_preferences set invitation_mode=p_payload->>'invitation_mode',topic_mode=p_payload->>'topic_mode',notice_version=p_payload->>'notice_version',
+  notice_accepted_at=at,version=version+1,updated_at=at where profile_id=me;
+ return public.quiz_save_request(me,p_request_id,'preferences',public.quiz_week_at(at),d,null,
+  case when p.invitation_mode='weekly' and p_payload->>'invitation_mode'='off' then 'saved_off' else 'saved' end,at,public.quiz_preferences_dto(me));
+end $$;
+
+create or replace function public.quiz_invitation(p_expected_week date,p_request_id uuid,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.quiz_expected_actor(p_expected_profile_id);at timestamptz;d text; r public.sport_quiz_requests%rowtype;p public.sport_quiz_preferences%rowtype;outcome text;
+begin
+ if p_request_id is null then raise exception 'quiz_request_invalid';end if;perform public.quiz_lock(me);at:=clock_timestamp();
+ if p_expected_week is distinct from public.quiz_week_at(at) then raise exception 'quiz_week_changed';end if;
+ d:=public.quiz_digest(jsonb_build_array(p_expected_week));select * into r from public.sport_quiz_requests where profile_id=me and request_id=p_request_id;
+ if found then if r.operation<>'invitation' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict';end if;return public.quiz_receipt_dto(me,p_request_id,at);end if;
+ perform public.quiz_require_testing(me);select * into p from public.sport_quiz_preferences where profile_id=me for update;
+ outcome:=case when p.invitation_mode is distinct from 'weekly' then 'off' when p.last_invited_week=p_expected_week then 'already_claimed' else 'claimed' end;
+ if outcome='claimed' then update public.sport_quiz_preferences set last_invited_week=p_expected_week where profile_id=me;end if;
+ return public.quiz_save_request(me,p_request_id,'invitation',p_expected_week,d,null,outcome,at);
+end $$;
+
+create or replace function public.quiz_admin_snapshot(p_question_cursor text default null,p_audit_before bigint default null)
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare me uuid:=public.quiz_admin_actor();at timestamptz:=statement_timestamp();w date:=public.quiz_week_at(at);
+ c jsonb:=public.quiz_cursor(p_question_cursor,'questions');bank jsonb;audit jsonb;nextq text;nexta text;last_id uuid;last_at timestamptz;
+begin
+ if p_audit_before is not null and p_audit_before<=0 then raise exception 'quiz_cursor_invalid';end if;
+ select coalesce(jsonb_agg(to_jsonb(q) order by created_at desc,id desc),'[]') into bank from
+ (select * from public.sport_quiz_questions where c is null or (created_at,id)<((c->>'at')::timestamptz,(c->>'id')::uuid) order by created_at desc,id desc limit 50)q;
+ if jsonb_array_length(bank)=50 then
+  last_at:=(bank->49->>'created_at')::timestamptz;last_id:=(bank->49->>'id')::uuid;
+  if exists(select 1 from public.sport_quiz_questions where (created_at,id)<(last_at,last_id)) then nextq:=jsonb_build_object('v',1,'stream','questions','at',last_at,'id',last_id)::text;end if;
+ end if;
+ select coalesce(jsonb_agg(jsonb_build_object('id',x.id::text,'action',x.action,
+  'actor_id',case when x.action in ('settings','retention') or x.action like 'question_%' then x.actor_id else null end,
+  'question_id',case when x.action like 'question_%' then x.question_id else null end,'reason',x.reason,'created_at',x.created_at) order by x.id desc),'[]') into audit
+  from(select * from public.sport_quiz_audit where p_audit_before is null or id<p_audit_before order by id desc limit 50)x;
+ if jsonb_array_length(audit)=50 and exists(select 1 from public.sport_quiz_audit where id<(audit->49->>'id')::bigint) then nexta:=audit->49->>'id';end if;
+ return jsonb_build_object('contract_version',2,'generated_at',at,'week_start',w,'week_end',w+7,
+ 'settings',(select (to_jsonb(s)-'singleton')||jsonb_build_object('contract_version',2) from public.sport_quiz_settings s where singleton),
+ 'questions',bank,'question_total',(select count(*) from public.sport_quiz_questions),'question_cap',100,'next_question_cursor',nextq,'audit',audit,'next_before',nexta,
+ 'pools',(select coalesce(jsonb_agg(to_jsonb(x) order by topic_category,sport),'[]') from(select topic_category,sport,count(*) approved_count from public.sport_quiz_questions where status='approved' and public.quiz_normalize_options(options) is not null and char_length(btrim(source_notes))>=10 group by topic_category,sport)x),
+ 'counts',jsonb_build_object(
+ 'questions_draft',(select count(*) from public.sport_quiz_questions where status='draft'),
+ 'questions_approved',(select count(*) from public.sport_quiz_questions where status='approved'),
+ 'questions_archived',(select count(*) from public.sport_quiz_questions where status='archived'),
+ 'questions_void',(select count(*) from public.sport_quiz_questions where status='void'),
+ 'week_issued',(select count(*) from public.sport_quiz_attempts where week_start=w and status='issued' and expires_at>at),
+ 'week_completed',(select count(*) from public.sport_quiz_attempts where week_start=w and status='completed'),
+ 'week_skipped',(select count(*) from public.sport_quiz_attempts where week_start=w and status='skipped'),
+ 'week_void',(select count(*) from public.sport_quiz_attempts where week_start=w and status='void'),
+ 'week_ended',(select count(*) from public.sport_quiz_attempts where week_start=w and status='ended'),
+ 'week_expired',(select count(*) from public.sport_quiz_attempts where week_start=w and (status='expired' or (status='issued' and expires_at<=at))),
+ 'badges_issued',(select count(*) from public.sport_quiz_badges where voided_at is null),
+ 'badges_void',(select count(*) from public.sport_quiz_badges where voided_at is not null),
+ 'preferences_weekly',(select count(*) from public.sport_quiz_preferences where invitation_mode='weekly'),
+ 'exposures',(select count(*) from public.sport_quiz_exposures),'week_spent',(select count(*) from public.sport_quiz_week_guards where week_start=w),
+ 'retained_guards',(select count(*) from public.sport_quiz_week_guards),'retained_requests',(select count(*) from public.sport_quiz_requests)));
+end $$;
+
+create or replace function public.quiz_admin_retention(p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.quiz_expected_actor(p_expected_actor_id,true);at timestamptz;ng bigint;nr bigint;kept bigint;
+begin
+ if char_length(btrim(coalesce(p_reason,''))) not between 10 and 500 then raise exception 'quiz_retention_invalid';end if;
+ perform 1 from public.sport_quiz_settings where singleton for update;if not found then raise exception 'quiz_unavailable';end if;at:=clock_timestamp();
+ delete from public.sport_quiz_requests where (profile_id,request_id) in(select profile_id,request_id from public.sport_quiz_requests where prune_after<=at order by prune_after,profile_id,request_id limit 500);get diagnostics nr=row_count;
+ delete from public.sport_quiz_week_guards where (profile_id,week_start) in(select profile_id,week_start from public.sport_quiz_week_guards where prune_after<=at order by prune_after,profile_id,week_start limit 500);get diagnostics ng=row_count;
+ select count(*) into kept from public.sport_quiz_week_guards where prune_after>at;
+ insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'retention',btrim(p_reason),at);
+ return jsonb_build_object('contract_version',2,'removed_guards',ng,'removed_requests',nr,'preserved_guards',kept,'batch_limit',500);
+end $$;
+
+do $$ declare t text;f record;begin
+ foreach t in array array['sport_quiz_preferences','sport_quiz_exposures','sport_quiz_week_guards','sport_quiz_requests'] loop
+  execute format('alter table public.%I enable row level security',t);
+  execute format('drop policy if exists quiz_closed_account on public.%I',t);
+  execute format('create policy quiz_closed_account on public.%I as restrictive for all to authenticated using (public.my_profile_id() is not null and public.profile_age_band(public.my_profile_id()) in (''adult'',''teen_13_15'',''teen_16_17'')) with check (public.my_profile_id() is not null and public.profile_age_band(public.my_profile_id()) in (''adult'',''teen_13_15'',''teen_16_17''))',t);
+  execute format('revoke all on table public.%I from public,anon,authenticated,service_role',t);
+ end loop;
+ for f in select p.oid::regprocedure signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'quiz\_%' escape '\' loop
+  execute format('revoke all on function %s from public,anon,authenticated,service_role',f.signature);
+ end loop;
+end $$;
+grant execute on function public.quiz_snapshot(),public.quiz_preferences(jsonb,bigint,uuid,uuid),public.quiz_invitation(date,uuid,uuid),
+ public.quiz_start(text,text,integer,date,text,uuid,text,uuid),public.quiz_answer(uuid,integer,uuid,text,uuid),
+ public.quiz_end(uuid,uuid,date,text,uuid,uuid),public.quiz_skip(date,uuid,uuid),public.quiz_receipt(uuid),public.quiz_history(text),
+ public.quiz_erase_history(bigint,uuid),public.quiz_admin_snapshot(text,bigint),public.quiz_admin_settings(jsonb,text,uuid),
+ public.quiz_admin_question(uuid,text,jsonb,uuid),public.quiz_admin_retention(text,uuid) to authenticated;
+
+
+-- QUIZ-03: trivia play together — rounds of up to five with Next recovery, question types, badges, season recap
+-- and family groups. Local source only; not applied anywhere. Requires QUIZ-01, QUIZ-02, MINOR-01 and PRIV-01.
+-- Design: docs/engineering/design/TRIVIA_PLAY_TOGETHER_DESIGN.md (§9 overrides §1–§7).
+-- Owner: POLLS (with BACKEND, DATABASE_MIGRATIONS, AURA for badges, ADMIN); reviews MINOR_SAFETY, PRIVACY_ENGINEERING,
+--   RLS_SECURITY, CONTENT_RIGHTS, SUPPORT, QA, DATA_GOVERNANCE.
+-- What it adds:
+--   1. sport_quiz_round_items: the attempt stays the weekly round; each item has its own server deadline. Round state
+--      'between' (round_state column, attempt status stays 'issued') carries next_by = item close + 2 minutes.
+--   2. quiz_next: exact recovery by request UUID + expected position + the round's session secret; a replay returns
+--      the same item only before its deadline. Start and Next refuse a round that cannot finish before the UTC week.
+--   3. Per-item void; a completed round = at least one committed, non-void answer. Badges are unique per
+--      (profile, label, period): Trivia Explorer (week), "<Sport> Explorer" (5 facts, lifetime), Family Challenger
+--      (week played while in a group), Season Learner (10 rounds in a calendar quarter). Opt-in group visibility.
+--   4. question_type choice4 | true_false | image_choice; 2–4 options; answer bound by the option count; image rights
+--      fields (≤ 300 KB, no person). image_choice approval refused while trivia.images is off; images are never drawn
+--      (no bucket, no delivery in this build). Bank cap 300 counting draft + approved only; per-sport forecast.
+--   5. Groups: preset names, members, hashed 8-character codes (7 days), join attempts, group-week shared sets drawn
+--      without reading exposures (private replacements), audited case/report log, admin case view and removal,
+--      switch trivia.groups. MINOR-01 teen rules both ways and PRIV-01 blocks on every join; a block removes the
+--      blocked party. Guardian supervision gains "trivia_groups" and joined / left events (counts only).
+--   6. Erasure covers group participation, sets of dissolved groups and every badge (join attempts stay for their
+--      35 days so limits and refusal evidence survive); retention purges codes, sets, join attempts and closed groups;
+--      a deleted creator hands the group to the oldest member or it dissolves.
+--   Security review (RLS_SECURITY + MINOR_SAFETY + PRIVACY, 2026-10-14) applied: teen rules are re-checked after an
+--   age correction, a setting change, an unfriend, an ended guardian link and lazily on group reads/starts (birthdays);
+--   a closed (under-13) account leaves every group and never shows; erasure keeps join attempts; group fact totals are
+--   hidden below 3 players and rounded; member_ref is an opaque per-group reference; admin-closed groups show no
+--   members; codes use pgcrypto random bytes; image rights need a second admin's review plus marks/EXIF attestations.
+-- Access: RPC-only (no table grants), "Closed accounts" restrictive policy on every new table, explicit revokes on every
+--   function, pinned search_path. Lock order: settings → group → account → attempt; advisory lock per group for sets.
+-- Re-run: idempotent on its own before QUIZ-04 (add column if not exists; create table if not exists; drop/add named
+--   constraints; create or replace; widened checks NOT VALID). After QUIZ-04 (20261014180000) it must NOT be re-run alone:
+--   it would replace QUIZ-04 functions and grants, so it stops with quiz_rerun_after_quiz04. schema.sql re-applies it
+--   together with QUIZ-04 (it sets quiz.full_schema around the QUIZ blocks).
+-- Rollback: pause (enabled=false, groups off); retain records; reviewed forward migration. Never drop history blindly.
+
+-- 0. Stop a lone re-run after QUIZ-04 (see header) ---------------------------------------------------------------------
+do $$ begin
+  if to_regclass('public.sport_quiz_life_chapters') is not null and coalesce(current_setting('quiz.full_schema',true),'') <> 'on' then
+    raise exception 'quiz_rerun_after_quiz04: 20261014160000_trivia_play_together.sql must not be re-run alone after QUIZ-04; re-apply schema.sql or write a reviewed forward migration';
+  end if;
+end $$;
+
+-- 1. Settings: round size and the two switches -------------------------------------------------------------------
+alter table public.sport_quiz_settings add column if not exists round_size integer not null default 5;
+alter table public.sport_quiz_settings drop constraint if exists quiz_round_size_range;
+alter table public.sport_quiz_settings add constraint quiz_round_size_range check (round_size between 1 and 5);
+alter table public.sport_quiz_settings add column if not exists groups_enabled boolean not null default false;
+alter table public.sport_quiz_settings add column if not exists images_enabled boolean not null default false;
+
+-- 2. Question types and image rights fields --------------------------------------------------------------------------
+alter table public.sport_quiz_questions add column if not exists question_type text not null default 'choice4';
+alter table public.sport_quiz_questions add column if not exists media_path text;
+alter table public.sport_quiz_questions add column if not exists media_licence text;
+alter table public.sport_quiz_questions add column if not exists media_source text;
+alter table public.sport_quiz_questions add column if not exists media_attribution text;
+alter table public.sport_quiz_questions add column if not exists media_alt_text text;
+alter table public.sport_quiz_questions add column if not exists media_size_bytes integer;
+alter table public.sport_quiz_questions add column if not exists media_has_person boolean;
+alter table public.sport_quiz_questions add column if not exists media_reviewed_by uuid references public.profiles(id) on delete set null;
+alter table public.sport_quiz_questions add column if not exists media_reviewed_at timestamptz;
+alter table public.sport_quiz_questions add column if not exists media_no_marks boolean;
+alter table public.sport_quiz_questions add column if not exists media_exif_stripped boolean;
+alter table public.sport_quiz_questions drop constraint if exists sport_quiz_questions_options_check;
+alter table public.sport_quiz_questions drop constraint if exists quiz_question_type_check;
+alter table public.sport_quiz_questions add constraint quiz_question_type_check check (question_type in ('choice4','true_false','image_choice'));
+alter table public.sport_quiz_questions drop constraint if exists quiz_options_shape;
+alter table public.sport_quiz_questions add constraint quiz_options_shape check (jsonb_typeof(options) = 'array'
+  and jsonb_array_length(options) between 2 and 4 and correct_option < jsonb_array_length(options));
+alter table public.sport_quiz_questions drop constraint if exists quiz_question_type_shape;
+alter table public.sport_quiz_questions add constraint quiz_question_type_shape check (case question_type
+  when 'choice4' then jsonb_array_length(options) = 4
+  when 'true_false' then options = '["True","False"]'::jsonb
+  else jsonb_array_length(options) between 2 and 4 end);
+alter table public.sport_quiz_questions drop constraint if exists quiz_media_fields;
+alter table public.sport_quiz_questions add constraint quiz_media_fields check (
+  (question_type <> 'image_choice' and media_path is null and media_licence is null and media_source is null and media_attribution is null
+    and media_alt_text is null and media_size_bytes is null and media_has_person is null and media_no_marks is null and media_exif_stripped is null)
+  or (question_type = 'image_choice' and media_path ~ '^[a-z0-9][a-z0-9_/-]{0,150}\.(jpg|jpeg|png|webp)$'
+    and media_licence in ('owned','cc0','cc_by','licensed','public_domain')
+    and char_length(btrim(media_source)) between 3 and 300 and char_length(btrim(media_attribution)) between 2 and 200
+    and char_length(btrim(media_alt_text)) between 10 and 250 and media_size_bytes between 1 and 307200 and media_has_person = false
+    and media_no_marks = true and media_exif_stripped = true));
+
+-- 3. Groups ------------------------------------------------------------------------------------------------------------
+create table if not exists public.sport_quiz_groups (
+  id uuid primary key default gen_random_uuid(),
+  name_key text not null check (name_key in ('family','friends','team_fans','cousins','game_day_crew','home_team')),
+  theme_sport text check (theme_sport is null or char_length(btrim(theme_sport)) between 2 and 80),
+  owner_id uuid references public.profiles(id) on delete set null,
+  created_by uuid references public.profiles(id) on delete set null,
+  create_request_id uuid,
+  created_at timestamptz not null,
+  status text not null default 'active' check (status in ('active','closed')),
+  closed_at timestamptz,
+  close_reason text check (close_reason in ('dissolved','admin_removed')),
+  codes_issued integer not null default 0 check (codes_issued >= 0),
+  -- Private per-group salt for opaque member references; never returned by any RPC.
+  ref_salt text not null default replace(gen_random_uuid()::text,'-',''),
+  check ((status = 'closed') = (closed_at is not null and close_reason is not null))
+);
+create unique index if not exists quiz_group_create_request on public.sport_quiz_groups(create_request_id) where create_request_id is not null;
+create index if not exists quiz_group_owner on public.sport_quiz_groups(owner_id, status);
+
+create table if not exists public.sport_quiz_group_members (
+  group_id uuid not null references public.sport_quiz_groups(id) on delete cascade,
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  status text not null default 'active' check (status in ('active','removed')),
+  joined_at timestamptz not null,
+  removed_at timestamptz,
+  -- creator / blocked / admin bar rejoining; teen_rule (rules changed) and closed (under-13 closure) do not.
+  removed_reason text check (removed_reason in ('creator','blocked','admin','teen_rule','closed')),
+  primary key (group_id, profile_id),
+  check ((status = 'removed') = (removed_at is not null and removed_reason is not null))
+);
+create index if not exists quiz_group_member_profile on public.sport_quiz_group_members(profile_id, status);
+
+create table if not exists public.sport_quiz_group_codes (
+  group_id uuid primary key references public.sport_quiz_groups(id) on delete cascade,
+  code_hash text not null unique check (code_hash ~ '^[0-9a-f]{64}$'),
+  created_at timestamptz not null,
+  expires_at timestamptz not null,
+  created_by uuid references public.profiles(id) on delete set null,
+  check (expires_at > created_at and expires_at <= created_at + interval '7 days')
+);
+create index if not exists quiz_group_code_expiry on public.sport_quiz_group_codes(expires_at);
+
+create table if not exists public.sport_quiz_group_join_attempts (
+  id bigint generated always as identity primary key,
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  group_id uuid references public.sport_quiz_groups(id) on delete set null,
+  outcome text not null check (outcome in ('joined','wrong_code','refused')),
+  refusal_reason text check (refusal_reason in ('teen_rule','blocked','full','removed','closed')),
+  created_at timestamptz not null,
+  prune_after timestamptz not null,
+  check ((outcome = 'refused') = (refusal_reason is not null)),
+  check (prune_after = created_at + interval '35 days')
+);
+create index if not exists quiz_group_join_recent on public.sport_quiz_group_join_attempts(profile_id, created_at desc);
+create index if not exists quiz_group_join_prune on public.sport_quiz_group_join_attempts(prune_after);
+
+create table if not exists public.sport_quiz_group_sets (
+  group_id uuid not null references public.sport_quiz_groups(id) on delete cascade,
+  week_start date not null check (extract(isodow from week_start) = 1),
+  position smallint not null check (position between 1 and 5),
+  question_key uuid not null,
+  question_id uuid not null references public.sport_quiz_questions(id),
+  created_at timestamptz not null,
+  prune_after timestamptz not null,
+  primary key (group_id, week_start, position),
+  check (prune_after > created_at)
+);
+create index if not exists quiz_group_sets_prune on public.sport_quiz_group_sets(prune_after);
+
+-- Audited safety record. No foreign key on group_id: the record survives the group's retention purge.
+create table if not exists public.sport_quiz_group_cases (
+  id bigint generated always as identity primary key,
+  group_id uuid not null,
+  kind text not null check (kind in ('report','admin_view','admin_removal','admin_close','member_removed','blocked_removed','rule_removed','account_closed','handover','dissolved')),
+  actor_id uuid references public.profiles(id) on delete set null,
+  subject_id uuid references public.profiles(id) on delete set null,
+  reason_code text check (reason_code is null or reason_code in ('safety','unwanted_contact','name_or_theme','other','creator','blocked','admin','teen_rule','closed')),
+  reason text check (reason is null or char_length(reason) <= 500),
+  created_at timestamptz not null
+);
+create index if not exists quiz_group_cases_group on public.sport_quiz_group_cases(group_id, id desc);
+create index if not exists quiz_group_cases_kind on public.sport_quiz_group_cases(kind, created_at desc);
+
+-- 4. Rounds: the attempt is the round; items carry per-question deadlines -------------------------------------------
+alter table public.sport_quiz_attempts drop constraint if exists sport_quiz_attempts_mode_check;
+alter table public.sport_quiz_attempts add constraint sport_quiz_attempts_mode_check check (mode in ('legacy','timed','round'));
+alter table public.sport_quiz_attempts add column if not exists round_state text check (round_state in ('item','between'));
+alter table public.sport_quiz_attempts add column if not exists position smallint;
+alter table public.sport_quiz_attempts add column if not exists planned_items smallint;
+alter table public.sport_quiz_attempts add column if not exists round_size smallint;
+alter table public.sport_quiz_attempts add column if not exists next_by timestamptz;
+alter table public.sport_quiz_attempts add column if not exists topic_category text;
+alter table public.sport_quiz_attempts add column if not exists sport_filter text;
+alter table public.sport_quiz_attempts add column if not exists group_id uuid references public.sport_quiz_groups(id) on delete set null;
+-- QUIZ-01's unnamed single-question shape checks are rescoped to the legacy/timed modes.
+do $$ declare c record; begin
+  for c in select conname from pg_constraint where conrelid = 'public.sport_quiz_attempts'::regclass and contype = 'c'
+    and conname not like 'quiz\_%' and pg_get_constraintdef(oid) like '%question_id IS NOT NULL%' loop
+    execute format('alter table public.sport_quiz_attempts drop constraint %I', c.conname);
+  end loop;
+end $$;
+alter table public.sport_quiz_attempts drop constraint if exists quiz_completed_shape;
+alter table public.sport_quiz_attempts add constraint quiz_completed_shape check (mode = 'round' or status <> 'completed'
+  or (question_id is not null and answered_option is not null and request_id is not null and completed_at is not null));
+alter table public.sport_quiz_attempts drop constraint if exists quiz_issued_shape;
+alter table public.sport_quiz_attempts add constraint quiz_issued_shape check (mode = 'round' or status <> 'issued' or question_id is not null);
+alter table public.sport_quiz_attempts drop constraint if exists quiz_round_shape;
+alter table public.sport_quiz_attempts add constraint quiz_round_shape check (mode <> 'round' or (
+  question_id is null and duration_seconds is not null and started_at is not null and expires_at is not null
+  and topic_category in ('sport','science','geography','general')
+  and round_size between 1 and 5 and planned_items between 1 and round_size and position between 1 and planned_items
+  and status in ('issued','completed','ended','expired','void')
+  and (status = 'issued') = (round_state is not null)
+  and (round_state is distinct from 'between' or next_by is not null)
+  and (status <> 'issued' or session_hash is not null))) not valid;
+alter table public.sport_quiz_attempts drop constraint if exists quiz_round_only_columns;
+alter table public.sport_quiz_attempts add constraint quiz_round_only_columns check (mode = 'round'
+  or (round_state is null and position is null and planned_items is null and next_by is null and group_id is null));
+create index if not exists quiz_attempt_group on public.sport_quiz_attempts(group_id, week_start) where group_id is not null;
+
+create table if not exists public.sport_quiz_round_items (
+  attempt_id uuid not null references public.sport_quiz_attempts(id) on delete cascade,
+  position smallint not null check (position between 1 and 5),
+  question_id uuid not null references public.sport_quiz_questions(id),
+  question_key uuid not null,
+  issued_at timestamptz not null,
+  expires_at timestamptz not null,
+  answered_option smallint check (answered_option between 0 and 3),
+  answered_at timestamptz,
+  answer_request_id uuid,
+  next_request_id uuid,
+  status text not null check (status in ('issued','answered','expired','ended','void')),
+  closed_at timestamptz,
+  voided_at timestamptz,
+  correction_reason text,
+  primary key (attempt_id, position),
+  check (expires_at > issued_at),
+  check (status <> 'answered' or (answered_option is not null and answered_at is not null and answered_at <= expires_at)),
+  check ((status = 'void') = (voided_at is not null)),
+  check (status = 'issued' or closed_at is not null)
+);
+create index if not exists quiz_round_items_question on public.sport_quiz_round_items(question_id);
+
+-- 5. Badges: unique per (profile, label, period) ----------------------------------------------------------------------
+alter table public.sport_quiz_badges add column if not exists period text;
+alter table public.sport_quiz_badges add column if not exists kind text;
+alter table public.sport_quiz_badges add column if not exists sport text;
+update public.sport_quiz_badges set period = week_start::text where period is null;
+update public.sport_quiz_badges set kind = 'weekly' where kind is null;
+alter table public.sport_quiz_badges alter column period set not null;
+alter table public.sport_quiz_badges alter column kind set not null;
+alter table public.sport_quiz_badges alter column attempt_id drop not null;
+alter table public.sport_quiz_badges alter column week_start drop not null;
+alter table public.sport_quiz_badges drop constraint if exists sport_quiz_badges_attempt_id_key;
+alter table public.sport_quiz_badges drop constraint if exists sport_quiz_badges_profile_id_week_start_key;
+create unique index if not exists quiz_badge_unique on public.sport_quiz_badges(profile_id, label, period);
+create index if not exists quiz_badge_attempt on public.sport_quiz_badges(attempt_id);
+alter table public.sport_quiz_badges drop constraint if exists sport_quiz_badges_label_check;
+alter table public.sport_quiz_badges drop constraint if exists quiz_badge_label;
+alter table public.sport_quiz_badges add constraint quiz_badge_label check (
+  (kind = 'weekly' and label in ('Sport Learner','Trivia Explorer') and attempt_id is not null and sport is null)
+  or (kind = 'family' and label = 'Family Challenger' and attempt_id is null and sport is null)
+  or (kind = 'season' and label = 'Season Learner' and attempt_id is null and sport is null and period ~ '^[0-9]{4}-Q[1-4]$')
+  or (kind = 'sport' and sport is not null and label = sport || ' Explorer' and attempt_id is null and period = 'lifetime')) not valid;
+alter table public.sport_quiz_badges drop constraint if exists sport_quiz_badges_visibility_check;
+alter table public.sport_quiz_badges drop constraint if exists quiz_badge_visibility;
+alter table public.sport_quiz_badges add constraint quiz_badge_visibility check (visibility in ('private','groups'));
+
+-- QUIZ-02 inserts name only (profile, attempt, week, label); fill the new columns for those rows.
+create or replace function public.quiz_badge_defaults()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  new.kind := coalesce(new.kind, case when new.label in ('Sport Learner','Trivia Explorer') then 'weekly' end);
+  new.period := coalesce(new.period, new.week_start::text);
+  return new;
+end $$;
+drop trigger if exists quiz_badge_defaults on public.sport_quiz_badges;
+create trigger quiz_badge_defaults before insert on public.sport_quiz_badges for each row execute function public.quiz_badge_defaults();
+
+-- 6. Requests and supervision vocabulary ------------------------------------------------------------------------------
+alter table public.sport_quiz_requests drop constraint if exists sport_quiz_requests_operation_check;
+alter table public.sport_quiz_requests add constraint sport_quiz_requests_operation_check
+  check (operation in ('preferences','invitation','start','answer','end','skip','next'));
+alter table public.sport_quiz_audit drop constraint if exists sport_quiz_audit_action_check;
+alter table public.sport_quiz_audit add constraint sport_quiz_audit_action_check check (action in
+  ('settings','question_create','question_edit','question_approve','question_archive','question_void','question_review_media','start','answer','skip','end','retention')) not valid;
+alter table public.supervision_events drop constraint if exists supervision_events_kind_check;
+alter table public.supervision_events add constraint supervision_events_kind_check check (kind in (
+  'age_recorded', 'age_corrected', 'invite_created', 'guardian_linked', 'guardian_unlinked', 'consent_signed',
+  'consent_withdrawn', 'settings_changed', 'made_private', 'approval_requested', 'approval_decided', 'approval_cancelled',
+  'trivia_group_joined', 'trivia_group_left'));
+
+-- 7. Content helpers -----------------------------------------------------------------------------------------------------
+create or replace function public.quiz_round_gap()
+returns interval language sql immutable set search_path = '' as $$ select interval '120 seconds' $$;
+create or replace function public.quiz_week_end(p_week date)
+returns timestamptz language sql immutable set search_path = '' as $$ select (p_week + 7)::timestamp at time zone 'UTC' $$;
+create or replace function public.quiz_quarter_of(p_day date)
+returns text language sql immutable set search_path = '' as $$ select to_char(p_day, 'YYYY') || '-Q' || extract(quarter from p_day)::int $$;
+
+-- Two to four options, Unicode-trimmed and distinct (the type rule lives in the table checks).
+create or replace function public.quiz_normalize_options(p_options jsonb)
+returns jsonb language plpgsql immutable set search_path = '' as $$
+declare item jsonb; normalized jsonb := '[]'; option_text text; n integer;
+begin
+  if jsonb_typeof(p_options) is distinct from 'array' then return null; end if;
+  n := jsonb_array_length(p_options);
+  if n not between 2 and 4 then return null; end if;
+  for item in select value from jsonb_array_elements(p_options) loop
+    if jsonb_typeof(item) <> 'string' then return null; end if;
+    option_text := btrim(item #>> '{}',U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF');
+    if char_length(option_text) not between 1 and 100 then return null; end if;
+    normalized := normalized || jsonb_build_array(option_text);
+  end loop;
+  if (select count(distinct value) from jsonb_array_elements(normalized)) <> n then return null; end if;
+  return normalized;
+end $$;
+
+create or replace function public.quiz_guard_question()
+returns trigger language plpgsql set search_path = '' as $$
+declare normalized jsonb;
+begin
+  if tg_op = 'UPDATE' and (new.question_key,new.version,new.sport,new.prompt,new.options,new.correct_option,new.explanation,new.created_at,
+      new.topic_category,new.source_notes,new.question_type,new.media_path,new.media_licence,new.media_source,new.media_attribution,
+      new.media_alt_text,new.media_size_bytes,new.media_has_person,new.media_no_marks,new.media_exif_stripped)
+    is distinct from (old.question_key,old.version,old.sport,old.prompt,old.options,old.correct_option,old.explanation,old.created_at,
+      old.topic_category,old.source_notes,old.question_type,old.media_path,old.media_licence,old.media_source,old.media_attribution,
+      old.media_alt_text,old.media_size_bytes,old.media_has_person,old.media_no_marks,old.media_exif_stripped) then raise exception 'quiz_immutable'; end if;
+  if tg_op = 'UPDATE' and old.status = 'void' and new.status <> 'void' then raise exception 'quiz_void_final'; end if;
+  normalized := public.quiz_normalize_options(new.options);
+  if normalized is null and tg_op = 'UPDATE' and new.status in ('archived','void') then return new; end if;
+  if normalized is null then raise exception 'quiz_options_invalid'; end if;
+  if new.status = 'approved' and char_length(btrim(new.source_notes)) not between 10 and 1000 then raise exception 'quiz_sources_required'; end if;
+  -- Images stay off until Content Rights and Minor Safety approve; nothing can be approved behind the switch.
+  if new.status = 'approved' and new.question_type = 'image_choice' and (tg_op = 'INSERT' or old.status <> 'approved')
+     and not coalesce((select s.images_enabled from public.sport_quiz_settings s where s.singleton), false) then raise exception 'quiz_images_off'; end if;
+  if new.status = 'approved' and new.question_type = 'image_choice' and (tg_op = 'INSERT' or old.status <> 'approved')
+     and (new.media_reviewed_by is null or new.media_reviewed_by is not distinct from new.created_by) then raise exception 'quiz_media_review_required'; end if;
+  if new.question_type = 'image_choice' and new.correct_option < jsonb_array_length(normalized)
+     and position(lower(normalized ->> new.correct_option) in lower(coalesce(new.media_alt_text,''))) > 0 then raise exception 'quiz_media_alt_reveals_answer'; end if;
+  if tg_op = 'INSERT' then new.options := normalized; end if;
+  return new;
+end $$;
+
+create or replace function public.quiz_question_dto(p_question uuid)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('id',id,'question_key',question_key,'version',version,'topic_category',topic_category,'sport',sport,
+    'prompt',prompt,'options',options,'question_type',question_type)
+  from public.sport_quiz_questions where id = p_question
+$$;
+
+create or replace function public.quiz_fun_available(p_me uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.sport_quiz_questions q where status = 'approved' and topic_category <> 'sport' and question_type <> 'image_choice'
+    and char_length(btrim(source_notes)) >= 10 and public.quiz_normalize_options(options) is not null
+    and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key))
+$$;
+
+-- Unseen deliverable families for one account in a topic/sport filter.
+create or replace function public.quiz_unseen_count(p_me uuid,p_topic text,p_sport text)
+returns integer language sql stable security definer set search_path = '' as $$
+  select count(*)::int from public.sport_quiz_questions q
+  where q.status = 'approved' and q.question_type <> 'image_choice' and q.topic_category = p_topic and (p_sport is null or q.sport = p_sport)
+    and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10
+    and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+$$;
+
+-- Facts learned: committed non-void round answers plus completed single-question attempts, by week range.
+create or replace function public.quiz_facts(p_me uuid,p_from date,p_to date)
+returns integer language sql stable security definer set search_path = '' as $$
+  select ((select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+            where a.profile_id = p_me and i.status = 'answered' and a.week_start >= p_from and a.week_start < p_to)
+        + (select count(*) from public.sport_quiz_attempts a where a.profile_id = p_me and a.mode <> 'round' and a.status = 'completed'
+            and a.week_start >= p_from and a.week_start < p_to))::int
+$$;
+create or replace function public.quiz_played(p_me uuid,p_week date)
+returns boolean language sql stable security definer set search_path = '' as $$ select public.quiz_facts(p_me,p_week,p_week + 7) > 0 $$;
+
+-- 8. Round lifecycle -----------------------------------------------------------------------------------------------------
+-- Read-only effective state: the snapshot never writes, so an expired item or a missed Next is computed here.
+create or replace function public.quiz_round_view(p_attempt uuid,p_asof timestamptz)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare a public.sport_quiz_attempts%rowtype; it public.sport_quiz_round_items%rowtype; answered integer; voided integer;
+  st text; rs text; nb timestamptz; closed timestamptz; why text; item_expired boolean := false;
+begin
+  select * into a from public.sport_quiz_attempts where id = p_attempt;
+  if a.id is null or a.mode <> 'round' then return null; end if;
+  select count(*) filter (where status = 'answered'), count(*) filter (where status = 'void' and answered_option is not null)
+    into answered, voided from public.sport_quiz_round_items where attempt_id = a.id;
+  st := a.status; rs := a.round_state; nb := a.next_by; closed := a.closed_at; why := a.close_reason;
+  select * into it from public.sport_quiz_round_items where attempt_id = a.id and position = a.position;
+  if st = 'issued' and rs = 'item' and it.status = 'issued' and it.expires_at <= p_asof then
+    item_expired := true;
+    if a.position >= a.planned_items then
+      st := case when answered > 0 then 'completed' when voided > 0 then 'void' else 'expired' end; rs := null; nb := null; closed := it.expires_at; why := 'deadline';
+    else rs := 'between'; nb := it.expires_at + public.quiz_round_gap(); end if;
+  end if;
+  if st = 'issued' and rs = 'between' and nb <= p_asof then
+    st := case when answered > 0 then 'completed' when voided > 0 then 'void' else 'expired' end; rs := null; closed := nb; nb := null; why := 'next_timeout';
+  end if;
+  return jsonb_build_object('status',st,'round_state',rs,'next_by',case when rs = 'between' then nb end,'closed_at',closed,'close_reason',why,
+    'item_expired',item_expired,'answered_count',answered,'effective_expired',a.status = 'issued' and (st <> 'issued' or item_expired));
+end $$;
+
+create or replace function public.quiz_summary(p_attempt uuid,p_asof timestamptz)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select case when a.mode = 'round' then
+    jsonb_build_object('id',a.id,'week_start',a.week_start,'mode',a.mode,'status',v ->> 'status','started_at',a.started_at,'expires_at',a.expires_at,
+      'duration_seconds',a.duration_seconds,'closed_at',v -> 'closed_at','close_reason',v ->> 'close_reason','effective_expired',(v ->> 'effective_expired')::boolean,
+      'correction_reason',a.correction_reason,'round_state',v ->> 'round_state','position',a.position,'planned_items',a.planned_items,
+      'round_size',a.round_size,'next_by',v -> 'next_by','answered_count',(v ->> 'answered_count')::int,'short_round',a.planned_items < a.round_size,
+      'group_id',a.group_id)
+  else
+    jsonb_build_object('id',a.id,'week_start',a.week_start,'mode',a.mode,
+      'status',case when a.status = 'issued' and a.expires_at <= p_asof then 'expired' else a.status end,
+      'started_at',a.started_at,'expires_at',a.expires_at,'duration_seconds',a.duration_seconds,'closed_at',a.closed_at,'close_reason',a.close_reason,
+      'effective_expired',a.status = 'issued' and a.expires_at <= p_asof,'correction_reason',a.correction_reason,
+      'round_state',null,'position',null,'planned_items',null,'round_size',null,'next_by',null,'answered_count',
+      case when a.status = 'completed' then 1 else 0 end,'short_round',false,'group_id',null)
+  end
+  from public.sport_quiz_attempts a cross join lateral (select public.quiz_round_view(a.id,p_asof) v) x where a.id = p_attempt
+$$;
+
+-- The latest closed item's result while the round waits for Next or is over; never the open item's answer.
+create or replace function public.quiz_result_dto(p_attempt uuid,p_asof timestamptz)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare a public.sport_quiz_attempts%rowtype; it public.sport_quiz_round_items%rowtype; q public.sport_quiz_questions%rowtype; v jsonb;
+begin
+  select * into a from public.sport_quiz_attempts where id = p_attempt;
+  if a.id is null then return null; end if;
+  if a.mode <> 'round' then
+    return (select jsonb_build_object('answered_option',a.answered_option,'correct_option',q2.correct_option,
+      'was_correct',case when a.answered_option is null then null else a.answered_option = q2.correct_option end,
+      'explanation',q2.explanation,'completed_at',a.completed_at,'position',null,'item_status',null)
+      from public.sport_quiz_questions q2 where q2.id = a.question_id and (a.status <> 'issued' or a.expires_at <= p_asof));
+  end if;
+  v := public.quiz_round_view(a.id,p_asof);
+  if v ->> 'status' = 'issued' and v ->> 'round_state' = 'item' then return null; end if;
+  select * into it from public.sport_quiz_round_items where attempt_id = a.id and (status <> 'issued' or expires_at <= p_asof) order by position desc limit 1;
+  if it.attempt_id is null then return null; end if;
+  select * into q from public.sport_quiz_questions where id = it.question_id;
+  return jsonb_build_object('answered_option',it.answered_option,'correct_option',q.correct_option,
+    'was_correct',case when it.answered_option is null then null else it.answered_option = q.correct_option end,
+    'explanation',q.explanation,'completed_at',it.answered_at,'position',it.position,
+    'item_status',case when it.status = 'issued' then 'expired' else it.status end);
+end $$;
+
+create or replace function public.quiz_round_items_dto(p_attempt uuid,p_asof timestamptz)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('position',i.position,
+    'status',case when i.status = 'issued' then 'expired' else i.status end,'question',public.quiz_question_dto(i.question_id),
+    'result',jsonb_build_object('answered_option',i.answered_option,'correct_option',q.correct_option,
+      'was_correct',case when i.answered_option is null then null else i.answered_option = q.correct_option end,
+      'explanation',q.explanation,'completed_at',i.answered_at),
+    'correction_reason',i.correction_reason) order by i.position),'[]'::jsonb)
+  from public.sport_quiz_round_items i join public.sport_quiz_questions q on q.id = i.question_id
+  where i.attempt_id = p_attempt and (i.status <> 'issued' or i.expires_at <= p_asof)
+$$;
+
+-- Close a round: open items end (or expire), the status follows the committed answers.
+create or replace function public.quiz_round_close(p_attempt uuid,p_at timestamptz,p_reason text,p_closed_at timestamptz default null)
+returns text language plpgsql security definer set search_path = '' as $$
+declare a public.sport_quiz_attempts%rowtype; n integer; nv integer; st text; t timestamptz := coalesce(p_closed_at,p_at);
+begin
+  select * into a from public.sport_quiz_attempts where id = p_attempt for update;
+  if a.id is null or a.mode <> 'round' or a.status <> 'issued' then return a.status; end if;
+  update public.sport_quiz_round_items set status = case when expires_at <= t then 'expired' else 'ended' end,closed_at = least(expires_at,t)
+    where attempt_id = a.id and status = 'issued';
+  select count(*) filter (where status = 'answered'),count(*) filter (where status = 'void' and answered_option is not null) into n,nv
+    from public.sport_quiz_round_items where attempt_id = a.id;
+  st := case when n > 0 then 'completed' when nv > 0 then 'void' when p_reason in ('deadline','next_timeout') then 'expired' else 'ended' end;
+  update public.sport_quiz_attempts set status = st,round_state = null,next_by = null,closed_at = t,close_reason = p_reason,session_hash = null,
+    completed_at = case when n > 0 then t end,voided_at = case when st = 'void' then coalesce(voided_at,t) end where id = a.id;
+  perform public.quiz_bump_history(a.profile_id);
+  return st;
+end $$;
+
+-- Persist expiry chains under the lifecycle lock: item deadline → between → Next window → closed.
+create or replace function public.quiz_round_settle(p_attempt uuid,p_at timestamptz)
+returns void language plpgsql security definer set search_path = '' as $$
+declare a public.sport_quiz_attempts%rowtype; it public.sport_quiz_round_items%rowtype; closed timestamptz;
+begin
+  loop
+    select * into a from public.sport_quiz_attempts where id = p_attempt for update;
+    if a.id is null or a.mode <> 'round' or a.status <> 'issued' then return; end if;
+    if a.round_state = 'item' then
+      select * into it from public.sport_quiz_round_items where attempt_id = a.id and position = a.position for update;
+      if it.status = 'issued' and it.expires_at > p_at then return; end if;
+      closed := case when it.status = 'issued' then it.expires_at else coalesce(it.closed_at,p_at) end;
+      if it.status = 'issued' then
+        update public.sport_quiz_round_items set status = 'expired',closed_at = it.expires_at where attempt_id = a.id and position = a.position;
+      end if;
+      if a.position >= a.planned_items then perform public.quiz_round_close(a.id,p_at,'deadline',closed); return; end if;
+      update public.sport_quiz_attempts set round_state = 'between',next_by = closed + public.quiz_round_gap() where id = a.id;
+      perform public.quiz_bump_history(a.profile_id);
+    else
+      if a.next_by > p_at then return; end if;
+      perform public.quiz_round_close(a.id,p_at,'next_timeout',a.next_by); return;
+    end if;
+  end loop;
+end $$;
+
+create or replace function public.quiz_expire(p_me uuid,p_at timestamptz)
+returns void language plpgsql security definer set search_path = '' as $$
+declare changed bigint; rid uuid;
+begin
+  update public.sport_quiz_attempts set status = 'expired',closed_at = expires_at,close_reason = 'deadline',session_hash = null
+    where profile_id = p_me and mode <> 'round' and status = 'issued' and expires_at <= p_at;
+  get diagnostics changed = row_count;
+  if changed > 0 then perform public.quiz_bump_history(p_me); end if;
+  for rid in select id from public.sport_quiz_attempts where profile_id = p_me and mode = 'round' and status = 'issued' order by id loop
+    perform public.quiz_round_settle(rid,p_at);
+  end loop;
+end $$;
+
+-- Draw for one position. Group rounds use the shared set unless this account has seen that family; then a private
+-- replacement (unseen, preferring families not reserved by later shared positions). Personal rounds draw at random.
+create or replace function public.quiz_round_pick(p_me uuid,p_attempt uuid,p_position integer)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare a public.sport_quiz_attempts%rowtype; qid uuid;
+begin
+  select * into a from public.sport_quiz_attempts where id = p_attempt;
+  if a.group_id is not null then
+    select q.id into qid from public.sport_quiz_group_sets gs join public.sport_quiz_questions q on q.id = gs.question_id
+      where gs.group_id = a.group_id and gs.week_start = a.week_start and gs.position = p_position
+        and q.status = 'approved' and q.question_type <> 'image_choice' and public.quiz_normalize_options(q.options) is not null
+        and char_length(btrim(q.source_notes)) >= 10
+        and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = gs.question_key)
+      for share of q;
+    if qid is not null then return qid; end if;
+    select q.id into qid from public.sport_quiz_questions q
+      where q.status = 'approved' and q.question_type <> 'image_choice' and q.topic_category = 'sport' and (a.sport_filter is null or q.sport = a.sport_filter)
+        and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10
+        and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+      order by exists(select 1 from public.sport_quiz_group_sets gs where gs.group_id = a.group_id and gs.week_start = a.week_start
+                        and gs.position > p_position and gs.question_key = q.question_key), random()
+      limit 1 for share of q;
+    return qid;
+  end if;
+  select q.id into qid from public.sport_quiz_questions q
+    where q.status = 'approved' and q.question_type <> 'image_choice' and q.topic_category = a.topic_category and (a.sport_filter is null or q.sport = a.sport_filter)
+      and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10
+      and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+    order by random() limit 1 for share of q;
+  return qid;
+end $$;
+
+create or replace function public.quiz_round_issue(p_me uuid,p_attempt uuid,p_position integer,p_question uuid,p_at timestamptz,p_duration integer,p_request uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare k uuid;
+begin
+  select question_key into k from public.sport_quiz_questions where id = p_question;
+  insert into public.sport_quiz_round_items(attempt_id,position,question_id,question_key,issued_at,expires_at,status,next_request_id)
+    values(p_attempt,p_position,p_question,k,p_at,p_at + p_duration * interval '1 second','issued',p_request);
+  insert into public.sport_quiz_exposures(profile_id,question_key,question_id,first_issued_at) values(p_me,k,p_question,p_at);
+end $$;
+
+create or replace function public.quiz_active_item(p_attempt uuid)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('position',i.position,'planned_items',a.planned_items,'expires_at',i.expires_at)
+  from public.sport_quiz_attempts a join public.sport_quiz_round_items i on i.attempt_id = a.id and i.position = a.position where a.id = p_attempt
+$$;
+
+-- 9. Badges -----------------------------------------------------------------------------------------------------------
+-- Derived from live rows on every answer, join and correction, so a void can withdraw what it no longer supports.
+create or replace function public.quiz_sync_badges(p_me uuid,p_at timestamptz)
+returns void language plpgsql security definer set search_path = '' as $$
+declare earned text[]; seasons text[]; w date := public.quiz_week_at(p_at);
+begin
+  insert into public.sport_quiz_badges(profile_id,attempt_id,week_start,label,kind,period,issued_at)
+    select p_me,a.id,a.week_start,'Trivia Explorer','weekly',a.week_start::text,p_at from public.sport_quiz_attempts a
+    where a.profile_id = p_me and a.mode = 'round' and exists(select 1 from public.sport_quiz_round_items i where i.attempt_id = a.id and i.status = 'answered')
+    on conflict (profile_id,label,period) do update set voided_at = null where public.sport_quiz_badges.voided_at is not null;
+  update public.sport_quiz_badges b set voided_at = p_at where b.profile_id = p_me and b.kind = 'weekly' and b.voided_at is null
+    and b.attempt_id in (select a.id from public.sport_quiz_attempts a where a.profile_id = p_me and a.mode = 'round'
+      and not exists(select 1 from public.sport_quiz_round_items i where i.attempt_id = a.id and i.status = 'answered'));
+  select coalesce(array_agg(sport),'{}') into earned from (
+    select sport from (
+      select q.sport from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+        join public.sport_quiz_questions q on q.id = i.question_id
+        where a.profile_id = p_me and i.status = 'answered' and q.topic_category = 'sport'
+      union all
+      select q.sport from public.sport_quiz_attempts a join public.sport_quiz_questions q on q.id = a.question_id
+        where a.profile_id = p_me and a.mode <> 'round' and a.status = 'completed' and q.topic_category = 'sport') f
+    group by sport having count(*) >= 5) x;
+  insert into public.sport_quiz_badges(profile_id,label,kind,sport,period,issued_at)
+    select p_me,s || ' Explorer','sport',s,'lifetime',p_at from unnest(earned) s
+    on conflict (profile_id,label,period) do update set voided_at = null where public.sport_quiz_badges.voided_at is not null;
+  update public.sport_quiz_badges set voided_at = p_at where profile_id = p_me and kind = 'sport' and voided_at is null and not (sport = any(earned));
+  select coalesce(array_agg(quarter),'{}') into seasons from (
+    select public.quiz_quarter_of(a.week_start) quarter from public.sport_quiz_attempts a
+    where a.profile_id = p_me and ((a.mode = 'round' and exists(select 1 from public.sport_quiz_round_items i where i.attempt_id = a.id and i.status = 'answered'))
+      or (a.mode <> 'round' and a.status = 'completed'))
+    group by 1 having count(*) >= 10) x;
+  insert into public.sport_quiz_badges(profile_id,label,kind,period,issued_at)
+    select p_me,'Season Learner','season',s,p_at from unnest(seasons) s
+    on conflict (profile_id,label,period) do update set voided_at = null where public.sport_quiz_badges.voided_at is not null;
+  update public.sport_quiz_badges set voided_at = p_at where profile_id = p_me and kind = 'season' and voided_at is null and not (period = any(seasons));
+  if public.quiz_played(p_me,w) and exists(select 1 from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+      where m.profile_id = p_me and m.status = 'active' and g.status = 'active') then
+    insert into public.sport_quiz_badges(profile_id,label,kind,period,issued_at) values(p_me,'Family Challenger','family',w::text,p_at)
+      on conflict (profile_id,label,period) do update set voided_at = null where public.sport_quiz_badges.voided_at is not null;
+  end if;
+  update public.sport_quiz_badges set voided_at = p_at where profile_id = p_me and kind = 'family' and voided_at is null
+    and not public.quiz_played(p_me,period::date);
+end $$;
+
+-- 10. Group building blocks ---------------------------------------------------------------------------------------------
+create or replace function public.quiz_group_code_new()
+returns text language plpgsql volatile set search_path = public, extensions as $$
+declare alphabet constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; code text := ''; b bytea; i integer; v integer;
+begin
+  -- 8 characters from 31 (no 0/O, 1/I/L). pgcrypto random bytes with rejection sampling (0–247 map evenly onto
+  -- the 31 characters), so every position uses the full alphabet; UUID hex has fixed version/variant digits.
+  while char_length(code) < 8 loop
+    b := gen_random_bytes(16);
+    for i in 0..15 loop
+      v := get_byte(b,i);
+      if v < 248 and char_length(code) < 8 then code := code || substr(alphabet,1 + v % 31,1); end if;
+    end loop;
+  end loop;
+  return code;
+end $$;
+
+create or replace function public.quiz_group_active_count(p_group uuid)
+returns integer language sql stable security definer set search_path = '' as $$
+  select count(*)::int from public.sport_quiz_group_members where group_id = p_group and status = 'active'
+$$;
+
+-- A new code replaces the old hash (rotation). A full group gets no code: the code dies when the group is full.
+create or replace function public.quiz_group_issue_code(p_group uuid,p_actor uuid,p_at timestamptz)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare code text; tries integer := 0; expires timestamptz := p_at + interval '7 days';
+begin
+  delete from public.sport_quiz_group_codes where group_id = p_group;
+  if public.quiz_group_active_count(p_group) >= 12 then return null; end if;
+  loop
+    code := public.quiz_group_code_new(); tries := tries + 1;
+    begin
+      insert into public.sport_quiz_group_codes(group_id,code_hash,created_at,expires_at,created_by) values(p_group,public.hash_secret(code),p_at,expires,p_actor);
+      exit;
+    exception when unique_violation then if tries >= 5 then raise; end if;
+    end;
+  end loop;
+  update public.sport_quiz_groups set codes_issued = codes_issued + 1 where id = p_group;
+  return jsonb_build_object('code',code,'expires_at',expires);
+end $$;
+
+-- MINOR-01 friend-request setting decides whom a teen can share a group with (adults always pass this side).
+create or replace function public.quiz_teen_accepts(p_teen uuid,p_other uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select case when not public.is_minor_band(public.profile_age_band(p_teen)) then true
+    else coalesce((select case p.friend_requests_from
+        when 'everyone' then true
+        when 'teens' then public.is_minor_band(public.profile_age_band(p_other)) or public.are_friends(p_teen,p_other)
+          or exists(select 1 from public.guardian_links l where l.minor_id = p_teen and l.guardian_id = p_other and l.ended_at is null and l.confirmed_at is not null)
+        else public.are_friends(p_teen,p_other)
+          or exists(select 1 from public.guardian_links l where l.minor_id = p_teen and l.guardian_id = p_other and l.ended_at is null and l.confirmed_at is not null) end
+      from public.profiles p where p.id = p_teen),false) end
+$$;
+
+-- Why a join would be refused (null = allowed). Every reason gets the same "That code didn't work" for the joiner.
+create or replace function public.quiz_group_refusal(p_group uuid,p_joiner uuid)
+returns text language plpgsql stable security definer set search_path = '' as $$
+declare g public.sport_quiz_groups%rowtype; m uuid;
+begin
+  select * into g from public.sport_quiz_groups where id = p_group;
+  if g.id is null or g.status <> 'active' then return 'closed'; end if;
+  if exists(select 1 from public.sport_quiz_group_members where group_id = p_group and profile_id = p_joiner and status = 'removed'
+      and removed_reason in ('creator','blocked','admin')) then return 'removed'; end if;
+  if public.quiz_group_active_count(p_group) >= 12 then return 'full'; end if;
+  for m in select profile_id from public.sport_quiz_group_members where group_id = p_group and status = 'active' and profile_id <> p_joiner loop
+    if public.is_blocked_between(p_joiner,m) then return 'blocked'; end if;
+  end loop;
+  for m in select profile_id from public.sport_quiz_group_members where group_id = p_group and status = 'active' and profile_id <> p_joiner loop
+    if not public.quiz_teen_accepts(p_joiner,m) or not public.quiz_teen_accepts(m,p_joiner) then return 'teen_rule'; end if;
+  end loop;
+  return null;
+end $$;
+
+create or replace function public.quiz_group_case(p_group uuid,p_kind text,p_actor uuid,p_subject uuid,p_code text,p_reason text,p_at timestamptz)
+returns void language sql security definer set search_path = '' as $$
+  insert into public.sport_quiz_group_cases(group_id,kind,actor_id,subject_id,reason_code,reason,created_at) values(p_group,p_kind,p_actor,p_subject,p_code,p_reason,p_at)
+$$;
+
+-- Hand the group to the oldest remaining member, or dissolve it. The old owner's code dies either way.
+create or replace function public.quiz_group_handover(p_group uuid,p_leaving uuid,p_at timestamptz)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare nxt uuid;
+begin
+  select profile_id into nxt from public.sport_quiz_group_members where group_id = p_group and status = 'active' and profile_id <> p_leaving
+    order by joined_at, profile_id limit 1;
+  delete from public.sport_quiz_group_codes where group_id = p_group;
+  if nxt is null then
+    update public.sport_quiz_groups set status = 'closed',closed_at = p_at,close_reason = 'dissolved' where id = p_group and status = 'active';
+    perform public.quiz_group_case(p_group,'dissolved',null,p_leaving,null,null,p_at);
+  else
+    update public.sport_quiz_groups set owner_id = nxt where id = p_group;
+    perform public.quiz_group_case(p_group,'handover',null,nxt,null,null,p_at);
+  end if;
+  return nxt;
+end $$;
+
+-- Remove (creator, block, admin, teen rule or closed account): creator/block/admin bar rejoining; the code rotates;
+-- supervision logs "left".
+create or replace function public.quiz_group_mark_removed(p_group uuid,p_member uuid,p_reason text,p_actor uuid,p_note text,p_at timestamptz)
+returns void language plpgsql security definer set search_path = '' as $$
+declare owner uuid;
+begin
+  update public.sport_quiz_group_members set status = 'removed',removed_at = p_at,removed_reason = p_reason
+    where group_id = p_group and profile_id = p_member and status = 'active';
+  if not found then return; end if;
+  perform public.log_supervision_event(p_member,'trivia_group_left','{}'::jsonb);
+  perform public.quiz_group_case(p_group,case p_reason when 'creator' then 'member_removed' when 'blocked' then 'blocked_removed' when 'teen_rule' then 'rule_removed'
+    when 'closed' then 'account_closed' else 'admin_removal' end,
+    p_actor,p_member,p_reason,p_note,p_at);
+  delete from public.sport_quiz_group_codes where group_id = p_group;
+  select owner_id into owner from public.sport_quiz_groups where id = p_group;
+  if owner = p_member then perform public.quiz_group_handover(p_group,p_member,p_at); end if;
+  if public.quiz_group_active_count(p_group) = 0 then
+    update public.sport_quiz_groups set status = 'closed',closed_at = p_at,close_reason = 'dissolved' where id = p_group and status = 'active';
+  end if;
+end $$;
+
+-- Rules drift after a join (age correction, setting change, unfriend, ended guardian link, a birthday). These re-run
+-- the both-ways teen rule and remove the failing member with reason teen_rule (no rejoin bar; the join check decides).
+create or replace function public.quiz_pair_ok(p_a uuid,p_b uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select public.quiz_teen_accepts(p_a,p_b) and public.quiz_teen_accepts(p_b,p_a)
+$$;
+create or replace function public.quiz_profile_closed(p_profile uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select coalesce((select p.age_blocked_at is not null from public.profiles p where p.id = p_profile),true)
+$$;
+
+-- p_remove_self: the profile itself changed (birth month/year), so it is the one removed from a failing pair.
+-- Otherwise (its friend-request setting changed) the party its teen rule now refuses is removed.
+create or replace function public.quiz_group_recheck(p_profile uuid,p_remove_self boolean default true)
+returns integer language plpgsql security definer set search_path = '' as $$
+declare gid uuid; m uuid; at timestamptz := clock_timestamp(); removed integer := 0;
+begin
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  for gid in select x.group_id from public.sport_quiz_group_members x join public.sport_quiz_groups g on g.id = x.group_id
+      where x.profile_id = p_profile and x.status = 'active' and g.status = 'active' order by x.group_id loop
+    perform 1 from public.sport_quiz_groups where id = gid for update;
+    if public.quiz_profile_closed(p_profile) then
+      perform public.quiz_group_mark_removed(gid,p_profile,'closed',null,null,at); removed := removed + 1; continue;
+    end if;
+    for m in select profile_id from public.sport_quiz_group_members where group_id = gid and status = 'active' and profile_id <> p_profile order by joined_at,profile_id loop
+      exit when not exists(select 1 from public.sport_quiz_group_members where group_id = gid and profile_id = p_profile and status = 'active');
+      if not public.quiz_pair_ok(p_profile,m) then
+        if p_remove_self or public.quiz_teen_accepts(p_profile,m) then perform public.quiz_group_mark_removed(gid,p_profile,'teen_rule',null,null,at);
+        else perform public.quiz_group_mark_removed(gid,m,'teen_rule',null,null,at); end if;
+        removed := removed + 1;
+      end if;
+    end loop;
+  end loop;
+  return removed;
+end $$;
+
+-- A relationship between two accounts ended (unfriend, guardian link ended): in every shared group, remove the party
+-- the teen's rule now refuses.
+create or replace function public.quiz_group_recheck_pair(p_a uuid,p_b uuid)
+returns integer language plpgsql security definer set search_path = '' as $$
+declare gid uuid; at timestamptz := clock_timestamp(); removed integer := 0;
+begin
+  if public.quiz_pair_ok(p_a,p_b) then return 0; end if;
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  for gid in select a.group_id from public.sport_quiz_group_members a join public.sport_quiz_group_members b on b.group_id = a.group_id
+      join public.sport_quiz_groups g on g.id = a.group_id
+      where a.profile_id = p_a and b.profile_id = p_b and a.status = 'active' and b.status = 'active' and g.status = 'active' order by a.group_id loop
+    perform 1 from public.sport_quiz_groups where id = gid for update;
+    perform public.quiz_group_mark_removed(gid,case when not public.quiz_teen_accepts(p_a,p_b) then p_b else p_a end,'teen_rule',null,null,at);
+    removed := removed + 1;
+  end loop;
+  return removed;
+end $$;
+
+-- Lazy check for drift without a trigger (a birthday moves an account into another band): closed accounts and every
+-- failing pair, oldest pairs first; the refused party is removed. Caller holds settings share and the group row lock.
+create or replace function public.quiz_group_needs_recheck(p_group uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.sport_quiz_group_members m where m.group_id = p_group and m.status = 'active' and public.quiz_profile_closed(m.profile_id))
+    or exists(select 1 from public.sport_quiz_group_members a join public.sport_quiz_group_members b on b.group_id = a.group_id and a.profile_id < b.profile_id
+      where a.group_id = p_group and a.status = 'active' and b.status = 'active' and not public.quiz_pair_ok(a.profile_id,b.profile_id))
+$$;
+create or replace function public.quiz_group_recheck_group(p_group uuid)
+returns integer language plpgsql security definer set search_path = '' as $$
+declare r record; at timestamptz := clock_timestamp(); removed integer := 0;
+begin
+  for r in select profile_id from public.sport_quiz_group_members where group_id = p_group and status = 'active' and public.quiz_profile_closed(profile_id) order by profile_id loop
+    perform public.quiz_group_mark_removed(p_group,r.profile_id,'closed',null,null,at); removed := removed + 1;
+  end loop;
+  for r in select a.profile_id x,b.profile_id y from public.sport_quiz_group_members a join public.sport_quiz_group_members b on b.group_id = a.group_id
+      and (a.joined_at,a.profile_id) < (b.joined_at,b.profile_id)
+      where a.group_id = p_group and a.status = 'active' and b.status = 'active' order by a.joined_at,a.profile_id,b.joined_at,b.profile_id loop
+    if exists(select 1 from public.sport_quiz_group_members where group_id = p_group and profile_id = r.x and status = 'active')
+       and exists(select 1 from public.sport_quiz_group_members where group_id = p_group and profile_id = r.y and status = 'active')
+       and not public.quiz_pair_ok(r.x,r.y) then
+      perform public.quiz_group_mark_removed(p_group,case when not public.quiz_teen_accepts(r.x,r.y) then r.y else r.x end,'teen_rule',null,null,at);
+      removed := removed + 1;
+    end if;
+  end loop;
+  return removed;
+end $$;
+
+-- Opaque per-group member reference: the creator never sees profile ids.
+create or replace function public.quiz_member_ref(p_group uuid,p_member uuid)
+returns text language sql stable security definer set search_path = '' as $$
+  select left(public.hash_secret(g.ref_salt || ':' || g.id::text || ':' || p_member::text),32) from public.sport_quiz_groups g where g.id = p_group
+$$;
+
+-- First name for everyone; a teen never shows more than a first name.
+create or replace function public.quiz_group_display_name(p_member uuid)
+returns text language sql stable security definer set search_path = '' as $$
+  select case when public.is_minor_band(public.profile_age_band(p_member))
+    then coalesce(nullif(split_part(btrim(coalesce(p.full_name,'')),' ',1),''),'Teammate')
+    else public.first_name_of(p_member) end
+  from public.profiles p where p.id = p_member
+$$;
+
+-- Live group page: a played-this-week mark per member, group totals only, opt-in visible badges. No answers,
+-- correctness, times, per-member counts or ranking. Members blocked with the viewer and closed accounts are left out;
+-- a closed group shows no members. Fact totals appear only once 3 members played this week, rounded down to 5s, so
+-- polling cannot isolate one member's count. member_ref is opaque and only for the creator.
+create or replace function public.quiz_group_page_dto(p_group uuid,p_me uuid,p_at timestamptz)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  with g as (select * from public.sport_quiz_groups where id = p_group),
+  w as (select public.quiz_week_at(p_at) w, date_trunc('quarter',p_at at time zone 'UTC')::date qs),
+  mem as (select m.profile_id,m.joined_at,public.quiz_played(m.profile_id,(select w from w)) played
+          from public.sport_quiz_group_members m where m.group_id = p_group and m.status = 'active'
+            and (select status from public.sport_quiz_groups where id = p_group) = 'active' and not public.quiz_profile_closed(m.profile_id)
+            and (m.profile_id = p_me or not public.is_blocked_between(p_me,m.profile_id))),
+  shown as (select count(*) filter (where played) >= 3 ok from mem)
+  select jsonb_build_object('contract_version',3,'group_id',g.id,'name_key',g.name_key,'theme_sport',g.theme_sport,'status',g.status,
+    'is_owner',g.owner_id = p_me,'week_start',(select w from w),
+    'members',coalesce((select jsonb_agg(jsonb_build_object('member_ref',case when g.owner_id = p_me then public.quiz_member_ref(g.id,m.profile_id) end,
+        'display_name',public.quiz_group_display_name(m.profile_id),'is_owner',m.profile_id = g.owner_id,'is_me',m.profile_id = p_me,
+        'played_this_week',m.played,
+        'badges',(select coalesce(jsonb_agg(b.label order by b.label),'[]'::jsonb) from public.sport_quiz_badges b
+                  where b.profile_id = m.profile_id and b.visibility = 'groups' and b.voided_at is null)) order by m.joined_at,m.profile_id) from mem m),'[]'::jsonb),
+    'totals',jsonb_build_object('members',(select count(*) from mem),'played_this_week',(select count(*) from mem where played),
+      'facts_this_week',case when (select ok from shown) then (select (coalesce(sum(public.quiz_facts(m.profile_id,(select w from w),(select w from w) + 7)),0) / 5) * 5 from mem m) end,
+      'facts_this_season',case when (select ok from shown) then (select (coalesce(sum(public.quiz_facts(m.profile_id,(select qs from w),((select qs from w) + interval '3 months')::date)),0) / 5) * 5 from mem m) end),
+    'everyone_played',(select count(*) > 0 and bool_and(played) from mem),
+    'code_active',exists(select 1 from public.sport_quiz_group_codes c where c.group_id = g.id and c.expires_at > p_at),
+    'code_expires_at',case when g.owner_id = p_me then (select c.expires_at from public.sport_quiz_group_codes c where c.group_id = g.id and c.expires_at > p_at) end,
+    'can_invite',g.owner_id = p_me and g.status = 'active' and (select count(*) from mem) < 12)
+  from g
+$$;
+
+-- The shared set for a group-week, drawn at random from the theme without reading any member's exposures.
+create or replace function public.quiz_group_ensure_set(p_group uuid,p_week date,p_size integer,p_at timestamptz)
+returns integer language plpgsql security definer set search_path = '' as $$
+declare theme text; n integer;
+begin
+  select count(*) into n from public.sport_quiz_group_sets where group_id = p_group and week_start = p_week;
+  if n > 0 then return n; end if;
+  select theme_sport into theme from public.sport_quiz_groups where id = p_group;
+  insert into public.sport_quiz_group_sets(group_id,week_start,position,question_key,question_id,created_at,prune_after)
+    select p_group,p_week,row_number() over (order by r),x.question_key,x.id,p_at,public.quiz_week_end(p_week) + interval '35 days'
+    from (select q.id,q.question_key,random() r from public.sport_quiz_questions q
+          where q.status = 'approved' and q.question_type <> 'image_choice' and q.topic_category = 'sport' and (theme is null or q.sport = theme)
+            and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10
+          order by r limit p_size) x;
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
+-- 11. Rounds: Start, group Start, Next, answer, End -------------------------------------------------------------------
+create or replace function public.quiz_round_begin(p_me uuid,p_topic text,p_sport text,p_duration integer,p_expected_week date,p_notice text,
+  p_request uuid,p_secret text,p_group uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare at timestamptz; w date; d text; r public.sport_quiz_requests%rowtype; a public.sport_quiz_attempts%rowtype; it public.sport_quiz_round_items%rowtype;
+  q public.sport_quiz_questions%rowtype; p public.sport_quiz_preferences%rowtype; s public.sport_quiz_settings%rowtype;
+  receipt jsonb; active jsonb; item jsonb; planned integer; setn integer; qid uuid; filter text := case when p_sport is null then null else btrim(p_sport) end;
+begin
+  -- Lock order: settings → group (row + set advisory lock) → account.
+  select * into s from public.sport_quiz_settings where singleton for share;
+  if not found then raise exception 'quiz_unavailable'; end if;
+  if p_group is not null then
+    if public.quiz_group_needs_recheck(p_group) then
+      perform 1 from public.sport_quiz_groups where id = p_group for update;
+      perform public.quiz_group_recheck_group(p_group);
+    else
+      perform 1 from public.sport_quiz_groups where id = p_group for share;
+    end if;
+    perform pg_advisory_xact_lock(hashtextextended('sport-quiz-group:' || p_group,0));
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz:' || p_me,0));
+  at := clock_timestamp(); w := public.quiz_week_at(at);
+  if p_expected_week is distinct from w then raise exception 'quiz_week_changed'; end if;
+  d := public.quiz_digest(case when p_group is null then jsonb_build_array(p_topic,filter,p_duration,p_expected_week,p_notice,p_secret)
+    else jsonb_build_array(p_topic,filter,p_duration,p_expected_week,p_notice,p_secret,p_group) end);
+  select * into r from public.sport_quiz_requests where profile_id = p_me and request_id = p_request;
+  if found then
+    if r.operation <> 'start' or (r.payload_digest is not null and r.payload_digest is distinct from d) then raise exception 'quiz_request_conflict'; end if;
+    perform public.quiz_expire(p_me,at);
+    select * into a from public.sport_quiz_attempts where id = r.attempt_id for update;
+    if a.status = 'issued' and a.session_hash = public.hash_secret(p_secret) and s.enabled and p_me = any(s.pilot_accounts) then
+      if a.mode = 'round' then
+        select * into it from public.sport_quiz_round_items where attempt_id = a.id and position = 1;
+        if a.round_state = 'item' and a.position = 1 and it.status = 'issued' and it.expires_at > at then
+          active := public.quiz_question_dto(it.question_id); item := public.quiz_active_item(a.id);
+        end if;
+      elsif a.expires_at > at then
+        select * into q from public.sport_quiz_questions where id = a.question_id for share;
+        if q.status <> 'void' then active := public.quiz_question_dto(q.id); end if;
+      end if;
+    end if;
+    return public.quiz_receipt_dto(p_me,p_request,at) || jsonb_build_object('server_now',at,'active_question',active,'active_item',item);
+  end if;
+  -- A guard survives erasure/cancellation and is checked before any draw.
+  if exists(select 1 from public.sport_quiz_week_guards where profile_id = p_me and week_start = w) then
+    select id into a.id from public.sport_quiz_attempts where profile_id = p_me and week_start = w;
+    receipt := public.quiz_save_request(p_me,p_request,'start',w,d,a.id,'week_spent',at);
+    return receipt || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  perform public.quiz_require_testing(p_me);
+  perform public.quiz_expire(p_me,at);
+  if exists(select 1 from public.sport_quiz_attempts where profile_id = p_me and status = 'issued') then raise exception 'quiz_round_active'; end if;
+  select * into p from public.sport_quiz_preferences where profile_id = p_me;
+  if p.notice_version is distinct from p_notice then raise exception 'quiz_notice_required'; end if;
+  if p_group is null then
+    if (p_topic <> 'sport' and not public.quiz_fun_slot(p_me,w)) or (p_topic = 'sport' and public.quiz_fun_slot(p_me,w) and public.quiz_fun_available(p_me)) then
+      raise exception 'quiz_topic_not_allowed'; end if;
+    planned := least(s.round_size,public.quiz_unseen_count(p_me,p_topic,filter));
+  else
+    if not s.groups_enabled then raise exception 'quiz_groups_paused'; end if;
+    if not exists(select 1 from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+        where m.group_id = p_group and m.profile_id = p_me and m.status = 'active' and g.status = 'active') then raise exception 'quiz_group_not_member'; end if;
+    select theme_sport into filter from public.sport_quiz_groups where id = p_group;
+    setn := public.quiz_group_ensure_set(p_group,w,s.round_size,at);
+    planned := least(setn,public.quiz_unseen_count(p_me,'sport',filter));
+  end if;
+  if coalesce(planned,0) < 1 then raise exception 'quiz_no_question'; end if;
+  at := clock_timestamp(); w := public.quiz_week_at(at);
+  if w is distinct from p_expected_week then raise exception 'quiz_week_changed'; end if;
+  -- The whole round (items plus Next windows) must fit before the UTC week ends.
+  if at + planned * p_duration * interval '1 second' + (planned - 1) * public.quiz_round_gap() > public.quiz_week_end(w) then raise exception 'quiz_week_closing'; end if;
+  perform public.quiz_spend(p_me,w,at);
+  insert into public.sport_quiz_attempts(profile_id,week_start,question_id,status,issued_at,mode,duration_seconds,started_at,expires_at,session_hash,
+      round_state,position,planned_items,round_size,topic_category,sport_filter,group_id)
+    values(p_me,w,null,'issued',at,'round',p_duration,at,at + p_duration * interval '1 second',public.hash_secret(p_secret),
+      'item',1,planned,s.round_size,p_topic,filter,p_group) returning * into a;
+  qid := public.quiz_round_pick(p_me,a.id,1);
+  if qid is null then raise exception 'quiz_no_question'; end if;
+  perform public.quiz_round_issue(p_me,a.id,1,qid,at,p_duration,null);
+  perform public.quiz_bump_history(p_me);
+  insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,created_at) values(p_me,'start',qid,a.id,at);
+  receipt := public.quiz_save_request(p_me,p_request,'start',w,d,a.id,'started',at);
+  return receipt || jsonb_build_object('server_now',at,'active_question',public.quiz_question_dto(qid),'active_item',public.quiz_active_item(a.id));
+end $$;
+
+create or replace function public.quiz_start(p_topic_category text,p_sport text,p_duration_seconds integer,p_expected_week date,
+ p_notice_version text,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id);
+begin
+  if p_request_id is null or coalesce(p_topic_category,'') not in ('sport','science','geography','general') or p_duration_seconds is null or p_duration_seconds not in (30,90)
+    or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' or p_notice_version is distinct from 'timed-trivia-v1-testing'
+    or (p_sport is not null and char_length(btrim(p_sport)) not between 2 and 80) or (p_topic_category <> 'sport' and p_sport is not null) then raise exception 'quiz_start_invalid'; end if;
+  return public.quiz_round_begin(me,p_topic_category,p_sport,p_duration_seconds,p_expected_week,p_notice_version,p_request_id,p_session_secret,null);
+end $$;
+
+-- A member plays the group's shared set only by starting from that group's page. Same weekly opportunity.
+create or replace function public.quiz_group_start(p_group_id uuid,p_duration_seconds integer,p_expected_week date,p_notice_version text,
+ p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id);
+begin
+  if p_group_id is null or p_request_id is null or p_duration_seconds is null or p_duration_seconds not in (30,90)
+    or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' or p_notice_version is distinct from 'timed-trivia-v1-testing' then raise exception 'quiz_start_invalid'; end if;
+  return public.quiz_round_begin(me,'sport',null,p_duration_seconds,p_expected_week,p_notice_version,p_request_id,p_session_secret,p_group_id);
+end $$;
+
+create or replace function public.quiz_next(p_attempt_id uuid,p_expected_position integer,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz; d text; r public.sport_quiz_requests%rowtype;
+  a public.sport_quiz_attempts%rowtype; it public.sport_quiz_round_items%rowtype; s public.sport_quiz_settings%rowtype;
+  active jsonb; item jsonb; qid uuid; st text;
+begin
+  if p_attempt_id is null or p_request_id is null or p_expected_position is null or p_expected_position not between 1 and 4
+    or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' then raise exception 'quiz_next_invalid'; end if;
+  perform public.quiz_lock(me);
+  select * into s from public.sport_quiz_settings where singleton;
+  at := clock_timestamp(); d := public.quiz_digest(jsonb_build_array(p_attempt_id,p_expected_position,p_session_secret));
+  select * into r from public.sport_quiz_requests where profile_id = me and request_id = p_request_id;
+  if found then
+    -- Exact recovery: the same item, only before its deadline and only with the round's secret.
+    if r.operation <> 'next' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict'; end if;
+    perform public.quiz_expire(me,at);
+    select * into a from public.sport_quiz_attempts where id = r.attempt_id;
+    select * into it from public.sport_quiz_round_items where attempt_id = a.id and next_request_id = p_request_id;
+    if a.status = 'issued' and a.round_state = 'item' and a.position = it.position and it.status = 'issued' and it.expires_at > at
+       and a.session_hash = public.hash_secret(p_session_secret) and s.enabled and me = any(s.pilot_accounts) then
+      active := public.quiz_question_dto(it.question_id); item := public.quiz_active_item(a.id);
+    end if;
+    return public.quiz_receipt_dto(me,p_request_id,at) || jsonb_build_object('server_now',at,'active_question',active,'active_item',item);
+  end if;
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id and profile_id = me for update;
+  if a.id is null or a.mode <> 'round' then raise exception 'quiz_round_closed'; end if;
+  perform public.quiz_require_testing(me);
+  if a.status = 'issued' and a.session_hash is distinct from public.hash_secret(p_session_secret) then raise exception 'quiz_capability_invalid'; end if;
+  perform public.quiz_round_settle(a.id,at);
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id for update;
+  if a.status <> 'issued' then
+    return public.quiz_save_request(me,p_request_id,'next',a.week_start,d,a.id,a.status,at) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  if a.round_state <> 'between' or a.position <> p_expected_position then raise exception 'quiz_next_not_ready'; end if;
+  at := clock_timestamp();
+  if a.week_start <> public.quiz_week_at(at) or at + a.duration_seconds * interval '1 second' > public.quiz_week_end(a.week_start) then
+    st := public.quiz_round_close(a.id,at,'week_end');
+    return public.quiz_save_request(me,p_request_id,'next',a.week_start,d,a.id,'week_closed',at) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  qid := public.quiz_round_pick(me,a.id,a.position + 1);
+  if qid is null then
+    st := public.quiz_round_close(a.id,at,'pool_exhausted');
+    return public.quiz_save_request(me,p_request_id,'next',a.week_start,d,a.id,'pool_exhausted',at) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  perform public.quiz_round_issue(me,a.id,a.position + 1,qid,at,a.duration_seconds,p_request_id);
+  update public.sport_quiz_attempts set position = position + 1,round_state = 'item',next_by = null,expires_at = at + a.duration_seconds * interval '1 second' where id = a.id;
+  perform public.quiz_bump_history(me);
+  return public.quiz_save_request(me,p_request_id,'next',a.week_start,d,a.id,'issued',at)
+    || jsonb_build_object('server_now',at,'active_question',public.quiz_question_dto(qid),'active_item',public.quiz_active_item(a.id));
+end $$;
+
+create or replace function public.quiz_answer(p_attempt_id uuid,p_option integer,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz; d text; r public.sport_quiz_requests%rowtype;
+  a public.sport_quiz_attempts%rowtype; q public.sport_quiz_questions%rowtype; it public.sport_quiz_round_items%rowtype; outcome text;
+begin
+  if p_request_id is null or p_attempt_id is null or p_option is null or p_option not between 0 and 3 or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' then raise exception 'quiz_answer_invalid'; end if;
+  perform public.quiz_lock(me); select * into a from public.sport_quiz_attempts where id = p_attempt_id and profile_id = me for update;
+  at := clock_timestamp(); d := public.quiz_digest(jsonb_build_array(p_attempt_id,p_option,p_session_secret));
+  select * into r from public.sport_quiz_requests where profile_id = me and request_id = p_request_id;
+  if found then if r.operation <> 'answer' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict'; end if; return public.quiz_receipt_dto(me,p_request_id,at); end if;
+  if a.id is null or a.mode not in ('timed','round') then raise exception 'quiz_round_closed'; end if;
+  perform public.quiz_require_testing(me);
+  if a.status = 'issued' and a.session_hash is distinct from public.hash_secret(p_session_secret) then raise exception 'quiz_capability_invalid'; end if;
+  if a.mode = 'timed' then
+    -- Single-question rounds started before QUIZ-03 keep their QUIZ-02 behaviour.
+    if a.status = 'issued' and a.expires_at <= at then perform public.quiz_expire(me,at); return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at); end if;
+    if a.status <> 'issued' then return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,a.status,at); end if;
+    select * into q from public.sport_quiz_questions where id = a.question_id for share;
+    if q.status = 'void' or public.quiz_normalize_options(q.options) is null then raise exception 'quiz_question_unavailable'; end if;
+    if p_option >= jsonb_array_length(q.options) then raise exception 'quiz_answer_invalid'; end if;
+    at := clock_timestamp();
+    if a.expires_at <= at then perform public.quiz_expire(me,at); return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at); end if;
+    update public.sport_quiz_attempts set status = 'completed',answered_option = p_option,request_id = p_request_id,completed_at = at,closed_at = at,close_reason = 'answered',session_hash = null where id = a.id;
+    insert into public.sport_quiz_badges(profile_id,attempt_id,week_start,label,issued_at) values(me,a.id,a.week_start,'Trivia Explorer',at);
+    perform public.quiz_sync_badges(me,at);
+    perform public.quiz_bump_history(me);
+    insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,created_at) values(me,'answer',q.id,a.id,at);
+    return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'completed',at);
+  end if;
+  perform public.quiz_round_settle(a.id,at);
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id for update;
+  if a.status <> 'issued' then return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,a.status,at); end if;
+  select * into it from public.sport_quiz_round_items where attempt_id = a.id and position = a.position for update;
+  if a.round_state = 'between' then
+    return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,case it.status when 'answered' then 'already_answered' else it.status end,at);
+  end if;
+  select * into q from public.sport_quiz_questions where id = it.question_id for share;
+  if q.status = 'void' or public.quiz_normalize_options(q.options) is null then raise exception 'quiz_question_unavailable'; end if;
+  if p_option >= jsonb_array_length(q.options) then raise exception 'quiz_answer_invalid'; end if;
+  at := clock_timestamp();
+  if it.expires_at <= at then
+    perform public.quiz_round_settle(a.id,at);
+    return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at);
+  end if;
+  update public.sport_quiz_round_items set status = 'answered',answered_option = p_option,answered_at = at,answer_request_id = p_request_id,closed_at = at
+    where attempt_id = a.id and position = a.position;
+  if a.position >= a.planned_items then perform public.quiz_round_close(a.id,at,'answered'); outcome := 'completed';
+  else update public.sport_quiz_attempts set round_state = 'between',next_by = at + public.quiz_round_gap() where id = a.id; outcome := 'answered'; end if;
+  perform public.quiz_sync_badges(me,at);
+  perform public.quiz_bump_history(me);
+  insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,created_at) values(me,'answer',q.id,a.id,at);
+  return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,outcome,at);
+end $$;
+
+create or replace function public.quiz_end(p_attempt_id uuid,p_start_request_id uuid,p_expected_week date,p_reason text,p_request_id uuid,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz; d text; r public.sport_quiz_requests%rowtype;
+  source public.sport_quiz_requests%rowtype; a public.sport_quiz_attempts%rowtype; outcome text; w date;
+begin
+  if (p_attempt_id is null) = (p_start_request_id is null) or p_request_id is null or p_request_id = p_start_request_id
+    or coalesce(p_reason,'') not in ('user_end','left_page','background','identity_change') then raise exception 'quiz_end_invalid'; end if;
+  perform public.quiz_lock(me); at := clock_timestamp(); w := public.quiz_week_at(at);
+  d := public.quiz_digest(jsonb_build_array(p_attempt_id,p_start_request_id,p_expected_week,p_reason));
+  select * into r from public.sport_quiz_requests where profile_id = me and request_id = p_request_id;
+  if found then if r.operation <> 'end' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict'; end if; return public.quiz_receipt_dto(me,p_request_id,at); end if;
+  if p_expected_week is null or p_expected_week > w then raise exception 'quiz_week_changed'; end if;
+  if p_start_request_id is not null then
+    select * into source from public.sport_quiz_requests where profile_id = me and request_id = p_start_request_id;
+    if found and (source.operation <> 'start' or source.week_start <> p_expected_week) then raise exception 'quiz_request_conflict'; end if;
+    if source.request_id is null then
+      if p_expected_week <> w then raise exception 'quiz_round_closed'; end if;
+      if exists(select 1 from public.sport_quiz_week_guards where profile_id = me and week_start = w) then raise exception 'quiz_round_closed'; end if;
+      perform public.quiz_spend(me,w,at);
+      perform public.quiz_bump_history(me);
+      perform public.quiz_save_request(me,p_start_request_id,'start',w,null,null,'cancelled',at);
+      return public.quiz_save_request(me,p_request_id,'end',w,d,null,'cancelled',at);
+    end if;
+    p_attempt_id := source.attempt_id;
+    if p_attempt_id is null then return public.quiz_save_request(me,p_request_id,'end',p_expected_week,d,null,'cancelled',at); end if;
+  end if;
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id and profile_id = me and week_start = p_expected_week for update;
+  if a.id is null then raise exception 'quiz_round_closed'; end if;
+  at := clock_timestamp();
+  if a.mode = 'round' then
+    -- Leaving ends the whole round; unissued positions were never drawn, so they stay in the pool.
+    perform public.quiz_round_settle(a.id,at);
+    select * into a from public.sport_quiz_attempts where id = a.id for update;
+    if a.status = 'issued' then
+      outcome := public.quiz_round_close(a.id,at,p_reason);
+      insert into public.sport_quiz_audit(actor_id,action,attempt_id,created_at) values(me,'end',a.id,at);
+    else outcome := a.status; end if;
+    return public.quiz_save_request(me,p_request_id,'end',a.week_start,d,a.id,outcome,at);
+  end if;
+  if a.status = 'issued' then
+    outcome := case when a.expires_at <= at then 'expired' else 'ended' end;
+    update public.sport_quiz_attempts set status = outcome,closed_at = case when outcome = 'expired' then expires_at else at end,
+      close_reason = case when outcome = 'expired' then 'deadline' else p_reason end,session_hash = null where id = a.id;
+    perform public.quiz_bump_history(me);
+    insert into public.sport_quiz_audit(actor_id,action,attempt_id,created_at) values(me,'end',a.id,at);
+  else outcome := a.status; end if;
+  return public.quiz_save_request(me,p_request_id,'end',a.week_start,d,a.id,outcome,at);
+end $$;
+
+-- 12. Participant reads ---------------------------------------------------------------------------------------------------
+create or replace function public.quiz_snapshot()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id(); at timestamptz := statement_timestamp(); w date := public.quiz_week_at(at);
+  s public.sport_quiz_settings%rowtype; pref jsonb; available text; pools jsonb := '[]'; aid uuid; scheduled text;
+begin
+  select * into s from public.sport_quiz_settings where singleton;
+  if auth.uid() is null or me is null or public.profile_age_band(me) not in ('adult','teen_13_15','teen_16_17') then me := null; available := 'ineligible';
+  elsif s.singleton is null then available := 'unavailable';
+  elsif not s.enabled then available := 'paused';
+  elsif not (me = any(s.pilot_accounts)) then available := 'not_enrolled'; else available := 'ready'; end if;
+  pref := public.quiz_preferences_dto(me);
+  scheduled := case when public.quiz_fun_slot(me,w) then 'fun' else 'sport' end;
+  if available = 'ready' then
+    select coalesce(jsonb_agg(jsonb_build_object('topic_category',x.topic_category,'sport',x.sport,'unseen_count',x.n,
+      'allowed',case when x.topic_category = 'sport' then scheduled = 'sport' or not public.quiz_fun_available(me) else scheduled = 'fun' end) order by x.topic_category,x.sport),'[]') into pools
+    from (select q.topic_category,q.sport,count(*) filter (where not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = me and e.question_key = q.question_key)) n
+      from public.sport_quiz_questions q where q.status = 'approved' and q.question_type <> 'image_choice' and public.quiz_normalize_options(q.options) is not null
+        and char_length(btrim(q.source_notes)) >= 10 group by q.topic_category,q.sport) x;
+    if not exists(select 1 from jsonb_array_elements(pools) p where (p ->> 'unseen_count')::int > 0 and (p ->> 'allowed')::boolean) then available := 'unavailable'; end if;
+  end if;
+  if me is not null and s.singleton is not null then select id into aid from public.sport_quiz_attempts where profile_id = me and week_start = w; end if;
+  return jsonb_build_object('contract_version',2,'profile_id',me,'server_now',at,'week_start',w,'week_end',w + 7,'testing_only',true,
+    'availability',available,'preferences',pref,'attempt',public.quiz_summary(aid,at),
+    'week_spent',me is not null and exists(select 1 from public.sport_quiz_week_guards where profile_id = me and week_start = w),
+    'scheduled_topic',scheduled,'pools',pools,'history_version',(pref ->> 'history_version')::bigint,
+    'history_count',(select count(*) from public.sport_quiz_attempts a where a.profile_id = me and public.quiz_summary(a.id,at) ->> 'status' <> 'issued'),
+    'badge_count',(select count(*) from public.sport_quiz_badges where profile_id = me and voided_at is null),
+    'correction_count',(select count(*) from public.sport_quiz_attempts where profile_id = me and status = 'void')
+      + (select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.profile_id = me and i.status = 'void' and a.status <> 'void'),
+    'round_size',coalesce(s.round_size,5),'groups_available',coalesce(s.groups_enabled,false) and available = 'ready');
+end $$;
+
+create or replace function public.quiz_history(p_before text default null)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_actor(); at timestamptz := statement_timestamp(); c jsonb := public.quiz_cursor(p_before,'history'); items jsonb; next_before text;
+  last_id uuid; last_week date; total bigint;
+begin
+  select count(*) into total from public.sport_quiz_attempts a where a.profile_id = me and public.quiz_summary(a.id,at) ->> 'status' <> 'issued';
+  select coalesce(jsonb_agg(jsonb_build_object('attempt',public.quiz_summary(a.id,at),'question',public.quiz_question_dto(a.question_id),
+    'result',case when a.mode = 'round' then null else public.quiz_result_dto(a.id,at) end,
+    'items',case when a.mode = 'round' then public.quiz_round_items_dto(a.id,at) else '[]'::jsonb end,
+    'badge',(select to_jsonb(b) - 'profile_id' - 'attempt_id' - 'week_start' from public.sport_quiz_badges b where b.attempt_id = a.id and b.kind = 'weekly' limit 1))
+    order by a.week_start desc,a.id desc),'[]') into items
+  from (select * from public.sport_quiz_attempts x where x.profile_id = me and public.quiz_summary(x.id,at) ->> 'status' <> 'issued'
+    and (c is null or (x.week_start,x.id) < ((c ->> 'at')::date,(c ->> 'id')::uuid)) order by x.week_start desc,x.id desc limit 50) a;
+  if jsonb_array_length(items) = 50 then
+    last_id := (items -> 49 -> 'attempt' ->> 'id')::uuid; last_week := (items -> 49 -> 'attempt' ->> 'week_start')::date;
+    if exists(select 1 from public.sport_quiz_attempts x where x.profile_id = me and public.quiz_summary(x.id,at) ->> 'status' <> 'issued' and (x.week_start,x.id) < (last_week,last_id)) then
+      next_before := jsonb_build_object('v',1,'stream','history','at',last_week,'id',last_id)::text;
+    end if;
+  end if;
+  return jsonb_build_object('contract_version',2,'profile_id',me,'server_now',at,'history_version',(public.quiz_preferences_dto(me) ->> 'history_version')::bigint,
+    'total',total,'items',items,'next_before',next_before);
+end $$;
+
+create or replace function public.quiz_badge_shelf()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_actor();
+begin
+  return jsonb_build_object('contract_version',3,'profile_id',me,
+    'badges',coalesce((select jsonb_agg(jsonb_build_object('id',b.id,'label',b.label,'kind',b.kind,'sport',b.sport,'period',b.period,
+      'visibility',b.visibility,'issued_at',b.issued_at) order by b.issued_at desc,b.id) from public.sport_quiz_badges b where b.profile_id = me and b.voided_at is null),'[]'::jsonb));
+end $$;
+
+create or replace function public.quiz_badge_visibility(p_badge_id uuid,p_visibility text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); b public.sport_quiz_badges%rowtype;
+begin
+  if p_badge_id is null or coalesce(p_visibility,'') not in ('private','groups') then raise exception 'quiz_badge_invalid'; end if;
+  perform public.quiz_lock(me);
+  update public.sport_quiz_badges set visibility = p_visibility where id = p_badge_id and profile_id = me and voided_at is null returning * into b;
+  if b.id is null then raise exception 'quiz_badge_missing'; end if;
+  return jsonb_build_object('contract_version',3,'id',b.id,'label',b.label,'kind',b.kind,'sport',b.sport,'period',b.period,'visibility',b.visibility,'issued_at',b.issued_at);
+end $$;
+
+-- Own data only: facts by sport and topic in one calendar quarter (a season until sport seasons are defined).
+create or replace function public.quiz_season_recap(p_quarter text default null)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_actor(); qkey text; qs date; qe date; per_sport jsonb; per_topic jsonb; rounds bigint;
+begin
+  if p_quarter is not null and p_quarter !~ '^[0-9]{4}-Q[1-4]$' then raise exception 'quiz_recap_invalid'; end if;
+  qkey := coalesce(p_quarter,public.quiz_quarter_of((statement_timestamp() at time zone 'UTC')::date));
+  qs := make_date(split_part(qkey,'-Q',1)::int,(split_part(qkey,'-Q',2)::int - 1) * 3 + 1,1); qe := (qs + interval '3 months')::date;
+  with f as (
+    select q.topic_category,q.sport from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+      join public.sport_quiz_questions q on q.id = i.question_id
+      where a.profile_id = me and i.status = 'answered' and a.week_start >= qs and a.week_start < qe
+    union all
+    select q.topic_category,q.sport from public.sport_quiz_attempts a join public.sport_quiz_questions q on q.id = a.question_id
+      where a.profile_id = me and a.mode <> 'round' and a.status = 'completed' and a.week_start >= qs and a.week_start < qe)
+  select coalesce((select jsonb_agg(jsonb_build_object('sport',sport,'facts',n) order by n desc,sport) from (select sport,count(*) n from f where topic_category = 'sport' group by sport) x),'[]'::jsonb),
+         coalesce((select jsonb_agg(jsonb_build_object('topic_category',topic_category,'facts',n) order by topic_category) from (select topic_category,count(*) n from f group by topic_category) y),'[]'::jsonb)
+    into per_sport,per_topic;
+  select count(*) into rounds from public.sport_quiz_attempts a where a.profile_id = me and a.week_start >= qs and a.week_start < qe
+    and ((a.mode = 'round' and exists(select 1 from public.sport_quiz_round_items i where i.attempt_id = a.id and i.status = 'answered')) or (a.mode <> 'round' and a.status = 'completed'));
+  return jsonb_build_object('contract_version',3,'profile_id',me,'quarter',qkey,'starts_on',qs,'ends_before',qe,
+    'facts',public.quiz_facts(me,qs,qe),'sports',jsonb_array_length(per_sport),'rounds',rounds,'per_sport',per_sport,'per_topic',per_topic,
+    'badges',(select count(*) from public.sport_quiz_badges b where b.profile_id = me and b.voided_at is null and b.issued_at >= qs and b.issued_at < qe));
+end $$;
+
+-- 13. Groups: participant RPCs -------------------------------------------------------------------------------------------
+create or replace function public.quiz_group_create(p_name_key text,p_theme_sport text,p_request_id uuid,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz; g public.sport_quiz_groups%rowtype; code jsonb; theme text := nullif(btrim(coalesce(p_theme_sport,'')),'');
+begin
+  if p_request_id is null or coalesce(p_name_key,'') not in ('family','friends','team_fans','cousins','game_day_crew','home_team')
+    or (theme is not null and char_length(theme) not between 2 and 80) then raise exception 'quiz_group_invalid'; end if;
+  perform public.quiz_lock(me); at := clock_timestamp();
+  select * into g from public.sport_quiz_groups where create_request_id = p_request_id;
+  if found then
+    if g.created_by is distinct from me then raise exception 'quiz_request_conflict'; end if;
+    -- The code is shown once; a retry gets the page and can renew the code.
+    return public.quiz_group_page_dto(g.id,me,at) || jsonb_build_object('code',null,'code_shown',false);
+  end if;
+  perform public.quiz_require_testing(me);
+  if not (select groups_enabled from public.sport_quiz_settings where singleton) then raise exception 'quiz_groups_paused'; end if;
+  if theme is not null and not exists(select 1 from public.sport_quiz_questions q where q.status = 'approved' and q.topic_category = 'sport' and q.sport = theme) then raise exception 'quiz_group_theme_invalid'; end if;
+  if (select count(*) from public.sport_quiz_groups where owner_id = me and status = 'active') >= 3 then raise exception 'quiz_group_create_limit'; end if;
+  if (select count(*) from public.sport_quiz_group_members m join public.sport_quiz_groups x on x.id = m.group_id where m.profile_id = me and m.status = 'active' and x.status = 'active') >= 5 then raise exception 'quiz_group_member_limit'; end if;
+  insert into public.sport_quiz_groups(name_key,theme_sport,owner_id,created_by,create_request_id,created_at) values(p_name_key,theme,me,me,p_request_id,at) returning * into g;
+  insert into public.sport_quiz_group_members(group_id,profile_id,status,joined_at) values(g.id,me,'active',at);
+  perform public.log_supervision_event(me,'trivia_group_joined','{}'::jsonb);
+  code := public.quiz_group_issue_code(g.id,me,at);
+  perform public.quiz_sync_badges(me,at);
+  return public.quiz_group_page_dto(g.id,me,at) || jsonb_build_object('code',code ->> 'code','code_shown',true);
+end $$;
+
+-- Wrong or refused codes return (never raise) so the counted try survives; every refusal reads the same to the joiner.
+create or replace function public.quiz_group_join(p_code text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz; h text; gid uuid; why text; tries bigint; joins bigint;
+begin
+  if p_code is null or char_length(p_code) > 40 then raise exception 'quiz_group_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  if not found then raise exception 'quiz_unavailable'; end if;
+  perform public.quiz_require_testing(me);
+  if not (select groups_enabled from public.sport_quiz_settings where singleton) then raise exception 'quiz_groups_paused'; end if;
+  h := public.hash_secret(upper(regexp_replace(p_code,'[^A-Za-z0-9]','','g')));
+  select group_id into gid from public.sport_quiz_group_codes where code_hash = h;
+  if gid is not null then perform 1 from public.sport_quiz_groups where id = gid for update; end if;
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz:' || me,0));
+  at := clock_timestamp();
+  select count(*) filter (where outcome in ('wrong_code','refused')),count(*) filter (where outcome = 'joined') into tries,joins
+    from public.sport_quiz_group_join_attempts where profile_id = me and created_at > at - interval '1 day';
+  if tries >= 10 then raise exception 'quiz_group_try_limit'; end if;
+  if gid is not null and exists(select 1 from public.sport_quiz_group_members where group_id = gid and profile_id = me and status = 'active') then
+    return jsonb_build_object('contract_version',3,'outcome','joined','group',public.quiz_group_page_dto(gid,me,at));
+  end if;
+  if gid is null or not exists(select 1 from public.sport_quiz_group_codes where group_id = gid and code_hash = h and expires_at > at) then
+    insert into public.sport_quiz_group_join_attempts(profile_id,group_id,outcome,created_at,prune_after) values(me,null,'wrong_code',at,at + interval '35 days');
+    return jsonb_build_object('contract_version',3,'outcome','refused','group',null);
+  end if;
+  if joins >= 5 then raise exception 'quiz_group_join_limit'; end if;
+  if (select count(*) from public.sport_quiz_group_members m join public.sport_quiz_groups x on x.id = m.group_id where m.profile_id = me and m.status = 'active' and x.status = 'active') >= 5 then raise exception 'quiz_group_member_limit'; end if;
+  why := public.quiz_group_refusal(gid,me);
+  if why is not null then
+    insert into public.sport_quiz_group_join_attempts(profile_id,group_id,outcome,refusal_reason,created_at,prune_after) values(me,gid,'refused',why,at,at + interval '35 days');
+    if why = 'full' then delete from public.sport_quiz_group_codes where group_id = gid; end if;
+    return jsonb_build_object('contract_version',3,'outcome','refused','group',null);
+  end if;
+  -- A teen_rule or closed removal leaves no rejoin bar; the row is reused when the rules allow the join again.
+  insert into public.sport_quiz_group_members(group_id,profile_id,status,joined_at) values(gid,me,'active',at)
+    on conflict (group_id,profile_id) do update set status = 'active',joined_at = excluded.joined_at,removed_at = null,removed_reason = null;
+  insert into public.sport_quiz_group_join_attempts(profile_id,group_id,outcome,created_at,prune_after) values(me,gid,'joined',at,at + interval '35 days');
+  perform public.log_supervision_event(me,'trivia_group_joined','{}'::jsonb);
+  if public.quiz_group_active_count(gid) >= 12 then delete from public.sport_quiz_group_codes where group_id = gid; end if;
+  perform public.quiz_sync_badges(me,at);
+  return jsonb_build_object('contract_version',3,'outcome','joined','group',public.quiz_group_page_dto(gid,me,at));
+end $$;
+
+create or replace function public.quiz_group_leave(p_group_id uuid,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz; g public.sport_quiz_groups%rowtype;
+begin
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  select * into g from public.sport_quiz_groups where id = p_group_id for update;
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz:' || me,0)); at := clock_timestamp();
+  delete from public.sport_quiz_group_members where group_id = p_group_id and profile_id = me and status = 'active';
+  if not found then return jsonb_build_object('contract_version',3,'outcome','not_member'); end if;
+  perform public.log_supervision_event(me,'trivia_group_left','{}'::jsonb);
+  if g.owner_id = me then perform public.quiz_group_handover(g.id,me,at);
+  elsif public.quiz_group_active_count(g.id) = 0 then
+    update public.sport_quiz_groups set status = 'closed',closed_at = at,close_reason = 'dissolved' where id = g.id and status = 'active';
+  end if;
+  return jsonb_build_object('contract_version',3,'outcome','left');
+end $$;
+
+create or replace function public.quiz_group_owned(p_group uuid,p_me uuid)
+returns public.sport_quiz_groups language plpgsql security definer set search_path = '' as $$
+declare g public.sport_quiz_groups%rowtype;
+begin
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  select * into g from public.sport_quiz_groups where id = p_group for update;
+  if g.id is null or g.status <> 'active' or g.owner_id is distinct from p_me then raise exception 'quiz_group_not_owner'; end if;
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz:' || p_me,0));
+  return g;
+end $$;
+
+drop function if exists public.quiz_group_remove_member(uuid,uuid,uuid);
+create or replace function public.quiz_group_remove_member(p_group_id uuid,p_member_ref text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz; g public.sport_quiz_groups%rowtype; code jsonb; p_profile_id uuid;
+begin
+  g := public.quiz_group_owned(p_group_id,me); at := clock_timestamp();
+  if p_member_ref is null or p_member_ref !~ '^[0-9a-f]{32}$' then raise exception 'quiz_group_invalid'; end if;
+  select profile_id into p_profile_id from public.sport_quiz_group_members where group_id = g.id and status = 'active' and public.quiz_member_ref(g.id,profile_id) = p_member_ref;
+  if p_profile_id = me then raise exception 'quiz_group_invalid'; end if;
+  if p_profile_id is null then
+    return public.quiz_group_page_dto(g.id,me,at) || jsonb_build_object('code',null);
+  end if;
+  perform public.quiz_group_mark_removed(g.id,p_profile_id,'creator',me,null,at);
+  -- The code rotates: the old one stops working and the creator gets the new one now.
+  code := public.quiz_group_issue_code(g.id,me,at);
+  return public.quiz_group_page_dto(g.id,me,at) || jsonb_build_object('code',code ->> 'code');
+end $$;
+
+create or replace function public.quiz_group_renew_code(p_group_id uuid,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz; g public.sport_quiz_groups%rowtype; code jsonb;
+begin
+  g := public.quiz_group_owned(p_group_id,me); at := clock_timestamp();
+  if not (select groups_enabled from public.sport_quiz_settings where singleton) then raise exception 'quiz_groups_paused'; end if;
+  if public.quiz_group_active_count(g.id) >= 12 then raise exception 'quiz_group_full'; end if;
+  code := public.quiz_group_issue_code(g.id,me,at);
+  return jsonb_build_object('contract_version',3,'group_id',g.id,'code',code ->> 'code','expires_at',code -> 'expires_at');
+end $$;
+
+create or replace function public.quiz_group_set_theme(p_group_id uuid,p_theme_sport text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); g public.sport_quiz_groups%rowtype; theme text := nullif(btrim(coalesce(p_theme_sport,'')),'');
+begin
+  if theme is not null and char_length(theme) not between 2 and 80 then raise exception 'quiz_group_invalid'; end if;
+  g := public.quiz_group_owned(p_group_id,me);
+  if theme is not null and not exists(select 1 from public.sport_quiz_questions q where q.status = 'approved' and q.topic_category = 'sport' and q.sport = theme) then raise exception 'quiz_group_theme_invalid'; end if;
+  -- A theme is a sport filter; a set already drawn this week keeps its questions.
+  update public.sport_quiz_groups set theme_sport = theme where id = g.id;
+  return public.quiz_group_page_dto(g.id,me,clock_timestamp());
+end $$;
+
+create or replace function public.quiz_group_page(p_group_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_actor(); m public.sport_quiz_group_members%rowtype; g public.sport_quiz_groups%rowtype;
+begin
+  -- Read-only unless the rules drifted (a birthday, for example); then settle under settings → group locks first.
+  if exists(select 1 from public.sport_quiz_group_members where group_id = p_group_id and profile_id = me and status = 'active')
+     and public.quiz_group_needs_recheck(p_group_id) then
+    perform 1 from public.sport_quiz_settings where singleton for share;
+    perform 1 from public.sport_quiz_groups where id = p_group_id and status = 'active' for update;
+    perform public.quiz_group_recheck_group(p_group_id);
+  end if;
+  select * into m from public.sport_quiz_group_members where group_id = p_group_id and profile_id = me;
+  if m.group_id is null then raise exception 'quiz_group_not_member'; end if;
+  select * into g from public.sport_quiz_groups where id = p_group_id;
+  -- One message for a creator removal, a block removal or an admin removal.
+  if m.status = 'removed' then return jsonb_build_object('contract_version',3,'group_id',p_group_id,'name_key',g.name_key,'outcome','removed'); end if;
+  return public.quiz_group_page_dto(p_group_id,me,statement_timestamp()) || jsonb_build_object('outcome',case when g.status = 'active' then 'member' else 'closed' end);
+end $$;
+
+create or replace function public.quiz_groups_mine()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_actor(); at timestamptz := statement_timestamp(); w date := public.quiz_week_at(at);
+begin
+  return jsonb_build_object('contract_version',3,'profile_id',me,'week_start',w,
+    'groups_enabled',coalesce((select groups_enabled from public.sport_quiz_settings where singleton),false),
+    'groups',coalesce((select jsonb_agg(jsonb_build_object('group_id',g.id,'name_key',g.name_key,'theme_sport',g.theme_sport,'is_owner',g.owner_id = me,
+        'members',public.quiz_group_active_count(g.id),'played_this_week',public.quiz_played(me,w),
+        'everyone_played',(select bool_and(public.quiz_played(x.profile_id,w)) from public.sport_quiz_group_members x where x.group_id = g.id and x.status = 'active'))
+        order by m.joined_at,g.id)
+      from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id where m.profile_id = me and m.status = 'active' and g.status = 'active'),'[]'::jsonb),
+    'removed',coalesce((select jsonb_agg(jsonb_build_object('group_id',g.id,'name_key',g.name_key) order by m.removed_at desc)
+      from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id where m.profile_id = me and m.status = 'removed'),'[]'::jsonb),
+    'limits',jsonb_build_object('created',(select count(*) from public.sport_quiz_groups where owner_id = me and status = 'active'),'create_limit',3,
+      'belong',(select count(*) from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id where m.profile_id = me and m.status = 'active' and g.status = 'active'),
+      'belong_limit',5,'max_members',12));
+end $$;
+
+create or replace function public.quiz_group_report(p_group_id uuid,p_reason_code text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz;
+begin
+  if p_group_id is null or coalesce(p_reason_code,'') not in ('safety','unwanted_contact','name_or_theme','other') then raise exception 'quiz_group_invalid'; end if;
+  perform public.quiz_lock(me); at := clock_timestamp();
+  -- Members and removed members can report; nobody else learns whether the group exists.
+  if not exists(select 1 from public.sport_quiz_group_members where group_id = p_group_id and profile_id = me) then raise exception 'quiz_group_not_member'; end if;
+  if (select count(*) from public.sport_quiz_group_cases where actor_id = me and kind = 'report' and created_at > at - interval '1 day') >= 5 then raise exception 'quiz_group_report_limit'; end if;
+  perform public.quiz_group_case(p_group_id,'report',me,null,p_reason_code,null,at);
+  return jsonb_build_object('contract_version',3,'outcome','reported','group_id',p_group_id);
+end $$;
+
+-- 14. Blocks remove the blocked party; a deleted creator hands the group over ------------------------------------------
+create or replace function public.quiz_groups_on_block()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare gid uuid; at timestamptz := clock_timestamp();
+begin
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  for gid in select m1.group_id from public.sport_quiz_group_members m1 join public.sport_quiz_group_members m2 on m2.group_id = m1.group_id
+      where m1.profile_id = new.blocker_id and m2.profile_id = new.blocked_id and m1.status = 'active' and m2.status = 'active' order by m1.group_id loop
+    perform 1 from public.sport_quiz_groups where id = gid for update;
+    perform public.quiz_group_mark_removed(gid,new.blocked_id,'blocked',new.blocker_id,null,at);
+  end loop;
+  return new;
+end $$;
+drop trigger if exists quiz_groups_block on public.user_blocks;
+create trigger quiz_groups_block after insert on public.user_blocks for each row execute function public.quiz_groups_on_block();
+
+-- Age correction / under-13 closure (remove this account) or a friend-request setting change (remove whom it refuses).
+create or replace function public.quiz_groups_on_profile()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if not exists(select 1 from public.sport_quiz_group_members where profile_id = new.id and status = 'active') then return new; end if;
+  if (new.birth_year,new.birth_month,new.age_blocked_at) is distinct from (old.birth_year,old.birth_month,old.age_blocked_at) then
+    -- MINOR-01 applies teen defaults in a second update of the same transaction; remember that this account changed.
+    perform set_config('quiz.age_changed',new.id::text,true);
+    perform public.quiz_group_recheck(new.id,true);
+  elsif new.friend_requests_from is distinct from old.friend_requests_from then
+    perform public.quiz_group_recheck(new.id,coalesce(current_setting('quiz.age_changed',true),'') = new.id::text);
+  end if;
+  return new;
+end $$;
+drop trigger if exists quiz_groups_profile_rules on public.profiles;
+create trigger quiz_groups_profile_rules after update of birth_year,birth_month,friend_requests_from,age_blocked_at on public.profiles
+  for each row execute function public.quiz_groups_on_profile();
+
+create or replace function public.quiz_groups_on_friendship()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if tg_op = 'DELETE' then
+    if old.status = 'accepted' then perform public.quiz_group_recheck_pair(old.requester_id,old.addressee_id); end if;
+    return old;
+  end if;
+  if old.status = 'accepted' and new.status is distinct from 'accepted' then perform public.quiz_group_recheck_pair(new.requester_id,new.addressee_id); end if;
+  return new;
+end $$;
+drop trigger if exists quiz_groups_friendship_rules on public.friendships;
+create trigger quiz_groups_friendship_rules after delete or update of status on public.friendships
+  for each row execute function public.quiz_groups_on_friendship();
+
+create or replace function public.quiz_groups_on_guardian_link()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if old.ended_at is null and new.ended_at is not null then perform public.quiz_group_recheck_pair(new.minor_id,new.guardian_id); end if;
+  return new;
+end $$;
+drop trigger if exists quiz_groups_guardian_rules on public.guardian_links;
+create trigger quiz_groups_guardian_rules after update of ended_at on public.guardian_links
+  for each row execute function public.quiz_groups_on_guardian_link();
+
+create or replace function public.quiz_group_owner_gone()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if old.owner_id is not null and new.owner_id is null and new.status = 'active' then
+    new.owner_id := (select profile_id from public.sport_quiz_group_members where group_id = new.id and status = 'active' and profile_id <> old.owner_id
+                     order by joined_at,profile_id limit 1);
+    delete from public.sport_quiz_group_codes where group_id = new.id;
+    if new.owner_id is null then new.status := 'closed'; new.closed_at := clock_timestamp(); new.close_reason := 'dissolved'; end if;
+    insert into public.sport_quiz_group_cases(group_id,kind,subject_id,created_at) values(new.id,case when new.owner_id is null then 'dissolved' else 'handover' end,new.owner_id,clock_timestamp());
+  end if;
+  return new;
+end $$;
+drop trigger if exists quiz_group_owner_gone on public.sport_quiz_groups;
+create trigger quiz_group_owner_gone before update of owner_id on public.sport_quiz_groups for each row execute function public.quiz_group_owner_gone();
+
+create or replace function public.quiz_guard_group_case()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  -- Account deletion may null actor/subject; nothing else may rewrite or remove the safety record.
+  if tg_op = 'UPDATE' and pg_trigger_depth() > 1 and (to_jsonb(new) - 'actor_id' - 'subject_id') = (to_jsonb(old) - 'actor_id' - 'subject_id')
+     and (new.actor_id is null or new.actor_id = old.actor_id) and (new.subject_id is null or new.subject_id = old.subject_id) then return new; end if;
+  raise exception 'quiz_group_case_immutable';
+end $$;
+drop trigger if exists quiz_group_case_guard on public.sport_quiz_group_cases;
+create trigger quiz_group_case_guard before update or delete on public.sport_quiz_group_cases for each row execute function public.quiz_guard_group_case();
+drop trigger if exists quiz_group_case_truncate_guard on public.sport_quiz_group_cases;
+create trigger quiz_group_case_truncate_guard before truncate on public.sport_quiz_group_cases for each statement execute function public.quiz_guard_group_case();
+
+-- 15. Guardian supervision: MINOR-01's summary copied with one more count ("trivia_groups") -----------------------------
+create or replace function public.supervision_json(minor uuid, events_since timestamptz)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'profile_id', p.id,
+    'first_name', public.first_name_of(p.id),
+    'username', p.username,
+    'settings', public.privacy_settings_json(p.id),
+    'status', public.minor_status_json(p.id, false),
+    'summary', jsonb_build_object(
+      'friends', (select count(*) from public.friendships f where f.status = 'accepted' and p.id in (f.requester_id, f.addressee_id)),
+      'incoming_requests', (select count(*) from public.friendships f where f.status = 'pending' and f.addressee_id = p.id),
+      'blocked_accounts', (select count(*) from public.user_blocks u where u.blocker_id = p.id),
+      'tags_waiting', (select count(*) from public.reels r
+                       where r.player_id = public.verified_player_of(p.id) and r.tag_status = 'pending'),
+      'hidden_from_search', p.hide_from_search,
+      -- QUIZ-03: a count only, the same for teen and guardian; no group names, members or pages.
+      'trivia_groups', (select count(*) from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+                        where m.profile_id = p.id and m.status = 'active' and g.status = 'active')
+    ),
+    'events', coalesce((
+      select jsonb_agg(jsonb_build_object('kind', e.kind, 'detail', e.detail, 'at', e.created_at,
+                                          'by_teen', e.actor_id is not distinct from p.id) order by e.created_at desc)
+      from (
+        select * from public.supervision_events e
+        where e.minor_id = p.id and e.created_at >= coalesce(events_since, '-infinity'::timestamptz)
+          and e.created_at > timezone('utc', now()) - interval '365 days'
+        order by e.created_at desc limit 30
+      ) e
+    ), '[]'::jsonb)
+  )
+  from public.profiles p where p.id = minor;
+$$;
+
+-- 16. Erasure ---------------------------------------------------------------------------------------------------------
+-- Also leaves every group (hand-over or dissolve), removes the sets of groups that dissolve and every badge
+-- (including group-visible ones). Join attempts stay until their 35-day prune (like the week guard), so erasing
+-- cannot reset the try/join limits or remove refusal evidence; removed-member tombstones keep barring a rejoin.
+create or replace function public.quiz_erase_history(p_expected_history_version bigint,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz; w date; rev bigint; na bigint; ne bigint; nb bigint; nr bigint; nau bigint;
+  prune timestamptz; gid uuid; owner uuid; ng bigint := 0; nj bigint; ns bigint := 0; n bigint;
+begin
+  -- Lock order: settings → each group (ordered) → account.
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  if not found then raise exception 'quiz_unavailable'; end if;
+  for gid in select group_id from public.sport_quiz_group_members where profile_id = me and status = 'active' order by group_id loop
+    perform 1 from public.sport_quiz_groups where id = gid for update;
+  end loop;
+  perform public.quiz_lock(me); at := clock_timestamp(); w := public.quiz_week_at(at);
+  insert into public.sport_quiz_preferences(profile_id) values(me) on conflict do nothing;
+  select history_version into rev from public.sport_quiz_preferences where profile_id = me for update;
+  if rev is distinct from p_expected_history_version then raise exception 'quiz_history_stale'; end if;
+  perform public.quiz_spend(me,w,at);
+  select prune_after into prune from public.sport_quiz_week_guards where profile_id = me and week_start = w;
+  select count(*) into na from public.sport_quiz_attempts where profile_id = me;
+  for gid in select group_id from public.sport_quiz_group_members where profile_id = me and status = 'active' order by group_id loop
+    delete from public.sport_quiz_group_members where group_id = gid and profile_id = me;
+    ng := ng + 1;
+    perform public.log_supervision_event(me,'trivia_group_left','{}'::jsonb);
+    select owner_id into owner from public.sport_quiz_groups where id = gid;
+    if owner = me then perform public.quiz_group_handover(gid,me,at);
+    elsif public.quiz_group_active_count(gid) = 0 then
+      update public.sport_quiz_groups set status = 'closed',closed_at = at,close_reason = 'dissolved' where id = gid and status = 'active';
+    end if;
+    if (select status from public.sport_quiz_groups where id = gid) = 'closed' then
+      delete from public.sport_quiz_group_sets where group_id = gid; get diagnostics n = row_count; ns := ns + n;
+    end if;
+  end loop;
+  select count(*) into nj from public.sport_quiz_group_join_attempts where profile_id = me;
+  delete from public.sport_quiz_badges where profile_id = me; get diagnostics nb = row_count;
+  delete from public.sport_quiz_requests where profile_id = me; get diagnostics nr = row_count;
+  delete from public.sport_quiz_exposures where profile_id = me; get diagnostics ne = row_count;
+  perform set_config('quiz.erase_profile',me::text,true);
+  delete from public.sport_quiz_audit where actor_id = me and action in ('start','answer','skip','end'); get diagnostics nau = row_count;
+  perform set_config('quiz.erase_profile','',true);
+  delete from public.sport_quiz_attempts where profile_id = me;
+  update public.sport_quiz_preferences set history_version = history_version + 1,updated_at = at where profile_id = me;
+  return jsonb_build_object('contract_version',2,'profile_id',me,'history_version',rev + 1,'week_start',w,'week_spent',true,'quota_prune_after',prune,
+    'removed_attempts',na,'removed_exposures',ne,'removed_badges',nb,'removed_requests',nr,'removed_audit',nau,
+    'removed_group_memberships',ng,'retained_join_attempts',nj,'removed_group_sets',ns);
+end $$;
+
+-- 17. Admin ------------------------------------------------------------------------------------------------------------
+-- QUIZ-02 settings with round-aware closure: pause or removal settles and ends active rounds for good.
+create or replace function public.quiz_admin_settings(p_payload jsonb,p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); testers uuid[]; next_enabled boolean; at timestamptz; affected uuid; rid uuid;
+begin
+  if jsonb_typeof(p_payload) is distinct from 'object' or jsonb_typeof(p_payload -> 'enabled') is distinct from 'boolean'
+    or jsonb_typeof(p_payload -> 'pilot_accounts') is distinct from 'array' or char_length(btrim(coalesce(p_reason,''))) not between 10 and 500
+    or exists(select 1 from jsonb_object_keys(p_payload) k where k not in ('enabled','pilot_accounts')) then raise exception 'quiz_settings_invalid'; end if;
+  if jsonb_array_length(p_payload -> 'pilot_accounts') > 100 then raise exception 'quiz_testers_limit'; end if;
+  if exists(select 1 from jsonb_array_elements(p_payload -> 'pilot_accounts') v where jsonb_typeof(v) <> 'string' or (v #>> '{}') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') then raise exception 'quiz_settings_invalid'; end if;
+  select coalesce(array_agg(x::uuid),'{}'::uuid[]) into testers from jsonb_array_elements_text(p_payload -> 'pilot_accounts') x;
+  next_enabled := (p_payload ->> 'enabled')::boolean;
+  if cardinality(testers) <> (select count(distinct x) from unnest(testers) x) then raise exception 'quiz_testers_duplicate'; end if;
+  if next_enabled and cardinality(testers) = 0 then raise exception 'quiz_testers_required'; end if;
+  if next_enabled and exists(select 1 from unnest(testers) x where public.profile_age_band(x) not in ('adult','teen_13_15','teen_16_17') or
+    not exists(select 1 from public.profiles p where p.id = x and p.age_blocked_at is null)) then raise exception 'quiz_testers_ineligible'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  update public.sport_quiz_settings set enabled = next_enabled,pilot_accounts = testers,reason = btrim(p_reason),updated_at = at,updated_by = me where singleton;
+  for affected in select distinct profile_id from public.sport_quiz_attempts where status = 'issued' and (not next_enabled or not (profile_id = any(testers))) order by profile_id loop
+    perform public.quiz_lock(affected);
+  end loop;
+  for affected in with changed as (update public.sport_quiz_attempts set status = case when expires_at <= at then 'expired' else 'ended' end,
+      closed_at = case when expires_at <= at then expires_at else at end,close_reason = case when expires_at <= at then 'deadline' when not next_enabled then 'paused' else 'access_revoked' end,session_hash = null
+      where mode <> 'round' and status = 'issued' and (not next_enabled or not (profile_id = any(testers))) returning profile_id) select distinct profile_id from changed order by profile_id loop
+    perform public.quiz_bump_history(affected);
+  end loop;
+  for rid in select id from public.sport_quiz_attempts where mode = 'round' and status = 'issued' and (not next_enabled or not (profile_id = any(testers))) order by profile_id,id loop
+    perform public.quiz_round_settle(rid,at);
+    perform public.quiz_round_close(rid,at,case when not next_enabled then 'paused' else 'access_revoked' end);
+  end loop;
+  insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'settings',btrim(p_reason),at);
+  return jsonb_build_object('contract_version',2,'enabled',next_enabled,'testing_only',true,'pilot_accounts',testers);
+end $$;
+
+create or replace function public.quiz_admin_play_settings(p_payload jsonb,p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); at timestamptz; s public.sport_quiz_settings%rowtype;
+begin
+  if jsonb_typeof(p_payload) is distinct from 'object' or char_length(btrim(coalesce(p_reason,''))) not between 10 and 500
+    or exists(select 1 from jsonb_object_keys(p_payload) k where k not in ('round_size','groups_enabled','images_enabled'))
+    or jsonb_typeof(p_payload -> 'round_size') is distinct from 'number' or (p_payload ->> 'round_size') !~ '^[1-5]$'
+    or jsonb_typeof(p_payload -> 'groups_enabled') is distinct from 'boolean' or jsonb_typeof(p_payload -> 'images_enabled') is distinct from 'boolean' then raise exception 'quiz_settings_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  -- New rounds use the new size; a paused groups switch stops new groups, joins and group rounds without touching data.
+  update public.sport_quiz_settings set round_size = (p_payload ->> 'round_size')::int,groups_enabled = (p_payload ->> 'groups_enabled')::boolean,
+    images_enabled = (p_payload ->> 'images_enabled')::boolean,reason = btrim(p_reason),updated_at = at,updated_by = me where singleton returning * into s;
+  insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'settings',btrim(p_reason),at);
+  return jsonb_build_object('contract_version',3,'round_size',s.round_size,'groups_enabled',s.groups_enabled,'images_enabled',s.images_enabled);
+end $$;
+
+create or replace function public.quiz_admin_question(p_id uuid,p_action text,p_payload jsonb,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); q public.sport_quiz_questions%rowtype; nextq public.sport_quiz_questions%rowtype;
+  why text := btrim(p_payload ->> 'reason'); family uuid; at timestamptz; affected uuid; qtype text; opts jsonb; rid uuid; ritem record;
+begin
+  if jsonb_typeof(p_payload) is distinct from 'object' or coalesce(p_action,'') not in ('create','edit','approve','archive','void','review_media') or char_length(coalesce(why,'')) not between 10 and 500
+    or exists(select 1 from jsonb_object_keys(p_payload) k where k not in ('reason','sport','prompt','options','correct_option','explanation','topic_category','source_notes','family_action','question_key',
+      'question_type','media_path','media_licence','media_source','media_attribution','media_alt_text','media_size_bytes','media_has_person','media_no_marks','media_exif_stripped')) then raise exception 'quiz_question_action_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  if p_action = 'void' then
+    for affected in select profile_id from public.sport_quiz_attempts where question_id = p_id
+        union select a.profile_id from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where i.question_id = p_id order by 1 loop
+      perform public.quiz_lock(affected);
+    end loop;
+  end if;
+  if p_action <> 'create' then select * into q from public.sport_quiz_questions where id = p_id for update; if not found then raise exception 'quiz_question_missing'; end if;
+  elsif p_id is not null then raise exception 'quiz_create_id_invalid'; end if;
+  if p_action in ('create','edit') then
+    if p_action = 'create' then
+      if coalesce(p_payload ->> 'family_action','') not in ('new','existing') then raise exception 'quiz_family_required'; end if;
+      if p_payload ->> 'family_action' = 'new' then
+        if p_payload ? 'question_key' then raise exception 'quiz_family_invalid'; end if; family := gen_random_uuid();
+      else
+        if coalesce(p_payload ->> 'question_key','') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then raise exception 'quiz_family_invalid'; end if;
+        family := (p_payload ->> 'question_key')::uuid; if not exists(select 1 from public.sport_quiz_questions where question_key = family) then raise exception 'quiz_family_invalid'; end if;
+      end if;
+    else
+      family := q.question_key;
+      if (p_payload ? 'question_key' and p_payload ->> 'question_key' <> family::text) or (p_payload ? 'family_action' and p_payload ->> 'family_action' <> 'existing') then raise exception 'quiz_family_invalid'; end if;
+    end if;
+    qtype := coalesce(p_payload ->> 'question_type','choice4'); opts := p_payload -> 'options';
+    if qtype not in ('choice4','true_false','image_choice') or jsonb_typeof(opts) is distinct from 'array'
+      or (qtype = 'choice4' and jsonb_array_length(opts) <> 4) or (qtype = 'true_false' and opts <> '["True","False"]'::jsonb)
+      or (qtype = 'image_choice' and jsonb_array_length(opts) not between 2 and 4) then raise exception 'quiz_question_content_invalid'; end if;
+    if coalesce(p_payload ->> 'topic_category','') not in ('sport','science','geography','general') or char_length(btrim(coalesce(p_payload ->> 'source_notes',''))) not between 10 and 1000
+      or jsonb_typeof(p_payload -> 'correct_option') is distinct from 'number' or (p_payload ->> 'correct_option') !~ '^[0-3]$'
+      or (p_payload ->> 'correct_option')::int >= jsonb_array_length(opts) then raise exception 'quiz_question_content_invalid'; end if;
+    if exists(select 1 from unnest(array['sport','prompt','explanation','source_notes']) k where jsonb_typeof(p_payload -> k) is distinct from 'string') then raise exception 'quiz_question_content_invalid'; end if;
+    if qtype = 'image_choice' then
+      if exists(select 1 from unnest(array['media_path','media_licence','media_source','media_attribution','media_alt_text']) k where jsonb_typeof(p_payload -> k) is distinct from 'string')
+        or jsonb_typeof(p_payload -> 'media_size_bytes') is distinct from 'number' or (p_payload ->> 'media_size_bytes') !~ '^[0-9]{1,6}$'
+        or (p_payload ->> 'media_size_bytes')::int not between 1 and 307200 or p_payload -> 'media_has_person' is distinct from 'false'::jsonb
+        or p_payload -> 'media_no_marks' is distinct from 'true'::jsonb or p_payload -> 'media_exif_stripped' is distinct from 'true'::jsonb then raise exception 'quiz_media_invalid'; end if;
+    elsif exists(select 1 from jsonb_object_keys(p_payload) k where k like 'media\_%') then raise exception 'quiz_media_invalid'; end if;
+    update public.sport_quiz_questions set status = 'archived',reason = why where question_key = family and status = 'approved';
+    -- The 300 cap counts only versions still in play (draft or approved); archived and void history is free.
+    if (select count(*) from public.sport_quiz_questions where status in ('draft','approved')) >= 300 then raise exception 'quiz_bank_full'; end if;
+    insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,created_by,topic_category,source_notes,
+        question_type,media_path,media_licence,media_source,media_attribution,media_alt_text,media_size_bytes,media_has_person,media_no_marks,media_exif_stripped)
+      values(family,coalesce((select max(version) + 1 from public.sport_quiz_questions where question_key = family),1),
+        btrim(p_payload ->> 'sport'),btrim(p_payload ->> 'prompt'),opts,(p_payload ->> 'correct_option')::integer,btrim(p_payload ->> 'explanation'),why,me,
+        p_payload ->> 'topic_category',btrim(p_payload ->> 'source_notes'),qtype,
+        case when qtype = 'image_choice' then btrim(p_payload ->> 'media_path') end,case when qtype = 'image_choice' then p_payload ->> 'media_licence' end,
+        case when qtype = 'image_choice' then btrim(p_payload ->> 'media_source') end,case when qtype = 'image_choice' then btrim(p_payload ->> 'media_attribution') end,
+        case when qtype = 'image_choice' then btrim(p_payload ->> 'media_alt_text') end,case when qtype = 'image_choice' then (p_payload ->> 'media_size_bytes')::int end,
+        case when qtype = 'image_choice' then false end,case when qtype = 'image_choice' then true end,case when qtype = 'image_choice' then true end) returning * into nextq;
+  elsif p_action = 'review_media' then
+    -- The rights reviewer is a second admin, recorded before approval; the creator cannot review their own image.
+    if q.question_type <> 'image_choice' or q.status <> 'draft' then raise exception 'quiz_media_review_invalid'; end if;
+    if q.created_by is not distinct from me then raise exception 'quiz_media_reviewer_is_creator'; end if;
+    update public.sport_quiz_questions set media_reviewed_by = me,media_reviewed_at = at where id = q.id returning * into nextq;
+  else
+    if q.status = 'void' then raise exception 'quiz_void_final'; end if;
+    if p_action = 'approve' and q.status <> 'draft' then raise exception 'quiz_approve_draft_only'; end if;
+    if p_action = 'approve' and q.question_type = 'image_choice' and not (select images_enabled from public.sport_quiz_settings where singleton) then raise exception 'quiz_images_off'; end if;
+    if p_action = 'approve' and q.question_type = 'image_choice' and (q.media_reviewed_by is null or q.media_reviewed_by is not distinct from q.created_by) then raise exception 'quiz_media_review_required'; end if;
+    if p_action = 'approve' then update public.sport_quiz_questions set status = 'archived',reason = why where question_key = q.question_key and status = 'approved'; end if;
+    update public.sport_quiz_questions set status = case p_action when 'approve' then 'approved' when 'archive' then 'archived' else 'void' end,
+      reason = why,reviewed_at = at,reviewed_by = me where id = q.id returning * into nextq;
+    if p_action = 'void' then
+      -- Single-question attempts: QUIZ-02 correction (attempt and badge).
+      for affected in with changed as (update public.sport_quiz_attempts set status = 'void',voided_at = at,closed_at = coalesce(closed_at,at),correction_reason = why,session_hash = null
+          where question_id = q.id and status <> 'skipped' returning profile_id) select distinct profile_id from changed order by profile_id loop perform public.quiz_bump_history(affected); end loop;
+      update public.sport_quiz_badges set voided_at = at where attempt_id in (select id from public.sport_quiz_attempts where question_id = q.id) and voided_at is null;
+      -- Rounds: void the item only. An open voided item closes and the round waits for Next (or ends if it was last).
+      for ritem in select i.attempt_id,i.position,i.status,a.profile_id,a.status attempt_status,a.position current_position,a.planned_items
+          from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where i.question_id = q.id and i.status <> 'void' order by a.profile_id,i.attempt_id loop
+        update public.sport_quiz_round_items set status = 'void',voided_at = at,closed_at = coalesce(closed_at,at),correction_reason = why
+          where attempt_id = ritem.attempt_id and position = ritem.position;
+        if ritem.attempt_status = 'issued' and ritem.status = 'issued' and ritem.position = ritem.current_position then
+          if ritem.position >= ritem.planned_items then perform public.quiz_round_close(ritem.attempt_id,at,'corrected');
+          else update public.sport_quiz_attempts set round_state = 'between',next_by = at + public.quiz_round_gap() where id = ritem.attempt_id; end if;
+        elsif ritem.attempt_status <> 'issued' and not exists(select 1 from public.sport_quiz_round_items where attempt_id = ritem.attempt_id and status = 'answered') then
+          update public.sport_quiz_attempts set status = 'void',voided_at = coalesce(voided_at,at),correction_reason = why where id = ritem.attempt_id and status <> 'void';
+        end if;
+        update public.sport_quiz_attempts set correction_reason = coalesce(correction_reason,why) where id = ritem.attempt_id;
+        perform public.quiz_bump_history(ritem.profile_id);
+      end loop;
+      for affected in select distinct a.profile_id from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where i.question_id = q.id
+          union select distinct profile_id from public.sport_quiz_attempts where question_id = q.id order by 1 loop
+        perform public.quiz_sync_badges(affected,at);
+      end loop;
+    end if;
+  end if;
+  insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'question_' || p_action,nextq.id,why,at);
+  return jsonb_build_object('id',nextq.id,'question_key',nextq.question_key,'version',nextq.version,'status',nextq.status);
+end $$;
+
+-- Weeks until the most-exposed recent player runs out of a sport at the current pace (exposures in the last 28 days).
+create or replace function public.quiz_admin_forecast(p_at timestamptz)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  with bank as (select q.sport,count(*) families from public.sport_quiz_questions q
+      where q.status = 'approved' and q.topic_category = 'sport' and q.question_type <> 'image_choice'
+        and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10 group by q.sport),
+  recent as (select q.sport,e.profile_id,public.quiz_week_at(e.first_issued_at) wk from public.sport_quiz_exposures e
+      join public.sport_quiz_questions q on q.id = e.question_id where q.topic_category = 'sport' and e.first_issued_at > p_at - interval '28 days'),
+  pace as (select sport,count(*) issued,count(distinct profile_id) players,count(distinct (profile_id,wk)) player_weeks from recent group by sport),
+  seen as (select q.sport,e.profile_id,count(*) n from public.sport_quiz_exposures e join public.sport_quiz_questions q on q.id = e.question_id
+      where q.topic_category = 'sport' and e.profile_id in (select profile_id from recent) group by q.sport,e.profile_id),
+  maxseen as (select sport,max(n) max_seen from seen group by sport)
+  select coalesce(jsonb_agg(jsonb_build_object('sport',b.sport,'approved_families',b.families,'players_28d',coalesce(p.players,0),'issued_28d',coalesce(p.issued,0),
+    'pace_per_player_week',case when coalesce(p.player_weeks,0) > 0 then round(p.issued::numeric / p.player_weeks,2) else 0 end,
+    'max_seen',coalesce(m.max_seen,0),
+    'weeks_left',case when coalesce(p.player_weeks,0) > 0 then greatest(floor((b.families - coalesce(m.max_seen,0)) / (p.issued::numeric / p.player_weeks)),0)::int end)
+    order by b.sport),'[]'::jsonb)
+  from bank b left join pace p on p.sport = b.sport left join maxseen m on m.sport = b.sport
+$$;
+
+create or replace function public.quiz_admin_snapshot(p_question_cursor text default null,p_audit_before bigint default null)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_admin_actor(); at timestamptz := statement_timestamp(); w date := public.quiz_week_at(at);
+  c jsonb := public.quiz_cursor(p_question_cursor,'questions'); bank jsonb; audit jsonb; nextq text; nexta text; last_id uuid; last_at timestamptz; wk jsonb;
+begin
+  if p_audit_before is not null and p_audit_before <= 0 then raise exception 'quiz_cursor_invalid'; end if;
+  select coalesce(jsonb_agg(to_jsonb(q) - 'media_reviewed_by' || jsonb_build_object('media_reviewed_by',q.media_reviewed_by) order by created_at desc,id desc),'[]') into bank from
+    (select * from public.sport_quiz_questions where c is null or (created_at,id) < ((c ->> 'at')::timestamptz,(c ->> 'id')::uuid) order by created_at desc,id desc limit 50) q;
+  if jsonb_array_length(bank) = 50 then
+    last_at := (bank -> 49 ->> 'created_at')::timestamptz; last_id := (bank -> 49 ->> 'id')::uuid;
+    if exists(select 1 from public.sport_quiz_questions where (created_at,id) < (last_at,last_id)) then nextq := jsonb_build_object('v',1,'stream','questions','at',last_at,'id',last_id)::text; end if;
+  end if;
+  select coalesce(jsonb_agg(jsonb_build_object('id',x.id::text,'action',x.action,
+    'actor_id',case when x.action in ('settings','retention') or x.action like 'question_%' then x.actor_id else null end,
+    'question_id',case when x.action like 'question_%' then x.question_id else null end,'reason',x.reason,'created_at',x.created_at) order by x.id desc),'[]') into audit
+    from (select * from public.sport_quiz_audit where p_audit_before is null or id < p_audit_before order by id desc limit 50) x;
+  if jsonb_array_length(audit) = 50 and exists(select 1 from public.sport_quiz_audit where id < (audit -> 49 ->> 'id')::bigint) then nexta := audit -> 49 ->> 'id'; end if;
+  select jsonb_build_object(
+    'week_issued',count(*) filter (where s ->> 'status' = 'issued'),'week_completed',count(*) filter (where s ->> 'status' = 'completed'),
+    'week_skipped',count(*) filter (where s ->> 'status' = 'skipped'),'week_void',count(*) filter (where s ->> 'status' = 'void'),
+    'week_ended',count(*) filter (where s ->> 'status' = 'ended'),'week_expired',count(*) filter (where s ->> 'status' = 'expired'),
+    'week_rounds_short',count(*) filter (where (s ->> 'short_round')::boolean),'week_rounds_group',count(*) filter (where s ->> 'group_id' is not null))
+    into wk from (select public.quiz_summary(a.id,at) s from public.sport_quiz_attempts a where a.week_start = w) x;
+  return jsonb_build_object('contract_version',2,'generated_at',at,'week_start',w,'week_end',w + 7,
+    'settings',(select (to_jsonb(s) - 'singleton') || jsonb_build_object('contract_version',2) from public.sport_quiz_settings s where singleton),
+    'questions',bank,'question_total',(select count(*) from public.sport_quiz_questions),
+    'active_total',(select count(*) from public.sport_quiz_questions where status in ('draft','approved')),
+    'question_cap',300,'next_question_cursor',nextq,'audit',audit,'next_before',nexta,
+    'pools',(select coalesce(jsonb_agg(to_jsonb(x) order by topic_category,sport),'[]') from (select topic_category,sport,count(*) approved_count from public.sport_quiz_questions
+      where status = 'approved' and question_type <> 'image_choice' and public.quiz_normalize_options(options) is not null and char_length(btrim(source_notes)) >= 10 group by topic_category,sport) x),
+    'forecast',public.quiz_admin_forecast(at),
+    'counts',wk || jsonb_build_object(
+      'questions_draft',(select count(*) from public.sport_quiz_questions where status = 'draft'),
+      'questions_approved',(select count(*) from public.sport_quiz_questions where status = 'approved'),
+      'questions_archived',(select count(*) from public.sport_quiz_questions where status = 'archived'),
+      'questions_void',(select count(*) from public.sport_quiz_questions where status = 'void'),
+      'questions_true_false',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and question_type = 'true_false'),
+      'questions_image',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and question_type = 'image_choice'),
+      'week_items_issued',(select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.week_start = w),
+      'week_items_answered',(select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.week_start = w and i.status = 'answered'),
+      'week_items_void',(select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.week_start = w and i.status = 'void'),
+      'badges_issued',(select count(*) from public.sport_quiz_badges where voided_at is null),
+      'badges_void',(select count(*) from public.sport_quiz_badges where voided_at is not null),
+      'badges_sport',(select count(*) from public.sport_quiz_badges where voided_at is null and kind = 'sport'),
+      'badges_family',(select count(*) from public.sport_quiz_badges where voided_at is null and kind = 'family'),
+      'badges_season',(select count(*) from public.sport_quiz_badges where voided_at is null and kind = 'season'),
+      'badges_group_visible',(select count(*) from public.sport_quiz_badges where voided_at is null and visibility = 'groups'),
+      'recap_facts_quarter',(select coalesce(sum(public.quiz_facts(p.profile_id,date_trunc('quarter',at at time zone 'UTC')::date,(date_trunc('quarter',at at time zone 'UTC') + interval '3 months')::date)),0)
+        from (select distinct profile_id from public.sport_quiz_attempts) p),
+      'preferences_weekly',(select count(*) from public.sport_quiz_preferences where invitation_mode = 'weekly'),
+      'exposures',(select count(*) from public.sport_quiz_exposures),'week_spent',(select count(*) from public.sport_quiz_week_guards where week_start = w),
+      'retained_guards',(select count(*) from public.sport_quiz_week_guards),'retained_requests',(select count(*) from public.sport_quiz_requests)),
+    -- Counts only: never member names, answers or per-member play.
+    'groups',jsonb_build_object(
+      'groups_active',(select count(*) from public.sport_quiz_groups where status = 'active'),
+      'groups_closed',(select count(*) from public.sport_quiz_groups where status = 'closed'),
+      'members_active',(select count(*) from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id where m.status = 'active' and g.status = 'active'),
+      'members_removed',(select count(*) from public.sport_quiz_group_members where status = 'removed'),
+      'groups_played_this_week',(select count(distinct m.group_id) from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+         where m.status = 'active' and g.status = 'active' and public.quiz_played(m.profile_id,w)),
+      'codes_active',(select count(*) from public.sport_quiz_group_codes where expires_at > at),
+      'codes_issued',(select coalesce(sum(codes_issued),0) from public.sport_quiz_groups),
+      'joins_7d',(select count(*) from public.sport_quiz_group_join_attempts where outcome = 'joined' and created_at > at - interval '7 days'),
+      'refusals_7d',(select count(*) from public.sport_quiz_group_join_attempts where outcome = 'refused' and created_at > at - interval '7 days'),
+      'wrong_codes_7d',(select count(*) from public.sport_quiz_group_join_attempts where outcome = 'wrong_code' and created_at > at - interval '7 days'),
+      'reports_7d',(select count(*) from public.sport_quiz_group_cases where kind = 'report' and created_at > at - interval '7 days'),
+      'sets_this_week',(select count(distinct group_id) from public.sport_quiz_group_sets where week_start = w),
+      'retained_sets',(select count(*) from public.sport_quiz_group_sets),'retained_join_attempts',(select count(*) from public.sport_quiz_group_join_attempts)),
+    'reports',coalesce((select jsonb_agg(jsonb_build_object('id',r.id::text,'group_id',r.group_id,'reason_code',r.reason_code,'created_at',r.created_at) order by r.id desc)
+      from (select * from public.sport_quiz_group_cases where kind = 'report' order by id desc limit 50) r),'[]'::jsonb));
+end $$;
+
+create or replace function public.quiz_admin_retention(p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); at timestamptz; ng bigint; nr bigint; kept bigint; nc bigint; ns bigint; nj bigint; ngp bigint;
+begin
+  if char_length(btrim(coalesce(p_reason,''))) not between 10 and 500 then raise exception 'quiz_retention_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  delete from public.sport_quiz_requests where (profile_id,request_id) in (select profile_id,request_id from public.sport_quiz_requests where prune_after <= at order by prune_after,profile_id,request_id limit 500); get diagnostics nr = row_count;
+  delete from public.sport_quiz_week_guards where (profile_id,week_start) in (select profile_id,week_start from public.sport_quiz_week_guards where prune_after <= at order by prune_after,profile_id,week_start limit 500); get diagnostics ng = row_count;
+  delete from public.sport_quiz_group_codes where group_id in (select group_id from public.sport_quiz_group_codes where expires_at <= at order by expires_at,group_id limit 500); get diagnostics nc = row_count;
+  delete from public.sport_quiz_group_sets where (group_id,week_start,position) in (select group_id,week_start,position from public.sport_quiz_group_sets where prune_after <= at order by prune_after,group_id,week_start,position limit 500); get diagnostics ns = row_count;
+  delete from public.sport_quiz_group_join_attempts where id in (select id from public.sport_quiz_group_join_attempts where prune_after <= at order by prune_after,id limit 500); get diagnostics nj = row_count;
+  -- Closed groups (and their removal tombstones) go 35 days after closing; the case log keeps the safety record.
+  delete from public.sport_quiz_groups where id in (select id from public.sport_quiz_groups where (status = 'closed' and closed_at <= at - interval '35 days')
+    or (status = 'active' and not exists(select 1 from public.sport_quiz_group_members m where m.group_id = id and m.status = 'active')) order by created_at,id limit 500); get diagnostics ngp = row_count;
+  select count(*) into kept from public.sport_quiz_week_guards where prune_after > at;
+  insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'retention',btrim(p_reason),at);
+  return jsonb_build_object('contract_version',2,'removed_guards',ng,'removed_requests',nr,'preserved_guards',kept,'batch_limit',500,
+    'removed_codes',nc,'removed_group_sets',ns,'removed_join_attempts',nj,'removed_groups',ngp);
+end $$;
+
+-- Audited case view: member ids, age bands, statuses and join refusals for one group. Admins only; each read is logged.
+create or replace function public.quiz_admin_group_case(p_group_id uuid,p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); at timestamptz; g public.sport_quiz_groups%rowtype;
+begin
+  if p_group_id is null or char_length(btrim(coalesce(p_reason,''))) not between 10 and 500 then raise exception 'quiz_group_case_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for share; at := clock_timestamp();
+  select * into g from public.sport_quiz_groups where id = p_group_id;
+  if g.id is null and not exists(select 1 from public.sport_quiz_group_cases where group_id = p_group_id) then raise exception 'quiz_group_missing'; end if;
+  perform public.quiz_group_case(p_group_id,'admin_view',me,null,null,btrim(p_reason),at);
+  return jsonb_build_object('contract_version',3,'generated_at',at,'group_id',p_group_id,
+    'group',case when g.id is null then null else jsonb_build_object('name_key',g.name_key,'theme_sport',g.theme_sport,'status',g.status,'created_at',g.created_at,
+      'closed_at',g.closed_at,'close_reason',g.close_reason,'owner_id',g.owner_id,'codes_issued',g.codes_issued,
+      'code_active',exists(select 1 from public.sport_quiz_group_codes c where c.group_id = g.id and c.expires_at > at)) end,
+    'members',coalesce((select jsonb_agg(jsonb_build_object('profile_id',m.profile_id,'age_band',public.profile_age_band(m.profile_id),'status',m.status,
+      'joined_at',m.joined_at,'removed_at',m.removed_at,'removed_reason',m.removed_reason,'is_owner',m.profile_id = g.owner_id) order by m.joined_at,m.profile_id)
+      from public.sport_quiz_group_members m where m.group_id = p_group_id),'[]'::jsonb),
+    'refusals',coalesce((select jsonb_agg(jsonb_build_object('profile_id',j.profile_id,'age_band',public.profile_age_band(j.profile_id),'refusal_reason',j.refusal_reason,'created_at',j.created_at) order by j.id desc)
+      from (select * from public.sport_quiz_group_join_attempts where group_id = p_group_id and outcome = 'refused' order by id desc limit 100) j),'[]'::jsonb),
+    'cases',coalesce((select jsonb_agg(jsonb_build_object('id',x.id::text,'kind',x.kind,'actor_id',x.actor_id,'subject_id',x.subject_id,'reason_code',x.reason_code,
+      'reason',x.reason,'created_at',x.created_at) order by x.id desc) from (select * from public.sport_quiz_group_cases where group_id = p_group_id order by id desc limit 100) x),'[]'::jsonb));
+end $$;
+
+-- Remove one member (bars rejoining, rotates the code) or close the whole group, with a recorded reason.
+create or replace function public.quiz_admin_group_remove(p_group_id uuid,p_profile_id uuid,p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); at timestamptz; g public.sport_quiz_groups%rowtype; m uuid;
+begin
+  if p_group_id is null or char_length(btrim(coalesce(p_reason,''))) not between 10 and 500 then raise exception 'quiz_group_case_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  select * into g from public.sport_quiz_groups where id = p_group_id for update;
+  if g.id is null then raise exception 'quiz_group_missing'; end if;
+  at := clock_timestamp();
+  if p_profile_id is null then
+    if g.status <> 'active' then return jsonb_build_object('contract_version',3,'outcome','already_closed','group_id',g.id,'profile_id',null); end if;
+    for m in select profile_id from public.sport_quiz_group_members where group_id = g.id and status = 'active' order by profile_id loop
+      perform public.log_supervision_event(m,'trivia_group_left','{}'::jsonb);
+    end loop;
+    update public.sport_quiz_groups set status = 'closed',closed_at = at,close_reason = 'admin_removed' where id = g.id;
+    delete from public.sport_quiz_group_codes where group_id = g.id;
+    perform public.quiz_group_case(g.id,'admin_close',me,null,'admin',btrim(p_reason),at);
+    return jsonb_build_object('contract_version',3,'outcome','closed','group_id',g.id,'profile_id',null);
+  end if;
+  if not exists(select 1 from public.sport_quiz_group_members where group_id = g.id and profile_id = p_profile_id and status = 'active') then raise exception 'quiz_group_not_member'; end if;
+  perform public.quiz_group_mark_removed(g.id,p_profile_id,'admin',me,btrim(p_reason),at);
+  return jsonb_build_object('contract_version',3,'outcome','removed','group_id',g.id,'profile_id',p_profile_id);
+end $$;
+
+-- 18. Access: RPC-only, explicit revokes, closed-account policy on every new RLS table -------------------------------------
+do $$ declare t text; f record; begin
+  foreach t in array array['sport_quiz_round_items','sport_quiz_groups','sport_quiz_group_members','sport_quiz_group_codes',
+      'sport_quiz_group_join_attempts','sport_quiz_group_sets','sport_quiz_group_cases'] loop
+    execute format('alter table public.%I enable row level security',t);
+    execute format('revoke all on table public.%I from public,anon,authenticated,service_role',t);
+    execute format('drop policy if exists "Closed accounts" on public.%I',t);
+    execute format('create policy "Closed accounts" on public.%I as restrictive for all to authenticated using ((select public.caller_not_age_blocked())) with check ((select public.caller_not_age_blocked()))',t);
+  end loop;
+  revoke all on sequence public.sport_quiz_group_join_attempts_id_seq from public,anon,authenticated,service_role;
+  revoke all on sequence public.sport_quiz_group_cases_id_seq from public,anon,authenticated,service_role;
+  for f in select p.oid::regprocedure signature from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname like 'quiz\_%' escape '\' loop
+    execute format('revoke all on function %s from public,anon,authenticated,service_role',f.signature);
+  end loop;
+  revoke all on function public.supervision_json(uuid,timestamptz) from public,anon,authenticated;
+  grant execute on function public.supervision_json(uuid,timestamptz) to service_role;
+end $$;
+grant execute on function public.quiz_snapshot(),public.quiz_preferences(jsonb,bigint,uuid,uuid),public.quiz_invitation(date,uuid,uuid),
+ public.quiz_start(text,text,integer,date,text,uuid,text,uuid),public.quiz_answer(uuid,integer,uuid,text,uuid),
+ public.quiz_end(uuid,uuid,date,text,uuid,uuid),public.quiz_skip(date,uuid,uuid),public.quiz_receipt(uuid),public.quiz_history(text),
+ public.quiz_erase_history(bigint,uuid),public.quiz_admin_snapshot(text,bigint),public.quiz_admin_settings(jsonb,text,uuid),
+ public.quiz_admin_question(uuid,text,jsonb,uuid),public.quiz_admin_retention(text,uuid),
+ public.quiz_next(uuid,integer,uuid,text,uuid),public.quiz_group_start(uuid,integer,date,text,uuid,text,uuid),
+ public.quiz_badge_shelf(),public.quiz_badge_visibility(uuid,text,uuid),public.quiz_season_recap(text),
+ public.quiz_group_create(text,text,uuid,uuid),public.quiz_group_join(text,uuid),public.quiz_group_leave(uuid,uuid),
+ public.quiz_group_remove_member(uuid,text,uuid),public.quiz_group_renew_code(uuid,uuid),public.quiz_group_set_theme(uuid,text,uuid),
+ public.quiz_group_page(uuid),public.quiz_groups_mine(),public.quiz_group_report(uuid,text,uuid),
+ public.quiz_admin_play_settings(jsonb,text,uuid),public.quiz_admin_group_case(uuid,text,uuid),public.quiz_admin_group_remove(uuid,uuid,text,uuid) to authenticated;
+
+-- Trivia starter bank (QUIZ-03, 2026-10-14): 60 DRAFT questions across the 12 supported sports plus science,
+-- geography and fun general knowledge (45 four-choice, 15 true / false). Generated from supabase/content/
+-- trivia_starter_bank.json by scripts/trivia-bank-sql.mjs. Every row is a draft: Content verifies the source notes
+-- (marked "to verify"; internet was off) and approves each question in /admin/sport-quiz before anyone can be asked it.
+-- Simple, well-known facts only (owner 2026-10-14): 18 items that depended on level or league rules, cited dates or
+-- were obscure became basic facts everyone agrees on; kept items keep their question_key.
+-- Needs: 20261014160000_trivia_play_together.sql (question_type, two-option true / false).
+-- Safe to re-run: each insert skips an existing question_key. Applied: written 2026-10-14, not applied anywhere.
+-- Rollback: delete from public.sport_quiz_questions where status = 'draft' and reason like 'Starter draft (QUIZ-03)%'.
+
+-- QUIZ-03 starter trivia bank: generated by scripts/trivia-bank-sql.mjs from supabase/content/trivia_starter_bank.json.
+-- 60 draft questions; status stays 'draft' until Content verifies the source and approves each one.
+-- Requires the BACKEND migration that adds sport_quiz_questions.question_type and relaxes the option count for true_false.
+-- Idempotent: each row is skipped when its question_key already exists.
+
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'dd8481c0-b82a-40d7-960e-080738d6ff34',1,'Football',
+  'In football, how many points is a field goal worth?',
+  '["1","2","3","6"]'::jsonb,2,
+  'A field goal is worth 3 points. The ball is kicked through the goalposts above the crossbar, often when a team is close but cannot reach the end zone.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Football Rules Book, scoring section (field goal = 3 points); to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'dd8481c0-b82a-40d7-960e-080738d6ff34');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '7965a6ed-7ee5-4677-a04d-0f82c2808df2',1,'Football',
+  'How many yards long is a football field from one goal line to the other, not counting the end zones?',
+  '["80 yards","100 yards","110 yards","120 yards"]'::jsonb,1,
+  'It is 100 yards from goal line to goal line. Add the two 10-yard end zones and the whole field is 120 yards long.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Football Rules Book, field diagram and dimensions; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '7965a6ed-7ee5-4677-a04d-0f82c2808df2');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '902e6405-293c-4166-a920-5240746d0c50',1,'Football',
+  'In football, what is a safety worth to the defense?',
+  '["1 point","2 points","3 points","6 points"]'::jsonb,1,
+  'A safety is worth 2 points. It usually happens when the defense tackles a ball carrier in the offense''s own end zone. Then the team that gave up the safety has to kick the ball away, so the defense gets points and the ball.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Football Rules Book, scoring section (safety = 2 points); to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '902e6405-293c-4166-a920-5240746d0c50');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '2b2cbe6b-edb3-404f-8201-eede5f9df31e',1,'Football',
+  'In football, the offense gets four downs (tries) to gain 10 yards and earn a new first down.',
+  '["True","False"]'::jsonb,0,
+  'True! The offense has four downs to move the ball 10 yards. If they make it, they get a fresh set of downs. That is why teams often punt on fourth down.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Football Rules Book, series of downs; to verify.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '2b2cbe6b-edb3-404f-8201-eede5f9df31e');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'a1f2c869-9368-41e3-b272-eda3ce752626',1,'Basketball',
+  'How high above the floor is the rim of a regulation basketball hoop?',
+  '["8 feet","9 feet","10 feet","12 feet"]'::jsonb,2,
+  'The rim is 10 feet above the floor. That height has stayed the same since the game''s early days, from high school gyms to the pros.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Basketball Rules Book, court and equipment section (basket height); to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'a1f2c869-9368-41e3-b272-eda3ce752626');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'e2c7ef3a-3e77-4ab1-bece-db743e6a5fe0',1,'Basketball',
+  'In basketball, how many points is one made free throw worth?',
+  '["1","2","3","4"]'::jsonb,0,
+  'Each made free throw is worth 1 point. Free throws are taken from the free-throw line with no defender guarding the shooter, usually after a foul.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Basketball Rules Book, scoring section (free throw = 1 point); to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'e2c7ef3a-3e77-4ab1-bece-db743e6a5fe0');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '82ff66bb-fb11-43a7-b54d-9dda7063ca70',1,'Basketball',
+  'How many players does a basketball team have on the court at the same time?',
+  '["4","5","6","7"]'::jsonb,1,
+  'Each basketball team has 5 players on the court at once. Coaches can swap players in and out during the game.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '82ff66bb-fb11-43a7-b54d-9dda7063ca70');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '5745bd42-6431-4398-a19d-e2a8f031f6e7',1,'Basketball',
+  'In basketball, dribbling the ball with both hands at the same time is allowed.',
+  '["True","False"]'::jsonb,1,
+  'False. Dribbling with both hands at once, or stopping and then dribbling again, is a violation often called a double dribble. The other team gets the ball.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Basketball Rules Book, dribble definitions and violations; to verify.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '5745bd42-6431-4398-a19d-e2a8f031f6e7');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '1c2b6725-123c-4a46-a08f-ebb30156d55d',1,'Rugby',
+  'In rugby, what is it called when a player grounds the ball in the other team''s in-goal area to score?',
+  '["A touchdown","A goal","A try","A home run"]'::jsonb,2,
+  'It is called a try. The player has to press the ball down to the ground over the line, which is how the score got its name.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '1c2b6725-123c-4a46-a08f-ebb30156d55d');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'eb926b73-69d7-45cd-ac49-195ba5a8ff9e',1,'Rugby',
+  'What shape is a rugby ball?',
+  '["Round","Oval","Square","Flat like a disc"]'::jsonb,1,
+  'A rugby ball is oval, a bit like a stretched-out egg. That shape makes it bounce in surprising ways.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'eb926b73-69d7-45cd-ac49-195ba5a8ff9e');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'd617066e-e685-4625-8b75-f2fe1b6701ec',1,'Rugby',
+  'In rugby, which way are players allowed to pass the ball with their hands?',
+  '["Forward only","Backward or sideways","Any direction","Only to the kicker"]'::jsonb,1,
+  'Passes in rugby must go backward or sideways. A pass that travels forward is called a forward pass, and play stops for a scrum. Teams move the ball forward by running and kicking.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'World Rugby Laws of the Game, definitions and forward pass law; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'd617066e-e685-4625-8b75-f2fe1b6701ec');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '88651c33-f885-47fd-9ea5-813b6a1c0a92',1,'Rugby',
+  'In rugby, a scrum is a way to restart play where players from both teams bind together and push.',
+  '["True","False"]'::jsonb,0,
+  'True! In a scrum, the forwards from each team lock together and push while the ball is rolled in between them.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '88651c33-f885-47fd-9ea5-813b6a1c0a92');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'e81382ca-69c7-46d6-b3be-a397fb927d5b',1,'Volleyball',
+  'In indoor volleyball, how many players from each team are on the court at once?',
+  '["4","5","6","7"]'::jsonb,2,
+  'Each indoor volleyball team has 6 players on the court. Beach volleyball is usually played with just 2 players per side.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Volleyball Rules Book, players and substitutes section; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'e81382ca-69c7-46d6-b3be-a397fb927d5b');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '739f445d-fd3e-4691-b636-72000232e974',1,'Volleyball',
+  'In volleyball, what is the most times a team can hit the ball before it must go over the net (not counting a block)?',
+  '["2","3","4","5"]'::jsonb,1,
+  'A team gets up to 3 hits to send the ball back over, often a pass, a set and an attack. A touch on a block does not count as one of the three.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Volleyball Rules Book, playing the ball section; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '739f445d-fd3e-4691-b636-72000232e974');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '6a6e2066-150d-4a4f-8b6a-ae0748cd999d',1,'Volleyball',
+  'In volleyball, what do players use to hit the ball over the net?',
+  '["A racket","Their hands and arms","A bat","A stick"]'::jsonb,1,
+  'Volleyball players hit the ball with their hands and arms. A bump, a set and a spike are all done without any equipment.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '6a6e2066-150d-4a4f-8b6a-ae0748cd999d');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '2e361968-aec0-48f5-983a-411b925c9a0a',1,'Volleyball',
+  'In volleyball, a team must win a set by at least two points.',
+  '["True","False"]'::jsonb,0,
+  'True! A set keeps going until one team leads by two points, even past 25. A close set can finish 26-24, 27-25 or later.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Volleyball Rules Book, scoring and set length section; to verify.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '2e361968-aec0-48f5-983a-411b925c9a0a');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '12370a8f-ff2d-41da-b420-ef3c37716477',1,'Soccer',
+  'In soccer, how many players does each team have on the field, including the goalkeeper?',
+  '["9","10","11","12"]'::jsonb,2,
+  'Each team has 11 players on the field, and one of them is the goalkeeper. Smaller-sided youth games may use fewer.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'IFAB Laws of the Game, Law 3 (the players); NFHS Soccer Rules Book; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '12370a8f-ff2d-41da-b420-ef3c37716477');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '7d714b96-060a-4614-8772-01108aace03c',1,'Soccer',
+  'In soccer, which player is allowed to handle the ball with their hands inside their own penalty area?',
+  '["The captain","The goalkeeper","Any defender","The player taking a corner"]'::jsonb,1,
+  'Only the goalkeeper may handle the ball, and only inside their own penalty area. Other field players use their feet, head, chest and thighs. Throw-ins are the one time everyone uses their hands.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'IFAB Laws of the Game, Law 12 (handling the ball); to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '7d714b96-060a-4614-8772-01108aace03c');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '835414cd-ac77-474b-9211-d89fc9b99ca0',1,'Soccer',
+  'In soccer, what is it called when one player scores three goals in the same game?',
+  '["A triple play","A hat trick","A grand slam","A clean sheet"]'::jsonb,1,
+  'Three goals by one player is a hat trick. A clean sheet means a team did not allow a goal, and the grand slam and triple play come from baseball.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'General soccer terminology; any standard sports glossary; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '835414cd-ac77-474b-9211-d89fc9b99ca0');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '44fa6ca4-117a-40c0-9f03-4825a2806716',1,'Soccer',
+  'In soccer, a yellow card from the referee is a warning to a player.',
+  '["True","False"]'::jsonb,0,
+  'True! A yellow card is a caution. A red card is more serious and sends the player off the field.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '44fa6ca4-117a-40c0-9f03-4825a2806716');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '14409c96-8f6c-47ee-aed2-6dfb11d6f3bb',1,'Baseball',
+  'In baseball, how many balls does a batter need to earn a walk to first base?',
+  '["3","4","5","6"]'::jsonb,1,
+  'Four balls earns a walk, also called a base on balls. A ball is a pitch outside the strike zone that the batter does not swing at.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Baseball Rules Book, batter and base on balls section; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '14409c96-8f6c-47ee-aed2-6dfb11d6f3bb');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '59c241c5-4307-4b19-a0e2-59d5835fb474',1,'Baseball',
+  'In baseball, how many strikes make a strikeout?',
+  '["2","3","4","5"]'::jsonb,1,
+  'Three strikes and the batter is out. That is where the saying "three strikes and you''re out" comes from.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '59c241c5-4307-4b19-a0e2-59d5835fb474');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '7bd0a97f-2dd3-4194-8aec-44949f704f99',1,'Baseball',
+  'In baseball, what do you call a home run hit when the bases are loaded?',
+  '["A hat trick","A grand slam","A triple play","A walk-off single"]'::jsonb,1,
+  'A home run with runners on all three bases is a grand slam. It scores four runs at once, the most possible on a single swing.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'General baseball terminology; NFHS/MLB glossaries; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '7bd0a97f-2dd3-4194-8aec-44949f704f99');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'a37d81dc-8e01-465c-8b9c-2063e4dd104d',1,'Baseball',
+  'In baseball, a home run lets the batter run around all the bases and score.',
+  '["True","False"]'::jsonb,0,
+  'True! On a home run, the batter rounds first, second and third base and touches home plate to score a run.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'a37d81dc-8e01-465c-8b9c-2063e4dd104d');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'aaeb6654-988e-4bbd-a138-6085237ceaac',1,'Softball',
+  'How does a pitcher throw the ball in fastpitch softball?',
+  '["Overhand","Underhand","Sidearm","Off a tee"]'::jsonb,1,
+  'Fastpitch softball pitchers throw underhand, often with a windmill arm motion. Even underhand, top pitchers throw very fast from a short distance.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Softball Rules Book, pitching section; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'aaeb6654-988e-4bbd-a138-6085237ceaac');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '44e2ed3e-8ddd-449d-912c-058b7b3d38fd',1,'Softball',
+  'In softball, what does the batter use to hit the ball?',
+  '["A racket","A stick","A bat","A paddle"]'::jsonb,2,
+  'Softball batters swing a bat, just like in baseball.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '44e2ed3e-8ddd-449d-912c-058b7b3d38fd');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'c0aaca09-9899-48d8-8442-d3f1aa36df93',1,'Softball',
+  'In softball, how many outs does the batting team get before the teams switch sides?',
+  '["2","3","4","5"]'::jsonb,1,
+  'After 3 outs, the teams switch: the fielding team comes in to bat. Baseball works the same way.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'c0aaca09-9899-48d8-8442-d3f1aa36df93');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '7577838f-bf05-418c-beba-3dae49e2054d',1,'Softball',
+  'A softball is smaller than a baseball.',
+  '["True","False"]'::jsonb,1,
+  'False. A fastpitch softball is bigger, about 12 inches around, while a baseball is about 9 inches around. The "soft" in the name does not mean small!',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Softball and Baseball Rules Books, equipment (ball circumference); to verify.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '7577838f-bf05-418c-beba-3dae49e2054d');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '33350a3a-960f-4cd8-b055-3982af63f479',1,'Wrestling',
+  'In wrestling, what is it called when a wrestler holds both of the opponent''s shoulders on the mat long enough to end the match?',
+  '["A takedown","A fall, or pin","An escape","A reversal"]'::jsonb,1,
+  'That is a fall, often called a pin. It ends the match right away, no matter what the score was.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Wrestling Rules Book, fall definition; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '33350a3a-960f-4cd8-b055-3982af63f479');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'c2a70df4-cefe-42e8-9de6-c5d25d3f9919',1,'Wrestling',
+  'What is the padded floor that wrestlers compete on called?',
+  '["A court","A mat","A pitch","A rink"]'::jsonb,1,
+  'Wrestlers compete on a thick, padded mat. The padding helps protect them during takedowns.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'c2a70df4-cefe-42e8-9de6-c5d25d3f9919');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'cea7ab17-dd60-48d4-9392-95e1e957d3dd',1,'Wrestling',
+  'Why do wrestlers compete in weight classes?',
+  '["So matches go faster","So wrestlers face opponents of similar size","So each team has the same uniforms","So referees can tell wrestlers apart"]'::jsonb,1,
+  'Weight classes match wrestlers with opponents close to their own size. That keeps matches fair and lets skill and technique decide the winner.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Wrestling Rules Book, weight classes section; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'cea7ab17-dd60-48d4-9392-95e1e957d3dd');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '919b607b-81e5-4968-8511-e40e753fedd5',1,'Wrestling',
+  'In a wrestling match, each wrestler faces a single opponent.',
+  '["True","False"]'::jsonb,0,
+  'True! A wrestling match is one-on-one. In team meets, each match still pits one wrestler against another.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '919b607b-81e5-4968-8511-e40e753fedd5');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '3ed21bc5-86a6-4ede-add1-91fcccd3964f',1,'Track & Field',
+  'How long is one lap around the inside lane of a standard outdoor running track?',
+  '["200 meters","300 meters","400 meters","500 meters"]'::jsonb,2,
+  'One lap of the inside lane is 400 meters. Outer lanes are longer, which is why runners in those lanes start farther ahead in races around the curve.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Track and Field Rules Book; World Athletics track specifications; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '3ed21bc5-86a6-4ede-add1-91fcccd3964f');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'bf9c512f-19a6-4f89-9782-a97b3963fc33',1,'Track & Field',
+  'In a relay race, what do runners pass to their teammates?',
+  '["A flag","A baton","A wristband","A torch"]'::jsonb,1,
+  'Relay runners pass a baton. The handoff must happen inside a marked exchange zone, so smooth passing can win or lose a race.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Track and Field Rules Book, relay section; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'bf9c512f-19a6-4f89-9782-a97b3963fc33');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '34f1a576-7c7e-4868-bc19-b39e2249fb0e',1,'Track & Field',
+  'How many events are in a decathlon?',
+  '["5","7","10","12"]'::jsonb,2,
+  'A decathlon has 10 events, held over two days. The word comes from the Greek "deka," meaning ten. The heptathlon has seven events.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'World Athletics competition rules (combined events); to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '34f1a576-7c7e-4868-bc19-b39e2249fb0e');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '23da76c8-056f-4512-9027-b55eceebb2a8',1,'Track & Field',
+  'In the long jump, stepping past the takeoff line counts as a foul.',
+  '["True","False"]'::jsonb,0,
+  'True! If a jumper''s foot goes past the takeoff line, the jump is a foul and does not count. Jumpers practice their run-up so they hit the board just right.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Track and Field Rules Book, long jump section; World Athletics rules; to verify.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '23da76c8-056f-4512-9027-b55eceebb2a8');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '60f76779-ab11-44c5-aae5-ed70cc00c9ab',1,'Lacrosse',
+  'In lacrosse, which player guards the net?',
+  '["The goalie","The midfielder","The attacker","The referee"]'::jsonb,0,
+  'The goalie guards the net and tries to stop shots, just like a goalkeeper in soccer or a goalie in hockey.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '60f76779-ab11-44c5-aae5-ed70cc00c9ab');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '96676b40-6338-4d02-af8b-82905a0a3472',1,'Lacrosse',
+  'Lacrosse was first played by which people?',
+  '["Indigenous peoples of North America","Ancient Romans","Vikings","Medieval English knights"]'::jsonb,0,
+  'Lacrosse began with Indigenous peoples of North America, including the Haudenosaunee, centuries ago. Many communities still honor it as an important part of their culture.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'USA Lacrosse history; Haudenosaunee Nationals history; to verify wording with Content.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '96676b40-6338-4d02-af8b-82905a0a3472');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '4e08a8ea-1117-40fb-8e44-2c444dd13833',1,'Lacrosse',
+  'What do lacrosse players use to catch, carry and throw the ball?',
+  '["A racket","A paddle","A stick with a netted head","A wooden bat"]'::jsonb,2,
+  'Players use a lacrosse stick, sometimes called a crosse. Its netted head, or pocket, lets them catch, cradle and throw the ball.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'NFHS Boys and Girls Lacrosse Rules Books, equipment section; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '4e08a8ea-1117-40fb-8e44-2c444dd13833');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '72422bda-b086-4416-8009-ed53cee9ed7f',1,'Lacrosse',
+  'Lacrosse players can carry the ball in the netted pocket of their stick while running.',
+  '["True","False"]'::jsonb,0,
+  'True! Players cradle the ball in the pocket of the stick as they run, then pass or shoot it.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'Common knowledge (basic rules of the game); no expert check needed.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '72422bda-b086-4416-8009-ed53cee9ed7f');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '44e37b63-9521-454e-9e03-9c0a029b5d02',1,'Ice Hockey',
+  'What is the flat rubber disc used in ice hockey called?',
+  '["A puck","A slider","A shuttle","A chip"]'::jsonb,0,
+  'It is called a puck, and it is made of hard rubber. Pucks are often frozen before games so they slide smoothly and bounce less.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'USA Hockey Playing Rules, equipment (puck); NFHS Ice Hockey Rules Book; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '44e37b63-9521-454e-9e03-9c0a029b5d02');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '4a660884-fc56-442a-b675-b32fd3483e85',1,'Ice Hockey',
+  'In ice hockey, how many players from each team are on the ice during normal play, including the goalie?',
+  '["5","6","7","11"]'::jsonb,1,
+  'Each team has 6 players on the ice: a goalie and five skaters. When a player serves a penalty, the team usually plays with one fewer skater.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'USA Hockey Playing Rules; NFHS Ice Hockey Rules Book, players section; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '4a660884-fc56-442a-b675-b32fd3483e85');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '3cc6af0a-79e7-4f9c-b216-2d9161b91c54',1,'Ice Hockey',
+  'How many periods are in a standard ice hockey game?',
+  '["2","3","4","5"]'::jsonb,1,
+  'A standard hockey game has three periods. Teams switch ends between periods, and the ice is often resurfaced during the breaks.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'USA Hockey Playing Rules; NFHS Ice Hockey Rules Book, game length; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '3cc6af0a-79e7-4f9c-b216-2d9161b91c54');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '64181af8-a508-4950-8843-d567a07e0ac0',1,'Ice Hockey',
+  'In ice hockey, a player who gets a penalty sits in the penalty box while their team plays one player short.',
+  '["True","False"]'::jsonb,0,
+  'True! The penalized player sits in the penalty box, and their team plays short-handed. The other team gets a power play, a great chance to score.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'USA Hockey Playing Rules, penalties section; NFHS Ice Hockey Rules Book; to verify.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '64181af8-a508-4950-8843-d567a07e0ac0');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '7549ac25-008f-4dd0-a862-66992c5c4c75',1,'Tennis',
+  'In tennis scoring, what does the word "love" mean?',
+  '["Zero","One point","A tie game","A perfect serve"]'::jsonb,0,
+  '"Love" means zero in tennis. So a score of 15-love means one player has one point and the other has none.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'ITF Rules of Tennis, scoring section; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '7549ac25-008f-4dd0-a862-66992c5c4c75');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '09b3af71-1209-4e28-a184-73d8c3a093c7',1,'Tennis',
+  'In a tennis game, the points go love, 15, 30 and then what?',
+  '["35","40","45","50"]'::jsonb,1,
+  'After 30 comes 40. One more point after 40 wins the game, as long as the player is at least two points ahead.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'ITF Rules of Tennis, scoring in a game; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '09b3af71-1209-4e28-a184-73d8c3a093c7');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '1a206c55-cf33-48b0-909e-f47fc5cfe1a0',1,'Tennis',
+  'In tennis, what is a serve called when the receiver cannot even touch it with their racket?',
+  '["A let","An ace","A fault","A volley"]'::jsonb,1,
+  'That serve is an ace. A let is a serve that clips the net and lands in, so it is replayed, and a fault is a serve that misses the service box.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'ITF Rules of Tennis and standard tennis glossary; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '1a206c55-cf33-48b0-909e-f47fc5cfe1a0');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '420e03e7-d506-40a4-a4ad-bb2dca0de5f3',1,'Tennis',
+  'In tennis, when the score in a game is tied at 40-40, it is called deuce.',
+  '["True","False"]'::jsonb,0,
+  'True! A 40-40 tie is called deuce. From there, a player must win two points in a row to win the game, first earning "advantage" and then the game.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','sport',
+  'ITF Rules of Tennis, scoring in a game (deuce); to verify.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '420e03e7-d506-40a4-a4ad-bb2dca0de5f3');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '29b7a628-782d-4abb-8c31-785c5226a14b',1,'Science',
+  'What pulls a ball back down to the ground after it is thrown up in the air?',
+  '["Gravity","Magnetism","Electricity","Sound"]'::jsonb,0,
+  'Gravity pulls everything toward the ground. That is why every pop fly and jump shot comes back down.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','science',
+  'Common knowledge (basic science); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '29b7a628-782d-4abb-8c31-785c5226a14b');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '8b1168b6-437f-406b-905d-fc2c82374f23',1,'Science',
+  'When you exercise hard, you breathe faster mainly to get more of which gas to your muscles?',
+  '["Oxygen","Carbon dioxide","Helium","Nitrogen"]'::jsonb,0,
+  'Your muscles use oxygen to make energy. Breathing faster brings in more oxygen and also helps your body get rid of carbon dioxide, the gas you breathe out.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','science',
+  'Introductory biology/physiology texts on respiration during exercise; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '8b1168b6-437f-406b-905d-fc2c82374f23');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '992ae3e5-78fb-4c7b-8b0e-c6e4c4da98dc',1,'Science',
+  'Why does your body sweat during a game?',
+  '["To make your skin stronger","To cool you down as the sweat dries","To help you jump higher","To keep your muscles from moving"]'::jsonb,1,
+  'Sweat cools you as it evaporates from your skin, carrying heat away from your body. That is why drinking water during practice and games matters.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','science',
+  'Introductory physiology texts on thermoregulation; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '992ae3e5-78fb-4c7b-8b0e-c6e4c4da98dc');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '0ee0c2b1-eef4-4a33-bc19-a311e64d57f2',1,'Science',
+  'If you threw a ball on the Moon as hard as you can on Earth, it would travel farther.',
+  '["True","False"]'::jsonb,0,
+  'True! The Moon''s gravity is about one-sixth of Earth''s, and there is no air to slow the ball down. An astronaut even hit golf balls on the Moon in 1971.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','science',
+  'NASA educational material on lunar gravity; Apollo 14 mission history; to verify.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '0ee0c2b1-eef4-4a33-bc19-a311e64d57f2');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'f3ce0f5f-9799-42cf-8fba-6c7e1d7a31d0',1,'Geography',
+  'Rugby is named after a school in a town called Rugby. In which country is it?',
+  '["England","New Zealand","France","South Africa"]'::jsonb,0,
+  'Rugby School is in the town of Rugby, England, where the game''s early form developed in the 1800s. Today rugby is loved worldwide, including across the Pacific Islands.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','geography',
+  'World Rugby history; Rugby School history; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'f3ce0f5f-9799-42cf-8fba-6c7e1d7a31d0');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '725a3060-4158-4733-8280-468e9b7054fa',1,'Geography',
+  'The ancient Olympic Games began in which country?',
+  '["Italy","Egypt","Greece","China"]'::jsonb,2,
+  'The Olympic Games started in ancient Greece, at a place called Olympia. That is where the name comes from.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','geography',
+  'Common knowledge (world history); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '725a3060-4158-4733-8280-468e9b7054fa');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '2e446695-3943-4804-b123-3bf5da558f61',1,'Geography',
+  'Sumo wrestling is a traditional sport from which country?',
+  '["Brazil","Japan","Canada","Kenya"]'::jsonb,1,
+  'Sumo is a traditional sport from Japan. Wrestlers try to push each other out of a ring or make them touch the ground.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','geography',
+  'Common knowledge (world geography and culture); no expert check needed.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '2e446695-3943-4804-b123-3bf5da558f61');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '2730f26f-8250-47d3-acbe-d5f73a12a9ca',1,'Geography',
+  'Canada, where ice hockey is hugely popular, is north of the United States.',
+  '["True","False"]'::jsonb,0,
+  'True! Canada is directly north of the United States. Hockey is one of the most loved sports there.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','geography',
+  'Common knowledge (world geography); no expert check needed.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '2730f26f-8250-47d3-acbe-d5f73a12a9ca');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '87db24c0-4aee-434f-acc1-dd06703f3018',1,'General',
+  'In sports, what does "MVP" stand for?',
+  '["Most Valuable Player","Most Visible Player","Main Varsity Player","Most Victorious Pick"]'::jsonb,0,
+  'MVP stands for Most Valuable Player. It is an honor given to the player who helped their team the most in a game, a tournament or a season.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','general',
+  'Standard sports glossary; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '87db24c0-4aee-434f-acc1-dd06703f3018');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '17a4bc09-f816-496c-8288-6fae918a9f4a',1,'General',
+  'What is a "shutout" in sports?',
+  '["A game stopped because of weather","A game where one team does not score at all","A game that goes into overtime","A game played with no fans"]'::jsonb,1,
+  'A shutout is a game where one team keeps the other from scoring at all. It is a big win for the defense and the goalie or pitcher.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','general',
+  'Standard sports glossary; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '17a4bc09-f816-496c-8288-6fae918a9f4a');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select 'efcdc141-679b-4778-be4d-9f10b769d119',1,'General',
+  'What do people call it when a team plays a game at its own field or gym?',
+  '["An away game","A home game","A bye week","A scrimmage"]'::jsonb,1,
+  'A game at your own field or gym is a home game. When a team travels to the other school, it is an away game. A bye week means no game at all.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','general',
+  'Standard sports glossary; to verify.','choice4'
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'efcdc141-679b-4778-be4d-9f10b769d119');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type)
+select '6cc0972a-0dec-45c1-973c-0e7246770d32',1,'General',
+  'The Olympic flag shows five interlocking rings.',
+  '["True","False"]'::jsonb,0,
+  'True! The five rings, in blue, yellow, black, green and red on a white background, stand for the five continents joined together in the Olympic spirit.',
+  'Starter draft (QUIZ-03); Content verifies the source before approval.','general',
+  'International Olympic Committee (olympics.com) on the Olympic symbol; to verify.','true_false'
+where not exists(select 1 from public.sport_quiz_questions where question_key = '6cc0972a-0dec-45c1-973c-0e7246770d32');
+
+-- QUIZ-04: Life Playbook and personal progress. Local source only; not applied anywhere.
+-- Requires QUIZ-01, QUIZ-02, QUIZ-03 (20261014160000), the QUIZ-03 starter bank and MINOR-01 / PRIV-01.
+-- Design: docs/engineering/design/LIFE_PLAYBOOK_DESIGN.md (§8 owner simplification 2026-10-15 overrides §2–§7).
+-- Owner: POLLS with BACKEND, DATABASE_MIGRATIONS, AURA (levels and badges), ADMIN and DATA_GOVERNANCE. Reviews: LEGAL,
+--   MINOR_SAFETY, PRIVACY_ENGINEERING, RLS_SECURITY, VOICE, QA.
+-- Owner simplification (2026-10-15, edited in place before any apply): keep trivia simple and fun, simple facts only.
+--   One admin approves a Life question exactly like sports trivia. The CPA sign-off, named finance / tax reviewers,
+--   source URLs / retrieval dates / tax years, re-review and the January withdrawal, and the 16+ / adult bands are
+--   gone (excerpts kept in archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql). Life content carries
+--   no money figures or years, so nothing goes stale.
+-- What it adds:
+--   1. Round kinds (§7.1): round_kind personal | group | life on attempts, week guards, request receipts and the Start
+--      digest; one round per (account, week, kind); quiz_end takes the kind and spends only that guard; still one active
+--      round at a time; reserved request slots per (week, kind) and the weekly request cap raised 57 -> 171.
+--   2. Explicit fun-slot categories (science, geography, general); topic 'life' only through quiz_life_start (§7.2).
+--   3. Group "played", Family Challenger and group fact totals count group rounds only; group Start needs >= 2 members;
+--      Trivia Explorer re-points to another qualifying round of the same week when its round is voided (§7.3).
+--   4. Life columns on questions (chapter, min_age_band '13', education_only) and a separate Life version cap (200 draft
+--      + approved; trivia keeps its 300). Approval: one admin, the education-only attestation and the copy rules.
+--   5. Four chapters (sport_quiz_life_chapters, seeded closed, all 13+): Money Huddle, Savings Season, Scam Defense,
+--      Smart Plays. A chapter opens with 5 approved items (one round).
+--   6. Eligibility: Life is for trivia-eligible accounts plus 13+ accounts without a recorded age (not_given / unknown),
+--      checked at Start and every Next. No error or read mentions age.
+--   7. Levels: admin thresholds (Rookie 0, Varsity 15, All-Star 40, Pro 80, Hall of Fame 150 by default); stored
+--      highest level per account and per chapter only goes up (cleared by erasure); chapter progress = share of the
+--      chapter's approved questions seen; one private Life badge per chapter at Varsity.
+--   8. Privacy: admin Life statistics are aggregate only (per-question >= 20 responders, age band x chapter cells < 10
+--      hidden, no per-user rows); Life stays out of the trivia counts and audit feed; Life audit rows carry no question
+--      id; erasure covers Life; the opt-in is private.
+--   9. The Life copy ruleset runs in SQL at approval (quiz_life_copy_problems): no advice, brands, Tapua'i money words,
+--      NIL / eligibility, tax / loan / credit score / APR, money figures or years; Scam Defense ends "Tell a trusted adult
+--      and use Report."; prompt <= 120 and explanation <= 200 characters. CI runs the same rules over the JSON bank
+--      (scripts/life-bank-sql.mjs) from one file, supabase/content/life_copy_rules.json.
+--  10. trivia.life switch (sport_quiz_settings.life_enabled), default off.
+--  11. Control tower (2026-10-15, edited in place before any apply): quiz_admin_snapshot.bank_counts (draft / approved
+--      versions by topic, sport and chapter; content counts only) and the atomic quiz_admin_question 'edit_replace'.
+-- Access: RPC-only, "Closed accounts" restrictive policy on every new table, explicit revokes on every function, pinned
+--   search_path. Lock order unchanged: settings -> group -> account -> attempt.
+-- Safe to re-run: add column if not exists, create table if not exists, named constraints dropped and re-added NOT VALID,
+--   seeds on conflict do nothing, create or replace. Rollback: switch trivia.life off and pause; keep records; forward fix.
+
+-- QUIZ-05 (2026-10-15, edited in place before any apply): after 20261015210000_trivia_fresh_questions.sql exists this file
+--   must not be re-run alone (it would replace QUIZ-05 functions and narrow its checks); it stops with
+--   quiz_rerun_after_quiz05. schema.sql re-applies it together with QUIZ-05 (quiz.full_schema is on there).
+do $$ begin
+  if to_regclass('public.quiz_athlete_facts') is not null and coalesce(current_setting('quiz.full_schema',true),'') <> 'on' then
+    raise exception 'quiz_rerun_after_quiz05: 20261014180000_life_playbook.sql must not be re-run alone after QUIZ-05; re-apply schema.sql or write a reviewed forward migration';
+  end if;
+end $$;
+
+-- 0. Helpers used by constraints ---------------------------------------------------------------------------------------
+create or replace function public.quiz_level_keys()
+returns text[] language sql immutable set search_path = '' as $$ select array['rookie','varsity','all_star','pro','hall_of_fame'] $$;
+create or replace function public.quiz_level_label(p_rank integer)
+returns text language sql immutable set search_path = '' as $$ select (array['Rookie','Varsity','All-Star','Pro','Hall of Fame'])[p_rank + 1] $$;
+
+-- Five integer thresholds, Rookie = 0, strictly increasing.
+create or replace function public.quiz_thresholds_ok(p jsonb)
+returns boolean language plpgsql immutable set search_path = '' as $$
+declare k text; prev integer := -1; v integer;
+begin
+  if jsonb_typeof(p) is distinct from 'object' or (select count(*) from jsonb_object_keys(p)) <> 5 then return false; end if;
+  foreach k in array public.quiz_level_keys() loop
+    if jsonb_typeof(p -> k) is distinct from 'number' or (p ->> k) !~ '^[0-9]{1,5}$' then return false; end if;
+    v := (p ->> k)::integer;
+    if (k = 'rookie' and v <> 0) or v <= prev then return false; end if;
+    prev := v;
+  end loop;
+  return true;
+end $$;
+create or replace function public.quiz_level_rank(p_facts integer,p_thresholds jsonb)
+returns integer language sql immutable set search_path = '' as $$
+  select coalesce(max(i::integer - 1),0) from unnest(public.quiz_level_keys()) with ordinality k(name,i) where coalesce(p_facts,0) >= (p_thresholds ->> name)::integer
+$$;
+
+-- Life is for the trivia bands plus 13+ accounts without a recorded age (not_given / unknown); never under 13.
+create or replace function public.quiz_life_band_ok(p_profile_band text)
+returns boolean language sql immutable set search_path = '' as $$
+  select coalesce(p_profile_band in ('adult','teen_16_17','teen_13_15','not_given','unknown'),false)
+$$;
+-- A chapter opens with one round of approved items (owner simplification 2026-10-15; was 20).
+create or replace function public.quiz_life_open_at()
+returns integer language sql immutable set search_path = '' as $$ select 5 $$;
+-- The Life copy ruleset (v4, design §8). One rule list: supabase/content/life_copy_rules.json, read by
+-- scripts/life-bank-sql.mjs and copied here between the markers; `pnpm life:bank:check` fails if the two differ.
+-- life-copy-rules:begin
+create or replace function public.quiz_life_copy_rules()
+returns jsonb language sql immutable set search_path = '' as $$ select $life_rules${"version":4,"advice":["you should","you shouldn't","you should not","you ought to","you must","you mustn't","you need to","should you","you shouldnt","you mustnt"],"brands":["visa","mastercard","master card","american express","amex","paypal","venmo","zelle","cash app","cashapp","apple pay","google pay","apple","chase","nike","adidas","wells fargo","bank of america","citibank","capital one","sallie mae","sofi","credit karma","nerdwallet","equifax","experian","transunion","fico","turbotax","h&r block","robinhood","coinbase","bitcoin","klarna","afterpay"],"money_words":["tapua'i","tapuai","donate","donates","donated","donating","donation","donations","donor","donors","rally","rallies","family account","family accounts","payout","payouts","pay out","pays out","aura","gift","gifts","gifted","gifting","mālo","malo","pay-out","pay-outs"],"money_patterns":["tapua[^a-z0-9]?i"],"nil_eligibility":["nil","name, image and likeness","name, image, and likeness","name image and likeness","eligible","eligibility","ineligible","ineligibility"],"tax_loan_credit":["tax","taxes","taxed","taxable","taxation","loan","loans","credit score","credit scores","apr","aprs","annual percentage rate","annual percentage rates"],"money_symbols":"$€£¥¢%","number_words":["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety","hundred","thousand","million","billion","dozen","half"],"figure_words":["dollar","dollars","cent","cents","usd","buck","bucks","penny","pennies","percent","per cent","percentage points","pct","euro","euros","pound","pounds","grand"],"currency_words":["dollar","dollars","cent","cents","buck","bucks","penny","pennies","euro","euros"],"currency_prefixes":["usd","us$","eur","gbp","cad","aud"],"amount_suffixes":["k","m","bn"],"magnitude_words":["million","billion","trillion"],"year_pattern":"(?<![0-9])(?:1[6-9]|20|21)[0-9]{2}(?![0-9])","scam_chapter":"scam_defense","scam_end":"tell a trusted adult and use report.","prompt_max":120,"explanation_max":200,"allowed_non_ascii":"āēīōū—–·×"}$life_rules$::jsonb $$;
+-- life-copy-rules:end
+-- Normalize before matching: NFKC (full-width digits / %, compatibility spaces), drop zero-width characters, plain
+-- spaces and quotes (ʻokina and curly quotes become '), lowercase. The same steps run in scripts/life-bank-sql.mjs.
+create or replace function public.quiz_life_normalize(p text)
+returns text language sql immutable set search_path = '' as $$
+  select lower(translate(regexp_replace(normalize(coalesce(p,''),nfkc),U&'[\200B-\200D\2060\FEFF\00AD]','','g'),
+    U&'\00A0\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\202F\205F\3000\2018\2019\02BB\02BC\0060\00B4\2032\201C\201D\201E\2033',
+    repeat(' ',15) || repeat(chr(39),7) || repeat(chr(34),4)))
+$$;
+-- Whole-word alternation of a phrase list (spaces match any run of spaces); identical pattern in the JS check.
+-- Matching runs on macron-stripped text (quiz_life_strip), so phrases are stripped too.
+create or replace function public.quiz_life_strip(p text)
+returns text language sql immutable set search_path = '' as $$ select translate(coalesce(p,''),'āēīōū','aeiou') $$;
+create or replace function public.quiz_life_alt(p_list jsonb)
+returns text language sql immutable set search_path = '' as $$
+  select '(?:' || string_agg(replace(regexp_replace(public.quiz_life_strip(x),'([.^$*+?()\[\]{}|\\])','\\\1','g'),' ','\s+'),'|') || ')'
+  from jsonb_array_elements_text(p_list) x
+$$;
+create or replace function public.quiz_life_phrase_re(p_list jsonb)
+returns text language sql immutable set search_path = '' as $$ select '(?<![a-z0-9_])' || public.quiz_life_alt(p_list) || '(?![a-z0-9_])' $$;
+-- Money figure pattern (macron-stripped, normalized text): any money symbol or %, digits or number words with a
+-- currency / percent / "grand" word, "a" / "an" with a currency word, a currency code before digits, digits with
+-- k / m / bn, or million / billion / trillion on their own. Life content has no figures at all (design §8).
+create or replace function public.quiz_life_figure_re()
+returns text language sql immutable set search_path = '' as $$
+  select '[' || (r ->> 'money_symbols') || ']|[0-9][0-9,.]*\s*-?\s*' || public.quiz_life_alt(r -> 'figure_words') || '(?![a-z0-9_])|'
+    || public.quiz_life_phrase_re(r -> 'number_words') || '\s*-?\s*' || public.quiz_life_alt(r -> 'figure_words') || '(?![a-z0-9_])|'
+    || '(?<![a-z0-9_])(?:a|an)\s+' || public.quiz_life_alt(r -> 'currency_words') || '(?![a-z0-9_])|'
+    || '(?<![a-z0-9_])' || public.quiz_life_alt(r -> 'currency_prefixes') || '\s*[0-9]|'
+    || '[0-9][0-9,.]*\s*' || public.quiz_life_alt(r -> 'amount_suffixes') || '(?![a-z0-9_])|' || public.quiz_life_phrase_re(r -> 'magnitude_words')
+  from (select public.quiz_life_copy_rules() r) x
+$$;
+-- Returns the broken rule names in this order (empty = passes): non_latin_text on the display text (letters outside
+-- ASCII and the allowed macron / dash forms, e.g. Cyrillic lookalikes); then on the macron-stripped text over prompt,
+-- explanation and options: advice_you_should, brand_name, tapuai_money_word (phrases + tapua?i patterns),
+-- nil_eligibility, tax_loan_credit, money_figure, year; scam_missing_report_line (Scam Defense explanations end
+-- "Tell a trusted adult and use Report."); prompt_too_long (> 120) and explanation_too_long (> 200 characters).
+create or replace function public.quiz_life_copy_problems(p_prompt text,p_options jsonb,p_explanation text,p_chapter text)
+returns text[] language plpgsql immutable set search_path = '' as $$
+declare r jsonb := public.quiz_life_copy_rules(); p text; e text; t text; m text; out text[] := '{}';
+begin
+  p := public.quiz_life_normalize(p_prompt);
+  e := btrim(public.quiz_life_normalize(p_explanation));
+  t := p || ' ' || e || ' ' || public.quiz_life_normalize(coalesce((select string_agg(v,' ') from jsonb_array_elements_text(case when jsonb_typeof(p_options) = 'array' then p_options else '[]'::jsonb end) v),''));
+  m := public.quiz_life_strip(t);
+  if exists(select 1 from regexp_split_to_table(t,'') c where ascii(c) > 126 and position(c in r ->> 'allowed_non_ascii') = 0) then out := out || 'non_latin_text'::text; end if;
+  if m ~ public.quiz_life_phrase_re(r -> 'advice') then out := out || 'advice_you_should'::text; end if;
+  if m ~ public.quiz_life_phrase_re(r -> 'brands') then out := out || 'brand_name'::text; end if;
+  if m ~ public.quiz_life_phrase_re(r -> 'money_words')
+     or m ~ ('(?<![a-z0-9_])(?:' || (select string_agg(x,'|') from jsonb_array_elements_text(r -> 'money_patterns') x) || ')(?![a-z0-9_])') then out := out || 'tapuai_money_word'::text; end if;
+  if m ~ public.quiz_life_phrase_re(r -> 'nil_eligibility') then out := out || 'nil_eligibility'::text; end if;
+  if m ~ public.quiz_life_phrase_re(r -> 'tax_loan_credit') then out := out || 'tax_loan_credit'::text; end if;
+  if m ~ public.quiz_life_figure_re() then out := out || 'money_figure'::text; end if;
+  if m ~ (r ->> 'year_pattern') then out := out || 'year'::text; end if;
+  if p_chapter = r ->> 'scam_chapter' and right(e,char_length(r ->> 'scam_end')) is distinct from r ->> 'scam_end' then out := out || 'scam_missing_report_line'::text; end if;
+  if char_length(btrim(coalesce(p_prompt,''))) > (r ->> 'prompt_max')::integer then out := out || 'prompt_too_long'::text; end if;
+  if char_length(btrim(coalesce(p_explanation,''))) > (r ->> 'explanation_max')::integer then out := out || 'explanation_too_long'::text; end if;
+  return out;
+end $$;
+
+-- 1. Settings: the trivia.life switch and level thresholds -------------------------------------------------------------
+alter table public.sport_quiz_settings add column if not exists life_enabled boolean not null default false;
+alter table public.sport_quiz_settings add column if not exists level_thresholds jsonb not null
+  default '{"rookie":0,"varsity":15,"all_star":40,"pro":80,"hall_of_fame":150}'::jsonb;
+alter table public.sport_quiz_settings drop constraint if exists quiz_level_thresholds_valid;
+alter table public.sport_quiz_settings add constraint quiz_level_thresholds_valid check (public.quiz_thresholds_ok(level_thresholds));
+
+-- 2. Chapters (all 13+, seeded closed) ----------------------------------------------------------------------------------
+create table if not exists public.sport_quiz_life_chapters (
+  id text primary key check (id ~ '^[a-z][a-z_]{2,39}$'),
+  title text not null check (char_length(btrim(title)) between 2 and 80),
+  framing text not null default '' check (char_length(framing) <= 200),
+  open boolean not null default false,
+  position smallint not null unique check (position between 1 and 50),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references public.profiles(id) on delete set null
+);
+insert into public.sport_quiz_life_chapters(id,title,framing,position) values
+  ('money_huddle','Money Huddle','Calling the play before you spend',1),
+  ('savings_season','Savings Season','Building your bench',2),
+  ('scam_defense','Scam Defense','Defense wins',3),
+  ('smart_plays','Smart Plays','Good calls every day',4)
+on conflict (id) do nothing;
+
+-- 3. Life columns on questions -----------------------------------------------------------------------------------------
+alter table public.sport_quiz_questions drop constraint if exists sport_quiz_questions_topic_category_check;
+alter table public.sport_quiz_questions add constraint sport_quiz_questions_topic_category_check
+  check (topic_category in ('sport','science','geography','general','life')) not valid;
+alter table public.sport_quiz_questions add column if not exists chapter text references public.sport_quiz_life_chapters(id);
+alter table public.sport_quiz_questions add column if not exists min_age_band text check (min_age_band = '13');
+alter table public.sport_quiz_questions add column if not exists education_only boolean not null default false;
+alter table public.sport_quiz_questions drop constraint if exists quiz_life_fields;
+alter table public.sport_quiz_questions add constraint quiz_life_fields check (case when topic_category = 'life' then
+    chapter is not null and min_age_band = '13' and question_type in ('choice4','true_false')
+  else
+    chapter is null and min_age_band is null and education_only = false
+  end) not valid;
+create index if not exists quiz_questions_life on public.sport_quiz_questions(chapter, status) where topic_category = 'life';
+
+-- 4. Round kinds ---------------------------------------------------------------------------------------------------------
+alter table public.sport_quiz_attempts add column if not exists round_kind text not null default 'personal';
+alter table public.sport_quiz_attempts drop constraint if exists quiz_round_kind_values;
+alter table public.sport_quiz_attempts add constraint quiz_round_kind_values check (round_kind in ('personal','group','life'));
+update public.sport_quiz_attempts set round_kind = 'group' where group_id is not null and round_kind = 'personal';
+alter table public.sport_quiz_attempts drop constraint if exists sport_quiz_attempts_profile_id_week_start_key;
+do $$ begin
+  if not exists(select 1 from pg_constraint where conname = 'quiz_attempt_week_kind' and conrelid = 'public.sport_quiz_attempts'::regclass) then
+    alter table public.sport_quiz_attempts add constraint quiz_attempt_week_kind unique (profile_id, week_start, round_kind);
+  end if;
+end $$;
+alter table public.sport_quiz_attempts drop constraint if exists quiz_round_kind_shape;
+alter table public.sport_quiz_attempts add constraint quiz_round_kind_shape check ((group_id is null or round_kind = 'group')
+  and (round_kind = 'personal' or mode = 'round') and ((round_kind = 'life') = (coalesce(topic_category,'') = 'life'))) not valid;
+alter table public.sport_quiz_attempts drop constraint if exists quiz_round_shape;
+alter table public.sport_quiz_attempts add constraint quiz_round_shape check (mode <> 'round' or (
+  question_id is null and duration_seconds is not null and started_at is not null and expires_at is not null
+  and topic_category in ('sport','science','geography','general','life')
+  and round_size between 1 and 5 and planned_items between 1 and round_size and position between 1 and planned_items
+  and status in ('issued','completed','ended','expired','void')
+  and (status = 'issued') = (round_state is not null)
+  and (round_state is distinct from 'between' or next_by is not null)
+  and (status <> 'issued' or session_hash is not null))) not valid;
+
+alter table public.sport_quiz_week_guards add column if not exists round_kind text not null default 'personal';
+alter table public.sport_quiz_week_guards drop constraint if exists quiz_guard_kind_values;
+alter table public.sport_quiz_week_guards add constraint quiz_guard_kind_values check (round_kind in ('personal','group','life'));
+update public.sport_quiz_week_guards g set round_kind = 'group' from public.sport_quiz_attempts a
+  where a.profile_id = g.profile_id and a.week_start = g.week_start and a.round_kind = 'group' and g.round_kind = 'personal'
+    and not exists(select 1 from public.sport_quiz_attempts p where p.profile_id = g.profile_id and p.week_start = g.week_start and p.round_kind = 'personal');
+do $$ begin
+  if not exists(select 1 from pg_constraint c join pg_attribute a on a.attrelid = c.conrelid and a.attnum = any(c.conkey)
+      where c.conrelid = 'public.sport_quiz_week_guards'::regclass and c.contype = 'p' and a.attname = 'round_kind') then
+    alter table public.sport_quiz_week_guards drop constraint if exists sport_quiz_week_guards_pkey;
+    alter table public.sport_quiz_week_guards add constraint sport_quiz_week_guards_pkey primary key (profile_id, week_start, round_kind);
+  end if;
+end $$;
+
+alter table public.sport_quiz_requests add column if not exists round_kind text not null default 'personal';
+alter table public.sport_quiz_requests drop constraint if exists quiz_request_kind_values;
+alter table public.sport_quiz_requests add constraint quiz_request_kind_values check (round_kind in ('personal','group','life'));
+update public.sport_quiz_requests r set round_kind = a.round_kind from public.sport_quiz_attempts a where a.id = r.attempt_id and r.round_kind <> a.round_kind;
+-- Review fix (P3): round operations (Start, Next, answer, End) use a per-kind budget ('round') that ordinary saves cannot use.
+alter table public.sport_quiz_requests drop constraint if exists sport_quiz_requests_capacity_class_check;
+alter table public.sport_quiz_requests add constraint sport_quiz_requests_capacity_class_check check (capacity_class in ('ordinary','round','answer','off','end')) not valid;
+drop index if exists public.quiz_reserved_request_slot;
+create unique index quiz_reserved_request_slot on public.sport_quiz_requests(profile_id, week_start, round_kind, capacity_class) where capacity_class in ('answer','off','end');
+
+-- 5. Private Life opt-in, levels and badge / audit vocabulary --------------------------------------------------------------
+alter table public.sport_quiz_preferences add column if not exists life_opt_in boolean not null default false;
+alter table public.sport_quiz_preferences add column if not exists life_notice_version text check (life_notice_version = 'life-playbook-v1-testing');
+alter table public.sport_quiz_preferences add column if not exists life_opted_in_at timestamptz;
+alter table public.sport_quiz_preferences add column if not exists life_version bigint not null default 0 check (life_version >= 0);
+
+create table if not exists public.sport_quiz_levels (
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  track text not null check (track = 'overall' or track ~ '^[a-z][a-z_]{2,39}$'),
+  level text not null check (level in ('rookie','varsity','all_star','pro','hall_of_fame')),
+  rank smallint not null check (rank between 0 and 4),
+  reached_at timestamptz not null,
+  primary key (profile_id, track)
+);
+
+alter table public.sport_quiz_badges drop constraint if exists quiz_badge_label;
+alter table public.sport_quiz_badges add constraint quiz_badge_label check (
+  (kind = 'weekly' and label in ('Sport Learner','Trivia Explorer') and attempt_id is not null and sport is null)
+  or (kind = 'family' and label = 'Family Challenger' and attempt_id is null and sport is null)
+  or (kind = 'season' and label = 'Season Learner' and attempt_id is null and sport is null and period ~ '^[0-9]{4}-Q[1-4]$')
+  or (kind = 'sport' and sport is not null and label = sport || ' Explorer' and attempt_id is null and period = 'lifetime')
+  or (kind = 'life' and label like '% Playbook' and attempt_id is null and sport is null and period = 'lifetime' and visibility = 'private')) not valid;
+alter table public.sport_quiz_audit drop constraint if exists sport_quiz_audit_action_check;
+alter table public.sport_quiz_audit add constraint sport_quiz_audit_action_check check (action in
+  ('settings','question_create','question_edit','question_approve','question_archive','question_void','question_review_media',
+   'start','answer','skip','end','retention','life_settings','life_chapter')) not valid;
+
+-- 6. Life read helpers -------------------------------------------------------------------------------------------------
+-- Approved items in a chapter: the count that opens a chapter.
+create or replace function public.quiz_life_approved_count(p_chapter text)
+returns integer language sql stable security definer set search_path = '' as $$
+  select count(*)::integer from public.sport_quiz_questions q where q.status = 'approved' and q.topic_category = 'life' and q.chapter = p_chapter
+$$;
+create or replace function public.quiz_life_chapter_state(p_chapter text)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('approved_count',z.n,'needs_more',greatest(z.at - z.n,0),'ready',z.n >= z.at,'switched_open',c.open,
+    'open',c.open and z.n >= z.at,
+    'reasons',to_jsonb(array_remove(array[case when z.n < z.at then 'needs ' || (z.at - z.n) || ' more approved question' || case when z.at - z.n = 1 then '' else 's' end end],null)))
+  from public.sport_quiz_life_chapters c
+  cross join lateral (select public.quiz_life_approved_count(c.id) n, public.quiz_life_open_at() at) z
+  where c.id = p_chapter
+$$;
+create or replace function public.quiz_life_chapter_open(p_chapter text)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select coalesce((public.quiz_life_chapter_state(p_chapter) ->> 'open')::boolean,false)
+$$;
+-- Unseen, drawable Life questions for one account right now: approved, in an open chapter, optionally one chapter.
+-- Eligibility is checked by the caller (Start and every Next).
+create or replace function public.quiz_life_pool(p_me uuid,p_chapter text)
+returns table(id uuid, question_key uuid, chapter text) language sql stable security definer set search_path = '' as $$
+  select q.id,q.question_key,q.chapter from public.sport_quiz_questions q join public.sport_quiz_life_chapters c on c.id = q.chapter
+  where q.status = 'approved' and q.topic_category = 'life' and q.question_type <> 'image_choice' and (p_chapter is null or q.chapter = p_chapter)
+    and public.quiz_life_chapter_open(c.id)
+    and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10
+    and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+$$;
+create or replace function public.quiz_life_unseen_count(p_me uuid,p_chapter text)
+returns integer language sql stable security definer set search_path = '' as $$ select count(*)::integer from public.quiz_life_pool(p_me,p_chapter) $$;
+-- Life accepts 13+ accounts without a recorded age (not_given / unknown); sport and group trivia keep QUIZ-02's bands.
+create or replace function public.quiz_life_actor()
+returns uuid language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id();
+begin
+  if auth.role() is distinct from 'authenticated' or auth.uid() is null or me is null or not public.quiz_life_band_ok(public.profile_age_band(me)) then
+    raise exception 'quiz_ineligible'; end if;
+  return me;
+end $$;
+create or replace function public.quiz_life_expected_actor(p_expected uuid)
+returns uuid language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_actor();
+begin
+  if p_expected is null or me is distinct from p_expected then raise exception 'quiz_identity_changed'; end if;
+  return me;
+end $$;
+create or replace function public.quiz_trivia_band(p_me uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select public.profile_age_band(p_me) in ('adult','teen_13_15','teen_16_17')
+$$;
+-- Switch on, opted in with the current Life notice, and eligible by the server's band.
+create or replace function public.quiz_life_access(p_me uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select coalesce((select s.life_enabled from public.sport_quiz_settings s where s.singleton),false)
+    and coalesce((select p.life_opt_in and p.life_notice_version = 'life-playbook-v1-testing' from public.sport_quiz_preferences p where p.profile_id = p_me),false)
+    and public.quiz_life_band_ok(public.profile_age_band(p_me))
+$$;
+
+-- 7. Guards ------------------------------------------------------------------------------------------------------------
+-- QUIZ-03's question guard plus the Life fields: chapter, band and attestation are fixed on a version; approving a Life
+-- version needs the education-only attestation and a clean copy-rule check (one admin, like sports trivia).
+create or replace function public.quiz_guard_question()
+returns trigger language plpgsql set search_path = '' as $$
+declare normalized jsonb; problems text[];
+begin
+  if tg_op = 'UPDATE' and (new.question_key,new.version,new.sport,new.prompt,new.options,new.correct_option,new.explanation,new.created_at,
+      new.topic_category,new.source_notes,new.question_type,new.media_path,new.media_licence,new.media_source,new.media_attribution,
+      new.media_alt_text,new.media_size_bytes,new.media_has_person,new.media_no_marks,new.media_exif_stripped,
+      new.chapter,new.min_age_band,new.education_only)
+    is distinct from (old.question_key,old.version,old.sport,old.prompt,old.options,old.correct_option,old.explanation,old.created_at,
+      old.topic_category,old.source_notes,old.question_type,old.media_path,old.media_licence,old.media_source,old.media_attribution,
+      old.media_alt_text,old.media_size_bytes,old.media_has_person,old.media_no_marks,old.media_exif_stripped,
+      old.chapter,old.min_age_band,old.education_only) then raise exception 'quiz_immutable'; end if;
+  if tg_op = 'UPDATE' and old.status = 'void' and new.status <> 'void' then raise exception 'quiz_void_final'; end if;
+  normalized := public.quiz_normalize_options(new.options);
+  if normalized is null and tg_op = 'UPDATE' and new.status in ('archived','void') then return new; end if;
+  if normalized is null then raise exception 'quiz_options_invalid'; end if;
+  if new.status = 'approved' and char_length(btrim(new.source_notes)) not between 10 and 1000 then raise exception 'quiz_sources_required'; end if;
+  if new.status = 'approved' and new.question_type = 'image_choice' and (tg_op = 'INSERT' or old.status <> 'approved')
+     and not coalesce((select s.images_enabled from public.sport_quiz_settings s where s.singleton), false) then raise exception 'quiz_images_off'; end if;
+  if new.status = 'approved' and new.question_type = 'image_choice' and (tg_op = 'INSERT' or old.status <> 'approved')
+     and (new.media_reviewed_by is null or new.media_reviewed_by is not distinct from new.created_by) then raise exception 'quiz_media_review_required'; end if;
+  if new.question_type = 'image_choice' and new.correct_option < jsonb_array_length(normalized)
+     and position(lower(normalized ->> new.correct_option) in lower(coalesce(new.media_alt_text,''))) > 0 then raise exception 'quiz_media_alt_reveals_answer'; end if;
+  if new.topic_category = 'life' then
+    if not exists(select 1 from public.sport_quiz_life_chapters where id = new.chapter) or new.min_age_band is distinct from '13' then raise exception 'quiz_life_fields_invalid'; end if;
+    if new.status = 'approved' and (tg_op = 'INSERT' or old.status <> 'approved') then
+      if new.education_only is not true then raise exception 'quiz_life_attestation_required'; end if;
+      problems := public.quiz_life_copy_problems(new.prompt,new.options,new.explanation,new.chapter);
+      if cardinality(problems) > 0 then raise exception 'quiz_life_copy: %', array_to_string(problems,', '); end if;
+    end if;
+  end if;
+  if tg_op = 'INSERT' then new.options := normalized; end if;
+  return new;
+end $$;
+
+-- A chapter switches open only when ready; its id never changes and it is never deleted.
+create or replace function public.quiz_guard_life_chapter()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if tg_op = 'DELETE' then raise exception 'quiz_life_chapter_immutable'; end if;
+  if tg_op = 'UPDATE' and new.id is distinct from old.id then raise exception 'quiz_life_chapter_immutable'; end if;
+  if new.open and (tg_op = 'INSERT' or not old.open) and not coalesce((public.quiz_life_chapter_state(new.id) ->> 'ready')::boolean,false) then
+    raise exception 'quiz_life_chapter_not_ready'; end if;
+  return new;
+end $$;
+drop trigger if exists quiz_life_chapter_guard on public.sport_quiz_life_chapters;
+create trigger quiz_life_chapter_guard before insert or update or delete on public.sport_quiz_life_chapters for each row execute function public.quiz_guard_life_chapter();
+
+-- Levels only go up; only history erasure (or account deletion) removes them.
+create or replace function public.quiz_guard_level()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if tg_op = 'DELETE' then
+    if pg_trigger_depth() > 1 or old.profile_id::text = coalesce(current_setting('quiz.erase_profile',true),'') then return old; end if;
+    raise exception 'quiz_level_only_up';
+  end if;
+  if (new.profile_id,new.track) is distinct from (old.profile_id,old.track) or new.rank <= old.rank then raise exception 'quiz_level_only_up'; end if;
+  return new;
+end $$;
+drop trigger if exists quiz_level_guard on public.sport_quiz_levels;
+create trigger quiz_level_guard before update or delete on public.sport_quiz_levels for each row execute function public.quiz_guard_level();
+drop trigger if exists quiz_level_truncate_guard on public.sport_quiz_levels;
+create or replace function public.quiz_guard_truncate()
+returns trigger language plpgsql set search_path = '' as $$ begin raise exception 'quiz_truncate_refused'; end $$;
+create trigger quiz_level_truncate_guard before truncate on public.sport_quiz_levels for each statement execute function public.quiz_guard_truncate();
+
+
+-- 8. Receipts, guards and summaries by kind ------------------------------------------------------------------------------
+-- Request budgets per account and UTC week (review fix P3): round operations (Start, Next, answer, End) have 20 per
+-- kind ('round'), ordinary saves (preferences, invitation, skip) 111, so neither can block the other (3 x 57 = 171 in
+-- all). Past a budget only the reserved answer / off / end slot of that (week, kind) remains.
+create or replace function public.quiz_save_receipt(p_me uuid,p_request uuid,p_operation text,p_week date,p_digest text,p_attempt uuid,p_outcome text,
+  p_at timestamptz,p_kind text,p_preferences jsonb default null)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare receipt jsonb; budget text; kind text; round_op boolean := p_operation in ('start','next','answer','end');
+begin
+  kind := coalesce(p_kind,(select round_kind from public.sport_quiz_attempts where id = p_attempt),'personal');
+  receipt := jsonb_build_object('contract_version',2,'profile_id',p_me,'request_id',p_request,'operation',p_operation,'outcome',p_outcome,
+    'week_start',p_week,'committed_at',p_at,'round_kind',kind,'attempt',public.quiz_summary(p_attempt,p_at),'result',public.quiz_result_dto(p_attempt,p_at),'preferences',p_preferences);
+  if round_op and (select count(*) from public.sport_quiz_requests where profile_id = p_me and week_start = p_week and round_kind = kind and capacity_class = 'round') < 20 then
+    budget := 'round';
+  elsif not round_op and (select count(*) from public.sport_quiz_requests where profile_id = p_me and week_start = p_week and capacity_class = 'ordinary') < 111 then
+    budget := 'ordinary';
+  else
+    budget := case when p_operation = 'end' then 'end' when p_operation = 'answer' or (p_operation = 'start' and p_outcome = 'cancelled') then 'answer'
+      when p_outcome = 'saved_off' then 'off' else null end;
+    if budget is null or exists(select 1 from public.sport_quiz_requests r where r.profile_id = p_me and r.week_start = p_week and r.round_kind = kind and r.capacity_class = budget)
+      then raise exception 'quiz_request_limit'; end if;
+  end if;
+  insert into public.sport_quiz_requests(profile_id,request_id,operation,week_start,payload_digest,attempt_id,receipt,created_at,prune_after,capacity_class,round_kind)
+    values(p_me,p_request,p_operation,p_week,p_digest,p_attempt,receipt,p_at,p_at + interval '35 days',budget,kind);
+  return receipt;
+end $$;
+-- QUIZ-02 signature kept for preferences / invitation callers: the kind comes from the attempt, else personal.
+create or replace function public.quiz_save_request(p_me uuid,p_request uuid,p_operation text,p_week date,p_digest text,p_attempt uuid,p_outcome text,p_at timestamptz,p_preferences jsonb default null)
+returns jsonb language sql security definer set search_path = '' as $$
+  select public.quiz_save_receipt(p_me,p_request,p_operation,p_week,p_digest,p_attempt,p_outcome,p_at,null,p_preferences)
+$$;
+create or replace function public.quiz_spend(p_me uuid,p_week date,p_at timestamptz,p_kind text)
+returns void language sql security definer set search_path = '' as $$
+  insert into public.sport_quiz_week_guards(profile_id,week_start,spent_at,prune_after,round_kind) values(p_me,p_week,p_at,p_at + interval '35 days',p_kind) on conflict do nothing
+$$;
+
+create or replace function public.quiz_summary(p_attempt uuid,p_asof timestamptz)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select case when a.mode = 'round' then
+    jsonb_build_object('id',a.id,'week_start',a.week_start,'mode',a.mode,'status',v ->> 'status','started_at',a.started_at,'expires_at',a.expires_at,
+      'duration_seconds',a.duration_seconds,'closed_at',v -> 'closed_at','close_reason',v ->> 'close_reason','effective_expired',(v ->> 'effective_expired')::boolean,
+      'correction_reason',a.correction_reason,'round_state',v ->> 'round_state','position',a.position,'planned_items',a.planned_items,
+      'round_size',a.round_size,'next_by',v -> 'next_by','answered_count',(v ->> 'answered_count')::int,'short_round',a.planned_items < a.round_size,
+      'group_id',a.group_id,'round_kind',a.round_kind)
+  else
+    jsonb_build_object('id',a.id,'week_start',a.week_start,'mode',a.mode,
+      'status',case when a.status = 'issued' and a.expires_at <= p_asof then 'expired' else a.status end,
+      'started_at',a.started_at,'expires_at',a.expires_at,'duration_seconds',a.duration_seconds,'closed_at',a.closed_at,'close_reason',a.close_reason,
+      'effective_expired',a.status = 'issued' and a.expires_at <= p_asof,'correction_reason',a.correction_reason,
+      'round_state',null,'position',null,'planned_items',null,'round_size',null,'next_by',null,'answered_count',
+      case when a.status = 'completed' then 1 else 0 end,'short_round',false,'group_id',null,'round_kind',a.round_kind)
+  end
+  from public.sport_quiz_attempts a cross join lateral (select public.quiz_round_view(a.id,p_asof) v) x where a.id = p_attempt
+$$;
+-- The QUIZ-02 preferences contract is unchanged; the private Life opt-in travels only in the Life reads.
+create or replace function public.quiz_preferences_dto(p_me uuid)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select coalesce((select to_jsonb(p) - 'profile_id' - 'updated_at' - 'life_opt_in' - 'life_notice_version' - 'life_opted_in_at' - 'life_version'
+      from public.sport_quiz_preferences p where profile_id = p_me),
+    jsonb_build_object('invitation_mode','off','topic_mode','sports','notice_version',null,'notice_accepted_at',null,'version',0,'history_version',0,'last_invited_week',null))
+$$;
+-- §7.2: the fun slot names its categories; Life is never a fun-slot topic.
+create or replace function public.quiz_fun_available(p_me uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.sport_quiz_questions q where status = 'approved' and topic_category in ('science','geography','general') and question_type <> 'image_choice'
+    and char_length(btrim(source_notes)) >= 10 and public.quiz_normalize_options(options) is not null
+    and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key))
+$$;
+-- §7.3: "played" (group pages, Family Challenger, admin group counts) means a group round with a committed answer.
+create or replace function public.quiz_played(p_me uuid,p_week date)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.sport_quiz_attempts a join public.sport_quiz_round_items i on i.attempt_id = a.id
+    where a.profile_id = p_me and a.round_kind = 'group' and a.week_start = p_week and i.status = 'answered')
+$$;
+create or replace function public.quiz_group_facts(p_me uuid,p_from date,p_to date)
+returns integer language sql stable security definer set search_path = '' as $$
+  select count(*)::integer from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+  where a.profile_id = p_me and a.round_kind = 'group' and i.status = 'answered' and a.week_start >= p_from and a.week_start < p_to
+$$;
+create or replace function public.quiz_attempt_qualifies(p_attempt uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.sport_quiz_attempts a where a.id = p_attempt and ((a.mode = 'round'
+    and exists(select 1 from public.sport_quiz_round_items i where i.attempt_id = a.id and i.status = 'answered')) or (a.mode = 'timed' and a.status = 'completed')))
+$$;
+
+-- 9. Draw: Life rounds draw from the Life pool re-evaluated now (open chapters, unseen items) -----------------------------
+create or replace function public.quiz_round_pick(p_me uuid,p_attempt uuid,p_position integer)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare a public.sport_quiz_attempts%rowtype; qid uuid;
+begin
+  select * into a from public.sport_quiz_attempts where id = p_attempt;
+  if a.round_kind = 'life' then
+    select q.id into qid from public.sport_quiz_questions q where q.id in (select x.id from public.quiz_life_pool(p_me,a.sport_filter) x)
+      order by random() limit 1 for share of q;
+    return qid;
+  end if;
+  if a.group_id is not null then
+    select q.id into qid from public.sport_quiz_group_sets gs join public.sport_quiz_questions q on q.id = gs.question_id
+      where gs.group_id = a.group_id and gs.week_start = a.week_start and gs.position = p_position
+        and q.status = 'approved' and q.question_type <> 'image_choice' and public.quiz_normalize_options(q.options) is not null
+        and char_length(btrim(q.source_notes)) >= 10
+        and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = gs.question_key)
+      for share of q;
+    if qid is not null then return qid; end if;
+    select q.id into qid from public.sport_quiz_questions q
+      where q.status = 'approved' and q.question_type <> 'image_choice' and q.topic_category = 'sport' and (a.sport_filter is null or q.sport = a.sport_filter)
+        and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10
+        and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+      order by exists(select 1 from public.sport_quiz_group_sets gs where gs.group_id = a.group_id and gs.week_start = a.week_start
+                        and gs.position > p_position and gs.question_key = q.question_key), random()
+      limit 1 for share of q;
+    return qid;
+  end if;
+  select q.id into qid from public.sport_quiz_questions q
+    where q.status = 'approved' and q.question_type <> 'image_choice' and q.topic_category = a.topic_category and a.topic_category <> 'life'
+      and (a.sport_filter is null or q.sport = a.sport_filter)
+      and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10
+      and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+    order by random() limit 1 for share of q;
+  return qid;
+end $$;
+
+-- 10. Start core: one weekly opportunity per kind; one active round at a time -------------------------------------------
+drop function if exists public.quiz_round_begin(uuid,text,text,integer,date,text,uuid,text,uuid);
+create or replace function public.quiz_round_begin(p_me uuid,p_kind text,p_topic text,p_sport text,p_duration integer,p_expected_week date,p_notice text,
+  p_request uuid,p_secret text,p_group uuid,p_chapter text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare at timestamptz; w date; d text; r public.sport_quiz_requests%rowtype; a public.sport_quiz_attempts%rowtype; it public.sport_quiz_round_items%rowtype;
+  q public.sport_quiz_questions%rowtype; p public.sport_quiz_preferences%rowtype; s public.sport_quiz_settings%rowtype;
+  receipt jsonb; active jsonb; item jsonb; planned integer; setn integer; qid uuid; filter text := case when p_sport is null then null else btrim(p_sport) end;
+begin
+  if coalesce(p_kind,'') not in ('personal','group','life') or (p_kind = 'group') <> (p_group is not null) or (p_kind <> 'life' and p_chapter is not null)
+     or (p_kind = 'life') <> (p_topic = 'life') then raise exception 'quiz_start_invalid'; end if;
+  -- Lock order: settings -> group (row + set advisory lock) -> account.
+  select * into s from public.sport_quiz_settings where singleton for share;
+  if not found then raise exception 'quiz_unavailable'; end if;
+  if p_group is not null then
+    if public.quiz_group_needs_recheck(p_group) then
+      perform 1 from public.sport_quiz_groups where id = p_group for update;
+      perform public.quiz_group_recheck_group(p_group);
+    else
+      perform 1 from public.sport_quiz_groups where id = p_group for share;
+    end if;
+    perform pg_advisory_xact_lock(hashtextextended('sport-quiz-group:' || p_group,0));
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz:' || p_me,0));
+  at := clock_timestamp(); w := public.quiz_week_at(at);
+  if p_expected_week is distinct from w then raise exception 'quiz_week_changed'; end if;
+  d := public.quiz_digest(jsonb_build_array(p_kind,p_topic,filter,p_duration,p_expected_week,p_notice,p_secret,p_group,p_chapter));
+  select * into r from public.sport_quiz_requests where profile_id = p_me and request_id = p_request;
+  if found then
+    if r.operation <> 'start' or (r.payload_digest is not null and r.payload_digest is distinct from d) then raise exception 'quiz_request_conflict'; end if;
+    perform public.quiz_expire(p_me,at);
+    select * into a from public.sport_quiz_attempts where id = r.attempt_id for update;
+    if a.status = 'issued' and a.session_hash = public.hash_secret(p_secret) and s.enabled and p_me = any(s.pilot_accounts)
+       and (a.round_kind <> 'life' or public.quiz_life_access(p_me)) then
+      if a.mode = 'round' then
+        select * into it from public.sport_quiz_round_items where attempt_id = a.id and position = 1;
+        if a.round_state = 'item' and a.position = 1 and it.status = 'issued' and it.expires_at > at then
+          active := public.quiz_question_dto(it.question_id); item := public.quiz_active_item(a.id);
+        end if;
+      elsif a.expires_at > at then
+        select * into q from public.sport_quiz_questions where id = a.question_id for share;
+        if q.status <> 'void' then active := public.quiz_question_dto(q.id); end if;
+      end if;
+    end if;
+    return public.quiz_receipt_dto(p_me,p_request,at) || jsonb_build_object('server_now',at,'active_question',active,'active_item',item);
+  end if;
+  -- A guard of this kind survives erasure / cancellation and is checked before any draw; other kinds are independent.
+  if exists(select 1 from public.sport_quiz_week_guards where profile_id = p_me and week_start = w and round_kind = p_kind) then
+    select id into a.id from public.sport_quiz_attempts where profile_id = p_me and week_start = w and round_kind = p_kind;
+    receipt := public.quiz_save_receipt(p_me,p_request,'start',w,d,a.id,'week_spent',at,p_kind);
+    return receipt || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  perform public.quiz_require_testing(p_me);
+  perform public.quiz_expire(p_me,at);
+  if exists(select 1 from public.sport_quiz_attempts where profile_id = p_me and status = 'issued') then raise exception 'quiz_round_active'; end if;
+  select * into p from public.sport_quiz_preferences where profile_id = p_me;
+  if p_kind = 'life' then
+    if p.notice_version is distinct from 'timed-trivia-v1-testing' or p.life_notice_version is distinct from p_notice then raise exception 'quiz_notice_required'; end if;
+    if not s.life_enabled then raise exception 'quiz_life_paused'; end if;
+    if p.life_opt_in is not true then raise exception 'quiz_life_not_opted_in'; end if;
+    if not public.quiz_life_band_ok(public.profile_age_band(p_me)) then raise exception 'quiz_ineligible'; end if;
+    -- A closed, empty or unknown chapter reads exactly like an empty pool.
+    planned := least(s.round_size,public.quiz_life_unseen_count(p_me,p_chapter));
+  else
+    if p.notice_version is distinct from p_notice then raise exception 'quiz_notice_required'; end if;
+    if p_kind = 'personal' then
+      if coalesce(p_topic,'') not in ('sport','science','geography','general') then raise exception 'quiz_start_invalid'; end if;
+      if (p_topic <> 'sport' and not public.quiz_fun_slot(p_me,w)) or (p_topic = 'sport' and public.quiz_fun_slot(p_me,w) and public.quiz_fun_available(p_me)) then
+        raise exception 'quiz_topic_not_allowed'; end if;
+      planned := least(s.round_size,public.quiz_unseen_count(p_me,p_topic,filter));
+    else
+      if not s.groups_enabled then raise exception 'quiz_groups_paused'; end if;
+      if not exists(select 1 from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+          where m.group_id = p_group and m.profile_id = p_me and m.status = 'active' and g.status = 'active') then raise exception 'quiz_group_not_member'; end if;
+      if public.quiz_group_active_count(p_group) < 2 then raise exception 'quiz_group_too_small'; end if;
+      select theme_sport into filter from public.sport_quiz_groups where id = p_group;
+      setn := public.quiz_group_ensure_set(p_group,w,s.round_size,at);
+      planned := least(setn,public.quiz_unseen_count(p_me,'sport',filter));
+    end if;
+  end if;
+  if coalesce(planned,0) < 1 then raise exception 'quiz_no_question'; end if;
+  at := clock_timestamp(); w := public.quiz_week_at(at);
+  if w is distinct from p_expected_week then raise exception 'quiz_week_changed'; end if;
+  if at + planned * p_duration * interval '1 second' + (planned - 1) * public.quiz_round_gap() > public.quiz_week_end(w) then raise exception 'quiz_week_closing'; end if;
+  perform public.quiz_spend(p_me,w,at,p_kind);
+  insert into public.sport_quiz_attempts(profile_id,week_start,question_id,status,issued_at,mode,duration_seconds,started_at,expires_at,session_hash,
+      round_state,position,planned_items,round_size,topic_category,sport_filter,group_id,round_kind)
+    values(p_me,w,null,'issued',at,'round',p_duration,at,at + p_duration * interval '1 second',public.hash_secret(p_secret),
+      'item',1,planned,s.round_size,p_topic,case when p_kind = 'life' then p_chapter else filter end,p_group,p_kind) returning * into a;
+  qid := public.quiz_round_pick(p_me,a.id,1);
+  if qid is null then raise exception 'quiz_no_question'; end if;
+  perform public.quiz_round_issue(p_me,a.id,1,qid,at,p_duration,null);
+  perform public.quiz_bump_history(p_me);
+  -- Life audit rows keep chapter and position only, never the Life question id (review fix P3).
+  insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,reason,created_at)
+    values(p_me,'start',case when p_kind = 'life' then null else qid end,a.id,
+      case when p_kind = 'life' then (select chapter from public.sport_quiz_questions where id = qid) || ' #1' end,at);
+  receipt := public.quiz_save_receipt(p_me,p_request,'start',w,d,a.id,'started',at,p_kind);
+  return receipt || jsonb_build_object('server_now',at,'active_question',public.quiz_question_dto(qid),'active_item',public.quiz_active_item(a.id));
+end $$;
+
+create or replace function public.quiz_start(p_topic_category text,p_sport text,p_duration_seconds integer,p_expected_week date,
+ p_notice_version text,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id);
+begin
+  if p_request_id is null or coalesce(p_topic_category,'') not in ('sport','science','geography','general') or p_duration_seconds is null or p_duration_seconds not in (30,90)
+    or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' or p_notice_version is distinct from 'timed-trivia-v1-testing'
+    or (p_sport is not null and char_length(btrim(p_sport)) not between 2 and 80) or (p_topic_category <> 'sport' and p_sport is not null) then raise exception 'quiz_start_invalid'; end if;
+  return public.quiz_round_begin(me,'personal',p_topic_category,p_sport,p_duration_seconds,p_expected_week,p_notice_version,p_request_id,p_session_secret,null,null);
+end $$;
+
+-- The group opportunity is one per week across every group; a group round needs at least two active members.
+create or replace function public.quiz_group_start(p_group_id uuid,p_duration_seconds integer,p_expected_week date,p_notice_version text,
+ p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id);
+begin
+  if p_group_id is null or p_request_id is null or p_duration_seconds is null or p_duration_seconds not in (30,90)
+    or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' or p_notice_version is distinct from 'timed-trivia-v1-testing' then raise exception 'quiz_start_invalid'; end if;
+  return public.quiz_round_begin(me,'group','sport',null,p_duration_seconds,p_expected_week,p_notice_version,p_request_id,p_session_secret,p_group_id,null);
+end $$;
+
+-- Life round: 90 seconds by default (30 allowed); optional single chapter; the Life notice and opt-in are required.
+create or replace function public.quiz_life_start(p_expected_week date,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid,
+  p_notice_version text,p_chapter text default null,p_duration_seconds integer default 90)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id);
+begin
+  if p_request_id is null or p_duration_seconds is null or p_duration_seconds not in (30,90) or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$'
+    or p_notice_version is distinct from 'life-playbook-v1-testing' or (p_chapter is not null and p_chapter !~ '^[a-z][a-z_]{2,39}$') then raise exception 'quiz_start_invalid'; end if;
+  return public.quiz_round_begin(me,'life','life',null,p_duration_seconds,p_expected_week,p_notice_version,p_request_id,p_session_secret,null,p_chapter);
+end $$;
+
+-- 11. Next, answer, End and skip --------------------------------------------------------------------------------------
+create or replace function public.quiz_next(p_attempt_id uuid,p_expected_position integer,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id); at timestamptz; d text; r public.sport_quiz_requests%rowtype;
+  a public.sport_quiz_attempts%rowtype; it public.sport_quiz_round_items%rowtype; s public.sport_quiz_settings%rowtype;
+  active jsonb; item jsonb; qid uuid; st text;
+begin
+  if p_attempt_id is null or p_request_id is null or p_expected_position is null or p_expected_position not between 1 and 4
+    or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' then raise exception 'quiz_next_invalid'; end if;
+  perform public.quiz_lock(me);
+  select * into s from public.sport_quiz_settings where singleton;
+  at := clock_timestamp(); d := public.quiz_digest(jsonb_build_array(p_attempt_id,p_expected_position,p_session_secret));
+  select * into r from public.sport_quiz_requests where profile_id = me and request_id = p_request_id;
+  if found then
+    if r.operation <> 'next' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict'; end if;
+    perform public.quiz_expire(me,at);
+    select * into a from public.sport_quiz_attempts where id = r.attempt_id;
+    select * into it from public.sport_quiz_round_items where attempt_id = a.id and next_request_id = p_request_id;
+    if a.status = 'issued' and a.round_state = 'item' and a.position = it.position and it.status = 'issued' and it.expires_at > at
+       and a.session_hash = public.hash_secret(p_session_secret) and s.enabled and me = any(s.pilot_accounts)
+       and (a.round_kind <> 'life' or public.quiz_life_access(me)) then
+      active := public.quiz_question_dto(it.question_id); item := public.quiz_active_item(a.id);
+    end if;
+    return public.quiz_receipt_dto(me,p_request_id,at) || jsonb_build_object('server_now',at,'active_question',active,'active_item',item);
+  end if;
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id and profile_id = me for update;
+  if a.id is null or a.mode <> 'round' then raise exception 'quiz_round_closed'; end if;
+  if a.round_kind <> 'life' and not public.quiz_trivia_band(me) then raise exception 'quiz_ineligible'; end if;
+  perform public.quiz_require_testing(me);
+  if a.status = 'issued' and a.session_hash is distinct from public.hash_secret(p_session_secret) then raise exception 'quiz_capability_invalid'; end if;
+  perform public.quiz_round_settle(a.id,at);
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id for update;
+  if a.status <> 'issued' then
+    return public.quiz_save_receipt(me,p_request_id,'next',a.week_start,d,a.id,a.status,at,a.round_kind) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  if a.round_state <> 'between' or a.position <> p_expected_position then raise exception 'quiz_next_not_ready'; end if;
+  at := clock_timestamp();
+  if a.week_start <> public.quiz_week_at(at) or at + a.duration_seconds * interval '1 second' > public.quiz_week_end(a.week_start) then
+    st := public.quiz_round_close(a.id,at,'week_end');
+    return public.quiz_save_receipt(me,p_request_id,'next',a.week_start,d,a.id,'week_closed',at,a.round_kind) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  -- Life: switch, opt-in and eligibility are re-checked at every Next; the draw itself re-reads the open chapters.
+  if a.round_kind = 'life' and not public.quiz_life_access(me) then
+    st := public.quiz_round_close(a.id,at,'access_revoked');
+    return public.quiz_save_receipt(me,p_request_id,'next',a.week_start,d,a.id,'access_revoked',at,a.round_kind) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  qid := public.quiz_round_pick(me,a.id,a.position + 1);
+  if qid is null then
+    st := public.quiz_round_close(a.id,at,'pool_exhausted');
+    return public.quiz_save_receipt(me,p_request_id,'next',a.week_start,d,a.id,'pool_exhausted',at,a.round_kind) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  perform public.quiz_round_issue(me,a.id,a.position + 1,qid,at,a.duration_seconds,p_request_id);
+  update public.sport_quiz_attempts set position = position + 1,round_state = 'item',next_by = null,expires_at = at + a.duration_seconds * interval '1 second' where id = a.id;
+  perform public.quiz_bump_history(me);
+  return public.quiz_save_receipt(me,p_request_id,'next',a.week_start,d,a.id,'issued',at,a.round_kind)
+    || jsonb_build_object('server_now',at,'active_question',public.quiz_question_dto(qid),'active_item',public.quiz_active_item(a.id));
+end $$;
+
+create or replace function public.quiz_answer(p_attempt_id uuid,p_option integer,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id); at timestamptz; d text; r public.sport_quiz_requests%rowtype;
+  a public.sport_quiz_attempts%rowtype; q public.sport_quiz_questions%rowtype; it public.sport_quiz_round_items%rowtype; outcome text;
+begin
+  if p_request_id is null or p_attempt_id is null or p_option is null or p_option not between 0 and 3 or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' then raise exception 'quiz_answer_invalid'; end if;
+  perform public.quiz_lock(me); select * into a from public.sport_quiz_attempts where id = p_attempt_id and profile_id = me for update;
+  at := clock_timestamp(); d := public.quiz_digest(jsonb_build_array(p_attempt_id,p_option,p_session_secret));
+  select * into r from public.sport_quiz_requests where profile_id = me and request_id = p_request_id;
+  if found then if r.operation <> 'answer' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict'; end if; return public.quiz_receipt_dto(me,p_request_id,at); end if;
+  if a.id is null or a.mode not in ('timed','round') then raise exception 'quiz_round_closed'; end if;
+  if a.round_kind <> 'life' and not public.quiz_trivia_band(me) then raise exception 'quiz_ineligible'; end if;
+  perform public.quiz_require_testing(me);
+  if a.status = 'issued' and a.session_hash is distinct from public.hash_secret(p_session_secret) then raise exception 'quiz_capability_invalid'; end if;
+  if a.mode = 'timed' then
+    if a.status = 'issued' and a.expires_at <= at then perform public.quiz_expire(me,at); return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at); end if;
+    if a.status <> 'issued' then return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,a.status,at); end if;
+    select * into q from public.sport_quiz_questions where id = a.question_id for share;
+    if q.status = 'void' or public.quiz_normalize_options(q.options) is null then raise exception 'quiz_question_unavailable'; end if;
+    if p_option >= jsonb_array_length(q.options) then raise exception 'quiz_answer_invalid'; end if;
+    at := clock_timestamp();
+    if a.expires_at <= at then perform public.quiz_expire(me,at); return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at); end if;
+    update public.sport_quiz_attempts set status = 'completed',answered_option = p_option,request_id = p_request_id,completed_at = at,closed_at = at,close_reason = 'answered',session_hash = null where id = a.id;
+    -- Trivia Explorer is derived per week in quiz_sync_badges (several rounds can share a week now).
+    perform public.quiz_sync_badges(me,at);
+    perform public.quiz_bump_history(me);
+    insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,created_at) values(me,'answer',q.id,a.id,at);
+    return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'completed',at);
+  end if;
+  perform public.quiz_round_settle(a.id,at);
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id for update;
+  if a.status <> 'issued' then return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,a.status,at); end if;
+  select * into it from public.sport_quiz_round_items where attempt_id = a.id and position = a.position for update;
+  if a.round_state = 'between' then
+    return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,case it.status when 'answered' then 'already_answered' else it.status end,at);
+  end if;
+  select * into q from public.sport_quiz_questions where id = it.question_id for share;
+  if q.status = 'void' or public.quiz_normalize_options(q.options) is null then raise exception 'quiz_question_unavailable'; end if;
+  if p_option >= jsonb_array_length(q.options) then raise exception 'quiz_answer_invalid'; end if;
+  at := clock_timestamp();
+  if it.expires_at <= at then
+    perform public.quiz_round_settle(a.id,at);
+    return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at);
+  end if;
+  update public.sport_quiz_round_items set status = 'answered',answered_option = p_option,answered_at = at,answer_request_id = p_request_id,closed_at = at
+    where attempt_id = a.id and position = a.position;
+  if a.position >= a.planned_items then perform public.quiz_round_close(a.id,at,'answered'); outcome := 'completed';
+  else update public.sport_quiz_attempts set round_state = 'between',next_by = at + public.quiz_round_gap() where id = a.id; outcome := 'answered'; end if;
+  perform public.quiz_sync_badges(me,at);
+  perform public.quiz_bump_history(me);
+  insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,reason,created_at)
+    values(me,'answer',case when a.round_kind = 'life' then null else q.id end,a.id,case when a.round_kind = 'life' then q.chapter || ' #' || a.position end,at);
+  return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,outcome,at);
+end $$;
+
+-- End takes the kind: a pending unknown Start is cancelled against that kind's guard only; an attempt must match it.
+drop function if exists public.quiz_end(uuid,uuid,date,text,uuid,uuid);
+create or replace function public.quiz_end(p_attempt_id uuid,p_start_request_id uuid,p_expected_week date,p_reason text,p_request_id uuid,p_expected_profile_id uuid,p_round_kind text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id); at timestamptz; d text; r public.sport_quiz_requests%rowtype;
+  source public.sport_quiz_requests%rowtype; a public.sport_quiz_attempts%rowtype; outcome text; w date;
+begin
+  if (p_attempt_id is null) = (p_start_request_id is null) or p_request_id is null or p_request_id = p_start_request_id
+    or coalesce(p_reason,'') not in ('user_end','left_page','background','identity_change') or coalesce(p_round_kind,'') not in ('personal','group','life') then raise exception 'quiz_end_invalid'; end if;
+  if p_round_kind <> 'life' and not public.quiz_trivia_band(me) then raise exception 'quiz_ineligible'; end if;
+  perform public.quiz_lock(me); at := clock_timestamp(); w := public.quiz_week_at(at);
+  d := public.quiz_digest(jsonb_build_array(p_attempt_id,p_start_request_id,p_expected_week,p_reason,p_round_kind));
+  select * into r from public.sport_quiz_requests where profile_id = me and request_id = p_request_id;
+  if found then if r.operation <> 'end' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict'; end if; return public.quiz_receipt_dto(me,p_request_id,at); end if;
+  if p_expected_week is null or p_expected_week > w then raise exception 'quiz_week_changed'; end if;
+  if p_start_request_id is not null then
+    select * into source from public.sport_quiz_requests where profile_id = me and request_id = p_start_request_id;
+    if found and (source.operation <> 'start' or source.week_start <> p_expected_week or source.round_kind <> p_round_kind) then raise exception 'quiz_request_conflict'; end if;
+    if source.request_id is null then
+      if p_expected_week <> w then raise exception 'quiz_round_closed'; end if;
+      if exists(select 1 from public.sport_quiz_week_guards where profile_id = me and week_start = w and round_kind = p_round_kind) then raise exception 'quiz_round_closed'; end if;
+      -- A client-chosen kind the caller could not start writes nothing (review fix P3): enrolled, plus Life access or
+      -- an active group membership with groups on.
+      if not exists(select 1 from public.sport_quiz_settings s where s.singleton and s.enabled and me = any(s.pilot_accounts)
+           and (p_round_kind <> 'group' or s.groups_enabled))
+         or (p_round_kind = 'life' and not public.quiz_life_access(me))
+         or (p_round_kind = 'group' and not exists(select 1 from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+           where m.profile_id = me and m.status = 'active' and g.status = 'active')) then raise exception 'quiz_round_closed'; end if;
+      perform public.quiz_spend(me,w,at,p_round_kind);
+      perform public.quiz_bump_history(me);
+      perform public.quiz_save_receipt(me,p_start_request_id,'start',w,null,null,'cancelled',at,p_round_kind);
+      return public.quiz_save_receipt(me,p_request_id,'end',w,d,null,'cancelled',at,p_round_kind);
+    end if;
+    p_attempt_id := source.attempt_id;
+    if p_attempt_id is null then return public.quiz_save_receipt(me,p_request_id,'end',p_expected_week,d,null,'cancelled',at,p_round_kind); end if;
+  end if;
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id and profile_id = me and week_start = p_expected_week for update;
+  if a.id is null then raise exception 'quiz_round_closed'; end if;
+  if a.round_kind <> p_round_kind then raise exception 'quiz_end_invalid'; end if;
+  at := clock_timestamp();
+  if a.mode = 'round' then
+    perform public.quiz_round_settle(a.id,at);
+    select * into a from public.sport_quiz_attempts where id = a.id for update;
+    if a.status = 'issued' then
+      outcome := public.quiz_round_close(a.id,at,p_reason);
+      insert into public.sport_quiz_audit(actor_id,action,attempt_id,reason,created_at) values(me,'end',a.id,case when a.round_kind = 'life' then 'life' end,at);
+    else outcome := a.status; end if;
+    return public.quiz_save_receipt(me,p_request_id,'end',a.week_start,d,a.id,outcome,at,p_round_kind);
+  end if;
+  if a.status = 'issued' then
+    outcome := case when a.expires_at <= at then 'expired' else 'ended' end;
+    update public.sport_quiz_attempts set status = outcome,closed_at = case when outcome = 'expired' then expires_at else at end,
+      close_reason = case when outcome = 'expired' then 'deadline' else p_reason end,session_hash = null where id = a.id;
+    perform public.quiz_bump_history(me);
+    insert into public.sport_quiz_audit(actor_id,action,attempt_id,created_at) values(me,'end',a.id,at);
+  else outcome := a.status; end if;
+  return public.quiz_save_receipt(me,p_request_id,'end',a.week_start,d,a.id,outcome,at,p_round_kind);
+end $$;
+
+-- QUIZ-02 skip spends only the personal opportunity.
+create or replace function public.quiz_skip(p_expected_week date,p_request_id uuid,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); at timestamptz; d text; r public.sport_quiz_requests%rowtype; a public.sport_quiz_attempts%rowtype;
+begin
+  if p_request_id is null then raise exception 'quiz_request_invalid'; end if; perform public.quiz_lock(me); at := clock_timestamp();
+  if p_expected_week is distinct from public.quiz_week_at(at) then raise exception 'quiz_week_changed'; end if;
+  d := public.quiz_digest(jsonb_build_array(p_expected_week)); select * into r from public.sport_quiz_requests where profile_id = me and request_id = p_request_id;
+  if found then if r.operation <> 'skip' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict'; end if; return public.quiz_receipt_dto(me,p_request_id,at); end if;
+  perform public.quiz_require_testing(me);
+  select * into a from public.sport_quiz_attempts where profile_id = me and week_start = p_expected_week and round_kind = 'personal' for update;
+  if exists(select 1 from public.sport_quiz_week_guards where profile_id = me and week_start = p_expected_week and round_kind = 'personal') then
+    return public.quiz_save_receipt(me,p_request_id,'skip',p_expected_week,d,a.id,'week_spent',at,'personal');
+  end if;
+  perform public.quiz_spend(me,p_expected_week,at,'personal');
+  insert into public.sport_quiz_attempts(profile_id,week_start,status,issued_at,mode,closed_at,close_reason,round_kind)
+    values(me,p_expected_week,'skipped',at,'timed',at,'skip','personal') returning * into a;
+  perform public.quiz_bump_history(me);
+  insert into public.sport_quiz_audit(actor_id,action,attempt_id,created_at) values(me,'skip',a.id,at);
+  return public.quiz_save_receipt(me,p_request_id,'skip',p_expected_week,d,a.id,'skipped',at,'personal');
+end $$;
+
+-- 12. Own reads that Life players (including 13+ accounts without a recorded age) also need ---------------------------
+create or replace function public.quiz_receipt(p_request_id uuid)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_actor(); result jsonb;
+begin
+  result := public.quiz_receipt_dto(me,p_request_id,statement_timestamp());
+  if result is null then raise exception 'quiz_receipt_unavailable'; end if; return result;
+end $$;
+
+create or replace function public.quiz_history(p_before text default null)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_actor(); at timestamptz := statement_timestamp(); c jsonb := public.quiz_cursor(p_before,'history'); items jsonb; next_before text;
+  last_id uuid; last_week date; total bigint;
+begin
+  select count(*) into total from public.sport_quiz_attempts a where a.profile_id = me and public.quiz_summary(a.id,at) ->> 'status' <> 'issued';
+  select coalesce(jsonb_agg(jsonb_build_object('attempt',public.quiz_summary(a.id,at),'question',public.quiz_question_dto(a.question_id),
+    'result',case when a.mode = 'round' then null else public.quiz_result_dto(a.id,at) end,
+    'items',case when a.mode = 'round' then public.quiz_round_items_dto(a.id,at) else '[]'::jsonb end,
+    'badge',(select to_jsonb(b) - 'profile_id' - 'attempt_id' - 'week_start' from public.sport_quiz_badges b where b.attempt_id = a.id and b.kind = 'weekly' limit 1))
+    order by a.week_start desc,a.id desc),'[]') into items
+  from (select * from public.sport_quiz_attempts x where x.profile_id = me and public.quiz_summary(x.id,at) ->> 'status' <> 'issued'
+    and (c is null or (x.week_start,x.id) < ((c ->> 'at')::date,(c ->> 'id')::uuid)) order by x.week_start desc,x.id desc limit 50) a;
+  if jsonb_array_length(items) = 50 then
+    last_id := (items -> 49 -> 'attempt' ->> 'id')::uuid; last_week := (items -> 49 -> 'attempt' ->> 'week_start')::date;
+    if exists(select 1 from public.sport_quiz_attempts x where x.profile_id = me and public.quiz_summary(x.id,at) ->> 'status' <> 'issued' and (x.week_start,x.id) < (last_week,last_id)) then
+      next_before := jsonb_build_object('v',1,'stream','history','at',last_week,'id',last_id)::text;
+    end if;
+  end if;
+  return jsonb_build_object('contract_version',2,'profile_id',me,'server_now',at,'history_version',(public.quiz_preferences_dto(me) ->> 'history_version')::bigint,
+    'total',total,'items',items,'next_before',next_before);
+end $$;
+
+create or replace function public.quiz_badge_shelf()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_actor();
+begin
+  return jsonb_build_object('contract_version',3,'profile_id',me,
+    'badges',coalesce((select jsonb_agg(jsonb_build_object('id',b.id,'label',b.label,'kind',b.kind,'sport',b.sport,'period',b.period,
+      'visibility',b.visibility,'issued_at',b.issued_at) order by b.issued_at desc,b.id) from public.sport_quiz_badges b where b.profile_id = me and b.voided_at is null),'[]'::jsonb));
+end $$;
+
+-- Life badges stay private: they cannot be opted in to group pages.
+create or replace function public.quiz_badge_visibility(p_badge_id uuid,p_visibility text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id); b public.sport_quiz_badges%rowtype;
+begin
+  if p_badge_id is null or coalesce(p_visibility,'') not in ('private','groups') then raise exception 'quiz_badge_invalid'; end if;
+  perform public.quiz_lock(me);
+  update public.sport_quiz_badges set visibility = p_visibility where id = p_badge_id and profile_id = me and voided_at is null and kind <> 'life' returning * into b;
+  if b.id is null then raise exception 'quiz_badge_missing'; end if;
+  return jsonb_build_object('contract_version',3,'id',b.id,'label',b.label,'kind',b.kind,'sport',b.sport,'period',b.period,'visibility',b.visibility,'issued_at',b.issued_at);
+end $$;
+
+-- 13. Badges and levels --------------------------------------------------------------------------------------------------
+-- Derived from live rows on every answer, join and correction. Trivia Explorer is one per week and points at the
+-- week's earliest qualifying round; a void moves it to another qualifying round of that week before withdrawing it.
+-- Levels and Life chapter badges only go up (quiz_guard_level); a void never lowers them.
+create or replace function public.quiz_sync_badges(p_me uuid,p_at timestamptz)
+returns void language plpgsql security definer set search_path = '' as $$
+declare earned text[]; seasons text[]; w date := public.quiz_week_at(p_at); th jsonb; rk integer; ch record;
+begin
+  update public.sport_quiz_badges b set attempt_id = x.id,week_start = x.week_start,voided_at = null
+    from (select distinct on (a.week_start) a.week_start,a.id from public.sport_quiz_attempts a where a.profile_id = p_me and public.quiz_attempt_qualifies(a.id)
+          order by a.week_start,a.issued_at,a.id) x
+    where b.profile_id = p_me and b.label = 'Trivia Explorer' and b.period = x.week_start::text
+      and (b.voided_at is not null or b.attempt_id is null or not public.quiz_attempt_qualifies(b.attempt_id));
+  insert into public.sport_quiz_badges(profile_id,attempt_id,week_start,label,kind,period,issued_at)
+    select p_me,x.id,x.week_start,'Trivia Explorer','weekly',x.week_start::text,p_at
+    from (select distinct on (a.week_start) a.week_start,a.id from public.sport_quiz_attempts a where a.profile_id = p_me and public.quiz_attempt_qualifies(a.id)
+          order by a.week_start,a.issued_at,a.id) x
+    on conflict (profile_id,label,period) do nothing;
+  update public.sport_quiz_badges set voided_at = p_at where profile_id = p_me and label = 'Trivia Explorer' and voided_at is null
+    and (attempt_id is null or not public.quiz_attempt_qualifies(attempt_id));
+  select coalesce(array_agg(sport),'{}') into earned from (
+    select sport from (
+      select q.sport from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+        join public.sport_quiz_questions q on q.id = i.question_id
+        where a.profile_id = p_me and i.status = 'answered' and q.topic_category = 'sport'
+      union all
+      select q.sport from public.sport_quiz_attempts a join public.sport_quiz_questions q on q.id = a.question_id
+        where a.profile_id = p_me and a.mode <> 'round' and a.status = 'completed' and q.topic_category = 'sport') f
+    group by sport having count(*) >= 5) x;
+  insert into public.sport_quiz_badges(profile_id,label,kind,sport,period,issued_at)
+    select p_me,s || ' Explorer','sport',s,'lifetime',p_at from unnest(earned) s
+    on conflict (profile_id,label,period) do update set voided_at = null where public.sport_quiz_badges.voided_at is not null;
+  update public.sport_quiz_badges set voided_at = p_at where profile_id = p_me and kind = 'sport' and voided_at is null and not (sport = any(earned));
+  select coalesce(array_agg(quarter),'{}') into seasons from (
+    select public.quiz_quarter_of(a.week_start) quarter from public.sport_quiz_attempts a
+    where a.profile_id = p_me and ((a.mode = 'round' and exists(select 1 from public.sport_quiz_round_items i where i.attempt_id = a.id and i.status = 'answered'))
+      or (a.mode <> 'round' and a.status = 'completed'))
+    group by 1 having count(*) >= 10) x;
+  insert into public.sport_quiz_badges(profile_id,label,kind,period,issued_at)
+    select p_me,'Season Learner','season',s,p_at from unnest(seasons) s
+    on conflict (profile_id,label,period) do update set voided_at = null where public.sport_quiz_badges.voided_at is not null;
+  update public.sport_quiz_badges set voided_at = p_at where profile_id = p_me and kind = 'season' and voided_at is null and not (period = any(seasons));
+  -- quiz_played counts group rounds only (§7.3).
+  if public.quiz_played(p_me,w) and exists(select 1 from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+      where m.profile_id = p_me and m.status = 'active' and g.status = 'active') then
+    insert into public.sport_quiz_badges(profile_id,label,kind,period,issued_at) values(p_me,'Family Challenger','family',w::text,p_at)
+      on conflict (profile_id,label,period) do update set voided_at = null where public.sport_quiz_badges.voided_at is not null;
+  end if;
+  update public.sport_quiz_badges set voided_at = p_at where profile_id = p_me and kind = 'family' and voided_at is null
+    and not public.quiz_played(p_me,period::date);
+  -- Personal level: facts learned across every round kind, never correctness or speed.
+  th := coalesce((select level_thresholds from public.sport_quiz_settings where singleton),'{"rookie":0,"varsity":15,"all_star":40,"pro":80,"hall_of_fame":150}'::jsonb);
+  rk := public.quiz_level_rank(public.quiz_facts(p_me,date '1900-01-01',date '9999-01-01'),th);
+  insert into public.sport_quiz_levels(profile_id,track,level,rank,reached_at) values(p_me,'overall',(public.quiz_level_keys())[rk + 1],rk,p_at)
+    on conflict (profile_id,track) do update set level = excluded.level,rank = excluded.rank,reached_at = excluded.reached_at
+      where public.sport_quiz_levels.rank < excluded.rank;
+  for ch in select c.id,(select count(*)::integer from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+      join public.sport_quiz_questions q on q.id = i.question_id where a.profile_id = p_me and i.status = 'answered' and q.topic_category = 'life' and q.chapter = c.id) n
+      from public.sport_quiz_life_chapters c order by c.position loop
+    rk := public.quiz_level_rank(ch.n,th);
+    if rk > 0 then
+      insert into public.sport_quiz_levels(profile_id,track,level,rank,reached_at) values(p_me,ch.id,(public.quiz_level_keys())[rk + 1],rk,p_at)
+        on conflict (profile_id,track) do update set level = excluded.level,rank = excluded.rank,reached_at = excluded.reached_at
+          where public.sport_quiz_levels.rank < excluded.rank;
+    end if;
+  end loop;
+  insert into public.sport_quiz_badges(profile_id,label,kind,period,visibility,issued_at)
+    select p_me,c.title || ' Playbook','life','lifetime','private',p_at from public.sport_quiz_levels l join public.sport_quiz_life_chapters c on c.id = l.track
+    where l.profile_id = p_me and l.rank >= 1
+    on conflict (profile_id,label,period) do nothing;
+end $$;
+
+-- Group page: fact totals count group rounds only (Life never appears on group pages or totals).
+create or replace function public.quiz_group_page_dto(p_group uuid,p_me uuid,p_at timestamptz)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  with g as (select * from public.sport_quiz_groups where id = p_group),
+  w as (select public.quiz_week_at(p_at) w, date_trunc('quarter',p_at at time zone 'UTC')::date qs),
+  mem as (select m.profile_id,m.joined_at,public.quiz_played(m.profile_id,(select w from w)) played
+          from public.sport_quiz_group_members m where m.group_id = p_group and m.status = 'active'
+            and (select status from public.sport_quiz_groups where id = p_group) = 'active' and not public.quiz_profile_closed(m.profile_id)
+            and (m.profile_id = p_me or not public.is_blocked_between(p_me,m.profile_id))),
+  shown as (select count(*) filter (where played) >= 3 ok from mem)
+  select jsonb_build_object('contract_version',3,'group_id',g.id,'name_key',g.name_key,'theme_sport',g.theme_sport,'status',g.status,
+    'is_owner',g.owner_id = p_me,'week_start',(select w from w),
+    'members',coalesce((select jsonb_agg(jsonb_build_object('member_ref',case when g.owner_id = p_me then public.quiz_member_ref(g.id,m.profile_id) end,
+        'display_name',public.quiz_group_display_name(m.profile_id),'is_owner',m.profile_id = g.owner_id,'is_me',m.profile_id = p_me,
+        'played_this_week',m.played,
+        'badges',(select coalesce(jsonb_agg(b.label order by b.label),'[]'::jsonb) from public.sport_quiz_badges b
+                  where b.profile_id = m.profile_id and b.visibility = 'groups' and b.kind <> 'life' and b.voided_at is null)) order by m.joined_at,m.profile_id) from mem m),'[]'::jsonb),
+    'totals',jsonb_build_object('members',(select count(*) from mem),'played_this_week',(select count(*) from mem where played),
+      'facts_this_week',case when (select ok from shown) then (select (coalesce(sum(public.quiz_group_facts(m.profile_id,(select w from w),(select w from w) + 7)),0) / 5) * 5 from mem m) end,
+      'facts_this_season',case when (select ok from shown) then (select (coalesce(sum(public.quiz_group_facts(m.profile_id,(select qs from w),((select qs from w) + interval '3 months')::date)),0) / 5) * 5 from mem m) end),
+    'everyone_played',(select count(*) > 0 and bool_and(played) from mem),
+    'code_active',exists(select 1 from public.sport_quiz_group_codes c where c.group_id = g.id and c.expires_at > p_at),
+    'code_expires_at',case when g.owner_id = p_me then (select c.expires_at from public.sport_quiz_group_codes c where c.group_id = g.id and c.expires_at > p_at) end,
+    'can_invite',g.owner_id = p_me and g.status = 'active' and (select count(*) from mem) < 12)
+  from g
+$$;
+
+-- 14. Participant snapshot: the trivia snapshot stays QUIZ-02/03 shaped plus per-kind rounds; Life has its own reads ---
+create or replace function public.quiz_snapshot()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id(); at timestamptz := statement_timestamp(); w date := public.quiz_week_at(at);
+  s public.sport_quiz_settings%rowtype; pref jsonb; available text; pools jsonb := '[]'; aid uuid; scheduled text; active_kind text;
+begin
+  select * into s from public.sport_quiz_settings where singleton;
+  if auth.uid() is null or me is null or public.profile_age_band(me) not in ('adult','teen_13_15','teen_16_17') then me := null; available := 'ineligible';
+  elsif s.singleton is null then available := 'unavailable';
+  elsif not s.enabled then available := 'paused';
+  elsif not (me = any(s.pilot_accounts)) then available := 'not_enrolled'; else available := 'ready'; end if;
+  pref := public.quiz_preferences_dto(me);
+  scheduled := case when public.quiz_fun_slot(me,w) then 'fun' else 'sport' end;
+  if available = 'ready' then
+    select coalesce(jsonb_agg(jsonb_build_object('topic_category',x.topic_category,'sport',x.sport,'unseen_count',x.n,
+      'allowed',case when x.topic_category = 'sport' then scheduled = 'sport' or not public.quiz_fun_available(me) else scheduled = 'fun' end) order by x.topic_category,x.sport),'[]') into pools
+    from (select q.topic_category,q.sport,count(*) filter (where not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = me and e.question_key = q.question_key)) n
+      from public.sport_quiz_questions q where q.status = 'approved' and q.topic_category in ('sport','science','geography','general') and q.question_type <> 'image_choice'
+        and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10 group by q.topic_category,q.sport) x;
+    if not exists(select 1 from jsonb_array_elements(pools) p where (p ->> 'unseen_count')::int > 0 and (p ->> 'allowed')::boolean) then available := 'unavailable'; end if;
+  end if;
+  if me is not null and s.singleton is not null then
+    -- The open round (any kind) comes first so a client resumes it; otherwise this week's personal attempt.
+    select id,round_kind into aid,active_kind from public.sport_quiz_attempts a where a.profile_id = me and a.status = 'issued' and public.quiz_summary(a.id,at) ->> 'status' = 'issued'
+      order by a.issued_at desc limit 1;
+    if aid is null then select id into aid from public.sport_quiz_attempts where profile_id = me and week_start = w and round_kind = 'personal'; end if;
+  end if;
+  return jsonb_build_object('contract_version',2,'profile_id',me,'server_now',at,'week_start',w,'week_end',w + 7,'testing_only',true,
+    'availability',available,'preferences',pref,'attempt',public.quiz_summary(aid,at),
+    'week_spent',me is not null and exists(select 1 from public.sport_quiz_week_guards where profile_id = me and week_start = w and round_kind = 'personal'),
+    'week_spent_by_kind',jsonb_build_object(
+      'personal',me is not null and exists(select 1 from public.sport_quiz_week_guards where profile_id = me and week_start = w and round_kind = 'personal'),
+      'group',me is not null and exists(select 1 from public.sport_quiz_week_guards where profile_id = me and week_start = w and round_kind = 'group'),
+      'life',me is not null and exists(select 1 from public.sport_quiz_week_guards where profile_id = me and week_start = w and round_kind = 'life')),
+    'active_round_kind',active_kind,
+    'scheduled_topic',scheduled,'pools',pools,'history_version',(pref ->> 'history_version')::bigint,
+    'history_count',(select count(*) from public.sport_quiz_attempts a where a.profile_id = me and public.quiz_summary(a.id,at) ->> 'status' <> 'issued'),
+    'badge_count',(select count(*) from public.sport_quiz_badges where profile_id = me and voided_at is null),
+    'correction_count',(select count(*) from public.sport_quiz_attempts where profile_id = me and status = 'void')
+      + (select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.profile_id = me and i.status = 'void' and a.status <> 'void'),
+    'round_size',coalesce(s.round_size,5),'groups_available',coalesce(s.groups_enabled,false) and available = 'ready');
+end $$;
+
+-- 15. Erasure covers Life: attempts, items, exposures, badges, levels. All three weekly opportunities are spent.
+create or replace function public.quiz_erase_history(p_expected_history_version bigint,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id); at timestamptz; w date; rev bigint; na bigint; ne bigint; nb bigint; nr bigint; nau bigint;
+  prune timestamptz; gid uuid; owner uuid; ng bigint := 0; nj bigint; ns bigint := 0; n bigint; nl bigint;
+begin
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  if not found then raise exception 'quiz_unavailable'; end if;
+  for gid in select group_id from public.sport_quiz_group_members where profile_id = me and status = 'active' order by group_id loop
+    perform 1 from public.sport_quiz_groups where id = gid for update;
+  end loop;
+  perform public.quiz_lock(me); at := clock_timestamp(); w := public.quiz_week_at(at);
+  insert into public.sport_quiz_preferences(profile_id) values(me) on conflict do nothing;
+  select history_version into rev from public.sport_quiz_preferences where profile_id = me for update;
+  if rev is distinct from p_expected_history_version then raise exception 'quiz_history_stale'; end if;
+  perform public.quiz_spend(me,w,at,'personal'); perform public.quiz_spend(me,w,at,'group'); perform public.quiz_spend(me,w,at,'life');
+  select prune_after into prune from public.sport_quiz_week_guards where profile_id = me and week_start = w and round_kind = 'personal';
+  select count(*) into na from public.sport_quiz_attempts where profile_id = me;
+  for gid in select group_id from public.sport_quiz_group_members where profile_id = me and status = 'active' order by group_id loop
+    delete from public.sport_quiz_group_members where group_id = gid and profile_id = me;
+    ng := ng + 1;
+    perform public.log_supervision_event(me,'trivia_group_left','{}'::jsonb);
+    select owner_id into owner from public.sport_quiz_groups where id = gid;
+    if owner = me then perform public.quiz_group_handover(gid,me,at);
+    elsif public.quiz_group_active_count(gid) = 0 then
+      update public.sport_quiz_groups set status = 'closed',closed_at = at,close_reason = 'dissolved' where id = gid and status = 'active';
+    end if;
+    if (select status from public.sport_quiz_groups where id = gid) = 'closed' then
+      delete from public.sport_quiz_group_sets where group_id = gid; get diagnostics n = row_count; ns := ns + n;
+    end if;
+  end loop;
+  select count(*) into nj from public.sport_quiz_group_join_attempts where profile_id = me;
+  delete from public.sport_quiz_badges where profile_id = me; get diagnostics nb = row_count;
+  delete from public.sport_quiz_requests where profile_id = me; get diagnostics nr = row_count;
+  delete from public.sport_quiz_exposures where profile_id = me; get diagnostics ne = row_count;
+  perform set_config('quiz.erase_profile',me::text,true);
+  delete from public.sport_quiz_audit where actor_id = me and action in ('start','answer','skip','end'); get diagnostics nau = row_count;
+  delete from public.sport_quiz_levels where profile_id = me; get diagnostics nl = row_count;
+  perform set_config('quiz.erase_profile','',true);
+  delete from public.sport_quiz_attempts where profile_id = me;
+  update public.sport_quiz_preferences set history_version = history_version + 1,updated_at = at where profile_id = me;
+  return jsonb_build_object('contract_version',2,'profile_id',me,'history_version',rev + 1,'week_start',w,'week_spent',true,'quota_prune_after',prune,
+    'removed_attempts',na,'removed_exposures',ne,'removed_badges',nb,'removed_requests',nr,'removed_audit',nau,
+    'removed_group_memberships',ng,'retained_join_attempts',nj,'removed_group_sets',ns,'removed_levels',nl);
+end $$;
+
+-- 16. Life participant reads and the private opt-in -----------------------------------------------------------------------
+create or replace function public.quiz_life_preferences_dto(p_me uuid)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('life_opt_in',coalesce(p.life_opt_in,false),'life_notice_version',p.life_notice_version,'life_opted_in_at',p.life_opted_in_at,
+    'life_version',coalesce(p.life_version,0))
+  from (select 1) one left join public.sport_quiz_preferences p on p.profile_id = p_me
+$$;
+
+-- Availability: ineligible | unavailable | paused | not_enrolled | off (trivia.life) | not_opted_in | empty | ready.
+create or replace function public.quiz_life_snapshot()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id(); at timestamptz := statement_timestamp(); w date := public.quiz_week_at(at);
+  s public.sport_quiz_settings%rowtype; available text; aid uuid; active_kind text; nopen integer := 0; unseen integer := 0;
+begin
+  select * into s from public.sport_quiz_settings where singleton;
+  if auth.uid() is null or me is null or not public.quiz_life_band_ok(public.profile_age_band(me)) then me := null; available := 'ineligible';
+  elsif s.singleton is null then available := 'unavailable';
+  elsif not s.enabled then available := 'paused';
+  elsif not (me = any(s.pilot_accounts)) then available := 'not_enrolled';
+  elsif not s.life_enabled then available := 'off';
+  else available := 'ready'; end if;
+  if me is not null then
+    select id into aid from public.sport_quiz_attempts where profile_id = me and week_start = w and round_kind = 'life';
+    select round_kind into active_kind from public.sport_quiz_attempts a where a.profile_id = me and a.status = 'issued' and public.quiz_summary(a.id,at) ->> 'status' = 'issued'
+      order by a.issued_at desc limit 1;
+  end if;
+  if available = 'ready' then
+    select count(*) into nopen from public.sport_quiz_life_chapters c where public.quiz_life_chapter_open(c.id);
+    unseen := public.quiz_life_unseen_count(me,null);
+    if not coalesce((public.quiz_life_preferences_dto(me) ->> 'life_opt_in')::boolean,false) then available := 'not_opted_in';
+    elsif unseen = 0 then available := 'empty'; end if;
+  end if;
+  return jsonb_build_object('contract_version',4,'profile_id',me,'server_now',at,'week_start',w,'week_end',w + 7,'testing_only',true,
+    'availability',available,'notice_version','life-playbook-v1-testing','preferences',case when me is null then null else public.quiz_life_preferences_dto(me) end,
+    'week_spent',me is not null and exists(select 1 from public.sport_quiz_week_guards where profile_id = me and week_start = w and round_kind = 'life'),
+    'attempt',public.quiz_summary(aid,at),'active_round_kind',active_kind,'default_duration_seconds',90,'round_size',coalesce(s.round_size,5),
+    'chapters_open',nopen,'unseen_count',unseen);
+end $$;
+
+create or replace function public.quiz_life_chapters()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_actor();
+begin
+  return jsonb_build_object('contract_version',4,'profile_id',me,
+    -- Participant fields only: no draft counts or refusal reasons (those stay in the admin read).
+    'chapters',coalesce((select jsonb_agg(jsonb_build_object('id',c.id,'title',c.title,'framing',c.framing,'position',c.position,
+      'open',public.quiz_life_chapter_open(c.id),'unseen_count',public.quiz_life_unseen_count(me,c.id)) order by c.position)
+      from public.sport_quiz_life_chapters c),'[]'::jsonb));
+end $$;
+
+-- Own chapter progress: share of the chapter's approved questions seen, facts and the highest chapter level reached.
+create or replace function public.quiz_life_progress()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_actor();
+  th jsonb := (select level_thresholds from public.sport_quiz_settings where singleton);
+begin
+  return jsonb_build_object('contract_version',4,'profile_id',me,'thresholds',th,
+    'chapters',coalesce((select jsonb_agg(jsonb_build_object('id',x.id,'title',x.title,'approved_count',x.approved,'seen_count',x.seen,
+        'progress',case when x.approved = 0 then 0 else round(least(x.seen::numeric / x.approved,1),2) end,'facts',x.facts,
+        'rank',x.rk,'level',(public.quiz_level_keys())[x.rk + 1],'level_label',public.quiz_level_label(x.rk),'badge_earned',x.rk >= 1) order by x.position)
+      from (select c.id,c.title,c.position,
+          public.quiz_life_approved_count(c.id) approved,
+          (select count(*)::integer from public.sport_quiz_exposures e join public.sport_quiz_questions q on q.question_key = e.question_key and q.status = 'approved'
+             and q.topic_category = 'life' and q.chapter = c.id where e.profile_id = me) seen,
+          f.n facts,
+          greatest(coalesce((select l.rank from public.sport_quiz_levels l where l.profile_id = me and l.track = c.id),0),public.quiz_level_rank(f.n,th)) rk
+        from public.sport_quiz_life_chapters c
+        cross join lateral (select count(*)::integer n from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+          join public.sport_quiz_questions q on q.id = i.question_id where a.profile_id = me and i.status = 'answered' and q.topic_category = 'life' and q.chapter = c.id) f) x),'[]'::jsonb));
+end $$;
+
+-- Own personal level: the highest of the stored level and the level the current facts reach.
+create or replace function public.quiz_level()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_actor(); th jsonb := (select level_thresholds from public.sport_quiz_settings where singleton);
+  facts integer := public.quiz_facts(me,date '1900-01-01',date '9999-01-01'); stored public.sport_quiz_levels%rowtype; rk integer;
+begin
+  select * into stored from public.sport_quiz_levels where profile_id = me and track = 'overall';
+  rk := greatest(coalesce(stored.rank,0),public.quiz_level_rank(facts,th));
+  return jsonb_build_object('contract_version',4,'profile_id',me,'facts',facts,'rank',rk,'level',(public.quiz_level_keys())[rk + 1],'level_label',public.quiz_level_label(rk),
+    'next_level',(public.quiz_level_keys())[rk + 2],'next_at',(th ->> (public.quiz_level_keys())[rk + 2])::integer,'thresholds',th,'reached_at',stored.reached_at);
+end $$;
+
+-- Private opt-in with its own CAS version. Opting out closes an open Life round. Not audited (it is private).
+create or replace function public.quiz_life_preferences(p_opt_in boolean,p_notice_version text,p_expected_version bigint,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id); at timestamptz; p public.sport_quiz_preferences%rowtype; rid uuid;
+begin
+  if p_opt_in is null or p_expected_version is null or (p_opt_in and p_notice_version is distinct from 'life-playbook-v1-testing')
+    or (p_notice_version is not null and p_notice_version <> 'life-playbook-v1-testing') then raise exception 'quiz_preferences_invalid'; end if;
+  perform public.quiz_lock(me); at := clock_timestamp();
+  insert into public.sport_quiz_preferences(profile_id) values(me) on conflict do nothing;
+  select * into p from public.sport_quiz_preferences where profile_id = me for update;
+  if p.life_opt_in = p_opt_in and (not p_opt_in or p.life_notice_version is not distinct from p_notice_version) then
+    return jsonb_build_object('contract_version',4,'profile_id',me,'outcome','unchanged','preferences',public.quiz_life_preferences_dto(me));
+  end if;
+  if p.life_version is distinct from p_expected_version then raise exception 'quiz_preferences_stale'; end if;
+  update public.sport_quiz_preferences set life_opt_in = p_opt_in,life_notice_version = case when p_opt_in then p_notice_version else life_notice_version end,
+    life_opted_in_at = case when p_opt_in then at else null end,life_version = life_version + 1,updated_at = at where profile_id = me;
+  if not p_opt_in then
+    for rid in select id from public.sport_quiz_attempts where profile_id = me and round_kind = 'life' and status = 'issued' loop
+      perform public.quiz_round_settle(rid,at); perform public.quiz_round_close(rid,at,'access_revoked');
+    end loop;
+  end if;
+  return jsonb_build_object('contract_version',4,'profile_id',me,'outcome','saved','preferences',public.quiz_life_preferences_dto(me));
+end $$;
+
+-- 17. Admin: questions (Life fields and cap; one-admin approval like sports trivia) ----------------------------------------
+-- edit_replace (control tower, 2026-10-15): the review queue's Edit in one transaction under the same locks (settings,
+-- then the replaced row). It refuses unless the replaced row is still a draft, archives it, then runs the create / edit
+-- path (family, content, Life fields, caps, the question guard). A Life replacement must also pass what approval would
+-- check (the education-only attestation and the copy rules), tested on the stored row after the archive and insert, so
+-- any refusal rolls back both. Two audit rows, in the existing vocabulary: question_edit (new version) and
+-- question_archive (replaced draft), both with the reason. The cap counts after the archive: a replacement never grows
+-- the bank.
+create or replace function public.quiz_admin_question(p_id uuid,p_action text,p_payload jsonb,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); q public.sport_quiz_questions%rowtype; nextq public.sport_quiz_questions%rowtype;
+  why text := btrim(p_payload ->> 'reason'); family uuid; at timestamptz; affected uuid; qtype text; opts jsonb; ritem record;
+  life boolean; fam_life boolean; ch public.sport_quiz_life_chapters%rowtype; sport_text text; problems text[];
+begin
+  if jsonb_typeof(p_payload) is distinct from 'object' or coalesce(p_action,'') not in ('create','edit','edit_replace','approve','archive','void','review_media') or char_length(coalesce(why,'')) not between 10 and 500
+    or exists(select 1 from jsonb_object_keys(p_payload) k where k not in ('reason','sport','prompt','options','correct_option','explanation','topic_category','source_notes','family_action','question_key',
+      'question_type','media_path','media_licence','media_source','media_attribution','media_alt_text','media_size_bytes','media_has_person','media_no_marks','media_exif_stripped',
+      'chapter','min_age_band','education_only')) then raise exception 'quiz_question_action_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  if p_action = 'void' then
+    for affected in select profile_id from public.sport_quiz_attempts where question_id = p_id
+        union select a.profile_id from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where i.question_id = p_id order by 1 loop
+      perform public.quiz_lock(affected);
+    end loop;
+  end if;
+  if p_action <> 'create' then select * into q from public.sport_quiz_questions where id = p_id for update; if not found then raise exception 'quiz_question_missing'; end if;
+  elsif p_id is not null then raise exception 'quiz_create_id_invalid'; end if;
+  if p_action = 'edit_replace' then
+    if q.status <> 'draft' then raise exception 'quiz_replace_draft_only'; end if;
+    update public.sport_quiz_questions set status = 'archived',reason = why,reviewed_at = at,reviewed_by = me where id = q.id;
+  end if;
+  if p_action in ('create','edit','edit_replace') then
+    if p_action = 'create' then
+      if coalesce(p_payload ->> 'family_action','') not in ('new','existing') then raise exception 'quiz_family_required'; end if;
+      if p_payload ->> 'family_action' = 'new' then
+        if p_payload ? 'question_key' then raise exception 'quiz_family_invalid'; end if; family := gen_random_uuid();
+      else
+        if coalesce(p_payload ->> 'question_key','') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then raise exception 'quiz_family_invalid'; end if;
+        family := (p_payload ->> 'question_key')::uuid; if not exists(select 1 from public.sport_quiz_questions where question_key = family) then raise exception 'quiz_family_invalid'; end if;
+      end if;
+    else
+      family := q.question_key;
+      if (p_payload ? 'question_key' and p_payload ->> 'question_key' <> family::text) or (p_payload ? 'family_action' and p_payload ->> 'family_action' <> 'existing') then raise exception 'quiz_family_invalid'; end if;
+    end if;
+    life := coalesce(p_payload ->> 'topic_category','') = 'life';
+    -- A family stays Life or stays trivia across versions.
+    select bool_or(topic_category = 'life') into fam_life from public.sport_quiz_questions where question_key = family;
+    if fam_life is not null and fam_life <> life then raise exception 'quiz_family_invalid'; end if;
+    qtype := coalesce(p_payload ->> 'question_type','choice4'); opts := p_payload -> 'options';
+    if qtype not in ('choice4','true_false','image_choice') or jsonb_typeof(opts) is distinct from 'array'
+      or (qtype = 'choice4' and jsonb_array_length(opts) <> 4) or (qtype = 'true_false' and opts <> '["True","False"]'::jsonb)
+      or (qtype = 'image_choice' and (life or jsonb_array_length(opts) not between 2 and 4)) then raise exception 'quiz_question_content_invalid'; end if;
+    if coalesce(p_payload ->> 'topic_category','') not in ('sport','science','geography','general','life') or char_length(btrim(coalesce(p_payload ->> 'source_notes',''))) not between 10 and 1000
+      or jsonb_typeof(p_payload -> 'correct_option') is distinct from 'number' or (p_payload ->> 'correct_option') !~ '^[0-3]$'
+      or (p_payload ->> 'correct_option')::int >= jsonb_array_length(opts) then raise exception 'quiz_question_content_invalid'; end if;
+    if exists(select 1 from unnest(case when life then array['prompt','explanation','source_notes'] else array['sport','prompt','explanation','source_notes'] end) k
+      where jsonb_typeof(p_payload -> k) is distinct from 'string') then raise exception 'quiz_question_content_invalid'; end if;
+    if life then
+      select * into ch from public.sport_quiz_life_chapters where id = p_payload ->> 'chapter';
+      if ch.id is null or coalesce(p_payload ->> 'min_age_band','13') <> '13' or jsonb_typeof(p_payload -> 'education_only') is distinct from 'boolean'
+        then raise exception 'quiz_life_fields_invalid'; end if;
+      sport_text := ch.title;
+    else
+      if exists(select 1 from unnest(array['chapter','min_age_band','education_only']) k where p_payload ? k) then
+        raise exception 'quiz_life_fields_invalid'; end if;
+      sport_text := btrim(p_payload ->> 'sport');
+    end if;
+    if qtype = 'image_choice' then
+      if exists(select 1 from unnest(array['media_path','media_licence','media_source','media_attribution','media_alt_text']) k where jsonb_typeof(p_payload -> k) is distinct from 'string')
+        or jsonb_typeof(p_payload -> 'media_size_bytes') is distinct from 'number' or (p_payload ->> 'media_size_bytes') !~ '^[0-9]{1,6}$'
+        or (p_payload ->> 'media_size_bytes')::int not between 1 and 307200 or p_payload -> 'media_has_person' is distinct from 'false'::jsonb
+        or p_payload -> 'media_no_marks' is distinct from 'true'::jsonb or p_payload -> 'media_exif_stripped' is distinct from 'true'::jsonb then raise exception 'quiz_media_invalid'; end if;
+    elsif exists(select 1 from jsonb_object_keys(p_payload) k where k like 'media\_%') then raise exception 'quiz_media_invalid'; end if;
+    update public.sport_quiz_questions set status = 'archived',reason = why where question_key = family and status = 'approved';
+    -- Separate caps: trivia 300 and Life 200, each counting only versions still in play (draft or approved).
+    if life and (select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category = 'life') >= 200 then raise exception 'quiz_life_bank_full'; end if;
+    if not life and (select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category <> 'life') >= 300 then raise exception 'quiz_bank_full'; end if;
+    insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,created_by,topic_category,source_notes,
+        question_type,media_path,media_licence,media_source,media_attribution,media_alt_text,media_size_bytes,media_has_person,media_no_marks,media_exif_stripped,
+        chapter,min_age_band,education_only)
+      values(family,coalesce((select max(version) + 1 from public.sport_quiz_questions where question_key = family),1),
+        sport_text,btrim(p_payload ->> 'prompt'),opts,(p_payload ->> 'correct_option')::integer,btrim(p_payload ->> 'explanation'),why,me,
+        p_payload ->> 'topic_category',btrim(p_payload ->> 'source_notes'),qtype,
+        case when qtype = 'image_choice' then btrim(p_payload ->> 'media_path') end,case when qtype = 'image_choice' then p_payload ->> 'media_licence' end,
+        case when qtype = 'image_choice' then btrim(p_payload ->> 'media_source') end,case when qtype = 'image_choice' then btrim(p_payload ->> 'media_attribution') end,
+        case when qtype = 'image_choice' then btrim(p_payload ->> 'media_alt_text') end,case when qtype = 'image_choice' then (p_payload ->> 'media_size_bytes')::int end,
+        case when qtype = 'image_choice' then false end,case when qtype = 'image_choice' then true end,case when qtype = 'image_choice' then true end,
+        case when life then ch.id end,case when life then '13' end,coalesce(life and (p_payload ->> 'education_only')::boolean,false)) returning * into nextq;
+    if p_action = 'edit_replace' and life then
+      if nextq.education_only is not true then raise exception 'quiz_life_attestation_required'; end if;
+      problems := public.quiz_life_copy_problems(nextq.prompt,nextq.options,nextq.explanation,nextq.chapter);
+      if cardinality(problems) > 0 then raise exception 'quiz_life_copy: %', array_to_string(problems,', '); end if;
+    end if;
+  elsif p_action = 'review_media' then
+    if q.question_type <> 'image_choice' or q.status <> 'draft' then raise exception 'quiz_media_review_invalid'; end if;
+    if q.created_by is not distinct from me then raise exception 'quiz_media_reviewer_is_creator'; end if;
+    update public.sport_quiz_questions set media_reviewed_by = me,media_reviewed_at = at where id = q.id returning * into nextq;
+  else
+    if q.status = 'void' then raise exception 'quiz_void_final'; end if;
+    if p_action = 'approve' and q.status <> 'draft' then raise exception 'quiz_approve_draft_only'; end if;
+    if p_action = 'approve' and q.question_type = 'image_choice' and not (select images_enabled from public.sport_quiz_settings where singleton) then raise exception 'quiz_images_off'; end if;
+    if p_action = 'approve' and q.question_type = 'image_choice' and (q.media_reviewed_by is null or q.media_reviewed_by is not distinct from q.created_by) then raise exception 'quiz_media_review_required'; end if;
+    if p_action = 'approve' then update public.sport_quiz_questions set status = 'archived',reason = why where question_key = q.question_key and status = 'approved'; end if;
+    update public.sport_quiz_questions set status = case p_action when 'approve' then 'approved' when 'archive' then 'archived' else 'void' end,
+      reason = why,reviewed_at = at,reviewed_by = me where id = q.id returning * into nextq;
+    if p_action = 'void' then
+      for affected in with changed as (update public.sport_quiz_attempts set status = 'void',voided_at = at,closed_at = coalesce(closed_at,at),correction_reason = why,session_hash = null
+          where question_id = q.id and status <> 'skipped' returning profile_id) select distinct profile_id from changed order by profile_id loop perform public.quiz_bump_history(affected); end loop;
+      update public.sport_quiz_badges set voided_at = at where attempt_id in (select id from public.sport_quiz_attempts where question_id = q.id) and voided_at is null;
+      for ritem in select i.attempt_id,i.position,i.status,a.profile_id,a.status attempt_status,a.position current_position,a.planned_items
+          from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where i.question_id = q.id and i.status <> 'void' order by a.profile_id,i.attempt_id loop
+        update public.sport_quiz_round_items set status = 'void',voided_at = at,closed_at = coalesce(closed_at,at),correction_reason = why
+          where attempt_id = ritem.attempt_id and position = ritem.position;
+        if ritem.attempt_status = 'issued' and ritem.status = 'issued' and ritem.position = ritem.current_position then
+          if ritem.position >= ritem.planned_items then perform public.quiz_round_close(ritem.attempt_id,at,'corrected');
+          else update public.sport_quiz_attempts set round_state = 'between',next_by = at + public.quiz_round_gap() where id = ritem.attempt_id; end if;
+        elsif ritem.attempt_status <> 'issued' and not exists(select 1 from public.sport_quiz_round_items where attempt_id = ritem.attempt_id and status = 'answered') then
+          update public.sport_quiz_attempts set status = 'void',voided_at = coalesce(voided_at,at),correction_reason = why where id = ritem.attempt_id and status <> 'void';
+        end if;
+        update public.sport_quiz_attempts set correction_reason = coalesce(correction_reason,why) where id = ritem.attempt_id;
+        perform public.quiz_bump_history(ritem.profile_id);
+      end loop;
+      for affected in select distinct a.profile_id from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where i.question_id = q.id
+          union select distinct profile_id from public.sport_quiz_attempts where question_id = q.id order by 1 loop
+        perform public.quiz_sync_badges(affected,at);
+      end loop;
+    end if;
+  end if;
+  if p_action = 'edit_replace' then
+    insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'question_edit',nextq.id,why,at),(me,'question_archive',q.id,why,at);
+    return jsonb_build_object('id',nextq.id,'question_key',nextq.question_key,'version',nextq.version,'status',nextq.status,'replaced_id',q.id,'replaced_status','archived');
+  end if;
+  insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'question_' || p_action,nextq.id,why,at);
+  return jsonb_build_object('id',nextq.id,'question_key',nextq.question_key,'version',nextq.version,'status',nextq.status);
+end $$;
+
+-- Life participant audit rows (start / answer / end / skip of a Life round) never appear row by row in any admin feed:
+-- they carry a reason (chapter and position, or 'life') or point at a Life round.
+create or replace function public.quiz_audit_is_life(p_id bigint)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.sport_quiz_audit u where u.id = p_id and u.action in ('start','answer','end','skip')
+    and (u.reason is not null or exists(select 1 from public.sport_quiz_attempts a where a.id = u.attempt_id and a.round_kind = 'life')))
+$$;
+-- 18. Admin snapshot: trivia cap and every participant count exclude Life (Life numbers live, thresholded, in the Life desk)
+create or replace function public.quiz_admin_snapshot(p_question_cursor text default null,p_audit_before bigint default null)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_admin_actor(); at timestamptz := statement_timestamp(); w date := public.quiz_week_at(at);
+  c jsonb := public.quiz_cursor(p_question_cursor,'questions'); bank jsonb; audit jsonb; nextq text; nexta text; last_id uuid; last_at timestamptz; wk jsonb;
+begin
+  if p_audit_before is not null and p_audit_before <= 0 then raise exception 'quiz_cursor_invalid'; end if;
+  select coalesce(jsonb_agg(to_jsonb(q) - 'media_reviewed_by' || jsonb_build_object('media_reviewed_by',q.media_reviewed_by) order by created_at desc,id desc),'[]') into bank from
+    (select * from public.sport_quiz_questions where c is null or (created_at,id) < ((c ->> 'at')::timestamptz,(c ->> 'id')::uuid) order by created_at desc,id desc limit 50) q;
+  if jsonb_array_length(bank) = 50 then
+    last_at := (bank -> 49 ->> 'created_at')::timestamptz; last_id := (bank -> 49 ->> 'id')::uuid;
+    if exists(select 1 from public.sport_quiz_questions where (created_at,id) < (last_at,last_id)) then nextq := jsonb_build_object('v',1,'stream','questions','at',last_at,'id',last_id)::text; end if;
+  end if;
+  select coalesce(jsonb_agg(jsonb_build_object('id',x.id::text,'action',x.action,
+    'actor_id',case when x.action in ('settings','retention','life_settings','life_chapter') or x.action like 'question_%' then x.actor_id else null end,
+    'question_id',case when x.action like 'question_%' then x.question_id else null end,'reason',x.reason,'created_at',x.created_at) order by x.id desc),'[]') into audit
+    from (select * from public.sport_quiz_audit u where (p_audit_before is null or u.id < p_audit_before) and not public.quiz_audit_is_life(u.id) order by u.id desc limit 50) x;
+  if jsonb_array_length(audit) = 50 and exists(select 1 from public.sport_quiz_audit u where u.id < (audit -> 49 ->> 'id')::bigint and not public.quiz_audit_is_life(u.id)) then nexta := audit -> 49 ->> 'id'; end if;
+  select jsonb_build_object(
+    'week_issued',count(*) filter (where s ->> 'status' = 'issued'),'week_completed',count(*) filter (where s ->> 'status' = 'completed'),
+    'week_skipped',count(*) filter (where s ->> 'status' = 'skipped'),'week_void',count(*) filter (where s ->> 'status' = 'void'),
+    'week_ended',count(*) filter (where s ->> 'status' = 'ended'),'week_expired',count(*) filter (where s ->> 'status' = 'expired'),
+    'week_rounds_short',count(*) filter (where (s ->> 'short_round')::boolean),'week_rounds_group',count(*) filter (where s ->> 'round_kind' = 'group'),
+    'week_rounds_personal',count(*) filter (where s ->> 'round_kind' = 'personal' and s ->> 'status' <> 'skipped'))
+    into wk from (select public.quiz_summary(a.id,at) s from public.sport_quiz_attempts a where a.week_start = w and a.round_kind <> 'life') x;
+  return jsonb_build_object('contract_version',2,'generated_at',at,'week_start',w,'week_end',w + 7,
+    'settings',(select (to_jsonb(s) - 'singleton') || jsonb_build_object('contract_version',2) from public.sport_quiz_settings s where singleton),
+    'questions',bank,'question_total',(select count(*) from public.sport_quiz_questions),
+    'active_total',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category <> 'life'),
+    'life_active_total',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category = 'life'),'life_cap',200,
+    'question_cap',300,'next_question_cursor',nextq,'audit',audit,'next_before',nexta,
+    'pools',(select coalesce(jsonb_agg(to_jsonb(x) order by topic_category,sport),'[]') from (select topic_category,sport,count(*) approved_count from public.sport_quiz_questions
+      where status = 'approved' and topic_category <> 'life' and question_type <> 'image_choice' and public.quiz_normalize_options(options) is not null and char_length(btrim(source_notes)) >= 10 group by topic_category,sport) x),
+    'forecast',public.quiz_admin_forecast(at),
+    -- Review-queue counts (control tower, 2026-10-15): draft and approved versions in the whole bank by topic, by sport
+    -- (sports topic) and by Life chapter (every chapter, zeros included), so the desk never counts only loaded pages.
+    -- Content counts only: question versions by status. No participant, answer, exposure or account information, so
+    -- no privacy threshold applies.
+    'bank_counts',jsonb_build_object(
+      'topics',(select coalesce(jsonb_agg(jsonb_build_object('topic_category',x.topic_category,'draft_count',x.d,'approved_count',x.a) order by x.topic_category),'[]'::jsonb)
+        from (select topic_category,count(*) filter (where status = 'draft') d,count(*) filter (where status = 'approved') a
+          from public.sport_quiz_questions where status in ('draft','approved') group by topic_category) x),
+      'sports',(select coalesce(jsonb_agg(jsonb_build_object('sport',x.sport,'draft_count',x.d,'approved_count',x.a) order by x.sport),'[]'::jsonb)
+        from (select sport,count(*) filter (where status = 'draft') d,count(*) filter (where status = 'approved') a
+          from public.sport_quiz_questions where status in ('draft','approved') and topic_category = 'sport' group by sport) x),
+      'chapters',(select coalesce(jsonb_agg(jsonb_build_object('chapter',c.id,'draft_count',coalesce(x.d,0),'approved_count',coalesce(x.a,0)) order by c.position),'[]'::jsonb)
+        from public.sport_quiz_life_chapters c left join (select chapter,count(*) filter (where status = 'draft') d,count(*) filter (where status = 'approved') a
+          from public.sport_quiz_questions where status in ('draft','approved') and topic_category = 'life' group by chapter) x on x.chapter = c.id)),
+    'counts',wk || jsonb_build_object(
+      'questions_draft',(select count(*) from public.sport_quiz_questions where status = 'draft'),
+      'questions_approved',(select count(*) from public.sport_quiz_questions where status = 'approved'),
+      'questions_archived',(select count(*) from public.sport_quiz_questions where status = 'archived'),
+      'questions_void',(select count(*) from public.sport_quiz_questions where status = 'void'),
+      'questions_true_false',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and question_type = 'true_false'),
+      'questions_image',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and question_type = 'image_choice'),
+      'week_items_issued',(select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.week_start = w and a.round_kind <> 'life'),
+      'week_items_answered',(select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.week_start = w and a.round_kind <> 'life' and i.status = 'answered'),
+      'week_items_void',(select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.week_start = w and a.round_kind <> 'life' and i.status = 'void'),
+      'badges_issued',(select count(*) from public.sport_quiz_badges where voided_at is null and kind <> 'life'),
+      'badges_void',(select count(*) from public.sport_quiz_badges where voided_at is not null and kind <> 'life'),
+      'badges_sport',(select count(*) from public.sport_quiz_badges where voided_at is null and kind = 'sport'),
+      'badges_family',(select count(*) from public.sport_quiz_badges where voided_at is null and kind = 'family'),
+      'badges_season',(select count(*) from public.sport_quiz_badges where voided_at is null and kind = 'season'),
+      'badges_group_visible',(select count(*) from public.sport_quiz_badges where voided_at is null and visibility = 'groups'),
+      'recap_facts_quarter',(select coalesce(sum(public.quiz_facts(p.profile_id,date_trunc('quarter',at at time zone 'UTC')::date,(date_trunc('quarter',at at time zone 'UTC') + interval '3 months')::date)),0)
+        from (select distinct profile_id from public.sport_quiz_attempts) p)
+        - (select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.round_kind = 'life' and i.status = 'answered'
+           and a.week_start >= date_trunc('quarter',at at time zone 'UTC')::date and a.week_start < (date_trunc('quarter',at at time zone 'UTC') + interval '3 months')::date),
+      'preferences_weekly',(select count(*) from public.sport_quiz_preferences where invitation_mode = 'weekly'),
+      'exposures',(select count(*) from public.sport_quiz_exposures e where not exists(select 1 from public.sport_quiz_questions q where q.id = e.question_id and q.topic_category = 'life')),
+      'week_spent',(select count(*) from public.sport_quiz_week_guards where week_start = w and round_kind <> 'life'),
+      'retained_guards',(select count(*) from public.sport_quiz_week_guards where round_kind <> 'life'),'retained_requests',(select count(*) from public.sport_quiz_requests where round_kind <> 'life')),
+    'groups',jsonb_build_object(
+      'groups_active',(select count(*) from public.sport_quiz_groups where status = 'active'),
+      'groups_closed',(select count(*) from public.sport_quiz_groups where status = 'closed'),
+      'members_active',(select count(*) from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id where m.status = 'active' and g.status = 'active'),
+      'members_removed',(select count(*) from public.sport_quiz_group_members where status = 'removed'),
+      'groups_played_this_week',(select count(distinct m.group_id) from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+         where m.status = 'active' and g.status = 'active' and public.quiz_played(m.profile_id,w)),
+      'codes_active',(select count(*) from public.sport_quiz_group_codes where expires_at > at),
+      'codes_issued',(select coalesce(sum(codes_issued),0) from public.sport_quiz_groups),
+      'joins_7d',(select count(*) from public.sport_quiz_group_join_attempts where outcome = 'joined' and created_at > at - interval '7 days'),
+      'refusals_7d',(select count(*) from public.sport_quiz_group_join_attempts where outcome = 'refused' and created_at > at - interval '7 days'),
+      'wrong_codes_7d',(select count(*) from public.sport_quiz_group_join_attempts where outcome = 'wrong_code' and created_at > at - interval '7 days'),
+      'reports_7d',(select count(*) from public.sport_quiz_group_cases where kind = 'report' and created_at > at - interval '7 days'),
+      'sets_this_week',(select count(distinct group_id) from public.sport_quiz_group_sets where week_start = w),
+      'retained_sets',(select count(*) from public.sport_quiz_group_sets),'retained_join_attempts',(select count(*) from public.sport_quiz_group_join_attempts)),
+    'reports',coalesce((select jsonb_agg(jsonb_build_object('id',r.id::text,'group_id',r.group_id,'reason_code',r.reason_code,'created_at',r.created_at) order by r.id desc)
+      from (select * from public.sport_quiz_group_cases where kind = 'report' order by id desc limit 50) r),'[]'::jsonb));
+end $$;
+
+-- 19. Admin: Life switch and level thresholds, chapters ----------------------------------------------------------------
+create or replace function public.quiz_admin_life_settings(p_payload jsonb,p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); at timestamptz; s public.sport_quiz_settings%rowtype; rid uuid;
+begin
+  if jsonb_typeof(p_payload) is distinct from 'object' or char_length(btrim(coalesce(p_reason,''))) not between 10 and 500
+    or exists(select 1 from jsonb_object_keys(p_payload) k where k not in ('life_enabled','level_thresholds'))
+    or jsonb_typeof(p_payload -> 'life_enabled') is distinct from 'boolean' or not public.quiz_thresholds_ok(p_payload -> 'level_thresholds') then raise exception 'quiz_settings_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  update public.sport_quiz_settings set life_enabled = (p_payload ->> 'life_enabled')::boolean,level_thresholds = p_payload -> 'level_thresholds',
+    reason = btrim(p_reason),updated_at = at,updated_by = me where singleton returning * into s;
+  -- Switching Life off ends open Life rounds for good, like a pause.
+  if not s.life_enabled then
+    for rid in select id from public.sport_quiz_attempts where round_kind = 'life' and status = 'issued' order by profile_id,id loop
+      perform public.quiz_round_settle(rid,at); perform public.quiz_round_close(rid,at,'paused');
+    end loop;
+  end if;
+  insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'life_settings',btrim(p_reason),at);
+  return jsonb_build_object('contract_version',4,'life_enabled',s.life_enabled,'level_thresholds',s.level_thresholds);
+end $$;
+
+create or replace function public.quiz_admin_life_chapter(p_chapter text,p_open boolean,p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); at timestamptz; st jsonb;
+begin
+  if p_chapter is null or p_open is null or char_length(btrim(coalesce(p_reason,''))) not between 10 and 500 then raise exception 'quiz_life_chapter_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  perform 1 from public.sport_quiz_life_chapters where id = p_chapter for update; if not found then raise exception 'quiz_life_chapter_invalid'; end if;
+  st := public.quiz_life_chapter_state(p_chapter);
+  if p_open and not (st ->> 'ready')::boolean then
+    raise exception 'quiz_life_chapter_not_ready: %', (select string_agg(r,'; ') from jsonb_array_elements_text(st -> 'reasons') r); end if;
+  update public.sport_quiz_life_chapters set open = p_open,updated_at = at,updated_by = me where id = p_chapter;
+  insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'life_chapter',p_chapter || (case when p_open then ' opened: ' else ' closed: ' end) || btrim(p_reason),at);
+  return jsonb_build_object('contract_version',4,'chapter',p_chapter) || public.quiz_life_chapter_state(p_chapter);
+end $$;
+
+-- 20. Admin Life desk read: switch, chapters with reasons and aggregate-only statistics.
+-- Privacy (§7.10): per-question numbers only with >= 20 responders; age band x chapter and level cells under 10 are
+-- hidden (null); the opt-in count is hidden under 10; nothing names, lists or links a participant.
+create or replace function public.quiz_admin_life_snapshot()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_admin_actor(); at timestamptz := statement_timestamp(); s public.sport_quiz_settings%rowtype; n bigint;
+begin
+  select * into s from public.sport_quiz_settings where singleton;
+  select count(*) into n from public.sport_quiz_preferences where life_opt_in;
+  return jsonb_build_object('contract_version',4,'generated_at',at,
+    'settings',jsonb_build_object('life_enabled',coalesce(s.life_enabled,false),'level_thresholds',s.level_thresholds,'round_size',s.round_size,'enabled',s.enabled),
+    'life_cap',200,'life_active_total',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category = 'life'),
+    'open_at',public.quiz_life_open_at(),
+    'chapters',(select coalesce(jsonb_agg(jsonb_build_object('id',c.id,'title',c.title,'framing',c.framing,'position',c.position,'updated_at',c.updated_at,
+        'draft_count',(select count(*) from public.sport_quiz_questions q where q.topic_category = 'life' and q.chapter = c.id and q.status = 'draft'))
+        || public.quiz_life_chapter_state(c.id) order by c.position),'[]'::jsonb) from public.sport_quiz_life_chapters c),
+    'stats',jsonb_build_object(
+      'opted_in',case when n >= 10 then n end,
+      'week_life_rounds',(select case when count(*) >= 10 then count(*) end from public.sport_quiz_attempts where round_kind = 'life' and week_start = public.quiz_week_at(at)),
+      'questions',(select coalesce(jsonb_agg(jsonb_build_object('question_id',x.qid,'chapter',x.chapter,'responders',x.responders,
+          'correct_share',round(x.correct::numeric / x.answers,2)) order by x.chapter,x.qid),'[]'::jsonb)
+        from (select i.question_id qid,q.chapter,count(distinct a.profile_id) responders,count(*) answers,count(*) filter (where i.answered_option = q.correct_option) correct
+          from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id join public.sport_quiz_questions q on q.id = i.question_id
+          where q.topic_category = 'life' and i.status = 'answered' group by i.question_id,q.chapter having count(distinct a.profile_id) >= 20) x),
+      'questions_hidden',(select count(*) from (select i.question_id from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+          join public.sport_quiz_questions q on q.id = i.question_id where q.topic_category = 'life' and i.status = 'answered'
+          group by i.question_id having count(distinct a.profile_id) < 20) y),
+      'cells',(select coalesce(jsonb_agg(jsonb_build_object('age_band',b.band,'chapter',c.id,'players',case when coalesce(z.players,0) >= 10 then z.players end,
+          'hidden',coalesce(z.players,0) < 10) order by b.ord,c.position),'[]'::jsonb)
+        from (values ('teen_13_15',1),('teen_16_17',2),('adult',3),('no_age',4)) b(band,ord) cross join public.sport_quiz_life_chapters c
+        left join (select case when public.profile_age_band(a.profile_id) in ('not_given','unknown') then 'no_age' else public.profile_age_band(a.profile_id) end band,
+            q.chapter,count(distinct a.profile_id) players
+          from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id join public.sport_quiz_questions q on q.id = i.question_id
+          where q.topic_category = 'life' and i.status = 'answered' group by 1,2) z on z.band = b.band and z.chapter = c.id),
+      'levels',(select coalesce(jsonb_agg(jsonb_build_object('level',k.name,'label',public.quiz_level_label(k.i::integer - 1),
+          'players',case when coalesce(l.players,0) >= 10 then l.players end,'hidden',coalesce(l.players,0) < 10) order by k.i),'[]'::jsonb)
+        from unnest(public.quiz_level_keys()) with ordinality k(name,i)
+        left join (select level,count(*) players from public.sport_quiz_levels where track = 'overall' group by level) l on l.level = k.name)));
+end $$;
+
+-- 21. Access: RPC-only, explicit revokes, closed-account policy on every new table ----------------------------------------
+-- Also closes a gap from QUIZ-02 (found 2026-10-15 by the staging packet dry run): its tables never received MINOR-01's
+-- restrictive "Closed accounts" policy. Every RLS-enabled sport_quiz_* table without it gets it here; RLS state and grants
+-- are not changed.
+do $$ declare t text; begin
+  for t in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+           where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity and c.relname like 'sport\_quiz\_%' escape '\'
+             and not exists (select 1 from pg_policy p where p.polrelid = c.oid and p.polname = 'Closed accounts') loop
+    execute format('create policy "Closed accounts" on public.%I as restrictive for all to authenticated using ((select public.caller_not_age_blocked())) with check ((select public.caller_not_age_blocked()))',t);
+  end loop;
+end $$;
+do $$ declare t text; f record; begin
+  foreach t in array array['sport_quiz_life_chapters','sport_quiz_levels'] loop
+    execute format('alter table public.%I enable row level security',t);
+    execute format('revoke all on table public.%I from public,anon,authenticated,service_role',t);
+    execute format('drop policy if exists "Closed accounts" on public.%I',t);
+    execute format('create policy "Closed accounts" on public.%I as restrictive for all to authenticated using ((select public.caller_not_age_blocked())) with check ((select public.caller_not_age_blocked()))',t);
+  end loop;
+  for f in select p.oid::regprocedure signature from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname like 'quiz\_%' escape '\' loop
+    execute format('revoke all on function %s from public,anon,authenticated,service_role',f.signature);
+  end loop;
+end $$;
+grant execute on function public.quiz_snapshot(),public.quiz_preferences(jsonb,bigint,uuid,uuid),public.quiz_invitation(date,uuid,uuid),
+ public.quiz_start(text,text,integer,date,text,uuid,text,uuid),public.quiz_answer(uuid,integer,uuid,text,uuid),
+ public.quiz_end(uuid,uuid,date,text,uuid,uuid,text),public.quiz_skip(date,uuid,uuid),public.quiz_receipt(uuid),public.quiz_history(text),
+ public.quiz_erase_history(bigint,uuid),public.quiz_admin_snapshot(text,bigint),public.quiz_admin_settings(jsonb,text,uuid),
+ public.quiz_admin_question(uuid,text,jsonb,uuid),public.quiz_admin_retention(text,uuid),
+ public.quiz_next(uuid,integer,uuid,text,uuid),public.quiz_group_start(uuid,integer,date,text,uuid,text,uuid),
+ public.quiz_badge_shelf(),public.quiz_badge_visibility(uuid,text,uuid),public.quiz_season_recap(text),
+ public.quiz_group_create(text,text,uuid,uuid),public.quiz_group_join(text,uuid),public.quiz_group_leave(uuid,uuid),
+ public.quiz_group_remove_member(uuid,text,uuid),public.quiz_group_renew_code(uuid,uuid),public.quiz_group_set_theme(uuid,text,uuid),
+ public.quiz_group_page(uuid),public.quiz_groups_mine(),public.quiz_group_report(uuid,text,uuid),
+ public.quiz_admin_play_settings(jsonb,text,uuid),public.quiz_admin_group_case(uuid,text,uuid),public.quiz_admin_group_remove(uuid,uuid,text,uuid),
+ public.quiz_life_start(date,uuid,text,uuid,text,text,integer),public.quiz_life_snapshot(),public.quiz_life_chapters(),public.quiz_life_progress(),
+ public.quiz_level(),public.quiz_life_preferences(boolean,text,bigint,uuid),
+ public.quiz_admin_life_settings(jsonb,text,uuid),public.quiz_admin_life_chapter(text,boolean,text,uuid),public.quiz_admin_life_snapshot() to authenticated;
+
+-- Life Playbook bank (QUIZ-04, owner simplification 2026-10-15): 40 DRAFT questions (10 money_huddle, 10 savings_season, 10 scam_defense, 10 smart_plays).
+-- Generated from supabase/content/life_playbook_bank.json by `node scripts/life-bank-sql.mjs`; regenerate rather than edit by hand.
+-- Simple everyday facts, all 13+, no money figures or years. Every row is a draft: one admin checks the fact and
+-- approves it in the admin desk like sports trivia (the server runs the Life copy rules). A chapter opens at 5 approved
+-- items, so this file opens nothing: all four chapters stay closed after it loads.
+-- Needs: 20261014180000_life_playbook.sql (topic_category life, chapter, min_age_band, education_only).
+-- Safe to re-run: each insert skips an existing question_key. Applied: written 2026-10-15, not applied anywhere.
+-- Rollback: delete from public.sport_quiz_questions where topic_category = 'life' and status = 'draft' and reason like 'Life Playbook draft (QUIZ-04)%'.
+
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'c1b4c007-d311-497f-899e-dedbeb0a02fe',1,'Money Huddle',
+  'A budget is a game plan for money: it shows what comes in and where it goes.',
+  '["True","False"]'::jsonb,0,
+  'True! A budget is like a playbook for money. It helps plan spending and saving before the money is gone.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','money_huddle','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'c1b4c007-d311-497f-899e-dedbeb0a02fe');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '2606ad8d-fc5d-43e7-bd4b-f4b780894ff5',1,'Money Huddle',
+  'Food and a safe place to live are needs, not wants.',
+  '["True","False"]'::jsonb,0,
+  'True! Needs keep people safe and cared for. Wants are fun extras, like the newest video game.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','money_huddle','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '2606ad8d-fc5d-43e7-bd4b-f4b780894ff5');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'de61b5cb-f506-4177-a0b5-fe1e75e38504',1,'Money Huddle',
+  'A budget is only useful for people with lots of money.',
+  '["True","False"]'::jsonb,1,
+  'False. A budget helps with any amount. Even a small allowance goes further with a plan.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','money_huddle','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'de61b5cb-f506-4177-a0b5-fe1e75e38504');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'fbaa34ed-5d0d-4454-8cbf-770bce7935fe',1,'Money Huddle',
+  'Comparing prices at a few stores before buying can help get a better deal.',
+  '["True","False"]'::jsonb,0,
+  'True! Scouting prices is like scouting the other team. The same item can cost more in some places than others.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','money_huddle','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'fbaa34ed-5d0d-4454-8cbf-770bce7935fe');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '39ece432-dfca-4fe7-88d2-6f7fe2ea1889',1,'Money Huddle',
+  'A want is something a person cannot live without.',
+  '["True","False"]'::jsonb,1,
+  'False. That describes a need. A want is nice to have, like a new jersey, but life goes on without it.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','money_huddle','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '39ece432-dfca-4fe7-88d2-6f7fe2ea1889');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '9a04c9a5-c04a-4fe2-8bef-5bd3c2e55630',1,'Money Huddle',
+  'Which of these is a WANT?',
+  '["Groceries","A warm coat in winter","A limited-edition team jersey","Water at home"]'::jsonb,2,
+  'A limited-edition jersey is fun, but nobody has to have it. Food, warm clothes and water are needs.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','money_huddle','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '9a04c9a5-c04a-4fe2-8bef-5bd3c2e55630');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '90547488-1fa6-4b1f-b413-9f610ebc435b',1,'Money Huddle',
+  'Coaches call the play before the snap. Before spending, a smart move is to...',
+  '["Check the budget first","Spend it all right away","Buy whatever is on display","Skip looking at the price"]'::jsonb,0,
+  'Checking the budget first is calling the play before the snap. It keeps spending in line with the plan.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','money_huddle','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '90547488-1fa6-4b1f-b413-9f610ebc435b');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '3fafdd47-d914-4ccd-9940-38b4778e8e8e',1,'Money Huddle',
+  'Backpacks at different stores look almost the same. What helps pick the better deal?',
+  '["The brightest color","Comparing price and quality","The biggest logo","Whichever is closest"]'::jsonb,1,
+  'Comparing price and quality shows which backpack gives more for the money. Color and logos do not tell the whole story.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','money_huddle','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '3fafdd47-d914-4ccd-9940-38b4778e8e8e');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '9b532443-97ff-4760-9c77-efb013b9d1fb',1,'Money Huddle',
+  'An impulse buy is...',
+  '["A purchase planned for weeks","Money kept for later","A buy made on the spot without a plan","A bill paid on time"]'::jsonb,2,
+  'An impulse buy happens in the moment, often because something looks fun. A quick pause helps check if it fits the plan.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','money_huddle','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '9b532443-97ff-4760-9c77-efb013b9d1fb');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'd39ca658-e8c6-4a1b-b6d9-e3e2308685ae',1,'Money Huddle',
+  'Waiting a day before buying something unplanned is like calling a timeout. What can it help with?',
+  '["Deciding if it is really wanted","Making the price go up","Losing the receipt","Forgetting the budget"]'::jsonb,0,
+  'A timeout gives time to think. After a day, it is easier to tell if something is really wanted or just exciting in the moment.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','money_huddle','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'd39ca658-e8c6-4a1b-b6d9-e3e2308685ae');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '4ae74e2f-3950-42fa-bc5b-9f890251b304',1,'Savings Season',
+  'Saving a little at a time can add up to something bigger later.',
+  '["True","False"]'::jsonb,0,
+  'True! Small amounts saved regularly add up, like small gains in practice that build over a season.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','savings_season','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '4ae74e2f-3950-42fa-bc5b-9f890251b304');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'b0159a0a-0ddf-4f6d-b210-134e3ccc7112',1,'Savings Season',
+  'A savings account is a place to keep money set aside for later.',
+  '["True","False"]'::jsonb,0,
+  'True! A savings account holds money for goals and surprises. A checking account is the everyday spending account.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','savings_season','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'b0159a0a-0ddf-4f6d-b210-134e3ccc7112');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'e3de252d-fa57-4d8f-9ed8-ccf2fe753025',1,'Savings Season',
+  'When a bank pays interest on savings, the money in the account can grow.',
+  '["True","False"]'::jsonb,0,
+  'True! Interest is extra money a bank pays for keeping savings there, so the balance grows over time.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','savings_season','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'e3de252d-fa57-4d8f-9ed8-ccf2fe753025');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '379c4a36-1829-49df-970c-75aba4cf37cc',1,'Savings Season',
+  'It is fine to share a card PIN with a friend who promises to keep it secret.',
+  '["True","False"]'::jsonb,1,
+  'False. A PIN is like a locker combination: it only works if it stays private. If a card is lost, tell a trusted adult right away.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','savings_season','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '379c4a36-1829-49df-970c-75aba4cf37cc');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '4f2b92a9-2cb9-46b1-9088-a47f1e3bdde1',1,'Savings Season',
+  'Saving for a goal means the money can never be spent.',
+  '["True","False"]'::jsonb,1,
+  'False. Saving means setting money aside for later, like new cleats. When the goal is reached, the money can go toward it.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','savings_season','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '4f2b92a9-2cb9-46b1-9088-a47f1e3bdde1');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '514c8e3f-e2ef-4425-b5cb-61be1c8f4b05',1,'Savings Season',
+  'A checking account is mostly used for...',
+  '["Hiding money from everyone","Everyday spending and paying bills","Winning trophies","Keeping score in games"]'::jsonb,1,
+  'A checking account is the everyday account for spending and paying bills. Savings accounts are for money set aside.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','savings_season','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '514c8e3f-e2ef-4425-b5cb-61be1c8f4b05');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'e3b5ae33-0319-4dae-8fef-a2819347eada',1,'Savings Season',
+  'Why do people save money?',
+  '["Because spending is not allowed","To make prices go down","To be ready for goals and surprises","To win a trophy"]'::jsonb,2,
+  'Saving gets people ready for goals, like new gear, and for surprises, like a broken phone.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','savings_season','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'e3b5ae33-0319-4dae-8fef-a2819347eada');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'be440b46-ae9c-4d54-b63a-a1ca7080af30',1,'Savings Season',
+  'Interest on savings is...',
+  '["A fee for opening a door","A type of sports drink","A store coupon","Extra money a bank pays for keeping savings there"]'::jsonb,3,
+  'Interest is what a bank pays for keeping savings with it. It is a simple way savings can grow.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','savings_season','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'be440b46-ae9c-4d54-b63a-a1ca7080af30');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '0cbc1e66-2c12-49bd-a241-8dbe6043cb48',1,'Savings Season',
+  'A bank card goes missing. What is a smart first play?',
+  '["Tell a trusted adult and the bank right away","Wait a few months","Post the card number online","Do nothing"]'::jsonb,0,
+  'Acting fast protects the account. A trusted adult can help contact the bank so the card can be stopped.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','savings_season','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '0cbc1e66-2c12-49bd-a241-8dbe6043cb48');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '488935b0-3586-4f73-981e-f9169cd821f7',1,'Savings Season',
+  'Saving for a big goal is like training for a season. What helps most?',
+  '["Saving only once","Setting aside a little regularly","Spending first and never saving","Guessing"]'::jsonb,1,
+  'Regular saving is like regular practice. Small, steady steps add up to big results.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','savings_season','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '488935b0-3586-4f73-981e-f9169cd821f7');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'a87f06d6-47ea-4ebc-93ec-3ac283a4c3e9',1,'Scam Defense',
+  'If an offer sounds too good to be true, it is often a scam.',
+  '["True","False"]'::jsonb,0,
+  'True! Big promises for little effort are a classic scam play. Tell a trusted adult and use Report.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','scam_defense','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'a87f06d6-47ea-4ebc-93ec-3ac283a4c3e9');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'acbc2032-6224-41f6-875e-e2d408221816',1,'Scam Defense',
+  'Sharing a password with someone who messages first is a safe move.',
+  '["True","False"]'::jsonb,1,
+  'False. Passwords stay private, even if the message looks friendly or official. Tell a trusted adult and use Report.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','scam_defense','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'acbc2032-6224-41f6-875e-e2d408221816');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'f8078a79-534c-41bc-a665-0adcdef7cbe5',1,'Scam Defense',
+  'It is okay to send money to someone online who contacts you first and pressures you to hurry.',
+  '["True","False"]'::jsonb,1,
+  'False. Never send money to someone who contacts you first or pressures you. Tell a trusted adult and use Report.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','scam_defense','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'f8078a79-534c-41bc-a665-0adcdef7cbe5');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'a3987147-aef9-40f2-980f-2553ff868019',1,'Scam Defense',
+  'Using a different strong password for each account helps protect accounts.',
+  '["True","False"]'::jsonb,0,
+  'True! If a password leaks, the other accounts stay safe. Tell a trusted adult and use Report.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','scam_defense','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'a3987147-aef9-40f2-980f-2553ff868019');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '10b25d31-3c92-4130-b7dd-db3c9df2a751',1,'Scam Defense',
+  'A message that says "Act now or lose your account!" is a red flag.',
+  '["True","False"]'::jsonb,0,
+  'True! Scammers use panic to rush people. Real companies give time to check. Tell a trusted adult and use Report.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','scam_defense','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '10b25d31-3c92-4130-b7dd-db3c9df2a751');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'dd5eb954-373d-41dd-be59-8f48ab5a3c96',1,'Scam Defense',
+  'Phishing is when a scammer...',
+  '["Goes fishing at the lake","Pretends to be someone trusted to steal information","Sends a real thank-you card","Fixes a phone for free"]'::jsonb,1,
+  'Phishing messages pretend to come from a bank, school or friend to steal passwords or personal info. Tell a trusted adult and use Report.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','scam_defense','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'dd5eb954-373d-41dd-be59-8f48ab5a3c96');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '00bc1452-5b1d-450a-9b16-cd7a04a52757',1,'Scam Defense',
+  'A text says a prize is waiting if you click a link and type in your password. Best defense?',
+  '["Click fast","Reply with the password","Forward it to friends","Do not click; delete it"]'::jsonb,3,
+  'Surprise prizes and password requests are scam tricks. Not clicking keeps the defense strong. Tell a trusted adult and use Report.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','scam_defense','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '00bc1452-5b1d-450a-9b16-cd7a04a52757');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'c13e6eb8-4324-49af-9391-ca7cf44f776f',1,'Scam Defense',
+  'Which of these is personal information to keep private?',
+  '["A favorite team","Passwords and a home address","The color of a jersey","Last week''s score"]'::jsonb,1,
+  'Passwords and a home address can be used to cause harm. Team colors and scores are fine to share. Tell a trusted adult and use Report.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','scam_defense','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'c13e6eb8-4324-49af-9391-ca7cf44f776f');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'd4b45f26-55eb-4b04-b9fb-45a9b1dad67b',1,'Scam Defense',
+  'Someone a player never met messages first and asks for money to unlock a prize. What is this?',
+  '["A normal prize","A team bake sale","A savings plan","A scam"]'::jsonb,3,
+  'This is a scam. Never send money to someone who contacts you first or pressures you. Tell a trusted adult and use Report.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','scam_defense','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'd4b45f26-55eb-4b04-b9fb-45a9b1dad67b');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'f3154360-f8f6-46b7-b327-67544e048874',1,'Scam Defense',
+  'Scammers often try to rush people. What beats the rush?',
+  '["Pausing to check first","Answering right away","Sharing more details","Sending money fast"]'::jsonb,0,
+  'Slowing down and checking breaks the scammer''s game plan. Tell a trusted adult and use Report.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','scam_defense','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'f3154360-f8f6-46b7-b327-67544e048874');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '1dec3cc5-c837-4223-ba92-88dceddd45ba',1,'Smart Plays',
+  'Reading something all the way through before signing it is a smart play.',
+  '["True","False"]'::jsonb,0,
+  'True! Signing means agreeing. Reading first, and asking a trusted adult about anything unclear, avoids surprises.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','smart_plays','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '1dec3cc5-c837-4223-ba92-88dceddd45ba');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '4bfb5c98-d2f4-4810-b219-9f7526ecd99e',1,'Smart Plays',
+  'Asking questions when something is confusing is a sign of weakness.',
+  '["True","False"]'::jsonb,1,
+  'False. Great players ask their coaches questions. Asking is how people learn and avoid mistakes.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','smart_plays','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '4bfb5c98-d2f4-4810-b219-9f7526ecd99e');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '11f065fe-3849-4c01-bb9f-d2dba544cdbe',1,'Smart Plays',
+  'Sleeping on a big decision can help a person think it through with a clear head.',
+  '["True","False"]'::jsonb,0,
+  'True! Waiting until the next day takes the pressure off and makes it easier to see the whole field.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','smart_plays','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '11f065fe-3849-4c01-bb9f-d2dba544cdbe');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '306ffe51-cedd-41a1-bc45-49d090c29014',1,'Smart Plays',
+  'Planning ahead is like studying the playbook before game day.',
+  '["True","False"]'::jsonb,0,
+  'True! Knowing the plan before the moment comes makes it easier to make good choices under pressure.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','smart_plays','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '306ffe51-cedd-41a1-bc45-49d090c29014');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'd299bfb0-8d65-49dc-8a5a-651be8f9e7bf',1,'Smart Plays',
+  'If a deal says "today only," it is always smart to decide right away.',
+  '["True","False"]'::jsonb,1,
+  'False. Pressure to rush is a reason to slow down. Good choices usually leave time to think and ask questions.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','true_false','smart_plays','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'd299bfb0-8d65-49dc-8a5a-651be8f9e7bf');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '23a71977-4acb-4ec8-8140-7c60b4b96574',1,'Smart Plays',
+  'Before a big decision, which move helps most?',
+  '["Guessing quickly","Gathering facts and asking questions","Doing what a pop-up ad says","Ignoring the details"]'::jsonb,1,
+  'Gathering facts and asking questions is like watching game film before the big game. It leads to better calls.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','smart_plays','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '23a71977-4acb-4ec8-8140-7c60b4b96574');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '65b33ed7-b1da-4540-afb2-d8e110073e79',1,'Smart Plays',
+  'Someone asks a player to sign a form they do not understand. What is the smart play?',
+  '["Sign it fast","Sign without reading","Ask questions and read it with a trusted adult","Hide it"]'::jsonb,2,
+  'A trusted adult can help explain the form. Nobody has to sign something they do not understand.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','smart_plays','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '65b33ed7-b1da-4540-afb2-d8e110073e79');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select 'e1dd915b-7dd6-4eb4-bfa5-0652de1137e6',1,'Smart Plays',
+  'A coach makes a game plan before the season. In everyday life, planning ahead helps...',
+  '["Avoid last-minute surprises","Make every day the same","Skip all choices","Lose track of time"]'::jsonb,0,
+  'Planning ahead means fewer surprises, like packing gear the night before a game.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','smart_plays','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = 'e1dd915b-7dd6-4eb4-bfa5-0652de1137e6');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '51eaed61-07a7-45a8-b7e0-fe2681e47352',1,'Smart Plays',
+  'What does it mean to "sleep on it"?',
+  '["Take a nap during class","Never decide","Wait until the next day to decide something big","Decide while very sleepy"]'::jsonb,2,
+  'To sleep on it means waiting until the next day before making a big choice, so it can be made with a fresh mind.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','smart_plays','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '51eaed61-07a7-45a8-b7e0-fe2681e47352');
+insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,topic_category,source_notes,question_type,chapter,min_age_band,education_only)
+select '2bb3208a-795a-4275-9257-2ba10750adab',1,'Smart Plays',
+  'Which is the best example of thinking before acting?',
+  '["Buying the first thing seen","Agreeing without reading","Rushing because a timer says so","Comparing choices before picking"]'::jsonb,3,
+  'Comparing choices before picking is thinking before acting. It is how good players and smart shoppers make their moves.',
+  'Life Playbook draft (QUIZ-04); one admin checks the fact and approves it like sports trivia.','life',
+  'Everyday fact; no expert check needed.','choice4','smart_plays','13',true
+where not exists(select 1 from public.sport_quiz_questions where question_key = '2bb3208a-795a-4275-9257-2ba10750adab');
+
+-- QUIZ-05: fresh questions — self-healing trivia, Know your athlete (fun facts) and admin refills. Local source only; not
+-- applied anywhere. Requires QUIZ-01..04 (20261014140000–20261014190000), PRIV-01 (20261014090000 / 100000), MINOR-01
+-- (20261014110000) and the athlete verification ladder.
+-- Design: docs/engineering/design/TRIVIA_FRESH_QUESTIONS_DESIGN.md (§6 design review 2026-10-15 overrides §1–§5).
+-- Owner: POLLS with BACKEND, DATABASE_MIGRATIONS, ADMIN, PROFILE and CUSTODIAL. Reviews: MINOR_SAFETY (lead),
+--   PRIVACY_ENGINEERING, RLS_SECURITY, VOICE, DATA_GOVERNANCE, infrastructure seat.
+-- The one rule: nothing reaches players without an admin approving it. Spotting, pausing, drafting and alerting are
+--   automatic; publishing never is.
+-- What it adds (§6 item numbers):
+--   1. Fun facts (§6.1–6.7): a PRIV-01 per-item audience `fun_facts` (default friends; 13–15 capped at friends);
+--      quiz_athlete_facts keeps the athlete's answer text apart from question rows (filled in at read time); six preset
+--      prompts with curated wrong-answer lists (the pre-game meal is chosen from its list); a server text filter (the Life
+--      text cleanup and brand / money lists plus links, handles, digits, addresses, weekdays and times, the athlete's own
+--      school or city, emoji, non-Latin letters and a not-okay word list) and a near-match-to-a-wrong-option refusal.
+--      Order: athlete submit → guardian (under 16, MINOR-01 approval change_key 'fun_fact:<id>') → one admin approves.
+--      13–15 without a guardian keep a draft "waiting for a guardian"; no recorded age (unknown / not_given) cannot
+--      submit. Only the athlete withdraws. Withdrawal, account deletion, unlinking and an under-13 block clear the text in
+--      the same transaction and void the question and every issued, unrevealed item; history shows "Removed by the
+--      athlete" and no audit row holds the text. Drawn only for verified athletes, in personal rounds, at most one per
+--      round, in about 1 of 3 rounds per player (deterministic per player-week from a server salt), at most one per
+--      athlete per viewer per month, when the viewer follows the athlete or started from the athlete's Learn card
+--      (quiz_learn_start validates the athlete id), the audience allows and neither side blocked the other. Checked when
+--      issued and again at the reveal; on failure an ordinary question is drawn (issue) or the item is voided (reveal).
+--      Athlete counts: completed months only, distinct fans in buckets 5+ / 10+ / 25+ (under 5 hidden), never counting
+--      the athlete, guardians, admins or the testing group; a "paused for a check" state for the owner. Supervision adds
+--      "fun_facts_shared". Switch trivia.athlete_questions (off) and a share setting 0–10% (default 0).
+--   2. Answer shuffle (§6.8): each round item stores its shown order when issued (stable on replay); the client sends the
+--      shown position, the server maps it to the stored index and keeps both on the item and in the receipt result.
+--      True / false is not shuffled. The stored order is shuffled on bulk import and at approval (a permutation the
+--      question guard allows only for draft → approved). Stats, voids and history use the stored index.
+--   3. Reports (§6.9): one per account per question and 10 a day, only after a closed round item for that question;
+--      counted only from accounts 7+ days old with a completed round and never across a block; auto-pause at 2 counted
+--      reporters (ordinary) or 1 "Not okay" / "Shares something private" (fun fact); 3 new counted reporters after a
+--      restore; at most 10 auto-pauses per topic per UTC day, then reports queue and an alert is recorded; intake pause;
+--      reporter id cleared at 90 days, reports deleted at 180 (quiz_admin_retention); erasure removes own reports.
+--   4. Quality flags and difficulty (§6.10): counters refreshed when each answer or time-out is committed (trigger, no
+--      scheduler) over distinct accounts on the current version, excluding admins and the author; type-aware
+--      "confusing"; easy / medium / hard; at most two hard per round (group sets choose without reading members'
+--      history).
+--   5. Bulk import (§6.11): admin-only, 200 rows / 64 KB, server re-check, dry run, refuses athlete / image rows and
+--      formula-start cells, version caps, duplicate check across all statuses / versions / families / topics and the
+--      batch (exact after cleanup blocks, near match warns); rows land as drafts; there is no approve-all.
+--   6. Needs a look: an admin read with reasons; Restore / Dismiss / Archive, and Edit through the atomic edit_replace
+--      (now also for an approved question that needs a look). The admin snapshot adds weeks left / Refill needed per
+--      topic, sport and Life chapter and the Needs a look count.
+--   7. Data and audit (§6.12): new audit actions; fun-fact answer audit rows carry no question id; the athlete export
+--      (quiz_fact_export) lists their facts and every decision.
+--   8. Security: RPC-only tables with the Closed accounts restrictive policy, explicit revokes, pinned search_path.
+-- Lock order unchanged: settings → group → account → attempt; a per-question advisory lock (reports) sits after settings
+--   and before accounts; a per-athlete advisory lock (facts) sits after settings.
+-- Safe to re-run alone or through schema.sql (the QUIZ transaction sets quiz.full_schema): add column if not exists,
+--   create table if not exists, named constraints dropped and re-added NOT VALID, create or replace, no data updates.
+--   QUIZ-04 (20261014180000) now refuses a lone re-run after this file (quiz_rerun_after_quiz05), like QUIZ-03 after
+--   QUIZ-04. Rollback: switch trivia.athlete_questions off, set the share to 0 and pause report intake; keep records;
+--   forward fix.
+
+-- 0. Text helpers -------------------------------------------------------------------------------------------------------
+-- Lookalike letters folded to Latin (security review 2026-10-15): dotless i, Cyrillic and Greek letters that read as
+-- Latin, so "shıt" or a Cyrillic "а" cannot slip past a word list or a duplicate check.
+create or replace function public.quiz_fold_lookalikes(p text)
+returns text language sql immutable set search_path = '' as $$
+  select translate(coalesce(p,''),'ıİаеорсхуіјѕԁһкмтвнАЕОРСХУІЈЅКМТВНαοερτυνικΑΟΕΡΤΥΝΙΚ',
+    'iIaeopcxyijsdhkmtbhAEOPCXYIJSKMTBHaoeptuvikAOEPTYNIK')
+$$;
+-- Cleanup for comparisons: the Life normalization (NFKC, zero-width, quotes, lowercase), lookalikes folded, macrons
+-- stripped; letters (Latin, accented and any other script) and digits kept, everything else becomes one space.
+create or replace function public.quiz_fresh_norm(p text)
+returns text language sql immutable set search_path = '' as $$
+  select btrim(regexp_replace(public.quiz_life_strip(public.quiz_life_normalize(public.quiz_fold_lookalikes(p))),'[[:space:][:punct:]]+',' ','g'))
+$$;
+-- Edit distance for short texts (fun-fact answers against wrong options).
+create or replace function public.quiz_levenshtein(a text,b text)
+returns integer language plpgsql immutable set search_path = '' as $$
+declare la integer := char_length(coalesce(a,'')); lb integer := char_length(coalesce(b,'')); prev integer[]; cur integer[]; i integer; j integer; cost integer;
+begin
+  if la = 0 then return lb; end if;
+  if lb = 0 then return la; end if;
+  if la > 120 or lb > 120 then return greatest(la,lb); end if;
+  prev := array(select generate_series(0,lb));
+  for i in 1..la loop
+    cur := array[i];
+    for j in 1..lb loop
+      cost := case when substr(a,i,1) = substr(b,j,1) then 0 else 1 end;
+      cur := cur || least(cur[j] + 1,prev[j + 1] + 1,prev[j] + cost);
+    end loop;
+    prev := cur;
+  end loop;
+  return prev[lb + 1];
+end $$;
+-- Same, nearly the same (one edit for short words, two otherwise) or one inside the other (both 4+ characters).
+create or replace function public.quiz_near_match(a text,b text)
+returns boolean language plpgsql immutable set search_path = '' as $$
+declare x text := public.quiz_fresh_norm(a); y text := public.quiz_fresh_norm(b); shortest integer;
+begin
+  if x = '' or y = '' then return false; end if;
+  if x = y or replace(x,' ','') = replace(y,' ','') then return true; end if;
+  shortest := least(char_length(x),char_length(y));
+  if shortest >= 4 and (position(x in y) > 0 or position(y in x) > 0) then return true; end if;
+  return public.quiz_levenshtein(x,y) <= case when shortest <= 5 then 1 else 2 end;
+end $$;
+-- Share of words two prompts have in common (near-duplicate warning for imports).
+create or replace function public.quiz_word_overlap(a text,b text)
+returns numeric language sql immutable set search_path = '' as $$
+  with x as (select distinct w from regexp_split_to_table(public.quiz_fresh_norm(a),' ') w where w <> ''),
+       y as (select distinct w from regexp_split_to_table(public.quiz_fresh_norm(b),' ') w where w <> '')
+  select case when (select count(*) from (select w from x union select w from y) u) = 0 then 0
+    else round((select count(*) from (select w from x intersect select w from y) i)::numeric / (select count(*) from (select w from x union select w from y) u),2) end
+$$;
+-- A random permutation of 0..n-1 (shown order for one item).
+create or replace function public.quiz_random_order(p_n integer)
+returns smallint[] language sql volatile set search_path = '' as $$
+  select array_agg(i::smallint order by random()) from generate_series(0,p_n - 1) i
+$$;
+-- Shuffle stored options and move the correct index with them (import and approval); true / false keeps its order.
+create or replace function public.quiz_shuffle_options(p_options jsonb,p_correct integer,p_type text)
+returns jsonb language plpgsql volatile set search_path = '' as $$
+declare perm smallint[]; out jsonb := '[]'; i integer; correct integer;
+begin
+  if p_type = 'true_false' or jsonb_typeof(p_options) is distinct from 'array' then
+    return jsonb_build_object('options',p_options,'correct_option',p_correct);
+  end if;
+  perm := public.quiz_random_order(jsonb_array_length(p_options));
+  for i in 1..array_length(perm,1) loop
+    out := out || jsonb_build_array(p_options -> perm[i]);
+    if perm[i] = p_correct then correct := i - 1; end if;
+  end loop;
+  return jsonb_build_object('options',out,'correct_option',correct);
+end $$;
+-- Two option arrays hold the same texts (any order).
+create or replace function public.quiz_same_options(a jsonb,b jsonb)
+returns boolean language sql immutable set search_path = '' as $$
+  select jsonb_typeof(a) = 'array' and jsonb_typeof(b) = 'array' and jsonb_array_length(a) = jsonb_array_length(b)
+    and (select array_agg(x order by x) from jsonb_array_elements_text(a) x) = (select array_agg(x order by x) from jsonb_array_elements_text(b) x)
+$$;
+-- A stable 0–99 bucket from a server-side hash (deterministic per input, unpredictable without the salt).
+create or replace function public.quiz_bucket(p_seed text,p_slice integer)
+returns integer language sql immutable set search_path = '' as $$
+  select (('x' || substr(public.hash_secret(p_seed),1 + p_slice * 8,8))::bit(32)::bigint % 100)::integer
+$$;
+
+-- 1. Self-heal thresholds, report rules and fun-fact prompts --------------------------------------------------------------
+create or replace function public.quiz_self_heal_defaults()
+returns jsonb language sql immutable set search_path = '' as $$
+  select '{"min_responders":30,"too_easy_pct":95,"confusing_choice4_pct":15,"confusing_true_false_pct":35,"too_long_pct":40}'::jsonb
+$$;
+-- Editable within these bounds only (admin Settings); anything else is refused.
+create or replace function public.quiz_self_heal_ok(p jsonb)
+returns boolean language plpgsql immutable set search_path = '' as $$
+declare k text; lo integer; hi integer; v text;
+begin
+  if jsonb_typeof(p) is distinct from 'object' or (select count(*) from jsonb_object_keys(p)) <> 5 then return false; end if;
+  for k,lo,hi in select * from (values ('min_responders',20,200),('too_easy_pct',80,100),('confusing_choice4_pct',5,30),
+      ('confusing_true_false_pct',20,45),('too_long_pct',20,80)) t(k,lo,hi) loop
+    v := p ->> k;
+    if jsonb_typeof(p -> k) is distinct from 'number' or v !~ '^[0-9]{1,3}$' or v::integer not between lo and hi then return false; end if;
+  end loop;
+  return true;
+end $$;
+-- Report rules from design §6.9 (fixed; shown read-only on the desk).
+create or replace function public.quiz_report_rules()
+returns jsonb language sql immutable set search_path = '' as $$
+  select '{"ordinary_reporters":2,"fact_reporters":1,"fact_reasons":["not_okay","private"],"restored_reporters":3,"daily_pause_cap":10,
+    "min_account_days":7,"per_account_per_day":10,"reporter_clear_days":90,"delete_days":180}'::jsonb
+$$;
+-- The six preset prompts (§6.4). `question` / `explanation` use {name}; the stored question holds {answer} where the
+-- athlete's text goes, so no question row ever holds it. `answers` (pre-game meal only) is the list the athlete picks
+-- from; `wrong` lists are curated per prompt and never come from other athletes. US spelling for on-screen labels.
+create or replace function public.quiz_fact_prompts()
+returns jsonb language sql immutable set search_path = '' as $$ select $fact_prompts$[
+  {"key":"pregame_meal","label":"Pre-game meal","question":"What does {name} like to eat before a game?",
+   "answers":["Pasta","Chicken and rice","Pancakes","Waffles","Peanut butter sandwich","Oatmeal","Eggs and toast","Breakfast burrito","Teriyaki chicken","Poke bowl","Smoothie","Bagel","Turkey sandwich","Fruit bowl","Rice and fish","Tacos","Pizza","Grilled cheese"],
+   "wrong":["Pasta","Chicken and rice","Pancakes","Waffles","Peanut butter sandwich","Oatmeal","Eggs and toast","Breakfast burrito","Teriyaki chicken","Poke bowl","Smoothie","Bagel","Turkey sandwich","Fruit bowl","Rice and fish","Tacos","Pizza","Grilled cheese"]},
+  {"key":"hype_song","label":"Hype song","question":"Which song gets {name} hyped before a game?",
+   "wrong":["We Will Rock You","Eye of the Tiger","Thunderstruck","Seven Nation Army","Jump Around","Lose Yourself","Remember the Name","Can't Hold Us","Centuries","Believer","Hall of Fame","Till I Collapse"]},
+  {"key":"pro_athlete","label":"Favorite pro athlete","question":"Who is {name}'s favorite pro athlete?",
+   "wrong":["Michael Jordan","Serena Williams","Babe Ruth","Wayne Gretzky","Simone Biles","Usain Bolt","Mia Hamm","Jackie Robinson","Wilma Rudolph","Muhammad Ali","Billie Jean King","Jim Thorpe"]},
+  {"key":"pregame_ritual","label":"Pre-game ritual","question":"What is {name}'s pre-game ritual?",
+   "wrong":["Stretching with the team","Listening to music","Tying shoes twice","Picturing the game","A team handshake","Quiet time alone","Wearing lucky socks","Eating a banana","Jumping jacks","A deep breath routine","High fives with teammates","Reading the playbook"]},
+  {"key":"hidden_talent","label":"Hidden talent","question":"What is {name}'s hidden talent?",
+   "wrong":["Juggling","Drawing","Singing","Cooking","Solving puzzle cubes","Playing piano","Dancing","Skateboarding","Playing ukulele","Card tricks","Baking","Writing poems"]},
+  {"key":"other_sport","label":"Other sport you love","question":"Which other sport does {name} love?",
+   "wrong":["Basketball","Soccer","Volleyball","Tennis","Swimming","Golf","Baseball","Track and field","Wrestling","Softball","Rugby","Bowling"]}
+]$fact_prompts$::jsonb $$;
+create or replace function public.quiz_fact_prompt(p_key text)
+returns jsonb language sql immutable set search_path = '' as $$
+  select x from jsonb_array_elements(public.quiz_fact_prompts()) x where x ->> 'key' = p_key
+$$;
+-- Words a fun fact may never contain (profanity, slurs, sexual, drug and alcohol words). Matched whole-word on cleaned text.
+create or replace function public.quiz_fact_not_okay_words()
+returns jsonb language sql immutable set search_path = '' as $$ select '["damn","hell","shit","shitty","fuck","fucking","fucker","bitch","ass","asshole","bastard","crap","piss","pissed","dick","cock","pussy","slut","whore","fag","faggot","retard","retarded","nigger","nigga","cunt","twat","wanker","bollocks","sex","sexy","porn","nude","naked","boobs","weed","vape","vaping","beer","vodka","whiskey","drunk","stoned","cocaine","meth","kill","gun","guns"]'::jsonb $$;
+
+-- 2. Settings: trivia.athlete_questions, the share, report intake and self-heal thresholds --------------------------------
+alter table public.sport_quiz_settings add column if not exists athlete_questions_enabled boolean not null default false;
+alter table public.sport_quiz_settings add column if not exists athlete_share_pct smallint not null default 0;
+alter table public.sport_quiz_settings drop constraint if exists quiz_athlete_share_range;
+alter table public.sport_quiz_settings add constraint quiz_athlete_share_range check (athlete_share_pct between 0 and 10) not valid;
+alter table public.sport_quiz_settings add column if not exists reports_paused boolean not null default false;
+alter table public.sport_quiz_settings add column if not exists self_heal jsonb not null
+  default '{"min_responders":30,"too_easy_pct":95,"confusing_choice4_pct":15,"confusing_true_false_pct":35,"too_long_pct":40}'::jsonb;
+alter table public.sport_quiz_settings drop constraint if exists quiz_self_heal_valid;
+alter table public.sport_quiz_settings add constraint quiz_self_heal_valid check (public.quiz_self_heal_ok(self_heal)) not valid;
+-- Private salt for the 1-in-3 fun-fact rounds; never returned by any read (stripped from the admin snapshot).
+alter table public.sport_quiz_settings add column if not exists fact_salt text not null default replace(gen_random_uuid()::text,'-','');
+
+-- 3. PRIV-01 audience: a per-item `fun_facts` audience, default friends -------------------------------------------------------
+create or replace function public.privacy_default_audience()
+returns jsonb
+language sql
+immutable
+set search_path = ''
+as $$
+  select '{"photo":"friends","bio":"friends","school":"friends","social_links":"only_me","stats":"friends","aura":"friends","crew":"friends","friends_list":"only_me","fun_facts":"friends"}'::jsonb;
+$$;
+
+-- 4. Tables ------------------------------------------------------------------------------------------------------------------
+-- The athlete's fun facts. answer_text is the only place the athlete's words live; it is cleared (null) at once on
+-- withdrawal, account closure, unlinking or an under-13 block. Questions point here through fact_id.
+create table if not exists public.quiz_athlete_facts (
+  id uuid primary key default gen_random_uuid(),
+  athlete_id uuid not null references public.profiles(id) on delete cascade,
+  prompt_key text not null check (prompt_key in ('pregame_meal','hype_song','pro_athlete','pregame_ritual','hidden_talent','other_sport')),
+  answer_text text check (answer_text is null or char_length(answer_text) between 2 and 40),
+  status text not null check (status in ('waiting_guardian','guardian_review','admin_review','approved','declined','withdrawn','removed')),
+  look_reasons text[] not null default '{}',
+  submitted_at timestamptz not null,
+  guardian_request_id uuid references public.guardian_approval_requests(id) on delete set null,
+  guardian_decision text check (guardian_decision in ('approved','declined')),
+  guardian_decided_at timestamptz,
+  admin_decided_at timestamptz,
+  admin_decided_by uuid references public.profiles(id) on delete set null,
+  decline_reason text check (decline_reason in ('guardian','not_okay','private','sponsor_or_business','place','schedule','other')),
+  question_id uuid references public.sport_quiz_questions(id) on delete set null,
+  cleared_at timestamptz,
+  clear_cause text,
+  updated_at timestamptz not null
+);
+-- Text is gone exactly when cleared; withdrawn / removed facts never keep text; a declined fact's text is purged after
+-- 30 days by quiz_admin_retention (clear_cause declined_purged). Named checks re-added NOT VALID (re-run safe).
+alter table public.quiz_athlete_facts drop constraint if exists quiz_athlete_facts_clear_cause_check;
+alter table public.quiz_athlete_facts drop constraint if exists quiz_fact_clear_cause;
+alter table public.quiz_athlete_facts add constraint quiz_fact_clear_cause check (clear_cause in ('withdrawn','unlinked','age_blocked','account_deleted','declined_purged')) not valid;
+alter table public.quiz_athlete_facts drop constraint if exists quiz_fact_cleared;
+alter table public.quiz_athlete_facts add constraint quiz_fact_cleared check ((answer_text is null) = (cleared_at is not null)
+  and (cleared_at is null) = (clear_cause is null)
+  and (status not in ('withdrawn','removed') or answer_text is null)
+  and (answer_text is not null or status in ('withdrawn','removed','declined'))
+  and (status <> 'withdrawn' or clear_cause = 'withdrawn')
+  and (clear_cause is distinct from 'declined_purged' or status = 'declined')) not valid;
+create unique index if not exists quiz_fact_one_live_prompt on public.quiz_athlete_facts(athlete_id, prompt_key) where status not in ('declined','withdrawn','removed');
+create index if not exists quiz_fact_status on public.quiz_athlete_facts(status, submitted_at desc);
+create index if not exists quiz_fact_question on public.quiz_athlete_facts(question_id) where question_id is not null;
+
+alter table public.sport_quiz_questions add column if not exists fact_id uuid references public.quiz_athlete_facts(id) on delete set null;
+alter table public.sport_quiz_questions drop constraint if exists sport_quiz_questions_topic_category_check;
+alter table public.sport_quiz_questions add constraint sport_quiz_questions_topic_category_check
+  check (topic_category in ('sport','science','geography','general','life','athlete')) not valid;
+alter table public.sport_quiz_questions drop constraint if exists quiz_fact_fields;
+alter table public.sport_quiz_questions add constraint quiz_fact_fields check ((fact_id is null or topic_category = 'athlete')
+  and (topic_category <> 'athlete' or question_type = 'choice4')) not valid;
+create index if not exists quiz_questions_fact on public.sport_quiz_questions(fact_id) where fact_id is not null;
+
+-- Per-question health: aggregates only (distinct accounts, right, time-outs), flags, difficulty and the pause state.
+create table if not exists public.sport_quiz_question_stats (
+  question_id uuid primary key references public.sport_quiz_questions(id) on delete cascade,
+  responders integer not null default 0 check (responders >= 0),
+  right_count integer not null default 0 check (right_count >= 0),
+  timeouts integer not null default 0 check (timeouts >= 0),
+  difficulty text check (difficulty in ('easy','medium','hard')),
+  flags text[] not null default '{}',
+  dismissed_flags text[] not null default '{}',
+  paused_at timestamptz,
+  pause_reason text check (pause_reason in ('reports','fact_report')),
+  queued_at timestamptz,
+  restored_at timestamptz,
+  restored_by uuid references public.profiles(id) on delete set null,
+  reviewed_at timestamptz,
+  updated_at timestamptz not null,
+  check ((paused_at is null) = (pause_reason is null))
+);
+create index if not exists quiz_stats_paused on public.sport_quiz_question_stats(paused_at) where paused_at is not null;
+
+-- Reports: fixed reasons, no free text. reporter_id is cleared at 90 days and rows are deleted at 180.
+create table if not exists public.sport_quiz_reports (
+  id bigint generated always as identity primary key,
+  question_id uuid not null references public.sport_quiz_questions(id) on delete cascade,
+  topic_category text not null,
+  reporter_id uuid references public.profiles(id) on delete set null,
+  reason text not null check (reason in ('wrong_answer','confusing','not_okay','private')),
+  is_fact boolean not null,
+  counted boolean not null,
+  not_counted_reason text check (not_counted_reason in ('new_account','no_completed_round','blocked_pair')),
+  created_at timestamptz not null,
+  reporter_cleared_at timestamptz,
+  check (counted = (not_counted_reason is null)),
+  check (reason <> 'private' or is_fact)
+);
+create unique index if not exists quiz_report_once on public.sport_quiz_reports(reporter_id, question_id) where reporter_id is not null;
+create index if not exists quiz_report_question on public.sport_quiz_reports(question_id, created_at);
+create index if not exists quiz_report_reporter_day on public.sport_quiz_reports(reporter_id, created_at desc) where reporter_id is not null;
+create index if not exists quiz_report_age on public.sport_quiz_reports(created_at);
+
+-- Bulk imports: one row per real import (dry runs write nothing).
+create table if not exists public.sport_quiz_imports (
+  id uuid primary key default gen_random_uuid(),
+  actor_id uuid references public.profiles(id) on delete set null,
+  reason text not null check (char_length(btrim(reason)) between 10 and 500),
+  rows_total integer not null check (rows_total between 1 and 200),
+  rows_imported integer not null check (rows_imported >= 0),
+  rows_refused integer not null check (rows_refused >= 0),
+  rows_warned integer not null check (rows_warned >= 0),
+  created_at timestamptz not null
+);
+
+-- Round items: the shown order (null = stored order: true / false and older items) and the shown position answered.
+alter table public.sport_quiz_round_items add column if not exists shown_order smallint[];
+alter table public.sport_quiz_round_items add column if not exists answered_position smallint;
+alter table public.sport_quiz_round_items drop constraint if exists quiz_item_shown_order;
+alter table public.sport_quiz_round_items add constraint quiz_item_shown_order check ((shown_order is null or array_length(shown_order,1) between 2 and 4)
+  and (answered_position is null or (answered_option is not null and answered_position between 0 and 3))) not valid;
+-- The athlete whose Learn card started this personal round (validated at Start; null otherwise).
+alter table public.sport_quiz_attempts add column if not exists learn_athlete_id uuid references public.profiles(id) on delete set null;
+
+-- 5. MINOR-01 approval type fun_fact (fact id in change_key) and audit vocabulary ---------------------------------------------
+alter table public.guardian_approval_requests drop constraint if exists guardian_approval_requests_change_key_check;
+alter table public.guardian_approval_requests add constraint guardian_approval_requests_change_key_check
+  check (change_key in ('account_public','friend_requests_everyone') or change_key ~ '^fun_fact:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') not valid;
+alter table public.sport_quiz_audit drop constraint if exists sport_quiz_audit_action_check;
+alter table public.sport_quiz_audit add constraint sport_quiz_audit_action_check check (action in
+  ('settings','question_create','question_edit','question_approve','question_archive','question_void','question_review_media',
+   'start','answer','skip','end','retention','life_settings','life_chapter',
+   'fact_submit','fact_withdraw','fact_guardian','fact_approve','fact_decline','fact_clear',
+   'question_pause','question_restore','question_dismiss','question_import','fresh_settings','report_alert')) not valid;
+
+-- 6. Question guard: QUIZ-04's guard plus the approval shuffle, fact_id and the fun-fact shape --------------------------------
+-- Content stays immutable on a version. One exception: draft → approved may permute the options (approval shuffle) when
+-- the texts and the correct text are unchanged; true / false never moves. fact_id may only drop to null (account deleted).
+create or replace function public.quiz_guard_question()
+returns trigger language plpgsql set search_path = '' as $$
+declare normalized jsonb; problems text[]; shuffled boolean := false;
+begin
+  if tg_op = 'UPDATE' then
+    shuffled := old.status = 'draft' and new.status = 'approved' and (new.options,new.correct_option) is distinct from (old.options,old.correct_option);
+    if shuffled and (new.question_type = 'true_false' or not public.quiz_same_options(old.options,new.options)
+       or (new.options ->> new.correct_option) is distinct from (old.options ->> old.correct_option)) then raise exception 'quiz_immutable'; end if;
+    if (new.question_key,new.version,new.sport,new.prompt,new.explanation,new.created_at,new.topic_category,new.source_notes,new.question_type,
+        new.media_path,new.media_licence,new.media_source,new.media_attribution,new.media_alt_text,new.media_size_bytes,new.media_has_person,
+        new.media_no_marks,new.media_exif_stripped,new.chapter,new.min_age_band,new.education_only,coalesce(new.fact_id,old.fact_id),
+        case when shuffled then null else new.options end,case when shuffled then null else new.correct_option end)
+      is distinct from (old.question_key,old.version,old.sport,old.prompt,old.explanation,old.created_at,old.topic_category,old.source_notes,old.question_type,
+        old.media_path,old.media_licence,old.media_source,old.media_attribution,old.media_alt_text,old.media_size_bytes,old.media_has_person,
+        old.media_no_marks,old.media_exif_stripped,old.chapter,old.min_age_band,old.education_only,old.fact_id,
+        case when shuffled then null else old.options end,case when shuffled then null else old.correct_option end) then raise exception 'quiz_immutable'; end if;
+  end if;
+  if tg_op = 'UPDATE' and old.status = 'void' and new.status <> 'void' then raise exception 'quiz_void_final'; end if;
+  normalized := public.quiz_normalize_options(new.options);
+  if normalized is null and tg_op = 'UPDATE' and new.status in ('archived','void') then return new; end if;
+  if normalized is null then raise exception 'quiz_options_invalid'; end if;
+  if new.status = 'approved' and char_length(btrim(new.source_notes)) not between 10 and 1000 then raise exception 'quiz_sources_required'; end if;
+  if new.status = 'approved' and new.question_type = 'image_choice' and (tg_op = 'INSERT' or old.status <> 'approved')
+     and not coalesce((select s.images_enabled from public.sport_quiz_settings s where s.singleton), false) then raise exception 'quiz_images_off'; end if;
+  if new.status = 'approved' and new.question_type = 'image_choice' and (tg_op = 'INSERT' or old.status <> 'approved')
+     and (new.media_reviewed_by is null or new.media_reviewed_by is not distinct from new.created_by) then raise exception 'quiz_media_review_required'; end if;
+  if new.question_type = 'image_choice' and new.correct_option < jsonb_array_length(normalized)
+     and position(lower(normalized ->> new.correct_option) in lower(coalesce(new.media_alt_text,''))) > 0 then raise exception 'quiz_media_alt_reveals_answer'; end if;
+  if new.topic_category = 'life' then
+    if not exists(select 1 from public.sport_quiz_life_chapters where id = new.chapter) or new.min_age_band is distinct from '13' then raise exception 'quiz_life_fields_invalid'; end if;
+    if new.status = 'approved' and (tg_op = 'INSERT' or old.status <> 'approved') then
+      if new.education_only is not true then raise exception 'quiz_life_attestation_required'; end if;
+      problems := public.quiz_life_copy_problems(new.prompt,new.options,new.explanation,new.chapter);
+      if cardinality(problems) > 0 then raise exception 'quiz_life_copy: %', array_to_string(problems,', '); end if;
+    end if;
+  end if;
+  -- A fun-fact question holds {answer} (exactly once, the correct option) and {name}; never the athlete's words.
+  if tg_op = 'INSERT' and new.topic_category = 'athlete' and (new.fact_id is null
+     or (select count(*) from jsonb_array_elements_text(normalized) x where x = '{answer}') <> 1
+     or normalized ->> new.correct_option is distinct from '{answer}' or position('{name}' in new.prompt) = 0) then raise exception 'quiz_fact_question_invalid'; end if;
+  if tg_op = 'INSERT' then new.options := normalized; end if;
+  return new;
+end $$;
+
+-- 7. Self-heal counters (refreshed when an answer or time-out is committed) -----------------------------------------------
+-- Distinct accounts on this version only, never admins or the author (the creating admin, or the fact's athlete).
+-- Flags and difficulty appear only from min_responders; "confusing" depends on the type.
+create or replace function public.quiz_question_stats_refresh(p_question uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare q public.sport_quiz_questions%rowtype; th jsonb; author uuid; n integer; r integer; t integer; pct numeric; tpct numeric;
+  fl text[] := '{}'; diff text;
+begin
+  select * into q from public.sport_quiz_questions where id = p_question;
+  if not found then return; end if;
+  th := coalesce((select s.self_heal from public.sport_quiz_settings s where s.singleton),public.quiz_self_heal_defaults());
+  author := coalesce((select f.athlete_id from public.quiz_athlete_facts f where f.id = q.fact_id),q.created_by);
+  select count(distinct a.profile_id),
+         count(distinct a.profile_id) filter (where i.status = 'answered' and i.answered_option = q.correct_option),
+         count(distinct a.profile_id) filter (where i.status = 'expired')
+    into n,r,t
+    from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id join public.profiles p on p.id = a.profile_id
+    where i.question_id = q.id and i.status in ('answered','expired') and a.profile_id is distinct from author and p.role <> 'admin' and not coalesce(p.is_admin,false);
+  if n >= (th ->> 'min_responders')::integer then
+    pct := r * 100.0 / n; tpct := t * 100.0 / n;
+    if pct >= (th ->> 'too_easy_pct')::numeric then fl := fl || 'too_easy'::text; end if;
+    if pct <= (th ->> case when q.question_type = 'true_false' then 'confusing_true_false_pct' else 'confusing_choice4_pct' end)::numeric then fl := fl || 'confusing'::text; end if;
+    if tpct >= (th ->> 'too_long_pct')::numeric then fl := fl || 'too_long'::text; end if;
+    diff := case when q.question_type = 'true_false' then case when pct >= 90 then 'easy' when pct <= 60 then 'hard' else 'medium' end
+      else case when pct >= 80 then 'easy' when pct <= 40 then 'hard' else 'medium' end end;
+  end if;
+  insert into public.sport_quiz_question_stats(question_id,responders,right_count,timeouts,difficulty,flags,updated_at)
+    values(q.id,n,r,t,diff,fl,clock_timestamp())
+    on conflict (question_id) do update set responders = excluded.responders,right_count = excluded.right_count,timeouts = excluded.timeouts,
+      difficulty = excluded.difficulty,flags = excluded.flags,updated_at = excluded.updated_at;
+end $$;
+create or replace function public.quiz_items_stats()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if old.status = 'issued' and new.status in ('answered','expired') then perform public.quiz_question_stats_refresh(new.question_id); end if;
+  return new;
+end $$;
+drop trigger if exists quiz_round_items_stats on public.sport_quiz_round_items;
+create trigger quiz_round_items_stats after update of status on public.sport_quiz_round_items for each row execute function public.quiz_items_stats();
+
+create or replace function public.quiz_question_paused(p_question uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.sport_quiz_question_stats s where s.question_id = p_question and s.paused_at is not null)
+$$;
+create or replace function public.quiz_question_hard(p_question uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.sport_quiz_question_stats s where s.question_id = p_question and s.difficulty = 'hard')
+$$;
+create or replace function public.quiz_round_hard_count(p_attempt uuid)
+returns integer language sql stable security definer set search_path = '' as $$
+  select count(*)::integer from public.sport_quiz_round_items i where i.attempt_id = p_attempt and public.quiz_question_hard(i.question_id)
+$$;
+-- Open reports: since the last admin review (restore / dismiss).
+create or replace function public.quiz_open_reports(p_question uuid)
+returns integer language sql stable security definer set search_path = '' as $$
+  select count(*)::integer from public.sport_quiz_reports r
+  where r.question_id = p_question and r.created_at > coalesce((select s.reviewed_at from public.sport_quiz_question_stats s where s.question_id = p_question),'-infinity'::timestamptz)
+$$;
+create or replace function public.quiz_needs_look(p_question uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select coalesce((select s.paused_at is not null or s.queued_at is not null or not (s.flags <@ s.dismissed_flags)
+    from public.sport_quiz_question_stats s where s.question_id = p_question),false) or public.quiz_open_reports(p_question) > 0
+$$;
+-- Shown position of a stored index (null order = stored order).
+create or replace function public.quiz_shown_position(p_order smallint[],p_stored integer)
+returns integer language sql immutable set search_path = '' as $$
+  select case when p_stored is null then null when p_order is null then p_stored
+    else (select (i - 1)::integer from generate_subscripts(p_order,1) i where p_order[i] = p_stored limit 1) end
+$$;
+
+-- 8. Fun facts: text filter, audience, eligibility and display ------------------------------------------------------------
+-- Word scan shared by the refusal check and the look reasons (re-review 2026-10-15), so both read words the same way:
+--   profanity: a token whose letters (swaps undone: sh!t, b1tch, Phuck) are a clear word, or a run of 3+ spaced single
+--     letters spelling one ("f u c k"), refuses; the same letters anywhere else inside a word ("Crush it", "Scunthorpe")
+--     is only a look;
+--   (runs of 3+ repeated letters collapse first: "fuuuck"; common variants such as "biatch" are in the list);
+--   digits: spelled digit words in a row (split at spaces and punctuation) refuse when phone-like (7 or more, or 4 or more with 3 that are not "oh"); 3
+--     real digit words are a look; "oh" alone never counts;
+--   address: an abbreviation (St, Ave, Rd, Blvd, Hwy, Apt) or Street / Highway after a capitalised name or a number, an
+--     unambiguous word (avenue, boulevard, apartment, suite, PO box, zip code) or a number before road / drive / court /
+--     lane refuses; a capitalised name before road / drive / court / lane ("Thunder Road") is a look; the bare words
+--     ("Court vision", "Drive to the hoop") are fine.
+create or replace function public.quiz_fact_word_scan(p_text text)
+returns jsonb language plpgsql immutable set search_path = '' as $$
+declare t text := btrim(regexp_replace(normalize(coalesce(p_text,''),nfkc),'\s+',' ','g'));
+  m text; tok text; wc text; dw text; run text := ''; prof text; dig text; addr text; drun integer := 0; dreal integer := 0;
+  strong constant text := '(fuck|fuk|fck|fuq|phuck|phuk|fvck|shit|sht|shyt|bitch|biatch|biotch|beyotch|bish|cunt|nigg[a-z]*|fagg[a-z]*|whore|hoe|slut|pussy|asshole|bastard|wanker|porn|cocaine)';
+begin
+  m := public.quiz_life_strip(public.quiz_life_normalize(public.quiz_fold_lookalikes(t)));
+  foreach tok in array regexp_split_to_array(m,'\s+') loop
+    -- Swaps undone, then runs of 3+ repeated letters collapse to one ("fuuuck").
+    wc := regexp_replace(regexp_replace(translate(tok,'0134578@$!|','oieastbasii'),'[^a-z]','','g'),'([a-z])\1{2,}','\1','g');
+    if wc ~ ('^' || strong || '(s|es|ed|er|ers|ing|in|y|ty|head|heads|face|hole)?$') then prof := 'refuse'; end if;
+    if char_length(wc) = 1 then run := run || wc;
+    else
+      if char_length(run) >= 3 and run ~ strong then prof := 'refuse'; end if;
+      run := '';
+    end if;
+  end loop;
+  -- Spelled digits are counted on words split at spaces and any punctuation ("five-five-five", "five.five").
+  foreach dw in array regexp_split_to_array(m,'[[:space:][:punct:]]+') loop
+    if dw in ('zero','oh','one','two','three','four','five','six','seven','eight','nine') then
+      drun := drun + 1; if dw <> 'oh' then dreal := dreal + 1; end if;
+    else drun := 0; dreal := 0; end if;
+    if drun >= 7 or (drun >= 4 and dreal >= 3) then dig := 'refuse'; elsif dreal >= 3 and dig is null then dig := 'look'; end if;
+  end loop;
+  if char_length(run) >= 3 and run ~ strong then prof := 'refuse'; end if;
+  if prof is null and regexp_replace(regexp_replace(translate(m,'0134578@$!|','oieastbasii'),'[^a-z]','','g'),'([a-z])\1{2,}','\1','g') ~ strong then prof := 'look'; end if;
+  if m ~ '(?<![a-z])(avenue|boulevard|apartment|suite|p\.?o\.? box|zip code)(?![a-z])'
+     or t ~ '(^|[^A-Za-z])([A-Z][A-Za-z]*|[0-9]+)\.?\s+([Ss][Tt]|[Aa][Vv][Ee]|[Rr][Dd]|[Bb][Ll][Vv][Dd]|[Hh][Ww][Yy]|[Aa][Pp][Tt]|[Ss]treet|[Hh]ighway)\.?([^A-Za-z]|$)'
+     or t ~ '[0-9]+\s+([A-Za-z]+\s+)?([Rr]oad|[Dd]rive|[Cc]ourt|[Ll]ane)([^A-Za-z]|$)' then addr := 'refuse';
+  elsif t ~ '(^|[^A-Za-z])[A-Z][a-z]+\s+([Rr]oad|[Dd]rive|[Cc]ourt|[Ll]ane)([^A-Za-z]|$)' then addr := 'look'; end if;
+  return jsonb_build_object('profanity',prof,'digits',dig,'address',addr);
+end $$;
+-- Refusal codes (empty = passes). Display text is NFKC-trimmed; matching runs on the Life cleanup (lowercase, macrons).
+create or replace function public.quiz_fact_text_problems(p_text text,p_prompt text,p_athlete uuid)
+returns text[] language plpgsql stable security definer set search_path = '' as $$
+declare t text := btrim(regexp_replace(normalize(coalesce(p_text,''),nfkc),'\s+',' ','g')); m text; n text; r jsonb := public.quiz_life_copy_rules();
+  pr jsonb := public.quiz_fact_prompt(p_prompt); out text[] := '{}'; place text; w text; scan jsonb := public.quiz_fact_word_scan(p_text);
+begin
+  if pr is null then return array['prompt_invalid']; end if;
+  m := public.quiz_life_strip(public.quiz_life_normalize(public.quiz_fold_lookalikes(t))); n := ' ' || public.quiz_fresh_norm(t) || ' ';
+  if char_length(t) not between 2 and 40 then out := out || 'length'::text; end if;
+  if t ~ '[^ -~À-ÖØ-öø-ſ‘’ʻ]' then out := out || 'emoji_or_non_latin'::text; end if;
+  if m ~ '(https?|www\.)' or m ~ '[a-z0-9-]+\.[a-z]{2,}' or m ~ '(?<![a-z])dot\s+(com|net|org|co|io|me|app|gg|tv|ly|us)(?![a-z])' then out := out || 'link'::text; end if;
+  if m ~ '[@#]' or m ~ '(?<![a-z])at\s+(gmail|yahoo|hotmail|outlook|icloud|aol|proton|protonmail|live|msn)(?![a-z])'
+     or m ~ '(?<![a-z])(insta|instagram|ig|snap|snapchat|sc|tiktok|discord|twitter|facebook|fb|youtube|yt|twitch|threads|whatsapp|telegram)\s+[a-z0-9_.]+' then out := out || 'handle_or_email'::text; end if;
+  -- Digits, or a phone-like run of spelled digits (quiz_fact_word_scan).
+  if m ~ '[0-9]' or scan ->> 'digits' = 'refuse' then out := out || 'digits'::text; end if;
+  if scan ->> 'address' = 'refuse' then out := out || 'address'::text; end if;
+  if m ~ '(?<![a-z])(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mondays|tuesdays|wednesdays|thursdays|fridays|saturdays|sundays|noon|midnight|o.?clock|tonight|tomorrow|weekend|weekends)(?![a-z])'
+     or m ~ '(?<![a-z])(mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat|sun)\.?\s+(morning|mornings|night|nights|afternoon|afternoons|evening|evenings)(?![a-z])'
+     or m ~ '(?<![a-z])(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*(am|pm|a\.m\.|p\.m\.)(?![a-z])' then out := out || 'weekday_or_time'::text; end if;
+  -- The athlete's own school, team or town: the whole name, or any distinctive word of 4+ letters in it.
+  for place in select public.quiz_fresh_norm(x) from (
+      select s.name x from public.profiles p join public.schools_and_teams s on s.id = p.school_id where p.id = p_athlete
+      union all select s.city from public.profiles p join public.schools_and_teams s on s.id = p.school_id where p.id = p_athlete
+      union all select s.mascot from public.profiles p join public.schools_and_teams s on s.id = p.school_id where p.id = p_athlete
+      union all select pl.school_name from public.profiles p join public.players pl on pl.id = p.player_id where p.id = p_athlete
+      union all select pl.team from public.profiles p join public.players pl on pl.id = p.player_id where p.id = p_athlete) z loop
+    if char_length(coalesce(place,'')) >= 3 and (position(' ' || place || ' ' in n) > 0
+       or exists(select 1 from regexp_split_to_table(place,' ') wd where char_length(wd) >= 4
+         and wd not in ('high','school','academy','college','university','prep','christian','saint','the','of','middle','junior','senior','central','north','south','east','west',
+           'team','club','varsity','boys','girls','mens','womens','women','lady','ladies',
+           'football','basketball','rugby','volleyball','soccer','baseball','softball','wrestling','track','field','lacrosse','hockey','tennis')
+         and position(' ' || wd || ' ' in n) > 0)) then out := out || 'school_or_city'::text; exit; end if;
+  end loop;
+  if m ~ public.quiz_life_phrase_re(public.quiz_fact_not_okay_words()) or scan ->> 'profanity' = 'refuse' then out := out || 'not_okay_word'::text; end if;
+  if m ~ public.quiz_life_phrase_re(r -> 'money_words')
+     or m ~ ('(?<![a-z0-9_])(?:' || (select string_agg(x,'|') from jsonb_array_elements_text(r -> 'money_patterns') x) || ')(?![a-z0-9_])') then out := out || 'money_word'::text; end if;
+  if m ~ public.quiz_life_phrase_re(r -> 'brands') then out := out || 'brand'::text; end if;
+  if pr ? 'answers' then
+    if not exists(select 1 from jsonb_array_elements_text(pr -> 'answers') a where public.quiz_fresh_norm(a) = public.quiz_fresh_norm(t)) then out := out || 'not_on_list'::text; end if;
+  else
+    for w in select x from jsonb_array_elements_text(pr -> 'wrong') x loop
+      if public.quiz_near_match(t,w) then out := out || 'matches_wrong_option'::text; exit; end if;
+    end loop;
+  end if;
+  return out;
+end $$;
+-- For the admin's look (not a refusal): a pair of capitalised words may name a person, place or business.
+-- Borderline cases (security review 2026-10-15, re-review): schedule-like or place-like words, words hidden inside other
+-- words or by swaps, a possible street name, spelled digits short of a phone number. The admin decides; nothing is refused.
+create or replace function public.quiz_fact_look_reasons(p_text text,p_prompt text)
+returns text[] language sql immutable set search_path = '' as $$
+  with x as (select coalesce(p_text,'') t,public.quiz_life_strip(public.quiz_life_normalize(public.quiz_fold_lookalikes(coalesce(p_text,'')))) m,
+    public.quiz_fact_word_scan(p_text) scan)
+  select case when public.quiz_fact_prompt(p_prompt) ? 'answers' then '{}'::text[] else array_remove(array[
+    case when x.t ~ '(^|[^A-Za-z])[A-Z][a-z]+\s+[A-Z][a-z]+' then 'capitalised_pair' end,
+    case when x.m ~ '(?<![a-z])(daily|every day|everyday|after school|before school|mornings|evenings|nights|weekly|practice at|near|downtown)(?![a-z])' then 'schedule_or_place_words' end,
+    case when x.scan ->> 'profanity' = 'look' or (regexp_replace(translate(x.m,'0134578@$!|','oieastbasii'),'[^a-z]','','g') ~ '(damn|hell|crap|piss|dick|cock|sexy|weed|vape|beer|drunk)'
+      and not x.m ~ public.quiz_life_phrase_re(public.quiz_fact_not_okay_words())) then 'hidden_word' end,
+    case when x.scan ->> 'address' = 'look' then 'possible_address' end,
+    case when x.scan ->> 'digits' = 'look' then 'spelled_numbers' end],null) end from x
+$$;
+-- The athlete's fun_facts audience for this viewer: 13–15 are capped at friends; a guardian of the athlete passes unless
+-- the audience is only me; no admin bypass. Blocks either way refuse.
+create or replace function public.quiz_fact_audience_ok(p_athlete uuid,p_viewer uuid)
+returns boolean language plpgsql stable security definer set search_path = '' as $$
+declare p public.profiles%rowtype; lvl text;
+begin
+  if p_athlete is null or p_viewer is null or p_athlete = p_viewer then return false; end if;
+  select * into p from public.profiles where id = p_athlete;
+  if not found or public.is_blocked_between(p_athlete,p_viewer) then return false; end if;
+  lvl := coalesce(p.profile_audience ->> 'fun_facts',public.privacy_default_audience() ->> 'fun_facts','only_me');
+  if public.profile_age_band(p_athlete) = 'teen_13_15' and lvl = 'everyone' then lvl := 'friends'; end if;
+  if lvl not in ('friends','everyone') then return false; end if;
+  if exists(select 1 from public.guardian_links l where l.minor_id = p_athlete and l.guardian_id = p_viewer and l.ended_at is null and l.confirmed_at is not null)
+     or exists(select 1 from public.players pl where pl.id = p.player_id and pl.guardian_id = p_viewer) then return true; end if;
+  if public.are_friends(p_athlete,p_viewer) then return true; end if;
+  return lvl = 'everyone' and not coalesce(p.account_private,true);
+end $$;
+-- Issue and reveal check: switch on with a share, an approved live fact on an approved unpaused question, a verified
+-- athlete with a recorded 13+ age (13–15 needs the guardian's approval), not the viewer, audience, no block, and the viewer
+-- follows the athlete or started from that athlete's Learn card.
+create or replace function public.quiz_fact_viewer_ok(p_fact uuid,p_viewer uuid,p_learn uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select coalesce((select s.athlete_questions_enabled and s.athlete_share_pct > 0 from public.sport_quiz_settings s where s.singleton),false)
+    and exists(select 1 from public.quiz_athlete_facts f join public.profiles p on p.id = f.athlete_id join public.sport_quiz_questions q on q.id = f.question_id
+      where f.id = p_fact and f.status = 'approved' and f.answer_text is not null and q.status = 'approved' and not public.quiz_question_paused(q.id)
+        and p.age_blocked_at is null and p.verification_status = 'verified' and p.player_id is not null
+        and public.profile_age_band(p.id) in ('adult','teen_16_17','teen_13_15')
+        and (public.profile_age_band(p.id) <> 'teen_13_15' or f.guardian_decision = 'approved')
+        and p.id <> p_viewer and not public.quiz_profile_closed(p_viewer) and public.quiz_fact_audience_ok(p.id,p_viewer)
+        and (p.id = p_learn or exists(select 1 from public.crew_follows c join public.profiles v on v.user_id = c.follower_id
+          where v.id = p_viewer and c.athlete_id = p.player_id)))
+$$;
+-- Display check for history and results (no follow / switch requirement): live text, verified open account, audience,
+-- no block, guardian approval for 13–15.
+create or replace function public.quiz_fact_visible(p_fact uuid,p_viewer uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.quiz_athlete_facts f join public.profiles p on p.id = f.athlete_id
+    where f.id = p_fact and f.status = 'approved' and f.answer_text is not null and p.age_blocked_at is null and p.verification_status = 'verified'
+      and not public.quiz_question_paused(f.question_id)
+      and (public.profile_age_band(p.id) <> 'teen_13_15' or f.guardian_decision = 'approved')
+      and (p.id = p_viewer or public.quiz_fact_audience_ok(p.id,p_viewer)))
+$$;
+-- Fill a fun-fact question for one viewer: prompt, options, explanation and the athlete card. Null for other questions.
+create or replace function public.quiz_fact_fill(p_question uuid,p_viewer uuid)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare q public.sport_quiz_questions%rowtype; f public.quiz_athlete_facts%rowtype; vis boolean; nm text; ans text; gone text;
+begin
+  select * into q from public.sport_quiz_questions where id = p_question;
+  if q.id is null or q.topic_category <> 'athlete' then return null; end if;
+  select * into f from public.quiz_athlete_facts where id = q.fact_id;
+  vis := f.id is not null and public.quiz_fact_visible(f.id,p_viewer);
+  gone := case when f.id is not null and f.status = 'withdrawn' then 'Removed by the athlete' when f.id is null or f.status = 'removed' then 'No longer available' end;
+  nm := case when vis then public.first_name_of(f.athlete_id) else 'this athlete' end;
+  ans := case when vis then f.answer_text else coalesce(gone,'Not available') end;
+  return jsonb_build_object(
+    'prompt',coalesce(gone,replace(q.prompt,'{name}',nm)),
+    'options',(select jsonb_agg(case when x = '{answer}' then to_jsonb(ans) else to_jsonb(x) end order by o) from jsonb_array_elements_text(q.options) with ordinality t(x,o)),
+    'explanation',case when gone is not null then gone || '.' else replace(q.explanation,'{name}',nm) end,
+    'visible',vis,'prompt_key',f.prompt_key,'first_name',case when vis then nm end,
+    'athlete_player_id',case when vis then (select p.player_id from public.profiles p where p.id = f.athlete_id) end);
+end $$;
+-- The fun-fact position of this personal round, or null: switch on with a share, not group / Life, two or more items, and
+-- the player-week falls in the share (deterministic from the private salt; about 1 in 3 at most; never position 1).
+create or replace function public.quiz_fact_slot(p_me uuid,p_attempt uuid)
+returns integer language plpgsql stable security definer set search_path = '' as $$
+declare a public.sport_quiz_attempts%rowtype; s public.sport_quiz_settings%rowtype; seed text;
+begin
+  select * into a from public.sport_quiz_attempts where id = p_attempt;
+  select * into s from public.sport_quiz_settings where singleton;
+  if a.id is null or a.round_kind <> 'personal' or a.group_id is not null or a.mode <> 'round' or coalesce(a.planned_items,0) < 2
+     or not coalesce(s.athlete_questions_enabled,false) or coalesce(s.athlete_share_pct,0) = 0 then return null; end if;
+  seed := s.fact_salt || ':' || p_me::text || ':' || a.week_start::text;
+  if public.quiz_bucket(seed,0) >= least(s.athlete_share_pct * a.round_size,34) then return null; end if;
+  return 2 + public.quiz_bucket(seed,1) % (a.planned_items - 1);
+end $$;
+-- One drawable fun fact for this viewer: at most one per round, unseen family, at most one per athlete per viewer per UTC
+-- month; the Learn card's athlete first.
+create or replace function public.quiz_fact_pick(p_me uuid,p_attempt uuid)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare a public.sport_quiz_attempts%rowtype; qid uuid; month_start timestamptz := date_trunc('month',clock_timestamp() at time zone 'UTC') at time zone 'UTC';
+begin
+  select * into a from public.sport_quiz_attempts where id = p_attempt;
+  if exists(select 1 from public.sport_quiz_round_items i join public.sport_quiz_questions q on q.id = i.question_id where i.attempt_id = a.id and q.topic_category = 'athlete') then return null; end if;
+  select q.id into qid from public.sport_quiz_questions q join public.quiz_athlete_facts f on f.id = q.fact_id
+    where q.status = 'approved' and q.topic_category = 'athlete' and public.quiz_fact_viewer_ok(f.id,p_me,a.learn_athlete_id)
+      and (public.quiz_round_hard_count(a.id) < 2 or not public.quiz_question_hard(q.id))
+      and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+      and not exists(select 1 from public.sport_quiz_round_items i2 join public.sport_quiz_attempts a2 on a2.id = i2.attempt_id
+        join public.sport_quiz_questions q2 on q2.id = i2.question_id join public.quiz_athlete_facts f2 on f2.id = q2.fact_id
+        where a2.profile_id = p_me and f2.athlete_id = f.athlete_id and i2.issued_at >= month_start)
+    order by (f.athlete_id = a.learn_athlete_id) desc nulls last, random() limit 1 for share of q;
+  return qid;
+end $$;
+-- Void issued items of one question (all viewers, or one): the round moves on to Next (or ends if it was the last item).
+create or replace function public.quiz_fact_void_items(p_question uuid,p_viewer uuid,p_reason text,p_at timestamptz)
+returns integer language plpgsql security definer set search_path = '' as $$
+declare r record; n integer := 0;
+begin
+  for r in select i.attempt_id,i.position,a.profile_id,a.status attempt_status,a.position current_position,a.planned_items
+      from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+      where i.question_id = p_question and i.status = 'issued' and (p_viewer is null or a.profile_id = p_viewer) order by a.profile_id,i.attempt_id loop
+    perform public.quiz_lock(r.profile_id);
+    update public.sport_quiz_round_items set status = 'void',voided_at = p_at,closed_at = coalesce(closed_at,p_at),correction_reason = p_reason
+      where attempt_id = r.attempt_id and position = r.position and status = 'issued';
+    if r.attempt_status = 'issued' and r.position = r.current_position then
+      if r.position >= r.planned_items then perform public.quiz_round_close(r.attempt_id,p_at,'corrected');
+      else update public.sport_quiz_attempts set round_state = 'between',next_by = p_at + public.quiz_round_gap() where id = r.attempt_id and status = 'issued'; end if;
+    end if;
+    perform public.quiz_bump_history(r.profile_id); n := n + 1;
+  end loop;
+  return n;
+end $$;
+-- Retire a fun-fact question: void it (final) and every issued, unrevealed item.
+create or replace function public.quiz_fact_retire_question(p_question uuid,p_reason text,p_at timestamptz)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if p_question is null then return; end if;
+  update public.sport_quiz_questions set status = 'void',reason = p_reason,reviewed_at = p_at where id = p_question and status <> 'void';
+  perform public.quiz_fact_void_items(p_question,null,p_reason,p_at);
+end $$;
+-- Clear a fact's text in this transaction (withdrawal, unlink, under-13 block), retire its question and cancel a pending
+-- guardian request. The audit row carries the cause code, never the text.
+create or replace function public.quiz_fact_clear(p_fact uuid,p_cause text,p_actor uuid,p_at timestamptz)
+returns void language plpgsql security definer set search_path = '' as $$
+declare f public.quiz_athlete_facts%rowtype;
+begin
+  select * into f from public.quiz_athlete_facts where id = p_fact for update;
+  if not found or f.status in ('withdrawn','removed') then return; end if;
+  update public.quiz_athlete_facts set answer_text = null,status = case when p_cause = 'withdrawn' then 'withdrawn' else 'removed' end,
+    cleared_at = p_at,clear_cause = p_cause,look_reasons = '{}',updated_at = p_at where id = f.id;
+  perform public.quiz_fact_retire_question(f.question_id,case when p_cause = 'withdrawn' then 'Removed by the athlete.' else 'Removed: the athlete account changed.' end,p_at);
+  if f.guardian_request_id is not null then
+    update public.guardian_approval_requests set status = 'cancelled',decided_at = p_at where id = f.guardian_request_id and status = 'pending';
+  end if;
+  insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at)
+    values(p_actor,case when p_cause = 'withdrawn' then 'fact_withdraw' else 'fact_clear' end,f.question_id,p_cause,p_at);
+end $$;
+
+-- 9. Round items: shown order at issue; participant DTOs fill fun facts and apply the shown order -----------------------------
+create or replace function public.quiz_round_issue(p_me uuid,p_attempt uuid,p_position integer,p_question uuid,p_at timestamptz,p_duration integer,p_request uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare k uuid; t text; n integer;
+begin
+  select question_key,question_type,jsonb_array_length(options) into k,t,n from public.sport_quiz_questions where id = p_question;
+  insert into public.sport_quiz_round_items(attempt_id,position,question_id,question_key,issued_at,expires_at,status,next_request_id,shown_order)
+    values(p_attempt,p_position,p_question,k,p_at,p_at + p_duration * interval '1 second','issued',p_request,
+      case when t = 'true_false' then null else public.quiz_random_order(n) end);
+  insert into public.sport_quiz_exposures(profile_id,question_key,question_id,first_issued_at) values(p_me,k,p_question,p_at);
+end $$;
+-- A fun-fact item may show the athlete's words only if it was answered (revealed then) or still passes the issue / reveal
+-- check now (security review 2026-10-15: a timed-out or unanswered item is re-checked before anything is filled in).
+create or replace function public.quiz_item_fact_ok(p_attempt uuid,p_position integer)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select coalesce((select q.topic_category <> 'athlete' or i.status = 'answered' or public.quiz_fact_viewer_ok(q.fact_id,a.profile_id,a.learn_athlete_id)
+    from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id join public.sport_quiz_questions q on q.id = i.question_id
+    where i.attempt_id = p_attempt and i.position = p_position),false)
+$$;
+-- The item's question as its player saw it: options in the stored shown order (identical on every replay), the fun fact
+-- filled for this viewer. Never the correct option, the explanation or the order itself before the reveal.
+create or replace function public.quiz_item_question_dto(p_attempt uuid,p_position integer)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare it public.sport_quiz_round_items%rowtype; q public.sport_quiz_questions%rowtype; viewer uuid; fill jsonb; opts jsonb; shown jsonb := '[]'; i integer;
+begin
+  select * into it from public.sport_quiz_round_items where attempt_id = p_attempt and position = p_position;
+  if it.attempt_id is null then return null; end if;
+  select * into q from public.sport_quiz_questions where id = it.question_id;
+  select profile_id into viewer from public.sport_quiz_attempts where id = p_attempt;
+  fill := public.quiz_fact_fill(q.id,viewer);
+  if fill is not null and not public.quiz_item_fact_ok(p_attempt,p_position) then
+    fill := fill || jsonb_build_object('prompt',replace(q.prompt,'{name}','this athlete'),'first_name',null,
+      'options',(select jsonb_agg(case when x = '{answer}' then to_jsonb('Not available'::text) else to_jsonb(x) end order by o) from jsonb_array_elements_text(q.options) with ordinality t(x,o)));
+  end if;
+  opts := coalesce(fill -> 'options',q.options);
+  if it.shown_order is not null then
+    for i in 1..array_length(it.shown_order,1) loop shown := shown || jsonb_build_array(opts -> it.shown_order[i]::integer); end loop;
+    opts := shown;
+  end if;
+  return jsonb_build_object('id',q.id,'question_key',q.question_key,'version',q.version,'topic_category',q.topic_category,'sport',q.sport,
+    'prompt',coalesce(fill ->> 'prompt',q.prompt),'options',opts,'question_type',q.question_type,'shuffled',it.shown_order is not null)
+    || case when fill is null then '{}'::jsonb else jsonb_build_object('fun_fact',jsonb_build_object('first_name',fill ->> 'first_name','prompt_key',fill ->> 'prompt_key')) end;
+end $$;
+-- Result of one closed item: stored indices (answered_option / correct_option, as before) plus the shown positions and
+-- the shown order (after the reveal only), the filled explanation and, for a visible fun fact, the athlete card.
+create or replace function public.quiz_item_result_dto(p_attempt uuid,p_position integer)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare it public.sport_quiz_round_items%rowtype; q public.sport_quiz_questions%rowtype; viewer uuid; fill jsonb;
+begin
+  select * into it from public.sport_quiz_round_items where attempt_id = p_attempt and position = p_position;
+  if it.attempt_id is null then return null; end if;
+  select * into q from public.sport_quiz_questions where id = it.question_id;
+  select profile_id into viewer from public.sport_quiz_attempts where id = p_attempt;
+  fill := public.quiz_fact_fill(q.id,viewer);
+  -- An unanswered fun fact that no longer passes the check reveals nothing: no positions, order or athlete card.
+  if fill is not null and not public.quiz_item_fact_ok(p_attempt,p_position) then
+    return jsonb_build_object('answered_option',null,'correct_option',q.correct_option,'was_correct',null,'explanation','Fun fact no longer available.',
+      'completed_at',null,'position',it.position,'item_status','fact_unavailable','answered_position',null,'correct_position',null,'shown_order',null);
+  end if;
+  return jsonb_build_object('answered_option',it.answered_option,'correct_option',q.correct_option,
+    'was_correct',case when it.answered_option is null then null else it.answered_option = q.correct_option end,
+    'explanation',coalesce(fill ->> 'explanation',q.explanation),'completed_at',it.answered_at,'position',it.position,
+    'item_status',case when it.status = 'issued' then 'expired' else it.status end,
+    'answered_position',coalesce(it.answered_position,public.quiz_shown_position(it.shown_order,it.answered_option)),
+    'correct_position',public.quiz_shown_position(it.shown_order,q.correct_option),'shown_order',to_jsonb(it.shown_order))
+    || case when fill is not null and (fill ->> 'visible')::boolean then jsonb_build_object('fun_fact',jsonb_build_object('first_name',fill ->> 'first_name','athlete_player_id',fill -> 'athlete_player_id')) else '{}'::jsonb end;
+end $$;
+create or replace function public.quiz_result_dto(p_attempt uuid,p_asof timestamptz)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare a public.sport_quiz_attempts%rowtype; it public.sport_quiz_round_items%rowtype; v jsonb;
+begin
+  select * into a from public.sport_quiz_attempts where id = p_attempt;
+  if a.id is null then return null; end if;
+  if a.mode <> 'round' then
+    return (select jsonb_build_object('answered_option',a.answered_option,'correct_option',q2.correct_option,
+      'was_correct',case when a.answered_option is null then null else a.answered_option = q2.correct_option end,
+      'explanation',q2.explanation,'completed_at',a.completed_at,'position',null,'item_status',null)
+      from public.sport_quiz_questions q2 where q2.id = a.question_id and (a.status <> 'issued' or a.expires_at <= p_asof));
+  end if;
+  v := public.quiz_round_view(a.id,p_asof);
+  if v ->> 'status' = 'issued' and v ->> 'round_state' = 'item' then return null; end if;
+  select * into it from public.sport_quiz_round_items where attempt_id = a.id and (status <> 'issued' or expires_at <= p_asof) order by position desc limit 1;
+  if it.attempt_id is null then return null; end if;
+  return public.quiz_item_result_dto(a.id,it.position);
+end $$;
+create or replace function public.quiz_round_items_dto(p_attempt uuid,p_asof timestamptz)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object('position',i.position,
+    'status',case when i.status = 'issued' then 'expired' else i.status end,'question',public.quiz_item_question_dto(i.attempt_id,i.position),
+    -- item_status stays only when it says fact_unavailable (an unanswered fun fact that no longer passes the check).
+    'result',r.j - 'position' - (case when r.j ->> 'item_status' = 'fact_unavailable' then '' else 'item_status' end),
+    'correction_reason',i.correction_reason) order by i.position),'[]'::jsonb)
+  from public.sport_quiz_round_items i cross join lateral (select public.quiz_item_result_dto(i.attempt_id,i.position) j) r
+  where i.attempt_id = p_attempt and (i.status <> 'issued' or i.expires_at <= p_asof)
+$$;
+
+-- 10. Draws: paused questions are never drawn; at most two hard per round; the fun-fact slot in personal rounds ---------------
+create or replace function public.quiz_unseen_count(p_me uuid,p_topic text,p_sport text)
+returns integer language sql stable security definer set search_path = '' as $$
+  select count(*)::int from public.sport_quiz_questions q
+  where q.status = 'approved' and q.question_type <> 'image_choice' and q.topic_category = p_topic and (p_sport is null or q.sport = p_sport)
+    and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10 and not public.quiz_question_paused(q.id)
+    and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+$$;
+create or replace function public.quiz_fun_available(p_me uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.sport_quiz_questions q where status = 'approved' and topic_category in ('science','geography','general') and question_type <> 'image_choice'
+    and char_length(btrim(source_notes)) >= 10 and public.quiz_normalize_options(options) is not null and not public.quiz_question_paused(q.id)
+    and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key))
+$$;
+create or replace function public.quiz_life_pool(p_me uuid,p_chapter text)
+returns table(id uuid, question_key uuid, chapter text) language sql stable security definer set search_path = '' as $$
+  select q.id,q.question_key,q.chapter from public.sport_quiz_questions q join public.sport_quiz_life_chapters c on c.id = q.chapter
+  where q.status = 'approved' and q.topic_category = 'life' and q.question_type <> 'image_choice' and (p_chapter is null or q.chapter = p_chapter)
+    and public.quiz_life_chapter_open(c.id) and not public.quiz_question_paused(q.id)
+    and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10
+    and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+$$;
+-- The group-week set: drawn at random from the theme without reading any member's exposures, at most two hard (from the
+-- question's own aggregate difficulty, never a member's history), never paused.
+create or replace function public.quiz_group_ensure_set(p_group uuid,p_week date,p_size integer,p_at timestamptz)
+returns integer language plpgsql security definer set search_path = '' as $$
+declare theme text; n integer;
+begin
+  select count(*) into n from public.sport_quiz_group_sets where group_id = p_group and week_start = p_week;
+  if n > 0 then return n; end if;
+  select theme_sport into theme from public.sport_quiz_groups where id = p_group;
+  insert into public.sport_quiz_group_sets(group_id,week_start,position,question_key,question_id,created_at,prune_after)
+    select p_group,p_week,row_number() over (order by y.r),y.question_key,y.id,p_at,public.quiz_week_end(p_week) + interval '35 days'
+    from (select z.* from (select x.*,row_number() over (partition by x.hard order by x.r) hr
+            from (select q.id,q.question_key,random() r,public.quiz_question_hard(q.id) hard from public.sport_quiz_questions q
+              where q.status = 'approved' and q.question_type <> 'image_choice' and q.topic_category = 'sport' and (theme is null or q.sport = theme)
+                and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10 and not public.quiz_question_paused(q.id)) x) z
+          where not z.hard or z.hr <= 2 order by z.r limit p_size) y;
+  get diagnostics n = row_count;
+  return n;
+end $$;
+create or replace function public.quiz_round_pick(p_me uuid,p_attempt uuid,p_position integer)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare a public.sport_quiz_attempts%rowtype; qid uuid; hard_full boolean;
+begin
+  select * into a from public.sport_quiz_attempts where id = p_attempt;
+  hard_full := public.quiz_round_hard_count(a.id) >= 2;
+  if a.round_kind = 'life' then
+    select q.id into qid from public.sport_quiz_questions q where q.id in (select x.id from public.quiz_life_pool(p_me,a.sport_filter) x)
+      and (not hard_full or not public.quiz_question_hard(q.id)) order by random() limit 1 for share of q;
+    return qid;
+  end if;
+  if a.group_id is not null then
+    select q.id into qid from public.sport_quiz_group_sets gs join public.sport_quiz_questions q on q.id = gs.question_id
+      where gs.group_id = a.group_id and gs.week_start = a.week_start and gs.position = p_position
+        and q.status = 'approved' and q.question_type <> 'image_choice' and public.quiz_normalize_options(q.options) is not null
+        and char_length(btrim(q.source_notes)) >= 10 and not public.quiz_question_paused(q.id)
+        and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = gs.question_key)
+      for share of q;
+    if qid is not null then return qid; end if;
+    select q.id into qid from public.sport_quiz_questions q
+      where q.status = 'approved' and q.question_type <> 'image_choice' and q.topic_category = 'sport' and (a.sport_filter is null or q.sport = a.sport_filter)
+        and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10 and not public.quiz_question_paused(q.id)
+        and (not hard_full or not public.quiz_question_hard(q.id))
+        and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+      order by exists(select 1 from public.sport_quiz_group_sets gs where gs.group_id = a.group_id and gs.week_start = a.week_start
+                        and gs.position > p_position and gs.question_key = q.question_key), random()
+      limit 1 for share of q;
+    return qid;
+  end if;
+  -- Personal rounds: the fun-fact slot first (issue-time checks inside quiz_fact_pick); any failure draws an ordinary question.
+  if p_position = public.quiz_fact_slot(p_me,a.id) then
+    qid := public.quiz_fact_pick(p_me,a.id);
+    if qid is not null then return qid; end if;
+  end if;
+  select q.id into qid from public.sport_quiz_questions q
+    where q.status = 'approved' and q.question_type <> 'image_choice' and q.topic_category = a.topic_category and a.topic_category not in ('life','athlete')
+      and (a.sport_filter is null or q.sport = a.sport_filter)
+      and public.quiz_normalize_options(q.options) is not null and char_length(btrim(q.source_notes)) >= 10 and not public.quiz_question_paused(q.id)
+      and (not hard_full or not public.quiz_question_hard(q.id))
+      and not exists(select 1 from public.sport_quiz_exposures e where e.profile_id = p_me and e.question_key = q.question_key)
+    order by random() limit 1 for share of q;
+  return qid;
+end $$;
+
+-- 11. Start: QUIZ-04's core plus the Learn card's athlete (validated here, recorded on the attempt, part of the digest) -------
+drop function if exists public.quiz_round_begin(uuid,text,text,text,integer,date,text,uuid,text,uuid,text);
+create or replace function public.quiz_round_begin(p_me uuid,p_kind text,p_topic text,p_sport text,p_duration integer,p_expected_week date,p_notice text,
+  p_request uuid,p_secret text,p_group uuid,p_chapter text,p_learn_player uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare at timestamptz; w date; d text; r public.sport_quiz_requests%rowtype; a public.sport_quiz_attempts%rowtype; it public.sport_quiz_round_items%rowtype;
+  q public.sport_quiz_questions%rowtype; p public.sport_quiz_preferences%rowtype; s public.sport_quiz_settings%rowtype;
+  receipt jsonb; active jsonb; item jsonb; planned integer; setn integer; qid uuid; filter text := case when p_sport is null then null else btrim(p_sport) end;
+  learn uuid; base jsonb;
+begin
+  if coalesce(p_kind,'') not in ('personal','group','life') or (p_kind = 'group') <> (p_group is not null) or (p_kind <> 'life' and p_chapter is not null)
+     or (p_kind = 'life') <> (p_topic = 'life') or (p_learn_player is not null and (p_kind <> 'personal' or p_topic <> 'sport')) then raise exception 'quiz_start_invalid'; end if;
+  select * into s from public.sport_quiz_settings where singleton for share;
+  if not found then raise exception 'quiz_unavailable'; end if;
+  if p_group is not null then
+    if public.quiz_group_needs_recheck(p_group) then
+      perform 1 from public.sport_quiz_groups where id = p_group for update;
+      perform public.quiz_group_recheck_group(p_group);
+    else
+      perform 1 from public.sport_quiz_groups where id = p_group for share;
+    end if;
+    perform pg_advisory_xact_lock(hashtextextended('sport-quiz-group:' || p_group,0));
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz:' || p_me,0));
+  at := clock_timestamp(); w := public.quiz_week_at(at);
+  if p_expected_week is distinct from w then raise exception 'quiz_week_changed'; end if;
+  -- The athlete id joins the digest only for a Learn-card Start, so every earlier Start keeps its digest.
+  base := jsonb_build_array(p_kind,p_topic,filter,p_duration,p_expected_week,p_notice,p_secret,p_group,p_chapter);
+  d := public.quiz_digest(case when p_learn_player is null then base else base || jsonb_build_array(p_learn_player) end);
+  select * into r from public.sport_quiz_requests where profile_id = p_me and request_id = p_request;
+  if found then
+    if r.operation <> 'start' or (r.payload_digest is not null and r.payload_digest is distinct from d) then raise exception 'quiz_request_conflict'; end if;
+    perform public.quiz_expire(p_me,at);
+    select * into a from public.sport_quiz_attempts where id = r.attempt_id for update;
+    if a.status = 'issued' and a.session_hash = public.hash_secret(p_secret) and s.enabled and p_me = any(s.pilot_accounts)
+       and (a.round_kind <> 'life' or public.quiz_life_access(p_me)) then
+      if a.mode = 'round' then
+        select * into it from public.sport_quiz_round_items where attempt_id = a.id and position = 1;
+        if a.round_state = 'item' and a.position = 1 and it.status = 'issued' and it.expires_at > at then
+          active := public.quiz_item_question_dto(a.id,1); item := public.quiz_active_item(a.id);
+        end if;
+      elsif a.expires_at > at then
+        select * into q from public.sport_quiz_questions where id = a.question_id for share;
+        if q.status <> 'void' then active := public.quiz_question_dto(q.id); end if;
+      end if;
+    end if;
+    return public.quiz_receipt_dto(p_me,p_request,at) || jsonb_build_object('server_now',at,'active_question',active,'active_item',item);
+  end if;
+  if exists(select 1 from public.sport_quiz_week_guards where profile_id = p_me and week_start = w and round_kind = p_kind) then
+    select id into a.id from public.sport_quiz_attempts where profile_id = p_me and week_start = w and round_kind = p_kind;
+    receipt := public.quiz_save_receipt(p_me,p_request,'start',w,d,a.id,'week_spent',at,p_kind);
+    return receipt || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  perform public.quiz_require_testing(p_me);
+  perform public.quiz_expire(p_me,at);
+  if exists(select 1 from public.sport_quiz_attempts where profile_id = p_me and status = 'issued') then raise exception 'quiz_round_active'; end if;
+  select * into p from public.sport_quiz_preferences where profile_id = p_me;
+  -- The Learn card's athlete: a verified, open account other than the caller with no block either way; anything else is
+  -- recorded as no athlete (the round still starts, so the card reveals nothing about blocks).
+  if p_learn_player is not null then
+    select pr.id into learn from public.profiles pr where pr.player_id = p_learn_player and pr.verification_status = 'verified' and pr.age_blocked_at is null
+      and pr.id <> p_me and not public.is_blocked_between(pr.id,p_me) order by pr.id limit 1;
+  end if;
+  if p_kind = 'life' then
+    if p.notice_version is distinct from 'timed-trivia-v1-testing' or p.life_notice_version is distinct from p_notice then raise exception 'quiz_notice_required'; end if;
+    if not s.life_enabled then raise exception 'quiz_life_paused'; end if;
+    if p.life_opt_in is not true then raise exception 'quiz_life_not_opted_in'; end if;
+    if not public.quiz_life_band_ok(public.profile_age_band(p_me)) then raise exception 'quiz_ineligible'; end if;
+    planned := least(s.round_size,public.quiz_life_unseen_count(p_me,p_chapter));
+  else
+    if p.notice_version is distinct from p_notice then raise exception 'quiz_notice_required'; end if;
+    if p_kind = 'personal' then
+      if coalesce(p_topic,'') not in ('sport','science','geography','general') then raise exception 'quiz_start_invalid'; end if;
+      -- A Learn-card Start for a validated athlete is an explicit sports choice, so the fun-slot rotation does not apply;
+      -- an unknown, blocked or unverified athlete id does not skip it (security review 2026-10-15).
+      if learn is null and ((p_topic <> 'sport' and not public.quiz_fun_slot(p_me,w)) or (p_topic = 'sport' and public.quiz_fun_slot(p_me,w) and public.quiz_fun_available(p_me))) then
+        raise exception 'quiz_topic_not_allowed'; end if;
+      planned := least(s.round_size,public.quiz_unseen_count(p_me,p_topic,filter));
+    else
+      if not s.groups_enabled then raise exception 'quiz_groups_paused'; end if;
+      if not exists(select 1 from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+          where m.group_id = p_group and m.profile_id = p_me and m.status = 'active' and g.status = 'active') then raise exception 'quiz_group_not_member'; end if;
+      if public.quiz_group_active_count(p_group) < 2 then raise exception 'quiz_group_too_small'; end if;
+      select theme_sport into filter from public.sport_quiz_groups where id = p_group;
+      setn := public.quiz_group_ensure_set(p_group,w,s.round_size,at);
+      planned := least(setn,public.quiz_unseen_count(p_me,'sport',filter));
+    end if;
+  end if;
+  if coalesce(planned,0) < 1 then raise exception 'quiz_no_question'; end if;
+  at := clock_timestamp(); w := public.quiz_week_at(at);
+  if w is distinct from p_expected_week then raise exception 'quiz_week_changed'; end if;
+  if at + planned * p_duration * interval '1 second' + (planned - 1) * public.quiz_round_gap() > public.quiz_week_end(w) then raise exception 'quiz_week_closing'; end if;
+  perform public.quiz_spend(p_me,w,at,p_kind);
+  insert into public.sport_quiz_attempts(profile_id,week_start,question_id,status,issued_at,mode,duration_seconds,started_at,expires_at,session_hash,
+      round_state,position,planned_items,round_size,topic_category,sport_filter,group_id,round_kind,learn_athlete_id)
+    values(p_me,w,null,'issued',at,'round',p_duration,at,at + p_duration * interval '1 second',public.hash_secret(p_secret),
+      'item',1,planned,s.round_size,p_topic,case when p_kind = 'life' then p_chapter else filter end,p_group,p_kind,learn) returning * into a;
+  qid := public.quiz_round_pick(p_me,a.id,1);
+  if qid is null then raise exception 'quiz_no_question'; end if;
+  perform public.quiz_round_issue(p_me,a.id,1,qid,at,p_duration,null);
+  perform public.quiz_bump_history(p_me);
+  insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,reason,created_at)
+    values(p_me,'start',case when p_kind = 'life' or (select topic_category from public.sport_quiz_questions where id = qid) = 'athlete' then null else qid end,a.id,
+      case when p_kind = 'life' then (select chapter from public.sport_quiz_questions where id = qid) || ' #1' end,at);
+  receipt := public.quiz_save_receipt(p_me,p_request,'start',w,d,a.id,'started',at,p_kind);
+  return receipt || jsonb_build_object('server_now',at,'active_question',public.quiz_item_question_dto(a.id,1),'active_item',public.quiz_active_item(a.id));
+end $$;
+
+create or replace function public.quiz_start(p_topic_category text,p_sport text,p_duration_seconds integer,p_expected_week date,
+ p_notice_version text,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id);
+begin
+  if p_request_id is null or coalesce(p_topic_category,'') not in ('sport','science','geography','general') or p_duration_seconds is null or p_duration_seconds not in (30,90)
+    or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' or p_notice_version is distinct from 'timed-trivia-v1-testing'
+    or (p_sport is not null and char_length(btrim(p_sport)) not between 2 and 80) or (p_topic_category <> 'sport' and p_sport is not null) then raise exception 'quiz_start_invalid'; end if;
+  return public.quiz_round_begin(me,'personal',p_topic_category,p_sport,p_duration_seconds,p_expected_week,p_notice_version,p_request_id,p_session_secret,null,null,null);
+end $$;
+create or replace function public.quiz_group_start(p_group_id uuid,p_duration_seconds integer,p_expected_week date,p_notice_version text,
+ p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id);
+begin
+  if p_group_id is null or p_request_id is null or p_duration_seconds is null or p_duration_seconds not in (30,90)
+    or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' or p_notice_version is distinct from 'timed-trivia-v1-testing' then raise exception 'quiz_start_invalid'; end if;
+  return public.quiz_round_begin(me,'group','sport',null,p_duration_seconds,p_expected_week,p_notice_version,p_request_id,p_session_secret,p_group_id,null,null);
+end $$;
+create or replace function public.quiz_life_start(p_expected_week date,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid,
+  p_notice_version text,p_chapter text default null,p_duration_seconds integer default 90)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id);
+begin
+  if p_request_id is null or p_duration_seconds is null or p_duration_seconds not in (30,90) or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$'
+    or p_notice_version is distinct from 'life-playbook-v1-testing' or (p_chapter is not null and p_chapter !~ '^[a-z][a-z_]{2,39}$') then raise exception 'quiz_start_invalid'; end if;
+  return public.quiz_round_begin(me,'life','life',null,p_duration_seconds,p_expected_week,p_notice_version,p_request_id,p_session_secret,null,p_chapter,null);
+end $$;
+-- Start from an athlete's "Learn {sport} with {name}" card: the personal weekly round, sports topic, with the athlete's
+-- player id validated by the server (see quiz_round_begin).
+create or replace function public.quiz_learn_start(p_athlete_player_id uuid,p_sport text,p_duration_seconds integer,p_expected_week date,
+ p_notice_version text,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_profile_id);
+begin
+  if p_athlete_player_id is null or p_request_id is null or p_duration_seconds is null or p_duration_seconds not in (30,90)
+    or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' or p_notice_version is distinct from 'timed-trivia-v1-testing'
+    or (p_sport is not null and char_length(btrim(p_sport)) not between 2 and 80) then raise exception 'quiz_start_invalid'; end if;
+  return public.quiz_round_begin(me,'personal','sport',p_sport,p_duration_seconds,p_expected_week,p_notice_version,p_request_id,p_session_secret,null,null,p_athlete_player_id);
+end $$;
+
+-- 12. Next and answer -----------------------------------------------------------------------------------------------------------
+create or replace function public.quiz_next(p_attempt_id uuid,p_expected_position integer,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id); at timestamptz; d text; r public.sport_quiz_requests%rowtype;
+  a public.sport_quiz_attempts%rowtype; it public.sport_quiz_round_items%rowtype; s public.sport_quiz_settings%rowtype;
+  active jsonb; item jsonb; qid uuid; st text;
+begin
+  if p_attempt_id is null or p_request_id is null or p_expected_position is null or p_expected_position not between 1 and 4
+    or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' then raise exception 'quiz_next_invalid'; end if;
+  perform public.quiz_lock(me);
+  select * into s from public.sport_quiz_settings where singleton;
+  at := clock_timestamp(); d := public.quiz_digest(jsonb_build_array(p_attempt_id,p_expected_position,p_session_secret));
+  select * into r from public.sport_quiz_requests where profile_id = me and request_id = p_request_id;
+  if found then
+    if r.operation <> 'next' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict'; end if;
+    perform public.quiz_expire(me,at);
+    select * into a from public.sport_quiz_attempts where id = r.attempt_id;
+    select * into it from public.sport_quiz_round_items where attempt_id = a.id and next_request_id = p_request_id;
+    if a.status = 'issued' and a.round_state = 'item' and a.position = it.position and it.status = 'issued' and it.expires_at > at
+       and a.session_hash = public.hash_secret(p_session_secret) and s.enabled and me = any(s.pilot_accounts)
+       and (a.round_kind <> 'life' or public.quiz_life_access(me)) then
+      active := public.quiz_item_question_dto(a.id,it.position); item := public.quiz_active_item(a.id);
+    end if;
+    return public.quiz_receipt_dto(me,p_request_id,at) || jsonb_build_object('server_now',at,'active_question',active,'active_item',item);
+  end if;
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id and profile_id = me for update;
+  if a.id is null or a.mode <> 'round' then raise exception 'quiz_round_closed'; end if;
+  if a.round_kind <> 'life' and not public.quiz_trivia_band(me) then raise exception 'quiz_ineligible'; end if;
+  perform public.quiz_require_testing(me);
+  if a.status = 'issued' and a.session_hash is distinct from public.hash_secret(p_session_secret) then raise exception 'quiz_capability_invalid'; end if;
+  perform public.quiz_round_settle(a.id,at);
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id for update;
+  if a.status <> 'issued' then
+    return public.quiz_save_receipt(me,p_request_id,'next',a.week_start,d,a.id,a.status,at,a.round_kind) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  if a.round_state <> 'between' or a.position <> p_expected_position then raise exception 'quiz_next_not_ready'; end if;
+  at := clock_timestamp();
+  if a.week_start <> public.quiz_week_at(at) or at + a.duration_seconds * interval '1 second' > public.quiz_week_end(a.week_start) then
+    st := public.quiz_round_close(a.id,at,'week_end');
+    return public.quiz_save_receipt(me,p_request_id,'next',a.week_start,d,a.id,'week_closed',at,a.round_kind) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  if a.round_kind = 'life' and not public.quiz_life_access(me) then
+    st := public.quiz_round_close(a.id,at,'access_revoked');
+    return public.quiz_save_receipt(me,p_request_id,'next',a.week_start,d,a.id,'access_revoked',at,a.round_kind) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  qid := public.quiz_round_pick(me,a.id,a.position + 1);
+  if qid is null then
+    st := public.quiz_round_close(a.id,at,'pool_exhausted');
+    return public.quiz_save_receipt(me,p_request_id,'next',a.week_start,d,a.id,'pool_exhausted',at,a.round_kind) || jsonb_build_object('server_now',at,'active_question',null,'active_item',null);
+  end if;
+  perform public.quiz_round_issue(me,a.id,a.position + 1,qid,at,a.duration_seconds,p_request_id);
+  update public.sport_quiz_attempts set position = position + 1,round_state = 'item',next_by = null,expires_at = at + a.duration_seconds * interval '1 second' where id = a.id;
+  perform public.quiz_bump_history(me);
+  return public.quiz_save_receipt(me,p_request_id,'next',a.week_start,d,a.id,'issued',at,a.round_kind)
+    || jsonb_build_object('server_now',at,'active_question',public.quiz_item_question_dto(a.id,a.position + 1),'active_item',public.quiz_active_item(a.id));
+end $$;
+
+-- The client sends the position it showed; the item's stored shown order maps it to the stored index. Both are kept on
+-- the item and in the receipt result. A fun fact is re-checked at the reveal: if it no longer passes, the item is voided
+-- (outcome fact_unavailable) and the round moves on, so nothing about the fact is revealed.
+create or replace function public.quiz_answer(p_attempt_id uuid,p_option integer,p_request_id uuid,p_session_secret text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id); at timestamptz; d text; r public.sport_quiz_requests%rowtype;
+  a public.sport_quiz_attempts%rowtype; q public.sport_quiz_questions%rowtype; it public.sport_quiz_round_items%rowtype; outcome text; stored integer;
+begin
+  if p_request_id is null or p_attempt_id is null or p_option is null or p_option not between 0 and 3 or p_session_secret is null or p_session_secret !~ '^[0-9a-f]{64}$' then raise exception 'quiz_answer_invalid'; end if;
+  perform public.quiz_lock(me); select * into a from public.sport_quiz_attempts where id = p_attempt_id and profile_id = me for update;
+  at := clock_timestamp(); d := public.quiz_digest(jsonb_build_array(p_attempt_id,p_option,p_session_secret));
+  select * into r from public.sport_quiz_requests where profile_id = me and request_id = p_request_id;
+  if found then if r.operation <> 'answer' or r.payload_digest is distinct from d then raise exception 'quiz_request_conflict'; end if; return public.quiz_receipt_dto(me,p_request_id,at); end if;
+  if a.id is null or a.mode not in ('timed','round') then raise exception 'quiz_round_closed'; end if;
+  if a.round_kind <> 'life' and not public.quiz_trivia_band(me) then raise exception 'quiz_ineligible'; end if;
+  perform public.quiz_require_testing(me);
+  if a.status = 'issued' and a.session_hash is distinct from public.hash_secret(p_session_secret) then raise exception 'quiz_capability_invalid'; end if;
+  if a.mode = 'timed' then
+    if a.status = 'issued' and a.expires_at <= at then perform public.quiz_expire(me,at); return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at); end if;
+    if a.status <> 'issued' then return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,a.status,at); end if;
+    select * into q from public.sport_quiz_questions where id = a.question_id for share;
+    if q.status = 'void' or public.quiz_normalize_options(q.options) is null then raise exception 'quiz_question_unavailable'; end if;
+    if p_option >= jsonb_array_length(q.options) then raise exception 'quiz_answer_invalid'; end if;
+    at := clock_timestamp();
+    if a.expires_at <= at then perform public.quiz_expire(me,at); return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at); end if;
+    update public.sport_quiz_attempts set status = 'completed',answered_option = p_option,request_id = p_request_id,completed_at = at,closed_at = at,close_reason = 'answered',session_hash = null where id = a.id;
+    perform public.quiz_sync_badges(me,at);
+    perform public.quiz_bump_history(me);
+    insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,created_at) values(me,'answer',q.id,a.id,at);
+    return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'completed',at);
+  end if;
+  perform public.quiz_round_settle(a.id,at);
+  select * into a from public.sport_quiz_attempts where id = p_attempt_id for update;
+  if a.status <> 'issued' then return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,a.status,at); end if;
+  select * into it from public.sport_quiz_round_items where attempt_id = a.id and position = a.position for update;
+  if a.round_state = 'between' then
+    return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,case it.status when 'answered' then 'already_answered' else it.status end,at);
+  end if;
+  select * into q from public.sport_quiz_questions where id = it.question_id for share;
+  if q.status = 'void' or public.quiz_normalize_options(q.options) is null then raise exception 'quiz_question_unavailable'; end if;
+  if p_option >= coalesce(array_length(it.shown_order,1),jsonb_array_length(q.options)) then raise exception 'quiz_answer_invalid'; end if;
+  stored := case when it.shown_order is null then p_option else it.shown_order[p_option + 1] end;
+  at := clock_timestamp();
+  if it.expires_at <= at then
+    perform public.quiz_round_settle(a.id,at);
+    return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'expired',at);
+  end if;
+  if q.topic_category = 'athlete' and not public.quiz_fact_viewer_ok(q.fact_id,me,a.learn_athlete_id) then
+    update public.sport_quiz_round_items set status = 'void',voided_at = at,closed_at = at,correction_reason = 'Fun fact no longer available'
+      where attempt_id = a.id and position = a.position;
+    if a.position >= a.planned_items then perform public.quiz_round_close(a.id,at,'corrected');
+    else update public.sport_quiz_attempts set round_state = 'between',next_by = at + public.quiz_round_gap() where id = a.id; end if;
+    perform public.quiz_bump_history(me);
+    return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,'fact_unavailable',at);
+  end if;
+  update public.sport_quiz_round_items set status = 'answered',answered_option = stored,answered_position = p_option,answered_at = at,answer_request_id = p_request_id,closed_at = at
+    where attempt_id = a.id and position = a.position;
+  if a.position >= a.planned_items then perform public.quiz_round_close(a.id,at,'answered'); outcome := 'completed';
+  else update public.sport_quiz_attempts set round_state = 'between',next_by = at + public.quiz_round_gap() where id = a.id; outcome := 'answered'; end if;
+  perform public.quiz_sync_badges(me,at);
+  perform public.quiz_bump_history(me);
+  -- Life and fun-fact answer rows never carry the question id.
+  insert into public.sport_quiz_audit(actor_id,action,question_id,attempt_id,reason,created_at)
+    values(me,'answer',case when a.round_kind = 'life' or q.topic_category = 'athlete' then null else q.id end,a.id,case when a.round_kind = 'life' then q.chapter || ' #' || a.position end,at);
+  return public.quiz_save_request(me,p_request_id,'answer',a.week_start,d,a.id,outcome,at);
+end $$;
+
+-- 13. Reports and auto-pause (§6.9) -------------------------------------------------------------------------------------------
+-- After the reveal only (a closed round item of the caller's own for that question). Fixed reasons, no free text. The
+-- reply never says whether the report counted or paused anything.
+create or replace function public.quiz_report(p_question_id uuid,p_reason text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id); at timestamptz; q public.sport_quiz_questions%rowtype; s public.sport_quiz_settings%rowtype;
+  rr jsonb := public.quiz_report_rules(); author uuid; fact boolean; why text; st public.sport_quiz_question_stats%rowtype; since timestamptz; n integer;
+  hit boolean := false; today timestamptz; safety boolean := false; capped boolean := false;
+begin
+  if p_question_id is null or coalesce(p_reason,'') not in ('wrong_answer','confusing','not_okay','private') then raise exception 'quiz_report_invalid'; end if;
+  select * into s from public.sport_quiz_settings where singleton for share;
+  if not found then raise exception 'quiz_unavailable'; end if;
+  -- Lock order: settings → this question → this reporter's report budget (separate from the account lifecycle lock).
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz-question:' || p_question_id,0));
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz-report:' || me,0));
+  at := clock_timestamp(); today := date_trunc('day',at at time zone 'UTC') at time zone 'UTC';
+  select * into q from public.sport_quiz_questions where id = p_question_id;
+  if q.id is null or not exists(select 1 from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+      where a.profile_id = me and i.question_id = q.id and (i.status <> 'issued' or i.expires_at <= at)) then raise exception 'quiz_report_not_allowed'; end if;
+  fact := q.topic_category = 'athlete';
+  if p_reason = 'private' and not fact then raise exception 'quiz_report_invalid'; end if;
+  if s.reports_paused then return jsonb_build_object('contract_version',5,'outcome','paused','question_id',q.id); end if;
+  if exists(select 1 from public.sport_quiz_reports where reporter_id = me and question_id = q.id) then
+    return jsonb_build_object('contract_version',5,'outcome','already_reported','question_id',q.id); end if;
+  if (select count(*) from public.sport_quiz_reports where reporter_id = me and created_at > at - interval '1 day') >= (rr ->> 'per_account_per_day')::integer then
+    raise exception 'quiz_report_limit'; end if;
+  author := coalesce((select f.athlete_id from public.quiz_athlete_facts f where f.id = q.fact_id),q.created_by);
+  if author is not null and public.is_blocked_between(me,author) then why := 'blocked_pair';
+  elsif coalesce((select p.created_at from public.profiles p where p.id = me),at) > at - make_interval(days => (rr ->> 'min_account_days')::integer) then why := 'new_account';
+  elsif not exists(select 1 from public.sport_quiz_attempts a where a.profile_id = me and public.quiz_attempt_qualifies(a.id)) then why := 'no_completed_round'; end if;
+  insert into public.sport_quiz_reports(question_id,topic_category,reporter_id,reason,is_fact,counted,not_counted_reason,created_at)
+    values(q.id,q.topic_category,me,p_reason,fact,why is null,why,at);
+  insert into public.sport_quiz_question_stats(question_id,updated_at) values(q.id,at) on conflict (question_id) do nothing;
+  select * into st from public.sport_quiz_question_stats where question_id = q.id for update;
+  if why is null and st.paused_at is null and q.status = 'approved' then
+    since := coalesce(st.restored_at,'-infinity'::timestamptz);
+    select count(*) into n from public.sport_quiz_reports where question_id = q.id and counted and created_at > since;
+    -- Security review 2026-10-15: a counted "Not okay" / "Shares something private" on a fun fact always pauses it,
+    -- after a restore too and past the daily cap (the alert is still recorded).
+    safety := fact and p_reason in (select jsonb_array_elements_text(rr -> 'fact_reasons'));
+    if safety then hit := true;
+    elsif st.restored_at is not null then hit := n >= (rr ->> 'restored_reporters')::integer;
+    elsif fact then hit := n >= (rr ->> 'ordinary_reporters')::integer or (select count(*) from public.sport_quiz_reports where question_id = q.id and counted
+      and reason in (select jsonb_array_elements_text(rr -> 'fact_reasons'))) >= (rr ->> 'fact_reporters')::integer;
+    else hit := n >= (rr ->> 'ordinary_reporters')::integer; end if;
+    capped := (select count(*) from public.sport_quiz_question_stats s2 join public.sport_quiz_questions q2 on q2.id = s2.question_id
+      where q2.topic_category = q.topic_category and s2.paused_at >= today) >= (rr ->> 'daily_pause_cap')::integer;
+    if hit and capped and not exists(select 1 from public.sport_quiz_audit where action = 'report_alert' and reason = q.topic_category and created_at >= today) then
+      insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(null,'report_alert',q.topic_category,at);
+    end if;
+    if hit then
+      if capped and not safety then
+        -- Daily cap reached for this topic: the question stays live and waits in Needs a look.
+        update public.sport_quiz_question_stats set queued_at = coalesce(queued_at,at),updated_at = at where question_id = q.id;
+      else
+        update public.sport_quiz_question_stats set paused_at = at,pause_reason = case when fact then 'fact_report' else 'reports' end,queued_at = null,updated_at = at
+          where question_id = q.id;
+        insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(null,'question_pause',q.id,'reports',at);
+        if fact then perform public.quiz_fact_void_items(q.id,null,'Paused for a check',at); end if;
+      end if;
+    end if;
+  end if;
+  return jsonb_build_object('contract_version',5,'outcome','reported','question_id',q.id);
+end $$;
+
+-- 14. Fun facts: athlete, guardian and export RPCs ------------------------------------------------------------------------------
+-- An athlete account (linked to a roster athlete) with a recorded 13+ age; no recorded age means no submissions.
+create or replace function public.quiz_fact_actor(p_expected uuid)
+returns uuid language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id(); band text;
+begin
+  if auth.role() is distinct from 'authenticated' or auth.uid() is null or me is null then raise exception 'quiz_ineligible'; end if;
+  if p_expected is null or me is distinct from p_expected then raise exception 'quiz_identity_changed'; end if;
+  band := public.profile_age_band(me);
+  if band in ('unknown','not_given') then raise exception 'quiz_fact_age_needed'; end if;
+  if band not in ('adult','teen_16_17','teen_13_15') then raise exception 'quiz_ineligible'; end if;
+  if not exists(select 1 from public.profiles p where p.id = me and p.player_id is not null) then raise exception 'quiz_fact_athlete_only'; end if;
+  return me;
+end $$;
+-- The guardian step is still open only while its request is pending and younger than MINOR-01's 14 days.
+create or replace function public.quiz_fact_request_open(p_request uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(select 1 from public.guardian_approval_requests r where r.id = p_request and r.status = 'pending'
+    and r.requested_at > timezone('utc',now()) - interval '14 days')
+$$;
+-- Owner view of one fact: own text, the effective status ("paused" for a check while its question is paused; a lapsed
+-- guardian request reads as waiting again), decisions with reason codes. No counts of reporters, no viewer.
+create or replace function public.quiz_fact_owner_dto(p_fact uuid)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('id',f.id,'prompt_key',f.prompt_key,'label',public.quiz_fact_prompt(f.prompt_key) ->> 'label','answer_text',f.answer_text,
+    'status',case when f.status = 'approved' and public.quiz_question_paused(f.question_id) then 'paused'
+      when f.status = 'guardian_review' and not public.quiz_fact_request_open(f.guardian_request_id) then 'waiting_guardian' else f.status end,
+    'submitted_at',f.submitted_at,'guardian_decision',f.guardian_decision,'guardian_decided_at',f.guardian_decided_at,'admin_decided_at',f.admin_decided_at,
+    'decline_reason',f.decline_reason,'cleared_at',f.cleared_at)
+  from public.quiz_athlete_facts f where f.id = p_fact
+$$;
+create or replace function public.quiz_fact_submit(p_prompt_key text,p_answer text,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_fact_actor(p_expected_profile_id); at timestamptz; t text; problems text[]; pr jsonb := public.quiz_fact_prompt(p_prompt_key);
+  f public.quiz_athlete_facts%rowtype; band text; st text; req uuid; k text;
+begin
+  if pr is null then raise exception 'quiz_fact_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton and athlete_questions_enabled for share;
+  if not found then raise exception 'quiz_facts_paused'; end if;
+  perform pg_advisory_xact_lock(hashtextextended('quiz-fact:' || me,0));
+  at := clock_timestamp();
+  t := btrim(regexp_replace(normalize(coalesce(p_answer,''),nfkc),'\s+',' ','g'));
+  problems := public.quiz_fact_text_problems(t,p_prompt_key,me);
+  if cardinality(problems) > 0 then raise exception 'quiz_fact_text: %', array_to_string(problems,', '); end if;
+  if pr ? 'answers' then select a into t from jsonb_array_elements_text(pr -> 'answers') a where public.quiz_fresh_norm(a) = public.quiz_fresh_norm(t) limit 1; end if;
+  select * into f from public.quiz_athlete_facts where athlete_id = me and prompt_key = p_prompt_key and status not in ('declined','withdrawn','removed') for update;
+  if f.id is not null then
+    -- Only an unsent draft (or one whose guardian request lapsed) can be edited; anything else is withdraw-and-resubmit.
+    if not (f.status = 'waiting_guardian' or (f.status = 'guardian_review' and not public.quiz_fact_request_open(f.guardian_request_id))) then
+      raise exception 'quiz_fact_prompt_taken'; end if;
+  else
+    if (select count(*) from public.quiz_athlete_facts where athlete_id = me and status not in ('declined','withdrawn','removed')) >= 3 then raise exception 'quiz_fact_limit'; end if;
+    insert into public.quiz_athlete_facts(athlete_id,prompt_key,answer_text,status,submitted_at,updated_at)
+      values(me,p_prompt_key,t,'waiting_guardian',at,at) returning * into f;
+  end if;
+  band := public.profile_age_band(me); k := 'fun_fact:' || f.id::text;
+  if band = 'teen_13_15' then
+    if public.minor_guardian_count(me) > 0 then
+      update public.guardian_approval_requests set status = 'expired' where minor_id = me and change_key = k and status = 'pending'
+        and requested_at <= timezone('utc',now()) - interval '14 days';
+      insert into public.guardian_approval_requests(minor_id,change_key) values(me,k) on conflict do nothing returning id into req;
+      if req is null then select id into req from public.guardian_approval_requests where minor_id = me and change_key = k and status = 'pending'; end if;
+      st := 'guardian_review';
+      perform public.log_supervision_event(me,'approval_requested',jsonb_build_object('changes',jsonb_build_array('fun_fact')));
+    else
+      -- Saved as a draft; nothing asks them to invite a guardian.
+      st := 'waiting_guardian';
+    end if;
+  else st := 'admin_review'; end if;
+  update public.quiz_athlete_facts set answer_text = t,status = st,look_reasons = public.quiz_fact_look_reasons(t,p_prompt_key),submitted_at = at,
+    guardian_request_id = req,guardian_decision = null,guardian_decided_at = null,updated_at = at where id = f.id;
+  insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'fact_submit',p_prompt_key || ':' || st,at);
+  return jsonb_build_object('contract_version',5,'fact',public.quiz_fact_owner_dto(f.id));
+end $$;
+-- Only the athlete withdraws (never a guardian or an admin). The text is cleared now; the question and every issued,
+-- unrevealed item are voided in the same transaction.
+create or replace function public.quiz_fact_withdraw(p_fact_id uuid,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id(); at timestamptz; f public.quiz_athlete_facts%rowtype;
+begin
+  if auth.role() is distinct from 'authenticated' or me is null then raise exception 'quiz_ineligible'; end if;
+  if p_expected_profile_id is null or me is distinct from p_expected_profile_id then raise exception 'quiz_identity_changed'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  perform pg_advisory_xact_lock(hashtextextended('quiz-fact:' || me,0));
+  at := clock_timestamp();
+  select * into f from public.quiz_athlete_facts where id = p_fact_id and athlete_id = me for update;
+  if f.id is null then raise exception 'quiz_fact_missing'; end if;
+  if f.status not in ('withdrawn','removed') then
+    if f.status = 'guardian_review' and public.quiz_fact_request_open(f.guardian_request_id) then
+      perform public.log_supervision_event(me,'approval_cancelled','{}'::jsonb);
+    end if;
+    perform public.quiz_fact_clear(f.id,'withdrawn',me,at);
+  end if;
+  return jsonb_build_object('contract_version',5,'fact',public.quiz_fact_owner_dto(f.id));
+end $$;
+-- Distinct fans who saw the fact revealed in one completed UTC month, as a bucket (null under 5). Never counted: the
+-- athlete, their guardians, admins and the testing group.
+create or replace function public.quiz_fact_month_bucket(p_fact uuid,p_month date)
+returns text language sql stable security definer set search_path = '' as $$
+  with f as (select x.athlete_id,(select pl.guardian_id from public.profiles p join public.players pl on pl.id = p.player_id where p.id = x.athlete_id) record_guardian
+             from public.quiz_athlete_facts x where x.id = p_fact),
+  v as (select distinct a.profile_id from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id
+        join public.sport_quiz_questions q on q.id = i.question_id
+        where q.fact_id = p_fact and i.status in ('answered','expired')
+          and i.issued_at >= (p_month::timestamp at time zone 'UTC') and i.issued_at < ((p_month + interval '1 month')::timestamp at time zone 'UTC')),
+  n as (select count(*) c from v join public.profiles p on p.id = v.profile_id cross join f
+        where p.id <> f.athlete_id and p.role <> 'admin' and not coalesce(p.is_admin,false) and p.id is distinct from f.record_guardian
+          and not public.is_blocked_between(f.athlete_id,p.id)
+          and not (p.id = any(coalesce((select s.pilot_accounts from public.sport_quiz_settings s where s.singleton),'{}'::uuid[])))
+          and not exists(select 1 from public.guardian_links l where l.minor_id = f.athlete_id and l.guardian_id = p.id and l.confirmed_at is not null))
+  select case when c >= 25 then '25+' when c >= 10 then '10+' when c >= 5 then '5+' end from n
+$$;
+create or replace function public.quiz_fact_counts()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id(); this_month date := date_trunc('month',statement_timestamp() at time zone 'UTC')::date;
+begin
+  if auth.role() is distinct from 'authenticated' or me is null then raise exception 'quiz_ineligible'; end if;
+  return jsonb_build_object('contract_version',5,'profile_id',me,
+    'facts',coalesce((select jsonb_agg(jsonb_build_object('id',f.id,'prompt_key',f.prompt_key,
+      'months',(select jsonb_agg(jsonb_build_object('month',to_char(m,'YYYY-MM'),'bucket',public.quiz_fact_month_bucket(f.id,m::date)) order by m desc)
+        from generate_series(this_month - interval '3 months',this_month - interval '1 month',interval '1 month') m)) order by f.submitted_at)
+      from public.quiz_athlete_facts f where f.athlete_id = me and f.status = 'approved'),'[]'::jsonb));
+end $$;
+-- The athlete's own facts, prompts (with the meal list), limits and the switch. Works for any signed-in account so the
+-- app can explain why submitting is not open.
+create or replace function public.quiz_fact_mine()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id(); band text; p public.profiles%rowtype; lvl text;
+begin
+  if auth.role() is distinct from 'authenticated' or me is null then raise exception 'quiz_ineligible'; end if;
+  select * into p from public.profiles where id = me; band := public.profile_age_band(me);
+  lvl := coalesce(p.profile_audience ->> 'fun_facts',public.privacy_default_audience() ->> 'fun_facts');
+  return jsonb_build_object('contract_version',5,'profile_id',me,
+    'enabled',coalesce((select s.athlete_questions_enabled from public.sport_quiz_settings s where s.singleton),false),
+    'can_submit',p.player_id is not null and band in ('adult','teen_16_17','teen_13_15'),'needs_birth',band in ('unknown','not_given'),
+    'guardian_needed',band = 'teen_13_15','has_guardian',public.minor_guardian_count(me) > 0,'verified',p.verification_status = 'verified',
+    'audience',lvl,'effective_audience',case when band = 'teen_13_15' and lvl = 'everyone' then 'friends' else lvl end,
+    'max_live',3,'live',(select count(*) from public.quiz_athlete_facts where athlete_id = me and status not in ('declined','withdrawn','removed')),
+    'prompts',(select jsonb_agg(jsonb_build_object('key',x ->> 'key','label',x ->> 'label','answers',x -> 'answers')) from jsonb_array_elements(public.quiz_fact_prompts()) x),
+    'facts',coalesce((select jsonb_agg(public.quiz_fact_owner_dto(f.id) order by f.submitted_at desc) from public.quiz_athlete_facts f where f.athlete_id = me),'[]'::jsonb));
+end $$;
+-- Data export: every fact with its text (while kept) and every decision.
+create or replace function public.quiz_fact_export()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id();
+begin
+  if auth.role() is distinct from 'authenticated' or me is null then raise exception 'quiz_ineligible'; end if;
+  return jsonb_build_object('contract_version',5,'profile_id',me,'exported_at',statement_timestamp(),
+    'facts',coalesce((select jsonb_agg(jsonb_build_object('id',f.id,'prompt_key',f.prompt_key,'answer_text',f.answer_text,'status',f.status,
+      'submitted_at',f.submitted_at,'guardian_decision',f.guardian_decision,'guardian_decided_at',f.guardian_decided_at,
+      'admin_decision',case when f.admin_decided_at is null then null when f.status = 'declined' and f.decline_reason <> 'guardian' then 'declined' else 'approved' end,
+      'admin_decided_at',f.admin_decided_at,'decline_reason',f.decline_reason,'cleared_at',f.cleared_at,'clear_cause',f.clear_cause,'look_reasons',to_jsonb(f.look_reasons))
+      order by f.submitted_at) from public.quiz_athlete_facts f where f.athlete_id = me),'[]'::jsonb));
+end $$;
+-- Guardian: fun facts waiting for this guardian (teens they supervise). The guardian sees the text to decide; they can
+-- approve or decline only, never write, edit or withdraw.
+create or replace function public.quiz_fact_guardian_pending()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id();
+begin
+  if auth.role() is distinct from 'authenticated' or me is null then raise exception 'quiz_ineligible'; end if;
+  return jsonb_build_object('contract_version',5,'profile_id',me,
+    'facts',coalesce((select jsonb_agg(jsonb_build_object('fact_id',f.id,'minor_profile_id',f.athlete_id,'first_name',public.first_name_of(f.athlete_id),
+      'prompt_key',f.prompt_key,'label',public.quiz_fact_prompt(f.prompt_key) ->> 'label','answer_text',f.answer_text,'requested_at',r.requested_at) order by r.requested_at)
+      from public.quiz_athlete_facts f join public.guardian_approval_requests r on r.id = f.guardian_request_id
+      where f.status = 'guardian_review' and public.quiz_fact_request_open(r.id) and public.is_supervising_guardian(f.athlete_id)),'[]'::jsonb));
+end $$;
+create or replace function public.quiz_fact_guardian_decide(p_fact_id uuid,p_approve boolean,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.my_profile_id(); f public.quiz_athlete_facts%rowtype; at timestamptz;
+begin
+  if auth.role() is distinct from 'authenticated' or me is null then raise exception 'quiz_ineligible'; end if;
+  if p_expected_profile_id is null or me is distinct from p_expected_profile_id then raise exception 'quiz_identity_changed'; end if;
+  if p_fact_id is null or p_approve is null then raise exception 'quiz_fact_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  select * into f from public.quiz_athlete_facts where id = p_fact_id for update;
+  if f.id is null or not public.is_supervising_guardian(f.athlete_id) then raise exception 'quiz_fact_guardian_only'; end if;
+  if f.status <> 'guardian_review' or not public.quiz_fact_request_open(f.guardian_request_id) then raise exception 'quiz_fact_already_decided'; end if;
+  at := clock_timestamp();
+  update public.guardian_approval_requests set status = case when p_approve then 'approved' else 'declined' end,decided_by = me,decided_at = at
+    where id = f.guardian_request_id;
+  perform public.log_supervision_event(f.athlete_id,'approval_decided',jsonb_build_object('change','fun_fact','approved',p_approve));
+  insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'fact_guardian',case when p_approve then 'approved' else 'declined' end,at);
+  return jsonb_build_object('contract_version',5,'fact_id',f.id,'status',(select status from public.quiz_athlete_facts where id = f.id));
+end $$;
+
+-- 15. Guardian approvals, clearing on unlink / under-13 / account deletion, and blocks --------------------------------------------
+-- Any decision on a fun_fact request (through either function) must come from a supervising guardian; it moves the fact.
+create or replace function public.quiz_fact_on_approval()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare fid uuid;
+begin
+  if new.change_key not like 'fun_fact:%' or new.status is not distinct from old.status then return new; end if;
+  fid := substr(new.change_key,10)::uuid;
+  if new.status in ('approved','declined') then
+    if new.decided_by is null or not exists(select 1 from public.guardian_links l where l.minor_id = new.minor_id and l.guardian_id = new.decided_by
+        and l.ended_at is null and l.confirmed_at is not null) then raise exception 'quiz_fact_guardian_only'; end if;
+    update public.quiz_athlete_facts set status = case when new.status = 'approved' then 'admin_review' else 'declined' end,guardian_decision = new.status,
+      guardian_decided_at = coalesce(new.decided_at,clock_timestamp()),decline_reason = case when new.status = 'declined' then 'guardian' end,updated_at = clock_timestamp()
+      where id = fid and status = 'guardian_review';
+  elsif new.status in ('cancelled','expired') then
+    update public.quiz_athlete_facts set status = 'waiting_guardian',updated_at = clock_timestamp() where id = fid and status = 'guardian_review';
+  end if;
+  return new;
+end $$;
+drop trigger if exists quiz_fact_approval on public.guardian_approval_requests;
+create trigger quiz_fact_approval after update of status on public.guardian_approval_requests for each row execute function public.quiz_fact_on_approval();
+
+-- MINOR-01's decision function with the fun_fact type: only the supervising guardian (never an admin), and no privacy
+-- setting changes for a fun fact.
+create or replace function public.guardian_decide_approval(request_id uuid, approve boolean)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  r public.guardian_approval_requests%rowtype;
+begin
+  select * into r from public.guardian_approval_requests a where a.id = request_id for update;
+  if not found or not (public.is_supervising_guardian(r.minor_id) or (public.current_user_role() = 'admin' and r.change_key not like 'fun_fact:%')) then
+    raise exception 'This request is not yours to decide.';
+  end if;
+  if r.status <> 'pending' then
+    raise exception 'This request was already handled.';
+  end if;
+  -- Fail closed, as in MINOR-01: only the two privacy requests and fun_fact requests are decided here.
+  if r.change_key not in ('account_public', 'friend_requests_everyone') and r.change_key !~ '^fun_fact:[0-9a-f-]{36}$' then
+    raise exception 'This request cannot be decided here.';
+  end if;
+  if r.requested_at <= timezone('utc', now()) - interval '14 days' then
+    update public.guardian_approval_requests set status = 'expired' where id = r.id;
+    return public.guardian_view(r.minor_id) || jsonb_build_object('notice', 'This request expired. They can ask again.');
+  end if;
+  if coalesce(approve, false) then
+    if r.change_key = 'account_public' then
+      if public.is_minor_band(public.profile_age_band(r.minor_id)) and not public.minor_has_consent(r.minor_id, 'public_profile') then
+        raise exception 'Sign the consent with "public profile" allowed first.';
+      end if;
+      perform public.apply_privacy_settings(r.minor_id, '{"account_private": false}'::jsonb);
+    elsif r.change_key = 'friend_requests_everyone' then
+      perform public.apply_privacy_settings(r.minor_id, '{"friend_requests_from": "everyone"}'::jsonb);
+    end if;
+  end if;
+  update public.guardian_approval_requests
+  set status = case when coalesce(approve, false) then 'approved' else 'declined' end,
+      decided_by = public.my_profile_id(), decided_at = timezone('utc', now())
+  where id = r.id;
+  perform public.log_supervision_event(r.minor_id, 'approval_decided',
+    jsonb_build_object('change', case when r.change_key like 'fun_fact:%' then 'fun_fact' else r.change_key end, 'approved', coalesce(approve, false)));
+  return public.guardian_view(r.minor_id);
+end;
+$$;
+
+-- Unlinking the athlete (roster link changes) or an under-13 block clears every fact's text in the same transaction.
+create or replace function public.quiz_facts_on_profile()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare fid uuid; cause text; at timestamptz := clock_timestamp();
+begin
+  if new.age_blocked_at is not null and old.age_blocked_at is null then cause := 'age_blocked';
+  elsif new.player_id is distinct from old.player_id then cause := 'unlinked';
+  else return new; end if;
+  for fid in select id from public.quiz_athlete_facts where athlete_id = new.id and status not in ('withdrawn','removed') order by id loop
+    perform public.quiz_fact_clear(fid,cause,null,at);
+  end loop;
+  return new;
+end $$;
+drop trigger if exists quiz_facts_profile_rules on public.profiles;
+create trigger quiz_facts_profile_rules after update of player_id,age_blocked_at on public.profiles for each row execute function public.quiz_facts_on_profile();
+-- Account deletion removes the fact rows (cascade); their questions and unrevealed items are voided first.
+create or replace function public.quiz_facts_on_delete()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.quiz_fact_retire_question(old.question_id,'Removed: the athlete account was deleted.',clock_timestamp());
+  return old;
+end $$;
+drop trigger if exists quiz_facts_delete on public.quiz_athlete_facts;
+create trigger quiz_facts_delete before delete on public.quiz_athlete_facts for each row execute function public.quiz_facts_on_delete();
+-- A block either way voids any issued, unrevealed fun fact between the two (the reveal and history re-check it too).
+create or replace function public.quiz_facts_on_block()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare r record; at timestamptz := clock_timestamp();
+begin
+  for r in select q.id qid,pair.viewer from public.quiz_athlete_facts f join public.sport_quiz_questions q on q.fact_id = f.id
+      cross join (values (new.blocker_id,new.blocked_id),(new.blocked_id,new.blocker_id)) pair(athlete,viewer)
+      where f.athlete_id = pair.athlete order by q.id loop
+    perform public.quiz_fact_void_items(r.qid,r.viewer,'Fun fact no longer available',at);
+  end loop;
+  -- Saved receipts between the two keep no athlete card (first name / player id) of the other side.
+  update public.sport_quiz_requests q set receipt = jsonb_set(q.receipt,'{result}',(q.receipt -> 'result') - 'fun_fact')
+    from (values (new.blocker_id,new.blocked_id),(new.blocked_id,new.blocker_id)) pair(viewer,athlete) join public.profiles ap on ap.id = pair.athlete
+    where q.profile_id = pair.viewer and jsonb_typeof(q.receipt -> 'result') = 'object'
+      and q.receipt -> 'result' -> 'fun_fact' ->> 'athlete_player_id' = ap.player_id::text;
+  return new;
+end $$;
+drop trigger if exists quiz_facts_block on public.user_blocks;
+create trigger quiz_facts_block after insert on public.user_blocks for each row execute function public.quiz_facts_on_block();
+
+-- 16. Admin: questions (approval shuffle, caps without fun facts, edit_replace for questions that need a look) ----------------
+-- QUIZ-04's function with four changes: approval shuffles the stored option order (true / false kept); the trivia cap no
+-- longer counts fun-fact questions; edit_replace also accepts an approved question that needs a look (Needs a look → Edit);
+-- fun-fact questions are approved only through quiz_admin_fact_decide (archive / void stay available here).
+create or replace function public.quiz_admin_question(p_id uuid,p_action text,p_payload jsonb,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); q public.sport_quiz_questions%rowtype; nextq public.sport_quiz_questions%rowtype;
+  why text := btrim(p_payload ->> 'reason'); family uuid; at timestamptz; affected uuid; qtype text; opts jsonb; ritem record;
+  life boolean; fam_life boolean; ch public.sport_quiz_life_chapters%rowtype; sport_text text; problems text[]; sh jsonb;
+begin
+  if jsonb_typeof(p_payload) is distinct from 'object' or coalesce(p_action,'') not in ('create','edit','edit_replace','approve','archive','void','review_media') or char_length(coalesce(why,'')) not between 10 and 500
+    or exists(select 1 from jsonb_object_keys(p_payload) k where k not in ('reason','sport','prompt','options','correct_option','explanation','topic_category','source_notes','family_action','question_key',
+      'question_type','media_path','media_licence','media_source','media_attribution','media_alt_text','media_size_bytes','media_has_person','media_no_marks','media_exif_stripped',
+      'chapter','min_age_band','education_only')) then raise exception 'quiz_question_action_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  if p_action = 'void' then
+    for affected in select profile_id from public.sport_quiz_attempts where question_id = p_id
+        union select a.profile_id from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where i.question_id = p_id order by 1 loop
+      perform public.quiz_lock(affected);
+    end loop;
+  end if;
+  if p_action <> 'create' then select * into q from public.sport_quiz_questions where id = p_id for update; if not found then raise exception 'quiz_question_missing'; end if;
+  elsif p_id is not null then raise exception 'quiz_create_id_invalid'; end if;
+  -- Fun-fact questions are decided only in the fact queue / Needs a look, where archive declines the fact and clears it
+  -- (security review 2026-10-15: a bank archive or void left the fact live with its text).
+  if q.topic_category = 'athlete' then raise exception 'quiz_fact_admin_path'; end if;
+  if p_action = 'edit_replace' then
+    if not (q.status = 'draft' or (q.status = 'approved' and public.quiz_needs_look(q.id))) then raise exception 'quiz_replace_draft_only'; end if;
+    update public.sport_quiz_questions set status = 'archived',reason = why,reviewed_at = at,reviewed_by = me where id = q.id;
+  end if;
+  if p_action in ('create','edit','edit_replace') then
+    if p_action = 'create' then
+      if coalesce(p_payload ->> 'family_action','') not in ('new','existing') then raise exception 'quiz_family_required'; end if;
+      if p_payload ->> 'family_action' = 'new' then
+        if p_payload ? 'question_key' then raise exception 'quiz_family_invalid'; end if; family := gen_random_uuid();
+      else
+        if coalesce(p_payload ->> 'question_key','') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then raise exception 'quiz_family_invalid'; end if;
+        family := (p_payload ->> 'question_key')::uuid; if not exists(select 1 from public.sport_quiz_questions where question_key = family and topic_category <> 'athlete') then raise exception 'quiz_family_invalid'; end if;
+      end if;
+    else
+      family := q.question_key;
+      if (p_payload ? 'question_key' and p_payload ->> 'question_key' <> family::text) or (p_payload ? 'family_action' and p_payload ->> 'family_action' <> 'existing') then raise exception 'quiz_family_invalid'; end if;
+    end if;
+    life := coalesce(p_payload ->> 'topic_category','') = 'life';
+    select bool_or(topic_category = 'life') into fam_life from public.sport_quiz_questions where question_key = family;
+    if fam_life is not null and fam_life <> life then raise exception 'quiz_family_invalid'; end if;
+    qtype := coalesce(p_payload ->> 'question_type','choice4'); opts := p_payload -> 'options';
+    if qtype not in ('choice4','true_false','image_choice') or jsonb_typeof(opts) is distinct from 'array'
+      or (qtype = 'choice4' and jsonb_array_length(opts) <> 4) or (qtype = 'true_false' and opts <> '["True","False"]'::jsonb)
+      or (qtype = 'image_choice' and (life or jsonb_array_length(opts) not between 2 and 4)) then raise exception 'quiz_question_content_invalid'; end if;
+    if coalesce(p_payload ->> 'topic_category','') not in ('sport','science','geography','general','life') or char_length(btrim(coalesce(p_payload ->> 'source_notes',''))) not between 10 and 1000
+      or jsonb_typeof(p_payload -> 'correct_option') is distinct from 'number' or (p_payload ->> 'correct_option') !~ '^[0-3]$'
+      or (p_payload ->> 'correct_option')::int >= jsonb_array_length(opts) then raise exception 'quiz_question_content_invalid'; end if;
+    if exists(select 1 from unnest(case when life then array['prompt','explanation','source_notes'] else array['sport','prompt','explanation','source_notes'] end) k
+      where jsonb_typeof(p_payload -> k) is distinct from 'string') then raise exception 'quiz_question_content_invalid'; end if;
+    if life then
+      select * into ch from public.sport_quiz_life_chapters where id = p_payload ->> 'chapter';
+      if ch.id is null or coalesce(p_payload ->> 'min_age_band','13') <> '13' or jsonb_typeof(p_payload -> 'education_only') is distinct from 'boolean'
+        then raise exception 'quiz_life_fields_invalid'; end if;
+      sport_text := ch.title;
+    else
+      if exists(select 1 from unnest(array['chapter','min_age_band','education_only']) k where p_payload ? k) then raise exception 'quiz_life_fields_invalid'; end if;
+      sport_text := btrim(p_payload ->> 'sport');
+    end if;
+    if qtype = 'image_choice' then
+      if exists(select 1 from unnest(array['media_path','media_licence','media_source','media_attribution','media_alt_text']) k where jsonb_typeof(p_payload -> k) is distinct from 'string')
+        or jsonb_typeof(p_payload -> 'media_size_bytes') is distinct from 'number' or (p_payload ->> 'media_size_bytes') !~ '^[0-9]{1,6}$'
+        or (p_payload ->> 'media_size_bytes')::int not between 1 and 307200 or p_payload -> 'media_has_person' is distinct from 'false'::jsonb
+        or p_payload -> 'media_no_marks' is distinct from 'true'::jsonb or p_payload -> 'media_exif_stripped' is distinct from 'true'::jsonb then raise exception 'quiz_media_invalid'; end if;
+    elsif exists(select 1 from jsonb_object_keys(p_payload) k where k like 'media\_%') then raise exception 'quiz_media_invalid'; end if;
+    update public.sport_quiz_questions set status = 'archived',reason = why where question_key = family and status = 'approved';
+    -- Separate caps: trivia 300 and Life 200 (draft + approved); fun-fact questions count toward neither.
+    if life and (select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category = 'life') >= 200 then raise exception 'quiz_life_bank_full'; end if;
+    if not life and (select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category not in ('life','athlete')) >= 300 then raise exception 'quiz_bank_full'; end if;
+    insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,created_by,topic_category,source_notes,
+        question_type,media_path,media_licence,media_source,media_attribution,media_alt_text,media_size_bytes,media_has_person,media_no_marks,media_exif_stripped,
+        chapter,min_age_band,education_only)
+      values(family,coalesce((select max(version) + 1 from public.sport_quiz_questions where question_key = family),1),
+        sport_text,btrim(p_payload ->> 'prompt'),opts,(p_payload ->> 'correct_option')::integer,btrim(p_payload ->> 'explanation'),why,me,
+        p_payload ->> 'topic_category',btrim(p_payload ->> 'source_notes'),qtype,
+        case when qtype = 'image_choice' then btrim(p_payload ->> 'media_path') end,case when qtype = 'image_choice' then p_payload ->> 'media_licence' end,
+        case when qtype = 'image_choice' then btrim(p_payload ->> 'media_source') end,case when qtype = 'image_choice' then btrim(p_payload ->> 'media_attribution') end,
+        case when qtype = 'image_choice' then btrim(p_payload ->> 'media_alt_text') end,case when qtype = 'image_choice' then (p_payload ->> 'media_size_bytes')::int end,
+        case when qtype = 'image_choice' then false end,case when qtype = 'image_choice' then true end,case when qtype = 'image_choice' then true end,
+        case when life then ch.id end,case when life then '13' end,coalesce(life and (p_payload ->> 'education_only')::boolean,false)) returning * into nextq;
+    if p_action = 'edit_replace' and life then
+      if nextq.education_only is not true then raise exception 'quiz_life_attestation_required'; end if;
+      problems := public.quiz_life_copy_problems(nextq.prompt,nextq.options,nextq.explanation,nextq.chapter);
+      if cardinality(problems) > 0 then raise exception 'quiz_life_copy: %', array_to_string(problems,', '); end if;
+    end if;
+  elsif p_action = 'review_media' then
+    if q.question_type <> 'image_choice' or q.status <> 'draft' then raise exception 'quiz_media_review_invalid'; end if;
+    if q.created_by is not distinct from me then raise exception 'quiz_media_reviewer_is_creator'; end if;
+    update public.sport_quiz_questions set media_reviewed_by = me,media_reviewed_at = at where id = q.id returning * into nextq;
+  else
+    if q.status = 'void' then raise exception 'quiz_void_final'; end if;
+    if p_action = 'approve' and q.status <> 'draft' then raise exception 'quiz_approve_draft_only'; end if;
+    if p_action = 'approve' and q.question_type = 'image_choice' and not (select images_enabled from public.sport_quiz_settings where singleton) then raise exception 'quiz_images_off'; end if;
+    if p_action = 'approve' and q.question_type = 'image_choice' and (q.media_reviewed_by is null or q.media_reviewed_by is not distinct from q.created_by) then raise exception 'quiz_media_review_required'; end if;
+    if p_action = 'approve' then update public.sport_quiz_questions set status = 'archived',reason = why where question_key = q.question_key and status = 'approved'; end if;
+    -- Approval shuffle: the published order never keeps the author's "correct answer first" habit.
+    sh := case when p_action = 'approve' then public.quiz_shuffle_options(q.options,q.correct_option,q.question_type) end;
+    update public.sport_quiz_questions set status = case p_action when 'approve' then 'approved' when 'archive' then 'archived' else 'void' end,
+      options = coalesce(sh -> 'options',options),correct_option = coalesce((sh ->> 'correct_option')::integer,correct_option),
+      reason = why,reviewed_at = at,reviewed_by = me where id = q.id returning * into nextq;
+    if p_action = 'void' then
+      for affected in with changed as (update public.sport_quiz_attempts set status = 'void',voided_at = at,closed_at = coalesce(closed_at,at),correction_reason = why,session_hash = null
+          where question_id = q.id and status <> 'skipped' returning profile_id) select distinct profile_id from changed order by profile_id loop perform public.quiz_bump_history(affected); end loop;
+      update public.sport_quiz_badges set voided_at = at where attempt_id in (select id from public.sport_quiz_attempts where question_id = q.id) and voided_at is null;
+      for ritem in select i.attempt_id,i.position,i.status,a.profile_id,a.status attempt_status,a.position current_position,a.planned_items
+          from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where i.question_id = q.id and i.status <> 'void' order by a.profile_id,i.attempt_id loop
+        update public.sport_quiz_round_items set status = 'void',voided_at = at,closed_at = coalesce(closed_at,at),correction_reason = why
+          where attempt_id = ritem.attempt_id and position = ritem.position;
+        if ritem.attempt_status = 'issued' and ritem.status = 'issued' and ritem.position = ritem.current_position then
+          if ritem.position >= ritem.planned_items then perform public.quiz_round_close(ritem.attempt_id,at,'corrected');
+          else update public.sport_quiz_attempts set round_state = 'between',next_by = at + public.quiz_round_gap() where id = ritem.attempt_id; end if;
+        elsif ritem.attempt_status <> 'issued' and not exists(select 1 from public.sport_quiz_round_items where attempt_id = ritem.attempt_id and status = 'answered') then
+          update public.sport_quiz_attempts set status = 'void',voided_at = coalesce(voided_at,at),correction_reason = why where id = ritem.attempt_id and status <> 'void';
+        end if;
+        update public.sport_quiz_attempts set correction_reason = coalesce(correction_reason,why) where id = ritem.attempt_id;
+        perform public.quiz_bump_history(ritem.profile_id);
+      end loop;
+      for affected in select distinct a.profile_id from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where i.question_id = q.id
+          union select distinct profile_id from public.sport_quiz_attempts where question_id = q.id order by 1 loop
+        perform public.quiz_sync_badges(affected,at);
+      end loop;
+    end if;
+  end if;
+  if p_action = 'edit_replace' then
+    insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'question_edit',nextq.id,why,at),(me,'question_archive',q.id,why,at);
+    return jsonb_build_object('id',nextq.id,'question_key',nextq.question_key,'version',nextq.version,'status',nextq.status,'replaced_id',q.id,'replaced_status','archived');
+  end if;
+  insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'question_' || p_action,nextq.id,why,at);
+  return jsonb_build_object('id',nextq.id,'question_key',nextq.question_key,'version',nextq.version,'status',nextq.status);
+end $$;
+
+-- 17. Admin: the fun-fact queue and decisions ---------------------------------------------------------------------------------
+-- Newest first (200). Admins see the text to decide; withdrawn and removed facts show without text.
+create or replace function public.quiz_admin_fact_queue()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_admin_actor();
+begin
+  return jsonb_build_object('contract_version',5,'generated_at',statement_timestamp(),
+    'counts',(select jsonb_build_object('waiting_guardian',count(*) filter (where status = 'waiting_guardian'),'guardian_review',count(*) filter (where status = 'guardian_review'),
+      'admin_review',count(*) filter (where status = 'admin_review'),'approved',count(*) filter (where status = 'approved'),'declined',count(*) filter (where status = 'declined'),
+      'withdrawn',count(*) filter (where status = 'withdrawn'),'removed',count(*) filter (where status = 'removed')) from public.quiz_athlete_facts),
+    'facts',coalesce((select jsonb_agg(jsonb_build_object('id',f.id,'athlete_profile_id',f.athlete_id,'first_name',public.first_name_of(f.athlete_id),
+        'age_band',public.profile_age_band(f.athlete_id),'verified',p.verification_status = 'verified','prompt_key',f.prompt_key,
+        'label',public.quiz_fact_prompt(f.prompt_key) ->> 'label','answer_text',f.answer_text,'status',f.status,
+        'guardian_status',case when public.profile_age_band(f.athlete_id) <> 'teen_13_15' and f.guardian_decision is null then 'not_needed'
+          when f.guardian_decision is not null then f.guardian_decision when f.status = 'waiting_guardian' then 'no_guardian_yet'
+          when public.quiz_fact_request_open(f.guardian_request_id) then 'pending' else 'lapsed' end,
+        'look_reasons',to_jsonb(f.look_reasons),'submitted_at',f.submitted_at,'admin_decided_at',f.admin_decided_at,'decline_reason',f.decline_reason,
+        'cleared_at',f.cleared_at,'question_id',f.question_id,'paused',public.quiz_question_paused(f.question_id)) order by f.submitted_at desc)
+      from (select * from public.quiz_athlete_facts order by submitted_at desc limit 200) f join public.profiles p on p.id = f.athlete_id),'[]'::jsonb));
+end $$;
+-- Approve (one admin, with the checklist: no sponsor or business, no place, no schedule) or decline with a reason code.
+-- Approval re-runs the server text check, needs the guardian's approval for 13–15, and builds the question from the
+-- prompt template, three curated wrong options that are not near the answer and {answer}, shuffled.
+create or replace function public.quiz_admin_fact_decide(p_fact_id uuid,p_action text,p_payload jsonb,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); f public.quiz_athlete_facts%rowtype; at timestamptz; why text := btrim(p_payload ->> 'reason');
+  pr jsonb; wrong text[]; sh jsonb; qid uuid; band text; problems text[]; code text := p_payload ->> 'decline_reason';
+begin
+  if jsonb_typeof(p_payload) is distinct from 'object' or coalesce(p_action,'') not in ('approve','decline') or char_length(coalesce(why,'')) not between 10 and 500
+     or exists(select 1 from jsonb_object_keys(p_payload) k where k not in ('reason','decline_reason','checklist')) then raise exception 'quiz_fact_action_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; at := clock_timestamp();
+  select * into f from public.quiz_athlete_facts where id = p_fact_id for update;
+  if f.id is null then raise exception 'quiz_fact_missing'; end if;
+  if f.status = 'guardian_review' or f.status = 'waiting_guardian' then raise exception 'quiz_fact_guardian_first'; end if;
+  if f.status <> 'admin_review' then raise exception 'quiz_fact_already_decided'; end if;
+  if p_action = 'decline' then
+    if coalesce(code,'') not in ('not_okay','private','sponsor_or_business','place','schedule','other') then raise exception 'quiz_fact_action_invalid'; end if;
+    update public.quiz_athlete_facts set status = 'declined',decline_reason = code,admin_decided_at = at,admin_decided_by = me,updated_at = at where id = f.id;
+    insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'fact_decline',code || ': ' || why,at);
+    return jsonb_build_object('contract_version',5,'fact_id',f.id,'status','declined','question_id',null);
+  end if;
+  if p_payload -> 'checklist' is distinct from '{"no_sponsor_or_business":true,"no_place":true,"no_schedule":true}'::jsonb then raise exception 'quiz_fact_checklist_required'; end if;
+  band := public.profile_age_band(f.athlete_id);
+  if band not in ('adult','teen_16_17','teen_13_15') then raise exception 'quiz_fact_age_needed'; end if;
+  if band = 'teen_13_15' and f.guardian_decision is distinct from 'approved' then raise exception 'quiz_fact_guardian_first'; end if;
+  problems := public.quiz_fact_text_problems(f.answer_text,f.prompt_key,f.athlete_id);
+  if cardinality(problems) > 0 then raise exception 'quiz_fact_text: %', array_to_string(problems,', '); end if;
+  pr := public.quiz_fact_prompt(f.prompt_key);
+  wrong := array(select x from jsonb_array_elements_text(pr -> 'wrong') x where not public.quiz_near_match(x,f.answer_text) order by random() limit 3);
+  if cardinality(wrong) < 3 then raise exception 'quiz_fact_options_short'; end if;
+  sh := public.quiz_shuffle_options(to_jsonb(wrong) || '["{answer}"]'::jsonb,3,'choice4');
+  insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,created_by,topic_category,source_notes,
+      question_type,status,reviewed_at,reviewed_by,fact_id)
+    values(gen_random_uuid(),1,'Fun fact',pr ->> 'question',sh -> 'options',(sh ->> 'correct_option')::integer,'Shared by {name} as a fun fact.',why,f.athlete_id,'athlete',
+      'Shared by the athlete; a guardian (under 16) and one admin approved it.','choice4','approved',at,me,f.id) returning id into qid;
+  update public.quiz_athlete_facts set status = 'approved',question_id = qid,admin_decided_at = at,admin_decided_by = me,updated_at = at where id = f.id;
+  insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'fact_approve',qid,why,at);
+  return jsonb_build_object('contract_version',5,'fact_id',f.id,'status','approved','question_id',qid);
+end $$;
+
+-- 18. Admin: Needs a look -------------------------------------------------------------------------------------------------------
+-- Auto-paused, queued (daily cap), flagged and reported questions with their reasons. Aggregates only: responders and
+-- percentages appear from min_responders; report counts by reason since the last review; never a reporter.
+create or replace function public.quiz_admin_needs_look()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_admin_actor(); minr integer := coalesce((select (s.self_heal ->> 'min_responders')::integer from public.sport_quiz_settings s where s.singleton),30);
+  today timestamptz := date_trunc('day',statement_timestamp() at time zone 'UTC') at time zone 'UTC'; rows jsonb;
+begin
+  select coalesce(jsonb_agg(x.j order by x.paused desc,x.at desc),'[]'::jsonb) into rows from (
+    select st.paused_at is not null paused,coalesce(st.paused_at,st.queued_at,st.updated_at) at,jsonb_build_object(
+      'question_id',q.id,'question_key',q.question_key,'version',q.version,'topic_category',q.topic_category,'sport',q.sport,'chapter',q.chapter,
+      'question_type',q.question_type,'status',q.status,'is_fact',q.topic_category = 'athlete','fact_id',q.fact_id,
+      'prompt',case when q.topic_category = 'athlete' then replace(q.prompt,'{name}',coalesce(public.first_name_of(f.athlete_id),'this athlete')) else q.prompt end,
+      'options',case when q.topic_category = 'athlete' then (select jsonb_agg(case when o = '{answer}' then to_jsonb(coalesce(f.answer_text,'Removed')) else to_jsonb(o) end order by n)
+        from jsonb_array_elements_text(q.options) with ordinality t(o,n)) else q.options end,
+      'correct_option',q.correct_option,'explanation',q.explanation,'source_notes',q.source_notes,'education_only',q.education_only,'paused_at',st.paused_at,'pause_reason',st.pause_reason,'queued_at',st.queued_at,'restored_at',st.restored_at,
+      'flags',to_jsonb(array(select unnest(st.flags) except select unnest(st.dismissed_flags))),'difficulty',st.difficulty,
+      'responders',case when st.responders >= minr then st.responders end,
+      'right_pct',case when st.responders >= minr then round(st.right_count * 100.0 / st.responders) end,
+      'timeout_pct',case when st.responders >= minr then round(st.timeouts * 100.0 / st.responders) end,
+      'reports',(select jsonb_build_object('open',count(*),'counted',count(*) filter (where r.counted),'not_counted',count(*) filter (where not r.counted),
+          'wrong_answer',count(*) filter (where r.reason = 'wrong_answer'),'confusing',count(*) filter (where r.reason = 'confusing'),
+          'not_okay',count(*) filter (where r.reason = 'not_okay'),'private',count(*) filter (where r.reason = 'private'))
+        from public.sport_quiz_reports r where r.question_id = q.id and r.created_at > coalesce(st.reviewed_at,'-infinity'::timestamptz))) j
+    from public.sport_quiz_question_stats st join public.sport_quiz_questions q on q.id = st.question_id left join public.quiz_athlete_facts f on f.id = q.fact_id
+    where q.status in ('draft','approved') and public.quiz_needs_look(q.id) limit 200) x;
+  return jsonb_build_object('contract_version',5,'generated_at',statement_timestamp(),'min_responders',minr,'count',jsonb_array_length(rows),'questions',rows,
+    'alerts',coalesce((select jsonb_agg(distinct u.reason) from public.sport_quiz_audit u where u.action = 'report_alert' and u.created_at >= today),'[]'::jsonb));
+end $$;
+-- Restore (un-pause; it then needs 3 new counted reporters to pause again), Dismiss (keep as is; clears current flags and
+-- open reports from the list) or Archive (an ordinary question is archived; a fun fact is declined and its question voided).
+create or replace function public.quiz_admin_needs_look_action(p_question_id uuid,p_action text,p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); q public.sport_quiz_questions%rowtype; st public.sport_quiz_question_stats%rowtype; at timestamptz; why text := btrim(p_reason);
+begin
+  if p_question_id is null or coalesce(p_action,'') not in ('restore','dismiss','archive') or char_length(coalesce(why,'')) not between 10 and 500 then raise exception 'quiz_look_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; at := clock_timestamp();
+  perform pg_advisory_xact_lock(hashtextextended('sport-quiz-question:' || p_question_id,0));
+  select * into q from public.sport_quiz_questions where id = p_question_id for update;
+  if q.id is null then raise exception 'quiz_question_missing'; end if;
+  insert into public.sport_quiz_question_stats(question_id,updated_at) values(q.id,at) on conflict (question_id) do nothing;
+  select * into st from public.sport_quiz_question_stats where question_id = q.id for update;
+  if p_action = 'restore' then
+    if st.paused_at is null then raise exception 'quiz_look_not_paused'; end if;
+    update public.sport_quiz_question_stats set paused_at = null,pause_reason = null,queued_at = null,restored_at = at,restored_by = me,reviewed_at = at,
+      dismissed_flags = flags,updated_at = at where question_id = q.id;
+    insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'question_restore',q.id,why,at);
+  elsif p_action = 'dismiss' then
+    if st.paused_at is not null then raise exception 'quiz_look_paused'; end if;
+    update public.sport_quiz_question_stats set queued_at = null,reviewed_at = at,dismissed_flags = flags,updated_at = at where question_id = q.id;
+    insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'question_dismiss',q.id,why,at);
+  elsif q.topic_category = 'athlete' then
+    update public.quiz_athlete_facts set status = 'declined',decline_reason = 'other',admin_decided_at = at,admin_decided_by = me,updated_at = at
+      where id = q.fact_id and status = 'approved';
+    perform public.quiz_fact_retire_question(q.id,why,at);
+    update public.sport_quiz_question_stats set queued_at = null,reviewed_at = at,updated_at = at where question_id = q.id;
+    insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'fact_decline',q.id,'other: ' || why,at);
+  else
+    if q.status not in ('draft','approved') then raise exception 'quiz_look_invalid'; end if;
+    update public.sport_quiz_questions set status = 'archived',reason = why,reviewed_at = at,reviewed_by = me where id = q.id;
+    update public.sport_quiz_question_stats set queued_at = null,reviewed_at = at,updated_at = at where question_id = q.id;
+    insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'question_archive',q.id,why,at);
+  end if;
+  return jsonb_build_object('contract_version',5,'question_id',q.id,'action',p_action,'needs_look',public.quiz_needs_look(q.id),
+    'status',(select status from public.sport_quiz_questions where id = q.id));
+end $$;
+
+-- 19. Admin: fresh-question settings (trivia.athlete_questions, share 0–10%, report intake, self-heal thresholds) -------------
+create or replace function public.quiz_admin_fresh_settings(p_payload jsonb,p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); at timestamptz; s public.sport_quiz_settings%rowtype;
+begin
+  if jsonb_typeof(p_payload) is distinct from 'object' or char_length(btrim(coalesce(p_reason,''))) not between 10 and 500
+    or exists(select 1 from jsonb_object_keys(p_payload) k where k not in ('athlete_questions_enabled','athlete_share_pct','reports_paused','self_heal'))
+    or jsonb_typeof(p_payload -> 'athlete_questions_enabled') is distinct from 'boolean' or jsonb_typeof(p_payload -> 'reports_paused') is distinct from 'boolean'
+    or jsonb_typeof(p_payload -> 'athlete_share_pct') is distinct from 'number' or (p_payload ->> 'athlete_share_pct') !~ '^([0-9]|10)$'
+    or not public.quiz_self_heal_ok(p_payload -> 'self_heal') then raise exception 'quiz_settings_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  update public.sport_quiz_settings set athlete_questions_enabled = (p_payload ->> 'athlete_questions_enabled')::boolean,athlete_share_pct = (p_payload ->> 'athlete_share_pct')::smallint,
+    reports_paused = (p_payload ->> 'reports_paused')::boolean,self_heal = p_payload -> 'self_heal',reason = btrim(p_reason),updated_at = at,updated_by = me where singleton returning * into s;
+  insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'fresh_settings',btrim(p_reason),at);
+  return jsonb_build_object('contract_version',5,'athlete_questions_enabled',s.athlete_questions_enabled,'athlete_share_pct',s.athlete_share_pct,
+    'reports_paused',s.reports_paused,'self_heal',s.self_heal,'report_rules',public.quiz_report_rules());
+end $$;
+
+-- 20. Admin: bulk import (§6.11) ----------------------------------------------------------------------------------------------
+-- At most 200 rows and 64 KB. Every row runs the create checks (and the Life copy rules for Life rows) on the server.
+-- Refused: athlete or image rows, unknown columns, cells starting with = + - @, an exact duplicate after cleanup of any
+-- stored question (all statuses, versions, families and topics) or of an earlier row, and rows past the version caps.
+-- Warned: a near duplicate (80%+ shared words). A dry run writes nothing; a real import lands the passing rows as drafts
+-- with the option order shuffled. There is no approve-all.
+create or replace function public.quiz_admin_import(p_rows jsonb,p_dry_run boolean,p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); at timestamptz; why text := btrim(p_reason); v jsonb; i integer; probs text[]; warns jsonb;
+  out jsonb := '[]'; norms text[] := '{}'; prompts text[] := '{}'; existing text[]; n text; topic text; qtype text; opts jsonb; life boolean; ch text;
+  trivia_left integer; life_left integer; ready integer := 0; refused integer := 0; warned integer := 0; sh jsonb; nid uuid; near uuid; j integer; sport_text text;
+begin
+  if jsonb_typeof(p_rows) is distinct from 'array' or p_dry_run is null or char_length(coalesce(why,'')) not between 10 and 500 then raise exception 'quiz_import_invalid'; end if;
+  if jsonb_array_length(p_rows) not between 1 and 200 or octet_length(p_rows::text) > 65536 then raise exception 'quiz_import_too_large'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  trivia_left := 300 - (select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category not in ('life','athlete'));
+  life_left := 200 - (select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category = 'life');
+  select coalesce(array_agg(public.quiz_fresh_norm(prompt)),'{}') into existing from public.sport_quiz_questions;
+  for i in 0..jsonb_array_length(p_rows) - 1 loop
+    v := p_rows -> i; probs := '{}'; warns := '[]'; n := null; nid := null; near := null;
+    if jsonb_typeof(v) is distinct from 'object' then probs := array['row_invalid'];
+    else
+      if exists(select 1 from jsonb_object_keys(v) k where k not in ('topic_category','sport','chapter','question_type','prompt','options','correct_option','explanation','source_notes')) then probs := probs || 'unknown_column'::text; end if;
+      -- Formula-start cells after any leading whitespace (tabs, returns, wide spaces) and full-width forms (NFKC).
+      if exists(select 1 from jsonb_each(v) e where (jsonb_typeof(e.value) = 'string' and normalize(e.value #>> '{}',nfkc) ~ '^[[:space:]﻿​]*[=+@-]')
+          or (jsonb_typeof(e.value) = 'array' and exists(select 1 from jsonb_array_elements(e.value) o where jsonb_typeof(o) = 'string' and normalize(o #>> '{}',nfkc) ~ '^[[:space:]﻿​]*[=+@-]'))) then
+        probs := probs || 'formula_cell'::text; end if;
+      -- Plain and accented Latin letters only (lookalike letters from other scripts could dodge the duplicate check).
+      if exists(select 1 from jsonb_each(v) e cross join lateral (select case jsonb_typeof(e.value) when 'string' then e.value #>> '{}'
+            when 'array' then (select string_agg(o,' ') from jsonb_array_elements_text(e.value) o) end txt) z
+          where z.txt ~ '[^[:space:] -~À-ÖØ-öø-ſ‘’“”—–…·×āēīōū]') then probs := probs || 'non_latin_text'::text; end if;
+      topic := v ->> 'topic_category'; qtype := coalesce(v ->> 'question_type','choice4'); life := topic = 'life';
+      if topic = 'athlete' then probs := probs || 'athlete_row'::text;
+      elsif coalesce(topic,'') not in ('sport','science','geography','general','life') then probs := probs || 'topic_invalid'::text; end if;
+      if qtype = 'image_choice' then probs := probs || 'image_row'::text;
+      elsif qtype not in ('choice4','true_false') then probs := probs || 'type_invalid'::text; end if;
+      opts := case when qtype = 'true_false' and v -> 'options' is null then '["True","False"]'::jsonb else v -> 'options' end;
+      if jsonb_typeof(v -> 'prompt') is distinct from 'string' or char_length(btrim(v ->> 'prompt')) not between 10 and 280 then probs := probs || 'prompt_length'::text; end if;
+      if jsonb_typeof(v -> 'explanation') is distinct from 'string' or char_length(btrim(v ->> 'explanation')) not between 10 and 500 then probs := probs || 'explanation_length'::text; end if;
+      if jsonb_typeof(v -> 'source_notes') is distinct from 'string' or char_length(btrim(v ->> 'source_notes')) not between 10 and 1000 then probs := probs || 'source_length'::text; end if;
+      if public.quiz_normalize_options(opts) is null or (qtype = 'choice4' and jsonb_array_length(opts) <> 4) or (qtype = 'true_false' and opts <> '["True","False"]'::jsonb) then probs := probs || 'options_invalid'::text; end if;
+      if jsonb_typeof(v -> 'correct_option') is distinct from 'number' or (v ->> 'correct_option') !~ '^[0-3]$'
+         or (jsonb_typeof(opts) = 'array' and (v ->> 'correct_option')::integer >= jsonb_array_length(opts)) then probs := probs || 'correct_invalid'::text; end if;
+      if life then
+        ch := v ->> 'chapter';
+        if not exists(select 1 from public.sport_quiz_life_chapters where id = ch) then probs := probs || 'chapter_invalid'::text; end if;
+        if v ? 'sport' then probs := probs || 'sport_not_for_life'::text; end if;
+        if cardinality(probs) = 0 then
+          probs := probs || array(select 'life_copy:' || x from unnest(public.quiz_life_copy_problems(v ->> 'prompt',opts,v ->> 'explanation',ch)) x);
+        end if;
+      elsif topic is not null then
+        if v ? 'chapter' then probs := probs || 'chapter_not_for_trivia'::text; end if;
+        sport_text := case topic when 'science' then coalesce(nullif(btrim(v ->> 'sport'),''),'Science') when 'geography' then coalesce(nullif(btrim(v ->> 'sport'),''),'Geography')
+          when 'general' then coalesce(nullif(btrim(v ->> 'sport'),''),'General') else btrim(coalesce(v ->> 'sport','')) end;
+        if char_length(sport_text) not between 2 and 80 then probs := probs || 'sport_invalid'::text; end if;
+      end if;
+      if jsonb_typeof(v -> 'prompt') = 'string' then
+        n := public.quiz_fresh_norm(v ->> 'prompt');
+        if n = any(existing) then probs := probs || 'duplicate'::text; end if;
+        if n = any(norms) then probs := probs || 'duplicate_in_batch'::text; end if;
+        select q.id into near from public.sport_quiz_questions q where public.quiz_fresh_norm(q.prompt) <> n and public.quiz_word_overlap(q.prompt,v ->> 'prompt') >= 0.8 limit 1;
+        if near is not null then warns := warns || jsonb_build_array(jsonb_build_object('code','near_duplicate','question_id',near)); end if;
+        for j in 1..coalesce(array_length(prompts,1),0) loop
+          if norms[j] <> n and public.quiz_word_overlap(prompts[j],v ->> 'prompt') >= 0.8 then
+            warns := warns || jsonb_build_array(jsonb_build_object('code','near_duplicate_in_batch','row',j - 1)); exit; end if;
+        end loop;
+      end if;
+      if cardinality(probs) = 0 then
+        if life then if life_left <= 0 then probs := probs || 'bank_full'::text; else life_left := life_left - 1; end if;
+        else if trivia_left <= 0 then probs := probs || 'bank_full'::text; else trivia_left := trivia_left - 1; end if; end if;
+      end if;
+    end if;
+    norms := norms || coalesce(n,''); prompts := prompts || coalesce(v ->> 'prompt','');
+    if cardinality(probs) = 0 then
+      ready := ready + 1;
+      if not p_dry_run then
+        sh := public.quiz_shuffle_options(opts,(v ->> 'correct_option')::integer,qtype);
+        insert into public.sport_quiz_questions(question_key,version,sport,prompt,options,correct_option,explanation,reason,created_by,topic_category,source_notes,
+            question_type,chapter,min_age_band,education_only)
+          values(gen_random_uuid(),1,case when life then (select title from public.sport_quiz_life_chapters where id = ch) else sport_text end,btrim(v ->> 'prompt'),sh -> 'options',
+            (sh ->> 'correct_option')::integer,btrim(v ->> 'explanation'),left('Bulk import: ' || why,500),me,topic,btrim(v ->> 'source_notes'),qtype,
+            case when life then ch end,case when life then '13' end,false) returning id into nid;
+        insert into public.sport_quiz_audit(actor_id,action,question_id,reason,created_at) values(me,'question_create',nid,left('Bulk import: ' || why,500),at);
+      end if;
+    else refused := refused + 1; end if;
+    if jsonb_array_length(warns) > 0 then warned := warned + 1; end if;
+    out := out || jsonb_build_array(jsonb_build_object('index',i,'status',case when cardinality(probs) > 0 then 'refused' when p_dry_run then 'ready' else 'imported' end,
+      'problems',to_jsonb(probs),'warnings',warns,'id',nid));
+  end loop;
+  if not p_dry_run then
+    insert into public.sport_quiz_imports(actor_id,reason,rows_total,rows_imported,rows_refused,rows_warned,created_at) values(me,why,jsonb_array_length(p_rows),ready,refused,warned,at);
+    insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'question_import',ready || ' drafts imported, ' || refused || ' refused: ' || left(why,400),at);
+  end if;
+  return jsonb_build_object('contract_version',5,'dry_run',p_dry_run,'rows_total',jsonb_array_length(p_rows),'rows_ready',ready,'rows_refused',refused,'rows_warned',warned,
+    'trivia_left',trivia_left,'life_left',life_left,'rows',out);
+end $$;
+
+-- 21. Admin snapshot: weeks left / Refill needed, the Needs a look count and the fresh-question settings -----------------------
+-- Weeks left per topic, sport and Life chapter: approved, drawable families minus what the most-exposed recent player
+-- has seen, at the last 28 days' pace; without recent play the pace is one full round per week ("assumed"). Under 4
+-- weeks reads Refill needed. Content counts and exposure pace only; no account is named.
+create or replace function public.quiz_admin_refill(p_at timestamptz)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  with size as (select coalesce((select round_size from public.sport_quiz_settings where singleton),5) n),
+  keys as (select 'topic' scope,t key from unnest(array['sport','science','geography','general']) t
+    union select 'sport',q.sport from public.sport_quiz_questions q where q.topic_category = 'sport' and q.status in ('draft','approved')
+    union select 'chapter',c.id from public.sport_quiz_life_chapters c),
+  dims as (select q.id,q.question_key,x.scope,x.key,q.status,q.question_type,q.options,q.source_notes from public.sport_quiz_questions q
+    cross join lateral (values ('topic',case when q.topic_category in ('sport','science','geography','general') then q.topic_category end),
+      ('sport',case when q.topic_category = 'sport' then q.sport end),('chapter',q.chapter)) x(scope,key) where x.key is not null),
+  bank as (select scope,key,count(*) n from dims where status = 'approved' and question_type <> 'image_choice' and public.quiz_normalize_options(options) is not null
+    and char_length(btrim(source_notes)) >= 10 and not public.quiz_question_paused(id) group by 1,2),
+  recent as (select d.scope,d.key,e.profile_id,public.quiz_week_at(e.first_issued_at) wk from public.sport_quiz_exposures e join dims d on d.id = e.question_id
+    where e.first_issued_at > p_at - interval '28 days'),
+  pace as (select scope,key,count(*) issued,count(distinct (profile_id,wk)) pw from recent group by 1,2),
+  seen as (select d.scope,d.key,e.profile_id,count(*) n from public.sport_quiz_exposures e join dims d on d.id = e.question_id
+    where e.profile_id in (select profile_id from recent) group by 1,2,3),
+  maxseen as (select scope,key,max(n) m from seen group by 1,2),
+  calc as (select k.scope,k.key,coalesce(b.n,0) approved,coalesce(p.issued,0) issued,coalesce(p.pw,0) pw,coalesce(m.m,0) max_seen,
+      case when coalesce(p.pw,0) > 0 then greatest(floor((coalesce(b.n,0) - coalesce(m.m,0)) / (p.issued::numeric / p.pw)),0)::integer
+        else floor(coalesce(b.n,0)::numeric / (select n from size))::integer end weeks_left
+    from keys k left join bank b using (scope,key) left join pace p using (scope,key) left join maxseen m using (scope,key))
+  select coalesce(jsonb_agg(jsonb_build_object('scope',scope,'key',key,'approved',approved,'pace_per_player_week',case when pw > 0 then round(issued::numeric / pw,2) else 0 end,
+    'pace_source',case when pw > 0 then 'measured' else 'assumed' end,'max_seen',max_seen,'weeks_left',weeks_left,'refill_needed',weeks_left < 4)
+    order by scope,key),'[]'::jsonb) from calc
+$$;
+create or replace function public.quiz_admin_snapshot(p_question_cursor text default null,p_audit_before bigint default null)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare me uuid := public.quiz_admin_actor(); at timestamptz := statement_timestamp(); w date := public.quiz_week_at(at);
+  c jsonb := public.quiz_cursor(p_question_cursor,'questions'); bank jsonb; audit jsonb; nextq text; nexta text; last_id uuid; last_at timestamptz; wk jsonb;
+  hidden text[] := array['fact_submit','fact_withdraw','fact_guardian','fact_clear'];
+begin
+  if p_audit_before is not null and p_audit_before <= 0 then raise exception 'quiz_cursor_invalid'; end if;
+  -- Fun-fact questions live in the fact queue, not the bank pages (they hold {answer} and belong to an athlete).
+  select coalesce(jsonb_agg(to_jsonb(q) - 'media_reviewed_by' - 'fact_id' || jsonb_build_object('media_reviewed_by',q.media_reviewed_by) order by created_at desc,id desc),'[]') into bank from
+    (select * from public.sport_quiz_questions where topic_category <> 'athlete' and (c is null or (created_at,id) < ((c ->> 'at')::timestamptz,(c ->> 'id')::uuid)) order by created_at desc,id desc limit 50) q;
+  if jsonb_array_length(bank) = 50 then
+    last_at := (bank -> 49 ->> 'created_at')::timestamptz; last_id := (bank -> 49 ->> 'id')::uuid;
+    if exists(select 1 from public.sport_quiz_questions where topic_category <> 'athlete' and (created_at,id) < (last_at,last_id)) then nextq := jsonb_build_object('v',1,'stream','questions','at',last_at,'id',last_id)::text; end if;
+  end if;
+  select coalesce(jsonb_agg(jsonb_build_object('id',x.id::text,'action',x.action,
+    'actor_id',case when x.action in ('settings','retention','life_settings','life_chapter','fresh_settings','fact_approve','fact_decline','question_restore','question_dismiss','question_import')
+      or x.action like 'question_%' then x.actor_id else null end,
+    'question_id',case when x.action like 'question_%' or x.action in ('fact_approve','fact_decline') then x.question_id else null end,'reason',x.reason,'created_at',x.created_at) order by x.id desc),'[]') into audit
+    from (select * from public.sport_quiz_audit u where (p_audit_before is null or u.id < p_audit_before) and not public.quiz_audit_is_life(u.id) and u.action <> all(hidden) order by u.id desc limit 50) x;
+  if jsonb_array_length(audit) = 50 and exists(select 1 from public.sport_quiz_audit u where u.id < (audit -> 49 ->> 'id')::bigint and not public.quiz_audit_is_life(u.id) and u.action <> all(hidden)) then nexta := audit -> 49 ->> 'id'; end if;
+  select jsonb_build_object(
+    'week_issued',count(*) filter (where s ->> 'status' = 'issued'),'week_completed',count(*) filter (where s ->> 'status' = 'completed'),
+    'week_skipped',count(*) filter (where s ->> 'status' = 'skipped'),'week_void',count(*) filter (where s ->> 'status' = 'void'),
+    'week_ended',count(*) filter (where s ->> 'status' = 'ended'),'week_expired',count(*) filter (where s ->> 'status' = 'expired'),
+    'week_rounds_short',count(*) filter (where (s ->> 'short_round')::boolean),'week_rounds_group',count(*) filter (where s ->> 'round_kind' = 'group'),
+    'week_rounds_personal',count(*) filter (where s ->> 'round_kind' = 'personal' and s ->> 'status' <> 'skipped'))
+    into wk from (select public.quiz_summary(a.id,at) s from public.sport_quiz_attempts a where a.week_start = w and a.round_kind <> 'life') x;
+  return jsonb_build_object('contract_version',2,'generated_at',at,'week_start',w,'week_end',w + 7,
+    'settings',(select (to_jsonb(s) - 'singleton' - 'fact_salt') || jsonb_build_object('contract_version',2) from public.sport_quiz_settings s where singleton),
+    'questions',bank,'question_total',(select count(*) from public.sport_quiz_questions where topic_category <> 'athlete'),
+    'active_total',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category not in ('life','athlete')),
+    'life_active_total',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and topic_category = 'life'),'life_cap',200,
+    'question_cap',300,'next_question_cursor',nextq,'audit',audit,'next_before',nexta,
+    'pools',(select coalesce(jsonb_agg(to_jsonb(x) order by topic_category,sport),'[]') from (select topic_category,sport,count(*) approved_count from public.sport_quiz_questions q
+      where status = 'approved' and topic_category not in ('life','athlete') and question_type <> 'image_choice' and public.quiz_normalize_options(options) is not null
+        and char_length(btrim(source_notes)) >= 10 and not public.quiz_question_paused(q.id) group by topic_category,sport) x),
+    'forecast',public.quiz_admin_forecast(at),
+    'refill',public.quiz_admin_refill(at),
+    'fresh',(select jsonb_build_object('athlete_questions_enabled',s.athlete_questions_enabled,'athlete_share_pct',s.athlete_share_pct,'reports_paused',s.reports_paused,
+        'self_heal',s.self_heal,'report_rules',public.quiz_report_rules(),
+        'needs_look_count',(select count(*) from public.sport_quiz_question_stats st join public.sport_quiz_questions q on q.id = st.question_id
+          where q.status in ('draft','approved') and public.quiz_needs_look(q.id)),
+        'paused_count',(select count(*) from public.sport_quiz_question_stats st join public.sport_quiz_questions q on q.id = st.question_id where q.status in ('draft','approved') and st.paused_at is not null),
+        'facts_admin_review',(select count(*) from public.quiz_athlete_facts where status = 'admin_review'),
+        'facts_guardian_review',(select count(*) from public.quiz_athlete_facts where status = 'guardian_review'),
+        'facts_live',(select count(*) from public.quiz_athlete_facts where status = 'approved'),
+        'imports_30d',(select count(*) from public.sport_quiz_imports where created_at > at - interval '30 days'),
+        'alerts',coalesce((select jsonb_agg(distinct u.reason) from public.sport_quiz_audit u where u.action = 'report_alert' and u.created_at >= date_trunc('day',at at time zone 'UTC') at time zone 'UTC'),'[]'::jsonb))
+      from public.sport_quiz_settings s where s.singleton),
+    'bank_counts',jsonb_build_object(
+      'topics',(select coalesce(jsonb_agg(jsonb_build_object('topic_category',x.topic_category,'draft_count',x.d,'approved_count',x.a) order by x.topic_category),'[]'::jsonb)
+        from (select topic_category,count(*) filter (where status = 'draft') d,count(*) filter (where status = 'approved') a
+          from public.sport_quiz_questions where status in ('draft','approved') and topic_category <> 'athlete' group by topic_category) x),
+      'sports',(select coalesce(jsonb_agg(jsonb_build_object('sport',x.sport,'draft_count',x.d,'approved_count',x.a) order by x.sport),'[]'::jsonb)
+        from (select sport,count(*) filter (where status = 'draft') d,count(*) filter (where status = 'approved') a
+          from public.sport_quiz_questions where status in ('draft','approved') and topic_category = 'sport' group by sport) x),
+      'chapters',(select coalesce(jsonb_agg(jsonb_build_object('chapter',c.id,'draft_count',coalesce(x.d,0),'approved_count',coalesce(x.a,0)) order by c.position),'[]'::jsonb)
+        from public.sport_quiz_life_chapters c left join (select chapter,count(*) filter (where status = 'draft') d,count(*) filter (where status = 'approved') a
+          from public.sport_quiz_questions where status in ('draft','approved') and topic_category = 'life' group by chapter) x on x.chapter = c.id)),
+    'counts',wk || jsonb_build_object(
+      'questions_draft',(select count(*) from public.sport_quiz_questions where status = 'draft' and topic_category <> 'athlete'),
+      'questions_approved',(select count(*) from public.sport_quiz_questions where status = 'approved' and topic_category <> 'athlete'),
+      'questions_archived',(select count(*) from public.sport_quiz_questions where status = 'archived' and topic_category <> 'athlete'),
+      'questions_void',(select count(*) from public.sport_quiz_questions where status = 'void' and topic_category <> 'athlete'),
+      'questions_true_false',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and question_type = 'true_false'),
+      'questions_image',(select count(*) from public.sport_quiz_questions where status in ('draft','approved') and question_type = 'image_choice'),
+      'week_items_issued',(select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.week_start = w and a.round_kind <> 'life'),
+      'week_items_answered',(select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.week_start = w and a.round_kind <> 'life' and i.status = 'answered'),
+      'week_items_void',(select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.week_start = w and a.round_kind <> 'life' and i.status = 'void'),
+      'badges_issued',(select count(*) from public.sport_quiz_badges where voided_at is null and kind <> 'life'),
+      'badges_void',(select count(*) from public.sport_quiz_badges where voided_at is not null and kind <> 'life'),
+      'badges_sport',(select count(*) from public.sport_quiz_badges where voided_at is null and kind = 'sport'),
+      'badges_family',(select count(*) from public.sport_quiz_badges where voided_at is null and kind = 'family'),
+      'badges_season',(select count(*) from public.sport_quiz_badges where voided_at is null and kind = 'season'),
+      'badges_group_visible',(select count(*) from public.sport_quiz_badges where voided_at is null and visibility = 'groups'),
+      'recap_facts_quarter',(select coalesce(sum(public.quiz_facts(p.profile_id,date_trunc('quarter',at at time zone 'UTC')::date,(date_trunc('quarter',at at time zone 'UTC') + interval '3 months')::date)),0)
+        from (select distinct profile_id from public.sport_quiz_attempts) p)
+        - (select count(*) from public.sport_quiz_round_items i join public.sport_quiz_attempts a on a.id = i.attempt_id where a.round_kind = 'life' and i.status = 'answered'
+           and a.week_start >= date_trunc('quarter',at at time zone 'UTC')::date and a.week_start < (date_trunc('quarter',at at time zone 'UTC') + interval '3 months')::date),
+      'preferences_weekly',(select count(*) from public.sport_quiz_preferences where invitation_mode = 'weekly'),
+      'exposures',(select count(*) from public.sport_quiz_exposures e where not exists(select 1 from public.sport_quiz_questions q where q.id = e.question_id and q.topic_category = 'life')),
+      'week_spent',(select count(*) from public.sport_quiz_week_guards where week_start = w and round_kind <> 'life'),
+      'retained_guards',(select count(*) from public.sport_quiz_week_guards where round_kind <> 'life'),'retained_requests',(select count(*) from public.sport_quiz_requests where round_kind <> 'life')),
+    'groups',jsonb_build_object(
+      'groups_active',(select count(*) from public.sport_quiz_groups where status = 'active'),
+      'groups_closed',(select count(*) from public.sport_quiz_groups where status = 'closed'),
+      'members_active',(select count(*) from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id where m.status = 'active' and g.status = 'active'),
+      'members_removed',(select count(*) from public.sport_quiz_group_members where status = 'removed'),
+      'groups_played_this_week',(select count(distinct m.group_id) from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+         where m.status = 'active' and g.status = 'active' and public.quiz_played(m.profile_id,w)),
+      'codes_active',(select count(*) from public.sport_quiz_group_codes where expires_at > at),
+      'codes_issued',(select coalesce(sum(codes_issued),0) from public.sport_quiz_groups),
+      'joins_7d',(select count(*) from public.sport_quiz_group_join_attempts where outcome = 'joined' and created_at > at - interval '7 days'),
+      'refusals_7d',(select count(*) from public.sport_quiz_group_join_attempts where outcome = 'refused' and created_at > at - interval '7 days'),
+      'wrong_codes_7d',(select count(*) from public.sport_quiz_group_join_attempts where outcome = 'wrong_code' and created_at > at - interval '7 days'),
+      'reports_7d',(select count(*) from public.sport_quiz_group_cases where kind = 'report' and created_at > at - interval '7 days'),
+      'sets_this_week',(select count(distinct group_id) from public.sport_quiz_group_sets where week_start = w),
+      'retained_sets',(select count(*) from public.sport_quiz_group_sets),'retained_join_attempts',(select count(*) from public.sport_quiz_group_join_attempts)),
+    'reports',coalesce((select jsonb_agg(jsonb_build_object('id',r.id::text,'group_id',r.group_id,'reason_code',r.reason_code,'created_at',r.created_at) order by r.id desc)
+      from (select * from public.sport_quiz_group_cases where kind = 'report' order by id desc limit 50) r),'[]'::jsonb));
+end $$;
+
+-- 22. Retention and erasure ---------------------------------------------------------------------------------------------------
+-- QUIZ-03's retention plus reports: reporter ids cleared at 90 days, reports deleted at 180 (500 per run each).
+create or replace function public.quiz_admin_retention(p_reason text,p_expected_actor_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_expected_actor(p_expected_actor_id,true); at timestamptz; ng bigint; nr bigint; kept bigint; nc bigint; ns bigint; nj bigint; ngp bigint; rc bigint; rd bigint; fp bigint;
+begin
+  if char_length(btrim(coalesce(p_reason,''))) not between 10 and 500 then raise exception 'quiz_retention_invalid'; end if;
+  perform 1 from public.sport_quiz_settings where singleton for update; if not found then raise exception 'quiz_unavailable'; end if; at := clock_timestamp();
+  delete from public.sport_quiz_requests where (profile_id,request_id) in (select profile_id,request_id from public.sport_quiz_requests where prune_after <= at order by prune_after,profile_id,request_id limit 500); get diagnostics nr = row_count;
+  delete from public.sport_quiz_week_guards where (profile_id,week_start) in (select profile_id,week_start from public.sport_quiz_week_guards where prune_after <= at order by prune_after,profile_id,week_start limit 500); get diagnostics ng = row_count;
+  delete from public.sport_quiz_group_codes where group_id in (select group_id from public.sport_quiz_group_codes where expires_at <= at order by expires_at,group_id limit 500); get diagnostics nc = row_count;
+  delete from public.sport_quiz_group_sets where (group_id,week_start,position) in (select group_id,week_start,position from public.sport_quiz_group_sets where prune_after <= at order by prune_after,group_id,week_start,position limit 500); get diagnostics ns = row_count;
+  delete from public.sport_quiz_group_join_attempts where id in (select id from public.sport_quiz_group_join_attempts where prune_after <= at order by prune_after,id limit 500); get diagnostics nj = row_count;
+  delete from public.sport_quiz_groups where id in (select id from public.sport_quiz_groups where (status = 'closed' and closed_at <= at - interval '35 days')
+    or (status = 'active' and not exists(select 1 from public.sport_quiz_group_members m where m.group_id = id and m.status = 'active')) order by created_at,id limit 500); get diagnostics ngp = row_count;
+  update public.sport_quiz_reports set reporter_id = null,reporter_cleared_at = at where id in (select id from public.sport_quiz_reports
+    where reporter_id is not null and created_at <= at - interval '90 days' order by created_at,id limit 500); get diagnostics rc = row_count;
+  delete from public.sport_quiz_reports where id in (select id from public.sport_quiz_reports where created_at <= at - interval '180 days' order by created_at,id limit 500); get diagnostics rd = row_count;
+  -- Declined fun-fact text goes 30 days after the decision (the decision and reason code stay for the athlete's export).
+  update public.quiz_athlete_facts set answer_text = null,cleared_at = at,clear_cause = 'declined_purged',look_reasons = '{}',updated_at = at
+    where id in (select id from public.quiz_athlete_facts where status = 'declined' and answer_text is not null
+      and coalesce(admin_decided_at,guardian_decided_at,updated_at) <= at - interval '30 days' order by updated_at,id limit 500); get diagnostics fp = row_count;
+  select count(*) into kept from public.sport_quiz_week_guards where prune_after > at;
+  insert into public.sport_quiz_audit(actor_id,action,reason,created_at) values(me,'retention',btrim(p_reason),at);
+  return jsonb_build_object('contract_version',2,'removed_guards',ng,'removed_requests',nr,'preserved_guards',kept,'batch_limit',500,
+    'removed_codes',nc,'removed_group_sets',ns,'removed_join_attempts',nj,'removed_groups',ngp,'cleared_reporters',rc,'removed_reports',rd,'purged_declined_facts',fp);
+end $$;
+-- QUIZ-04's erasure plus the caller's own reports.
+create or replace function public.quiz_erase_history(p_expected_history_version bigint,p_expected_profile_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare me uuid := public.quiz_life_expected_actor(p_expected_profile_id); at timestamptz; w date; rev bigint; na bigint; ne bigint; nb bigint; nr bigint; nau bigint;
+  prune timestamptz; gid uuid; owner uuid; ng bigint := 0; nj bigint; ns bigint := 0; n bigint; nl bigint; nrep bigint;
+begin
+  perform 1 from public.sport_quiz_settings where singleton for share;
+  if not found then raise exception 'quiz_unavailable'; end if;
+  for gid in select group_id from public.sport_quiz_group_members where profile_id = me and status = 'active' order by group_id loop
+    perform 1 from public.sport_quiz_groups where id = gid for update;
+  end loop;
+  perform public.quiz_lock(me); at := clock_timestamp(); w := public.quiz_week_at(at);
+  insert into public.sport_quiz_preferences(profile_id) values(me) on conflict do nothing;
+  select history_version into rev from public.sport_quiz_preferences where profile_id = me for update;
+  if rev is distinct from p_expected_history_version then raise exception 'quiz_history_stale'; end if;
+  perform public.quiz_spend(me,w,at,'personal'); perform public.quiz_spend(me,w,at,'group'); perform public.quiz_spend(me,w,at,'life');
+  select prune_after into prune from public.sport_quiz_week_guards where profile_id = me and week_start = w and round_kind = 'personal';
+  select count(*) into na from public.sport_quiz_attempts where profile_id = me;
+  for gid in select group_id from public.sport_quiz_group_members where profile_id = me and status = 'active' order by group_id loop
+    delete from public.sport_quiz_group_members where group_id = gid and profile_id = me;
+    ng := ng + 1;
+    perform public.log_supervision_event(me,'trivia_group_left','{}'::jsonb);
+    select owner_id into owner from public.sport_quiz_groups where id = gid;
+    if owner = me then perform public.quiz_group_handover(gid,me,at);
+    elsif public.quiz_group_active_count(gid) = 0 then
+      update public.sport_quiz_groups set status = 'closed',closed_at = at,close_reason = 'dissolved' where id = gid and status = 'active';
+    end if;
+    if (select status from public.sport_quiz_groups where id = gid) = 'closed' then
+      delete from public.sport_quiz_group_sets where group_id = gid; get diagnostics n = row_count; ns := ns + n;
+    end if;
+  end loop;
+  select count(*) into nj from public.sport_quiz_group_join_attempts where profile_id = me;
+  delete from public.sport_quiz_badges where profile_id = me; get diagnostics nb = row_count;
+  delete from public.sport_quiz_requests where profile_id = me; get diagnostics nr = row_count;
+  delete from public.sport_quiz_exposures where profile_id = me; get diagnostics ne = row_count;
+  delete from public.sport_quiz_reports where reporter_id = me; get diagnostics nrep = row_count;
+  perform set_config('quiz.erase_profile',me::text,true);
+  delete from public.sport_quiz_audit where actor_id = me and action in ('start','answer','skip','end'); get diagnostics nau = row_count;
+  delete from public.sport_quiz_levels where profile_id = me; get diagnostics nl = row_count;
+  perform set_config('quiz.erase_profile','',true);
+  delete from public.sport_quiz_attempts where profile_id = me;
+  update public.sport_quiz_preferences set history_version = history_version + 1,updated_at = at where profile_id = me;
+  return jsonb_build_object('contract_version',2,'profile_id',me,'history_version',rev + 1,'week_start',w,'week_spent',true,'quota_prune_after',prune,
+    'removed_attempts',na,'removed_exposures',ne,'removed_badges',nb,'removed_requests',nr,'removed_audit',nau,
+    'removed_group_memberships',ng,'retained_join_attempts',nj,'removed_group_sets',ns,'removed_levels',nl,'removed_reports',nrep);
+end $$;
+
+-- 23. Guardian supervision: QUIZ-03's summary with "fun_facts_shared" (the same count for teen and guardian) ------------------
+create or replace function public.supervision_json(minor uuid, events_since timestamptz)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'profile_id', p.id,
+    'first_name', public.first_name_of(p.id),
+    'username', p.username,
+    'settings', public.privacy_settings_json(p.id),
+    'status', public.minor_status_json(p.id, false),
+    'summary', jsonb_build_object(
+      'friends', (select count(*) from public.friendships f where f.status = 'accepted' and p.id in (f.requester_id, f.addressee_id)),
+      'incoming_requests', (select count(*) from public.friendships f where f.status = 'pending' and f.addressee_id = p.id),
+      'blocked_accounts', (select count(*) from public.user_blocks u where u.blocker_id = p.id),
+      'tags_waiting', (select count(*) from public.reels r
+                       where r.player_id = public.verified_player_of(p.id) and r.tag_status = 'pending'),
+      'hidden_from_search', p.hide_from_search,
+      'trivia_groups', (select count(*) from public.sport_quiz_group_members m join public.sport_quiz_groups g on g.id = m.group_id
+                        where m.profile_id = p.id and m.status = 'active' and g.status = 'active'),
+      -- QUIZ-05: approved fun facts live now; a count only, never the text.
+      'fun_facts_shared', (select count(*) from public.quiz_athlete_facts x where x.athlete_id = p.id and x.status = 'approved'),
+      -- CHAL-01: workout challenge invites delivered in the last 7 days.
+      'challenge_invites_7d', (select count(*) from public.challenge_nudges n
+                               where n.recipient_id = p.id and n.delivered and n.created_at > timezone('utc', now()) - interval '7 days')
+    ),
+    'events', coalesce((
+      select jsonb_agg(jsonb_build_object('kind', e.kind, 'detail', e.detail, 'at', e.created_at,
+                                          'by_teen', e.actor_id is not distinct from p.id) order by e.created_at desc)
+      from (
+        select * from public.supervision_events e
+        where e.minor_id = p.id and e.created_at >= coalesce(events_since, '-infinity'::timestamptz)
+          and e.created_at > timezone('utc', now()) - interval '365 days'
+        order by e.created_at desc limit 30
+      ) e
+    ), '[]'::jsonb)
+  )
+  from public.profiles p where p.id = minor;
+$$;
+
+-- 24. Access: RPC-only tables with the Closed accounts policy, explicit revokes and grants -----------------------------------
+do $$ declare t text; f record; begin
+  foreach t in array array['quiz_athlete_facts','sport_quiz_question_stats','sport_quiz_reports','sport_quiz_imports'] loop
+    execute format('alter table public.%I enable row level security',t);
+    execute format('revoke all on table public.%I from public,anon,authenticated,service_role',t);
+    execute format('drop policy if exists "Closed accounts" on public.%I',t);
+    execute format('create policy "Closed accounts" on public.%I as restrictive for all to authenticated using ((select public.caller_not_age_blocked())) with check ((select public.caller_not_age_blocked()))',t);
+  end loop;
+  revoke all on sequence public.sport_quiz_reports_id_seq from public,anon,authenticated,service_role;
+  for f in select p.oid::regprocedure signature from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname like 'quiz\_%' escape '\' loop
+    execute format('revoke all on function %s from public,anon,authenticated,service_role',f.signature);
+  end loop;
+  revoke all on function public.supervision_json(uuid,timestamptz) from public,anon,authenticated;
+  grant execute on function public.supervision_json(uuid,timestamptz) to service_role;
+end $$;
+grant execute on function public.quiz_snapshot(),public.quiz_preferences(jsonb,bigint,uuid,uuid),public.quiz_invitation(date,uuid,uuid),
+ public.quiz_start(text,text,integer,date,text,uuid,text,uuid),public.quiz_answer(uuid,integer,uuid,text,uuid),
+ public.quiz_end(uuid,uuid,date,text,uuid,uuid,text),public.quiz_skip(date,uuid,uuid),public.quiz_receipt(uuid),public.quiz_history(text),
+ public.quiz_erase_history(bigint,uuid),public.quiz_admin_snapshot(text,bigint),public.quiz_admin_settings(jsonb,text,uuid),
+ public.quiz_admin_question(uuid,text,jsonb,uuid),public.quiz_admin_retention(text,uuid),
+ public.quiz_next(uuid,integer,uuid,text,uuid),public.quiz_group_start(uuid,integer,date,text,uuid,text,uuid),
+ public.quiz_badge_shelf(),public.quiz_badge_visibility(uuid,text,uuid),public.quiz_season_recap(text),
+ public.quiz_group_create(text,text,uuid,uuid),public.quiz_group_join(text,uuid),public.quiz_group_leave(uuid,uuid),
+ public.quiz_group_remove_member(uuid,text,uuid),public.quiz_group_renew_code(uuid,uuid),public.quiz_group_set_theme(uuid,text,uuid),
+ public.quiz_group_page(uuid),public.quiz_groups_mine(),public.quiz_group_report(uuid,text,uuid),
+ public.quiz_admin_play_settings(jsonb,text,uuid),public.quiz_admin_group_case(uuid,text,uuid),public.quiz_admin_group_remove(uuid,uuid,text,uuid),
+ public.quiz_life_start(date,uuid,text,uuid,text,text,integer),public.quiz_life_snapshot(),public.quiz_life_chapters(),public.quiz_life_progress(),
+ public.quiz_level(),public.quiz_life_preferences(boolean,text,bigint,uuid),
+ public.quiz_admin_life_settings(jsonb,text,uuid),public.quiz_admin_life_chapter(text,boolean,text,uuid),public.quiz_admin_life_snapshot(),
+ -- QUIZ-05
+ public.quiz_learn_start(uuid,text,integer,date,text,uuid,text,uuid),public.quiz_report(uuid,text,uuid),
+ public.quiz_fact_submit(text,text,uuid),public.quiz_fact_withdraw(uuid,uuid),public.quiz_fact_mine(),public.quiz_fact_counts(),public.quiz_fact_export(),
+ public.quiz_fact_guardian_pending(),public.quiz_fact_guardian_decide(uuid,boolean,uuid),
+ public.quiz_admin_fact_queue(),public.quiz_admin_fact_decide(uuid,text,jsonb,uuid),public.quiz_admin_needs_look(),
+ public.quiz_admin_needs_look_action(uuid,text,text,uuid),public.quiz_admin_fresh_settings(jsonb,text,uuid),public.quiz_admin_import(jsonb,boolean,text,uuid) to authenticated;
+
+-- End of the QUIZ blocks: the transaction-local setting ends here, so a later lone re-run of QUIZ-03 or QUIZ-04 stops again.
+commit;

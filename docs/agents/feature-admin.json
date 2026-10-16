@@ -754,6 +754,548 @@
         "admin": null,
         "app": null
       }
+    },
+    {
+      "id": "FUN-01",
+      "title": "Fan Zone testing-only fan submissions and free ballots",
+      "owner": "POLLS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-14T05:29:26Z",
+      "exemption": null,
+      "source": {
+        "description": "Private Fan Zone campaigns, revision-bound entries/consents, one versioned free ballot per eligible profile/window, report/removal receipts and optional private reflection via narrow server RPCs. Unknown reads are unavailable; no payment or Aura credit. Design docs/engineering/design/FAN_ZONE_DESIGN.md.",
+        "paths": [
+          "supabase/migrations/20261014130000_fan_zone.sql",
+          "packages/shared-types/fanZone.ts",
+          "apps/mobile/src/frontend/lib/fanZone.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/fan-zone",
+        "actions": [
+          "Create testing campaign and configure rules/deadlines/curated story; open/pause/close; review entries; invalidate proven bad ballots with reasons; finalize/recount valid results; resolve/escalate cases and complete authorized media removal."
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/fan-zone.tsx",
+          "apps/mobile/src/frontend/components/Admin/FanZone/FanZoneScreen.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/fan-zone",
+        "metrics": [
+          "Complete selected-campaign Data list (cap 100 entries); status/permission/valid ballot/result/case counts with defined windows, cursor-paged cases/audit; source unavailable stays unknown. Restricted personal material stays on corrective desk; Analytics/Health/Support linked; SUPPORT reviews upload/vote/removal and hosted sensor gaps."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/FanZone/FanZoneScreen.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "No new runtime flag: all campaign states enforced on server, default draft/testing-only; pause denies entry/votes. Withdraw/revoke/remove and reports stay available. Invalidated result needs explicit valid recount. Private revocable API never exposes signed URLs; missing API/SQL unavailable. No SQL application or hosted launch.",
+        "paths": [
+          "supabase/migrations/20261014130000_fan_zone.sql",
+          "apps/mobile/src/backend/services/fanZoneMedia.ts"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible enrolled tester",
+          "confirmed linked guardian",
+          "non-account concern receipt"
+        ],
+        "deniedBehavior": "RPC guards and closed-account restrictive RLS; no client direct table writes/private media reads or overwrites. Exact entry revision permission, active guardian and verified sanitized media required for public candidacy. Guests/unknown/closed/under-13 cannot submit/consent/vote; private reads bounded by ownership/link/admin. Real actor SQL replay required. Testing audience is an empty-by-default canonical profile allowlist; guest/unlisted users cannot read campaigns/candidates/media. Consent compares exact current expected scope/form version.",
+        "paths": [
+          "supabase/migrations/20261014130000_fan_zone.sql",
+          "scripts/replay/fan-zone-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/fan-zone",
+        "paths": [
+          "apps/mobile/app/fan-zone.tsx",
+          "apps/mobile/src/frontend/components/FanZone/FanZoneScreen.tsx",
+          "apps/mobile/src/frontend/hooks/useFanZone.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-14T13:42:36Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/FUN-01-admin.md",
+              "command": "node scripts/replay/schema-replay.mjs .smoke/runtime/pglite-cache/package/dist",
+              "result": "Root105/105 PG18.6 exact canonical composition; worker154/154 Fan actors and2suites45SDK/admin tests; independent specification/quality and local Data/Safety/SUPPORT PASS. No hosted/device/counsel release."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-14T14:49:04Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/FUN-01-app.md",
+              "command": "pnpm check",
+              "result": "Root exit0:148 mobile suites/1146 assertions, both typechecks and all guards; canonical105/Fan154/Quiz34 actors pass. Independent broad source/Data/Safety/SUPPORT and actual Documentation/VP role reviews PASS. Local source only; no hosted/device/counsel release."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "QUIZ-01",
+      "title": "Weekly Sport Pop Quiz with noncash private learning badges",
+      "owner": "POLLS",
+      "status": "admin-ready",
+      "plannedAt": "2026-10-14T05:31:01Z",
+      "exemption": null,
+      "source": {
+        "description": "Server-assigned approved question version once per canonical eligible profile/UTC week, durable answer/idempotent request, private noncash completion badge, skip status. No correct-answer leakage before completion; no money/Aura/vote effect. Design docs/engineering/design/SPORT_POP_QUIZ_DESIGN.md.",
+        "paths": [
+          "supabase/migrations/20261014140000_sport_pop_quiz.sql",
+          "packages/shared-types/sportQuiz.ts",
+          "apps/mobile/src/frontend/lib/sportQuiz.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/sport-quiz",
+        "actions": [
+          "Manage/review versioned questions; pause/enable testing; archive/void erroneous question with reasons and corrected badge status."
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/sport-quiz",
+        "metrics": [
+          "Complete <=100 question Data bank, current UTC-week issued/completed/skipped counts, noncash valid/void badge counts, paged audit; unknown reads unavailable; no raw account answers/identities in Growth. Link existing Analytics/Health/Support; SUPPORT accepts safe fixed-code error/test sensors and explicit hosted gaps."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Default paused/testing-only server setting denies start/answer; prior private valid badges remain readable. Skip optional; void question prevents later answers and hides invalid badge. No runtime/hosted publication or payment impact. Missing migration unavailable.",
+        "paths": [
+          "supabase/migrations/20261014140000_sport_pop_quiz.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible enrolled tester"
+        ],
+        "deniedBehavior": "No direct table writes or correct-answer reads; narrow server RPCs use canonical auth/profile/age/week/settings/ownership; guests/unknown/closed/under-13 denied participation. Real actor SQL replay verifies duplicate/stale/wrong-owner/void behavior. Default paused/empty tester allowlist, production enable refused.",
+        "paths": [
+          "supabase/migrations/20261014140000_sport_pop_quiz.sql",
+          "scripts/replay/sport-quiz-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/sport-quiz",
+        "paths": [
+          "apps/mobile/app/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizScreen.tsx",
+          "apps/mobile/src/frontend/hooks/useSportQuiz.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-14T06:09:57Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-01-admin.md",
+              "command": "node scripts/replay/schema-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "Root105/105 PGlite18.6 after final migration append; worker34/34 Quiz actor checks and2suites30tests; independent local Data/Safety/SUPPORT source acceptance PASS. No hosted/device/counsel release."
+            }
+          ]
+        },
+        "app": null
+      }
+    },
+    {
+      "id": "QUIZ-02",
+      "title": "Optional timed sports trivia with private participation badges",
+      "owner": "POLLS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-14T16:15:21Z",
+      "exemption": null,
+      "source": {
+        "description": "Owner-approved 30/90 second reviewed trivia, default-off invitations, unseen issued families, original-view capability and exact mutation receipts. New private preference/exposure/receipt/35-day quota contracts; old untimed attempts historical. Plan docs/engineering/design/TIMED_TRIVIA_IMPLEMENTATION_PLAN.md.",
+        "paths": [
+          "supabase/migrations/20261014150000_timed_sport_trivia.sql",
+          "packages/shared-types/timedSportQuiz.ts",
+          "apps/mobile/src/frontend/lib/sportQuiz.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/sport-quiz",
+        "actions": [
+          "Review source/family/version facts; page full question bank and audit separately; pause/enable testing; void/correct content; prune bounded expired recovery/quota records with reason."
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizBank.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/sport-quiz",
+        "metrics": [
+          "Full bank/family/topic totals with 50-row inventory and separate 50-row audit paging; effective active/expired and persisted terminal counts; aggregate private badge/preference/quota/receipt totals. Data/Safety/SUPPORT review unknown reads, retention, correction and stop coverage. No individual child answers or duration profiling in Growth."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Default paused/testing-only/empty cohort; pause terminalizes active rounds permanently and denies new starts/answer commits. Own committed receipt/history, Off and End remain authorized. Missing migration/invalid v2 unavailable; no automatic prompt or question fallback. Retention preserves unexpired35-day minimal quota.",
+        "paths": [
+          "supabase/migrations/20261014150000_timed_sport_trivia.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible enrolled tester"
+        ],
+        "deniedBehavior": "Canonical JWT plus expected profile on every participant mutation and expected initiating admin actor on settings/question/retention writes; known-age restrictions remain. No direct private table/helper access. Active prompt only exact original Start capability; ordinary snapshot/history/quiz_receipt active-prompt-free, own terminal learning allowed. Owner End no secret; cancelled Start/erasure cannot revive quota. Erasure retains disclosed preferences/notice/revision and35-day minimal quota, uncertain CAS requires Refresh/reconfirm. First legacy upgrade resets enabled/nonempty untimed cohort to paused/empty; subsequent canonical repeats preserve timed settings/preferences/history/live deadlines. Actor replay checks grants/identity/expiry/retry/closure/family/legacy boundaries.",
+        "paths": [
+          "supabase/migrations/20261014150000_timed_sport_trivia.sql",
+          "scripts/replay/timed-trivia-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/sport-quiz",
+        "paths": [
+          "apps/mobile/app/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizScreen.tsx",
+          "apps/mobile/src/frontend/hooks/useSportQuiz.ts",
+          "apps/mobile/src/frontend/hooks/useTimedSportQuizRound.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-14T16:53:17Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-02-admin.md",
+              "command": "node scripts/replay/schema-replay.mjs .smoke/runtime/pglite-cache/package/dist",
+              "result": "Root105/105 canonical reapply, Fan154/154, historicalQuiz34/34, timed50/50 all exit0; worker SDK/admin77tests/typecheck0; independent specification/quality/Data/Privacy/Safety/SUPPORT PASS. Local admin only; no participant/hosted/device/counsel release."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-14T18:23:47Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-02-app.md",
+              "command": "pnpm check",
+              "result": "Root exit0: 150 mobile suites/1,219 tests, both app typechecks and all guards; unchanged canonical105/Fan154/historical34/timed50 actors. Independent whole-phase plus final scoped source/specification/quality/Data/Privacy/Safety/SUPPORT PASS at53a6104. Local source only; no hosted, device, counsel or launch certification."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "QUIZ-03",
+      "title": "Trivia, play together: weekly rounds of five, true/false (images later), Learn your athlete's sport, family challenge groups, badge shelf and season recap, starter question bank",
+      "owner": "POLLS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-14T19:44:21Z",
+      "exemption": null,
+      "source": {
+        "description": "Builds on QUIZ-02 (paused / testing-only / empty cohort). New round items with per-item deadlines, question types, private challenge groups joined by hashed codes under MINOR-01 teen rules, sport and season badges, drafts-only starter bank. Design: docs/engineering/design/TRIVIA_PLAY_TOGETHER_DESIGN.md (review §9 adopted).",
+        "paths": [
+          "docs/engineering/design/TRIVIA_PLAY_TOGETHER_DESIGN.md",
+          "supabase/migrations/20261014160000_trivia_play_together.sql",
+          "supabase/migrations/20261014170000_trivia_starter_bank.sql",
+          "supabase/content/trivia_starter_bank.json",
+          "scripts/trivia-bank-sql.mjs"
+        ]
+      },
+      "admin": {
+        "route": "/admin/sport-quiz",
+        "actions": [
+          "Round size setting; question type fields; bank exhaustion forecast; group counts (never names or answers); audited group case view and removal from a report; group and image switches; retention purge"
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizPlay.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizGroups.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizBank.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/sport-quiz",
+        "metrics": [
+          "Groups, members, active this week, codes made, join refusals by reason; rounds started / completed; items per round; badges by label; weeks until each sport runs out"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizPlay.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizGroups.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Inherits QUIZ-02 pause / empty cohort; switches trivia.groups (new groups and joins) and trivia.images (off) never loosen safety rules.",
+        "paths": [
+          "supabase/migrations/20261014160000_trivia_play_together.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible enrolled tester"
+        ],
+        "deniedBehavior": "RPC-only; group joins follow MINOR-01 teen rules both ways and blocks; codes hashed and rate-limited; no member answers or counts exposed; guardian sees group count only.",
+        "paths": [
+          "supabase/migrations/20261014160000_trivia_play_together.sql",
+          "scripts/replay/trivia-play-together-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/sport-quiz",
+        "paths": [
+          "apps/mobile/app/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizRound.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizGroups.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizGroupPage.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizBadgeShelf.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LearnSportCard.tsx",
+          "apps/mobile/src/frontend/hooks/useTimedSportQuizRound.ts",
+          "apps/mobile/src/frontend/hooks/useTriviaGroups.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-14T21:12:19Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-03-admin.md",
+              "command": "node scripts/replay/trivia-play-together-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "59/59 on PGlite (Postgres 18.6); schema 105/105; timed trivia with and without QUIZ-03 all pass. No hosted database."
+            },
+            {
+              "path": "docs/engineering/evidence/QUIZ-03-admin.md",
+              "command": "pnpm check",
+              "result": "exit 0, 153 suites / 1,255 tests (implementer run after the security fixes). SQL review APPROVED."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-14T21:43:11Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-03-app.md",
+              "command": "pnpm check",
+              "result": "exit 0: 156 suites / 1,286 tests and every guard. No device, screen reader or hosted database."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "QUIZ-04",
+      "title": "Life Playbook (opt-in, simple fun-fact trivia: Money Huddle, Savings Season, Scam Defense, Smart Plays) and personal progress (separate weekly allowances, levels that only go up)",
+      "owner": "POLLS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-14T21:53:41Z",
+      "exemption": null,
+      "source": {
+        "description": "Builds on QUIZ-02/03. Separate personal / group / life weekly guards; levels from facts learned that never drop; Life Playbook simplified by the owner 2026-10-15 to simple well-known facts: four 13+ chapters, one-admin approval like other trivia, automatic copy rules (no advice, brands, Tapua'i money words, NIL, tax / loan / credit, money figures or years). Design: docs/engineering/design/LIFE_PLAYBOOK_DESIGN.md (§8 overrides §2–§7).",
+        "paths": [
+          "docs/engineering/design/LIFE_PLAYBOOK_DESIGN.md",
+          "supabase/migrations/20261014180000_life_playbook.sql",
+          "supabase/migrations/20261014190000_life_playbook_bank.sql",
+          "supabase/content/life_playbook_bank.json",
+          "supabase/content/life_copy_rules.json",
+          "scripts/life-bank-sql.mjs"
+        ]
+      },
+      "admin": {
+        "route": "/admin/sport-quiz",
+        "actions": [
+          "trivia.life switch; chapters with 'needs N more approved question(s)' (open at 5); life question fields with copy rules at approval; level thresholds"
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLifeQuestion.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizBank.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/sport-quiz",
+        "metrics": [
+          "Opt-ins, Life rounds, chapter coverage, level distribution, per-question stats (>= 20 responders), cells under 10 hidden (aggregate only)"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "trivia.life off by default and stops new life rounds without touching personal or group play; inherits the QUIZ-02 pause / empty cohort.",
+        "paths": [
+          "supabase/migrations/20261014180000_life_playbook.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible enrolled tester"
+        ],
+        "deniedBehavior": "RPC-only; Life only via quiz_life_start for trivia-eligible 13+ accounts; no personal financial data; aggregate-only admin stats; Closed accounts policy on new tables.",
+        "paths": [
+          "supabase/migrations/20261014180000_life_playbook.sql",
+          "scripts/replay/life-playbook-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/sport-quiz",
+        "paths": [
+          "apps/mobile/app/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizScreen.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizAllowances.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizLevel.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LifePlaybookCard.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LifePlaybookHome.tsx",
+          "apps/mobile/src/frontend/hooks/useTimedSportQuizRound.ts",
+          "apps/mobile/src/frontend/hooks/useLifePlaybook.ts",
+          "apps/mobile/src/frontend/hooks/useTriviaLevel.ts",
+          "apps/mobile/src/frontend/lib/lifePlaybook.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-15T03:14:48Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-04-admin.md",
+              "command": "node scripts/replay/life-playbook-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "31/31 after the owner simplification (lead run); schema 105/105; QUIZ-03 59/59. Earlier full SQL review APPROVED; removal narrows the surface. No hosted database."
+            },
+            {
+              "path": "docs/engineering/evidence/QUIZ-04-admin.md",
+              "command": "pnpm check",
+              "result": "exit 0, 166 suites / 1,372 tests (lead run after the simplification)."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-15T03:15:48Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-04-app.md",
+              "command": "pnpm check",
+              "result": "exit 0, 166 suites / 1,372 tests (lead run). VOICE / ACCESSIBILITY / MINOR_SAFETY approved the participant screens before the simplification; screens unchanged apart from fixtures. No device, screen reader or hosted database."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "QUIZ-05",
+      "title": "Fresh questions: self-healing trivia (reports, auto-pause, quality flags, answer shuffle, phrasings, low-pool alerts), Know your athlete opt-in questions, and admin bulk import",
+      "owner": "POLLS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-15T17:11:33Z",
+      "exemption": null,
+      "source": {
+        "description": "Builds on QUIZ-02/03/04. Nothing reaches players without admin approval. Design: docs/engineering/design/TRIVIA_FRESH_QUESTIONS_DESIGN.md",
+        "paths": [
+          "docs/engineering/design/TRIVIA_FRESH_QUESTIONS_DESIGN.md",
+          "supabase/migrations/20261015210000_trivia_fresh_questions.sql"
+        ]
+      },
+      "admin": {
+        "route": "/admin/sport-quiz",
+        "actions": [
+          "Needs a look (auto-paused / flagged / reported) with Restore / Edit / Archive; athlete question queue with guardian status; athlete share and self-heal settings; bulk import with dry run"
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizFacts.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizFreshSettings.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizImport.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizNeedsLook.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizSettings.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/TriviaStatusCard.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/sport-quiz",
+        "metrics": [
+          "Reports by reason, auto-paused count, flags by type, weeks left per topic, athlete questions approved / withdrawn (aggregate only)"
+        ],
+        "paths": [
+          "apps/mobile/app/(admin)/admin/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizFacts.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizFreshSettings.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizImport.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizNeedsLook.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizSettings.tsx",
+          "apps/mobile/src/frontend/components/Admin/SportQuiz/TriviaStatusCard.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Athlete share setting 0 stops athlete questions; report intake can be paused; inherits trivia pause / empty cohort.",
+        "paths": [
+          "supabase/migrations/20261015210000_trivia_fresh_questions.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin",
+          "eligible enrolled tester",
+          "athlete (own questions)"
+        ],
+        "deniedBehavior": "RPC-only; preset prompts; under-16 guardian approval; athlete withdraw at any time; shown only where the athlete's privacy allows and to followers / Learn-card players.",
+        "paths": [
+          "supabase/migrations/20261015210000_trivia_fresh_questions.sql",
+          "scripts/replay/fresh-questions-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/sport-quiz",
+        "paths": [
+          "apps/mobile/app/sport-quiz.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/QuestionReport.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/FunFactMoment.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizRound.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LearnSportCard.tsx",
+          "apps/mobile/src/frontend/components/Profile/FunFactShare.tsx",
+          "apps/mobile/src/frontend/lib/freshQuestions.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-15T21:11:39Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-05-admin.md",
+              "command": "node scripts/replay/fresh-questions-replay.mjs /tmp/books01-pg/pkg/package/dist",
+              "result": "46/46 on PGlite (Postgres 18.6); Life 39/39, QUIZ-03 59/59, schema 105/105 (lead run). Security review four rounds; final items fixed and replay-verified. No hosted database."
+            },
+            {
+              "path": "docs/engineering/evidence/QUIZ-05-admin.md",
+              "command": "pnpm check",
+              "result": "exit 0, 1,482 tests and every guard (lead run)."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-15T21:52:58Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/QUIZ-05-app.md",
+              "command": "pnpm check",
+              "result": "exit 0, 1,579 tests and every guard (lead run); fresh-questions replay 46/46. VOICE / ACCESSIBILITY / MINOR_SAFETY / PRIVACY_ENGINEERING passed with fixes. No device, screen reader or hosted database."
+            }
+          ]
+        }
+      }
     }
   ]
 }

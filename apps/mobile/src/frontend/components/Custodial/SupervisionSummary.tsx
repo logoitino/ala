@@ -1,6 +1,7 @@
 /**
  * The supervision summary (MINOR-01): exactly what a linked guardian sees, and what the teen sees under "What your
  * guardian sees". Settings, safety counts (never who) and recent changes. Read-only.
+ * QUIZ-05: the fun facts audience (when the server has it) and "Fun facts shared: n" from the server's count.
  */
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -24,7 +25,8 @@ export function SupervisionSummary({ data }: { data: Supervision }) {
         {`${settings.accountPrivate ? 'Private' : 'Public'} account · ${status ? BAND_LABEL[status.ageBand] : ''} · friend requests from ${REQUESTS_LABEL[settings.friendRequestsFrom]}`}
       </Text>
       <Text style={styles.muted}>
-        {PRIVACY_ITEMS.map((item) => `${item.label}: ${AUDIENCE_LABEL[settings.audience[item.key]]}`).join(' · ')}
+        {[...PRIVACY_ITEMS.map((item) => `${item.label}: ${AUDIENCE_LABEL[settings.audience[item.key]]}`),
+          ...(settings.funFacts ? [`Fun facts: ${AUDIENCE_LABEL[settings.funFacts]}`] : [])].join(' · ')}
       </Text>
       <View style={styles.counts}>
         <Text style={styles.count}>{`${summary.friends} friends`}</Text>
@@ -33,6 +35,7 @@ export function SupervisionSummary({ data }: { data: Supervision }) {
         <Text style={styles.count}>{`${summary.tagsWaiting} tags to review`}</Text>
         <Text style={styles.count}>{summary.hiddenFromSearch ? 'Hidden from search' : 'Shown in search'}</Text>
         <Text style={styles.count}>{`${summary.challengeInvites7d} workout invites this week`}</Text>
+        {summary.funFactsShared !== null ? <Text style={styles.count}>{`Fun facts shared: ${summary.funFactsShared}`}</Text> : null}
       </View>
       <Text style={styles.heading}>Recent changes</Text>
       {data.events.length === 0 ? <Text style={styles.muted}>Nothing yet.</Text> : null}

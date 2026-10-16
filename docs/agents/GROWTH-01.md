@@ -584,3 +584,36 @@ and focused admin-first implementation design. Existing Engineering/Security/Dat
 Content Rights/Minor Safety/School/Support/QA and Commerce/Finance/Legal owners retain their
 required evidence. Fan voting selects the winner; no public award, voting feature, service
 program or earning model is launched by this refinement.
+
+
+## Implementation continuation: FUN-01 and QUIZ-01
+
+Owner authorized the recommended local first build and then added weekly sport pop quizzes.
+Actual source work is in the isolated codex/fan-zone checkout. Current status and evidence
+are tracked in [FUN-01](FUN-01.md) and [QUIZ-01](QUIZ-01.md); historical refinement receipts
+above describe the earlier recommendation-only pass. Fan backend/media and corrected quiz admin source have scoped independent PASS reviews.
+QUIZ-01 local Data/Safety/SUPPORT acceptance and actual admin-ready gate passed
+2026-10-14T06:09:57Z before quiz participant source began. Fan admin correction has independent
+Data/Safety/SUPPORT acceptance and actual admin-ready at 2026-10-14T13:42:36Z before fan source.
+Quiz participant/shared discovery reviews pass. Fan caller correction 070a58b independently
+passes specification/quality and local Data/Safety/SUPPORT; shared Fan discovery 8179b7b is built
+with private guardian shortcuts independent of participation dismissal. Shared and whole-branch reviews independently pass. Root full check passes 148 suites/1,146 assertions and all guards. Actual Documentation/VP scope reviews and selected local Fan app-ready pass; final status continuation is retained. Owner-approved timed QUIZ-02 now has independently accepted backend/admin and actual local checkpoint16:53:17Z plus selected admin-ready exit0 before Task3 release. Timed participant and final independent source acceptance plus root full150suites/1,219tests/all guards pass. Selected local app-ready passes after admin; actual final Documentation/VP continuation passes; local handoff is complete. The prior full check is historical.
+
+The playbook §13 adds an untimed learning path for fans, filmers, athletes, families, friends
+and guardians: one optional question, explanation, private completion badge and Skip.
+Legal/Safety, Content, Dev, Support and Growth must communicate fact corrections, pause
+ability, enrollment friction and support burden at the same decision checkpoint. The standing
+October20 Growth review retains expansion proposals, real measures and an owner decision.
+No new scheduler, outreach, payment, growth tracking or hosted rollout occurs in this local build.
+
+## Timed trivia approved local implementation
+
+Owner approved 30/90 seconds and continuing local work. Actual Growth architecture review
+supports a reviewed server bank, optional offline drafts, default-off
+manual/weekly invitations, sports-first optional fun topics, family exposure history and server
+expiry. The root read and SHA256-verified the private proposal receipt.
+[Approved design](../engineering/design/TIMED_TRIVIA_PROPOSAL.md) records choices and
+boundaries. [QUIZ-02](QUIZ-02.md) is enrolled before source, with verified new admin handling
+before participant work. Playbook §15 adds per-account learning/story/activity return ideas.
+The October 20 packet includes opt-in friction, interruption fairness, fresh-content
+capacity, review burden and accepted aggregate measures; no target or uplift is invented.

@@ -333,12 +333,132 @@
     "beyond_admin_events": {
       "owner": "HIGHLIGHTS",
       "purpose": "Restricted reason/action/time audit for switch/review/retention/cleanup. Identity references null on account deletion; support erasure sanitizes corresponding reasons. Minimal retained action/time is not counsel-approved retention."
+    },
+    "fan_zone_campaigns": {
+      "owner": "POLLS",
+      "purpose": "Default-off testing-only fan award campaigns, approved tester audience, immutable rules/windows and free-ballot result revisions."
+    },
+    "fan_zone_entries": {
+      "owner": "UPLOAD",
+      "purpose": "Private fan-video drafts/revisions, server-reserved immutable storage paths, verified media metadata, review and withdrawal state. Private guardian_consent_id pins the current exact grant; no automatic historical guardian substitution."
+    },
+    "fan_zone_consents": {
+      "owner": "MINOR_SAFETY",
+      "purpose": "Immutable exact-entry assent/guardian permission/revocation receipts tied to scope/media revision and active confirmed supervision link."
+    },
+    "fan_zone_ballots": {
+      "owner": "POLLS",
+      "purpose": "One current versioned free ballot per canonical eligible profile/campaign, with restricted invalidation rationale."
+    },
+    "fan_zone_requests": {
+      "owner": "POLLS",
+      "purpose": "Caller/request/argument-bound ballot retry receipts, capped60/window and expired30days after vote close."
+    },
+    "fan_zone_cases": {
+      "owner": "MODERATION",
+      "purpose": "Private bounded report/appeal/deletion cases with hashed reporter receipt secret/30day receipt access, actual removal completion and escalation."
+    },
+    "fan_zone_audit": {
+      "owner": "RLS_SECURITY",
+      "purpose": "Immutable server actor/time Fan Zone configuration/review/consent/ballot/result/removal trace; restricted corrective access."
+    },
+    "fan_zone_reflections": {
+      "owner": "POLLS",
+      "purpose": "Voluntary private preset service reflection receipts, deletable by owner; no beneficiary detail or payment condition."
+    },
+    "sport_quiz_settings": {
+      "owner": "POLLS",
+      "purpose": "Default-paused/testing-only quiz switch with approved canonical-profile tester allowlist."
+    },
+    "sport_quiz_questions": {
+      "owner": "POLLS",
+      "purpose": "Human-reviewed sport question versions, draft/approved/archive/void state and stable issued answer/explanation."
+    },
+    "sport_quiz_attempts": {
+      "owner": "POLLS",
+      "purpose": "Own private timed30/90-second immutable question/result lifecycle per account UTC week; legacy untimed history remains historical. Active capability hash never exported."
+    },
+    "sport_quiz_badges": {
+      "owner": "AURA",
+      "purpose": "Private noncash Trivia Explorer weekly completion, equal right/wrong; historical Sport Learner preserved. No Aura wallet, vote/payment value; erroneous content corrections. QUIZ-03: unique per (profile, label, period); sport explorer (5 facts), Family Challenger (week), Season Learner (10 rounds per quarter); opt-in visibility to own groups."
+    },
+    "sport_quiz_audit": {
+      "owner": "RLS_SECURITY",
+      "purpose": "Authoritative quiz settings/content/correction history remains immutable. Own participant learning associations are erased only under protected history-erasure context; admin export redacts participant actor/question/attempt links and never exports answers."
+    },
+    "sport_quiz_preferences": {
+      "owner": "PROFILE",
+      "purpose": "Optional default-off weekly invitations, sports/mix choice, versioned notice acceptance, once-weekly invitation claim and CAS history revision. No inferred interests or disability reason."
+    },
+    "sport_quiz_exposures": {
+      "owner": "POLLS",
+      "purpose": "Unique own account/question-family issuance history including ended/expired/void rounds; avoids repeats while retained. Removed by explicit learning-history erasure."
+    },
+    "sport_quiz_week_guards": {
+      "owner": "POLLS",
+      "purpose": "Minimal profile/week/spent/prune quota record for35days, disclosed after learning-history erasure; no question/answer/receipt/token. Account deletion cascades; retention never removes unexpired guard."
+    },
+    "sport_quiz_requests": {
+      "owner": "POLLS",
+      "purpose": "Private bounded caller/request/normalized-input exact mutation recovery and cancelled Start fence; no plaintext secret/prompt. Erasable learning receipts with expected-week protection."
+    },
+    "sport_quiz_round_items": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-03 per-question items of a weekly round (position 1-5, issued/expires, private answer, status incl. per-item void). Own history only; erased with learning history."
+    },
+    "sport_quiz_groups": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-03 family-challenge groups: preset name only, sport theme, current owner (hand-over on creator deletion), status. No search or listing; purged 35 days after closing."
+    },
+    "sport_quiz_group_members": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-03 group membership (max 12, belong to at most 5); removed rows are a rejoin bar (creator, block or admin). Leaving deletes the row."
+    },
+    "sport_quiz_group_codes": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-03 one SHA-256 hashed 8-character join code per group, 7 days; dies when the group is full, rotates on removal; purged on expiry by retention."
+    },
+    "sport_quiz_group_join_attempts": {
+      "owner": "RLS_SECURITY",
+      "purpose": "QUIZ-03 join limits (10 wrong tries, 5 joins a day) and private refusal reasons for the admin case view; kept through history erasure so limits and evidence survive; purged after 35 days."
+    },
+    "sport_quiz_group_sets": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-03 shared group-week question set drawn without reading member exposures; purged at week end + 35 days and when a group dissolves on erasure."
+    },
+    "sport_quiz_group_cases": {
+      "owner": "MINOR_SAFETY",
+      "purpose": "QUIZ-03 append-only group safety log: reports (fixed reason), audited admin case views, removals, block removals, hand-overs. Survives group purge; FK nulling only on account deletion."
+    },
+    "sport_quiz_life_chapters": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-04 Life Playbook chapters (4 seeded closed, all 13+: Money Huddle, Savings Season, Scam Defense, Smart Plays): title, framing, position, admin open switch. Opens only with 5 approved items (one round); owner simplification 2026-10-15 (design §8)."
+    },
+    "sport_quiz_levels": {
+      "owner": "AURA",
+      "purpose": "QUIZ-04 highest trivia level reached per account (track overall) and per Life chapter; only goes up; removed only by history erasure or account deletion. Private to the account; admin sees level counts with cells under 10 hidden."
+    },
+    "quiz_athlete_facts": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-05 athlete fun facts (minors' personal data at 13-17): the only place the athlete's words live (2-40 characters, server-filtered); status through guardian (under 16, MINOR-01 approval type fun_fact) and one-admin approval; cleared at once on withdrawal (athlete only), unlink or an under-13 block, deleted with the account; filled into fun-fact questions per viewer at read time where the fun_facts audience allows; never in the audit log; exported by quiz_fact_export. PROFILE / CUSTODIAL / MINOR_SAFETY review."
+    },
+    "sport_quiz_question_stats": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-05 per question version: distinct responders, right, time-outs, flags (too easy, confusing, too long), difficulty and the auto-pause / restore / review state for Needs a look. Aggregates only; refreshed by a trigger when an answer or time-out commits."
+    },
+    "sport_quiz_reports": {
+      "owner": "POLLS",
+      "purpose": "QUIZ-05 question reports with fixed reasons (no free text), counted or why not; reporter id cleared at 90 days and rows deleted at 180 by quiz_admin_retention; erasure removes the reporter's own; admins see counts by reason only."
+    },
+    "sport_quiz_imports": {
+      "owner": "ADMIN",
+      "purpose": "QUIZ-05 one row per real bulk import (admin, reason, row totals); dry runs write nothing. Read as the 30-day import count in the admin snapshot."
     }
   },
   "buckets": {
     "reels": {
       "owner": "UPLOAD",
-      "purpose": "Public Highlight videos (reels/<uid>/\u2026) and photo-story photos (<uid>/stories/\u2026)."
+      "purpose": "Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…)."
     },
     "game_highlights": {
       "owner": "UPLOAD",
@@ -355,6 +475,10 @@
     "beyond_game": {
       "owner": "UPLOAD",
       "purpose": "Private reviewed fan media only: immutable <auth-user>/<post>/<media>.jpg|mp4, reserved before upload, exact audience/actor/closure/block checks andSDK-requested60s signed URLs. Removed bytes inaccessible to users; current open admins have narrow read/delete cleanup access until confirmed physical deletion."
+    },
+    "fan_zone": {
+      "owner": "UPLOAD",
+      "purpose": "Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal."
     }
   },
   "functions": {
@@ -533,6 +657,602 @@
     "beyond_legacy_posts": {
       "owner": "HIGHLIGHTS",
       "use": "Bounded <=24 minimal workout/service discovery cards, canonical expected actor including explicit guest null. Exact confirmed verified athlete/link; both athlete/uploader current photo audience/block/closure/teen consent, no media URL/full profile. Contribution switch independent."
+    },
+    "fun_eligible": {
+      "owner": "AUTH",
+      "use": "Internal canonical-profile known-age/open-account eligibility predicate for fan actions."
+    },
+    "fun_actor": {
+      "owner": "AUTH",
+      "use": "Internal authenticated canonical profile/age guard; never assumes profile ID equals Auth user ID."
+    },
+    "fun_admin_guard": {
+      "owner": "ADMIN",
+      "use": "Internal admin/known-age guard for corrective Fan Zone operations."
+    },
+    "fun_pilot": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal testing-only campaign/tester-audience authorization, empty allowlist denies by default."
+    },
+    "fun_scope": {
+      "owner": "MINOR_SAFETY",
+      "use": "Internal exact revision/digest/alias/caption/campaign/audience/form/no-reuse consent scope."
+    },
+    "fun_guardian": {
+      "owner": "MINOR_SAFETY",
+      "use": "Internal currently active confirmed supervision-link predicate; does not prove legal guardianship."
+    },
+    "fun_permission_valid": {
+      "owner": "MINOR_SAFETY",
+      "use": "Internal current exact-entry assent/guardian-link/grant/revocation validity."
+    },
+    "fun_candidate": {
+      "owner": "MODERATION",
+      "use": "Internal accepted/currentverified/media-present/permission-valid candidate eligibility predicate."
+    },
+    "fun_entry_json": {
+      "owner": "UPLOAD",
+      "use": "Internal redacted private own/guardian/admin entry DTO including tracked media revision removal list."
+    },
+    "fun_campaign_json": {
+      "owner": "POLLS",
+      "use": "Internal campaign DTO with approved tester identities restricted to admins."
+    },
+    "fun_case_json": {
+      "owner": "MODERATION",
+      "use": "Internal minimal secret-authorized case receipt projection; no other case text."
+    },
+    "fun_audit": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal append-only trusted actor/time corrective event capture."
+    },
+    "fun_signature": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal hash of ballot request arguments for caller-bound exact retry."
+    },
+    "fun_admin_campaign": {
+      "owner": "POLLS",
+      "use": "Admin create/configure/testing-open/pause/close/finalize/recount; winners derived from valid free totals."
+    },
+    "fun_entry": {
+      "owner": "UPLOAD",
+      "use": "Caller-owned private reserve/edit/verified-submit/withdraw with immutable revision paths and server entry window."
+    },
+    "fun_permission": {
+      "owner": "MINOR_SAFETY",
+      "use": "Exact expected-scope assent/linked guardian grant/revoke; edit/stale form/link ending invalidates publication."
+    },
+    "fun_vote": {
+      "owner": "POLLS",
+      "use": "Atomic one free ballot/account/window; version CAS, caller/request/args retry binding, no-self vote and capped mutations."
+    },
+    "fun_admin_entry": {
+      "owner": "MODERATION",
+      "use": "Admin normal eligibility/rights/safety decisions compare the exact reviewed scope atomically; explicit current-entry emergency suspension with private rationale; no winner selection."
+    },
+    "fun_admin_ballot": {
+      "owner": "POLLS",
+      "use": "Admin proven ballot invalidation with reason and recount-required audit."
+    },
+    "fun_media_access": {
+      "owner": "RLS_SECURITY",
+      "use": "Caller-scoped exact revision read/verify/remove authorization before server private storage access."
+    },
+    "fun_verify_media": {
+      "owner": "UPLOAD",
+      "use": "Service-only sanitized digest/bytes/duration commit to still-authorized immutable draft; no client media assertion."
+    },
+    "fun_complete_removal": {
+      "owner": "UPLOAD",
+      "use": "Service-only actual object-absence completion across all tracked entry revisions/deletion cases."
+    },
+    "fun_case": {
+      "owner": "MODERATION",
+      "use": "Bounded report/appeal/removal request with hashed secret; public report saturation cannot deny owner deletion."
+    },
+    "fun_case_status": {
+      "owner": "MODERATION",
+      "use": "Secret-authorized unexpired minimal case status; no private target existence leak."
+    },
+    "fun_admin_case": {
+      "owner": "MODERATION",
+      "use": "Admin case resolve/escalation with reason; completion only server-confirmed deletion."
+    },
+    "fun_reflection": {
+      "owner": "POLLS",
+      "use": "Own private voluntary preset service receipt create/delete, separate from badges/money."
+    },
+    "fun_snapshot": {
+      "owner": "POLLS",
+      "use": "Own/guardian plus enrolled-pilot campaign/candidate/result/curated-story projection; eligible is known-age, can_participate is caller enrollment capability; no tester list/voter identity exposure."
+    },
+    "fun_admin_snapshot": {
+      "owner": "ADMIN",
+      "use": "Complete selected bounded campaign Data with independently paged cases/audit, exact campaign-bound timestamp/ID JSON cursors and defined counts; corrective identity scope."
+    },
+    "fan_zone_private.upload_allowed": {
+      "owner": "RLS_SECURITY",
+      "use": "Private-schema Storage INSERT policy helper; schema usage denied to API roles, only policy-bound execute; owner editable reserved path/window and no existing object."
+    },
+    "fun_page_time": {
+      "owner": "RLS_SECURITY",
+      "use": "Insert trigger ensures timestamp-page ordering without same-transaction skipped case/audit rows."
+    },
+    "fun_immutable_record": {
+      "owner": "RLS_SECURITY",
+      "use": "Trigger protects exact consent/audit receipts against mutation/truncate; identity nulling handled for deletion."
+    },
+    "fun_prune_receipts": {
+      "owner": "POLLS",
+      "use": "Service-only explicit expiry cleanup for bounded ballot retry records; no scheduler or hosted execution established."
+    },
+    "quiz_week": {
+      "owner": "POLLS",
+      "use": "Internal authoritative UTC Monday start for one weekly assignment/badge."
+    },
+    "quiz_actor": {
+      "owner": "AUTH",
+      "use": "Internal canonical account/knownage/closed check; no client-supplied participant identity."
+    },
+    "quiz_admin_actor": {
+      "owner": "ADMIN",
+      "use": "Internal protected quiz content/settings admin guard."
+    },
+    "quiz_require_testing": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal default-paused/tester allowlist/production-refusal guard for quiz participation."
+    },
+    "quiz_guard_question": {
+      "owner": "POLLS",
+      "use": "Trigger freezes issued question wording/answers; edits become new reviewed versions."
+    },
+    "quiz_guard_audit": {
+      "owner": "RLS_SECURITY",
+      "use": "Trigger keeps trusted quiz audit immutable; allowed FK nulling on identity deletion."
+    },
+    "quiz_snapshot": {
+      "owner": "POLLS",
+      "use": "Read-only sanitized own v2 availability/preferences/week/attempt summary/pools/history revision at one server instant; never active prompt."
+    },
+    "quiz_start": {
+      "owner": "POLLS",
+      "use": "Atomic unseen reviewed family and30/90 deadline under account/settings locks; exact request/profile/week/notice/token-bound original-view recovery only before expiry."
+    },
+    "quiz_answer": {
+      "owner": "POLLS",
+      "use": "Canonical expected-profile/token-bound predeadline answer commit with exact option/request recovery; equal private noncash badge, no proficiency/earnings claim."
+    },
+    "quiz_skip": {
+      "owner": "POLLS",
+      "use": "Explicit owned expected-week quota closure without prompt or reward; exact request retry. Invitation dismissal alone does not call it."
+    },
+    "quiz_admin_settings": {
+      "owner": "ADMIN",
+      "use": "Admin default-paused testing audience/settings change with authoritative rationale."
+    },
+    "quiz_admin_question": {
+      "owner": "POLLS",
+      "use": "Admin question create/newversion/approve/archive/void with fact-review reason and invalid-badge correction; QUIZ-04 edit_replace saves a new draft version and archives the replaced draft in one transaction (review queue Edit)."
+    },
+    "quiz_admin_snapshot": {
+      "owner": "ADMIN",
+      "use": "Complete100-slot bank through50-row opaque question paging, independent50-row bigint audit, full topic/lifecycle totals and effective expiry; no individual answer/token list. QUIZ-04 bank_counts: whole-bank draft/approved version counts by topic, sport and Life chapter (content counts only)."
+    },
+    "quiz_preferences": {
+      "owner": "PROFILE",
+      "use": "Canonical expected-profile/CAS/request-bound optional invitation/topic/notice settings. Off affects invitation scheduling, not manual play or active round."
+    },
+    "quiz_invitation": {
+      "owner": "POLLS",
+      "use": "Owned opt-in once-per-UTC-week quiet invitation claim and exact receipt; reveals no question or deadline."
+    },
+    "quiz_end": {
+      "owner": "POLLS",
+      "use": "QUIZ-04 End takes the round kind: a pending unknown Start is cancelled against that kind's guard only; an attempt must match the kind."
+    },
+    "quiz_receipt": {
+      "owner": "POLLS",
+      "use": "Own minimal mutation recovery or committed terminal result; never active prompt/capability."
+    },
+    "quiz_history": {
+      "owner": "PROFILE",
+      "use": "Own paged immutable terminal learning history/private badges/corrections; no active prompt or institutional answer export."
+    },
+    "quiz_erase_history": {
+      "owner": "PROFILE",
+      "use": "Owned history CAS erasure terminalizes current/pending round, removes learning/exposures/badges/receipts/own participant audit associations, increments retained revision and preserves preferences/notices/disclosed35-day minimal quota. Editorial audit remains immutable. QUIZ-03: also leaves groups and removes badges; keeps join attempts until their 35-day prune."
+    },
+    "quiz_admin_retention": {
+      "owner": "ADMIN",
+      "use": "Reasoned bounded expired receipt/quota pruning with actual removal totals; no unexpired quota deletion or hidden learning erasure."
+    },
+    "fun_storage_guard": {
+      "owner": "RLS_SECURITY",
+      "use": "Private Fan Zone Storage INSERT/UPDATE trigger locks campaign then entry; blocks stale/path-moving/service writes after withdrawal/deletion or verification. Catalog fence only, hosted provider compensation still unverified."
+    },
+    "fun_guardian_grant_valid": {
+      "owner": "MINOR_SAFETY",
+      "use": "Internal exact relied-on guardian consent receipt/link/scope validity; historical other grants do not substitute after revocation/link loss."
+    },
+    "quiz_normalize_options": {
+      "owner": "POLLS",
+      "use": "Protected Unicode/ECMAScript-whitespace option canonicalization for new content/approval/assignment; malformed legacy question rows stay admin-correctable and cannot issue or complete."
+    },
+    "quiz_week_at": {
+      "owner": "POLLS",
+      "use": "Internal UTC week from explicit server instant, captured after locks for mutations."
+    },
+    "quiz_expected_actor": {
+      "owner": "AUTH",
+      "use": "Internal canonical current JWT equality with expected participant/admin ID and known-age/current authorization."
+    },
+    "quiz_cursor": {
+      "owner": "POLLS",
+      "use": "Internal bounded exact version/stream/timestamp/ID cursor validation for full inventory/history paging."
+    },
+    "quiz_lock": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal settings/account serialization before lifecycle mutations and clock capture."
+    },
+    "quiz_preferences_dto": {
+      "owner": "PROFILE",
+      "use": "Internal own preference/notice/history-revision defaults and retained projection."
+    },
+    "quiz_summary": {
+      "owner": "POLLS",
+      "use": "Internal active-prompt-free attempt metadata and effective expiry at one server instant."
+    },
+    "quiz_question_dto": {
+      "owner": "POLLS",
+      "use": "Internal immutable content projection for original authorized Start or own terminal learning only."
+    },
+    "quiz_result_dto": {
+      "owner": "POLLS",
+      "use": "Internal own terminal answer/explanation projection without active correct-answer leakage."
+    },
+    "quiz_digest": {
+      "owner": "RLS_SECURITY",
+      "use": "Internal normalized request input SHA binding, never plaintext token persistence."
+    },
+    "quiz_receipt_dto": {
+      "owner": "POLLS",
+      "use": "Internal minimal owned exact receipt/terminal learning projection, never active question/token."
+    },
+    "quiz_save_request": {
+      "owner": "POLLS",
+      "use": "Internal bounded caller/request/input exact receipt persistence and cancellation fencing."
+    },
+    "quiz_spend": {
+      "owner": "POLLS",
+      "use": "Internal atomic disclosed35-day minimal weekly quota enforcement."
+    },
+    "quiz_expire": {
+      "owner": "POLLS",
+      "use": "Internal persisted terminal expiry under lifecycle lock; ordinary snapshots stay read-only."
+    },
+    "quiz_fun_slot": {
+      "owner": "POLLS",
+      "use": "Internal deterministic account/UTC-week4sports/1optional fun scheduling; no inferred interest or extra tracking counter."
+    },
+    "quiz_fun_available": {
+      "owner": "POLLS",
+      "use": "Internal reviewed unseen optional-topic availability; no silent sports/fun substitution when exhausted."
+    },
+    "quiz_bump_history": {
+      "owner": "PROFILE",
+      "use": "Protected settings/account-serialized monotonic learning revision on material issuance, terminal, badge/correction/pause changes; exact retries do not bump. Prevents stale erasure deleting new learning."
+    },
+    "quiz_next": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 Next: exact request/expected-position/session-secret recovery issues the following item with its own deadline; replay returns the same item only before its deadline; re-checks the week boundary."
+    },
+    "quiz_group_start": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 group round from a group page: same weekly opportunity, shared set with private replacements; refused while trivia.groups is off."
+    },
+    "quiz_badge_shelf": {
+      "owner": "AURA",
+      "use": "QUIZ-03 own badge shelf (non-void badges with visibility)."
+    },
+    "quiz_badge_visibility": {
+      "owner": "AURA",
+      "use": "QUIZ-03 own opt-in of one badge to group pages (private | groups)."
+    },
+    "quiz_season_recap": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 own calendar-quarter recap: facts by sport/topic, rounds, badges. Own data only."
+    },
+    "quiz_group_create": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 create a preset-named group (create <= 3, belong <= 5); code returned once; exact request retry returns the page without a code."
+    },
+    "quiz_group_join": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 join by hashed code with MINOR-01 teen rules both ways and PRIV-01 blocks; 10 wrong tries / 5 joins a day; refusals return (counted) with one ordinary outcome."
+    },
+    "quiz_group_leave": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 leave any time; creator leaving hands over to the oldest member or dissolves."
+    },
+    "quiz_group_remove_member": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 creator removes a member (rejoin bar) and receives the rotated code."
+    },
+    "quiz_group_renew_code": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 creator renews the 7-day code; refused while full or paused."
+    },
+    "quiz_group_set_theme": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 creator sets the sport-filter theme for sets not yet drawn."
+    },
+    "quiz_group_page": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 member group page: played-this-week mark per member, group totals, opt-in badges; removed members get only the removal notice."
+    },
+    "quiz_groups_mine": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 own groups, removal notices and limits."
+    },
+    "quiz_group_report": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 Report group with a fixed reason (members and removed members), 5 a day."
+    },
+    "quiz_admin_play_settings": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 admin round size (1-5) and trivia.groups / trivia.images switches with an audited reason."
+    },
+    "quiz_admin_group_case": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-03 admin audited case view: member ids, age bands, refusal reasons, case log; each read logged."
+    },
+    "quiz_admin_group_remove": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-03 admin removal of one member or closing a whole group, with a recorded reason."
+    },
+    "quiz_admin_forecast": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal per-sport weeks-left forecast for the admin snapshot."
+    },
+    "quiz_round_gap": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal 2-minute Next window."
+    },
+    "quiz_week_end": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal UTC week end instant."
+    },
+    "quiz_quarter_of": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal calendar-quarter key."
+    },
+    "quiz_unseen_count": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal unseen deliverable family count for a topic/sport."
+    },
+    "quiz_facts": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal facts learned in a week range (rounds + single-question)."
+    },
+    "quiz_played": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal played-this-week (at least one committed answer)."
+    },
+    "quiz_round_view": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal read-only effective round state (item expiry, missed Next)."
+    },
+    "quiz_round_items_dto": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal closed-item history projection; never an open item."
+    },
+    "quiz_round_close": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal round closure; completed when at least one committed non-void answer."
+    },
+    "quiz_round_settle": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal persisted expiry chain under the lifecycle lock."
+    },
+    "quiz_round_pick": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal draw: shared set unless seen, else private replacement; personal random unseen."
+    },
+    "quiz_round_issue": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal item + exposure insert."
+    },
+    "quiz_active_item": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal open item metadata for Start/Next responses."
+    },
+    "quiz_round_begin": {
+      "owner": "POLLS",
+      "use": "QUIZ-04 internal Start core for every round kind (personal, group, life): one guard per (week, kind), one active round at a time, group >= 2 members, Life eligibility / opt-in / chapter gating; settings -> group -> account lock order."
+    },
+    "quiz_sync_badges": {
+      "owner": "AURA",
+      "use": "QUIZ-03 internal badge derivation from live rows (issue, void, re-earn)."
+    },
+    "quiz_badge_defaults": {
+      "owner": "AURA",
+      "use": "QUIZ-03 trigger fills kind/period for QUIZ-02 badge inserts."
+    },
+    "quiz_group_code_new": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal 8-character code generator."
+    },
+    "quiz_group_active_count": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal active member count."
+    },
+    "quiz_group_issue_code": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal hashed code rotation; none when full."
+    },
+    "quiz_teen_accepts": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal MINOR-01 friend-request rule for sharing a group."
+    },
+    "quiz_group_refusal": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal join refusal reason (closed, removed, full, blocked, teen rule)."
+    },
+    "quiz_group_case": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal case-log insert."
+    },
+    "quiz_group_handover": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal hand-over to oldest member or dissolve."
+    },
+    "quiz_group_mark_removed": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal removal with tombstone, supervision event, code rotation."
+    },
+    "quiz_group_display_name": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal first name (teens first name only)."
+    },
+    "quiz_group_page_dto": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal live group page projection."
+    },
+    "quiz_group_ensure_set": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal shared set draw without reading exposures (advisory lock per group held by caller)."
+    },
+    "quiz_group_owned": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal creator check with lock order."
+    },
+    "quiz_groups_on_block": {
+      "owner": "RLS_SECURITY",
+      "use": "QUIZ-03 trigger: a block removes the blocked party from shared groups."
+    },
+    "quiz_group_owner_gone": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 trigger: creator account deletion hands the group over or dissolves it."
+    },
+    "quiz_guard_group_case": {
+      "owner": "RLS_SECURITY",
+      "use": "QUIZ-03 trigger keeps the group case log append-only (FK nulling allowed)."
+    },
+    "quiz_pair_ok": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-03 internal both-ways teen rule for one pair."
+    },
+    "quiz_profile_closed": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal closed (under-13) account test."
+    },
+    "quiz_group_recheck": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-03 internal re-check of one account in every group after an age correction, setting change or closure."
+    },
+    "quiz_group_recheck_pair": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-03 internal re-check of two accounts after an unfriend or an ended guardian link."
+    },
+    "quiz_group_needs_recheck": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-03 internal lazy drift test (birthdays) for group page and group Start."
+    },
+    "quiz_group_recheck_group": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-03 internal lazy group-wide re-check removing closed accounts and refused parties."
+    },
+    "quiz_member_ref": {
+      "owner": "POLLS",
+      "use": "QUIZ-03 internal opaque per-group member reference for the creator."
+    },
+    "quiz_groups_on_profile": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-03 trigger on profiles: re-check groups after age, setting or closure changes."
+    },
+    "quiz_groups_on_friendship": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-03 trigger on friendships: re-check shared groups after an unfriend."
+    },
+    "quiz_groups_on_guardian_link": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-03 trigger on guardian_links: re-check shared groups when a link ends."
+    },
+    "quiz_life_start": {
+      "owner": "POLLS",
+      "use": "QUIZ-04 Life round Start (kind life, 90 s default, 30 allowed, optional chapter): trivia.life on, Life notice + opt-in, eligible account, open chapters; same exact recovery as Start."
+    },
+    "quiz_life_snapshot": {
+      "owner": "POLLS",
+      "use": "QUIZ-04 own Life availability, private opt-in, this week's Life attempt and open-chapter / unseen counts."
+    },
+    "quiz_life_chapters": {
+      "owner": "POLLS",
+      "use": "QUIZ-04 the four chapters with effective open state and unseen counts (own read; no admin fields)."
+    },
+    "quiz_life_progress": {
+      "owner": "AURA",
+      "use": "QUIZ-04 own chapter progress: share of approved questions seen, facts and the highest chapter level reached."
+    },
+    "quiz_level": {
+      "owner": "AURA",
+      "use": "QUIZ-04 own personal level across every round kind (highest of stored and current), next threshold."
+    },
+    "quiz_life_preferences": {
+      "owner": "PRIVACY_ENGINEERING",
+      "use": "QUIZ-04 private Life opt-in with its own CAS version; opting out ends an open Life round; not audited."
+    },
+    "quiz_admin_life_settings": {
+      "owner": "ADMIN",
+      "use": "QUIZ-04 trivia.life switch and level thresholds with an audited reason; switching off ends open Life rounds."
+    },
+    "quiz_admin_life_chapter": {
+      "owner": "ADMIN",
+      "use": "QUIZ-04 open / close a Life chapter; refused with a plain reason (\"needs N more approved questions\") until 5 approved items."
+    },
+    "quiz_admin_life_snapshot": {
+      "owner": "ADMIN",
+      "use": "QUIZ-04 admin Life desk: switch, thresholds, chapters with reasons (open at 5) and aggregate-only statistics (>= 20 responders per question, cells under 10 hidden, no per-user rows)."
+    },
+    "quiz_save_receipt": {
+      "owner": "POLLS",
+      "use": "QUIZ-04 internal receipt writer: round operations have 20 per kind per week, ordinary saves 111, then reserved answer / off / end slots per (week, kind)."
+    },
+    "quiz_life_pool": {
+      "owner": "POLLS",
+      "use": "QUIZ-04 internal unseen drawable Life questions for an account now (approved, open chapter, chapter filter)."
+    },
+    "quiz_life_copy_problems": {
+      "owner": "VOICE",
+      "use": "QUIZ-04 Life copy ruleset at approval (v4, design §8): lookalike letters, advice, brands, Tapua'i money words, NIL / eligibility, tax / loan / credit score / APR, money figures, years, the Scam Defense line, prompt <= 120 and explanation <= 200 characters."
+    },
+    "quiz_guard_life_chapter": {
+      "owner": "POLLS",
+      "use": "QUIZ-04 trigger: a chapter opens only when ready (5 approved items); its id is fixed and it is never deleted."
+    },
+    "quiz_guard_level": {
+      "owner": "AURA",
+      "use": "QUIZ-04 trigger: levels only go up; erasure / account deletion removes them."
+    },
+    "quiz_life_copy_rules": {
+      "owner": "VOICE",
+      "use": "QUIZ-04 the Life copy rule list, embedded from supabase/content/life_copy_rules.json (pnpm life:bank:check fails on drift)."
+    },
+    "quiz_life_normalize": {
+      "owner": "VOICE",
+      "use": "QUIZ-04 text normalization before the copy rules: NFKC, zero-width removed, plain spaces and quotes, lowercase."
+    },
+    "quiz_life_phrase_re": {
+      "owner": "VOICE",
+      "use": "QUIZ-04 whole-word pattern for a rule phrase list (same pattern as the JS check)."
+    },
+    "quiz_life_band_ok": {
+      "owner": "MINOR_SAFETY",
+      "use": "QUIZ-04 Life eligibility: trivia bands plus 13+ accounts without a recorded age (not_given / unknown); never under 13."
+    },
+    "quiz_life_open_at": {
+      "owner": "POLLS",
+      "use": "QUIZ-04 the number of approved items that opens a Life chapter (5, one round; owner simplification 2026-10-15)."
     }
   },
   "exceptions": {
@@ -555,6 +1275,9 @@
     "bucket:beyond_game": {
       "noWriter": "SDK lib/beyondGame.ts uploadReservedBeyondMedia uses a per-operation JWT-pinned Storage client returned by actorStorage, not the global supabase.storage expression recognized by this regex map. Private reserve/finalize source/replay verifies exact immutable scope.",
       "noReader": "SDK lib/beyondGame.ts signBeyondMedia/adminBeyondCleanup use the same per-operation JWT-pinned client for60s signed reads and removed-file deletion; the regex map does not trace the client factory. Exact current server authorization and postcheck apply."
+    },
+    "fan_zone_requests": {
+      "noReader": "fun_vote actually selects caller/request retry receipts while also writing them; the map classifies this mixed function as a writer. Raw retry signatures are intentionally not exported to admin/fan reports."
     }
   },
   "exportsTriage": [
@@ -703,6 +1426,48 @@
       "name": "uploadBeyondSubmission",
       "decision": "keep",
       "reason": "Reviewed lower-level orchestrator retained for explicit external integration; participant composer deliberately calls each SDK hop with lifecycle acceptance between steps. Not used by the current participant UI.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/services/MediaUploadService.ts",
+      "name": "stripJpegMetadata",
+      "decision": "keep",
+      "reason": "Tested wrapper over parseJpeg/buildCleanJpeg; its byte-rule tests prove the GPS/EXIF stripping uploadStoryPhoto performs (privacy).",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/lifePlaybook.ts",
+      "name": "LIFE_DURATIONS",
+      "decision": "keep",
+      "reason": "QUIZ-04 shared Life constants mirrored from SQL as the documented contract; the participant screens (QUIZ-04 app) read durations and thresholds from the server instead.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/lifePlaybook.ts",
+      "name": "LIFE_DEFAULT_THRESHOLDS",
+      "decision": "keep",
+      "reason": "QUIZ-04 shared Life constants mirrored from SQL as the documented contract; the participant screens (QUIZ-04 app) read durations and thresholds from the server instead.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/freshQuestions.ts",
+      "name": "exportMyFunFacts",
+      "decision": "keep",
+      "reason": "QUIZ-05 participant / guardian wrapper built admin-first for the app agent (fun-fact opt-in, report button, Learn card, guardian panel); covered by lib tests; screens come with the app-ready step.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/freshQuestions.ts",
+      "name": "FUN_FACT_MAX_LIVE",
+      "decision": "keep",
+      "reason": "QUIZ-05 wire constant mirroring the SQL rule (limits, report labels per design §6.13, self-heal defaults) for the app screens and tests; one place for the copy.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/freshQuestions.ts",
+      "name": "FRESH_SELF_HEAL_DEFAULTS",
+      "decision": "keep",
+      "reason": "QUIZ-05 wire constant mirroring the SQL rule (limits, report labels per design §6.13, self-heal defaults) for the app screens and tests; one place for the copy.",
       "status": "kept"
     }
   ],
@@ -1426,6 +2191,398 @@
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/components/Custodial/GuardianPrivacyCard.archived.tsx",
       "reason": "Parent HQ Lock / Unlock card for the removed guardian lock; replaced by GuardianSupervisionPanel (MINOR-01). Never committed.",
       "approved": "owner, 2026-10-14"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "fetchSportQuiz",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
+      "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "startSportQuiz",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
+      "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "answerSportQuiz",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
+      "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "skipSportQuiz",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
+      "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
+      "name": "fetchSportQuizAdmin",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
+      "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_signoffs",
+      "kind": "database table",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "CPA sign-off records per chapter (Credit Clock / Tax Timeout no longer exist; no CPA gate). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_content_reviewers",
+      "kind": "database table",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Named finance / tax reviewer grants (approval is now one admin, like sports trivia). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_band_rank",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Item / chapter age bands 13 / 16 / 18 removed: every chapter is 13+. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_age_cap",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Per-band age cap replaced by quiz_life_band_ok (all chapters 13+). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_source_ok",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Allow-listed source URLs removed (no source_url column). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_field_marked",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "The illustrative figure marker is gone: Life content has no money figures at all. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_due_on",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Yearly / January re-review dates removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_today",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Only the January withdrawal and sign-off expiry used it. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_item_current",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "The January withdrawal of dated items is gone (no tax years, nothing goes stale). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_tax_year_ok",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "as_of_tax_year removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_signoff_current",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "CPA sign-off removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_is_author",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Life-specific author exclusion removed (normal trivia approval). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_active_grant",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Named reviewer grants removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_guard_life_signoff",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Trigger of the removed quiz_life_signoffs table. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_guard_reviewer",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Trigger of the removed quiz_content_reviewers table. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_admin_life_signoff",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "CPA sign-off entry removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_admin_life_signoff_confirm",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Second-admin CPA sign-off confirmation removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_life_signoff_dto",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "CPA sign-off read shape removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "supabase/migrations/20261014180000_life_playbook.sql",
+      "name": "quiz_admin_reviewer",
+      "kind": "database function",
+      "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
+      "reason": "Reviewer grant / confirm / revoke removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "packages/shared-types/lifePlaybook.ts",
+      "name": "LifeDomain",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: no finance / tax domains or named reviewers; Life questions use normal one-admin trivia approval (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "packages/shared-types/lifePlaybook.ts",
+      "name": "LIFE_ILLUSTRATIVE_MARKER",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: no money figures are allowed in Life content, so the illustrative-figure marker is gone (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "packages/shared-types/lifePlaybook.ts",
+      "name": "LifeSignoff",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "packages/shared-types/lifePlaybook.ts",
+      "name": "LifeSignoffInput",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "packages/shared-types/lifePlaybook.ts",
+      "name": "LifeReviewer",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "packages/shared-types/lifePlaybook.ts",
+      "name": "LifeReviewerGrantInput",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "packages/shared-types/lifePlaybook.ts",
+      "name": "LifeReviewerReceipt",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "packages/shared-types/lifePlaybook.ts",
+      "name": "LifeRereviewItem",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/lifePlaybook.ts",
+      "name": "recordLifeSignoff",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/lifePlaybook.ts",
+      "name": "confirmLifeSignoff",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/lifePlaybook.ts",
+      "name": "grantLifeReviewer",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/lifePlaybook.ts",
+      "name": "confirmLifeReviewer",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/lifePlaybook.ts",
+      "name": "revokeLifeReviewer",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/lifePlaybook.ts",
+      "name": "signoffReceipt",
+      "kind": "helper",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/lifePlaybook.ts",
+      "name": "reviewerReceipt",
+      "kind": "helper",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife.tsx",
+      "name": "SportQuizLife CPA sign-off panel",
+      "kind": "helper",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife-review.archived.tsx",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife.tsx",
+      "name": "SportQuizLife reviewer grants panel",
+      "kind": "helper",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife-review.archived.tsx",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife.tsx",
+      "name": "SportQuizLife re-review list panel",
+      "kind": "helper",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife-review.archived.tsx",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLifeQuestion.tsx",
+      "name": "lifeQuestionIssue",
+      "kind": "export",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLifeQuestion-review.archived.tsx",
+      "reason": "Owner 2026-10-15: no age bands above 13, source links, retrieval dates or tax years on Life questions, so the draft check is gone (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLifeQuestion.tsx",
+      "name": "SportQuizLifeQuestion source / band / tax-year fields",
+      "kind": "helper",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLifeQuestion-review.archived.tsx",
+      "reason": "Owner 2026-10-15: Life questions keep only chapter and the education-only attestation; band, source link, retrieval date and tax year removed (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizBank.tsx",
+      "name": "SportQuizBank re-review and reviewer display",
+      "kind": "helper",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizBank-review.archived.tsx",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool.tsx",
+      "name": "SportQuizTool sign-off and reviewer handlers",
+      "kind": "helper",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool-review.archived.tsx",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/SportQuiz/__tests__/SportQuizLife.test.tsx",
+      "name": "SportQuizLife sign-off / reviewer / source tests",
+      "kind": "tests",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/__tests__/SportQuizLife.test-review.archived.tsx",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Admin/SportQuiz/__tests__/SportQuizBank.test.tsx",
+      "name": "SportQuizBank source / re-review tests",
+      "kind": "tests",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/__tests__/SportQuizBank.test-review.archived.tsx",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__tests__/lifePlaybook.test.ts",
+      "name": "lifePlaybook sign-off / reviewer adapter tests",
+      "kind": "tests",
+      "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/__tests__/lifePlaybook.test-review.archived.ts",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "approved": "owner, 2026-10-15"
     }
   ],
   "unusedLocalsBaseline": [

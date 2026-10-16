@@ -196,3 +196,17 @@ Source/verification inventory: [ADMIN_DATA_CONSOLIDATION](design/ADMIN_DATA_CONS
 | Legacy workout/service cards | Bounded actor-bound read; existing athlete profile supplies viewing/support | Public cards exclude media URLs, full profiles, new payee selection and rankings. |
 
 This UI is local source, with unapplied migrations/defaultoff contributions. Native/web rendering remains a release check.
+## Weekly family activities — local source integration
+
+Sport Quiz uses a root account route with ScreenShell, explicit Back and account Home;
+the root Stack suppresses its duplicate native header. The optional invitation lives inside
+Home measured chrome and existing parent/booster/sponsor/operator HQ scroll content.
+Profile keeps a private quiz history link for signed-in account roles. Local dismissal and
+server Skip have distinct wording; failed actions keep a notice and Refresh.
+Fan Zone now shares that discovery space after its actual admin and independent participant
+acceptance. Its card prioritizes selected-campaign private guardian review, own entry, admitted
+open campaign and authorized recap; private guardian recovery is not hidden by participation
+dismissal. Profile has a generic Fan Zone entry, not an all-campaign inbox/history. The Fan root
+Stack header is suppressed; Back/account Home remain explicit. Source errors stay independent.
+No new bottom tab, forced modal, push permission or money control accompanies these activities.
+Device sizing, keyboard/screen-reader and full layout redirects remain release verification.

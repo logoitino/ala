@@ -1,5 +1,11 @@
 # Tapua'i — System Architecture Overview
 
+**Timed trivia addition:** [QUIZ-02](../agents/QUIZ-02.md) owns the approved optional30/90-second
+replacement for the earlier untimed Quiz. A reviewed server bank, private preferences,
+issued-family history, exact request recovery and bounded quota feed the Expo admin desk
+before player work. Ordinary account reads never reveal an active question; the mounted
+original round alone has its memory-only capability. Live enablement remains separate.
+
 **Product:** Tapua'i (“Back Every Athlete.”)  
 **Repo:** pnpm monorepo — `@tapuai/mobile` (Expo, the only place admin data changes) · `@tapuai/admin-portal` (Next, read-only oversight) · `@tapuai/shared-types`
 **Runtime:** Expo SDK 57 · React Native · TypeScript (fan app and main admin); Next.js retains compatible read-only reporting

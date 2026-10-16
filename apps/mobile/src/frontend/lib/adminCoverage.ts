@@ -1,7 +1,9 @@
 /**
  * The production map: every fan-visible control is listed with its admin desk, optional runtime flag and
  * telemetry id. Powers the Overview and Coverage desks ("what is live, what is paused, what is not instrumented").
- * Add a row here whenever you add a fan control.
+ * Add a row here whenever you add a fan control. Trivia rows (2026-10-15) add the This week strip, level and Life
+ * Playbook opt-in / chapters, and the page Skip now reads "Skip my round this week". QUIZ-05 adds Report a problem,
+ * the athlete's Share a fun fact, the Privacy fun facts audience and the guardian's fun-fact Approve / Decline.
  */
 
 import type { AdminNavHref } from '@/lib/admin';
@@ -21,7 +23,9 @@ export type CoverageSurface =
   | 'parent'
   | 'booster'
   | 'sponsor'
-  | 'auth';
+  | 'auth'
+  | 'sport-quiz'
+  | 'fan-zone';
 
 export type CoverageControl = {
   id: string;
@@ -51,12 +55,111 @@ export const COVERAGE_SURFACES: { id: CoverageSurface; label: string }[] = [
   { id: 'parent', label: 'Parent HQ' },
   { id: 'booster', label: 'Booster HQ' },
   { id: 'sponsor', label: 'Sponsor HQ' },
+  { id: 'sport-quiz', label: 'Sport Quiz' },
+  { id: 'fan-zone', label: 'Fan Zone' },
+];
+
+/** @purpose Map existing FUN-01 controls to campaign stop, exact permission and tracked case/removal authority. No passive sensor is invented. */
+const fanDiscoverySurfaces: { surface: CoverageSurface; href: string }[] = [
+  { surface: 'home', href: '/' }, { surface: 'parent', href: '/parent' }, { surface: 'operator', href: '/operator' },
+  { surface: 'booster', href: '/booster' }, { surface: 'sponsor', href: '/sponsor' },
+];
+const fanStop = 'fan_zone_campaigns status/testing-only pilot admission is the stop authority';
+const fanDiscoveryActions = [
+  ['open', 'Open Fan Zone', 'Read-only root navigation preserves selected canonical campaign; no automatic entry or ballot'],
+  ['dismiss', 'Not now for Fan Zone', 'Local participation presentation only; never hides nonempty private guardian queue; identity and returned campaign period; no persisted server action'],
+  ['refresh', 'Refresh Fan Zone discovery', 'Read-only independent source recovery; unavailable is not a healthy zero'],
+  ['permissions', 'Review fan permissions', 'Private selected campaign queue, not a global inbox; independent of participation; exact fan_zone_consents'],
+  ['entry', 'My fan entry', 'Own server-authorized private entry and recovery even when paused or unenrolled'],
+  ['recap', 'View fan recap', 'Only authorized finalized results without pending recount; no invented badge or winner'],
+] as const;
+const fanPageActions = [
+  ['back', 'Back', 'Previous route or current account Home fallback'], ['home', 'Account Home', 'Current role Home, always usable'],
+  ['refresh', 'Refresh Fan Zone', 'Read-only snapshot and permission review reset'], ['signin', 'Sign in to join Fan Zone', 'Account route; server age/action capability remains authoritative'],
+  ['paths', 'Join the fun / Meet an athlete / Serve together', 'Local path choice; no automatic mutation'],
+  ['picker', 'Choose / replace MP4 video', 'Explicit system picker; no upload before action'],
+  ['draft', 'Fan alias / caption / rights attestation', 'Local draft fields; not public permission'],
+  ['upload', 'Upload private entry', 'Server-reserved bounded MP4 and private fan_zone_entries revision'],
+  ['retryUpload', 'Retry private upload', 'Same reserved private revision recovery'], ['replaceUpload', 'Replace failed private draft', 'Explicit failed draft replacement'],
+  ['video', 'Open / close exact private video', 'Authenticated revocable producer; first-frame readiness tied to identity/revision/digest/scope'],
+  ['vote', 'Vote for candidate', 'Free replaceable per-account/window fan_zone_ballots; no spend/view weights'],
+  ['retryVote', 'Retry original ballot', 'Same request and candidate; no offline queue'],
+  ['scope', 'Confirm reviewed caption and exact permission scope', 'Local confirmation resets on stale review; not a permission grant'],
+  ['permission', 'Grant permission / Assent to exact revision', 'Exact active link/revision/digest/alias/audience fan_zone_consents'],
+  ['revoke', 'Revoke my exact permission', 'Server permission revocation and actual serving/access enforcement'],
+  ['submit', 'Submit private entry for review', 'Published eligibility/rights/safety review; staff does not select vote winner'],
+  ['withdraw', 'Withdraw my entry', 'Withdrawal and tracked actual media/index/access removal'],
+  ['story', 'Watch / close curated athlete story', 'Only explicitly selected authorized free story; unavailable does not substitute'],
+  ['profile', 'Athlete profile & Donate', 'Existing profile/financial flow; optional and never adds votes'],
+  ['serve', 'Optional private service reflection choices', 'Preset nonidentifying fan_zone_reflections; no cash, badge or access condition'],
+  ['deleteReflection', 'Delete private reflection', 'Own authorized private reflection removal'],
+  ['concern', 'Send concern / entry and details fields', 'Blocked-owner-capable private fan_zone_cases intake; restricted details'],
+  ['appeal', 'Appeal entry review', 'Tracked case and review correction; protect safety reasons'],
+  ['removal', 'Request media removal', 'Tracked all-revision actual media/provider/index/access removal'],
+  ['continueRemoval', 'Continue tracked removal', 'Receipt-based incomplete removal recovery; no premature completion claim'],
+  ['receipt', 'Check concern status / receipt ID and secret', 'Private case receipt, no fabricated completion'],
+  ['safety', 'Read Minor Safety information', 'Policy information; fan_zone_cases and configured support handle intake'],
+] as const;
+const fanControls: CoverageControl[] = [
+  ...fanDiscoverySurfaces.flatMap(({ surface, href }) => fanDiscoveryActions.map(([action, label, hint]) => ({
+    id: `fun.${surface}.${action}`, label: `${label} · ${surface}`, hint: `${hint}; ${fanStop}`, surface, fanHref: href, adminHref: '/admin/fan-zone' as const,
+  }))),
+  { id: 'fun.profile.open', label: 'Fan Zone', hint: `Generic root /fan-zone link; access checked on page, no all-campaign inbox/history claim; ${fanStop}`, surface: 'profile', fanHref: '/profile', adminHref: '/admin/fan-zone' },
+  ...fanPageActions.map(([action, label, hint]) => ({ id: `fun.page.${action}`, label, hint: `${hint}; ${fanStop}`, surface: 'fan-zone' as const, fanHref: '/fan-zone', adminHref: '/admin/fan-zone' as const })),
 ];
 
 /**
  * @purpose Production map: every fan-visible control has an admin desk, an optional runtime flag, and a telemetry id.
  */
 export const COVERAGE_CONTROLS: CoverageControl[] = [
+  ...fanControls,
+  { id: 'quiz.home.open', label: 'Open / Resume quiz · home', hint: 'Root /sport-quiz; navigation does not assign a question; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'home', fanHref: '/', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.home.dismiss', label: 'Not now (local presentation) · home', hint: 'Local auth + canonical profile + returned week; does not save Skip; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'home', fanHref: '/', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.home.skip', label: 'Skip this week · home', hint: 'Only server-confirmed skipped state is saved; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'home', fanHref: '/', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.home.refresh', label: 'Refresh unavailable quiz · home', hint: 'Failed source or unconfirmed Skip; readonly refresh; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'home', fanHref: '/', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.home.history', label: 'Private quiz history · home', hint: 'Own actual private badges and corrections; no invented counts; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'home', fanHref: '/', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.parent.open', label: 'Open / Resume quiz · parent', hint: 'Root /sport-quiz; navigation does not assign a question; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'parent', fanHref: '/parent', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.parent.dismiss', label: 'Not now (local presentation) · parent', hint: 'Local auth + canonical profile + returned week; does not save Skip; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'parent', fanHref: '/parent', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.parent.skip', label: 'Skip this week · parent', hint: 'Only server-confirmed skipped state is saved; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'parent', fanHref: '/parent', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.parent.refresh', label: 'Refresh unavailable quiz · parent', hint: 'Failed source or unconfirmed Skip; readonly refresh; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'parent', fanHref: '/parent', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.parent.history', label: 'Private quiz history · parent', hint: 'Own actual private badges and corrections; no invented counts; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'parent', fanHref: '/parent', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.operator.open', label: 'Open / Resume quiz · operator', hint: 'Root /sport-quiz; navigation does not assign a question; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'operator', fanHref: '/operator', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.operator.dismiss', label: 'Not now (local presentation) · operator', hint: 'Local auth + canonical profile + returned week; does not save Skip; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'operator', fanHref: '/operator', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.operator.skip', label: 'Skip this week · operator', hint: 'Only server-confirmed skipped state is saved; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'operator', fanHref: '/operator', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.operator.refresh', label: 'Refresh unavailable quiz · operator', hint: 'Failed source or unconfirmed Skip; readonly refresh; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'operator', fanHref: '/operator', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.operator.history', label: 'Private quiz history · operator', hint: 'Own actual private badges and corrections; no invented counts; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'operator', fanHref: '/operator', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.booster.open', label: 'Open / Resume quiz · booster', hint: 'Root /sport-quiz; navigation does not assign a question; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'booster', fanHref: '/booster', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.booster.dismiss', label: 'Not now (local presentation) · booster', hint: 'Local auth + canonical profile + returned week; does not save Skip; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'booster', fanHref: '/booster', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.booster.skip', label: 'Skip this week · booster', hint: 'Only server-confirmed skipped state is saved; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'booster', fanHref: '/booster', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.booster.refresh', label: 'Refresh unavailable quiz · booster', hint: 'Failed source or unconfirmed Skip; readonly refresh; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'booster', fanHref: '/booster', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.booster.history', label: 'Private quiz history · booster', hint: 'Own actual private badges and corrections; no invented counts; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'booster', fanHref: '/booster', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.sponsor.open', label: 'Open / Resume quiz · sponsor', hint: 'Root /sport-quiz; navigation does not assign a question; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.sponsor.dismiss', label: 'Not now (local presentation) · sponsor', hint: 'Local auth + canonical profile + returned week; does not save Skip; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.sponsor.skip', label: 'Skip this week · sponsor', hint: 'Only server-confirmed skipped state is saved; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.sponsor.refresh', label: 'Refresh unavailable quiz · sponsor', hint: 'Failed source or unconfirmed Skip; readonly refresh; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.sponsor.history', label: 'Private quiz history · sponsor', hint: 'Own actual private badges and corrections; no invented counts; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.profile.history', label: 'Sport Quiz & private history', hint: 'Authenticated root /sport-quiz link across roles; sport_quiz_settings enabled/testing-only pilot allowlist is the participation stop authority', surface: 'profile', fanHref: '/profile', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.back', label: 'Back', hint: 'Previous route or account Home fallback remains usable; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.home', label: 'Account Home', hint: 'Current role home remains usable; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.refresh', label: 'Refresh quiz', hint: 'Readonly source refresh; missing data stays unavailable; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.sport', label: 'Choose sport', hint: 'Explicit sport choice starts one server weekly assignment; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.answer', label: 'Answer question', hint: 'One of four choices; same private completion badge even when wrong; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.retry', label: 'Retry this answer', hint: 'Uncertain answer keeps exact request and choice; no offline queue; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.skip', label: 'Skip my round this week', hint: 'QUIZ-04 Skip spends only the personal round (a QUIZ-03 server still shows Skip this week); only confirmed server Skip persists; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.next', label: 'Next question', hint: 'QUIZ-03 round of up to five; exact Next recovery (same request UUID and position); round size on sport_quiz_settings; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.groups', label: 'Play together groups', hint: 'QUIZ-03 preset-name groups, codes, remove/leave/report; trivia.groups switch on sport_quiz_settings pauses new groups and joins; desk shows counts and audited cases only; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.badges', label: 'Badge shelf & season recap', hint: 'QUIZ-03 private badges with opt-in group visibility; noncash; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.week', label: 'This week strip', hint: 'QUIZ-04 personal, group and (when Life is on for the account) Life Playbook rounds, each with its own weekly spot, written in words; read-only; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.level', label: 'Your level', hint: 'QUIZ-04 private level from facts learned in every kind of round; never drops; level thresholds are in the Trivia desk Settings; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.life.optin', label: 'Turn on Life Playbook / Not now / About Life Playbook', hint: 'QUIZ-04 private opt-in card with notice life-playbook-v1-testing, shown only while trivia.life (sport_quiz_settings.life_enabled) is on; 13+ eligible accounts only; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.life.chapters', label: 'Life Playbook chapters', hint: 'QUIZ-04 only server-returned open chapters (Any open chapter / Choose a chapter); a chapter opens at 5 approved questions and the Trivia desk chapter switch; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.life.start', label: 'Start Life Playbook round', hint: 'QUIZ-04 separate weekly Life round (90 or 30 seconds) with its own notice checkbox; trivia.life off ends open Life rounds; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.life.off', label: 'Turn off Life Playbook', hint: 'QUIZ-04 own opt-out; ends an open Life round and keeps private history; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.profile.learn', label: 'Learn your athlete’s sport', hint: 'QUIZ-03 card on another athlete’s profile; preselects the sport for the viewer’s own weekly round; shown only when trivia is ready for the viewer; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'profile', fanHref: '/profile', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.page.report', label: 'Report a problem with this question', hint: 'QUIZ-05 after the reveal only; fixed reasons, no free text; one per question, 10 a day; report intake can be paused from the Trivia control tower; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'sport-quiz', fanHref: '/sport-quiz', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.profile.funfacts', label: 'Share a fun fact', hint: 'QUIZ-05 athlete Edit profile and optional sign-up step; six preset prompts, admin check, guardian approval under 16, Remove any time; trivia.athlete_questions (off) pauses new fun facts; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'profile', fanHref: '/profile', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.profile.funfacts.audience', label: 'Fun facts audience', hint: 'QUIZ-05 Privacy item fun_facts (default friends; 13–15 capped at friends by the server); sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'profile', fanHref: '/profile', adminHref: '/admin/sport-quiz' },
+  { id: 'quiz.parent.funfacts', label: 'Approve or decline a fun fact · parent', hint: 'QUIZ-05 guardian of an under-16 approves or declines only (never writes, edits or withdraws); an admin checks after; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'parent', fanHref: '/parent', adminHref: '/admin/sport-quiz' },
   { id: 'tab.home', label: 'Home tab', hint: 'Fan bar', surface: 'home', fanHref: '/', adminHref: '/admin/features', flag: 'tabs.home', telemetry: 'tab.home' },
   { id: 'home_search', label: 'Clip search', hint: 'Highlights ⚡ search', surface: 'home', fanHref: '/', adminHref: '/admin/features', flag: 'layouts.homeSearch', telemetry: 'home_search' },
   { id: 'feed.home', label: 'Home mix pill', hint: 'For You ranking', surface: 'home', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'feed.home' },

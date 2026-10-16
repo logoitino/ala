@@ -74,6 +74,13 @@ detection, reproduction, instrumented failure checks and repair pairing through 
 functional developers own their patches and QA verifies independently. Read
 `docs/engineering/ENGINEERING_SUPPORT.md`. Include SUPPORT in future-feature admin-ready review.
 
+## Engineering Support (2026-10-13)
+
+`SUPPORT` reports to you and leads INCIDENT_TRIAGE, TELEMETRY and RELIABILITY. Route cross-system
+detection, reproduction, instrumented failure checks and repair pairing through this team;
+functional developers own their patches and QA verifies independently. Read
+`docs/engineering/ENGINEERING_SUPPORT.md`. Include SUPPORT in future-feature admin-ready review.
+
 ## Current direct specialists
 
 `SUPPORT` · `DOCUMENTATION` · `FINANCE_DATA` · `ADMIN` · `API` · `AURA` · `AUTH` · `FULLSTACK` · `HIGHLIGHTS` · `LOCAL` · `MOBILE_PERFORMANCE` · `OFFLINE` · `PROFILE` · `REALTIME` · `SHARED_CONTRACTS` · `SPOTLIGHT`. `BACKEND` is the database lead and reports to `CTO`. Delegate scoped functional tasks and integrate their evidence. Available definitions do not mean every agent runs concurrently.

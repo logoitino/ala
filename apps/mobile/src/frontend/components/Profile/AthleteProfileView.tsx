@@ -1,6 +1,8 @@
 /**
  * The public athlete page shown at /user/[id]: hero card, Aura trading card, crew and teammate badges, Rally,
- * filmer card, and direct Highlights / Stats / Goals / Vault / owner Manage navigation.
+ * filmer card, the viewer's "Learn {sport} with {name}" trivia card (QUIZ-03), and direct Highlights / Stats / Goals /
+ * Vault / owner Manage navigation. QUIZ-05: the Learn card also receives the athlete's player id (a server-validated
+ * hint for that trivia round).
  * Used by both the fan tab's own profile and any athlete opened from elsewhere. `onOpenClip` lets other
  * components (for example a Rally thank-you) jump to a specific clip in the Highlights tab.
  * @sideEffects Reads athlete, crew, school badge, leaderboard and reel data through hooks / lib.
@@ -72,6 +74,7 @@ import { isVaultSealed } from '@/lib/vault';
 import { fetchWishlistItems } from '@/lib/wishlist';
 import { FOCAL } from '@/theme/motion';
 import { ProfileFriendActions } from '@/components/Profile/ProfileFriendActions';
+import { LearnSportCard } from '@/components/SportQuiz/LearnSportCard';
 
 export type AthleteProfileTab = 'highlights' | 'stats' | 'goals' | 'vault' | 'team' | 'manage';
 
@@ -388,6 +391,8 @@ export function AthleteProfileView({
       </View>
       {/* Someone else's profile: friend / block and the private-profile note (PRIV-01). */}
       {!ownerTools ? <ProfileFriendActions playerId={player.id} /> : null}
+      {/* QUIZ-03: the viewer's own trivia round about this athlete's sport; nothing reaches the athlete. */}
+      {!ownerTools && athleteIdentity ? <LearnSportCard sport={selectedSport} athleteName={name} athletePlayerId={player.id} /> : null}
     </>
   );
 

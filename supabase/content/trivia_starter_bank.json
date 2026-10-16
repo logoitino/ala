@@ -1,0 +1,932 @@
+[
+  {
+    "key": "dd8481c0-b82a-40d7-960e-080738d6ff34",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Football",
+    "prompt": "In football, how many points is a field goal worth?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "6"
+    ],
+    "correct_option": 2,
+    "explanation": "A field goal is worth 3 points. The ball is kicked through the goalposts above the crossbar, often when a team is close but cannot reach the end zone.",
+    "source_notes": "NFHS Football Rules Book, scoring section (field goal = 3 points); to verify."
+  },
+  {
+    "key": "7965a6ed-7ee5-4677-a04d-0f82c2808df2",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Football",
+    "prompt": "How many yards long is a football field from one goal line to the other, not counting the end zones?",
+    "options": [
+      "80 yards",
+      "100 yards",
+      "110 yards",
+      "120 yards"
+    ],
+    "correct_option": 1,
+    "explanation": "It is 100 yards from goal line to goal line. Add the two 10-yard end zones and the whole field is 120 yards long.",
+    "source_notes": "NFHS Football Rules Book, field diagram and dimensions; to verify."
+  },
+  {
+    "key": "902e6405-293c-4166-a920-5240746d0c50",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Football",
+    "prompt": "In football, what is a safety worth to the defense?",
+    "options": [
+      "1 point",
+      "2 points",
+      "3 points",
+      "6 points"
+    ],
+    "correct_option": 1,
+    "explanation": "A safety is worth 2 points. It usually happens when the defense tackles a ball carrier in the offense's own end zone. Then the team that gave up the safety has to kick the ball away, so the defense gets points and the ball.",
+    "source_notes": "NFHS Football Rules Book, scoring section (safety = 2 points); to verify."
+  },
+  {
+    "key": "2b2cbe6b-edb3-404f-8201-eede5f9df31e",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Football",
+    "prompt": "In football, the offense gets four downs (tries) to gain 10 yards and earn a new first down.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! The offense has four downs to move the ball 10 yards. If they make it, they get a fresh set of downs. That is why teams often punt on fourth down.",
+    "source_notes": "NFHS Football Rules Book, series of downs; to verify."
+  },
+  {
+    "key": "a1f2c869-9368-41e3-b272-eda3ce752626",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Basketball",
+    "prompt": "How high above the floor is the rim of a regulation basketball hoop?",
+    "options": [
+      "8 feet",
+      "9 feet",
+      "10 feet",
+      "12 feet"
+    ],
+    "correct_option": 2,
+    "explanation": "The rim is 10 feet above the floor. That height has stayed the same since the game's early days, from high school gyms to the pros.",
+    "source_notes": "NFHS Basketball Rules Book, court and equipment section (basket height); to verify."
+  },
+  {
+    "key": "e2c7ef3a-3e77-4ab1-bece-db743e6a5fe0",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Basketball",
+    "prompt": "In basketball, how many points is one made free throw worth?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correct_option": 0,
+    "explanation": "Each made free throw is worth 1 point. Free throws are taken from the free-throw line with no defender guarding the shooter, usually after a foul.",
+    "source_notes": "NFHS Basketball Rules Book, scoring section (free throw = 1 point); to verify."
+  },
+  {
+    "key": "82ff66bb-fb11-43a7-b54d-9dda7063ca70",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Basketball",
+    "prompt": "How many players does a basketball team have on the court at the same time?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correct_option": 1,
+    "explanation": "Each basketball team has 5 players on the court at once. Coaches can swap players in and out during the game.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "5745bd42-6431-4398-a19d-e2a8f031f6e7",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Basketball",
+    "prompt": "In basketball, dribbling the ball with both hands at the same time is allowed.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 1,
+    "explanation": "False. Dribbling with both hands at once, or stopping and then dribbling again, is a violation often called a double dribble. The other team gets the ball.",
+    "source_notes": "NFHS Basketball Rules Book, dribble definitions and violations; to verify."
+  },
+  {
+    "key": "1c2b6725-123c-4a46-a08f-ebb30156d55d",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Rugby",
+    "prompt": "In rugby, what is it called when a player grounds the ball in the other team's in-goal area to score?",
+    "options": [
+      "A touchdown",
+      "A goal",
+      "A try",
+      "A home run"
+    ],
+    "correct_option": 2,
+    "explanation": "It is called a try. The player has to press the ball down to the ground over the line, which is how the score got its name.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "eb926b73-69d7-45cd-ac49-195ba5a8ff9e",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Rugby",
+    "prompt": "What shape is a rugby ball?",
+    "options": [
+      "Round",
+      "Oval",
+      "Square",
+      "Flat like a disc"
+    ],
+    "correct_option": 1,
+    "explanation": "A rugby ball is oval, a bit like a stretched-out egg. That shape makes it bounce in surprising ways.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "d617066e-e685-4625-8b75-f2fe1b6701ec",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Rugby",
+    "prompt": "In rugby, which way are players allowed to pass the ball with their hands?",
+    "options": [
+      "Forward only",
+      "Backward or sideways",
+      "Any direction",
+      "Only to the kicker"
+    ],
+    "correct_option": 1,
+    "explanation": "Passes in rugby must go backward or sideways. A pass that travels forward is called a forward pass, and play stops for a scrum. Teams move the ball forward by running and kicking.",
+    "source_notes": "World Rugby Laws of the Game, definitions and forward pass law; to verify."
+  },
+  {
+    "key": "88651c33-f885-47fd-9ea5-813b6a1c0a92",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Rugby",
+    "prompt": "In rugby, a scrum is a way to restart play where players from both teams bind together and push.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! In a scrum, the forwards from each team lock together and push while the ball is rolled in between them.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "e81382ca-69c7-46d6-b3be-a397fb927d5b",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Volleyball",
+    "prompt": "In indoor volleyball, how many players from each team are on the court at once?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correct_option": 2,
+    "explanation": "Each indoor volleyball team has 6 players on the court. Beach volleyball is usually played with just 2 players per side.",
+    "source_notes": "NFHS Volleyball Rules Book, players and substitutes section; to verify."
+  },
+  {
+    "key": "739f445d-fd3e-4691-b636-72000232e974",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Volleyball",
+    "prompt": "In volleyball, what is the most times a team can hit the ball before it must go over the net (not counting a block)?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correct_option": 1,
+    "explanation": "A team gets up to 3 hits to send the ball back over, often a pass, a set and an attack. A touch on a block does not count as one of the three.",
+    "source_notes": "NFHS Volleyball Rules Book, playing the ball section; to verify."
+  },
+  {
+    "key": "6a6e2066-150d-4a4f-8b6a-ae0748cd999d",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Volleyball",
+    "prompt": "In volleyball, what do players use to hit the ball over the net?",
+    "options": [
+      "A racket",
+      "Their hands and arms",
+      "A bat",
+      "A stick"
+    ],
+    "correct_option": 1,
+    "explanation": "Volleyball players hit the ball with their hands and arms. A bump, a set and a spike are all done without any equipment.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "2e361968-aec0-48f5-983a-411b925c9a0a",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Volleyball",
+    "prompt": "In volleyball, a team must win a set by at least two points.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! A set keeps going until one team leads by two points, even past 25. A close set can finish 26-24, 27-25 or later.",
+    "source_notes": "NFHS Volleyball Rules Book, scoring and set length section; to verify."
+  },
+  {
+    "key": "12370a8f-ff2d-41da-b420-ef3c37716477",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Soccer",
+    "prompt": "In soccer, how many players does each team have on the field, including the goalkeeper?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correct_option": 2,
+    "explanation": "Each team has 11 players on the field, and one of them is the goalkeeper. Smaller-sided youth games may use fewer.",
+    "source_notes": "IFAB Laws of the Game, Law 3 (the players); NFHS Soccer Rules Book; to verify."
+  },
+  {
+    "key": "7d714b96-060a-4614-8772-01108aace03c",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Soccer",
+    "prompt": "In soccer, which player is allowed to handle the ball with their hands inside their own penalty area?",
+    "options": [
+      "The captain",
+      "The goalkeeper",
+      "Any defender",
+      "The player taking a corner"
+    ],
+    "correct_option": 1,
+    "explanation": "Only the goalkeeper may handle the ball, and only inside their own penalty area. Other field players use their feet, head, chest and thighs. Throw-ins are the one time everyone uses their hands.",
+    "source_notes": "IFAB Laws of the Game, Law 12 (handling the ball); to verify."
+  },
+  {
+    "key": "835414cd-ac77-474b-9211-d89fc9b99ca0",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Soccer",
+    "prompt": "In soccer, what is it called when one player scores three goals in the same game?",
+    "options": [
+      "A triple play",
+      "A hat trick",
+      "A grand slam",
+      "A clean sheet"
+    ],
+    "correct_option": 1,
+    "explanation": "Three goals by one player is a hat trick. A clean sheet means a team did not allow a goal, and the grand slam and triple play come from baseball.",
+    "source_notes": "General soccer terminology; any standard sports glossary; to verify."
+  },
+  {
+    "key": "44fa6ca4-117a-40c0-9f03-4825a2806716",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Soccer",
+    "prompt": "In soccer, a yellow card from the referee is a warning to a player.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! A yellow card is a caution. A red card is more serious and sends the player off the field.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "14409c96-8f6c-47ee-aed2-6dfb11d6f3bb",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Baseball",
+    "prompt": "In baseball, how many balls does a batter need to earn a walk to first base?",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correct_option": 1,
+    "explanation": "Four balls earns a walk, also called a base on balls. A ball is a pitch outside the strike zone that the batter does not swing at.",
+    "source_notes": "NFHS Baseball Rules Book, batter and base on balls section; to verify."
+  },
+  {
+    "key": "59c241c5-4307-4b19-a0e2-59d5835fb474",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Baseball",
+    "prompt": "In baseball, how many strikes make a strikeout?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correct_option": 1,
+    "explanation": "Three strikes and the batter is out. That is where the saying \"three strikes and you're out\" comes from.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "7bd0a97f-2dd3-4194-8aec-44949f704f99",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Baseball",
+    "prompt": "In baseball, what do you call a home run hit when the bases are loaded?",
+    "options": [
+      "A hat trick",
+      "A grand slam",
+      "A triple play",
+      "A walk-off single"
+    ],
+    "correct_option": 1,
+    "explanation": "A home run with runners on all three bases is a grand slam. It scores four runs at once, the most possible on a single swing.",
+    "source_notes": "General baseball terminology; NFHS/MLB glossaries; to verify."
+  },
+  {
+    "key": "a37d81dc-8e01-465c-8b9c-2063e4dd104d",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Baseball",
+    "prompt": "In baseball, a home run lets the batter run around all the bases and score.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! On a home run, the batter rounds first, second and third base and touches home plate to score a run.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "aaeb6654-988e-4bbd-a138-6085237ceaac",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Softball",
+    "prompt": "How does a pitcher throw the ball in fastpitch softball?",
+    "options": [
+      "Overhand",
+      "Underhand",
+      "Sidearm",
+      "Off a tee"
+    ],
+    "correct_option": 1,
+    "explanation": "Fastpitch softball pitchers throw underhand, often with a windmill arm motion. Even underhand, top pitchers throw very fast from a short distance.",
+    "source_notes": "NFHS Softball Rules Book, pitching section; to verify."
+  },
+  {
+    "key": "44e2ed3e-8ddd-449d-912c-058b7b3d38fd",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Softball",
+    "prompt": "In softball, what does the batter use to hit the ball?",
+    "options": [
+      "A racket",
+      "A stick",
+      "A bat",
+      "A paddle"
+    ],
+    "correct_option": 2,
+    "explanation": "Softball batters swing a bat, just like in baseball.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "c0aaca09-9899-48d8-8442-d3f1aa36df93",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Softball",
+    "prompt": "In softball, how many outs does the batting team get before the teams switch sides?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correct_option": 1,
+    "explanation": "After 3 outs, the teams switch: the fielding team comes in to bat. Baseball works the same way.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "7577838f-bf05-418c-beba-3dae49e2054d",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Softball",
+    "prompt": "A softball is smaller than a baseball.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 1,
+    "explanation": "False. A fastpitch softball is bigger, about 12 inches around, while a baseball is about 9 inches around. The \"soft\" in the name does not mean small!",
+    "source_notes": "NFHS Softball and Baseball Rules Books, equipment (ball circumference); to verify."
+  },
+  {
+    "key": "33350a3a-960f-4cd8-b055-3982af63f479",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Wrestling",
+    "prompt": "In wrestling, what is it called when a wrestler holds both of the opponent's shoulders on the mat long enough to end the match?",
+    "options": [
+      "A takedown",
+      "A fall, or pin",
+      "An escape",
+      "A reversal"
+    ],
+    "correct_option": 1,
+    "explanation": "That is a fall, often called a pin. It ends the match right away, no matter what the score was.",
+    "source_notes": "NFHS Wrestling Rules Book, fall definition; to verify."
+  },
+  {
+    "key": "c2a70df4-cefe-42e8-9de6-c5d25d3f9919",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Wrestling",
+    "prompt": "What is the padded floor that wrestlers compete on called?",
+    "options": [
+      "A court",
+      "A mat",
+      "A pitch",
+      "A rink"
+    ],
+    "correct_option": 1,
+    "explanation": "Wrestlers compete on a thick, padded mat. The padding helps protect them during takedowns.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "cea7ab17-dd60-48d4-9392-95e1e957d3dd",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Wrestling",
+    "prompt": "Why do wrestlers compete in weight classes?",
+    "options": [
+      "So matches go faster",
+      "So wrestlers face opponents of similar size",
+      "So each team has the same uniforms",
+      "So referees can tell wrestlers apart"
+    ],
+    "correct_option": 1,
+    "explanation": "Weight classes match wrestlers with opponents close to their own size. That keeps matches fair and lets skill and technique decide the winner.",
+    "source_notes": "NFHS Wrestling Rules Book, weight classes section; to verify."
+  },
+  {
+    "key": "919b607b-81e5-4968-8511-e40e753fedd5",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Wrestling",
+    "prompt": "In a wrestling match, each wrestler faces a single opponent.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! A wrestling match is one-on-one. In team meets, each match still pits one wrestler against another.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "3ed21bc5-86a6-4ede-add1-91fcccd3964f",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Track & Field",
+    "prompt": "How long is one lap around the inside lane of a standard outdoor running track?",
+    "options": [
+      "200 meters",
+      "300 meters",
+      "400 meters",
+      "500 meters"
+    ],
+    "correct_option": 2,
+    "explanation": "One lap of the inside lane is 400 meters. Outer lanes are longer, which is why runners in those lanes start farther ahead in races around the curve.",
+    "source_notes": "NFHS Track and Field Rules Book; World Athletics track specifications; to verify."
+  },
+  {
+    "key": "bf9c512f-19a6-4f89-9782-a97b3963fc33",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Track & Field",
+    "prompt": "In a relay race, what do runners pass to their teammates?",
+    "options": [
+      "A flag",
+      "A baton",
+      "A wristband",
+      "A torch"
+    ],
+    "correct_option": 1,
+    "explanation": "Relay runners pass a baton. The handoff must happen inside a marked exchange zone, so smooth passing can win or lose a race.",
+    "source_notes": "NFHS Track and Field Rules Book, relay section; to verify."
+  },
+  {
+    "key": "34f1a576-7c7e-4868-bc19-b39e2249fb0e",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Track & Field",
+    "prompt": "How many events are in a decathlon?",
+    "options": [
+      "5",
+      "7",
+      "10",
+      "12"
+    ],
+    "correct_option": 2,
+    "explanation": "A decathlon has 10 events, held over two days. The word comes from the Greek \"deka,\" meaning ten. The heptathlon has seven events.",
+    "source_notes": "World Athletics competition rules (combined events); to verify."
+  },
+  {
+    "key": "23da76c8-056f-4512-9027-b55eceebb2a8",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Track & Field",
+    "prompt": "In the long jump, stepping past the takeoff line counts as a foul.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! If a jumper's foot goes past the takeoff line, the jump is a foul and does not count. Jumpers practice their run-up so they hit the board just right.",
+    "source_notes": "NFHS Track and Field Rules Book, long jump section; World Athletics rules; to verify."
+  },
+  {
+    "key": "60f76779-ab11-44c5-aae5-ed70cc00c9ab",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Lacrosse",
+    "prompt": "In lacrosse, which player guards the net?",
+    "options": [
+      "The goalie",
+      "The midfielder",
+      "The attacker",
+      "The referee"
+    ],
+    "correct_option": 0,
+    "explanation": "The goalie guards the net and tries to stop shots, just like a goalkeeper in soccer or a goalie in hockey.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "96676b40-6338-4d02-af8b-82905a0a3472",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Lacrosse",
+    "prompt": "Lacrosse was first played by which people?",
+    "options": [
+      "Indigenous peoples of North America",
+      "Ancient Romans",
+      "Vikings",
+      "Medieval English knights"
+    ],
+    "correct_option": 0,
+    "explanation": "Lacrosse began with Indigenous peoples of North America, including the Haudenosaunee, centuries ago. Many communities still honor it as an important part of their culture.",
+    "source_notes": "USA Lacrosse history; Haudenosaunee Nationals history; to verify wording with Content."
+  },
+  {
+    "key": "4e08a8ea-1117-40fb-8e44-2c444dd13833",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Lacrosse",
+    "prompt": "What do lacrosse players use to catch, carry and throw the ball?",
+    "options": [
+      "A racket",
+      "A paddle",
+      "A stick with a netted head",
+      "A wooden bat"
+    ],
+    "correct_option": 2,
+    "explanation": "Players use a lacrosse stick, sometimes called a crosse. Its netted head, or pocket, lets them catch, cradle and throw the ball.",
+    "source_notes": "NFHS Boys and Girls Lacrosse Rules Books, equipment section; to verify."
+  },
+  {
+    "key": "72422bda-b086-4416-8009-ed53cee9ed7f",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Lacrosse",
+    "prompt": "Lacrosse players can carry the ball in the netted pocket of their stick while running.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Players cradle the ball in the pocket of the stick as they run, then pass or shoot it.",
+    "source_notes": "Common knowledge (basic rules of the game); no expert check needed."
+  },
+  {
+    "key": "44e37b63-9521-454e-9e03-9c0a029b5d02",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Ice Hockey",
+    "prompt": "What is the flat rubber disc used in ice hockey called?",
+    "options": [
+      "A puck",
+      "A slider",
+      "A shuttle",
+      "A chip"
+    ],
+    "correct_option": 0,
+    "explanation": "It is called a puck, and it is made of hard rubber. Pucks are often frozen before games so they slide smoothly and bounce less.",
+    "source_notes": "USA Hockey Playing Rules, equipment (puck); NFHS Ice Hockey Rules Book; to verify."
+  },
+  {
+    "key": "4a660884-fc56-442a-b675-b32fd3483e85",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Ice Hockey",
+    "prompt": "In ice hockey, how many players from each team are on the ice during normal play, including the goalie?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "11"
+    ],
+    "correct_option": 1,
+    "explanation": "Each team has 6 players on the ice: a goalie and five skaters. When a player serves a penalty, the team usually plays with one fewer skater.",
+    "source_notes": "USA Hockey Playing Rules; NFHS Ice Hockey Rules Book, players section; to verify."
+  },
+  {
+    "key": "3cc6af0a-79e7-4f9c-b216-2d9161b91c54",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Ice Hockey",
+    "prompt": "How many periods are in a standard ice hockey game?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "correct_option": 1,
+    "explanation": "A standard hockey game has three periods. Teams switch ends between periods, and the ice is often resurfaced during the breaks.",
+    "source_notes": "USA Hockey Playing Rules; NFHS Ice Hockey Rules Book, game length; to verify."
+  },
+  {
+    "key": "64181af8-a508-4950-8843-d567a07e0ac0",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Ice Hockey",
+    "prompt": "In ice hockey, a player who gets a penalty sits in the penalty box while their team plays one player short.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! The penalized player sits in the penalty box, and their team plays short-handed. The other team gets a power play, a great chance to score.",
+    "source_notes": "USA Hockey Playing Rules, penalties section; NFHS Ice Hockey Rules Book; to verify."
+  },
+  {
+    "key": "7549ac25-008f-4dd0-a862-66992c5c4c75",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Tennis",
+    "prompt": "In tennis scoring, what does the word \"love\" mean?",
+    "options": [
+      "Zero",
+      "One point",
+      "A tie game",
+      "A perfect serve"
+    ],
+    "correct_option": 0,
+    "explanation": "\"Love\" means zero in tennis. So a score of 15-love means one player has one point and the other has none.",
+    "source_notes": "ITF Rules of Tennis, scoring section; to verify."
+  },
+  {
+    "key": "09b3af71-1209-4e28-a184-73d8c3a093c7",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Tennis",
+    "prompt": "In a tennis game, the points go love, 15, 30 and then what?",
+    "options": [
+      "35",
+      "40",
+      "45",
+      "50"
+    ],
+    "correct_option": 1,
+    "explanation": "After 30 comes 40. One more point after 40 wins the game, as long as the player is at least two points ahead.",
+    "source_notes": "ITF Rules of Tennis, scoring in a game; to verify."
+  },
+  {
+    "key": "1a206c55-cf33-48b0-909e-f47fc5cfe1a0",
+    "question_type": "choice4",
+    "topic_category": "sport",
+    "sport": "Tennis",
+    "prompt": "In tennis, what is a serve called when the receiver cannot even touch it with their racket?",
+    "options": [
+      "A let",
+      "An ace",
+      "A fault",
+      "A volley"
+    ],
+    "correct_option": 1,
+    "explanation": "That serve is an ace. A let is a serve that clips the net and lands in, so it is replayed, and a fault is a serve that misses the service box.",
+    "source_notes": "ITF Rules of Tennis and standard tennis glossary; to verify."
+  },
+  {
+    "key": "420e03e7-d506-40a4-a4ad-bb2dca0de5f3",
+    "question_type": "true_false",
+    "topic_category": "sport",
+    "sport": "Tennis",
+    "prompt": "In tennis, when the score in a game is tied at 40-40, it is called deuce.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! A 40-40 tie is called deuce. From there, a player must win two points in a row to win the game, first earning \"advantage\" and then the game.",
+    "source_notes": "ITF Rules of Tennis, scoring in a game (deuce); to verify."
+  },
+  {
+    "key": "29b7a628-782d-4abb-8c31-785c5226a14b",
+    "question_type": "choice4",
+    "topic_category": "science",
+    "sport": "Science",
+    "prompt": "What pulls a ball back down to the ground after it is thrown up in the air?",
+    "options": [
+      "Gravity",
+      "Magnetism",
+      "Electricity",
+      "Sound"
+    ],
+    "correct_option": 0,
+    "explanation": "Gravity pulls everything toward the ground. That is why every pop fly and jump shot comes back down.",
+    "source_notes": "Common knowledge (basic science); no expert check needed."
+  },
+  {
+    "key": "8b1168b6-437f-406b-905d-fc2c82374f23",
+    "question_type": "choice4",
+    "topic_category": "science",
+    "sport": "Science",
+    "prompt": "When you exercise hard, you breathe faster mainly to get more of which gas to your muscles?",
+    "options": [
+      "Oxygen",
+      "Carbon dioxide",
+      "Helium",
+      "Nitrogen"
+    ],
+    "correct_option": 0,
+    "explanation": "Your muscles use oxygen to make energy. Breathing faster brings in more oxygen and also helps your body get rid of carbon dioxide, the gas you breathe out.",
+    "source_notes": "Introductory biology/physiology texts on respiration during exercise; to verify."
+  },
+  {
+    "key": "992ae3e5-78fb-4c7b-8b0e-c6e4c4da98dc",
+    "question_type": "choice4",
+    "topic_category": "science",
+    "sport": "Science",
+    "prompt": "Why does your body sweat during a game?",
+    "options": [
+      "To make your skin stronger",
+      "To cool you down as the sweat dries",
+      "To help you jump higher",
+      "To keep your muscles from moving"
+    ],
+    "correct_option": 1,
+    "explanation": "Sweat cools you as it evaporates from your skin, carrying heat away from your body. That is why drinking water during practice and games matters.",
+    "source_notes": "Introductory physiology texts on thermoregulation; to verify."
+  },
+  {
+    "key": "0ee0c2b1-eef4-4a33-bc19-a311e64d57f2",
+    "question_type": "true_false",
+    "topic_category": "science",
+    "sport": "Science",
+    "prompt": "If you threw a ball on the Moon as hard as you can on Earth, it would travel farther.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! The Moon's gravity is about one-sixth of Earth's, and there is no air to slow the ball down. An astronaut even hit golf balls on the Moon in 1971.",
+    "source_notes": "NASA educational material on lunar gravity; Apollo 14 mission history; to verify."
+  },
+  {
+    "key": "f3ce0f5f-9799-42cf-8fba-6c7e1d7a31d0",
+    "question_type": "choice4",
+    "topic_category": "geography",
+    "sport": "Geography",
+    "prompt": "Rugby is named after a school in a town called Rugby. In which country is it?",
+    "options": [
+      "England",
+      "New Zealand",
+      "France",
+      "South Africa"
+    ],
+    "correct_option": 0,
+    "explanation": "Rugby School is in the town of Rugby, England, where the game's early form developed in the 1800s. Today rugby is loved worldwide, including across the Pacific Islands.",
+    "source_notes": "World Rugby history; Rugby School history; to verify."
+  },
+  {
+    "key": "725a3060-4158-4733-8280-468e9b7054fa",
+    "question_type": "choice4",
+    "topic_category": "geography",
+    "sport": "Geography",
+    "prompt": "The ancient Olympic Games began in which country?",
+    "options": [
+      "Italy",
+      "Egypt",
+      "Greece",
+      "China"
+    ],
+    "correct_option": 2,
+    "explanation": "The Olympic Games started in ancient Greece, at a place called Olympia. That is where the name comes from.",
+    "source_notes": "Common knowledge (world history); no expert check needed."
+  },
+  {
+    "key": "2e446695-3943-4804-b123-3bf5da558f61",
+    "question_type": "choice4",
+    "topic_category": "geography",
+    "sport": "Geography",
+    "prompt": "Sumo wrestling is a traditional sport from which country?",
+    "options": [
+      "Brazil",
+      "Japan",
+      "Canada",
+      "Kenya"
+    ],
+    "correct_option": 1,
+    "explanation": "Sumo is a traditional sport from Japan. Wrestlers try to push each other out of a ring or make them touch the ground.",
+    "source_notes": "Common knowledge (world geography and culture); no expert check needed."
+  },
+  {
+    "key": "2730f26f-8250-47d3-acbe-d5f73a12a9ca",
+    "question_type": "true_false",
+    "topic_category": "geography",
+    "sport": "Geography",
+    "prompt": "Canada, where ice hockey is hugely popular, is north of the United States.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! Canada is directly north of the United States. Hockey is one of the most loved sports there.",
+    "source_notes": "Common knowledge (world geography); no expert check needed."
+  },
+  {
+    "key": "87db24c0-4aee-434f-acc1-dd06703f3018",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "In sports, what does \"MVP\" stand for?",
+    "options": [
+      "Most Valuable Player",
+      "Most Visible Player",
+      "Main Varsity Player",
+      "Most Victorious Pick"
+    ],
+    "correct_option": 0,
+    "explanation": "MVP stands for Most Valuable Player. It is an honor given to the player who helped their team the most in a game, a tournament or a season.",
+    "source_notes": "Standard sports glossary; to verify."
+  },
+  {
+    "key": "17a4bc09-f816-496c-8288-6fae918a9f4a",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "What is a \"shutout\" in sports?",
+    "options": [
+      "A game stopped because of weather",
+      "A game where one team does not score at all",
+      "A game that goes into overtime",
+      "A game played with no fans"
+    ],
+    "correct_option": 1,
+    "explanation": "A shutout is a game where one team keeps the other from scoring at all. It is a big win for the defense and the goalie or pitcher.",
+    "source_notes": "Standard sports glossary; to verify."
+  },
+  {
+    "key": "efcdc141-679b-4778-be4d-9f10b769d119",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "What do people call it when a team plays a game at its own field or gym?",
+    "options": [
+      "An away game",
+      "A home game",
+      "A bye week",
+      "A scrimmage"
+    ],
+    "correct_option": 1,
+    "explanation": "A game at your own field or gym is a home game. When a team travels to the other school, it is an away game. A bye week means no game at all.",
+    "source_notes": "Standard sports glossary; to verify."
+  },
+  {
+    "key": "6cc0972a-0dec-45c1-973c-0e7246770d32",
+    "question_type": "true_false",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "The Olympic flag shows five interlocking rings.",
+    "options": [
+      "True",
+      "False"
+    ],
+    "correct_option": 0,
+    "explanation": "True! The five rings, in blue, yellow, black, green and red on a white background, stand for the five continents joined together in the Olympic spirit.",
+    "source_notes": "International Olympic Committee (olympics.com) on the Olympic symbol; to verify."
+  }
+]

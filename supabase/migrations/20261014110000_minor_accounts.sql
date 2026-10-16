@@ -39,7 +39,17 @@
 --   PRIVACY_ENGINEERING, RLS_SECURITY, CUSTODIAL, LEGAL (consent form, LEGAL_BRIEFING row AA), DATA_GOVERNANCE.
 -- Needs: 20261014090000 and 20261014100000 first; hash_secret() (athlete verification ladder).
 -- Safe to re-run: add column if not exists; create table if not exists; create or replace; drop trigger if exists.
+--   After QUIZ-05 (20261015210000) it must NOT be re-run alone: it would replace QUIZ-05's guardian_decide_approval
+--   (fun_fact routing) and supervision_json ("trivia_groups", "fun_facts_shared"), so it stops with
+--   minor01_rerun_after_quiz05. schema.sql re-applies it with the transaction-local quiz.full_schema, then the QUIZ blocks.
 -- Applied: written 2026-10-14, not applied anywhere.
+
+-- 0. Stop a lone re-run after QUIZ-05 (QUIZ-05 security review 2026-10-15, edited in place before any apply) --------------
+do $$ begin
+  if to_regclass('public.quiz_athlete_facts') is not null and coalesce(current_setting('quiz.full_schema',true),'') <> 'on' then
+    raise exception 'minor01_rerun_after_quiz05: 20261014110000_minor_accounts.sql must not be re-run alone after QUIZ-05; re-apply schema.sql or write a reviewed forward migration';
+  end if;
+end $$;
 -- Rollback: drop the five new tables and the functions below; re-apply set_my_privacy, get_my_privacy, request_friend,
 --   my_profile_id from 20261014090000 and athlete_payout_status / handle_new_auth_user from
 --   schema.sql history; the birth columns can stay (unused).
@@ -1435,6 +1445,11 @@ begin
   end if;
   if r.status <> 'pending' then
     raise exception 'This request was already handled.';
+  end if;
+  -- Fail closed (QUIZ-05 security review 2026-10-15): this function decides only the two privacy requests; any other
+  -- approval type is refused before anything changes (QUIZ-05 redefines it to route fun_fact requests).
+  if r.change_key not in ('account_public', 'friend_requests_everyone') then
+    raise exception 'This request cannot be decided here.';
   end if;
   if r.requested_at <= timezone('utc', now()) - interval '14 days' then
     update public.guardian_approval_requests set status = 'expired' where id = r.id;
