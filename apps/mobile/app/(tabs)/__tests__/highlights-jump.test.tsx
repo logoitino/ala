@@ -291,3 +291,4 @@ it('actual Home keeps private Fan review inside measured chrome and preserves se
   expect(searchToggle()).toBeTruthy(); expect(pill('Home')).toBeTruthy();
   expect(mockDiscoveryReads.every(fn => ['fun_snapshot', 'quiz_snapshot'].includes(fn))).toBe(true);
 });
+});

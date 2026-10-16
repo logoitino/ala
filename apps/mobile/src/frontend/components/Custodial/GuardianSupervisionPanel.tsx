@@ -57,7 +57,13 @@ function consentLine(row: GuardianMinorRow): string {
 }
 
 /** @purpose One teen: status line, then (when linked) the summary, requests and consent actions. */
-function MinorCard({ row, onChanged }: { row: GuardianMinorRow; onChanged: () => void }) {
+function MinorCard({ row, onChanged, funFacts = [], guardianProfileId = null, onFunFactsChanged }: {
+  row: GuardianMinorRow;
+  onChanged: () => void;
+  funFacts?: PendingFunFact[];
+  guardianProfileId?: string | null;
+  onFunFactsChanged?: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<Supervision | null>(null);
   const [signing, setSigning] = useState(false);
@@ -218,7 +224,6 @@ export function GuardianSupervisionPanel() {
       else setNote(message(caught));
     }
   }, []);
-  useEffect(() => { void load(); }, [load]);
   // Fun facts waiting for this guardian; quietly empty when QUIZ-05 is not on this server or the read fails.
   const loadFunFacts = useCallback(async () => {
     try {
@@ -274,7 +279,16 @@ export function GuardianSupervisionPanel() {
       <Text style={styles.kicker}>Parent or guardian</Text>
       <Text style={styles.title}>Teens you supervise</Text>
       <Text style={styles.muted}>You see their settings, safety counts and changes, never who their friends are. They see exactly what you see, and either of you can unlink.</Text>
-      {(rows ?? []).map((row) => <MinorCard key={`${row.profileId}-${row.linkId ?? 'record'}`} row={row} onChanged={() => void load()} />)}
+      {(rows ?? []).map((row) => (
+        <MinorCard
+          key={`${row.profileId}-${row.linkId ?? 'record'}`}
+          row={row}
+          onChanged={() => void load()}
+          funFacts={row.linkStatus === 'linked' ? funFacts.facts.filter((fact) => fact.minor_profile_id === row.profileId) : []}
+          guardianProfileId={funFacts.profileId}
+          onFunFactsChanged={() => void loadFunFacts()}
+        />
+      ))}
       {rows && rows.length === 0 ? <Text style={styles.muted}>No teens linked yet.</Text> : null}
       <Text style={styles.section}>Link a teen</Text>
       {preview ? (

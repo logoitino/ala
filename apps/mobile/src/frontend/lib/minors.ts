@@ -200,10 +200,9 @@ export type Supervision = {
     friends: number; incomingRequests: number; blockedAccounts: number; tagsWaiting: number; hiddenFromSearch: boolean;
     /** CHAL-01: workout challenge invites received in the last 7 days (a count, never who; 0 before that migration). */
     challengeInvites7d: number;
+    /** QUIZ-05: fun facts live now (a count only); null when the server does not send it. */
+    funFactsShared: number | null;
   };
-  summary: { friends: number; incomingRequests: number; blockedAccounts: number; tagsWaiting: number; hiddenFromSearch: boolean;
-    /** QUIZ-05: fun facts live now (a count only, the same for teen and guardian); null when the server does not send it. */
-    funFactsShared: number | null };
   events: SupervisionEvent[];
   canAllowDonations: boolean;
 };

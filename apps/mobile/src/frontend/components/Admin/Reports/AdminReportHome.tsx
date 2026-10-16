@@ -1,8 +1,4 @@
 /** Home follows the owner-selected portal hero and compact comparison layout. Every count and
- * change comes from the shared dashboard input; a zero prior week has no invented percent. */
-import { Platform, Text, useWindowDimensions, View } from 'react-native';
-import { formatCount, formatUsd, homeKpis, isMeasured, weekChange, type HomeKpi } from '@tapuai/shared-types/admin';
-import type { AdminReportData } from '@/lib/adminReports';
  * change comes from the shared dashboard input; a zero prior week has no invented percent.
  * Desk status cards from the Home route (Trivia, 2026-10-15) sit after the weekly summary. */
 import { Platform, Text, useWindowDimensions, View } from 'react-native';

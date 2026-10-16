@@ -88,7 +88,7 @@ const message = (caught: unknown, fallback: string) => (caught instanceof Error 
 
 /** @purpose The Privacy sheet opened from Edit profile. */
 export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { recordBirthMonth } = useAuth();
+  const { recordBirthMonth, isAthlete } = useAuth();
   const [saved, setSaved] = useState<PrivacySettings | null>(null);
   const [draft, setDraft] = useState<PrivacySettings | null>(null);
   const [minor, setMinor] = useState<MinorStatus | null>(null);

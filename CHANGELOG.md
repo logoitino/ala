@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-16 — Fan Zone and trivia on the main line
+
+Fan Zone, sport trivia, and the life playbook are now in the same branch as Beyond and the current admin. Home can open Fan Zone discovery. Guardian supervision can approve a teen's fun fact and still shows workout invites. The repair after the merge makes the mobile app typecheck again.
+
 ## 2026-10-16 — Approved vs pending tag chip on Highlights
 
 Highlight cards now show whether the athlete approved the tag: a solid "✓ Tagged" chip for approved tags and a grey dashed "Tag pending" chip while waiting for approval. Untagged clips show no chip.
