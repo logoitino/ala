@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Preserve guardian-approved goals and truthful pending/progress states; donations and workout/service engagement remain separate, with ledger settlement and permitted purpose/claim review still required.
+**Now:** Preserve guardian-approved goals and truthful pending/progress states; donations and workout/service engagement remain separate, with ledger settlement and permitted purpose/claim review still required. A filled Rally can open the phone share sheet (M8-01). The message names the goal and the athlete. It does not name a donation amount.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 

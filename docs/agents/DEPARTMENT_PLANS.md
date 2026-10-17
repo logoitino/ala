@@ -422,7 +422,7 @@ client crediting and other explicit public gaps retain their separate owners. A 
 
 1. Review assigned new changes with ACCESSIBILITY. ADM-01 report-format re-review and ADM-02/consolidation local acceptance are complete; separate installed-device/VoiceOver and photo-story hosted/device checks remain with QA.
 2. Keep one primary action on a sheet, and keep empty, loading, and error visually distinct.
-3. Hold the Later visuals (share card, backer wall, badges, signature on the Aura card).
+3. The owner asked for the Rally and board-leader share sheet; that sheet is local (M8-01). Hold the rest of the Later visuals (backer wall, badges, signature on the Aura card).
 
 **What we will not do.** Restyle a payment or rights rule while changing how a card looks.
 

@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Calm Island is the owner's newer source direction after UX-06's frozen manifest; five published theme values may still override it until an authorized Look-to-Daylight publication, with native/accessibility checks open.
+**Now:** Calm Island is the owner's newer source direction after UX-06's frozen manifest; five published theme values may still override it until an authorized Look-to-Daylight publication, with native/accessibility checks open. The owner asked for the Rally and board-leader share sheet; that sheet is local (M8-01). Backer wall, badges and the larger rivalry takeover stay later.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 
@@ -38,7 +38,7 @@ You produce the screen. You do not wait for a separate mock unless the user aske
 
 ## Do not
 
-- Start Later work (share card, backer wall, badges, a bigger rivalry takeover) unless the user asked for that item.
+- Start the rest of the Later list (backer wall, badges, a bigger rivalry takeover) unless the user asked for that item. The Rally and board-leader share sheet was asked for and is local.
 - Restyle the Highlight player away from the current video chrome without saying so.
 - Add NativeWind, `expo-av`, or `useCaching: true`.
 - Change prices, the 90 / 10 line, or legal conclusions.

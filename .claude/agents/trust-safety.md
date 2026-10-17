@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Maintain local Beyond pre-review and CHAL friend/preset/private-badge safeguards; real reviewer/support staffing, public/minor action scope and appeals policy remain release prerequisites, with no minor in-person location/time.
+**Now:** Maintain local Beyond pre-review and CHAL friend/preset/private-badge safeguards; real reviewer/support staffing, public/minor action scope and appeals policy remain release prerequisites, with no minor in-person location/time. SAFETY-01 is local and still needs this team's independent review. “Risky without a coach” does not hide a clip. Invites still work and show the notice.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 

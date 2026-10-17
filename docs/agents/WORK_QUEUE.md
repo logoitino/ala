@@ -1,6 +1,6 @@
 # Specialist work queue
 
-Last updated: 2026-10-16. Entry point: [STATE.md](../STATE.md). Owners and executable
+Last updated: 2026-10-17. Entry point: [STATE.md](../STATE.md). Owners and executable
 instructions: [TEAMS.md](TEAMS.md), [TEAM_HIERARCHY.md](TEAM_HIERARCHY.md), and the agent registry.
 
 An app fix is assigned by `CTO`. The CTO names one lead. That lead names one specialist.
@@ -12,8 +12,9 @@ The owner (`FACILITATOR`) still decides applying SQL, merging, live money, price
 1. **Done locally:** Beyond switch on the Highlights bar, Beyond page with back button, Upload chooser, badge below Home chrome (STATE §4; [BEYOND-01](BEYOND-01.md)). Next: DEVICE_QA on iOS/Android.
 2. **Owner runs:** [DEV_DATABASE_CATCHUP](../engineering/DEV_DATABASE_CATCHUP.md) — 4 standalone files + 27 migrations on development, then an admin switches Beyond contributions on and republishes Look → Daylight. Not run; this session's Supabase access is read-only.
 3. **Content:** 2–3 real Train Like Me / Serve Like Me clips on development so the Beyond switch is not sample-only (owner or athletes; uploads need a truthful rights confirmation).
-4. **SAFETY-01 (planned):** HIGHLIGHTS owns; TRUST_SAFETY, MINOR_SAFETY, LEGAL (row AC) review the [design](../engineering/design/COACH_LEVEL_LABEL_DESIGN.md) before the admin-first build.
-5. **Phrase test:** RESEARCH + MARKETING + BRAND test Seki Set / Extra Rep / OT / Two-a-Day (FAMILY_FUN_PLAYBOOK, Beyond phrase test); LEGAL trademark and cultural check; results into the October 20 Growth packet.
+4. **SAFETY-01 (local, commit `1231af8`):** HIGHLIGHTS built the badge, upload switch, Beyond switch, non-hiding report and Highlights desk. Chain: owner request → CTO → ENGINEERING → HIGHLIGHTS, with BACKEND for `20261017090000` (written, not applied). TRUST_SAFETY, MINOR_SAFETY, MODERATION and LEGAL (row AC) still owe an independent review. Counsel has not approved the wording. Invites still work and show the notice. Teen pre-publish review is not built. Evidence: [SAFETY-01-admin](../engineering/evidence/SAFETY-01-admin.md), [SAFETY-01-app](../engineering/evidence/SAFETY-01-app.md).
+5. **M8-01 share sheet (local, same commit):** owner asked for the Rally share. HIGHLIGHTS with RALLY and SPOTLIGHT. DESIGN presentation only. “Share this Rally” and “Share the leader” use existing names. No donation amount and no new table. Backer wall, larger rivalry takeover, and first-backer and hometown badges stay later. Evidence: [M8-01-share](../engineering/evidence/M8-01-share.md).
+6. **Phrase test:** RESEARCH + MARKETING + BRAND test Seki Set / Extra Rep / OT / Two-a-Day (FAMILY_FUN_PLAYBOOK, Beyond phrase test); LEGAL trademark and cultural check; results into the October 20 Growth packet.
 
 ## UX-06 and Calm Island — local presentation follow-through
 

@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Maintain the existing athlete awards board and real athlete UUIDs; generic fan-ballot awards and private CHAL badge semantics do not create new public Spotlight eligibility or scoring.
+**Now:** Maintain the existing athlete awards board and real athlete UUIDs; generic fan-ballot awards and private CHAL badge semantics do not create new public Spotlight eligibility or scoring. “Share the leader” uses the current board’s first row and stays hype and views only.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 

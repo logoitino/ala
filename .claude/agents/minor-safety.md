@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Maintain MINOR birth-month/year, unknown-age and known-under13 closure plus teen consent/guardian limits; Beyond/CHAL age/friend gates stay action-specific, and minor in-person time/location remains prohibited even in future Vault work.
+**Now:** Maintain MINOR birth-month/year, unknown-age and known-under13 closure plus teen consent/guardian limits; Beyond/CHAL age/friend gates stay action-specific, and minor in-person time/location remains prohibited even in future Vault work. Coach-level workouts still allow invites and show the notice. Teen pre-publish review is not built. Counsel has not decided block versus warn.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 

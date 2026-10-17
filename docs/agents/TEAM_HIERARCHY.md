@@ -252,6 +252,15 @@ flowchart TB
 | Engineering support | SUPPORT (under ENGINEERING) | INCIDENT_TRIAGE, TELEMETRY, RELIABILITY; detection and repair with Dev |
 | Brand | VOICE | Donation words and honest product copy |
 
+## SAFETY-01 and M8-01 (owner 2026-10-16, recorded 2026-10-17)
+
+| Work | Primary | Pair / independent review | Lead chain |
+| --- | --- | --- | --- |
+| SAFETY-01 Coach-level label (local source, SQL not applied) | HIGHLIGHTS | BACKEND (migration), UPLOAD, MODERATION, TRUST_SAFETY, MINOR_SAFETY, LEGAL row AC, RLS_SECURITY, DATA_GOVERNANCE, VOICE | HIGHLIGHTS → ENGINEERING → CTO → owner |
+| M8-01 Rally and board-leader share sheet (presentation only) | HIGHLIGHTS | RALLY, SPOTLIGHT, DESIGN, VOICE | HIGHLIGHTS → ENGINEERING → CTO → owner |
+
+The Cursor session that committed `1231af8` did the build. It also wrote this documentation pass. Separate specialist agents did not run. Independent counsel, RLS, and device reviews are still open.
+
 ## Earlier cross-team ownership and status snapshot (2026-10-13)
 
 | Work | Primary | Pair / independent review | Lead chain |

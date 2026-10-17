@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Beyond's local pre-review/remove/support-erasure desk and legacy report controls exist; confirm staffed capacity, rights, block/closure and removal behavior before public use, with strikes/appeals still separately gated.
+**Now:** Beyond's local pre-review/remove/support-erasure desk and legacy report controls exist; confirm staffed capacity, rights, block/closure and removal behavior before public use, with strikes/appeals still separately gated. “Risky without a coach” is a report reason that never hides the clip and does not count toward the three-report hide.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 

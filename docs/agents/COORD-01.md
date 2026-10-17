@@ -179,3 +179,26 @@ and releases its remaining whole-team documentation/coordination scope. The whol
 handoff is **closed locally**. Every listed next-owner hosted/device/legal/admin-worktree item
 remains open under its own task and release reviews. Final metadata-only link verification
 follows this closure entry; it does not authorize deployment, spending or external messages.
+
+## SAFETY-01 and M8-01 documentation handoff — 2026-10-17
+
+The owner asked to build the coach-level label and the Rally share, and then to use the chain of
+command and update the documents. The build is commit `1231af8` on `main`. This pass does not
+change app behavior.
+
+| Function | Actual executor | What it did |
+| --- | --- | --- |
+| Owner request | Owner, 2026-10-16 | Asked for coach level and the Rally share |
+| CTO assignment | This Cursor session, recorded after the build | Named ENGINEERING as the lead and HIGHLIGHTS as the specialist |
+| Build | Same Cursor session, commit `1231af8` | Badge, switch, non-hiding report, Highlights desk, Rally share, board-leader share. Migration written, not applied |
+| Documentation | Same Cursor session, 2026-10-17 | Synced design, glossary, roadmap, queue, privacy map, menu map, catch-up step 32, STATE and CHANGELOG were already current from the commit |
+| VP Operations | Same Cursor session, 2026-10-17 | Moved the share sheet from Later to Now. Coach-level report is now in Trust & Safety. Registry tasks match the role files. Model pins unchanged |
+
+Separate specialist agents did not run. There is no independent TRUST_SAFETY, MINOR_SAFETY, LEGAL,
+RLS_SECURITY, or DATA_GOVERNANCE review of this source. Counsel has not approved the wording.
+Device taps of the share button were not run. Applying `20261017090000` stays with the owner.
+That apply is **$0** on the free development project unless the project is paused.
+
+Next owners: owner for the SQL apply; TRUST_SAFETY and MINOR_SAFETY for the invite and teen-review
+decision; LEGAL for row AC; RLS_SECURITY before any hosted apply; DEVICE_QA for the share button
+and the badge on a phone.

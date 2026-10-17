@@ -512,7 +512,7 @@
       ],
       "tasks": [
         "Visual design and interaction integration",
-        "Calm Island is the owner's newer source direction after UX-06's frozen manifest; five published theme values may still override it until an authorized Look-to-Daylight publication, with native/accessibility checks open."
+        "Calm Island is the owner's newer source direction after UX-06's frozen manifest; five published theme values may still override it until an authorized Look-to-Daylight publication, with native/accessibility checks open. The Rally and board-leader share sheet is local (M8-01). Backer wall, badges and the larger rivalry takeover stay later."
       ],
       "model": "grok-4.7-medium"
     },
@@ -730,7 +730,7 @@
       "tasks": [
         "Highlights feed and media specialist integration",
         "Integrate actual family-fun media/credit/status gaps for owner-selected fan-ballot awards; staff checks eligibility/rights/safety, votes choose winner, per-entry public candidate consent/private acknowledgment and withdrawal/recap corrections precede implementation; newcomer/network and trusted tally gaps stay explicit.",
-        "Maintain default Highlights and the adjacent Beyond integration with UPLOAD/PLAYBACK/FULLSTACK; source-free or ambiguous legacy samples must not acquire an unrelated athlete/payee, and fan awards remain proposed."
+        "Maintain default Highlights and the adjacent Beyond integration with UPLOAD/PLAYBACK/FULLSTACK; source-free or ambiguous legacy samples must not acquire an unrelated athlete/payee, and fan awards remain proposed. Coach-level label (SAFETY-01) is local; SQL 20261017090000 is not applied; counsel has not approved the wording."
       ],
       "model": "grok-4.7-medium"
     },
@@ -842,7 +842,7 @@
       ],
       "tasks": [
         "Approved legal wording and counsel decision tracking",
-        "Coordinate counsel classification of age/guardian/school/payment checks, approved alternatives and consent/notice decisions for Growth charter §9; exchange findings with Growth/Engineering before the one packet, preserving counsel/domain acceptance and owner business decisions."
+        "Coordinate counsel classification of age/guardian/school/payment checks, approved alternatives and consent/notice decisions for Growth charter §9; exchange findings with Growth/Engineering before the one packet, preserving counsel/domain acceptance and owner business decisions. SAFETY-01 option A wording is local only. LEGAL_BRIEFING row AC stays open."
       ],
       "model": "grok-4.7-medium"
     },
@@ -894,7 +894,7 @@
       ],
       "tasks": [
         "Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria.",
-        "Maintain MINOR birth-month/year, unknown-age and known-under13 closure plus teen consent/guardian limits; Beyond/CHAL age/friend gates stay action-specific, and minor in-person time/location remains prohibited even in future Vault work."
+        "Maintain MINOR birth-month/year, unknown-age and known-under13 closure plus teen consent/guardian limits; Beyond/CHAL age/friend gates stay action-specific, and minor in-person time/location remains prohibited even in future Vault work. Coach-level invites still work and show the notice. Teen pre-publish review is not built."
       ],
       "model": "grok-4.7-medium"
     },
@@ -924,7 +924,7 @@
       ],
       "tasks": [
         "Own report reasons, immediate-hide versus review threshold, review evidence and appeals design.",
-        "Beyond's local pre-review/remove/support-erasure desk and legacy report controls exist; confirm staffed capacity, rights, block/closure and removal behavior before public use, with strikes/appeals still separately gated."
+        "Beyond's local pre-review/remove/support-erasure desk and legacy report controls exist; confirm staffed capacity, rights, block/closure and removal behavior before public use, with strikes/appeals still separately gated. Risky without a coach never hides the clip and does not count toward the three-report hide."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1183,7 +1183,7 @@
         "apps/mobile/src/frontend/components/Rally"
       ],
       "tasks": [
-        "Own guardian-approved donation goals, progress aggregation and fill celebration."
+        "Own guardian-approved donation goals, progress aggregation and fill celebration. A filled Rally can open the phone share sheet without a donation amount (M8-01)."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1489,7 +1489,7 @@
         "apps/mobile/src/frontend/lib/tags.ts"
       ],
       "tasks": [
-        "Awards board, real athlete IDs and tag queue"
+        "Awards board, real athlete IDs and tag queue. Share the leader uses hype and views only (M8-01)."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1626,7 +1626,7 @@
       ],
       "tasks": [
         "Coordinate moderation, identity, minor safety and rights safeguards as independent release gates.",
-        "Maintain local Beyond pre-review and CHAL friend/preset/private-badge safeguards; real reviewer/support staffing, public/minor action scope and appeals policy remain release prerequisites, with no minor in-person location/time."
+        "Maintain local Beyond pre-review and CHAL friend/preset/private-badge safeguards; real reviewer/support staffing, public/minor action scope and appeals policy remain release prerequisites, with no minor in-person location/time. SAFETY-01 still needs an independent review. Risky without a coach does not hide a clip."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1648,7 +1648,7 @@
         "Own compression, MIME/bucket routing, upload progress/cancellation and athlete/account tag consent.",
         "Supply actual permitted casual-video versus athlete-required-photo workflows, rights/audience/age checks and publication/tag/reward/error states to per-user growth plans; identify retag/share/public-byte/removal/retry gaps and feasible reviewed bridges with support/service costs; no implementation or new rewards implied.",
         "Supply actual casual-video/photo/right/age/audience behavior for fan-ballot entries; staff eligibility/rights/safety and per-entry public candidate consent/private acknowledgment, restricted media/status/withdrawal and trusted ballot gaps remain proposed; no blanket Stripe KYC or implemented workflow.",
-        "Keep existing Highlight/photo rights and draft behavior distinct from Beyond's private pending video/JPEG review pipeline; current actor/consent/metadata/retry boundaries do not prove server decoding or public media safety."
+        "Keep existing Highlight/photo rights and draft behavior distinct from Beyond's private pending video/JPEG review pipeline; current actor/consent/metadata/retry boundaries do not prove server decoding or public media safety. A new Train Like Me upload can set the coach-level label only when layouts.coachLevel is on."
       ],
       "model": "grok-4.7-medium"
     },

@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Maintain default Highlights and the adjacent Beyond integration with UPLOAD/PLAYBACK/FULLSTACK; source-free or ambiguous legacy samples must not acquire an unrelated athlete/payee, and fan awards remain proposed.
+**Now:** Maintain default Highlights and the adjacent Beyond integration with UPLOAD/PLAYBACK/FULLSTACK; source-free or ambiguous legacy samples must not acquire an unrelated athlete/payee, and fan awards remain proposed. Coach-level label (SAFETY-01) is local: badge, switch, non-hiding report, Highlights desk. SQL `20261017090000` is not applied. Counsel has not approved the wording.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 

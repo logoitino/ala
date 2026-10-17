@@ -146,7 +146,7 @@ with these files.
 | --- | --- |
 | [BEYOND-01](agents/BEYOND-01.md) | Actual scoped implementation and review ledger |
 | [Beyond the Game design](engineering/design/BEYOND_GAME_DESIGN.md) | Beyond switch on the Highlights bar and Beyond page (owner 2026-10-16; was a bottom tab), reviewed media and workout/Vault boundaries |
-| [Coach-level move label design](engineering/design/COACH_LEVEL_LABEL_DESIGN.md) | SAFETY-01 (planned): safety notice for risky workouts, wording options for Legal, admin-first contract |
+| [Coach-level move label design](engineering/design/COACH_LEVEL_LABEL_DESIGN.md) | SAFETY-01: local coach-level badge, switch and Highlights desk. SQL written, not applied. Counsel still open |
 | [Figma UI/UX polish](engineering/design/UI_UX_FIGMA_POLISH.md) | Actual draft/plugin quota checkpoint, approved mock font, source reviews and proposed polish. |
 | [UX-06](agents/UX-06.md) | Local Beyond/workout polish ownership, presentation exemption and actual verification. |
 | [Implementation plan](engineering/design/BEYOND_GAME_IMPLEMENTATION_PLAN.md) | Ownership, admin-first gates and verification sequence |

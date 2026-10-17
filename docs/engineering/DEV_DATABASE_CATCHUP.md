@@ -70,6 +70,9 @@ project before the baseline in `supabase/migrations/README.md` (it would re-run 
 | 29 | `supabase/migrations/20261014120000_payee_verification.sql` | `insert into supabase_migrations.schema_migrations (version, name) values ('20261014120000', 'payee_verification') on conflict do nothing;` |
 | 30 | `supabase/migrations/20261016100000_workout_challenges.sql` | `insert into supabase_migrations.schema_migrations (version, name) values ('20261016100000', 'workout_challenges') on conflict do nothing;` |
 | 31 | `supabase/migrations/20261016120000_beyond_game.sql` | `insert into supabase_migrations.schema_migrations (version, name) values ('20261016120000', 'beyond_game') on conflict do nothing;` |
+| 32 | `supabase/migrations/20261017090000_coach_level_label.sql` | `insert into supabase_migrations.schema_migrations (version, name) values ('20261017090000', 'coach_level_label') on conflict do nothing;` |
+
+Step 32 is the Coach-level label. It needs `beyond_posts` from step 31. Fan Zone and trivia files sit between steps 31 and 32 by filename and are a separate chain. They are not required for this Beyond catch-up. Do not apply step 32 until the owner asks. Applying it on the free development project is **$0** unless that project is paused.
 
 Notes on order: filename order already applies `20261013220000_disbursements_guardian_scope.sql`
 after the function-access security fix, the PRIV-01 files before MINOR-01, and the workout

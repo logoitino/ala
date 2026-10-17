@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-17 — Coach-level and Rally share handoff
+
+The documents now follow the same chain as the build: Highlights through Engineering to the CTO. The share sheet is in the current work. Counsel and the database update stay open.
+
 ## 2026-10-16 — Coach-level workouts and a shareable Rally
 
 A workout that needs a coach or spotter can carry a Coach-level move label. Reporting it as risky does not take the clip down. A filled Rally and a board leader can be shared. The brand line stays Donate. Elevate. Celebrate. The database update is written and not applied. Counsel has not signed off on the wording.

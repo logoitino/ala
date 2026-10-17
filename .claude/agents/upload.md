@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Keep existing Highlight/photo rights and draft behavior distinct from Beyond's private pending video/JPEG review pipeline; current actor/consent/metadata/retry boundaries do not prove server decoding or public media safety.
+**Now:** Keep existing Highlight/photo rights and draft behavior distinct from Beyond's private pending video/JPEG review pipeline; current actor/consent/metadata/retry boundaries do not prove server decoding or public media safety. A new Train Like Me upload can set the coach-level label only when `layouts.coachLevel` is on. A missing column is dropped and the upload still completes.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 

@@ -1,8 +1,10 @@
 # Coach-level move label — safety notice for risky workouts (SAFETY-01)
 
-**Status:** planned design, owner request 2026-10-16. Enrolled in `docs/agents/feature-admin.json` as
-`SAFETY-01` before any source. Nothing is built. Owner HIGHLIGHTS (content), reviews TRUST_SAFETY,
-MINOR_SAFETY, LEGAL (owns the wording), MODERATION, RLS_SECURITY, DATA_GOVERNANCE, VOICE.
+**Status:** built locally 2026-10-16, commit `1231af8`. The app uses option A wording. Counsel has not
+approved it. Migration `20261017090000` is written, not applied. Owner HIGHLIGHTS (content), reviews
+TRUST_SAFETY, MINOR_SAFETY, LEGAL (owns the wording), MODERATION, RLS_SECURITY, DATA_GOVERNANCE, VOICE.
+The local build shows the notice on “I’m in” and invites. It does not block them. Teen pre-publish
+review is not built. Schools and coaches cannot set the label.
 
 ## Why
 
@@ -51,7 +53,9 @@ A standing line on workout content (Beyond switch, Beyond page Workouts, Train L
   source error shows unknown, never zero. No behavioural tracking.
 - Disable/repair: the uploader switch and report reason sit behind a runtime flag; an existing
   label keeps showing (a safety notice is never switched off silently). Admins remove a wrong label.
-- Migration, `lib/safetyLabels.ts` and the badge component are future files.
+- Migration `20261017090000_coach_level_label.sql`, `lib/safetyLabels.ts`, `SafetyLabelPanel.tsx` and
+  `CoachLevelBadge.tsx` exist locally. The selected gates passed on 2026-10-17. They check local
+  files and evidence. They are not a counsel sign-off or a hosted apply.
 
 ## Not decided (owner / counsel)
 

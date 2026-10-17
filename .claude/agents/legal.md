@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Coordinate counsel's Utah/action-specific consent, public media, guardian/payee, school and money decisions; local Beyond review/export/erasure and CHAL presets do not authorize real-family use or sign draft forms.
+**Now:** Coordinate counsel's Utah/action-specific consent, public media, guardian/payee, school and money decisions; local Beyond review/export/erasure and CHAL presets do not authorize real-family use or sign draft forms. SAFETY-01 uses the proposed option A wording locally. Row AC stays open. This role does not approve that wording.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 
