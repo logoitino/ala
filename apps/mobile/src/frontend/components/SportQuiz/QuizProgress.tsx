@@ -72,7 +72,7 @@ export function TimerBar({ remaining, duration }: { remaining: number; duration:
 
 /** @purpose The summary medal: counts 0 → `to` (instantly with Reduce Motion). The sentence below it stays the
  * screen-reader text, so nobody hears the numbers tick. */
-export function FactsCountUp({ to }: { to: number }) {
+export function FactsCountUp({ to, compact = false }: { to: number; compact?: boolean }) {
     const { reduceMotion } = useQuizFx();
     const [shown, setShown] = useState(reduceMotion ? to : 0);
     const pop = useSharedValue(1);
@@ -92,8 +92,8 @@ export function FactsCountUp({ to }: { to: number }) {
     }, [shown, reduceMotion, pop]);
     const animated = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
     return <View {...DECOR} testID="quiz-facts-medal" style={styles.medalWrap}>
-        <Animated.View style={[styles.medal, animated]}>
-            <Text style={styles.medalNumber}>{shown}</Text>
+        <Animated.View style={[styles.medal, compact && styles.medalCompact, animated]}>
+            <Text style={[styles.medalNumber, compact && styles.medalNumberCompact]}>{shown}</Text>
             <Text style={styles.medalCaption}>{to === 1 ? 'fact' : 'facts'}</Text>
         </Animated.View>
     </View>;
@@ -113,6 +113,8 @@ const styles = StyleSheet.create({
     fill: { height: '100%', borderRadius: 6 },
     medalWrap: { alignItems: 'center' },
     medal: { width: 96, height: 96, borderRadius: 48, borderWidth: 4, borderColor: FOCAL.electricGold, backgroundColor: FOCAL.mistGold, alignItems: 'center', justifyContent: 'center' },
+    medalCompact: { width: 72, height: 72, borderRadius: 36 },
     medalNumber: { fontSize: 36, fontWeight: '900', color: FOCAL.goldInk },
+    medalNumberCompact: { fontSize: 26 },
     medalCaption: { fontSize: 13, fontWeight: '700', color: FOCAL.goldInk },
 });

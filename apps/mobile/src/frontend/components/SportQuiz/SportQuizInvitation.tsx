@@ -14,10 +14,25 @@ export type SportQuizInvitationProps = {
     onDismiss?: () => void;
 };
 /** @purpose Ready opens preparation; Not now is local, while Skip explicitly spends this week. */
-export function SportQuizInvitation({ snapshot, loading, error, busy, onOpen, onSkip, onDismiss }: SportQuizInvitationProps) {
+export function SportQuizInvitation({ snapshot, loading, error, busy, onOpen, onSkip, onDismiss, overVideo = false }: SportQuizInvitationProps & { overVideo?: boolean }) {
     if (!snapshot || loading || error || snapshot.availability !== 'ready' || snapshot.week_spent || snapshot.preferences.invitation_mode !== 'weekly')
         return null;
-    return <View style={styles.card}><Text style={styles.title}>Sport Pop Quiz</Text><Text style={styles.copy}>Ready for this week’s optional trivia round? Up to five questions, one at a time. Choose 30 or 90 seconds per question before Start. Right or wrong, you get the same private badge, just for fun.</Text>
- <QuizButton label="Ready for trivia" onPress={onOpen}/>{onDismiss ? <QuizButton label="Not now" quiet onPress={onDismiss}/> : null}<QuizButton label="Skip this week" quiet disabled={!!busy} onPress={() => { void onSkip(); }}/></View>;
+    return <View style={[styles.card, overVideo && styles.cardVideo]}>
+      <Text style={[styles.title, overVideo && styles.titleVideo]}>Sport Pop Quiz</Text>
+      <Text style={[styles.copy, overVideo && styles.copyVideo]}>Ready for this week’s optional trivia round? Up to five questions, one at a time. Choose 30 or 90 seconds per question before Start. Right or wrong, you get the same private badge, just for fun.</Text>
+      <QuizButton label="Ready for trivia" onPress={onOpen} />
+      <View style={styles.row}>
+        {onDismiss ? <QuizButton fill label="Not now" quiet onVideo={overVideo} onPress={onDismiss} /> : null}
+        <QuizButton fill label="Skip this week" quiet onVideo={overVideo} disabled={!!busy} onPress={() => { void onSkip(); }} />
+      </View>
+    </View>;
 }
-const styles = StyleSheet.create({ card: { gap: 10, padding: 16, borderRadius: radii.lg, backgroundColor: colors.accentSoft }, title: { color: colors.text, fontSize: 20, fontWeight: '700' }, copy: { color: colors.textMuted, fontSize: 16, lineHeight: 23 } });
+const styles = StyleSheet.create({
+  card: { gap: 8, padding: 12, borderRadius: radii.lg, backgroundColor: colors.accentSoft },
+  cardVideo: { backgroundColor: 'rgba(14,19,21,0.92)', borderWidth: 1, borderColor: 'rgba(46,229,157,0.4)' },
+  title: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  titleVideo: { color: colors.onVideo },
+  copy: { color: colors.textMuted, fontSize: 14, lineHeight: 19 },
+  copyVideo: { color: colors.onVideoMuted },
+  row: { flexDirection: 'row', gap: 8 },
+});

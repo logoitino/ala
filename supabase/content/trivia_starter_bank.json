@@ -928,5 +928,170 @@
     "correct_option": 0,
     "explanation": "True! The five rings, in blue, yellow, black, green and red on a white background, stand for the five continents joined together in the Olympic spirit.",
     "source_notes": "International Olympic Committee (olympics.com) on the Olympic symbol; to verify."
+  },
+  {
+    "key": "4689e3e1-3578-4378-8d0f-d8baa231dab4",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "The United States government has three branches. Which list names them?",
+    "options": ["Legislative, executive, and judicial", "Army, navy, and air force", "Cities, states, and towns", "Schools, teams, and clubs"],
+    "correct_option": 0,
+    "explanation": "The three branches are legislative, executive, and judicial. They share the work of making laws, carrying them out, and judging them.",
+    "source_notes": "National Archives, the Constitution at a glance; to verify."
+  },
+  {
+    "key": "034cdd81-4ab9-4e83-8252-b121370b61dd",
+    "question_type": "true_false",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "The Constitution is the highest law in the United States.",
+    "options": ["True", "False"],
+    "correct_option": 0,
+    "explanation": "True! The Constitution sits above other laws in the United States. Public officials promise to support it.",
+    "source_notes": "National Archives, the Constitution; to verify."
+  },
+  {
+    "key": "cb7e6234-c998-402b-bc10-05ebc04cfac5",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "What is the Bill of Rights?",
+    "options": ["The first ten amendments to the Constitution", "The rules of a sports league", "A team's playbook", "A school attendance sheet"],
+    "correct_option": 0,
+    "explanation": "The Bill of Rights is the first ten amendments to the Constitution. It lists freedoms such as speech and religion.",
+    "source_notes": "National Archives, the Bill of Rights; to verify."
+  },
+  {
+    "key": "8ec72261-cb35-4ff0-8333-c078dc0a2f1c",
+    "question_type": "true_false",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "Congress is the part of the United States government that writes federal laws.",
+    "options": ["True", "False"],
+    "correct_option": 0,
+    "explanation": "True! Congress is the legislative branch. It is made up of the House of Representatives and the Senate.",
+    "source_notes": "USA.gov, branches of the U.S. government; to verify."
+  },
+  {
+    "key": "d3d3c143-a66c-4f91-ac35-3abbb0cebdc2",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "The Declaration of Independence names life, liberty, and what else?",
+    "options": ["The pursuit of happiness", "A starting spot on the team", "A reserved seat", "A longer practice"],
+    "correct_option": 0,
+    "explanation": "The Declaration names life, liberty, and the pursuit of happiness. It states why the colonies separated.",
+    "source_notes": "National Archives, the Declaration of Independence; to verify."
+  },
+  {
+    "key": "2f915c2f-ada4-42a7-94fb-e94e418bb0e8",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "What does an electrician work with in a building?",
+    "options": ["Wiring and electrical systems", "Only the paint on the walls", "The grass on the field", "The lines on a court"],
+    "correct_option": 0,
+    "explanation": "An electrician installs and looks after wiring and electrical systems. That work brings light and power into a building.",
+    "source_notes": "Bureau of Labor Statistics, electrician overview; to verify."
+  },
+  {
+    "key": "4e3a5a83-9ae9-4203-8e71-da8144d7be83",
+    "question_type": "true_false",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "A circuit breaker is built to stop electricity when a circuit is overloaded.",
+    "options": ["True", "False"],
+    "correct_option": 0,
+    "explanation": "True! A breaker opens the circuit when too much electricity flows. That protects the wiring from overheating.",
+    "source_notes": "Electrical Safety Foundation International, circuit breaker basics; to verify."
+  },
+  {
+    "key": "c6266dd9-c915-4c53-a03c-4215673d29c0",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "Why do people on a construction site wear hard hats?",
+    "options": ["To protect the head from falling objects", "To keep the score", "To carry water", "To mark the team captain"],
+    "correct_option": 0,
+    "explanation": "A hard hat protects the head. Tools and materials can fall on a job site.",
+    "source_notes": "OSHA construction head-protection overview; to verify."
+  },
+  {
+    "key": "4a8c563c-7031-4502-addf-ac3f4a600efe",
+    "question_type": "true_false",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "A wall stud is a vertical piece of the frame that helps hold the wall up.",
+    "options": ["True", "False"],
+    "correct_option": 0,
+    "explanation": "True! Studs stand upright inside a wall. They carry the wall and give a place to fasten the surface.",
+    "source_notes": "Common construction glossary, wall framing; to verify."
+  },
+  {
+    "key": "027d4fb6-221a-4a51-b9a2-200336a7c0a2",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "Why is water kept away from live electrical work?",
+    "options": ["Water can carry electricity", "Water makes wires lighter", "Water cools every tool", "Water is the same as air"],
+    "correct_option": 0,
+    "explanation": "Water can carry electricity. A wet floor and a live wire are a dangerous pair. A licensed electrician handles live electrical work.",
+    "source_notes": "Electrical Safety Foundation International, water and electricity; to verify."
+  },
+  {
+    "key": "3545973d-52b9-4f86-80b1-ba7c945658a2",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "After practice, muscles rebuild using which nutrient?",
+    "options": ["Protein", "Food coloring", "Sand", "Chalk"],
+    "correct_option": 0,
+    "explanation": "Protein is a nutrient the body uses when muscles rebuild after practice. Beans, eggs, milk, fish, and meat provide it. A parent or a doctor can help with meals.",
+    "source_notes": "USDA MyPlate, protein foods; general education, not a meal plan; to verify."
+  },
+  {
+    "key": "6aa7670c-bb08-45b2-b6ea-937aa5ef2ace",
+    "question_type": "true_false",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "Sweat during practice is mostly water leaving the body.",
+    "options": ["True", "False"],
+    "correct_option": 0,
+    "explanation": "True! Sweat is mostly water. Drinking water puts fluid back after a workout.",
+    "source_notes": "CDC, water and hydration overview; general education, not a drinking plan; to verify."
+  },
+  {
+    "key": "5a80ada6-e2cc-4a48-b290-0c670a12209b",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "When does a tired body do a lot of its recovery from a hard practice?",
+    "options": ["During sleep", "During a commercial", "While holding a breath", "In the first second of a sprint"],
+    "correct_option": 0,
+    "explanation": "Sleep is a recovery time. Muscles and the mind get a chance to restore after practice.",
+    "source_notes": "CDC, sleep and health overview for teens; general education, not a sleep prescription; to verify."
+  },
+  {
+    "key": "5f9b4b3d-73d8-48d5-ac5d-a28ec042d98d",
+    "question_type": "true_false",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "Fruits and vegetables provide vitamins the body uses to do its work.",
+    "options": ["True", "False"],
+    "correct_option": 0,
+    "explanation": "True! Vitamins from fruits and vegetables help the body carry out everyday work, including practice and class.",
+    "source_notes": "USDA MyPlate, fruits and vegetables; general education, not a meal plan; to verify."
+  },
+  {
+    "key": "8f6bcbc7-e829-4ac5-adfa-50542d9a0425",
+    "question_type": "choice4",
+    "topic_category": "general",
+    "sport": "General",
+    "prompt": "Muscles grow stronger from practice together with what else?",
+    "options": ["Rest", "Skipping meals", "Staying awake all night", "One sprint and nothing else"],
+    "correct_option": 0,
+    "explanation": "Practice asks the muscles to work. Rest lets them rebuild. The two go together. A parent or a doctor can help with a real plan.",
+    "source_notes": "American College of Sports Medicine, recovery overview; general education, not training advice; to verify."
   }
 ]

@@ -4,7 +4,7 @@
  * there is no teaser while Life is switched off. Copy never mentions age or unlocking.
  */
 import { useEffect, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, type TextInstance } from 'react-native';
 import type { LifePlaybookState } from '@/hooks/useLifePlaybook';
 import { LIFE_NOTICE_VERSION } from '@shared/lifePlaybook';
 import { colors, radii } from '@/constants/theme';
@@ -25,7 +25,7 @@ export function LifePlaybookCard({ life }: { life: LifePlaybookState }) {
     const [later, setLater] = useState(false);
     // After About Life Playbook, a screen reader lands on the card's title instead of losing its place.
     const [reopened, setReopened] = useState(0);
-    const title = useRef<Text>(null);
+    const title = useRef<TextInstance>(null);
     useEffect(() => reopened ? focusSoon(title) : undefined, [reopened]);
     const s = life.snapshot;
     // Offer only the notice text this build holds; a newer server notice waits for an app update.

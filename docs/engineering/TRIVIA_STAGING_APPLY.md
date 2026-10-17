@@ -121,6 +121,7 @@ column names the function or table that proves the dependency (found by grep in 
 | 15 | `20261014180000_life_playbook.sql` | QUIZ-04: round kinds, Life Playbook (off), four closed chapters, levels | Needs steps 11 to 14 | Trivia | Approved (round 3); owner simplification 2026-10-15 re-recorded: Life replay 31/31 ([QUIZ-04](../agents/QUIZ-04.md), [evidence](evidence/QUIZ-04-admin.md)) |
 | 16 | `20261014190000_life_playbook_bank.sql` | 40 draft Life questions (10 per chapter) | Needs the Life columns from step 15 | Trivia | Drafts only; `pnpm life:bank:check` |
 | 17 | `20261015210000_trivia_fresh_questions.sql` | QUIZ-05: fun facts (`trivia.athlete_questions` off, share 0), answer shuffle, reports and auto-pause, quality flags, bulk import, Needs a look, refill forecast | Needs steps 8, 10 and 11 to 16 (`privacy_default_audience`, `guardian_approval_requests`, `quiz_life_normalize`, `quiz_admin_forecast`) | Trivia | RLS_SECURITY review 2026-10-15: changes needed, applied (probes now replay checks); fresh-questions replay 45/45; QUIZ-03 59/59, Life 39/39, schema 105/105 still pass. Re-review and MINOR_SAFETY, PRIVACY_ENGINEERING, VOICE, DATA_GOVERNANCE not yet recorded |
+| 18 | `20261016220000_trivia_life_lessons_bank.sql` | 15 draft general questions: American history, electrician and construction, practice fuel | Needs `question_type` from step 13 | Trivia | Drafts only. General facts, not a meal plan, a training plan, or medical advice. Not applied |
 
 ## Paste and check, one file at a time
 

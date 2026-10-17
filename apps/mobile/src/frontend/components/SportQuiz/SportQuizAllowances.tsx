@@ -3,7 +3,7 @@
  * missing a week costs nothing, and group play never uses up the player's own round.
  */
 import type { RefObject } from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, type TextInstance } from 'react-native';
 import type { TimedQuizSnapshot } from '@shared/timedSportQuiz';
 import type { LifeSnapshot } from '@shared/lifePlaybook';
 import { colors, radii } from '@/constants/theme';
@@ -46,7 +46,7 @@ function Row({ name, state }: { name: string; state: AllowanceState }) {
 
 /** @purpose One row per weekly round; the Life row appears only when the account has Life turned on. `headerRef` lets
  * the screen return a screen reader here after "Back to this week's rounds". */
-export function SportQuizAllowances({ snapshot, life, headerRef }: { snapshot: TimedQuizSnapshot; life: LifeSnapshot | null; headerRef?: RefObject<Text | null> }) {
+export function SportQuizAllowances({ snapshot, life, headerRef }: { snapshot: TimedQuizSnapshot; life: LifeSnapshot | null; headerRef?: RefObject<TextInstance | null> }) {
     return <View style={{ gap: 8 }}>
         <Text ref={headerRef} accessibilityRole="header">This week</Text>
         <Text>Each kind of round has its own spot this week. Group play never uses up your own round.</Text>

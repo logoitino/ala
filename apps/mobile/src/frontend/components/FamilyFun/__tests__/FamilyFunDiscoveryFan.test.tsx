@@ -110,6 +110,32 @@ it('late previous-account private queue cannot leak into the next account', asyn
   await view.rerender(<FamilyFunDiscovery />); await act(async () => { finish(guardian()); });
   expect(screen.queryByRole('button', { name: 'Review fan permissions' })).toBeNull(); expect(screen.queryByText('Selected campaign: Family cheer')).toBeNull(); readOnly();
 });
+it('home shows the trivia notice and leaves Fan Zone off the Highlight', async () => {
+  mockClient.quiz = { ...quizSnapshot, availability: 'unavailable' };
+  mockClient.handler = async fn => { if (fn === 'fun_snapshot') throw new Error('not applied'); return mockClient.quiz; };
+  await render(<FamilyFunDiscovery surface="home" />);
+  await screen.findByText('Pop Quiz');
+  expect(screen.queryByText('Fan Zone is unavailable.')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Refresh quiz' })).toBeNull();
+  expect(screen.getByText(/This week’s five/)).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Play trivia' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Hide Sport Pop Quiz' })).toBeTruthy();
+});
+it('home Play opens this week’s round', async () => {
+  const weekly = { ...quizSnapshot, preferences: { ...quizSnapshot.preferences, invitation_mode: 'weekly' as const } };
+  mockClient.quiz = weekly;
+  mockClient.handler = async () => weekly;
+  await render(<FamilyFunDiscovery surface="home" />);
+  await fireEvent.press(await screen.findByRole('button', { name: 'Play trivia' }));
+  expect(mockPush).toHaveBeenCalledWith('/sport-quiz?play=1');
+});
+it('beyond keeps Fan Zone and leaves the trivia notice off that page', async () => {
+  mockClient.handler = async fn => { if (fn === 'fun_snapshot') throw new Error('not applied'); return quiz; };
+  await render(<FamilyFunDiscovery surface="beyond" />);
+  await screen.findByText('Fan Zone is unavailable.');
+  expect(screen.queryByText('Pop Quiz')).toBeNull();
+  expect(screen.queryByText('Sport Pop Quiz is unavailable.')).toBeNull();
+});
 it('unavailable source does not fabricate a private queue or completed recap', async () => {
   mockClient.handler = async fn => { if (fn === 'fun_snapshot') throw new Error('not applied'); return quiz; };
   await render(<FamilyFunDiscovery />); await screen.findByText('Fan Zone is unavailable.');

@@ -11,6 +11,8 @@ import type { UserRole } from '@/types/database';
 const mockAuth = { user: { id: 'auth-a' }, profile: { id: 'profile-a', user_id: 'auth-a', age_blocked_at: null as string | null }, role: 'parent' as UserRole, isGuest: false, loading: false };
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => mockAuth }));
 jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: { theme: { background: '#F3FAF6' } } }) }));
+jest.mock('@/context/UploadSheetContext', () => ({ useUploadSheet: () => ({ openUpload: jest.fn() }) }));
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 jest.mock('@/services/SupportSignalManager', () => ({ supportSignals: { capture: jest.fn() } }));
 jest.mock('react-native-safe-area-context', () => ({ SafeAreaView: require('react-native').View, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 const mockRouter = { back: jest.fn(), replace: jest.fn(), push: jest.fn(), canGoBack: jest.fn(() => true) };

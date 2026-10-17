@@ -4,10 +4,12 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import TriviaPreviewRoute from '../../../../../app/dev/trivia-preview';
 
 const mockRedirect = jest.fn((_props: { href: string }) => null);
-jest.mock('expo-router', () => ({ Redirect: (props: { href: string }) => mockRedirect(props), useIsFocused: () => true, usePathname: () => '/dev/trivia-preview', useRouter: () => ({ back: jest.fn(), replace: jest.fn() }) }));
+jest.mock('expo-router', () => ({ Redirect: (props: { href: string }) => mockRedirect(props), useIsFocused: () => true, usePathname: () => '/dev/trivia-preview', useRouter: () => ({ back: jest.fn(), replace: jest.fn(), push: jest.fn() }) }));
+jest.mock('@/context/UploadSheetContext', () => ({ useUploadSheet: () => ({ openUpload: jest.fn() }) }));
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 jest.mock('@/lib/quizSound', () => ({ playQuizCue: jest.fn(), armQuizSound: jest.fn(() => () => {}) }));
 jest.mock('react-native-confetti-cannon', () => () => null);
-jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: { theme: { background: '#F3FAF6' } } }) }));
+jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: { theme: { background: '#F3FAF6', surface: '#FFFFFF' }, tabs: { home: true, activity: true, spotlight: true, profile: true, upload: true } } }) }));
 jest.mock('react-native-safe-area-context', () => ({ SafeAreaView: require('react-native').View, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 const mockSupabase = jest.fn();
 jest.mock('@/lib/supabase', () => ({ get supabase() { mockSupabase(); return {}; }, isSupabaseConfigured: true }));

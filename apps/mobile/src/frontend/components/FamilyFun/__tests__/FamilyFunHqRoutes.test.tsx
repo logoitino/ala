@@ -35,7 +35,7 @@ jest.mock('@/hooks/usePendingPlayerTags', () => ({ usePendingPlayerTags: () => (
 jest.mock('@/hooks/useRoster', () => ({ useRoster: () => ({ players: [], loading: false, error: null, refresh: jest.fn(), setPlayers: jest.fn() }) }));
 jest.mock('@/lib/boosterPortal', () => ({ fetchBoosterVerificationQueue: async () => ({ rows: [], error: null }) }));
 jest.mock('@/lib/sponsorAds', () => ({ fetchSponsorAds: async () => ({ ads: [], error: null }) }));
-jest.mock('@/lib/operator', () => ({ OPERATOR_TEST_PIN: '0000', fetchOperatorGames: async () => ({ games: [{ id: 'game', home_team: 'Home', away_team: 'Away', venue: 'Venue' }], error: null }) }));
+jest.mock('@/lib/operator', () => ({ OPERATOR_TEST_PIN: '0000', fetchOperatorGames: async () => ({ games: [{ id: 'game', home_team: 'Home', away_team: 'Away', venue: 'Venue' }], error: null }), subscribeOperatorGames: () => () => undefined }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn() } }));
 jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: {
   rpc: async (fn:string,args:Record<string,unknown>={}) => {

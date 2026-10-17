@@ -11,12 +11,16 @@
  * question reported at its reveal reads as reported in the summary too. A personal sport round for the Learn card's
  * sport, opened from that card, carries the athlete's player id to Start (`learnAthlete`); nothing on this screen names
  * the athlete.
+ * Highlight Play (`autoPlay`) starts a 30-second all-sports round only when this account already saved the trivia notice.
+ * A live round fills a phone-width stage so the question and answers stay on screen.
+ * The fan bar stays pinned at the bottom so Home is always one tap, including during a round (leaving ends it).
  * @sideEffects Explicit account/round SDK actions and usable Back/account Home; no automatic Start or secret persistence.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, AppState, Platform, ScrollView, Text, View } from 'react-native';
+import { AccessibilityInfo, AppState, Platform, ScrollView, StyleSheet, Text, View, type TextInstance } from 'react-native';
 import { useIsFocused, useRouter, type Href } from 'expo-router';
 import { ScreenShell } from '@/components/ScreenShell';
+import { PlayNavBar } from '@/components/UI/PlayNavBar';
 import { useAuth } from '@/context/AuthContext';
 import { useSportQuiz, type SportQuizState } from '@/hooks/useSportQuiz';
 import { useTimedSportQuizRound } from '@/hooks/useTimedSportQuizRound';
@@ -27,6 +31,7 @@ import { useTriviaLevel } from '@/hooks/useTriviaLevel';
 import { LIFE_LEVELS, type LifeChapterId, type LifeLevel } from '@shared/lifePlaybook';
 import { ROLE_HOME } from '@/lib/roles';
 import { TIMED_QUIZ_NOTICE_VERSION, type TimedQuizTopic } from '@shared/timedSportQuiz';
+import { FOCAL } from '@/theme/motion';
 import { QuizButton } from './QuizButton';
 import { SportQuizPreparation } from './SportQuizPreparation';
 import { SportQuizPreferences } from './SportQuizPreferences';
@@ -46,7 +51,7 @@ type PreparationIntent = { topic: TimedQuizTopic; sport: string | null; duration
 type GroupPreparation = { groupId: string; label: string; theme: string | null };
 const isForeground = () => (AppState.currentState === 'active' || AppState.currentState == null) && !(Platform.OS === 'web' && typeof document !== 'undefined' && document.visibilityState !== 'visible');
 /** @purpose Remount preparation/round with canonical identity, while navigation remains available during every state. */
-export function SportQuizScreen({ initialSport = null, learnAthlete = null }: { initialSport?: string | null; learnAthlete?: string | null } = {}) { const quiz = useSportQuiz(); const focused = useIsFocused(); return <ScreenShell edges={['top', 'bottom', 'left', 'right']}><QuizFxProvider focused={focused}><SportQuizContent key={quiz.identityKey ?? 'unavailable'} quiz={quiz} initialSport={initialSport} learnAthlete={learnAthlete}/></QuizFxProvider></ScreenShell>; }
+export function SportQuizScreen({ initialSport = null, learnAthlete = null, autoPlay = false }: { initialSport?: string | null; learnAthlete?: string | null; autoPlay?: boolean } = {}) { const quiz = useSportQuiz(); const focused = useIsFocused(); return <ScreenShell edges={['top', 'left', 'right']} style={styles.docked}><QuizFxProvider focused={focused}><SportQuizContent key={quiz.identityKey ?? 'unavailable'} quiz={quiz} initialSport={initialSport} learnAthlete={learnAthlete} autoPlay={autoPlay}/></QuizFxProvider></ScreenShell>; }
 /** The level a round started at; `undefined` while no round is being watched. */
 type LevelBaseline = LifeLevel | null | undefined;
 /** @purpose The single-question (QUIZ-02) result: the same kicker and cue as a round's reveal, once per result. */
@@ -59,10 +64,11 @@ function TimedReveal({ result }: { result: { was_correct: boolean | null; answer
         []);
     return reveal ? <RevealBanner reveal={reveal} sport={null} seed={1}/> : null;
 }
-function SportQuizContent({ quiz, initialSport, learnAthlete }: {
+function SportQuizContent({ quiz, initialSport, learnAthlete, autoPlay }: {
     quiz: SportQuizState;
     initialSport: string | null;
     learnAthlete: string | null;
+    autoPlay: boolean;
 }) {
     const auth = useAuth();
     const router = useRouter();
@@ -78,9 +84,9 @@ function SportQuizContent({ quiz, initialSport, learnAthlete }: {
     const [groupPrep, setGroupPrep] = useState<GroupPreparation | null>(null);
     // Where a screen reader goes after a control it pressed disappears: the strip (or the page title) after "Back to
     // this week's rounds", the skipped line after Skip.
-    const titleRef = useRef<Text>(null);
-    const weekRef = useRef<Text>(null);
-    const skippedRef = useRef<Text>(null);
+    const titleRef = useRef<TextInstance>(null);
+    const weekRef = useRef<TextInstance>(null);
+    const skippedRef = useRef<TextInstance>(null);
     const [refocus, setRefocus] = useState<{ to: 'week' | 'skipped'; n: number } | null>(null);
     useEffect(() => refocus ? focusSoon(refocus.to === 'skipped' ? skippedRef : weekRef.current ? weekRef : titleRef) : undefined, [refocus]);
     const s = quiz.snapshot;
@@ -199,6 +205,16 @@ function SportQuizContent({ quiz, initialSport, learnAthlete }: {
     const roundSummary = round.ended && round.mode === 'round' && !round.unavailableQuestion;
     const timedResult = round.result?.result && round.mode !== 'round' ? round.result.result : null;
     const idle = !inRound && !round.pendingStart;
+    const autoPlayOnce = useRef(false);
+    const noticeSaved = s?.preferences.notice_version === TIMED_QUIZ_NOTICE_VERSION;
+    useEffect(() => {
+        if (!autoPlay || autoPlayOnce.current || !focused || !s || busy || !idle || round.ended || round.pendingStart) return;
+        if (s.availability !== 'ready' || s.week_spent || !noticeSaved) return;
+        autoPlayOnce.current = true;
+        void start('sport', null, 30);
+        // One Play from the Highlight tab. The saved notice is what allows this Start.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoPlay, focused, s, busy, idle, round.ended, round.pendingStart, noticeSaved]);
     const sports = s ? [...new Set(s.pools.filter(p => p.topic_category === 'sport').map(p => p.sport))] : [];
     const groupsVisible = !!s && idle && (!!s.groups_available || !!groups.mine?.groups.length || !!groups.mine?.removed.length);
     // QUIZ-04 servers keep separate weekly spots; a QUIZ-03 server has one round a week for everything.
@@ -213,9 +229,12 @@ function SportQuizContent({ quiz, initialSport, learnAthlete }: {
     const lifeShown = !groupPageOpen && !life.switchedOff && lifeVisible(life.snapshot);
     const lifeRow = separate && !groupPageOpen && lifeOn(life.snapshot) ? life.snapshot : null;
     const lifeCanStart = idle && !round.ended && !groupPrep && lifeOn(life.snapshot);
-    return <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
- <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}><QuizButton label="Back" quiet onPress={back}/><QuizButton label="Account Home" quiet onPress={home}/><QuizSoundToggle/></View>
- <Text ref={titleRef} accessibilityRole="header" style={{ fontSize: 28 }}>Sport Pop Quiz</Text><Text>Optional timed trivia · Testing only</Text>
+    const lifeNotice = !groupPageOpen ? <Text accessibilityLiveRegion="polite" style={life.notice ? undefined : styles.srOnly}>{life.notice ?? ''}</Text> : null;
+    const leave = () => { invalidatePreparation(); round.leave('left_page'); };
+    return <View style={[styles.phone, (inRound || round.pendingStart) && styles.stage]}><ScrollView style={styles.scroll} contentContainerStyle={styles.page}>
+ <View style={styles.stageBar}><QuizButton label="Back" quiet onPress={back}/><QuizButton label="Account Home" quiet onPress={home}/><QuizSoundToggle/></View>
+ <View style={styles.hero}><Text style={styles.heroKicker}>Trivia</Text><Text ref={titleRef} accessibilityRole="header" style={styles.heroTitle}>Sport Pop Quiz</Text><Text style={styles.heroCopy}>Optional timed trivia · Testing only</Text></View>
+ {(inRound || round.pendingStart) ? <SportQuizRound round={round} busy={busy} reports={reports}/> : null}
  {quiz.loading && !s ? <Text>Checking quiz availability…</Text> : null}{!s && !quiz.loading && !quiz.error ? <Text>Trivia is not available for this account. You can keep browsing.</Text> : null}
  {quiz.error ? <Text accessibilityRole="alert">{quiz.error}</Text> : null}{round.error ? <Text accessibilityRole="alert">{round.error}</Text> : null}
  {life.error && !life.switchedOff ? <Text accessibilityRole="alert">{life.error}</Text> : null}
@@ -224,10 +243,9 @@ function SportQuizContent({ quiz, initialSport, learnAthlete }: {
  {separate && idle && s.profile_id ? <SportQuizAllowances snapshot={s} life={lifeRow} headerRef={weekRef}/> : null}
  {idle && s.profile_id ? <SportQuizLevel state={level}/> : null}
  {s.availability !== 'ready' ? <Text>{s.availability === 'paused' ? 'Sport Pop Quiz is paused. Private history remains available.' : s.availability === 'not_enrolled' ? 'Trivia is not available for this account yet.' : 'Trivia is unavailable for this account right now.'}</Text> : null}
- {idle && !round.ended && s.availability === 'ready' && !s.week_spent && !groupPrep ? <SportQuizPreparation snapshot={s} busy={busy || quiz.loading} initialSport={initialSport} onStart={(...args) => { void start(...args); }}/> : null}
+ {idle && !round.ended && s.availability === 'ready' && !s.week_spent && !groupPrep ? <SportQuizPreparation snapshot={s} busy={busy || quiz.loading} initialSport={initialSport} quickStart={autoPlay && !noticeSaved} onStart={(...args) => { void start(...args); }}/> : null}
  {idle && !round.ended && s.availability === 'ready' && !groupSpent && groupPrep ? <SportQuizPreparation key={groupPrep.groupId} snapshot={s} busy={busy || quiz.loading} group={{ label: groupPrep.label, theme: groupPrep.theme }} onCancel={() => setGroupPrep(null)} onStart={(_topic, _sport, duration) => { void start('sport', null, duration, groupPrep.groupId); }}/> : null}
  {round.pendingStart ? <><Text>We couldn’t confirm Start. You can retry the same choices while this page stays open and before time runs out.</Text><QuizButton label="Retry original Start" disabled={busy} onPress={() => { void round.retryStart(); }}/></> : null}
- <SportQuizRound round={round} busy={busy} reports={reports}/>
  {inRound || round.pendingStart || s.attempt?.status === 'issued' ? <QuizButton label="End round" quiet disabled={quiz.busy==='erase'} onPress={() => round.leave('user_end')}/> : null}
  {round.unavailableQuestion ? <Text accessibilityRole="alert">This question isn’t available, so the round ended safely. You can keep browsing.</Text> : null}
  {roundSummary ? <SportQuizRoundSummary round={round} reports={reports}/> : null}
@@ -243,11 +261,28 @@ function SportQuizContent({ quiz, initialSport, learnAthlete }: {
         ? <SportQuizGroupPage groups={groups} sports={sports} playable={playable} playNote={playNote} onPlay={(groupId, label, theme) => setGroupPrep({ groupId, label, theme })} onBack={groups.close}/>
         : <SportQuizGroups groups={groups}/>) : null}
  {/* Kept mounted (empty until Turn on / Turn off) so Android reads the change; iOS gets the announcement above. */}
- {!groupPageOpen ? <Text accessibilityLiveRegion="polite" style={life.notice ? undefined : { position: 'absolute', width: 1, height: 1, opacity: 0 }}>{life.notice ?? ''}</Text> : null}
+ {lifeNotice}
  {lifeShown && idle && !round.ended ? <LifePlaybookCard life={life}/> : null}
  {lifeShown && idle ? <LifePlaybookHome life={life} canStart={lifeCanStart} busy={busy || life.saving} onStart={(chapter, duration) => { void start('sport', null, duration, null, chapter); }}/> : null}
  {idle && s.profile_id ? <SportQuizBadgeShelf badges={badges}/> : null}
  <SportQuizPreferences snapshot={s} busy={!!quiz.busy} suppressed={quiz.invitationsSuppressed} uncertain={quiz.preferenceUncertain} onSave={p => { void quiz.savePreferences(p); }}/>
  <SportQuizHistory quiz={quiz} onBeforeErase={round.discardForHistoryErase} lifeKnown={lifeVisible(life.snapshot)}/></> : null}
- </ScrollView>;
+ </ScrollView>
+ <PlayNavBar onBeforeLeave={leave}/>
+ </View>;
 }
+
+const styles = StyleSheet.create({
+    docked: { paddingBottom: 0 },
+    phone: { flex: 1, width: '100%', maxWidth: 430, alignSelf: 'center' },
+    scroll: { flex: 1 },
+    page: { padding: 16, gap: 14, paddingBottom: 28 },
+    hero: { gap: 4, padding: 16, borderRadius: 20, backgroundColor: FOCAL.electricGold, borderWidth: 3, borderColor: FOCAL.electricViolet },
+    heroKicker: { color: FOCAL.violetInk, fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
+    heroTitle: { color: FOCAL.ink, fontSize: 32, fontWeight: '900' },
+    heroCopy: { color: FOCAL.ink, fontSize: 15, fontWeight: '700' },
+    stage: { flex: 1, backgroundColor: '#F3E8FF' },
+    stageBar: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+    alert: { color: FOCAL.ink, fontSize: 16, lineHeight: 22 },
+    srOnly: { position: 'absolute', width: 1, height: 1, opacity: 0 },
+});

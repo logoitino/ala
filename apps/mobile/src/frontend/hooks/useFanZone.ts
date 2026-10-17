@@ -5,9 +5,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { useAuth } from '@/context/AuthContext';
-import { FanZoneError, fanZoneRpc, fetchFanZone, removeFanZoneRevision } from '@/lib/fanZone';
+import { FanZoneError, fanZoneRpc, fetchFanZone, removeFanZoneRevision, uploadFanZoneVideo } from '@/lib/fanZone';
 import { verifyFanZoneUpload } from '@/lib/fanZoneMedia';
-import { supabase } from '@/lib/supabase';
 import { bytesFromUri, compressHighlight } from '@/services/MediaUploadService';
 import { FAN_ZONE_MEDIA_LIMITS, type FanZoneSnapshot, type FanZoneEntry, type FanZoneCase, type FanZoneCaseKind, type FanZonePermissionAction, type FanZoneReflectionIdea } from '@shared/fanZone';
 export type FanZoneDraft = {
@@ -219,11 +218,9 @@ export function useFanZone(campaignId: string | null = null) {
             if (!body.byteLength || body.byteLength > FAN_ZONE_MEDIA_LIMITS.maxBytes)
                 throw new FanZoneError('FUN_MEDIA_INVALID');
             attempt.stage = 'uncertain';
-            const { error } = await supabase.storage.from('fan_zone').upload(attempt.entry.path, body, { contentType: 'video/mp4', upsert: false });
+            await uploadFanZoneVideo(attempt.entry.path, body);
             if (!current())
                 return null;
-            if (error)
-                throw new FanZoneError('FUN_MEDIA_UNAVAILABLE');
             attempt.stage = 'verify';
         }
         if (!current())

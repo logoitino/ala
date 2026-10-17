@@ -263,7 +263,7 @@ export default function HighlightsTab() {
   }, [accountSheetOpen, activeIndex, feed, isGuest, pageHeight, requireAuth]);
 
   const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
+    ({ viewableItems }: { viewableItems: Array<{ index?: number | null }> }) => {
       const next = viewableItems[0]?.index;
       if (typeof next === 'number') setActiveIndex(next);
     },
@@ -709,9 +709,9 @@ export default function HighlightsTab() {
               <Ionicons name="chevron-forward" size={13} color={colors.onVideo} />
             </AnimatedButton>
           ) : null}
-          <FamilyFunDiscovery />
           <SlangGuideBanner />
         </View>
+        <FamilyFunDiscovery surface="home" />
         <HomeSearchOverlay
           open={searchOpen && runtime.layouts.homeSearch}
           query={searchQuery}

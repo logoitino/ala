@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-10-16 — Student-athlete lessons in trivia
+
+The Highlight card clears for the week after Play or Not now. A finished round points to a new subject next week. Draft questions add American history, the job site, and practice fuel. They stay drafts until reviewed.
+
+## 2026-10-16 — Trivia invite on the Highlight
+
+The side card asks if you want to play this week’s round. The app rechecks availability on its own.
+
+## 2026-10-16 — Fan bar on trivia and Fan Zone
+
+Sport Pop Quiz and Fan Zone keep the same bottom bar as Highlights, so Home is always one tap. Leaving that way still ends an open trivia round.
+
+## 2026-10-16 — Trivia results on one phone screen
+
+A finished trivia round keeps the cheer, the facts medal and the badge together, then shows each question as a short jade, gold, cyan or violet card. The recap stays on the phone with very little scrolling.
+
+## 2026-10-16 — Phone-sized trivia and Fan Zone play
+
+Trivia and Fan Zone stay within a phone width. A live trivia round fills the screen with a gold question and large answers. Fan Zone paths stack on the phone, and voting is the bright action.
+
+## 2026-10-16 — Trivia notice on the Highlight, Fan Zone on Beyond
+
+Highlights no longer stacks Fan Zone and Sport Pop Quiz over the clip. Trivia appears in gold and violet for a few seconds, then tucks to a tab on the left. Play opens the round. Fan Zone discovery is on the Beyond page.
+
+## 2026-10-16 — Celebrate a live play, then donate
+
+On a live match, opening a play shows Seki, Aura and Flex so you can celebrate the athlete. Donate is a button on that card. The donation pages open only after you tap it.
+
+## 2026-10-16 — Family notices fit the Highlight
+
+Fan Zone and Sport Pop Quiz on Home show as a short card on the clip. Refresh stays easy to tap. Open and Not now sit beside each other so the notice does not cover the Highlight.
+
+## 2026-10-16 — Combined-branch test repair
+
+Guardian activity names a fun-fact approval correctly. Fan Zone test campaigns keep a voting window that is still open. The finance catalog lists each payout flag once.
+
 ## 2026-10-16 — Fan Zone and trivia on the main line
 
 Fan Zone, sport trivia, and the life playbook are now in the same branch as Beyond and the current admin. Home can open Fan Zone discovery. Guardian supervision can approve a teen's fun fact and still shows workout invites. The repair after the merge makes the mobile app typecheck again.

@@ -10,10 +10,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useIsFocused } from 'expo-router';
 import { ScreenShell } from '@/components/ScreenShell';
+import { PlayNavBar } from '@/components/UI/PlayNavBar';
 import type { TimedQuizRoundState } from '@/hooks/useTimedSportQuizRound';
 import type { LifePlaybookState } from '@/hooks/useLifePlaybook';
 import type { TimedQuizQuestion, TimedQuizResult } from '@shared/timedSportQuiz';
-import { colors, radii } from '@/constants/theme';
+import { radii } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
 import { QuizButton } from './QuizButton';
 import { LevelUpCelebration, QuizFxProvider, QuizSoundToggle } from './QuizFx';
@@ -28,18 +29,18 @@ export function triviaPreviewAvailable(): boolean {
 type Sample = TimedQuizQuestion & { correct: number; explanation: string };
 const q = (id: string, topic: TimedQuizQuestion['topic_category'], sport: string, prompt: string, options: string[], correct: number, explanation: string): Sample =>
     ({ id, question_key: id, version: 1, topic_category: topic, sport, prompt, options, question_type: options.length === 2 ? 'true_false' : 'choice4', correct, explanation });
-/** 2 sports, 1 science and 2 Life questions, copied from the starter banks. */
+/** One sport fact plus history, the job site, and practice fuel, copied from the starter bank. */
 const SAMPLES: Sample[] = [
     q('demo-1', 'sport', 'Basketball', 'How high above the floor is the rim of a regulation basketball hoop?', ['8 feet', '9 feet', '10 feet', '12 feet'], 2,
         'The rim is 10 feet above the floor. That height has stayed the same since the game’s early days, from high school gyms to the pros.'),
-    q('demo-2', 'sport', 'Soccer', 'In soccer, how many players does each team have on the field, including the goalkeeper?', ['9', '10', '11', '12'], 2,
-        'Each team has 11 players on the field, and one of them is the goalkeeper. Smaller-sided youth games may use fewer.'),
-    q('demo-3', 'science', 'Science', 'What pulls a ball back down to the ground after it is thrown up in the air?', ['Gravity', 'Magnetism', 'Electricity', 'Sound'], 0,
-        'Gravity pulls everything toward the ground. That is why every pop fly and jump shot comes back down.'),
-    q('demo-4', 'life', 'Money Huddle', 'A budget is a game plan for money: it shows what comes in and where it goes.', ['True', 'False'], 0,
-        'True! A budget is like a playbook for money. It helps plan spending and saving before the money is gone.'),
-    q('demo-5', 'life', 'Savings Season', 'Saving a little at a time can add up to something bigger later.', ['True', 'False'], 0,
-        'True! Small amounts saved regularly add up, like small gains in practice that build over a season.'),
+    q('demo-2', 'general', 'General', 'The Constitution is the highest law in the United States.', ['True', 'False'], 0,
+        'True! The Constitution sits above other laws in the United States. Public officials promise to support it.'),
+    q('demo-3', 'general', 'General', 'What does an electrician work with in a building?', ['Wiring and electrical systems', 'Only the paint on the walls', 'The grass on the field', 'The lines on a court'], 0,
+        'An electrician installs and looks after wiring and electrical systems. That work brings light and power into a building.'),
+    q('demo-4', 'general', 'General', 'Why do people on a construction site wear hard hats?', ['To protect the head from falling objects', 'To keep the score', 'To carry water', 'To mark the team captain'], 0,
+        'A hard hat protects the head. Tools and materials can fall on a job site.'),
+    q('demo-5', 'general', 'General', 'After practice, muscles rebuild using which nutrient?', ['Protein', 'Food coloring', 'Sand', 'Chalk'], 0,
+        'Protein is a nutrient the body uses when muscles rebuild after practice. Beans, eggs, milk, fish, and meat provide it. A parent or a doctor can help with meals.'),
 ];
 const PLANNED = SAMPLES.length;
 const DEMO_SECONDS = 30;
@@ -137,14 +138,14 @@ export function TriviaPreview() {
     const showEntry = (position: number, option: number | null) => { const entry = entryFor(position, option); go({ ...IDLE, kind: 'between', position, entries: [entry], between: entry }); };
     const roundEnd = (levelUp: string | null) => go({ ...IDLE, kind: 'summary', entries: [entryFor(1, 2), entryFor(2, 0), entryFor(3, null), entryFor(4, 0)], levelUp });
 
-    return <ScreenShell edges={['top', 'bottom', 'left', 'right']}><QuizFxProvider focused={focused}>
-        <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
-            <View accessibilityRole="alert" style={{ padding: 12, borderRadius: radii.md, borderWidth: 2, borderColor: FOCAL.goldInk, backgroundColor: FOCAL.mistGold }}>
-                <Text style={{ fontWeight: '800', color: FOCAL.goldInk }}>Demo only: nothing is saved.</Text>
-                <Text style={{ color: colors.text }}>A preview of the trivia effects with sample questions. No account, badge or level changes.</Text>
+    return <ScreenShell edges={['top', 'left', 'right']} style={{ paddingBottom: 0 }}><QuizFxProvider focused={focused}>
+        <View style={{ flex: 1, width: '100%', maxWidth: 430, alignSelf: 'center', backgroundColor: inRound ? '#F3E8FF' : '#F6F1FF' }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 10, gap: 6, paddingBottom: 16 }}>
+            <View accessibilityRole="alert" style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: radii.md, borderWidth: 2, borderColor: FOCAL.goldInk, backgroundColor: FOCAL.electricGold }}>
+                <Text style={{ fontWeight: '800', color: FOCAL.ink, fontSize: 13 }}>Demo only: nothing is saved.</Text>
             </View>
-            <Text accessibilityRole="header" style={{ fontSize: 28 }}>Trivia preview</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            <Text accessibilityRole="header" style={{ fontSize: 22, fontWeight: '900', color: FOCAL.violetInk }}>Trivia preview</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
                 <QuizButton label="Play a demo round" onPress={() => ask(1, IDLE)}/>
                 <QuizButton label="Show right answer" quiet onPress={() => showEntry(1, 2)}/>
                 <QuizButton label="Show not quite" quiet onPress={() => showEntry(2, 0)}/>
@@ -153,9 +154,9 @@ export function TriviaPreview() {
                 <QuizButton label="Show level up" quiet onPress={() => roundEnd('All-Star')}/>
                 <QuizButton label="Life Playbook cards" quiet onPress={() => go({ ...IDLE, kind: 'life' })}/>
                 <QuizSoundToggle/>
-            </View>
+            </ScrollView>
             {scene.kind === 'idle' ? <Text>Pick a button to see a moment, or play a five-question demo round with a real 30-second clock.</Text> : null}
-            <View key={sceneKey} style={{ gap: 16 }}>
+            <View key={sceneKey} style={{ gap: 8 }}>
                 <SportQuizRound round={round} busy={false}/>
                 {inRound ? <QuizButton label="End round" quiet onPress={() => round.leave('user_end')}/> : null}
                 {scene.kind === 'summary' ? <SportQuizRoundSummary round={round}/> : null}
@@ -163,5 +164,7 @@ export function TriviaPreview() {
                 {scene.kind === 'life' ? <LifePlaybookHome life={DEMO_LIFE} canStart busy={false} onStart={() => ask(1, IDLE)}/> : null}
             </View>
         </ScrollView>
+        <PlayNavBar/>
+        </View>
     </QuizFxProvider></ScreenShell>;
 }

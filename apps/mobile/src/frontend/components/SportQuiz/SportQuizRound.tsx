@@ -13,7 +13,7 @@
  * sheet (when the screen passes `reports`); it sits apart from Next and never holds it.
  */
 import { useEffect, useRef, type RefObject } from 'react';
-import { AccessibilityInfo, findNodeHandle, Platform, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, findNodeHandle, Platform, StyleSheet, Text, View, type TextInstance, type ViewInstance } from 'react-native';
 import type { TimedQuizRoundState } from '@/hooks/useTimedSportQuizRound';
 import type { TimedQuizResult } from '@shared/timedSportQuiz';
 import type { QuizCue } from '@/lib/quizSound';
@@ -35,7 +35,7 @@ function milestone(remaining: number, duration: number | null): string | null {
 }
 /** @purpose Move a screen reader to `target` once it is drawn, after the control the person pressed has gone (Back to
  * this week's rounds, Skip, About). Phones only: the browser build throws from findNodeHandle. Returns a cancel. */
-export function focusSoon(target: RefObject<View | Text | null>): () => void {
+export function focusSoon(target: RefObject<ViewInstance | TextInstance | null>): () => void {
     if (Platform.OS === 'web') return () => {};
     const timer = setTimeout(() => {
         const node = target.current ? findNodeHandle(target.current) : null;
@@ -105,22 +105,22 @@ export function SportQuizRound({ round, busy, reports = null }: { round: TimedQu
         // The answer is sent first; the tap cue is synchronous and cannot hold it up.
         const pick = (index: number) => { void round.answer(index); fx.play('tap'); };
         return <View style={{ gap: 12 }}>
-            {item ? <Text accessibilityRole="header">{`Question ${item.position} of ${item.planned}`}</Text> : null}
+            {item ? <Text accessibilityRole="header" style={styles.progress}>{`Question ${item.position} of ${item.planned}`}</Text> : null}
             {item ? <QuestionDots planned={item.planned} done={item.position - 1} current={item.position}/> : null}
             {isFunFact(live.question) ? <FunFactHeader key={`fact-${item?.position ?? 0}`} question={live.question}/> : null}
             <PopIn key={item?.position ?? 0} from="pop" style={styles.questionCard}>
-                {isFunFact(live.question) ? null : <Text style={{ color: colors.textMuted }}>{live.question.sport}</Text>}
-                <Text style={{ fontSize: 20, fontWeight: '600', color: colors.text }}>{live.question.prompt}</Text>
+                {isFunFact(live.question) ? null : <Text style={styles.sport}>{live.question.sport}</Text>}
+                <Text style={styles.prompt}>{live.question.prompt}</Text>
             </PopIn>
             <TimerBar remaining={round.remainingSeconds} duration={round.duration}/>
-            <Text accessibilityLabel={`${round.remainingSeconds} seconds left`} style={warm ? styles.warmClock : undefined}>{`${round.remainingSeconds} seconds left`}</Text>
+            <Text accessibilityLabel={`${round.remainingSeconds} seconds left`} style={warm ? styles.warmClock : styles.clock}>{`${round.remainingSeconds} seconds left`}</Text>
             {/* Screen-reader only: the visible counter above already shows the time, so the milestone is not drawn twice. */}
             <Text accessibilityLiveRegion="polite" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}>{note ?? ''}</Text>
             {trueFalse
                 ? <View style={{ flexDirection: 'row', gap: 12 }}>{live.question.options.map((option, index) => <PopIn key={`${item?.position}-${index}`} delay={80 + index * 70} style={{ flex: 1 }}>
                     <QuizButton big label={option} selected={round.pendingAnswer?.option === index} disabled={busy || !!round.pendingAnswer} onPress={() => pick(index)}/></PopIn>)}</View>
                 : live.question.options.map((option, index) => <PopIn key={`${item?.position}-${index}`} delay={80 + index * 70}>
-                    <QuizButton label={`Answer ${index + 1}: ${option}`} selected={round.pendingAnswer?.option === index} disabled={busy || !!round.pendingAnswer} onPress={() => pick(index)}/></PopIn>)}
+                    <QuizButton big label={`Answer ${index + 1}: ${option}`} selected={round.pendingAnswer?.option === index} disabled={busy || !!round.pendingAnswer} onPress={() => pick(index)}/></PopIn>)}
             {round.pendingAnswer?.uncertain ? <><Text>{`You picked: ${live.question.options[round.pendingAnswer.option]}. We couldn’t confirm it yet.`}</Text><QuizButton label="Retry this answer" disabled={busy} onPress={() => { if (round.pendingAnswer)
                 void round.answer(round.pendingAnswer.option); }}/></> : null}
         </View>;
@@ -136,7 +136,7 @@ export function SportQuizRound({ round, busy, reports = null }: { round: TimedQu
         const fact = isFunFact(between.question);
         const hasAnswer = !gone && !!between.result && !!between.question && between.result.correct_option < between.question.options.length;
         return <PopIn key={`between-${between.position}`} from="right" style={{ gap: 10 }}>
-            <Text accessibilityRole="header">{`Question ${between.position} of ${between.planned}`}</Text>
+            <Text accessibilityRole="header" style={styles.progress}>{`Question ${between.position} of ${between.planned}`}</Text>
             <QuestionDots planned={between.planned} done={between.position}/>
             {fact ? <FunFactHeader question={between.question}/> : null}
             {shown ? <RevealBanner reveal={shown} sport={fact ? null : between.question?.sport} seed={between.position}/> : null}
@@ -174,12 +174,19 @@ export function SportQuizRoundSummary({ round, reports = null }: { round: TimedQ
         // Once per summary: the fanfare must not replay when the screen re-renders.
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []);
-    return <View style={{ gap: 10 }}>
-        <Text accessibilityRole="header">{ended ? 'Round ended' : 'Round complete'}</Text>
-        {celebrate ? <CheerStage text={roundCheerFor(learned)} tone="round" burst="big"/> : null}
-        {celebrate ? <FactsCountUp to={learned}/> : null}
-        <Text accessibilityLiveRegion="polite" style={{ fontSize: 20, fontWeight: '700', color: colors.text }}>{learned === 0 ? 'No new facts this time, and that’s okay.' : `You learned ${plural(learned, 'new fact')}`}</Text>
-        {learned === 0 ? <Text>{ZERO_FACTS_LINE}</Text> : null}
+    return <View style={styles.summary}>
+        <View style={styles.summaryTop}>
+            <Text accessibilityRole="header" style={styles.summaryTitle}>{ended ? 'Round ended' : 'Round complete'}</Text>
+            <Text accessibilityLiveRegion="polite" style={styles.learned}>{learned === 0 ? 'No new facts this time, and that’s okay.' : `You learned ${plural(learned, 'new fact')}`}</Text>
+            {!ended ? <Text style={styles.nextWeek}>This week’s five are done. Next week unlocks a new subject.</Text> : null}
+        </View>
+        <View style={styles.summaryHero}>
+            <View style={styles.summaryCopy}>
+                {celebrate ? <CheerStage text={roundCheerFor(learned)} tone="round" burst="small" compact/> : null}
+                {learned === 0 ? <Text>{ZERO_FACTS_LINE}</Text> : null}
+            </View>
+            {celebrate ? <FactsCountUp to={learned} compact/> : null}
+        </View>
         {ended ? <Text>A round ends if you leave this page (even during an explanation), hide the app, wait too long at an explanation or tap End round. Questions you didn’t see are saved for another week.</Text> : null}
         {round.shortRound ? <Text>{`This round had ${plural(round.planned ?? entries.length, 'question')} because that’s all the new ones we have for this topic right now. We never repeat a question.`}</Text> : null}
         {outcome === 'pool_exhausted' ? <Text>That’s every new question we have for this topic right now, so the round stopped early.</Text> : null}
@@ -192,12 +199,14 @@ export function SportQuizRoundSummary({ round, reports = null }: { round: TimedQ
         {entries.map((entry, index) => {
             const gone = factUnavailable(entry.result);
             const fact = isFunFact(entry.question);
-            return <PopIn key={entry.position} delay={260 + index * 60} style={{ gap: 4 }}>
-                <Text style={{ fontWeight: '600', color: colors.text }}>{`Question ${entry.position}: ${gone ? 'not available' : entry.result.answered_option === null ? 'not answered' : entry.result.item_status === 'void' ? 'corrected' : entry.result.was_correct ? 'right' : 'not quite'}`}</Text>
+            const tone = gone ? styles.qGone : entry.result.answered_option === null ? styles.qOpen : entry.result.item_status === 'void' ? styles.qVoid : entry.result.was_correct ? styles.qRight : styles.qMiss;
+            const chip = gone ? styles.chipGone : entry.result.answered_option === null ? styles.chipOpen : entry.result.item_status === 'void' ? styles.chipVoid : entry.result.was_correct ? styles.chipRight : styles.chipMiss;
+            return <PopIn key={entry.position} delay={260 + index * 40} style={[styles.qCard, tone]}>
+                <Text style={[styles.qTitle, chip]}>{`Question ${entry.position}: ${gone ? 'not available' : entry.result.answered_option === null ? 'not answered' : entry.result.item_status === 'void' ? 'corrected' : entry.result.was_correct ? 'right' : 'not quite'}`}</Text>
                 {fact && !gone ? <FunFactHeader question={entry.question}/> : null}
                 {gone ? <Text>{FUN_FACT_UNAVAILABLE}</Text> : <>
-                    {entry.question ? <Text style={{ color: colors.textMuted }}>{entry.question.prompt}</Text> : null}
-                    <Text>{entry.result.explanation}</Text>
+                    {entry.question ? <Text style={styles.qPrompt}>{entry.question.prompt}</Text> : null}
+                    <Text style={styles.qExplain}>{entry.result.explanation}</Text>
                     {fact ? <FunFactAthleteCard card={entry.result.fun_fact}/> : null}
                     {entry.result.item_status !== 'void' && reportable(entry.question, reports) ? <QuestionReportLink question={entry.question} reports={reports!}/> : null}
                 </>}
@@ -207,13 +216,38 @@ export function SportQuizRoundSummary({ round, reports = null }: { round: TimedQ
 }
 
 const styles = StyleSheet.create({
-    questionCard: { gap: 6, padding: 16, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-    warmClock: { color: FOCAL.goldInk, fontWeight: '700' },
+    progress: { color: FOCAL.violetInk, fontSize: 15, fontWeight: '800', letterSpacing: 0.4 },
+    questionCard: { gap: 8, padding: 18, borderRadius: 20, borderWidth: 3, borderColor: FOCAL.electricViolet, backgroundColor: FOCAL.electricGold },
+    sport: { color: FOCAL.violetInk, fontSize: 13, fontWeight: '800', letterSpacing: 0.8 },
+    prompt: { fontSize: 26, fontWeight: '900', color: FOCAL.ink, lineHeight: 32 },
+    clock: { fontSize: 18, fontWeight: '800', color: FOCAL.violetInk },
+    warmClock: { color: FOCAL.goldInk, fontWeight: '900', fontSize: 18 },
     answerChip: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: radii.md, borderWidth: 2, borderColor: FOCAL.jadeInk, backgroundColor: FOCAL.mistJade },
     answerCheck: { fontSize: 18, fontWeight: '900', color: FOCAL.jadeInk },
     answerText: { flexShrink: 1, fontSize: 16, fontWeight: '700', color: colors.text },
     factCard: { padding: 12, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-    badgeCard: { gap: 6, padding: 14, borderRadius: radii.lg, borderWidth: 2, borderColor: FOCAL.electricGold, backgroundColor: FOCAL.mistGold, overflow: 'hidden' },
+    summary: { gap: 6 },
+    summaryTop: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
+    summaryTitle: { fontSize: 20, fontWeight: '900', color: FOCAL.violetInk },
+    summaryHero: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    summaryCopy: { flex: 1, gap: 4, minWidth: 0 },
+    learned: { fontSize: 15, fontWeight: '800', color: FOCAL.jadeInk },
+    nextWeek: { fontSize: 14, fontWeight: '700', color: FOCAL.violetInk, lineHeight: 18 },
+    qCard: { gap: 2, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 14, borderWidth: 2 },
+    qRight: { backgroundColor: FOCAL.mistJade, borderColor: FOCAL.neonJade },
+    qMiss: { backgroundColor: FOCAL.mistGold, borderColor: FOCAL.electricGold },
+    qOpen: { backgroundColor: FOCAL.mistCyan, borderColor: FOCAL.islandCyan },
+    qVoid: { backgroundColor: FOCAL.mistViolet, borderColor: FOCAL.electricViolet },
+    qGone: { backgroundColor: FOCAL.mistSlate, borderColor: colors.border },
+    qTitle: { alignSelf: 'flex-start', overflow: 'hidden', fontSize: 13, fontWeight: '800', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
+    chipRight: { backgroundColor: FOCAL.neonJade, color: FOCAL.ink },
+    chipMiss: { backgroundColor: FOCAL.electricGold, color: FOCAL.ink },
+    chipOpen: { backgroundColor: FOCAL.islandCyan, color: FOCAL.ink },
+    chipVoid: { backgroundColor: FOCAL.electricViolet, color: '#F7F6F2' },
+    chipGone: { backgroundColor: FOCAL.mistSlate, color: colors.text },
+    qPrompt: { color: FOCAL.ink, fontSize: 13, lineHeight: 16 },
+    qExplain: { color: colors.text, fontSize: 12, lineHeight: 15 },
+    badgeCard: { gap: 2, paddingVertical: 8, paddingHorizontal: 10, borderRadius: radii.lg, borderWidth: 2, borderColor: FOCAL.electricGold, backgroundColor: FOCAL.mistGold, overflow: 'hidden' },
     badgeTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     badgeEmoji: { fontSize: 22 },
     badgeTitle: { fontSize: 18, fontWeight: '800', color: FOCAL.goldInk },

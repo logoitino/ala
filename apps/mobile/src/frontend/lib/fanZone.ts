@@ -1,12 +1,12 @@
 /**
  * FUN-01 typed, bound client RPCs. Validate complete persisted DTOs and preserve exact consent/ballot receipts.
  * Missing/malformed sources throw fixed-code errors; no table fallback, private telemetry or service RPC access.
- * @sideEffects Authenticated RPCs through lib/rpc and caller-authorized media removal API requests.
+ * @sideEffects Authenticated RPCs through lib/rpc, one private Storage upload, and caller-authorized media removal API requests.
  */
 import type { FanZoneAdminSnapshot, FanZoneEntry, FanZoneRpcMap } from '@shared/fanZone';
 import { isMissingFunction } from '@/lib/dbErrors';
 import { untypedRpc } from '@/lib/rpc';
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { removeFanZoneMedia } from '@/lib/fanZoneMedia';
 export type * from '@shared/fanZone';
 const messages: Record<string, string> = {
@@ -174,6 +174,17 @@ function boundReceipt(fn: ClientRpc, args: Row, value: unknown): boolean {
     }
 }
 /** @purpose Call only client-granted RPCs with exact argument types and validated result envelopes. */
+/**
+ * @purpose Store one private Fan Zone video at the path the server reserved.
+ * @param path Object path returned with the draft entry.
+ * @param body Compressed MP4 bytes.
+ * @returns Nothing. A later verify call confirms the stored object.
+ * @sideEffects Inserts one object into the private `fan_zone` Storage bucket.
+ */
+export async function uploadFanZoneVideo(path: string, body: ArrayBuffer): Promise<void> {
+    const { error } = await supabase.storage.from('fan_zone').upload(path, body, { contentType: 'video/mp4', upsert: false });
+    if (error) throw new FanZoneError('FUN_MEDIA_UNAVAILABLE');
+}
 export async function fanZoneRpc<K extends ClientRpc>(fn: K, args: FanZoneRpcMap[K]['args']): Promise<FanZoneRpcMap[K]['result']> {
     if (!clientRpcs.has(fn))
         throw new FanZoneError('FUN_INVALID_REQUEST');

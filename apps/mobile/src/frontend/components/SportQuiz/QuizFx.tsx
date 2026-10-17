@@ -109,7 +109,7 @@ const BURST_COUNT = { small: 36, big: 64 } as const;
 /** @purpose The game-day kicker banner ("Touchdown!", "Good hustle!", "Whistle!"). Its confetti is clipped inside the
  * banner so it never covers a control; with Reduce Motion (or the page in the background) there is no confetti and
  * the words simply fade in. The words are ordinary text, so screen readers read them in order. */
-export function CheerStage({ text, tone, burst = null }: { text: string; tone: keyof typeof TONES; burst?: keyof typeof BURST_COUNT | null }) {
+export function CheerStage({ text, tone, burst = null, compact = false }: { text: string; tone: keyof typeof TONES; burst?: keyof typeof BURST_COUNT | null; compact?: boolean }) {
     const { reduceMotion, still } = useQuizFx();
     const look = TONES[tone];
     const [width, setWidth] = useState(320);
@@ -121,13 +121,13 @@ export function CheerStage({ text, tone, burst = null }: { text: string; tone: k
     }, []);
     const animated = useAnimatedStyle(() => reduceMotion ? { opacity: pop.value } : { opacity: Math.min(1, pop.value * 2), transform: [{ scale: 0.6 + pop.value * 0.4 }] });
     const onLayout = (event: LayoutChangeEvent) => { const w = Math.round(event.nativeEvent.layout.width); if (w > 0 && w !== width) setWidth(w); };
-    return <View onLayout={onLayout} style={[styles.stage, { backgroundColor: look.bg, borderColor: look.border }]}>
+    return <View onLayout={onLayout} style={[styles.stage, compact && styles.stageCompact, { backgroundColor: look.bg, borderColor: look.border }]}>
         {burst && !still ? <View testID="quiz-confetti" {...DECOR} style={StyleSheet.absoluteFill}>
             <ConfettiCannon count={BURST_COUNT[burst]} origin={{ x: width / 2, y: 0 }} explosionSpeed={320} fallSpeed={2000} fadeOut colors={CONFETTI_COLORS}/>
         </View> : null}
         <Animated.View style={[styles.kickerRow, animated]}>
-            <Text {...DECOR} style={styles.emoji}>{look.emoji}</Text>
-            <Text style={[styles.kicker, { color: look.ink }]}>{text}</Text>
+            <Text {...DECOR} style={[styles.emoji, compact && styles.emojiCompact]}>{look.emoji}</Text>
+            <Text style={[styles.kicker, compact && styles.kickerCompact, { color: look.ink }]}>{text}</Text>
         </Animated.View>
     </View>;
 }
@@ -154,9 +154,12 @@ export function QuizSoundToggle() {
 
 const styles = StyleSheet.create({
     stage: { minHeight: 76, borderRadius: radii.lg, borderWidth: 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 12 },
-    kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    stageCompact: { minHeight: 52, paddingVertical: 8, paddingHorizontal: 12 },
+    kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
     emoji: { fontSize: 26 },
+    emojiCompact: { fontSize: 18 },
     kicker: { fontSize: 26, fontWeight: '900', letterSpacing: 0.4 },
+    kickerCompact: { fontSize: 18, lineHeight: 22, flexShrink: 1 },
     toggle: { minHeight: 44, paddingHorizontal: 12, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' },
     toggleLabel: { color: colors.text, fontSize: 16, fontWeight: '600' },
     pressed: { opacity: 0.7 },

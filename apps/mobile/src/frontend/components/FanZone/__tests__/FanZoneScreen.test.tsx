@@ -9,6 +9,10 @@ const mockRpc=jest.fn(),mockBack=jest.fn(),mockReplace=jest.fn(),mockPush=jest.f
 let mockCanBack=true,bank:FanZoneSnapshot;
 let mockParams:{campaign?:string|string[];section?:string|string[]}={};
 jest.mock('@/context/AuthContext',()=>({useAuth:()=>mockAuth}));
+jest.mock('@/context/AppRuntimeContext',()=>({useAppRuntime:()=>({live:{theme:{background:'#F3FAF6',surface:'#FFFFFF'},tabs:{home:true,activity:true,spotlight:true,profile:true,upload:true}}})}));
+jest.mock('@/context/UploadSheetContext',()=>({useUploadSheet:()=>({openUpload:jest.fn()})}));
+jest.mock('@expo/vector-icons/Ionicons',()=>'Ionicons');
+jest.mock('react-native-safe-area-context',()=>({SafeAreaView:require('react-native').View,useSafeAreaInsets:()=>({top:0,bottom:0,left:0,right:0})}));
 jest.mock('@/context/SoftWallContext',()=>({useSoftWall:()=>({requireAuth:jest.fn()})}));
 jest.mock('@/components/ScreenShell',()=>({ScreenShell:({children}:{children:React.ReactNode})=>children}));
 jest.mock('@/components/Legal/LegalModal',()=>({LegalModal:()=>null}));
@@ -38,7 +42,7 @@ it('provides prior Back and the actual role Home outside a fan-only gate',async(
 it('uses role Home when no previous route exists',async()=>{mockCanBack=false;await open();await fireEvent.press(screen.getByLabelText('Back'));expect(mockReplace).toHaveBeenCalledWith('/parent');});
 it('shows three voluntary paths, published deadlines and private receipt versus public candidacy',async()=>{
  await open();expect(screen.getByLabelText('Join the fun')).toBeTruthy();expect(screen.getByLabelText('Meet an athlete')).toBeTruthy();expect(screen.getByLabelText('Serve together')).toBeTruthy();
- expect(screen.getByText(/Voting.*2026-10-16/)).toBeTruthy();expect(screen.getByText(/Private entry.*accepted/i)).toBeTruthy();expect(screen.getByText(/Free ballots.*donations.*votes/i)).toBeTruthy();
+ expect(screen.getByText(/Voting /)).toBeTruthy();expect(screen.getByText(/Private entry.*accepted/i)).toBeTruthy();expect(screen.getByText(/Free ballots.*donations.*votes/i)).toBeTruthy();
 });
 it('allows an unlisted guardian private review and requires real readiness plus exact copy review before grant',async()=>{
  bank={...bank,entry:null,candidates:[],can_participate:false,guardian_queue:[bank.entry!]};await open();

@@ -9,10 +9,12 @@ let mockLifecycle:((state:AppStateStatus)=>void)[]=[];
 import type { UserRole } from '@/types/database';
 let mockAuth={ user:{ id:'auth-a' },profile:{ id:'profile-a',user_id:'auth-a',age_blocked_at:null as string|null },role:'parent' as UserRole,isGuest:false,loading:false };
 jest.mock('@/context/AuthContext', () => ({ useAuth:() => mockAuth }));
-jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime:() => ({ live:{ theme:{ background:'#F3FAF6' } } }) }));
+jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime:() => ({ live:{ theme:{ background:'#F3FAF6', surface:'#FFFFFF' }, tabs:{ home:true, activity:true, spotlight:true, profile:true, upload:true } } }) }));
+jest.mock('@/context/UploadSheetContext', () => ({ useUploadSheet:() => ({ openUpload:jest.fn() }) }));
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 jest.mock('@/services/SupportSignalManager', () => ({ supportSignals:{ capture:jest.fn() } }));
 jest.mock('react-native-safe-area-context', () => ({ SafeAreaView:require('react-native').View,useSafeAreaInsets:() => ({ top:0,bottom:0,left:0,right:0 }) }));
-const mockRouter={ back:jest.fn(),replace:jest.fn(),canGoBack:jest.fn(() => true) };
+const mockRouter={ back:jest.fn(),replace:jest.fn(),push:jest.fn(),canGoBack:jest.fn(() => true) };
 jest.mock('expo-router', () => ({ useRouter:() => mockRouter,usePathname:() => '/sport-quiz',useIsFocused:()=>mockFocused }));
 let mockNonce=0;jest.mock('expo-crypto',()=>({randomUUID:()=>`00000000-0000-0000-0000-${String(++mockNonce).padStart(12,'0')}`,getRandomValues:(bytes:Uint8Array)=>{bytes.fill(42);return bytes;}}));
 

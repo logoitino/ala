@@ -7,15 +7,18 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { TimedQuizSnapshot, TimedQuizTopic } from '@shared/timedSportQuiz';
+import { FOCAL } from '@/theme/motion';
 import { QuizButton } from './QuizButton';
 const key = (topic: TimedQuizTopic, sport: string | null) => JSON.stringify([topic, sport]);
 /** @purpose Duration and notice are voluntary, accessible choices without requesting health information. */
-export function SportQuizPreparation({ snapshot, busy, onStart, initialSport = null, group = null, onCancel }: {
+export function SportQuizPreparation({ snapshot, busy, onStart, initialSport = null, quickStart = false, group = null, onCancel }: {
     snapshot: TimedQuizSnapshot;
     busy: boolean;
     onStart: (topic: TimedQuizTopic, sport: string | null, duration: 30 | 90) => void;
     /** Preselects this sport when the viewer has unseen questions in it (case-insensitive match). */
     initialSport?: string | null;
+    /** Highlight Play lands here with All sports and 30 seconds already chosen. The notice stays unchecked. */
+    quickStart?: boolean;
     /** Group round: the group's own theme decides the questions, so no topic choice is shown. */
     group?: { label: string; theme: string | null } | null;
     onCancel?: () => void;
@@ -24,17 +27,17 @@ export function SportQuizPreparation({ snapshot, busy, onStart, initialSport = n
     const [accepted, setAccepted] = useState(false);
     const pools = snapshot.pools.filter(p => p.allowed && p.unseen_count > 0);
     const preselected = initialSport ? pools.find(p => p.topic_category === 'sport' && p.sport.trim().toLowerCase() === initialSport.trim().toLowerCase()) : undefined;
-    const [selection, setSelection] = useState<string | null>(preselected ? key('sport', preselected.sport) : null);
-    const selected = pools.find(p => key(p.topic_category, p.sport) === selection);
     const topics = [...new Set(pools.map(p => p.topic_category))];
+    const [selection, setSelection] = useState<string | null>(preselected ? key('sport', preselected.sport) : quickStart && topics.includes('sport') ? key('sport', null) : null);
+    const selected = pools.find(p => key(p.topic_category, p.sport) === selection);
     const size = snapshot.round_size ?? 5;
     const ready = group ? true : !!selection && (!!selected || selection === key('sport', null));
   // QUIZ-04 servers keep a separate spot per kind, so name the one this Start uses.
   const separate = !!snapshot.week_spent_by_kind;
   const startSpot = !separate ? 'this UTC week’s opportunity' : group ? 'this UTC week’s group round' : 'your round for this UTC week';
   const lostSpot = !separate ? 'this week’s opportunity' : group ? 'this week’s group round' : 'your round this week';
-    return <View style={{ gap: 12 }}>
-  <Text accessibilityRole="header">{group ? `${group.label} group round` : `Ready for a round of up to ${size} questions?`}</Text>
+    return <View style={{ gap: 12, padding: 16, borderRadius: 20, backgroundColor: FOCAL.mistGold, borderWidth: 3, borderColor: FOCAL.electricGold }}>
+  <Text accessibilityRole="header" style={{ color: FOCAL.ink, fontSize: 22, fontWeight: '900' }}>{group ? `${group.label} group round` : `Ready for a round of up to ${size} questions?`}</Text>
   {group ? <Text>{`${separate ? 'This uses this week’s group round. Group play never uses up your own round.' : 'This uses your one round this week.'} Everyone in the group plays the same theme: ${group.theme ?? 'all sports'}. The group only sees that you played, never your answers.`}</Text> : null}
   {preselected ? <Text>{`Learning ${preselected.sport} this week.`}</Text> : null}
   <Text>{`Optional testing activity. Start uses ${startSpot}: one round of up to ${size} questions, one at a time. Right or wrong, completing earns the same private Trivia Explorer badge. No money, Aura, voting or school points.`}</Text>

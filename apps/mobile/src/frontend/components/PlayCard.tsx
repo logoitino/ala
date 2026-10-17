@@ -18,6 +18,7 @@ import Animated, {
 
 import { TipCheckout } from '@/components/TipCheckout';
 import { SheetRise } from '@/components/UI/SheetRise';
+import { maloAthleteCta } from '@/data/malo';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
@@ -137,17 +138,18 @@ function LiveReaction({
 }
 
 /**
- * @purpose Local play-by-play card. The athlete and the play stay in front; a chevron enlarges the same card to Seki / Aura / Flex and Mālo.
+ * @purpose Local play-by-play card. Opening the card celebrates the play with Seki, Aura and Flex. Donate is a button that opens the donation only after that tap.
  * @param event `game_events` row with optional joined player.
- * @param onBacked Fires after a compact Mālo on this athlete.
+ * @param onBacked Fires after a donation on this athlete.
  * @param onOpenAthlete Opens `/user/[id]` when the athlete name is tapped.
  * @returns Collapsed play row, or the same card opened downward.
- * @sideEffects One `bumpPlayerHype` per kind the first time it is selected. Later taps only select and clear. Mālo uses `TipCheckout`.
+ * @sideEffects One `bumpPlayerHype` per kind the first time it is selected. Later taps only select and clear. Donation uses `TipCheckout` after Donate.
  */
 export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
   const player = resolveEventPlayer(event);
   const [votes, setVotes] = useState<PlayReactionVotes>(() => playVoteStore.get(event.id) ?? emptyPlayVotes());
   const [open, setOpen] = useState(false);
+  const [donateOpen, setDonateOpen] = useState(false);
   const chevron = useSharedValue(0);
   const tone = actionTone(event.event_type);
   const playTitle = event.event_type.trim() || 'Play';
@@ -163,6 +165,7 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
   const toggle = () => {
     const next = !open;
     setOpen(next);
+    if (!next) setDonateOpen(false);
     chevron.value = withSpring(next ? 1 : 0, SPRING_SHEET);
   };
 
@@ -223,7 +226,7 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ expanded: open }}
-          accessibilityLabel={open ? 'Hide Donate and reactions' : 'Show Donate and reactions'}
+          accessibilityLabel={open ? 'Hide reactions' : 'Show reactions'}
           haptic="selection"
           onPress={toggle}
           style={styles.chevronHit}
@@ -253,14 +256,37 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
               />
             ))}
           </View>
+          <Text style={styles.celebrate}>Tap Aura, Flex, or Seki to celebrate this play.</Text>
 
-          {player ? (
-            <TipCheckout
-              player={player}
-              compact
-              origin="live"
-              onBacked={(nextCount) => onBacked?.(player.id, nextCount)}
-            />
+          {player && !donateOpen ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={maloAthleteCta(player.name)}
+              haptic="medium"
+              onPress={() => setDonateOpen(true)}
+              style={styles.donate}
+            >
+              <Text style={styles.donateLabel}>{maloAthleteCta(player.name)}</Text>
+            </Pressable>
+          ) : null}
+          {player && donateOpen ? (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Back to celebrating"
+                haptic="selection"
+                onPress={() => setDonateOpen(false)}
+                style={styles.donateBack}
+              >
+                <Text style={styles.donateBackLabel}>Back to celebrating</Text>
+              </Pressable>
+              <TipCheckout
+                player={player}
+                compact
+                origin="live"
+                onBacked={(nextCount) => onBacked?.(player.id, nextCount)}
+              />
+            </>
           ) : null}
         </SheetRise>
       ) : null}
@@ -374,6 +400,34 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: '600',
     color: colors.text,
+  },
+  celebrate: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  donate: {
+    minHeight: 44,
+    borderRadius: radii.md,
+    backgroundColor: FOCAL.jadeInk,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  donateLabel: {
+    color: colors.onAccent,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  donateBack: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  donateBackLabel: {
+    color: FOCAL.jadeInk,
+    fontSize: 15,
+    fontWeight: '700',
   },
   reactions: {
     flexDirection: 'row',

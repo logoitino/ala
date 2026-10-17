@@ -1,5 +1,7 @@
 /**
  * FUN-01 one all-role testing journey: private entry, exact guardian permission, free ballots and voluntary service.
+ * The page stays within a phone width. Play paths stack, and a ballot is the bright action.
+ * The fan bar stays pinned at the bottom so Home is always one tap.
  * @sideEffects Identity-scoped hook actions, explicit player selection and Back/account Home navigation.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -10,12 +12,23 @@ import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useFanZone, type FanZoneDraft } from '@/hooks/useFanZone';
 import { ROLE_HOME } from '@/lib/roles';
+import { PlayNavBar } from '@/components/UI/PlayNavBar';
 import { FanButton, FanPanel, fanStyles } from './FanZoneChrome';
 import { FanZoneEntryForm } from './FanZoneEntryForm';
 import { FanZonePermission, type FanVideoControl } from './FanZonePermission';
 import { FanZoneSafety } from './FanZoneSafety';
 import { FanZoneStory } from './FanZoneStory';
 import { FanZoneVideo } from './FanZoneVideo';
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** Short UTC label so a campaign window fits a phone width. */
+function fanWhen(iso: string): string {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    const hour = d.getUTCHours();
+    const ap = hour >= 12 ? 'PM' : 'AM';
+    const hr = hour % 12 || 12;
+    return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${hr}:${String(d.getUTCMinutes()).padStart(2, '0')} ${ap} UTC`;
+}
 /** @purpose Presentation-only route parameters never assign, consent, reserve or vote automatically. */
 export function FanZoneScreen({ campaignId = null, initialSection }: {
     campaignId?: string | null;
@@ -49,9 +62,9 @@ export function FanZoneScreen({ campaignId = null, initialSection }: {
         home(); };
     const entryWindow = !!c && c.status === 'open' && Date.now() >= Date.parse(c.entry_opens_at) && Date.now() < Date.parse(c.entry_closes_at);
     const voteWindow = !!c && c.status === 'open' && Date.now() >= Date.parse(c.vote_opens_at) && Date.now() < Date.parse(c.vote_closes_at);
-    return <ScreenShell edges={['top', 'bottom', 'left', 'right']}><ScrollView contentContainerStyle={fanStyles.page}>
- <View style={fanStyles.row}><FanButton label="Back" onPress={back}/><FanButton label="Account Home" onPress={home}/></View>
- <Text accessibilityRole="header" style={fanStyles.title}>Fan Zone</Text><Text style={fanStyles.copy}>Optional family fun · Approved-account testing only</Text>
+    return <ScreenShell edges={['top', 'left', 'right']} style={fanStyles.docked}><View style={fanStyles.phone}><ScrollView style={fanStyles.scroll} contentContainerStyle={fanStyles.page}>
+ <View style={fanStyles.stack}><FanButton label="Back" onPress={back}/><FanButton label="Account Home" onPress={home}/></View>
+ <View style={fanStyles.hero}><Text style={fanStyles.heroKicker}>Fan Zone</Text><Text accessibilityRole="header" style={fanStyles.alias}>Fan Zone</Text><Text style={fanStyles.heroCopy}>Optional family fun · Approved-account testing only</Text></View>
  <Text style={fanStyles.copy}>Free ballots choose recognition. Donations, watching, service and Aura never add votes. No entry fee or cash award.</Text>
  {state.loading && !s ? <Text>Checking Fan Zone availability…</Text> : null}{state.error ? <Text accessibilityRole="alert" style={fanStyles.notice}>{state.error}</Text> : null}{state.notice ? <Text style={fanStyles.notice}>{state.notice}</Text> : null}
  <FanButton label="Refresh Fan Zone" disabled={!!state.busy} onPress={() => { close(); void state.refresh(); }}/>
@@ -59,16 +72,16 @@ export function FanZoneScreen({ campaignId = null, initialSection }: {
  {!c && !state.loading ? <Text>Fan Zone is not available for this account right now. Your concern receipt can still be checked below.</Text> : null}
  {auth.isGuest ? <FanButton label="Sign in to join Fan Zone" onPress={() => requireAuth({ kind: 'signin', resume: () => { } })}/> : null}
  {c ? <>
- <FanPanel title={c.title}><Text style={fanStyles.copy}>{c.theme}</Text><Text>{`Entries ${c.entry_opens_at} to ${c.entry_closes_at}. Voting ${c.vote_opens_at} to ${c.vote_closes_at}; deadlines excluded.`}</Text><Text>{c.rules}</Text><Text>{`Campaign ${c.status}. ${s?.can_participate ? 'This account is enrolled.' : 'Private review only; this account is not enrolled to enter or vote.'}`}</Text></FanPanel>
- <View style={fanStyles.row}><FanButton label="Join the fun" onPress={() => { close(); setPath('join'); }}/><FanButton label="Meet an athlete" onPress={() => { close(); setPath('story'); }}/><FanButton label="Serve together" onPress={() => { close(); setPath('serve'); }}/></View>
+ <FanPanel title={c.title}><Text style={fanStyles.copy}>{c.theme}</Text><Text>{`Entries ${fanWhen(c.entry_opens_at)} to ${fanWhen(c.entry_closes_at)}.`}</Text><Text>{`Voting ${fanWhen(c.vote_opens_at)} to ${fanWhen(c.vote_closes_at)}; deadlines excluded.`}</Text><Text>{c.rules}</Text><Text>{`Campaign ${c.status}. ${s?.can_participate ? 'This account is enrolled.' : 'Private review only; this account is not enrolled to enter or vote.'}`}</Text></FanPanel>
+ <View style={fanStyles.stack}><FanButton label="Join the fun" selected={path === 'join'} onPress={() => { close(); setPath('join'); }}/><FanButton label="Meet an athlete" selected={path === 'story'} onPress={() => { close(); setPath('story'); }}/><FanButton label="Serve together" selected={path === 'serve'} onPress={() => { close(); setPath('serve'); }}/></View>
  {path === 'join' ? <>
  {s?.can_participate && entryWindow ? <FanZoneEntryForm state={state} draft={draft} onChange={next => setLocal({ identity: state.identityKey, draft: next })}/> : <Text>Entry creation is unavailable. Private review, revocation and tracked removal remain separate.</Text>}
  <FanPanel title="Eligible fan candidates">
  {!s?.candidates.length ? <Text>No eligible candidates are visible to this account.</Text> : s.candidates.map(e => {
                     const key = JSON.stringify([state.identityKey, e.id, e.revision, 'candidate']);
-                    return <View key={e.id} style={{ gap: 8 }}><Text style={fanStyles.copy}>{`${e.alias}: ${e.caption}`}</Text>
+                    return <View key={e.id} style={fanStyles.playCard}><Text style={fanStyles.alias}>{e.alias}</Text><Text style={fanStyles.copy}>{e.caption}</Text>
  <FanZoneVideo entryId={e.id} revision={e.revision} reviewKey={key} open={openKey === key} onOpen={() => open(key)} onClose={close} onReady={ready} label={`Watch candidate ${e.alias}`}/>
- <FanButton label={`Vote for ${e.alias}`} disabled={busy || !!state.pendingBallot || !voteWindow || !s.can_participate || s.entry?.id === e.id || !!s.ballot?.invalidated || !!state.error} onPress={() => void state.vote(e.id)}/></View>;
+ <FanButton play label={`Vote for ${e.alias}`} disabled={busy || !!state.pendingBallot || !voteWindow || !s.can_participate || s.entry?.id === e.id || !!s.ballot?.invalidated || !!state.error} onPress={() => void state.vote(e.id)}/></View>;
                 })}
  {state.pendingBallot ? <Text>The current ballot is awaiting confirmation.</Text> : s?.ballot ? <Text>{`Current ballot: ${s.candidates.find(e => e.id === s.ballot!.entry_id)?.alias ?? 'candidate unavailable'} · version ${s.ballot.version}${s.ballot.invalidated ? ' · invalidated' : ''}`}</Text> : <Text>No current ballot recorded in this source read.</Text>}
  </FanPanel>
@@ -84,5 +97,5 @@ export function FanZoneScreen({ campaignId = null, initialSection }: {
  {s?.entry ? <><Text>{`Private entry ${s.entry.status}${s.entry.reason ? ': ' + s.entry.reason : ''}. A private receipt is separate from public candidacy.`}</Text><FanZonePermission key={JSON.stringify([state.identityKey, state.permissionReviewEpoch, s.entry.id, s.entry.consent_scope])} entry={s.entry} guardian={false} state={state} video={video}/></> : null}
  {s?.guardian_queue.length ? <><Text accessibilityRole="header" style={fanStyles.title}>{initialSection === 'permissions' ? 'Guardian permission review' : 'Your selected-campaign guardian queue'}</Text><Text>These are private entries for this campaign only. Being a reviewer does not enroll you to vote.</Text>{s.guardian_queue.map(e => <FanZonePermission key={JSON.stringify([state.identityKey, state.permissionReviewEpoch, e.id, e.consent_scope])} entry={e} guardian state={state} video={video}/>)}</> : null}
  <FanZoneSafety key={state.identityKey} state={state}/>
- </ScrollView></ScreenShell>;
+ </ScrollView><PlayNavBar onBeforeLeave={close}/></View></ScreenShell>;
 }
