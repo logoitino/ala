@@ -7,10 +7,38 @@ receiving database changes on 2026-09-23: its migration history ends at
 `supabase/migrations/` are there. Beyond needs the privacy (PRIV-01) and minor-account
 (MINOR-01) files underneath it, so the whole chain goes in, in order.
 
-Prepared by Claude Code on 2026-10-16 from read-only checks of development. Nothing here has
-been run; the Supabase connection this session used is read-only. **The owner (or an approved
-engineer) runs it** in the Supabase SQL Editor. Do not use `supabase db push` on any hosted
+Prepared by Claude Code on 2026-10-16 from read-only checks of development. **Applied on
+development 2026-10-17** by this Cursor session with `supabase db query --linked` (not
+`supabase db push`). Staging was not touched. Do not use `supabase db push` on any hosted
 project before the baseline in `supabase/migrations/README.md` (it would re-run hand-pasted SQL).
+
+## What landed on 2026-10-17
+
+Steps 1–29 and step 30 succeeded and the timestamped files are recorded in
+`supabase_migrations.schema_migrations`. Trivia files that sit beside this list also succeeded:
+`20261014140000` through `20261015210000`, `20261016220000`, and `20261017110000`. A follow-up
+read found 123 `sport_quiz_questions` rows, 198 `quiz%` functions, and `guardian_links`.
+
+Two files stopped and rolled back:
+
+- Step between 29 and 30, `20261014130000_fan_zone.sql`: `must be owner of table objects`.
+- Step 31, `20261016120000_beyond_game.sql`: the same error.
+
+Both create a unique index and a trigger on `storage.objects`. The query login is `postgres`,
+which is not a member of `supabase_storage_admin` and is not a superuser. Re-running those files
+as `postgres` will fail the same way until a role that owns `storage.objects` runs them.
+
+Before `20261014150000`, this session added `public.digest(text, text)` and
+`public.digest(bytea, text)` that call `extensions.digest`. Hosted pgcrypto lives in
+`extensions`, and the trivia file calls `public.digest` with an empty search path.
+
+Privacy (`20261014090000`) stopped once on extra read policies. `Public Read Profiles` and
+`Users can read own stripe data` were dropped, then the file succeeded. `Public Update Profiles`
+was left in place.
+
+Step 32 (coach-level) was not run. Quizzes stay paused until an admin turns a round on.
+Look → Daylight is still a separate admin publish. Home highlight rows were pointed at the one
+surviving guest mp4 the same day; the missing originals remain 14-byte placeholders.
 
 ## What the read-only checks found (2026-10-16)
 

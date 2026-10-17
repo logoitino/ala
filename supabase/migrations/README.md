@@ -52,6 +52,13 @@ included history. Auth, Storage, grants and other dependencies need Supabase-awa
 
 Application dates below are saved records, not a fresh remote query.
 
+**Development (`ulfapgtabidorgwfjvwz`), 2026-10-17.** The catch-up in
+[DEV_DATABASE_CATCHUP](../../docs/engineering/DEV_DATABASE_CATCHUP.md) is applied through trivia
+and the IQ file, and those versions are recorded in `schema_migrations`. Fan Zone
+(`20261014130000`) and Beyond (`20261016120000`) are not applied. Coach-level
+(`20261017090000`) was not run. Staging was not changed. Where a cell below still says
+“not development” or “not applied anywhere,” trust the 2026-10-17 catch-up note for development.
+
 Apply order, including the standalone `supabase/*.sql` files these depend on, and a pre-flight
 check: `docs/STATE.md` §0.
 

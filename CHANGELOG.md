@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-17 — Development database catch-up through trivia
+
+Privacy, minor accounts, payee checks, sport quiz, timed trivia, play-together, Life Playbook, fresh questions, workout challenges, life-lesson questions, and the IQ file are on the development project. The bank has 123 questions. Fan Zone and Beyond did not apply: those files need to own the storage objects table. Coach-level SQL was not run. Home highlights play the one surviving video file.
+
 ## 2026-10-17 — Health shows where the app failed
 
 The portal Health page counts open syntax checks, logic and data failures, and screen glitches from Engineering Support. Fan Zone and Engineering Support join the waiting-database list. Product names the Expo desks this portal does not host, including trivia’s 5 Aura award and the IQ question file.
