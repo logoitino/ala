@@ -16,6 +16,7 @@ import {
   playerBelongsToSchool,
   type Player,
 } from '@/data/players';
+import { realtimeEq } from '@/lib/postgrestFilter';
 import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
 import type { Game } from '@/types/database';
 
@@ -595,11 +596,13 @@ export function subscribeScorerGames(onRow: (game: Game) => void): () => void {
  */
 export function subscribeOperatorGame(gameId: string, onRow: (game: Game) => void): () => void {
   if (!isSupabaseConfigured) return () => undefined;
+  const gameFilter = realtimeEq('id', gameId);
+  if (!gameFilter) return () => undefined;
   const channel = supabase
     .channel(nextRealtimeTopic(`operator_scorekeeper_${gameId}`))
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
+      { event: '*', schema: 'public', table: 'games', filter: gameFilter },
       (payload) => {
         if (!payload.new) return;
         onRow(payload.new as Game);

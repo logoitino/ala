@@ -140,6 +140,26 @@ export function classifySupportSignal(signal: SupportSignal, review: SupportRevi
   return { kind: 'issue', reason: 'A detected failure needs owner review and verification.', trusted };
 }
 
+export const FAILURE_POINTS = [
+  { id: 'syntax', label: 'Syntax', detail: 'A check failed before the app ran.' },
+  { id: 'logic', label: 'Logic', detail: 'Data was rejected or a read failed.' },
+  { id: 'glitch', label: 'Glitches', detail: 'A screen or the running app failed.' },
+  { id: 'other', label: 'Other', detail: 'Network, money, security, or a person\'s report.' },
+] as const;
+export type FailurePointId = (typeof FAILURE_POINTS)[number]['id'];
+export type FailurePoint = (typeof FAILURE_POINTS)[number] & { count: number };
+
+/** @purpose Open support rows as syntax, logic, glitches, or everything else. Expected outcomes stay out. */
+export function failurePoints(snapshot: EngineeringSupportSnapshot): FailurePoint[] {
+  const counts: Record<FailurePointId, number> = { syntax: 0, logic: 0, glitch: 0, other: 0 };
+  for (const group of groupSupportSignals(snapshot.signals, snapshot.reviews)) {
+    if (group.classification.kind === 'expected') continue;
+    const id: FailurePointId = group.category === 'syntax' ? 'syntax' : group.category === 'data' ? 'logic' : group.category === 'ui' || group.category === 'runtime' ? 'glitch' : 'other';
+    counts[id] += group.count;
+  }
+  return FAILURE_POINTS.map((point) => ({ ...point, count: counts[point.id] }));
+}
+
 /**
  * @purpose Collapse duplicate display rows without losing source evidence. Counts are for this bounded snapshot.
  * @param now Reference time for a 24-hour recent count; all supplied older occurrences remain in the group.

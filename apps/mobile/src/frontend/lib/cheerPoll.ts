@@ -4,6 +4,7 @@
  * a failed call is retried without them. The poll row read and its live channel live here too.
  * @sideEffects `cast_cheer_vote` RPC; `cheer_polls` SELECT and Realtime.
  */
+import { realtimeEq } from '@/lib/postgrestFilter';
 import { untypedRpc } from '@/lib/rpc';
 import { nextRealtimeTopic, supabase } from '@/lib/supabase';
 
@@ -42,11 +43,13 @@ export async function fetchCheerPollRow(slug: string): Promise<Record<string, un
  * @sideEffects Realtime `postgres_changes` channel on `cheer_polls` filtered to `slug`.
  */
 export function subscribeCheerPoll(slug: string, onRow: (row: Record<string, unknown>) => void): () => void {
+  const filter = realtimeEq('slug', slug);
+  if (!filter) return () => {};
   const channel = supabase
     .channel(nextRealtimeTopic(`cheer_poll_${slug}`))
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'cheer_polls', filter: `slug=eq.${slug}` },
+      { event: '*', schema: 'public', table: 'cheer_polls', filter },
       (payload) => {
         const next = payload.new as Record<string, unknown> | null;
         if (!next) return;

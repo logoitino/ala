@@ -13,6 +13,7 @@ import {
   type AthleteSport,
   type SchoolTeam,
 } from '@/data/teams';
+import { orIlike } from '@/lib/postgrestFilter';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { claimAthlete } from '@/lib/verification';
 
@@ -76,7 +77,7 @@ export async function searchSchoolsAndTeams(rawQuery: string): Promise<SchoolTea
       if (rows.length > 0) return rows;
     }
 
-    const pattern = `%${needle}%`;
+    const pattern = orIlike(needle);
     const { data: tableRows, error: tableError } = await supabase
       .from('schools_and_teams')
       .select('id, name, mascot, level, division, region, city')

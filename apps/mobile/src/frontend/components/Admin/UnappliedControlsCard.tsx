@@ -40,6 +40,7 @@ export function UnappliedControlsCard() {
     {waiting.map((control) => <View key={control.id} style={{ gap: 4 }}>
       <Text style={[s.strong, { color: c.ink }]}>{control.label}</Text>
       <Text style={s.sentence}>{control.migration}</Text>
+      {control.note ? <Text style={s.sentence}>{control.note}</Text> : null}
       <AdminReportLink label={`Open ${control.label}`} href={control.adminPath} />
     </View>)}
   </View>;

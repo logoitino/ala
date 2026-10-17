@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-17 — Health shows where the app failed
+
+The portal Health page counts open syntax checks, logic and data failures, and screen glitches from Engineering Support. Fan Zone and Engineering Support join the waiting-database list. Product names the Expo desks this portal does not host, including trivia’s 5 Aura award and the IQ question file.
+
+## 2026-10-17 — Search filters stay quoted
+
+Typed search text is quoted before it goes into a PostgREST `.or()` filter, and a live-match channel opens only for a plain id or slug. Database functions already take that text as a parameter.
+
 ## 2026-10-17 — Profiles, Local, and trivia Aura
 
 Athlete profiles from Highlights and the Local pill stay open. A trivia side notice appears only when a round can start. A right answer adds 5 Aura to the card. Six IQ questions are written for the weekly mix and are not applied yet.

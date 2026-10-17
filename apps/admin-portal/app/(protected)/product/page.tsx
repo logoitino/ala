@@ -25,6 +25,14 @@ const LINKS = [
   { href: '/people', title: 'People', detail: 'Who has a profile. Granting access stays in Expo /admin.' },
 ] as const;
 
+/** Desks that stay in Expo. Health probes the ones whose database update can still be missing. */
+const EXPO_DESKS = [
+  { path: '/admin/sport-quiz', title: 'Trivia', detail: 'Rounds, Life Playbook, and IQ questions. A right answer adds 5 Aura on the phone. If the Aura card does not move, that write failed.' },
+  { path: '/admin/fan-zone', title: 'Fan Zone', detail: 'Campaigns, private entries, and free ballots.' },
+  { path: '/admin/highlights', title: 'Highlights', detail: 'Beyond contributions, challenge invites, and the coach-level label.' },
+  { path: '/admin/support', title: 'Engineering Support', detail: 'Syntax, logic, and glitches. Health counts the open ones. Review stays here.' },
+] as const;
+
 /**
  * @purpose Product tab: menus on per group, then the four product desks.
  */
@@ -82,6 +90,19 @@ export default async function ProductPage() {
                 </span>
                 <span className="mt-2 text-sm leading-5 text-[var(--ink-soft)]">{item.detail}</span>
               </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="expo-desks" className="mt-10">
+        <SectionHeading id="expo-desks" level={2} title="Expo desks" hint="Not hosted in this portal" />
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {EXPO_DESKS.map((item) => (
+            <li key={item.path} className="border-b border-[var(--border)] py-5">
+              <p className="text-base font-extrabold">{item.title}</p>
+              <p className="mt-1 text-sm leading-5 text-[var(--ink-soft)]">{item.detail}</p>
+              <p className="mt-2 text-sm font-extrabold text-[var(--jade)]">{item.path}</p>
             </li>
           ))}
         </ul>

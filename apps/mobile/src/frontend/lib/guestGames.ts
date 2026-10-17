@@ -5,6 +5,7 @@
  */
 
 import type { Player } from '@/data/players';
+import { realtimeEq } from '@/lib/postgrestFilter';
 import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
 import type { Game, GameEvent, GameEventWithPlayer } from '@/types/database';
 
@@ -68,10 +69,12 @@ export function subscribeToGuestGame(
   callbacks: { onGame: (game: Game) => void; onEvent: (event: GameEvent) => void },
 ): () => void {
   if (!isSupabaseConfigured) return () => {};
+  const gameFilter = realtimeEq('id', gameId);
+  if (!gameFilter) return () => {};
   let active = true;
   const channel = supabase.channel(nextRealtimeTopic(`guest_game_${gameId}`))
     .on('postgres_changes',
-      { event: '*', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
+      { event: '*', schema: 'public', table: 'games', filter: gameFilter },
       (payload) => {
         if (active && payload.new) callbacks.onGame(payload.new as Game);
       })

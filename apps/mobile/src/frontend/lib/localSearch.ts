@@ -4,6 +4,7 @@
  * @sideEffects `search_local_entities` RPC; fallback SELECTs on `players`, `games` and `sponsorships`.
  */
 
+import { likeNeedle, orIlike } from '@/lib/postgrestFilter';
 import { untypedRpc } from '@/lib/rpc';
 import { supabase } from '@/lib/supabase';
 import type { LocalSearchHit, LocalSearchKind } from '@/types/database';
@@ -33,12 +34,8 @@ function parseHits(rows: unknown): LocalSearchHit[] {
     .filter((row): row is LocalSearchHit => Boolean(row));
 }
 
-function ilikeSafe(raw: string): string {
-  return raw.replace(/[\\%_,]/g, ' ').trim();
-}
-
 async function fallbackSearch(needle: string, kind: LocalSearchKind): Promise<LocalSearchHit[]> {
-  const pattern = `%${ilikeSafe(needle)}%`;
+  const pattern = orIlike(needle);
   const hits: LocalSearchHit[] = [];
 
   if (kind === 'all' || kind === 'athlete') {
@@ -67,7 +64,7 @@ async function fallbackSearch(needle: string, kind: LocalSearchKind): Promise<Lo
       for (const raw of [row.home_school, row.away_school, row.home_team, row.away_team]) {
         const title = asText(raw);
         const key = title.toLowerCase();
-        if (!title || seen.has(key) || !key.includes(ilikeSafe(needle).toLowerCase())) continue;
+        if (!title || seen.has(key) || !key.includes(likeNeedle(needle).toLowerCase())) continue;
         seen.add(key);
         hits.push({ entity_type: 'school', entity_id: title, title, subtitle: 'High school' });
       }
@@ -104,10 +101,12 @@ async function fallbackSearch(needle: string, kind: LocalSearchKind): Promise<Lo
  *   the fallback throws too.
  */
 export async function searchLocalEntities(needle: string, kind: LocalSearchKind): Promise<LocalSearchHit[]> {
-  const rpc = await untypedRpc('search_local_entities', { search_query: needle, entity_kind: kind });
+  const safe = likeNeedle(needle);
+  if (safe.length < 2) return [];
+  const rpc = await untypedRpc('search_local_entities', { search_query: safe, entity_kind: kind });
   if (!rpc.error) return parseHits(rpc.data);
   try {
-    return await fallbackSearch(needle, kind);
+    return await fallbackSearch(safe, kind);
   } catch {
     return [];
   }

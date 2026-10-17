@@ -5,6 +5,7 @@
  * @sideEffects SELECT on `games`; Realtime `postgres_changes` on `games` and `game_events`.
  */
 
+import { realtimeEq } from '@/lib/postgrestFilter';
 import { nextRealtimeTopic, supabase } from '@/lib/supabase';
 import type { Game, GameEvent } from '@/types/database';
 
@@ -101,12 +102,15 @@ export function subscribeLiveGame(
     onStatus: (status: string, topic: string) => void;
   },
 ): () => void {
+  const gameFilter = realtimeEq('id', gameId);
+  const playFilter = realtimeEq('game_id', gameId);
+  if (!gameFilter || !playFilter) return () => {};
   const topic = nextRealtimeTopic(`live_game_${gameId}`);
   const channel = supabase
     .channel(topic)
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
+      { event: '*', schema: 'public', table: 'games', filter: gameFilter },
       (payload) => {
         if (!payload.new) return;
         handlers.onGame(payload.new as Game);
@@ -114,7 +118,7 @@ export function subscribeLiveGame(
     )
     .on(
       'postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'game_events', filter: `game_id=eq.${gameId}` },
+      { event: 'INSERT', schema: 'public', table: 'game_events', filter: playFilter },
       (payload) => {
         const row = payload.new as GameEvent | null;
         if (!row) return;

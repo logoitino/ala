@@ -12,6 +12,8 @@ export type UnappliedControl = {
   adminPath: string;
   rpc: string;
   args: Record<string, unknown>;
+  /** Extra written work this probe cannot see on its own. */
+  note?: string;
 };
 
 /** A throwaway id so a present function can answer without matching a real account. */
@@ -48,6 +50,23 @@ export const UNAPPLIED_CONTROLS: readonly UnappliedControl[] = [
     migration: '20261014150000_timed_sport_trivia.sql',
     adminPath: '/admin/sport-quiz',
     rpc: 'quiz_admin_snapshot',
+    args: {},
+    note: 'IQ questions are in 20261017110000_trivia_iq.sql. A right answer adds 5 Aura on the phone. This list cannot see that file on its own.',
+  },
+  {
+    id: 'fan_zone',
+    label: 'Fan Zone',
+    migration: '20261014130000_fan_zone.sql',
+    adminPath: '/admin/fan-zone',
+    rpc: 'fun_admin_snapshot',
+    args: {},
+  },
+  {
+    id: 'support',
+    label: 'Engineering Support',
+    migration: '20261013190000_engineering_support.sql',
+    adminPath: '/admin/support',
+    rpc: 'get_engineering_support_snapshot',
     args: {},
   },
   {
