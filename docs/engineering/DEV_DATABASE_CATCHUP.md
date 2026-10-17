@@ -19,14 +19,13 @@ Steps 1–29 and step 30 succeeded and the timestamped files are recorded in
 `20261014140000` through `20261015210000`, `20261016220000`, and `20261017110000`. A follow-up
 read found 123 `sport_quiz_questions` rows, 198 `quiz%` functions, and `guardian_links`.
 
-Two files stopped and rolled back:
-
-- Step between 29 and 30, `20261014130000_fan_zone.sql`: `must be owner of table objects`.
-- Step 31, `20261016120000_beyond_game.sql`: the same error.
-
-Both create a unique index and a trigger on `storage.objects`. The query login is `postgres`,
-which is not a member of `supabase_storage_admin` and is not a superuser. Re-running those files
-as `postgres` will fail the same way until a role that owns `storage.objects` runs them.
+Fan Zone (`20261014130000`) and Beyond (`20261016120000`) first stopped on
+`must be owner of table objects`. The failing statement was `create unique index` on
+`storage.objects`. postgres can create a trigger on that table (it has the TRIGGER privilege)
+but cannot create an index. Those two index lines were removed from the unapplied files.
+`(bucket_id, name, version)` is already unique. Both files then applied. Private buckets
+`fan_zone` and `beyond_game` exist, and triggers `fan_zone_storage_guard` and
+`beyond_storage_guard` are attached. Contribution switches stay off until an admin turns them on.
 
 Before `20261014150000`, this session added `public.digest(text, text)` and
 `public.digest(bytea, text)` that call `extensions.digest`. Hosted pgcrypto lives in

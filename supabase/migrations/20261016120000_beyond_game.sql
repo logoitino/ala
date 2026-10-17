@@ -359,7 +359,8 @@ declare m public.beyond_media;p public.beyond_posts;begin
  return new;end$$;
 drop trigger if exists beyond_storage_guard on storage.objects;
 create trigger beyond_storage_guard before insert or update on storage.objects for each row execute function public.beyond_storage_guard();
-create unique index if not exists beyond_storage_unique on storage.objects(bucket_id,name) where bucket_id='beyond_game';
+-- postgres cannot create an index on storage.objects (owner supabase_storage_admin).
+-- (bucket_id, name, version) is already unique. The storage trigger above still guards writes.
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('beyond_game','beyond_game',false,52428800,array['image/jpeg','video/mp4']) on conflict(id) do update set public=false,file_size_limit=52428800,allowed_mime_types=array['image/jpeg','video/mp4'];
 create or replace function public.beyond_storage_allowed(object_path text,operation text)
 returns boolean language plpgsql stable security definer set search_path='' as $$

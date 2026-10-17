@@ -20084,7 +20084,8 @@ declare m public.beyond_media;p public.beyond_posts;begin
  return new;end$$;
 drop trigger if exists beyond_storage_guard on storage.objects;
 create trigger beyond_storage_guard before insert or update on storage.objects for each row execute function public.beyond_storage_guard();
-create unique index if not exists beyond_storage_unique on storage.objects(bucket_id,name) where bucket_id='beyond_game';
+-- postgres cannot create an index on storage.objects (owner supabase_storage_admin).
+-- (bucket_id, name, version) is already unique. The storage trigger above still guards writes.
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('beyond_game','beyond_game',false,52428800,array['image/jpeg','video/mp4']) on conflict(id) do update set public=false,file_size_limit=52428800,allowed_mime_types=array['image/jpeg','video/mp4'];
 create or replace function public.beyond_storage_allowed(object_path text,operation text)
 returns boolean language plpgsql stable security definer set search_path='' as $$
@@ -20785,7 +20786,8 @@ $$;
 revoke all on function fan_zone_private.upload_allowed(text,uuid) from public,anon,authenticated;
 grant execute on function fan_zone_private.upload_allowed(text,uuid) to authenticated;
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('fan_zone','fan_zone',false,20971520,array['video/mp4']) on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
-create unique index if not exists fan_zone_object_unique on storage.objects(bucket_id,name) where bucket_id='fan_zone';
+-- postgres cannot create an index on storage.objects (owner supabase_storage_admin).
+-- (bucket_id, name, version) is already unique. The storage trigger below still guards writes.
 -- A service upsert must also obey the reserved draft invariant: a late upload cannot recreate removed media.
 -- This protects Storage catalog rows; physical provider writes/metadata compatibility require hosted verification.
 create or replace function public.fun_storage_guard() returns trigger language plpgsql security definer set search_path='' as $$

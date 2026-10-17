@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-17 — Fan Zone and Beyond on development
+
+Fan Zone and Beyond are on the development project. The extra unique indexes on storage objects were removed because that table is owned by the storage admin role. The write guards are triggers, and both media buckets are private. An admin still has to turn the switches on. Coach-level SQL was not run.
+
 ## 2026-10-17 — Development database catch-up through trivia
 
 Privacy, minor accounts, payee checks, sport quiz, timed trivia, play-together, Life Playbook, fresh questions, workout challenges, life-lesson questions, and the IQ file are on the development project. The bank has 123 questions. Fan Zone and Beyond did not apply: those files need to own the storage objects table. Coach-level SQL was not run. Home highlights play the one surviving video file.

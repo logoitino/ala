@@ -43,7 +43,7 @@ import { fetchRecentTips } from '@/lib/finance';
 import { FOCAL } from '@/theme/motion';
 import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
 import { PrivacySettingsSheet } from '@/components/Profile/PrivacySettingsSheet';
-import { ChallengeSettings } from '@/components/Challenges/ChallengeSettings';
+import { ChallengeSettingsSheet } from '@/components/Challenges/ChallengeSettingsSheet';
 
 const FAN_SELF_PREFIX = 'fan-self';
 
@@ -73,6 +73,7 @@ export default function MyHubTab() {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [challengesOpen, setChallengesOpen] = useState(false);
   const [flipOpen, setFlipOpen] = useState(false);
   const [vaultLockBusy, setVaultLockBusy] = useState(false);
   const [localOnboardTeam, setLocalOnboardTeam] = useState<SchoolTeam | null>(null);
@@ -288,6 +289,12 @@ export default function MyHubTab() {
         hint: 'Bio, social links, and what other users can see',
         onPress: () => setEditProfileOpen(true),
       });
+      items.push({
+        id: 'challenges',
+        label: 'Workout challenges',
+        hint: 'Mute invites, private badges, and your data',
+        onPress: () => setChallengesOpen(true),
+      });
     }
     items.push({
       id: 'capability',
@@ -459,7 +466,6 @@ export default function MyHubTab() {
           }}
         />
         </ScrollFxParallax>
-        <ChallengeSettings />
         <FilmerCard stats={filmerStats} own onFilm={uploadSheet ? uploadSheet.openUpload : undefined} />
       </ScrollFxScrollView>
       <ProfileMenuSheet
@@ -480,6 +486,7 @@ export default function MyHubTab() {
       <EditProfileModal visible={editProfileOpen} onClose={() => setEditProfileOpen(false)} onOpenPrivacy={() => setPrivacyOpen(true)} />
       <PrivacySettingsSheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
       <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />
+      <ChallengeSettingsSheet visible={challengesOpen} onClose={() => setChallengesOpen(false)} />
     </TabScreen>
   );
 }
