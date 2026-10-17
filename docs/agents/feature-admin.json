@@ -694,7 +694,7 @@
       "id": "SAFETY-01",
       "title": "Coach-level move safety label for risky workouts",
       "owner": "HIGHLIGHTS",
-      "status": "planned",
+      "status": "app-ready",
       "plannedAt": "2026-10-16T15:11:26Z",
       "exemption": null,
       "source": {
@@ -751,8 +751,73 @@
         ]
       },
       "readiness": {
-        "admin": null,
-        "app": null
+        "admin": {
+          "date": "2026-10-17T04:25:19Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/SAFETY-01-admin.md",
+              "command": "node scripts/data-map.mjs; pnpm --filter @tapuai/mobile typecheck; pnpm --filter @tapuai/mobile test -- --watchman=false --no-coverage src/frontend/components/Admin/__tests__/SafetyLabelPanel.test.tsx",
+              "result": "Local 2026-10-17: data map 114 tables/views, 560 functions, 0 rule failures; mobile tsc exit 0; SafetyLabelPanel shows unknown and not 0 when coach_label_desk is missing. Migration 20261017090000 written, not applied, not replayed. Counsel, challenge exclusion and teen review remain open."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-17T04:25:48Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/SAFETY-01-app.md",
+              "command": "pnpm --filter @tapuai/mobile test -- --watchman=false --no-coverage src/frontend/lib/__tests__/shareCard.test.ts src/frontend/components/BeyondGame/__tests__/BeyondGameParticipant.test.tsx src/frontend/components/Spotlight/__tests__/LeaderboardsBoard.test.tsx src/frontend/components/Challenges/__tests__/Challenges.test.tsx",
+              "result": "Local 2026-10-17T04:25:48Z: 4 suites / 31 tests exit 0. Beyond consents unchanged. Challenges still allow I'm in. comments:check and data:map:check exit 0. Badge, switch and non-hiding report are in the app. Migration 20261017090000 not applied. No device or counsel sign-off."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "M8-01",
+      "title": "Share a filled Rally and a board leader",
+      "owner": "HIGHLIGHTS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-17T04:25:19Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Phone share sheet for an existing Rally title, athlete name, optional gift link, and the current board leader. No new table, write, permission, collection, or money path. Donation amounts stay off the boards.",
+        "reviewedBy": "Cursor session 2026-10-16, same session that built it, at the owner's request"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/mobile/src/frontend/lib/shareCard.ts",
+          "apps/mobile/src/frontend/components/Rally/RallyFillMoment.tsx",
+          "apps/mobile/src/frontend/components/Spotlight/LeaderboardsBoard.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-17T04:25:19Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/M8-01-share.md",
+              "command": "Presentation-only review of shareCard.ts, RallyFillMoment and LeaderboardsBoard before recording the share sheet",
+              "result": "No new table or write. Share text uses the Rally title, athlete name, existing gift URL, and board leader name. Boards still omit donation amounts. Same-session review, not independent."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-17T04:25:48Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/M8-01-share.md",
+              "command": "pnpm --filter @tapuai/mobile test -- --watchman=false --no-coverage src/frontend/lib/__tests__/shareCard.test.ts src/frontend/components/Spotlight/__tests__/LeaderboardsBoard.test.tsx",
+              "result": "Local 2026-10-17T04:25:48Z: share and leaderboard assertions passed inside 4 suites / 31 tests, exit 0. Share this Rally and Share the leader are in the app. Device and browser taps were not run. Backer wall, rivalry takeover and hometown badges stay open."
+            }
+          ]
+        }
       }
     },
     {

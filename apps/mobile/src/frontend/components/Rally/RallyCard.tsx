@@ -16,6 +16,7 @@ import { maloAthleteCta } from '@/data/malo';
 import type { Player } from '@/data/players';
 import { useRally } from '@/hooks/useRally';
 import { thanksText, type ThanksKey } from '@/lib/donationThanks';
+import { giftQrTarget } from '@/lib/share';
 import type { TipEntry } from '@/lib/finance';
 import {
   approveRally,
@@ -288,6 +289,7 @@ export function RallyCard({
         visible={fillMoment}
         title={rally.title}
         athleteName={athleteName}
+        giftUrl={username ? giftQrTarget(athleteName, username).url : null}
         onWatch={
           rally.thanksReelId && onOpenClip
             ? () => {

@@ -56,13 +56,20 @@ for (const m of sql.matchAll(/create or replace function public\.(\w+)\s*\(([\s\
   const types = m[2].split(',').map((param) => param.trim().split(/\s+/)[1] ?? '').join(',');
   signatureBodies.set(`${m[1]}(${types})`, { name: m[1], body: m[4] });
 }
+// Private schemas (fan_zone_private) are real functions. Keep the schema in the name so ownership can name them.
+for (const m of sql.matchAll(/create or replace function (?!public\.)(\w+)\.(\w+)\s*\(([\s\S]*?)\)\s*returns([\s\S]*?)\$\$([\s\S]*?)\$\$/gi)) {
+  const qualified = `${m[1]}.${m[2]}`;
+  const types = m[3].split(',').map((param) => param.trim().split(/\s+/)[1] ?? '').join(',');
+  signatureBodies.set(`${qualified}(${types})`, { name: qualified, body: m[5] });
+}
 // A function dropped after its last definition (archived by a migration) no longer exists.
 const lastIndex = (pattern) => { let at = -1; for (const m of sql.matchAll(pattern)) at = m.index; return at; };
 const functionBodies = new Map();
 for (const { name, body } of signatureBodies.values()) functionBodies.set(name, `${functionBodies.get(name) ?? ''}\n${body}`);
 for (const name of [...functionBodies.keys()]) {
-  const created = lastIndex(new RegExp(`create or replace function public\\.${name}\\s*\\(`, 'gi'));
-  const dropped = lastIndex(new RegExp(`drop function if exists public\\.${name}\\s*\\(`, 'gi'));
+  const needle = name.includes('.') ? name.replace(/\./g, '\\.') : `public\\.${name}`;
+  const created = lastIndex(new RegExp(`create or replace function ${needle}\\s*\\(`, 'gi'));
+  const dropped = lastIndex(new RegExp(`drop function if exists ${needle}\\s*\\(`, 'gi'));
   if (dropped > created) functionBodies.delete(name);
 }
 const functions = [...functionBodies.keys()].sort();

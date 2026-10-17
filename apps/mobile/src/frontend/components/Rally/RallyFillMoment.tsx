@@ -1,9 +1,10 @@
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, Share, StyleSheet, Text, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
+import { rallyShareMessage } from '@/lib/shareCard';
 import { FOCAL } from '@/theme/motion';
 
 const COLORS = [FOCAL.neonJade, FOCAL.electricGold, '#FFFFFF'];
@@ -14,18 +15,22 @@ const COLORS = [FOCAL.neonJade, FOCAL.electricGold, '#FFFFFF'];
  * @param title The Rally's name.
  * @param athleteName Who the community was supporting.
  * @param onWatch Opens the "what it paid for" clip when the family attached one.
+ * @param giftUrl Public gift link included on the share card when the athlete has a handle.
  * @param onClose Dismisses the moment.
+ * @sideEffects The share button opens the device share sheet with the filled-Rally message.
  */
 export function RallyFillMoment({
   visible,
   title,
   athleteName,
+  giftUrl,
   onWatch,
   onClose,
 }: {
   visible: boolean;
   title: string;
   athleteName: string;
+  giftUrl?: string | null;
   onWatch?: () => void;
   onClose: () => void;
 }) {
@@ -39,6 +44,14 @@ export function RallyFillMoment({
         <Text style={styles.body}>
           {athleteName}&apos;s community filled this Rally. Thank you for showing up.
         </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Share this Rally"
+          onPress={() => { void Share.share({ message: rallyShareMessage(title, athleteName, giftUrl) }); }}
+          style={styles.primary}
+        >
+          <Text style={styles.primaryText}>Share this Rally</Text>
+        </Pressable>
         {onWatch ? (
           <Pressable accessibilityRole="button" onPress={onWatch} style={styles.primary}>
             <Text style={styles.primaryText}>▶ Watch what it paid for</Text>

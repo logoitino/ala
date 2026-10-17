@@ -17,6 +17,7 @@ type ReportContentModalProps = {
   visible: boolean;
   athleteName?: string;
   submitting?: boolean;
+  showCoachReason?: boolean;
   onClose: () => void;
   onConfirm: (reason: Exclude<ReportReasonId, 'unspecified'>) => void;
 };
@@ -33,6 +34,7 @@ export function ReportContentModal({
   visible,
   athleteName,
   submitting = false,
+  showCoachReason = true,
   onClose,
   onConfirm,
 }: ReportContentModalProps) {
@@ -86,7 +88,7 @@ export function ReportContentModal({
             Hide {who} from your feed. Tell us what is wrong so we can review it. It will not show on this account again.
           </Text>
           <View style={styles.reasons}>
-            {REPORT_REASONS.map((row) => {
+            {REPORT_REASONS.filter((row) => showCoachReason || row.id !== 'coach_level').map((row) => {
               const selected = reason === row.id;
               return (
                 <Pressable

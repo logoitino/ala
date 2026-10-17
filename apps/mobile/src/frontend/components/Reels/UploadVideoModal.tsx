@@ -142,6 +142,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const [statusLabel, setStatusLabel] = useState('Uploading Seki play…');
   const [isExclusive, setIsExclusive] = useState(false);
   const [category, setCategory] = useState<ReelCategory>(REEL_CATEGORY_GAME);
+  const [coachLevel, setCoachLevel] = useState(false);
   const [rights, setRights] = useState<Partial<Record<RightsAckId, boolean>>>({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [mediaKind, setMediaKind] = useState<HighlightMediaType>('video');
@@ -403,6 +404,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         gameId,
         isExclusive,
         category,
+        coachLevel,
         compressed: asset!.compressed,
         onProgress: setProgress,
         onStatus: setStatusLabel,
@@ -476,6 +478,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         gameLabel={gameLabel} playerLabel={playerLabel} onGame={setGameId} onPlayer={choosePlayer}
         openSelect={openSelect} onSelect={setOpenSelect}
         caption={caption} onCaption={setCaption} category={category} onCategory={setCategory}
+        showCoachSwitch={live.layouts.coachLevel !== false} coachLevel={coachLevel} onCoachLevel={setCoachLevel}
         categoryPills={categoryPills} accountTags={accountTags} onAccountTags={setAccountTags}
         isExclusive={isExclusive} onExclusive={setIsExclusive} exclusiveDollars={exclusiveDollars}
         rights={rights} onRights={setRights} uploading={uploading} canSubmit={canSubmit}

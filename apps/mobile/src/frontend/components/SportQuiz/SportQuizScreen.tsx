@@ -36,6 +36,7 @@ import { QuizButton } from './QuizButton';
 import { SportQuizPreparation } from './SportQuizPreparation';
 import { SportQuizPreferences } from './SportQuizPreferences';
 import { SportQuizHistory } from './SportQuizHistory';
+import { nextWeekUnlockLine } from '@/lib/quizWeek';
 import { RevealBanner, SportQuizRound, SportQuizRoundSummary, focusSoon, revealOf } from './SportQuizRound';
 import { useQuestionReports } from './QuestionReport';
 import { LevelUpCelebration, QuizFxProvider, QuizSoundToggle, useQuizFx } from './QuizFx';
@@ -248,7 +249,7 @@ function SportQuizContent({ quiz, initialSport, learnAthlete, autoPlay }: {
  {round.pendingStart ? <><Text>We couldn’t confirm Start. You can retry the same choices while this page stays open and before time runs out.</Text><QuizButton label="Retry original Start" disabled={busy} onPress={() => { void round.retryStart(); }}/></> : null}
  {inRound || round.pendingStart || s.attempt?.status === 'issued' ? <QuizButton label="End round" quiet disabled={quiz.busy==='erase'} onPress={() => round.leave('user_end')}/> : null}
  {round.unavailableQuestion ? <Text accessibilityRole="alert">This question isn’t available, so the round ended safely. You can keep browsing.</Text> : null}
- {roundSummary ? <SportQuizRoundSummary round={round} reports={reports}/> : null}
+ {roundSummary ? <SportQuizRoundSummary round={round} reports={reports} nextWeekLine={nextWeekUnlockLine(s.week_start, s.preferences.topic_mode)}/> : null}
  {levelUp && round.ended ? <LevelUpCelebration label={levelUp}/> : null}
  {round.ended && !inRound ? <QuizButton label="Back to this week’s rounds" quiet onPress={() => { invalidatePreparation(); round.dismiss(); setRefocus(r => ({ to: 'week', n: (r?.n ?? 0) + 1 })); void quiz.refresh(); }}/> : null}
  {!inRound && !roundSummary && !round.unavailableQuestion && (round.ended || s.attempt?.status === 'expired' || s.attempt?.status === 'ended' || s.attempt?.status === 'issued') && !timedResult ? <Text>Round ended or unavailable on this view. Leaving the page, hiding the app or tapping End round ends a round, and no question comes back after leaving. You can keep browsing and check private history.</Text> : null}

@@ -6,8 +6,11 @@ import * as ImagePicker from 'expo-image-picker';
 import { randomUUID } from 'expo-crypto';
 import type { BeyondCategory, BeyondPost, BeyondReserveInput } from '@tapuai/shared-types/beyondGame';
 import { useAuth } from '@/context/AuthContext';
+import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useChallenges } from '@/hooks/useChallenges';
 import { fetchBeyondStatus, reserveBeyondPost, uploadReservedBeyondMedia, finalizeBeyondPost, removeBeyondPost } from '@/lib/beyondGame';
+import { COACH_LEVEL_SWITCH, setOwnCoachLabel } from '@/lib/safetyLabels';
+import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { prepareBeyondPhoto, prepareBeyondVideo, type PreparedBeyondMedia } from '@/services/BeyondGameMediaService';
 import { colors } from '@/constants/theme';
 import { beyondStyles as styles } from './BeyondGameStyles';
@@ -69,6 +72,8 @@ function ScopedComposer({ visible, active = true, category, onBack, onSubmitted 
   const [caption, setCaption] = useState('');
   const [audience, setAudience] = useState<'friends' | 'everyone'>('friends');
   const [rights, setRights] = useState(false), [safety, setSafety] = useState(false);
+  const [coachMove, setCoachMove] = useState(false);
+  const { live } = useAppRuntime();
   const [files, setFiles] = useState<PreparedBeyondMedia[]>([]);
   const [frozen, setFrozen] = useState<FrozenDraft | null>(null);
   const frozenRef = useRef<FrozenDraft | null>(null);
@@ -140,6 +145,15 @@ function ScopedComposer({ visible, active = true, category, onBack, onSubmitted 
     void model.run(async (actor, accepted) => {
       const post = await reserveBeyondPost(actor, { ...draft.details, media: draft.files.map(file => file.input) });
       if (!accepted()) return '';
+      let labelNote = '';
+      if (category === 'workout' && coachMove && live.layouts.coachLevel !== false && post.status === 'draft' && post.coachLevel !== true) {
+        try { await setOwnCoachLabel('beyond_post', post.id); }
+        catch (caught) {
+          const message = caught instanceof Error ? caught.message : '';
+          if (message !== NOT_SWITCHED_ON) throw caught;
+          labelNote = ' The coach-level label is not on this database yet.';
+        }
+      }
       draft.reserved = post; setFrozen({ ...draft });
       if (post.status === 'removed') throw Error('This submission was removed. Check your history before starting another.');
       if (post.status === 'draft') {
@@ -153,7 +167,7 @@ function ScopedComposer({ visible, active = true, category, onBack, onSubmitted 
       }
       frozenRef.current = null; setFrozen(null); setFiles([]); setCaption(''); setRights(false); setSafety(false);
       onSubmitted();
-      return 'Submitted for review. This is not a publication approval.';
+      return `Submitted for review. This is not a publication approval.${labelNote}`;
     });
   };
   const cancel = () => {
@@ -201,6 +215,7 @@ function ScopedComposer({ visible, active = true, category, onBack, onSubmitted 
     <Text accessibilityRole="header" style={styles.heading}>Before you submit</Text>
     <BeyondButton variant="choice" label={rightsLabel} selected={rights} disabled={locked} onPress={() => { if (current() && !frozenRef.current) setRights(!rights); }} />
     <BeyondButton variant="choice" label={safetyLabel} selected={safety} disabled={locked} onPress={() => { if (current() && !frozenRef.current) setSafety(!safety); }} />
+    {category === 'workout' && live.layouts.coachLevel !== false ? <BeyondButton variant="choice" label={COACH_LEVEL_SWITCH} selected={coachMove} disabled={locked} onPress={() => { if (current() && !frozenRef.current) setCoachMove(!coachMove); }} /> : null}
     <Text style={styles.hint}>Post your own contribution. Service is voluntary; protect beneficiaries and avoid dangerous workout instructions, private addresses and real-time whereabouts.</Text>
     </View>
     {frozen ? <View style={styles.note}>

@@ -1,5 +1,5 @@
 /** QUIZ-03 round of up to five: the open question with its own server deadline, the explanation with Next, and the
- * private round summary ("You learned N new facts"). Right or wrong shows per question, privately; never a score,
+ * private round summary ("You learned N new facts"). A finished round names next week's subject and offers one fact for dinner. Right or wrong shows per question, privately; never a score,
  * speed or rank. Image questions are never rendered in this build.
  * QUIZ-04 fun presentation (2026-10-15): the question card pops in and the answers cascade; jersey-number dots show
  * the round's progress; a shot-clock bar turns warm gold in the last 10 seconds; an answer press squishes with a
@@ -26,6 +26,8 @@ import { FactsCountUp, QuestionDots, TimerBar } from './QuizProgress';
 import { TIME_UP_CHEER, ZERO_FACTS_LINE, cheerFor, encouragementFor, roundCheerFor } from './quizCheers';
 import { FUN_FACT_UNAVAILABLE, FunFactAthleteCard, FunFactHeader, factUnavailable, funFactTitle, isFunFact } from './FunFactMoment';
 import { QuestionReportLink, reportable, type QuestionReports } from './QuestionReport';
+
+const DINNER_LINE = 'Take one fact to dinner.';
 
 /** Announce only a few milestones so screen readers hear the clock without a stream of numbers. */
 function milestone(remaining: number, duration: number | null): string | null {
@@ -163,7 +165,7 @@ export function SportQuizRound({ round, busy, reports = null }: { round: TimedQu
 /** @purpose The private end-of-round summary; also covers a round ended by leaving and a short (small pool) round.
  * Anyone who answered at least one question gets the same celebration (equal rewards): a kicker with confetti, the
  * counting medal, the badge card with a shine and the round fanfare. Zero facts gets a short friendly line instead. */
-export function SportQuizRoundSummary({ round, reports = null }: { round: TimedQuizRoundState; reports?: QuestionReports | null }) {
+export function SportQuizRoundSummary({ round, reports = null, nextWeekLine = 'This week’s five are done. Next week unlocks a new subject.' }: { round: TimedQuizRoundState; reports?: QuestionReports | null; nextWeekLine?: string }) {
     const fx = useQuizFx();
     const entries = round.entries;
     const outcome = round.result?.outcome ?? null;
@@ -178,8 +180,9 @@ export function SportQuizRoundSummary({ round, reports = null }: { round: TimedQ
         <View style={styles.summaryTop}>
             <Text accessibilityRole="header" style={styles.summaryTitle}>{ended ? 'Round ended' : 'Round complete'}</Text>
             <Text accessibilityLiveRegion="polite" style={styles.learned}>{learned === 0 ? 'No new facts this time, and that’s okay.' : `You learned ${plural(learned, 'new fact')}`}</Text>
-            {!ended ? <Text style={styles.nextWeek}>This week’s five are done. Next week unlocks a new subject.</Text> : null}
+            {!ended ? <Text style={styles.nextWeek}>{nextWeekLine}</Text> : null}
         </View>
+        {!ended && learned > 0 ? <Text style={styles.nextWeek}>{DINNER_LINE}</Text> : null}
         <View style={styles.summaryHero}>
             <View style={styles.summaryCopy}>
                 {celebrate ? <CheerStage text={roundCheerFor(learned)} tone="round" burst="small" compact/> : null}

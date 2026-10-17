@@ -164,6 +164,8 @@ export type HighlightClip = {
   photoCount?: number;
   /** `reels_feed.cover_path` — position-0 photo, used for grid posters and as the feed fallback. */
   coverUrl?: string | null;
+  /** `reels.safety_label`. Undefined until the column is on this database. True shows the Coach-level badge. */
+  coachLevel?: boolean;
 };
 
 /**

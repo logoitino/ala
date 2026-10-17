@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-16 — Coach-level workouts and a shareable Rally
+
+A workout that needs a coach or spotter can carry a Coach-level move label. Reporting it as risky does not take the clip down. A filled Rally and a board leader can be shared. The brand line stays Donate. Elevate. Celebrate. The database update is written and not applied. Counsel has not signed off on the wording.
+
+## 2026-10-16 — This week’s trivia subject
+
+The Highlight card names sports or a subject off the field. A finished round says which one unlocks next week, and offers one fact to take to dinner.
+
 ## 2026-10-16 — Student-athlete lessons in trivia
 
 The Highlight card clears for the week after Play or Not now. A finished round points to a new subject next week. Draft questions add American history, the job site, and practice fuel. They stay drafts until reviewed.

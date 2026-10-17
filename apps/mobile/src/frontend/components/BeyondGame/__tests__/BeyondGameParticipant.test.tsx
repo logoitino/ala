@@ -10,7 +10,9 @@ import { BeyondGameComposer, normalizePickedJpeg } from '../BeyondGameComposer';
 import { BeyondGameMedia } from '../BeyondGameMedia';
 import type { BeyondPost } from '@tapuai/shared-types/beyondGame';
 
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 jest.mock('@/context/AuthContext', () => ({ useAuth: jest.fn() }));
+jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: { layouts: { coachLevel: true } } }) }));
 jest.mock('expo-router', () => ({ useFocusEffect: (cb: () => void) => require('react').useEffect(cb, [cb]) }));
 jest.mock('expo-crypto', () => ({ randomUUID: () => 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' }));
 jest.mock('expo-image-picker', () => ({ launchImageLibraryAsync: jest.fn(), requestMediaLibraryPermissionsAsync: jest.fn() }));

@@ -6,6 +6,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useChallenges } from '@/hooks/useChallenges';
 import { fetchBeyondStatus, fetchBeyondPosts, fetchMyBeyondPosts, removeBeyondPost, reportBeyondPost, exportMyBeyondData } from '@/lib/beyondGame';
 import { exportCsv } from '@/lib/csvExport';
+import { CoachLevelBadge } from '@/components/Reels/CoachLevelBadge';
+import { WORKOUT_IDEAS_LINE } from '@/lib/safetyLabels';
 import { BeyondButton, BeyondGameComposer } from './BeyondGameComposer';
 import { BeyondGameMedia } from './BeyondGameMedia';
 import { beyondStyles as styles } from './BeyondGameStyles';
@@ -104,6 +106,7 @@ function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = 
   const card = (post: BeyondPost, own: boolean) => <View key={`${post.id}:${post.revision}`} style={styles.card}>
     <Text style={styles.kicker}>{categories.find(c => c.id === post.category)?.label}</Text>
     <Text style={styles.body}>{post.caption || 'A shared moment'}</Text>
+    {post.coachLevel ? <CoachLevelBadge /> : null}
     {own ? <><Text style={styles.hint}>{stateLabel[post.status]} · {post.audience === 'friends' ? 'Friends' : 'Everyone'}</Text>
       {post.reviewReason ? <Text style={styles.hint}>Review note: {post.reviewReason}</Text> : null}
       {post.cleanup !== 'not_requested' ? <Text style={styles.hint}>{post.cleanup === 'complete' ? 'Cleanup recorded complete; provider deletion not independently verified.' : 'File cleanup pending.'}</Text> : null}
@@ -120,6 +123,7 @@ function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = 
     </View>
     <View style={styles.filters}>{categories.map(item => <BeyondButton variant="chip" key={item.id} label={item.label} selected={category === item.id} disabled={model.busy || compose}
       onPress={() => { if (navigationCurrent() && !compose) { setCategory(item.id); setFeedBefore(null); } }} />)}</View>
+    {category === 'workout' ? <Text style={styles.hint}>{WORKOUT_IDEAS_LINE}</Text> : null}
     {!compose && active ? renderLegacy?.(category) : null}
     <BeyondGameComposer visible={compose} active={active} category={category} onBack={() => setCompose(false)}
       onSubmitted={() => { setCompose(false); setOwnBefore(null); }} />

@@ -5,8 +5,10 @@ import { CHALLENGE_PRESETS,CHALLENGE_PRESET_LABEL,CHALLENGE_REASON_LABEL } from 
 import { fetchChallengeCounts,respondToChallenge,inviteFriendToChallenge,fetchChallengeFriends } from '@/lib/challenges';
 import { useChallenges } from '@/hooks/useChallenges';
 import { ChallengeButton,ChallengeFeedback } from './ChallengeControls';
-/** @purpose Root mounts only on the dedicated Beyond legacy workout list; active follows card/route focus. */
-export function ChallengeBar({reelId,active}:{reelId:string;active:boolean}) {
+import { COACH_LEVEL_BADGE, COACH_LEVEL_SHEET } from '@/lib/safetyLabels';
+/** @purpose Root mounts only on the dedicated Beyond legacy workout list; active follows card/route focus.
+ * A coach-level workout keeps the response buttons and shows the notice on the invite. Counsel has not required those invites to stop. */
+export function ChallengeBar({reelId,active,coachLevel=false}:{reelId:string;active:boolean;coachLevel?:boolean}) {
  const read=useCallback((actor:string|null)=>fetchChallengeCounts(reelId,actor),[reelId]);
  const model=useChallenges(`post:${reelId}`,active,read,true);
  const [invitationKey,setInvitationKey]=useState<string|null>(null);
@@ -21,6 +23,7 @@ export function ChallengeBar({reelId,active}:{reelId:string;active:boolean}) {
   <ChallengeButton label="Refresh workout challenges" disabled={!model.canRead||model.busy||model.reading} onPress={()=>void model.refresh()}/>
   {post&&!post.eligible?<Text>{post.reason?CHALLENGE_REASON_LABEL[post.reason]:'Challenges are unavailable on this workout.'}</Text>:null}
   {post?.eligible?<>
+   {coachLevel?<Text>{`${COACH_LEVEL_BADGE}. ${COACH_LEVEL_SHEET}`}</Text>:null}
    <Text>Responses are self-reported. Join only if you want to; no exercise proof or cash reward.</Text>
    {!post.visible||post.total===null?<Text>Counts are hidden for privacy or a small group.</Text>:<Text>{post.total} responses</Text>}
    {post.canRespond&&model.actorId?CHALLENGE_PRESETS.map(preset=><ChallengeButton key={preset} label={CHALLENGE_PRESET_LABEL[preset]} selected={post.mine===preset} disabled={disabled} onPress={()=>void model.run(async actor=>{const next=await respondToChallenge(reelId,preset,actor);return next.badgeEarned?'Private Challenge finisher badge earned — self-reported and noncash.':'Response saved.';})}/>):null}

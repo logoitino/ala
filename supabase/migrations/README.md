@@ -151,3 +151,9 @@ counsel notices/retention review remain required before enabling a cohort.
 Rollback is pause (settings off, `trivia.groups` off) and a reviewed forward migration; never drop round, group
 or case records blindly. Hosted compatibility, counsel review of group notices/retention and device testing remain.
 
+## Coach-level workout label — SAFETY-01
+
+| File | Purpose | Applied? |
+| --- | --- | --- |
+| `20261017090000_coach_level_label.sql` | `safety_label` on `reels` and `beyond_posts` (`none` or `coach_level`). Append-only `safety_label_events`. Uploader RPC only on a new Train Like Me clip or a workout still in draft or pending. Admin add/remove requires a reason. `coach_level` reports do not hide the clip or count toward the three-report hide. `reels_feed` and `beyond_post_json` include the label. | **No.** Written 2026-10-16, not applied anywhere. |
+

@@ -159,7 +159,7 @@ export function TriviaPreview() {
             <View key={sceneKey} style={{ gap: 8 }}>
                 <SportQuizRound round={round} busy={false}/>
                 {inRound ? <QuizButton label="End round" quiet onPress={() => round.leave('user_end')}/> : null}
-                {scene.kind === 'summary' ? <SportQuizRoundSummary round={round}/> : null}
+                {scene.kind === 'summary' ? <SportQuizRoundSummary round={round} nextWeekLine="This week’s five are done. Next week unlocks a subject off the field."/> : null}
                 {scene.kind === 'summary' && scene.levelUp ? <LevelUpCelebration label={scene.levelUp}/> : null}
                 {scene.kind === 'life' ? <LifePlaybookHome life={DEMO_LIFE} canStart busy={false} onStart={() => ask(1, IDLE)}/> : null}
             </View>

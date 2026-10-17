@@ -19,7 +19,8 @@ import { AccountTagField } from '@/components/Reels/AccountTagField';
 import { MediaKindSwitch, PhotoDescriptionFields, PhotoStoryStrip, type DraftStoryPhoto } from '@/components/Reels/PhotoStoryPicker';
 import { CardShine } from '@/components/Effects/CardShine';
 import { colors, MENU_METRICS, radii } from '@/constants/theme';
-import { HIGHLIGHT_PUBLISH_LABEL, PHOTO_STORY_MAX_PHOTOS, REEL_CATEGORY_SERVE, SERVE_LIKE_ME_BOOST_LABEL, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
+import { HIGHLIGHT_PUBLISH_LABEL, PHOTO_STORY_MAX_PHOTOS, REEL_CATEGORY_SERVE, REEL_CATEGORY_TRAIN, SERVE_LIKE_ME_BOOST_LABEL, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
+import { COACH_LEVEL_SWITCH, WORKOUT_IDEAS_LINE } from '@/lib/safetyLabels';
 import { HIGHLIGHT_MAX_SECONDS } from '@/data/media';
 import { VAULT_BADGE_LABEL } from '@/data/exclusive';
 import { COMPLIANCE_UPLOAD } from '@/data/legal';
@@ -47,6 +48,7 @@ type Props = {
   mediaKind: HighlightMediaType; onMediaKind: (kind: HighlightMediaType) => void; photosAvailable: boolean;
   photos: DraftStoryPhoto[]; onPickPhotos: () => void; onMovePhoto: (from: number, to: number) => void;
   onRemovePhoto: (index: number) => void; onPhotoDescription: (index: number, text: string) => void;
+  showCoachSwitch?: boolean; coachLevel?: boolean; onCoachLevel?: (on: boolean) => void;
 };
 
 /** @purpose Render one focused upload page with persistent navigation and one rights confirmation. */
@@ -242,7 +244,14 @@ export function UploadVideoComposer(p: Props) {
                   disabled={p.uploading} onPress={() => p.onCategory(pill.id)} style={[styles.category, pill.id === p.category && styles.categoryActive]}>
                   <Text style={[styles.categoryText, pill.id === p.category && styles.categoryTextActive]}>{pill.label}</Text>
                 </Pressable>)}
-              </View>{p.category === REEL_CATEGORY_SERVE ? <Text style={styles.link}>{SERVE_LIKE_ME_BOOST_LABEL}</Text> : null}</View>
+              </View>{p.category === REEL_CATEGORY_SERVE ? <Text style={styles.link}>{SERVE_LIKE_ME_BOOST_LABEL}</Text> : null}
+              {p.showCoachSwitch && p.category === REEL_CATEGORY_TRAIN ? (
+                <Pressable accessibilityRole="switch" accessibilityLabel={COACH_LEVEL_SWITCH} accessibilityState={{ checked: !!p.coachLevel }}
+                  disabled={p.uploading} onPress={() => p.onCoachLevel?.(!p.coachLevel)} style={[styles.option, p.coachLevel && styles.selected]}>
+                  <Text style={styles.label}>{COACH_LEVEL_SWITCH}</Text>
+                  <Text style={styles.hint}>{WORKOUT_IDEAS_LINE}</Text>
+                </Pressable>
+              ) : null}</View>
               {isPhotos ? <PhotoDescriptionFields photos={p.photos} onDescription={p.onPhotoDescription} disabled={p.uploading} /> : null}
             </>
           ) : p.step === 'options' ? (

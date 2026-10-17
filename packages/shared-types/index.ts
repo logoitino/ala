@@ -336,6 +336,7 @@ export const APP_RUNTIME_FLAG_GROUPS: AppRuntimeFlagGroup[] = [
       { path: 'layouts.receipts', label: 'Receipts', hint: 'Profile Donation History & Receipts' },
       { path: 'layouts.wishlist', label: 'Locker Room Wishlist', hint: 'Gear-goal donations on Stats 📊' },
       { path: 'layouts.leaderboards', label: 'Leaderboards', hint: 'Spotlight Boards — hype and views, never donations' },
+      { path: 'layouts.coachLevel', label: 'Coach-level label', hint: 'Uploader switch and the Risky without a coach report. Labels already set stay visible.' },
       {
         path: 'layouts.operatorConsole',
         label: 'Operator console',

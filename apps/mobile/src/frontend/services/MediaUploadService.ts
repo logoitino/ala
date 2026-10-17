@@ -52,6 +52,7 @@ export type UploadHighlightInput = PickedHighlight & {
   gameId?: string | null;
   isExclusive?: boolean;
   category?: ReelCategory;
+  coachLevel?: boolean;
   onProgress?: CompressProgress;
   onStatus?: (message: string) => void;
 };
@@ -199,6 +200,7 @@ export type ReelInsertRow = {
   rights_version?: string;
   /** Omitted for videos (column default `video`); `photo_story` rows store `video_url = ''`. */
   media_type?: HighlightMediaType;
+  safety_label?: 'none' | 'coach_level';
 };
 
 /**
@@ -212,7 +214,7 @@ export type ReelInsertRow = {
  * @sideEffects `reels` INSERT.
  */
 export async function insertReelRow(baseRow: ReelInsertRow): Promise<Reel> {
-  type InsertRow = Database['public']['Tables']['reels']['Insert'] & { media_type?: HighlightMediaType };
+  type InsertRow = Database['public']['Tables']['reels']['Insert'] & { media_type?: HighlightMediaType; safety_label?: 'none' | 'coach_level' };
   let row: InsertRow = { ...baseRow };
   if (!row.media_type) delete row.media_type;
   let lastError: { message: string } | null = null;
@@ -238,7 +240,7 @@ export async function insertReelRow(baseRow: ReelInsertRow): Promise<Reel> {
     if (row.media_type && message.includes('media_type')) {
       throw new Error('Photo stories need the latest database update. Share a video instead for now.');
     }
-    const drop = (['attested_at', 'rights_version', 'category', 'is_vault_only'] as const).find(
+    const drop = (['attested_at', 'rights_version', 'category', 'is_vault_only', 'safety_label'] as const).find(
       (column) => column in row && message.includes(column),
     );
     if (!drop) break;
@@ -275,6 +277,7 @@ export async function uploadHighlight({
   gameId,
   isExclusive = false,
   category = 'game_play',
+  coachLevel = false,
   compressed = false,
   onProgress,
   onStatus,
@@ -335,6 +338,7 @@ export async function uploadHighlight({
     is_exclusive: isExclusive,
     is_vault_only: isExclusive,
     category: nextCategory,
+    ...(coachLevel && nextCategory === 'train_like_me' ? { safety_label: 'coach_level' as const } : {}),
     attested_at: new Date().toISOString(),
     rights_version: RIGHTS_VERSION,
   });

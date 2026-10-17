@@ -15,7 +15,7 @@ import { useEventListener } from 'expo';
 import { useIsFocused } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Platform, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Share, StyleSheet, Text, View, type ViewInstance } from 'react-native';
 import { BlurTargetView, BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -79,6 +79,7 @@ import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { addUserAura, auraBadgeLabel, auraTierForPoints, emitPlayerAura, emitProfileAura, resolveAuraPoints } from '@/lib/aura';
 import { hypeFromPlayer } from '@/lib/hype';
 import { formatGameEventHeadline } from '@/lib/operator';
+import { CoachLevelBadge } from '@/components/Reels/CoachLevelBadge';
 import { bumpReelHype, clearReelHype, formatReelDeepLink, hideReelLocally, hypeFromReel, isReelUuid, reportReelRemote, type ReelHype } from '@/lib/reels';
 import { clearReelVote, loadReelVotes, markReelVote, type ReelVoteMap } from '@/lib/reelVotes';
 import { isVaultSealed } from '@/lib/vault';
@@ -227,7 +228,7 @@ function ReelCardImpl({
   const lockedRef = useRef(locked);
   const reelHypeRef = useRef(reelHype);
   const votesRef = useRef(votes);
-  const blurTarget = useRef<View>(null);
+  const blurTarget = useRef<ViewInstance>(null);
   const muteOpacity = useSharedValue(0);
   const playerName = displayValue(player?.name, clip.athleteName);
   const schoolName = (player?.school_name || clip.school || '').trim();
@@ -473,10 +474,12 @@ function ReelCardImpl({
     if (reporting) return;
     setReporting(true);
     try {
-      await hideReelLocally(clip.id);
-      onHide?.(clip.id);
+      if (reason !== 'coach_level') {
+        await hideReelLocally(clip.id);
+        onHide?.(clip.id);
+      }
       telemetry.trackIssue('report', surface);
-      celebration?.showToast('Highlight hidden 🚩');
+      celebration?.showToast(reason === 'coach_level' ? 'Sent to reviewers. This Highlight stays up.' : 'Highlight hidden 🚩');
       setReportOpen(false);
       if (user?.id && isReelUuid(clip.id)) {
         await offlineQueue.runOrEnqueue({ type: 'report_reel', reelId: clip.id, reason }, () =>
@@ -707,6 +710,7 @@ function ReelCardImpl({
               </Text>
             </View>
           ) : null}
+          {clip.coachLevel ? <CoachLevelBadge /> : null}
           {categoryBadge ? (
             <View
               accessibilityRole="text"
@@ -819,6 +823,7 @@ function ReelCardImpl({
         visible={reportOpen}
         athleteName={playerName}
         submitting={reporting}
+        showCoachReason={live.layouts.coachLevel !== false}
         onClose={() => {
           if (!reporting) setReportOpen(false);
         }}

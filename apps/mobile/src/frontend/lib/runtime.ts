@@ -57,6 +57,8 @@ export type AppRuntimeLayouts = {
   receipts: boolean;
   wishlist: boolean;
   leaderboards: boolean;
+  /** Hides the uploader switch and the coach-level report. A label already set still shows. */
+  coachLevel: boolean;
 };
 
 export type AppRuntimeTheme = {
@@ -226,6 +228,7 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     receipts: true,
     wishlist: true,
     leaderboards: true,
+    coachLevel: true,
   },
   theme: { ...DAYLIGHT_THEME },
   catalog: {

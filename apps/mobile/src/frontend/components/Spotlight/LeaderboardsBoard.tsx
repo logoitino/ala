@@ -1,17 +1,18 @@
 /**
  * Spotlight → Boards: tabbed leaderboards (hype, views, highlights, schools, fans, filmers) with loading,
- * error + Retry, and "open athlete". Data arrives as props from `hooks/useLeaderboards`; no money amounts are
- * shown on any board.
+ * error + Retry, "open athlete", and a share of the current board's leader. Data arrives as props from
+ * `hooks/useLeaderboards`; no money amounts are shown on any board.
  */
 
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Share, StyleSheet, Text, View } from 'react-native';
 
 import { ScrollFxItem } from '@/components/Effects/ScrollFx';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { cardShadow, colors, radii, space } from '@/constants/theme';
 import type { Leaderboards } from '@/lib/leaderboards';
+import { boardShareMessage } from '@/lib/shareCard';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 
 export type LeaderboardsTab = 'hype' | 'views' | 'highlights' | 'schools' | 'fans' | 'filmers';
@@ -129,6 +130,8 @@ export function LeaderboardsBoard({ boards, loading, error, onRetry, onOpenAthle
   }
 
   const rows = boards ? rowsFor(tab, boards, onOpenAthlete) : [];
+  const leader = rows[0];
+  const boardLabel = TABS.find((item) => item.id === tab)?.label ?? 'this board';
 
   return (
     <View style={styles.wrap}>
@@ -157,6 +160,15 @@ export function LeaderboardsBoard({ boards, loading, error, onRetry, onOpenAthle
           );
         })}
       </View>
+      {leader ? (
+        <AnimatedButton
+          accessibilityLabel={`Share ${boardLabel}`}
+          contentStyle={styles.share}
+          onPress={() => { void Share.share({ message: boardShareMessage(boardLabel, leader.title) }); }}
+        >
+          <Text style={styles.shareText}>Share the leader</Text>
+        </AnimatedButton>
+      ) : null}
       {!boards && loading ? (
         <View style={styles.boot}>
           <ActivityIndicator color={FOCAL.goldInk} />
@@ -258,6 +270,8 @@ const styles = StyleSheet.create({
   list: {
     gap: 8,
   },
+  share: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
+  shareText: { color: FOCAL.goldInk, fontWeight: '800' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

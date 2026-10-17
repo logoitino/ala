@@ -6,6 +6,7 @@
  */
 import type { HighlightMediaType, ReelCategory } from '@/data/highlights';
 import { REEL_CATEGORY_GAME } from '@/data/highlights';
+import { COACH_LEVEL_REPORT } from '@/lib/safetyLabels';
 
 export const RIGHTS_VERSION = '2026-10-11';
 
@@ -23,6 +24,7 @@ export type ReportReasonId =
   | 'impersonation'
   | 'rights'
   | 'inappropriate'
+  | 'coach_level'
   | 'other'
   | 'unspecified';
 
@@ -64,6 +66,7 @@ export const REPORT_REASONS: { id: Exclude<ReportReasonId, 'unspecified'>; label
   { id: 'impersonation', label: 'Impersonation' },
   { id: 'rights', label: 'Music, logo, or broadcast without permission' },
   { id: 'inappropriate', label: 'Inappropriate' },
+  { id: 'coach_level', label: COACH_LEVEL_REPORT },
   { id: 'other', label: 'Other' },
 ];
 

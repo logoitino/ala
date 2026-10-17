@@ -15,10 +15,13 @@ const SHOW_MS = 2600;
 /** @purpose Bright trivia invite that tucks to the left edge after a few seconds. */
 export function TriviaSideNotice({
   busy,
+  subject = 'This week’s five.',
   onPlay,
   onDismiss,
 }: {
   busy: boolean;
+  /** This week’s subject, already decided by the server. Falls back to the plain invite. */
+  subject?: string;
   onPlay: () => void;
   onDismiss: () => void;
 }) {
@@ -66,7 +69,7 @@ export function TriviaSideNotice({
         >
           <Text style={styles.kicker}>Trivia</Text>
           <Text style={styles.title}>Pop Quiz</Text>
-          <Text style={styles.copy}>This week’s five. You learn a fact either way.</Text>
+          <Text style={styles.copy}>{`${subject} You learn a fact either way.`}</Text>
           <Pressable accessibilityRole="button" accessibilityLabel="Play trivia" disabled={busy} onPress={onPlay} style={styles.play}>
             <Text style={styles.playLabel}>Yes, let’s play</Text>
           </Pressable>

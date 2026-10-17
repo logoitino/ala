@@ -53,6 +53,8 @@ export type BeyondPost = {
     reviewReason: string | null;
     reviewedAt: string | null;
     reportCount: number | null;
+    /** Present only when the server sends safety_label. True is a Coach-level workout. */
+    coachLevel?: boolean;
 };
 export type BeyondPage = {
     posts: BeyondPost[];
@@ -106,7 +108,7 @@ export function parseBeyondPost(input: unknown): BeyondPost {
     if (r.rights_version !== BEYOND_RIGHTS_VERSION || r.safety_version !== BEYOND_SAFETY_VERSION) {
         bad();
     }
-    return { id: postId, creatorId: r.creator_id == null ? null : id(r.creator_id), category, caption: text(r.caption), audience, status, revision: int(r.revision, 1), createdAt: date(r.created_at), submittedAt: nullableDate(r.submitted_at), attestedAt: date(r.attested_at), rightsVersion: BEYOND_RIGHTS_VERSION, safetyVersion: BEYOND_SAFETY_VERSION, cleanup, media: ms, reviewReason: r.review_reason == null ? null : text(r.review_reason), reviewedAt: nullableDate(r.reviewed_at), reportCount: r.report_count == null ? null : int(r.report_count) };
+    return { id: postId, creatorId: r.creator_id == null ? null : id(r.creator_id), category, caption: text(r.caption), audience, status, revision: int(r.revision, 1), createdAt: date(r.created_at), submittedAt: nullableDate(r.submitted_at), attestedAt: date(r.attested_at), rightsVersion: BEYOND_RIGHTS_VERSION, safetyVersion: BEYOND_SAFETY_VERSION, cleanup, media: ms, reviewReason: r.review_reason == null ? null : text(r.review_reason), reviewedAt: nullableDate(r.reviewed_at), reportCount: r.report_count == null ? null : int(r.report_count), ...(r.safety_label == null ? {} : { coachLevel: r.safety_label === 'coach_level' }) };
 }
 export function parseBeyondPage(input: unknown): BeyondPage {
     const r = obj(input);

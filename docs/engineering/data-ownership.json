@@ -453,6 +453,10 @@
     "sport_quiz_imports": {
       "owner": "ADMIN",
       "purpose": "QUIZ-05 one row per real bulk import (admin, reason, row totals); dry runs write nothing. Read as the 30-day import count in the admin snapshot."
+    },
+    "safety_label_events": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "Append-only record of who added or removed a Coach-level workout label, with the reason and time. Admin read. RPC writes only."
     }
   },
   "buckets": {
@@ -482,6 +486,22 @@
     }
   },
   "functions": {
+    "guard_coach_label": {
+      "owner": "RLS_SECURITY",
+      "use": "Blocks a client update of safety_label. The review RPCs set a transaction flag first."
+    },
+    "set_own_coach_label": {
+      "owner": "HIGHLIGHTS",
+      "use": "Uploader marks a new Train Like Me clip or workout draft as coach-level. Cannot change it later."
+    },
+    "set_coach_label": {
+      "owner": "HIGHLIGHTS",
+      "use": "Admin adds or removes a Coach-level label with a reason and writes the audit row."
+    },
+    "coach_label_desk": {
+      "owner": "HIGHLIGHTS",
+      "use": "Admin counts of labelled clips, open suggestions and median review hours. A failed read stays unknown."
+    },
     "support_code_metadata": {
       "owner": "TELEMETRY",
       "use": "Fixed SQL vocabulary used by support capture and validation."
@@ -1429,10 +1449,94 @@
       "status": "kept"
     },
     {
-      "file": "apps/mobile/src/frontend/services/MediaUploadService.ts",
-      "name": "stripJpegMetadata",
+      "file": "apps/mobile/src/backend/services/__fixtures__/fanZoneMp4Fixture.ts",
+      "name": "sampleMp4",
       "decision": "keep",
-      "reason": "Tested wrapper over parseJpeg/buildCleanJpeg; its byte-rule tests prove the GPS/EXIF stripping uploadStoryPhoto performs (privacy).",
+      "reason": "FUN-01 test MP4 bytes. The data map skips __tests__ imports; fanZoneMedia.test.ts builds private-upload cases from it.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/fanZoneFixtures.ts",
+      "name": "fanSnapshotFixture",
+      "decision": "keep",
+      "reason": "FUN-01 participant snapshot for screen and hook tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/fanZoneFixtures.ts",
+      "name": "fanRemovalFixture",
+      "decision": "keep",
+      "reason": "FUN-01 removal receipt for the admin Fan Zone desk tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/timedSportQuizFixtures.ts",
+      "name": "quizHistory",
+      "decision": "keep",
+      "reason": "QUIZ-02 history page for sport-quiz screen tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/triviaRoundFixtures.ts",
+      "name": "roundSnapshot",
+      "decision": "keep",
+      "reason": "QUIZ-03 round snapshot for play-together tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/triviaRoundFixtures.ts",
+      "name": "roundStart",
+      "decision": "keep",
+      "reason": "QUIZ-03 start receipt for play-together tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/triviaRoundFixtures.ts",
+      "name": "roundNext",
+      "decision": "keep",
+      "reason": "QUIZ-03 next-question receipt for play-together tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/triviaRoundFixtures.ts",
+      "name": "roundAnswer",
+      "decision": "keep",
+      "reason": "QUIZ-03 answer receipt for play-together tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/triviaRoundFixtures.ts",
+      "name": "roundExpiredReceipt",
+      "decision": "keep",
+      "reason": "QUIZ-03 expired-round receipt for the timed-round hook tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/triviaRoundFixtures.ts",
+      "name": "roundPlain",
+      "decision": "keep",
+      "reason": "QUIZ-03 plain round receipt for play-together tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/triviaRoundFixtures.ts",
+      "name": "myGroups",
+      "decision": "keep",
+      "reason": "QUIZ-03 group list for play-together tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/triviaRoundFixtures.ts",
+      "name": "badgeShelf",
+      "decision": "keep",
+      "reason": "QUIZ-03 badge shelf for play-together tests. The data map skips __tests__ imports.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/lib/__fixtures__/triviaRoundFixtures.ts",
+      "name": "seasonRecap",
+      "decision": "keep",
+      "reason": "QUIZ-03 season recap for play-together tests. The data map skips __tests__ imports.",
       "status": "kept"
     },
     {

@@ -1,6 +1,6 @@
 /**
  * Optional shared discovery for the admin-ready QUIZ-02 and FUN-01 journeys.
- * Home keeps trivia as a side notice. Play and Not now clear that notice until the next week.
+ * Home keeps trivia as a side notice and names the subject the server already scheduled. Play and Not now clear that notice until the next week.
  * Beyond keeps Fan Zone. Role homes keep both cards.
  * @sideEffects Read on focus/return/UTC week; explicit quiz Skip, local dismissal and root navigation only. Fan discovery never writes.
  */
@@ -12,6 +12,7 @@ import { SportQuizInvitation } from '@/components/SportQuiz/SportQuizInvitation'
 import { QuizButton } from '@/components/SportQuiz/QuizButton';
 import { colors, radii } from '@/constants/theme';
 import { TriviaSideNotice } from './TriviaSideNotice';
+import { thisWeekSubject } from '@/lib/quizWeek';
 import { useAuth } from '@/context/AuthContext';
 import { useSportQuiz } from '@/hooks/useSportQuiz';
 import { useFanZone } from '@/hooks/useFanZone';
@@ -132,7 +133,8 @@ function QuizDiscovery({ overVideo, surface }: { overVideo: boolean; surface: Di
   const dismiss=()=>{ setDismissed(key); if (key) AsyncStorage.setItem(TRIVIA_NOTICE_WEEK, key).catch(() => {}); };
   if (surface === 'home') {
     if (homeStopped || (quiz.loading && !snapshot && !quiz.error)) return null;
-    return <TriviaSideNotice busy={!!quiz.busy} onPlay={() => { dismiss(); router.push('/sport-quiz?play=1' as Href); }} onDismiss={dismiss} />;
+    const kind = snapshot?.scheduled_topic === 'fun' || snapshot?.scheduled_topic === 'sport' ? snapshot.scheduled_topic : null;
+    return <TriviaSideNotice busy={!!quiz.busy} subject={thisWeekSubject(kind)} onPlay={() => { dismiss(); router.push('/sport-quiz?play=1' as Href); }} onDismiss={dismiss} />;
   }
   const skip=async()=>{const captured=key;const receipt=await quiz.skip();if(currentKey.current===captured)setFailedSkip(receipt?.outcome==='skipped'?null:captured);};
   const hasHistory=!!snapshot&&(snapshot.history_count>0||snapshot.badge_count>0||snapshot.correction_count>0);

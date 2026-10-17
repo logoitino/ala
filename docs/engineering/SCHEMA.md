@@ -1995,3 +1995,7 @@ otherwise it is a look ("Crush it", "Scunthorpe" pass); spelled digits refuse on
 are not "oh"); street abbreviations / Street / Highway refuse after a capitalised name or a number, road / drive / court /
 lane only after a number (a capitalised name before them is a look); sport names and varsity / boys / girls / team words
 are generic for the school and team check.
+
+## SAFETY-01 Coach-level label (`20261017090000_coach_level_label.sql`, written 2026-10-16, not applied)
+
+`reels.safety_label` and `beyond_posts.safety_label`: `none` or `coach_level`, default `none`. `safety_label_events` is append-only (target, old, new, actor, reason, time), RLS on, admin select, restrictive Closed accounts policy, no client writes. `guard_coach_label` refuses a direct update. `set_own_coach_label` lets the uploader mark a new Train Like Me clip (20 minutes) or a workout still in draft or pending. `set_coach_label` is admin-only and requires a reason. `coach_label_desk` returns labelled counts, open "Risky without a coach" suggestions, median review hours for the UTC week (null when there are none) and the latest events. `report_reel` accepts `coach_level` and does not flag or count that reason toward the three-report hide. `reels_feed` and `beyond_post_json` include `safety_label`. Missing SQL reads as unknown on the desk, never as zero unlabelled clips.

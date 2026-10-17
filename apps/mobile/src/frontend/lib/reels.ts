@@ -34,6 +34,8 @@ export type UploadSekiPlayInput = {
   isExclusive?: boolean;
   /** Persist `reels.category`. Default Game Day (`game_play`). */
   category?: ReelCategory;
+  /** Persist `reels.safety_label` on a new Train Like Me clip. Dropped if the column is not applied yet. */
+  coachLevel?: boolean;
   /** True when `HighlightPickerModal` already ran `Video.compress`. */
   compressed?: boolean;
   onProgress?: (value: number) => void;
@@ -155,6 +157,7 @@ export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
     mediaType: media.mediaType,
     photoCount: media.mediaType === 'photo_story' ? media.photoCount : undefined,
     coverUrl: media.mediaType === 'photo_story' ? media.coverUrl : undefined,
+    coachLevel: (reel as Reel & { safety_label?: string }).safety_label === 'coach_level',
   };
 }
 
@@ -274,6 +277,7 @@ const REEL_COLUMNS_TAG = `${REEL_COLUMNS_REMOVED}, tag_status, uploaded_by`;
 const REEL_COLUMNS_CREDIT = `${REEL_COLUMNS_TAG}, view_count, uploader_name, uploader_avatar_url`;
 /** Photo stories (migration 20261007230000). Falls back to the credit tier until applied; those rows are all video. */
 const REEL_COLUMNS_MEDIA = `${REEL_COLUMNS_CREDIT}, media_type, photo_count, cover_path`;
+const REEL_COLUMNS_LABEL = `${REEL_COLUMNS_MEDIA}, safety_label`;
 const REEL_COLUMNS_BASIC = 'id, video_url, title, player_id, game_id, created_at';
 const HIDDEN_REELS_KEY = 'tapuai.hiddenReels';
 
@@ -359,6 +363,10 @@ async function playable(rows: ReelWithPlayer[]): Promise<ReelWithPlayer[]> {
 }
 
 async function queryReels(playerId?: string): Promise<ReelWithPlayer[]> {
+  const labelled = await selectReels(`${REEL_COLUMNS_LABEL}, players (${PLAYER_SELECT})`, playerId);
+  if (!labelled.error) {
+    return playable(rowsFromQuery<ReelWithPlayer>(labelled.data).filter(isListableReel));
+  }
   const media = await selectReels(`${REEL_COLUMNS_MEDIA}, players (${PLAYER_SELECT})`, playerId);
   if (!media.error) {
     return playable(rowsFromQuery<ReelWithPlayer>(media.data).filter(isListableReel));

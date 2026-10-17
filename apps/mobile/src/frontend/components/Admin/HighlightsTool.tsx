@@ -13,6 +13,7 @@ import {
 } from '@/components/Admin/AdminChrome';
 import { WorkoutChallengesPanel } from '@/components/Admin/WorkoutChallengesPanel';
 import { BeyondGamePanel } from '@/components/Admin/BeyondGamePanel';
+import { SafetyLabelPanel } from '@/components/Admin/SafetyLabelPanel';
 import { labeledReelCategories, parseReelCategory, type ReelCategory } from '@/data/highlights';
 import { fetchAdminHighlights, patchHighlight, setHighlightRemoved, type AdminHighlightRow } from '@/lib/adminCatalog';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -22,10 +23,10 @@ import { formatTipDollars, toggleReelVaultStatus } from '@/lib/reels';
 type ClipFilter = 'all' | 'public' | 'vault' | 'removed' | 'flagged' | 'pending';
 
 /**
- * @purpose Production Highlights desk: filter, retitle, retag, vault, remove, restore; plus the Workout challenges
- *   section (CHAL-01: switch, per-post counts, nudge-abuse view, retention), and private Beyond the Game
- *   review/consent/cleanup handling. These protected desks establish the operational contract before participant UI.
- * @sideEffects `reels` UPDATE; `toggle_reel_vault_status`; the challenge admin functions (WorkoutChallengesPanel).
+ * @purpose Production Highlights desk: filter, retitle, retag, vault, remove, restore; plus the Coach-level
+ *   label desk (SAFETY-01), the Workout challenges section (CHAL-01: switch, per-post counts, nudge-abuse
+ *   view, retention), and private Beyond the Game review/consent/cleanup handling.
+ * @sideEffects `reels` UPDATE; `toggle_reel_vault_status`; `set_coach_label` / `coach_label_desk`; the challenge admin functions.
  */
 export function HighlightsTool() {
   const router = useRouter();
@@ -176,6 +177,7 @@ export function HighlightsTool() {
           </AdminRow>
         ))
       )}
+      <SafetyLabelPanel />
       <WorkoutChallengesPanel />
       <BeyondGamePanel />
     </AdminPage>
