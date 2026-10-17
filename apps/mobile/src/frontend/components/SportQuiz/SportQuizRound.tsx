@@ -11,9 +11,12 @@
  * athlete's card; a fun fact that no longer passes the server's check says "This fun fact isn’t available anymore."
  * with no answer, explanation, cheer or card. After a reveal, "Report a problem with this question" opens the reasons
  * sheet (when the screen passes `reports`); it sits apart from Next and never holds it.
+ * A right answer adds 5 Aura through the existing Aura award. The cue still fires once per question.
  */
 import { useEffect, useRef, type RefObject } from 'react';
 import { AccessibilityInfo, findNodeHandle, Platform, StyleSheet, Text, View, type TextInstance, type ViewInstance } from 'react-native';
+import { useAuth } from '@/context/AuthContext';
+import { addUserAura } from '@/lib/aura';
 import type { TimedQuizRoundState } from '@/hooks/useTimedSportQuizRound';
 import type { TimedQuizResult } from '@shared/timedSportQuiz';
 import type { QuizCue } from '@/lib/quizSound';
@@ -28,6 +31,8 @@ import { FUN_FACT_UNAVAILABLE, FunFactAthleteCard, FunFactHeader, factUnavailabl
 import { QuestionReportLink, reportable, type QuestionReports } from './QuestionReport';
 
 const DINNER_LINE = 'Take one fact to dinner.';
+/** A right answer adds this many points to the player's Aura card. Small on purpose. */
+const TRIVIA_AURA = 5;
 
 /** Announce only a few milestones so screen readers hear the clock without a stream of numbers. */
 function milestone(remaining: number, duration: number | null): string | null {
@@ -77,6 +82,7 @@ export function factsLearned(round: Pick<TimedQuizRoundState, 'entries'>): numbe
 /** @purpose The live item, its explanation step and the end-of-round summary, all driven by the round hook. */
 export function SportQuizRound({ round, busy, reports = null }: { round: TimedQuizRoundState; busy: boolean; reports?: QuestionReports | null }) {
     const fx = useQuizFx();
+    const auth = useAuth();
     const live = round.live;
     const item = round.item;
     const between = round.between;
@@ -100,7 +106,9 @@ export function SportQuizRound({ round, busy, reports = null }: { round: TimedQu
         if (!reveal || cued.current === revealPosition) return;
         cued.current = revealPosition;
         fx.play(CUE[reveal]);
-    }, [revealPosition, reveal, live, fx]);
+        const userId = auth.user?.id;
+        if (reveal === 'correct' && userId) void addUserAura(userId, TRIVIA_AURA);
+    }, [revealPosition, reveal, live, fx, auth.user?.id]);
     if (live) {
         const trueFalse = live.question.question_type === 'true_false';
         const warm = round.remainingSeconds <= 10;
@@ -146,6 +154,7 @@ export function SportQuizRound({ round, busy, reports = null }: { round: TimedQu
             <Wiggle active={shown === 'notQuite'}>
                 <Text accessibilityLiveRegion="polite" style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>{verdict(between.result)}</Text>
             </Wiggle>
+            {shown === 'correct' ? <Text>5 Aura added to your card.</Text> : null}
             {/* The right answer is highlighted with a border and a check mark (not colour alone); it glows after a right answer. */}
             {hasAnswer ? <View testID={shown === 'correct' ? 'quiz-answer-glow' : undefined} style={[styles.answerChip, shown === 'correct' && JADE_BORDER_GLOW]}>
                 <Text aria-hidden style={styles.answerCheck}>✓</Text>

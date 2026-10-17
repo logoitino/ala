@@ -5,6 +5,7 @@ import {FanTabBar} from '../FanTabBar';
 import {cloneAppRuntime,DEFAULT_APP_RUNTIME} from '@/lib/runtime';
 const mockNavigate=jest.fn(),mockEmit=jest.fn(()=>({defaultPrevented:false})),mockUpload=jest.fn();
 let mockLive=cloneAppRuntime(DEFAULT_APP_RUNTIME);
+jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 jest.mock('@/context/AppRuntimeContext',()=>({useAppRuntime:()=>({live:mockLive})}));
 jest.mock('@/context/UploadSheetContext',()=>({useUploadSheet:()=>({openUpload:mockUpload})}));
 jest.mock('@/lib/supabase',()=>({isSupabaseConfigured:false,supabase:{}}));

@@ -40,7 +40,7 @@ export function SportQuizPreparation({ snapshot, busy, onStart, initialSport = n
   <Text accessibilityRole="header" style={{ color: FOCAL.ink, fontSize: 22, fontWeight: '900' }}>{group ? `${group.label} group round` : `Ready for a round of up to ${size} questions?`}</Text>
   {group ? <Text>{`${separate ? 'This uses this week’s group round. Group play never uses up your own round.' : 'This uses your one round this week.'} Everyone in the group plays the same theme: ${group.theme ?? 'all sports'}. The group only sees that you played, never your answers.`}</Text> : null}
   {preselected ? <Text>{`Learning ${preselected.sport} this week.`}</Text> : null}
-  <Text>{`Optional testing activity. Start uses ${startSpot}: one round of up to ${size} questions, one at a time. Right or wrong, completing earns the same private Trivia Explorer badge. No money, Aura, voting or school points.`}</Text>
+  <Text>{`Optional testing activity. Start uses ${startSpot}: one round of up to ${size} questions, one at a time. A right answer adds 5 Aura to your card. Right or wrong, completing earns the same private Trivia Explorer badge. No money, voting or school points.`}</Text>
   <Text>Leaving this page, hiding the app or reaching the deadline closes the round. Leaving during an explanation also ends the round. You can always leave. The server decides whether an answer arrived in time.</Text>
   <Text>{`The clock starts when the server issues each question. Delivery uses part of your 30 or 90 seconds. A lost response may still use ${lostSpot}.`}</Text>
   <Text>Choose more time whenever you want; no reason is required.</Text>

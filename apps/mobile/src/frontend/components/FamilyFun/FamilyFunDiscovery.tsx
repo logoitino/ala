@@ -132,8 +132,9 @@ function QuizDiscovery({ overVideo, surface }: { overVideo: boolean; surface: Di
   const open=()=>router.push('/sport-quiz');
   const dismiss=()=>{ setDismissed(key); if (key) AsyncStorage.setItem(TRIVIA_NOTICE_WEEK, key).catch(() => {}); };
   if (surface === 'home') {
-    if (homeStopped || (quiz.loading && !snapshot && !quiz.error)) return null;
-    const kind = snapshot?.scheduled_topic === 'fun' || snapshot?.scheduled_topic === 'sport' ? snapshot.scheduled_topic : null;
+    // A failed read retries quietly. The invite appears only when a round can actually start.
+    if (homeStopped || !snapshot || snapshot.availability !== 'ready' || !!quiz.error) return null;
+    const kind = snapshot.scheduled_topic === 'fun' || snapshot.scheduled_topic === 'sport' ? snapshot.scheduled_topic : null;
     return <TriviaSideNotice busy={!!quiz.busy} subject={thisWeekSubject(kind)} onPlay={() => { dismiss(); router.push('/sport-quiz?play=1' as Href); }} onDismiss={dismiss} />;
   }
   const skip=async()=>{const captured=key;const receipt=await quiz.skip();if(currentKey.current===captured)setFailedSkip(receipt?.outcome==='skipped'?null:captured);};

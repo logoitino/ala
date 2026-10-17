@@ -239,12 +239,13 @@ function SportQuizContent({ quiz, initialSport, learnAthlete, autoPlay }: {
  {quiz.loading && !s ? <Text>Checking quiz availability…</Text> : null}{!s && !quiz.loading && !quiz.error ? <Text>Trivia is not available for this account. You can keep browsing.</Text> : null}
  {quiz.error ? <Text accessibilityRole="alert">{quiz.error}</Text> : null}{round.error ? <Text accessibilityRole="alert">{round.error}</Text> : null}
  {life.error && !life.switchedOff ? <Text accessibilityRole="alert">{life.error}</Text> : null}
- <QuizButton label="Refresh quiz" quiet disabled={busy} onPress={() => { void quiz.refresh(); void life.refresh(); void level.refresh(); }}/>
+ {!s && quiz.error ? <QuizButton label="Refresh quiz" quiet disabled={busy} onPress={() => { void quiz.refresh(); void life.refresh(); void level.refresh(); }}/> : null}
  {s ? <><Text>{`UTC week starts ${s.week_start}; next week ${s.week_end}.`}</Text>
  {separate && idle && s.profile_id ? <SportQuizAllowances snapshot={s} life={lifeRow} headerRef={weekRef}/> : null}
  {idle && s.profile_id ? <SportQuizLevel state={level}/> : null}
  {s.availability !== 'ready' ? <Text>{s.availability === 'paused' ? 'Sport Pop Quiz is paused. Private history remains available.' : s.availability === 'not_enrolled' ? 'Trivia is not available for this account yet.' : 'Trivia is unavailable for this account right now.'}</Text> : null}
  {idle && !round.ended && s.availability === 'ready' && !s.week_spent && !groupPrep ? <SportQuizPreparation snapshot={s} busy={busy || quiz.loading} initialSport={initialSport} quickStart={autoPlay && !noticeSaved} onStart={(...args) => { void start(...args); }}/> : null}
+ {!inRound && !round.pendingStart ? <QuizButton label="Refresh quiz" quiet disabled={busy} onPress={() => { void quiz.refresh(); void life.refresh(); void level.refresh(); }}/> : null}
  {idle && !round.ended && s.availability === 'ready' && !groupSpent && groupPrep ? <SportQuizPreparation key={groupPrep.groupId} snapshot={s} busy={busy || quiz.loading} group={{ label: groupPrep.label, theme: groupPrep.theme }} onCancel={() => setGroupPrep(null)} onStart={(_topic, _sport, duration) => { void start('sport', null, duration, groupPrep.groupId); }}/> : null}
  {round.pendingStart ? <><Text>We couldn’t confirm Start. You can retry the same choices while this page stays open and before time runs out.</Text><QuizButton label="Retry original Start" disabled={busy} onPress={() => { void round.retryStart(); }}/></> : null}
  {inRound || round.pendingStart || s.attempt?.status === 'issued' ? <QuizButton label="End round" quiet disabled={quiz.busy==='erase'} onPress={() => round.leave('user_end')}/> : null}

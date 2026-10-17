@@ -418,7 +418,7 @@ interpret missing campaigns/questions or an unavailable API as a healthy zero.
 2. Quiz: choose a sport explicitly; answer one question, including an incorrect answer.
    Check the explanation and private Sport Learner completion badge. Retry a lost answer
    response with the same request/choice; another sport must not issue a second question
-   that week. No money, Aura, fan vote or public school points change.
+   that week. A right answer adds 5 Aura to the card. No money, fan vote or public school points change.
 3. Compare local Not now with server-confirmed Skip this week. Simulate a failed Skip/read:
    do not claim it saved. Refresh and check private prior badges/corrections while paused.
    Verify the canonical UTC Monday boundary on the server; device clock is not authority.

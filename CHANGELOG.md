@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-17 — Profiles, Local, and trivia Aura
+
+Athlete profiles from Highlights and the Local pill stay open. A trivia side notice appears only when a round can start. A right answer adds 5 Aura to the card. Six IQ questions are written for the weekly mix and are not applied yet.
+
 ## 2026-10-17 — Database updates wait on admin
 
 A control whose database update is not applied no longer paints a red notice on Activity, workout challenges, or challenge settings. Expo admin Home and the portal Health page list the control, the migration file, and the Expo desk. A real read failure still shows.

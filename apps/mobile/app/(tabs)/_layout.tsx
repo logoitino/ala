@@ -1,7 +1,7 @@
 /**
  * Fan tab bar (Highlights / Activity / Spotlight / Profile around Upload), the global upload sheet and its
- * Highlight-or-Beyond chooser. Drip lives in Profile. Hidden routes (`beyond`, `local`, `user/[id]`, `receipts`)
- * live in this group but are not bar items; Beyond and Local open from the Highlights pill row (owner 2026-10-16).
+ * Highlight-or-Beyond chooser. Drip lives in Profile. Beyond, Local, athlete profiles and receipts
+ * stay off the bar. They keep a real href: SDK 58 sends `href: null` back to Home (owner 2026-10-16).
  */
 
 import { Platform, StyleSheet } from 'react-native';
@@ -46,20 +46,20 @@ function FanTabs() {
         }}
       >
         <Tabs.Screen name="index" options={{ title: 'Home', tabBarLabel: 'Home', href: live.tabs.home ? undefined : null }} />
-        {/* Beyond and Local open from the Highlights pill row, so they are routable but not bar items. */}
-        <Tabs.Screen name="beyond" options={{ title: 'Beyond the Game', href: null }} />
-        <Tabs.Screen name="local" options={{ title: 'Local', href: null }} />
+        {/* Beyond and Local open from the Highlights pill row. The custom bar omits them; href stays set so SDK 58 does not bounce the tap back to Home. */}
+        <Tabs.Screen name="beyond" options={{ title: 'Beyond the Game' }} />
+        <Tabs.Screen name="local" options={{ title: 'Local' }} />
         <Tabs.Screen
           name="activity"
           options={{ title: 'Activity', tabBarLabel: 'Activity', href: live.tabs.activity ? undefined : null }}
         />
         <Tabs.Screen name="spotlight" options={{ title: 'Spotlight', tabBarLabel: 'Spotlight', href: live.tabs.spotlight ? undefined : null }} />
-        <Tabs.Screen name="drip" options={{ title: 'Drip', tabBarLabel: 'Drip', href: null }} />
-        <Tabs.Screen name="shop" options={{ href: null, title: 'Drip' }} />
+        <Tabs.Screen name="drip" options={{ title: 'Drip', tabBarLabel: 'Drip' }} />
+        <Tabs.Screen name="shop" options={{ title: 'Drip' }} />
         <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarLabel: 'Profile', href: live.tabs.profile ? undefined : null }} />
-        <Tabs.Screen name="athlete" options={{ href: null, title: 'Athlete' }} />
-        <Tabs.Screen name="user" options={{ href: null, title: 'Athlete' }} />
-        <Tabs.Screen name="receipts" options={{ href: null, title: 'Receipts' }} />
+        <Tabs.Screen name="athlete" options={{ title: 'Athlete' }} />
+        <Tabs.Screen name="user" options={{ title: 'Athlete' }} />
+        <Tabs.Screen name="receipts" options={{ title: 'Receipts' }} />
       </Tabs>
       <UploadChoiceSheet
         visible={Boolean(chooserVisible) && live.tabs.upload}

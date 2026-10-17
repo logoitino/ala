@@ -110,16 +110,14 @@ it('late previous-account private queue cannot leak into the next account', asyn
   await view.rerender(<FamilyFunDiscovery />); await act(async () => { finish(guardian()); });
   expect(screen.queryByRole('button', { name: 'Review fan permissions' })).toBeNull(); expect(screen.queryByText('Selected campaign: Family cheer')).toBeNull(); readOnly();
 });
-it('home shows the trivia notice and leaves Fan Zone off the Highlight', async () => {
+it('home hides the trivia notice when a round cannot start', async () => {
   mockClient.quiz = { ...quizSnapshot, availability: 'unavailable' };
   mockClient.handler = async fn => { if (fn === 'fun_snapshot') throw new Error('not applied'); return mockClient.quiz; };
   await render(<FamilyFunDiscovery surface="home" />);
-  await screen.findByText('Pop Quiz');
-  expect(screen.queryByText('Fan Zone is unavailable.')).toBeNull();
+  await act(async () => {});
+  expect(screen.queryByText('Pop Quiz')).toBeNull();
   expect(screen.queryByRole('button', { name: 'Refresh quiz' })).toBeNull();
-  expect(screen.getByText(/This week’s five/)).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Play trivia' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Hide Sport Pop Quiz' })).toBeTruthy();
+  expect(screen.queryByText('Fan Zone is unavailable.')).toBeNull();
 });
 it('home Play opens this week’s round', async () => {
   const weekly = { ...quizSnapshot, preferences: { ...quizSnapshot.preferences, invitation_mode: 'weekly' as const } };
