@@ -5,7 +5,7 @@
  * @sideEffects Stripe checkout through useTipCheckout; both optional Tapua'i extras default off (LEGAL R).
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Keyboard, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Keyboard, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View, type ScrollViewInstance } from 'react-native';
 import { FeeCheckbox } from '@/components/FeeCheckbox';
 import { TipButton } from '@/components/TipButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -59,7 +59,7 @@ export function TipCheckout({ player, compact = false, hideHeader = false, embed
   }
   const busyCallbackRef = useRef(onBusyChange);
   busyCallbackRef.current = onBusyChange;
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const { startCheckout, busy } = useTipCheckout();
   const { live } = useAppRuntime();
   const { height } = useWindowDimensions();

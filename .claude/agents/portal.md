@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Maintain main's accepted read-only report shell and fixed-window pages; fan-zone exports/date ranges/Product workbench/Health template are not main capabilities until a scoped integration is assigned.
+**Now:** Maintain main's accepted read-only report shell and fixed-window pages; fan-zone exports/date ranges/Product workbench/Health template are not main capabilities until a scoped integration is assigned. Health lists controls whose database update is not applied.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 

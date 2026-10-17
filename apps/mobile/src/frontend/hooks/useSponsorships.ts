@@ -20,41 +20,6 @@ export type RecordSponsorshipInput = {
   tier: SponsorshipTierId;
 };
 
-function asText(value: unknown, fallback = ''): string {
-  return typeof value === 'string' ? value.trim() : fallback;
-}
-
-function parseSponsorship(row: Record<string, unknown>): Sponsorship | null {
-  const id = asText(row.id);
-  const businessName = asText(row.business_name);
-  if (!id || !businessName) return null;
-  const tierRaw = asText(row.tier, 'silver').toLowerCase();
-  const tier: SponsorshipTierId =
-    tierRaw === 'gold' || tierRaw === 'platinum' ? tierRaw : 'silver';
-  const cents = Number(row.amount_cents);
-  const aura = Number(row.aura_points);
-  return {
-    id,
-    sponsor_user_id: asText(row.sponsor_user_id) || null,
-    business_name: businessName,
-    logo_url: asText(row.logo_url),
-    school_team: asText(row.school_team),
-    tier,
-    amount_cents: Number.isFinite(cents) ? Math.max(0, Math.round(cents)) : 0,
-    aura_points: Number.isFinite(aura) ? Math.max(0, Math.round(aura)) : 0,
-    billing_interval: asText(row.billing_interval, 'month') || 'month',
-    status: asText(row.status, 'active') || 'active',
-    created_at: asText(row.created_at) || undefined,
-  };
-}
-
-function parseRows(rows: unknown): Sponsorship[] {
-  if (!Array.isArray(rows)) return [];
-  return rows
-    .map((row) => (row && typeof row === 'object' ? parseSponsorship(row as Record<string, unknown>) : null))
-    .filter((row): row is Sponsorship => Boolean(row));
-}
-
 /**
  * @purpose Load active Local Team Boosters from `sponsorships` (demo rail when empty / RPC missing).
  * @returns `{ sponsors, loading, refresh, recordSponsorship }`.

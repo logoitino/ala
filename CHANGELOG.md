@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-17 — Database updates wait on admin
+
+A control whose database update is not applied no longer paints a red notice on Activity, workout challenges, or challenge settings. Expo admin Home and the portal Health page list the control, the migration file, and the Expo desk. A real read failure still shows.
+
 ## 2026-10-17 — Coach-level and Rally share handoff
 
 The documents now follow the same chain as the build: Highlights through Engineering to the CTO. The share sheet is in the current work. Counsel and the database update stay open.

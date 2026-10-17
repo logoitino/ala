@@ -1,6 +1,5 @@
 import { createContext, forwardRef, useCallback, useContext, useEffect, useRef, type ReactNode } from 'react';
 import {
-  ScrollView,
   View,
   type LayoutChangeEvent,
   type NativeScrollEvent,
@@ -8,6 +7,8 @@ import {
   type ScrollViewProps,
   type StyleProp,
   type ViewStyle,
+  type ScrollViewInstance,
+  type ViewInstance,
 } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -47,7 +48,7 @@ type ScrollFxScrollViewProps = Omit<ScrollViewProps, 'onScroll'> & {
  * @returns Reanimated `ScrollView` inside a measuring frame; all other `ScrollView` props pass through.
  * @sideEffects `measureInWindow` on layout so child items can convert window coords to content offsets.
  */
-export const ScrollFxScrollView = forwardRef<ScrollView, ScrollFxScrollViewProps>(function ScrollFxScrollView(
+export const ScrollFxScrollView = forwardRef<ScrollViewInstance, ScrollFxScrollViewProps>(function ScrollFxScrollView(
   { children, onScroll, scrollEventThrottle: _throttle, ...rest },
   ref,
 ) {
@@ -55,7 +56,7 @@ export const ScrollFxScrollView = forwardRef<ScrollView, ScrollFxScrollViewProps
   const viewportH = useSharedValue(0);
   const frameTop = useSharedValue(0);
   const lastJs = useSharedValue(0);
-  const frameRef = useRef<View>(null);
+  const frameRef = useRef<ViewInstance>(null);
   const jsListener = useRef(onScroll);
   jsListener.current = onScroll;
 
@@ -124,7 +125,7 @@ type ScrollFxItemProps = {
 export function ScrollFxItem({ children, index = 0, variant = 'rise', exitFade = true, style }: ScrollFxItemProps) {
   const fx = useContext(ScrollFxContext);
   const reduceMotion = useReducedMotion();
-  const ref = useRef<View>(null);
+  const ref = useRef<ViewInstance>(null);
   const top = useSharedValue(-1);
   const height = useSharedValue(0);
   const enter = useSharedValue(0);

@@ -72,12 +72,11 @@ export const FINANCE_DATA_CATALOG: FinanceColumn[] = [
   { table: 'profiles', column: 'stripe_connect_id', unit: 'text', meaning: 'Stripe Connect account for a payee profile.', treatment: 'control', books: 'Routing only', owner: 'CONNECT' },
   { table: 'profiles', column: 'stripe_onboarding_complete', unit: 'flag', meaning: 'Connect onboarding finished.', treatment: 'control', books: 'Payout readiness', owner: 'CONNECT' },
   { table: 'profiles', column: 'payouts_enabled', unit: 'flag', meaning: 'Stripe allows payouts to this account.', treatment: 'control', books: 'Payout readiness', owner: 'CONNECT' },
-  { table: 'payout_flag_overrides', column: 'payouts_enabled', unit: 'flag', meaning: 'Requested payout-enabled value for a profile or custodial account; applied only after a second admin approves.', treatment: 'control', books: 'Payout readiness control only; no journal posting or money movement.', owner: 'CONNECT' },
   { table: 'profiles', column: 'malo_frozen', unit: 'flag', meaning: 'Compliance freeze: this profile cannot receive donations.', treatment: 'control', books: 'Blocks new donation rows', owner: 'COMPLIANCE' },
   { table: 'schools_and_teams', column: 'malo_frozen', unit: 'flag', meaning: "Compliance freeze on a school's athletes.", treatment: 'control', books: 'Blocks new donation rows', owner: 'COMPLIANCE' },
   { table: 'custodial_accounts', column: 'stripe_connect_id', unit: 'text', meaning: "Guardian's Connect account for one athlete's money.", treatment: 'control', books: 'Routing only', owner: 'CUSTODIAL' },
   { table: 'custodial_accounts', column: 'payouts_enabled', unit: 'flag', meaning: 'Payouts allowed on the custodial account.', treatment: 'control', books: 'Payout readiness', owner: 'CUSTODIAL' },
-  { table: 'payout_flag_overrides', column: 'payouts_enabled', unit: 'flag', meaning: 'The transfers setting a two-admin override asks for (VERIFY-02); applied only after an independent second admin approves.', treatment: 'control', books: 'Payout readiness', owner: 'CONNECT' },
+  { table: 'payout_flag_overrides', column: 'payouts_enabled', unit: 'flag', meaning: 'The transfers setting a two-admin override asks for (VERIFY-02); applied only after an independent second admin approves. No journal posting or money movement.', treatment: 'control', books: 'Payout readiness', owner: 'CONNECT' },
 ];
 
 /**

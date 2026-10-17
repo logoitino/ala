@@ -41,6 +41,11 @@ it('inbox uses truthful workout context/mute and no fake Watch destination',asyn
  await render(<ChallengeInbox/>);expect(await screen.findByText("Mele invited you to try Sione's workout")).toBeTruthy();expect(screen.queryByLabelText(/Watch/)).toBeNull();
  await fireEvent.press(screen.getByLabelText('Mute invites from Mele'));expect(apiMock.setChallengeMute).toHaveBeenCalledWith('friend1',true,A.profile.id);expect(await screen.findByText(/Invites from this person are muted/)).toBeTruthy();
 });
+it('a missing database update stays off the fan inbox',async()=>{
+ apiMock.fetchChallengeInbox.mockRejectedValueOnce(Error('This control is not switched on yet: its database update has not been applied.'));
+ await render(<ChallengeInbox/>);await waitFor(()=>expect(screen.queryByText('Challenge invites')).toBeNull());
+ expect(screen.queryByText(/database update has not been applied/)).toBeNull();
+});
 it('inbox errors clear private entries and allow a real refresh rather than showing empty success',async()=>{
  const view=await render(<ChallengeInbox/>);await screen.findByText(/Mele invited/);apiMock.fetchChallengeInbox.mockRejectedValueOnce(Error('Inbox source unavailable'));
  await fireEvent.press(screen.getByLabelText('Refresh challenge invites'));expect(await screen.findByText('Inbox source unavailable')).toBeTruthy();expect(screen.queryByText(/Mele invited/)).toBeNull();expect(screen.queryByText(/No challenge invites/)).toBeNull();

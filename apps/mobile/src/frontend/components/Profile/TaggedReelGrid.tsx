@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image, StyleSheet, Text, useWindowDimensions, View, type ViewInstance } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { formatCompactCount } from '@/lib/hype';
@@ -199,7 +199,7 @@ function TaggedReelTile({
   onPress,
   onLongPress,
 }: TaggedReelTileProps) {
-  const blurTarget = useRef<View>(null);
+  const blurTarget = useRef<ViewInstance>(null);
   const story = isPhotoStory(clip);
   const photoCount = story ? Math.max(0, clip.photoCount ?? 0) : 0;
   const storyLabel = story ? `Photo story, ${photoCount} ${photoCount === 1 ? 'photo' : 'photos'}` : '';

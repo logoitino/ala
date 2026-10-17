@@ -146,7 +146,7 @@ function ReelViewPager({
   }, [clips.length, close, visibleClips.length]);
 
   const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
+    ({ viewableItems }: { viewableItems: Array<{ index?: number | null }> }) => {
       const next = viewableItems[0]?.index;
       if (typeof next === 'number') setActiveIndex(next);
     },

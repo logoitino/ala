@@ -31,6 +31,11 @@
         "create-stripe-account",
         "stripe-webhook"
       ],
+      "apiRoutes": [
+        "fan-zone-media",
+        "fan-zone-remove",
+        "fan-zone-upload"
+      ],
       "extensions": [
         "pgcrypto"
       ],
@@ -39,7 +44,8 @@
         "avatars",
         "game_highlights",
         "reel_vault",
-        "beyond_game"
+        "beyond_game",
+        "fan_zone"
       ],
       "source": "docs/engineering/HOSTING_DECISION_BRIEF.md"
     },
@@ -211,6 +217,9 @@
       "expo-video",
       "jest",
       "jest-expo",
+      "@react-native/jest-preset",
+      "@react-native/metro-config",
+      "@expo/dom-webview",
       "react",
       "react-dom",
       "react-native",

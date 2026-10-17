@@ -1,5 +1,7 @@
-/** Shared local controls for CHAL-01 participant panels; no data access or persistence. */
+/** Shared local controls for CHAL-01 participant panels; no data access or persistence.
+ * A missing database update is not painted here. Admin Home and portal Health list it. */
 import { Text, StyleSheet } from 'react-native';
+import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { HapticPressable } from '@/components/UI/HapticPressable';
 import { FOCAL } from '@/theme/motion';
 
@@ -19,12 +21,14 @@ export function ChallengeButton({ label, onPress, disabled = false, selected = f
   );
 }
 
-/** @purpose Truthful loading/error/action notice; unavailable is not a healthy empty source. */
+/** @purpose Truthful loading/error/action notice; unavailable is not a healthy empty source.
+ * The missing-database sentence stays off the fan screen. */
 export function ChallengeFeedback({ error, notice, reading }: { error: string | null; notice: string | null; reading: boolean }) {
+  const shown = error === NOT_SWITCHED_ON ? null : error;
   return (
     <>
       {reading ? <Text style={styles.reading}>Loading challenges…</Text> : null}
-      {error ? <Text accessibilityRole="alert" style={[styles.feedback, styles.error]}>{error}</Text> : null}
+      {shown ? <Text accessibilityRole="alert" style={[styles.feedback, styles.error]}>{shown}</Text> : null}
       {notice ? <Text accessibilityLiveRegion="polite" style={[styles.feedback, styles.notice]}>{notice}</Text> : null}
     </>
   );

@@ -16,6 +16,7 @@ import {
   Text,
   TextInput,
   View,
+  type ScrollViewInstance,
 } from 'react-native';
 
 import { ScrollFxItem, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
@@ -229,7 +230,7 @@ export default function LocalTab() {
   const [highlightedSponsorId, setHighlightedSponsorId] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const lastTypeHaptic = useRef(0);
-  const sponsorRailRef = useRef<ScrollView>(null);
+  const sponsorRailRef = useRef<ScrollViewInstance>(null);
   const sponsorX = useRef<Record<string, number>>({});
 
   useEffect(() => {

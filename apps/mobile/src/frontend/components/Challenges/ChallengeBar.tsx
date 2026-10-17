@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 import { CHALLENGE_PRESETS,CHALLENGE_PRESET_LABEL,CHALLENGE_REASON_LABEL } from '@tapuai/shared-types/challenges';
 import { fetchChallengeCounts,respondToChallenge,inviteFriendToChallenge,fetchChallengeFriends } from '@/lib/challenges';
 import { useChallenges } from '@/hooks/useChallenges';
+import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { ChallengeButton,ChallengeFeedback } from './ChallengeControls';
 import { COACH_LEVEL_BADGE, COACH_LEVEL_SHEET } from '@/lib/safetyLabels';
 /** @purpose Root mounts only on the dedicated Beyond legacy workout list; active follows card/route focus.
@@ -17,6 +18,7 @@ export function ChallengeBar({reelId,active,coachLevel=false}:{reelId:string;act
  const friendModel=useChallenges(`friends:${reelId}`,active&&inviting,readFriends);
  const disabled=model.busy||model.reading||!model.ready;
  const post=model.data;
+ if (model.error === NOT_SWITCHED_ON) return null;
  return <View><Text style={{fontWeight:'700'}}>Workout challenges</Text>
   <ChallengeFeedback error={model.error} notice={model.notice} reading={model.reading}/>
   {!model.canRead?<Text>Sign in to respond, or return when this workout is active.</Text>:null}

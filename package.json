@@ -42,7 +42,8 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "expo-video@57.0.5": "patches/expo-video@57.0.5.patch"
+      "expo-video@58.0.11": "patches/expo-video@58.0.11.patch",
+      "expo@58.0.14": "patches/expo@58.0.14.patch"
     }
   }
 }

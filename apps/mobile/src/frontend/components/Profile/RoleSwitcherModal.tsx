@@ -15,6 +15,7 @@ import {
   Text,
   TextInput,
   View,
+  type ScrollViewInstance,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
@@ -88,7 +89,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
   // Optional fun-fact step, shown only after a first claim has already saved.
   const [funStep, setFunStep] = useState(false);
   // The step sits at the top of the list, but Apply is at the bottom: bring it into view when it appears.
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   useEffect(() => { if (funStep) scrollRef.current?.scrollTo?.({ y: 0, animated: false }); }, [funStep]);
   const translateY = useSharedValue(0);
   const dim = useSharedValue(0);

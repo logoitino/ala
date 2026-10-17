@@ -1,0 +1,34 @@
+diff --git a/types/react-native-web.d.ts b/types/react-native-web.d.ts
+index 1fc21a2..bee6092 100644
+--- a/types/react-native-web.d.ts
++++ b/types/react-native-web.d.ts
+@@ -90,8 +90,7 @@ declare module 'react-native' {
+     transitionProperty?: string | string[];
+     /** @platform web */
+     transitionTimingFunction?: string | Function | (string | Function)[];
+-    /** @platform web */
+-    userSelect?: string;
++    // Patched: React Native 0.88 types userSelect natively; this broader web declaration breaks StyleSheet.create results.
+     /** @platform web */
+     visibility?: string;
+     /** @platform web */
+@@ -141,8 +140,7 @@ declare module 'react-native' {
+     backgroundOrigin?: 'border-box' | 'content-box' | 'padding-box';
+     /** @platform web */
+     clip?: string;
+-    /** @platform web */
+-    cursor?: string;
++    // Patched: React Native 0.88 types cursor natively; this broader web declaration breaks StyleSheet.create results.
+     /** @platform web */
+     gridAutoColumns?: string;
+     /** @platform web */
+@@ -188,7 +186,8 @@ declare module 'react-native' {
+     /** @platform web */
+     transitionDelay?: string | string[];
+     /** @platform web */
+-    transitionDuration?: string | string[];
++    // Patched: match ViewStyle so StyleSheet.create keeps inferring merged View and Text styles.
++    transitionDuration?: string | string[] | number;
+     /** @platform web */
+     transitionProperty?: string | string[];
+     /** @platform web */

@@ -1,7 +1,7 @@
 /** Main-admin report routes share one responsive scroll surface with the navigation header.
  * Page-specific slices preserve the existing session and expose loading, missing and failed reads. */
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Platform, RefreshControl, ScrollView, Text, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
+import { ActivityIndicator, Platform, RefreshControl, ScrollView, Text, useWindowDimensions, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { utcStamp } from '@tapuai/shared-types/admin';
 import { AdminReportHeader } from '@/components/Admin/AdminChrome';
@@ -32,14 +32,14 @@ export function AdminReportScreen({ page }: { page: AdminReportPage }) {
   const data = useAdminReports(reportSectionsFor(page));
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
   const positions = useRef<Record<string, number>>({});
   const bodyOffset = useRef(0);
   const register = (id: string, event: LayoutChangeEvent) => { positions.current[id] = event.nativeEvent.layout.y; };
   const jump = (id: string) => {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       // Expo retains earlier stack screens in the DOM; only this report's scroll owner may receive focus.
-      const root = scroll.current?.getScrollableNode();
+      const root: unknown = scroll.current?.getScrollableNode();
       const section = root instanceof HTMLElement ? root.querySelector<HTMLElement>(`[id="report-${id}"]`) : null;
       section?.scrollIntoView({ behavior: 'auto', block: 'start' });
       const heading = section?.querySelector<HTMLElement>('[role="heading"]'); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }

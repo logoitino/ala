@@ -8,7 +8,7 @@
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, findNodeHandle, Image, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { AccessibilityInfo, findNodeHandle, Image, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View, type TextInstance } from 'react-native';
 import Animated, { FadeInDown, FadeInUp, useReducedMotion } from 'react-native-reanimated';
 
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
@@ -101,7 +101,7 @@ export function ReelOwnerPeek({
   // At large text sizes a pinned footer would take most of the card, so it scrolls with the content instead.
   const largeText = fontScale >= 1.3;
   const reduceMotion = useReducedMotion();
-  const nameRef = useRef<Text>(null);
+  const nameRef = useRef<TextInstance>(null);
   const { requireAuth } = useSoftWall();
   const crew = useCrew(open ? player?.id : undefined);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);

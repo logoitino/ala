@@ -264,8 +264,6 @@ export function describeEvent(event: SupervisionEvent): string {
       return keys.length ? `Changed: ${keys.join(', ')}.` : 'Privacy settings changed.';
     }
     case 'made_private': return 'The profile went back to private (no consent for public).';
-    case 'approval_requested': return 'Asked the guardian to approve a change.';
-    case 'approval_decided': return `${APPROVAL_LABEL[asApproval(d.change) ?? 'account_public']}: ${d.approved === true ? 'approved' : 'declined'}.`;
     case 'approval_requested': return Array.isArray(d.changes) && d.changes.length === 1 && d.changes[0] === 'fun_fact'
       ? 'Asked the guardian to approve a fun fact.' : 'Asked the guardian to approve a change.';
     case 'approval_decided': return d.change === 'fun_fact'

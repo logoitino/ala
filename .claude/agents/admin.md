@@ -12,7 +12,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Maintain the locally integrated Expo write desks, Beyond/workout review and Support controls; Next remains oversight only, and date-range/export/Product-workbench work from fan-zone is not integrated into main.
+**Now:** Maintain the locally integrated Expo write desks, Beyond/workout review and Support controls; Next remains oversight only, and date-range/export/Product-workbench work from fan-zone is not integrated into main. Expo admin Home lists controls whose database update is not applied.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 

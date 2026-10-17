@@ -4,6 +4,7 @@ import { Text,View } from 'react-native';
 import { fetchMyChallengeStatus,setChallengeMute,setAllowChallenges,exportMyChallengeData } from '@/lib/challenges';
 import { exportCsv } from '@/lib/csvExport';
 import { useChallenges } from '@/hooks/useChallenges';
+import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { ChallengeButton,ChallengeFeedback } from './ChallengeControls';
 // Explicit own export only. Quote cells and guard spreadsheet formulas; no payload is displayed or persisted here.
 const cell=(value:unknown)=>{const text=typeof value==='string'?value:JSON.stringify(value)??'';const safe=/^[\s\u200B-\u200F\uFEFF]*[=+@-]/u.test(text)?`'${text}`:text;return `"${safe.replace(/"/g,'""')}"`;};
@@ -12,6 +13,7 @@ function csv(data:Record<string,unknown>){const lines=['section,record,field,val
 export function ChallengeSettings({active=true}:{active?:boolean}) {
  const read=useCallback(async(actor:string|null)=>{if(!actor)throw Error('Sign in to manage challenges.');return fetchMyChallengeStatus(actor);},[]);
  const model=useChallenges('settings',active,read);const status=model.data;const disabled=model.busy||model.reading||!model.ready;
+ if (model.error === NOT_SWITCHED_ON) return null;
  return <View><Text style={{fontWeight:'700'}}>My workout challenges</Text><ChallengeFeedback error={model.error} notice={model.notice} reading={model.reading}/>
   {!model.canRead?<Text>Sign in to manage your workout challenges.</Text>:null}
   {model.canRead?<ChallengeButton label="Refresh challenge settings" disabled={model.busy||model.reading} onPress={()=>void model.refresh()}/>:null}

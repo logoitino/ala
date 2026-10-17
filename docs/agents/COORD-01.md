@@ -202,3 +202,18 @@ That apply is **$0** on the free development project unless the project is pause
 Next owners: owner for the SQL apply; TRUST_SAFETY and MINOR_SAFETY for the invite and teen-review
 decision; LEGAL for row AC; RLS_SECURITY before any hosted apply; DEVICE_QA for the share button
 and the badge on a phone.
+
+## Missing-database notices — 2026-10-17
+
+The owner asked to stop showing the red “database update has not been applied” line on Activity
+and to report those controls on the main admin portal. This Cursor session acted as coordinator.
+ENGINEERING is the lead. HIGHLIGHTS owns the fan screens. ADMIN owns the Expo Home card. PORTAL
+owns the Health list. No separate specialist process ran.
+
+Fans no longer see that sentence on challenge invites, workout challenges, or challenge settings.
+A real read failure still shows. Expo `/admin` Home and the portal Health page (`/operations`)
+list the waiting control, the migration file, and the Expo desk. No new table. SQL was not applied.
+
+Checks this session: challenge Jest 10/10; portal `missingRpc` test 1/1. Browser confirmation of
+the Health page was not run in this pass. Next owner: owner, if they want the written migrations
+applied. That apply is **$0** on the free development project unless the project is paused.

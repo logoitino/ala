@@ -101,4 +101,4 @@ Use this briefing to walk:
 2. The legal memo — especially **high-school amateurism** and **minors + money**.
 3. What “production” means: live Stripe, tightened RLS, real operator auth, custodial structure, association letters.
 
-Screenshots: Expo web stills from 13 September 2026 live in [`docs/company/press/`](../press/) (Reel, Local, Profile). Recapture from **Expo Go on a phone** for a deck — the web preview shows a DEV ROLE bar and unused desktop canvas.
+Screenshots: Expo web stills from 13 September 2026 live in [`docs/company/press/`](press/) (Reel, Local, Profile). Recapture from **Expo Go on a phone** for a deck — the web preview shows a DEV ROLE bar and unused desktop canvas.

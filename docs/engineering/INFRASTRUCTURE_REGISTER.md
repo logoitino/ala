@@ -25,7 +25,7 @@ owner-reported or unverified. Portability and exits: [PORTABILITY.md](PORTABILIT
 
 | Service | Dependencies | Environment variables (names only) | Server functions / API routes | Buckets / extensions / workflows |
 | --- | --- | --- | --- | --- |
-| Supabase (managed) | `@supabase/supabase-js`, `@supabase/ssr` | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | `create-payment-intent`, `create-stripe-account`, `stripe-webhook` | `reels`, `avatars`, `game_highlights`, `reel_vault`, `beyond_game`; `pgcrypto` |
+| Supabase (managed) | `@supabase/supabase-js`, `@supabase/ssr` | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | `create-payment-intent`, `create-stripe-account`, `stripe-webhook`; `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload` | `reels`, `avatars`, `game_highlights`, `reel_vault`, `beyond_game`, `fan_zone`; `pgcrypto` |
 | Stripe (PaymentSheet, Connect) | `@stripe/stripe-react-native`, `stripe` | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | `create-payment-intent`, `create-payout`, `create-stripe-account` | — |
 | Expo / EAS (builds, over-the-air updates) | `expo`, `expo-updates`, `expo-router`, `@expo/metro-runtime` | `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_API_ORIGIN` | — | — |
 | Apple and Google sign-in (OAuth) | `expo-apple-authentication`, `expo-auth-session`, `expo-web-browser`, `expo-crypto` | — | — | — |
@@ -34,15 +34,15 @@ owner-reported or unverified. Portability and exits: [PORTABILITY.md](PORTABILIT
 | Next.js admin portal hosting | `next` | — | — | — |
 | Engineering Support release and sensor settings | — | `EXPO_PUBLIC_SUPPORT_SENSORS_ENABLED`, `EXPO_PUBLIC_SUPPORT_RELEASE`, `EXPO_PUBLIC_SUPPORT_ENVIRONMENT`, `SUPPORT_RELEASE_ID`, `SUPPORT_ENVIRONMENT` | — | — |
 
-Local libraries (no outside service): 47. App configuration variables: `NODE_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `ANALYTICS_TEST_RESOLVER`.
+Local libraries (no outside service): 50. App configuration variables: `NODE_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `ANALYTICS_TEST_RESOLVER`.
 
 ## How deeply we are integrated with Supabase
 
 | Measure | Count | Meaning |
 | --- | --- | --- |
-| `auth.uid()` / `auth.role()` in SQL | 236 / 95 | Identity calls a non-Supabase host must provide (prefer `my_profile_id()` in new SQL) |
-| Grants to `anon` / `authenticated` / `service_role` | 330 | The PostgREST role model |
-| `storage.*` references in SQL | 96 | Storage policies and bucket rules |
+| `auth.uid()` / `auth.role()` in SQL | 246 / 108 | Identity calls a non-Supabase host must provide (prefer `my_profile_id()` in new SQL) |
+| Grants to `anon` / `authenticated` / `service_role` | 355 | The PostgREST role model |
+| `storage.*` references in SQL | 116 | Storage policies and bucket rules |
 | Realtime references in SQL / client channels | 14 / 11 | Live updates to replace on another host |
 | Realtime publication tables | 4 | `app_runtime_config`, `cheer_polls`, `game_events`, `games` |
 | Direct Supabase calls outside `lib/` | 48 in 19 files | Places a provider change must touch; may only shrink (`app:data-boundaries`) |
@@ -52,5 +52,5 @@ Local libraries (no outside service): 47. App configuration variables: `NODE_ENV
 
 - EAS build profiles: `development`, `preview`, `production`; over-the-air updates host: `u.expo.dev`.
 - CI workflows: `ci-checks.yml`.
-- Edge Functions: `create-payment-intent`, `create-stripe-account`, `stripe-webhook`. Metro API routes: `create-payment-intent`, `create-payout`, `create-stripe-account`.
+- Edge Functions: `create-payment-intent`, `create-stripe-account`, `stripe-webhook`. Metro API routes: `create-payment-intent`, `create-payout`, `create-stripe-account`, `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload`.
 

@@ -4,12 +4,14 @@ import { Text,View } from 'react-native';
 import { challengeInviteText } from '@tapuai/shared-types/challenges';
 import { fetchChallengeInbox,fetchMyChallengeStatus,setChallengeMute } from '@/lib/challenges';
 import { useChallenges } from '@/hooks/useChallenges';
+import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { ChallengeButton,ChallengeFeedback } from './ChallengeControls';
 /** @purpose Own current invitations and sender/all mute controls on Activity. */
 export function ChallengeInbox({active=true}:{active?:boolean}) {
  const read=useCallback(async(actor:string|null)=>{if(!actor)throw Error('Sign in to read challenge invites.');const [inbox,status]=await Promise.all([fetchChallengeInbox(30,actor),fetchMyChallengeStatus(actor)]);return {inbox,status};},[]);
  const model=useChallenges('inbox',active,read);
  const disabled=model.busy||model.reading||!model.ready;
+ if (model.error === NOT_SWITCHED_ON) return null;
  return <View><Text style={{fontWeight:'700'}}>Challenge invites</Text><ChallengeFeedback error={model.error} notice={model.notice} reading={model.reading}/>
   {!model.canRead?<Text>Sign in to manage your challenge invites.</Text>:null}
   {model.canRead?<ChallengeButton label="Refresh challenge invites" disabled={model.busy||model.reading} onPress={()=>void model.refresh()}/>:null}

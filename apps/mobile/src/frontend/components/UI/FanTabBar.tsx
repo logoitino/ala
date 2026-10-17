@@ -3,7 +3,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef } from 'react';
 import { Platform, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
-import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
+import type { BottomTabBarProps } from 'expo-router/tabs';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, radii } from '@/constants/theme';
@@ -81,12 +81,13 @@ function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accen
 /**
  * @purpose Fan bar: Highlights / Activity / Upload / Spotlight / Profile. Upload sits in the middle; Beyond and Local open from the Highlights pill row and Drip from Profile. A jade accent bar springs along the top edge to whichever tab is focused; every destination shares the one brand accent.
  * @param state React Navigation tab state.
- * @param navigation Tab navigator; a second tap on the focused tab pops to that tab’s `index`.
+ * @param emitter Tab event emitter; a second tap on the focused tab lets that tab’s stack pop to its `index` (SDK 58).
+ * @param navigateToTab Switches to an unfocused tab by route key.
  * @param insets Bottom safe-area for the bar padding.
  * @returns Custom tab bar with an in-slot Upload plus.
  * @sideEffects Opens `UploadSheetContext` on plus press; Reanimated spring on the indicator when focus changes.
  */
-export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
+export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
   const { openUpload } = useUploadSheet();
   const { live } = useAppRuntime();
   const slots = useRef<Record<string, { x: number; width: number }>>({});
@@ -163,17 +164,13 @@ export function FanTabBar({ state, navigation, insets }: BottomTabBarProps) {
           accentColor={BAR_ACCENT.color}
           accentMist={BAR_ACCENT.mist}
           onPress={() => {
-            const event = navigation.emit({
+            // SDK 58: the nested stack hears this tabPress and pops to `index` when the tab is already focused.
+            const event = emitter.emit({
               type: 'tabPress',
               target: route.key,
               canPreventDefault: true,
             });
-            if (event.defaultPrevented) return;
-            if (focused) {
-              navigation.navigate(route.name, { screen: 'index' });
-              return;
-            }
-            navigation.navigate(route.name);
+            if (!focused && !event.defaultPrevented) navigateToTab(route.key);
           }}
         />
       </View>

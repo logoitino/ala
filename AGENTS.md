@@ -10,7 +10,7 @@
 > CI enforces this on pull requests.
 
 
-Read the exact versioned docs at [https://docs.expo.dev/versions/v57.0.0/](https://docs.expo.dev/versions/v57.0.0/) before writing any code.
+Read the exact versioned docs at [https://docs.expo.dev/versions/v58.0.0/](https://docs.expo.dev/versions/v58.0.0/) before writing any code.
 
 Docs layout (2026-10-07): entry points at `docs/` ([README](docs/README.md) index · STATE · [ONBOARDING](docs/ONBOARDING.md) · [GLOSSARY](docs/GLOSSARY.md) code names ↔ product words); `docs/engineering/` (with `design/`), `docs/product/`, `docs/legal/`, `docs/company/`, `docs/agents/`. New docs go in the matching folder and get a row in `docs/README.md`. Readiness plan R1–R4 (dev → production): [CODE_ORGANIZATION_PLAN.md](docs/engineering/CODE_ORGANIZATION_PLAN.md). Run `pnpm check` before finishing; it includes local documentation destinations (`docs:links`), client credential markers (`security:client-keys`) and the master data map (`data:map:check`). **Data control point:** `DATA_GOVERNANCE` reviews every new or changed table, column, view, database function, export or Storage path; record it in `docs/engineering/data-ownership.json` and regenerate `docs/engineering/DATA_MAP.md` (`node scripts/data-map.mjs`) in the same change ([DATA_GOVERNANCE.md](docs/engineering/DATA_GOVERNANCE.md)). Never delete what looks dead; archive with the owner's approval. Local setup and CI use Node 24.
 
@@ -22,7 +22,7 @@ This repo is a **pnpm monorepo**.
 
 | Package | Path |
 | --- | --- |
-| `@tapuai/mobile` | `apps/mobile/` — Expo Router SDK 57 fan app + Expo `/admin` |
+| `@tapuai/mobile` | `apps/mobile/` — Expo Router SDK 58 fan app + Expo `/admin` |
 | `@tapuai/admin-portal` | `apps/admin-portal/` — Next web admin, **read-only oversight** (Home / Trends / Audience / Revenue / Health / Product, plus Analytics and Departments; inline-SVG charts in `components/charts/`; the report format — wide header, underline tabs, open panels — is the default look on every page, owner decision 2026-10-12); every write — Features/Look flags, Games, Drip, Catalogs, everything — happens only in Expo `/admin`, which this portal reads from (including `app_runtime_config`) |
 | `@tapuai/shared-types` | `packages/shared-types/` — Profile / ActionStats / Spotlight / Soft-Wall + Profile chrome / RPC shapes |
 
@@ -53,8 +53,8 @@ Path aliases (mobile): `@/*` → `apps/mobile/src/frontend/*`, `@backend/*` → 
 
 ### Tech Stack & Guardrails
 
-1. **Frontend:** React Native (Expo Router SDK 57), TypeScript, StyleSheet + `apps/mobile/src/frontend/constants/theme.ts` (Daylight default; focal hexes from `apps/mobile/src/frontend/theme/motion.ts`). Skia glow via `@shopify/react-native-skia` (`Effects/GlowingNeonBorder`). **Not NativeWind/Tailwind** in mobile. Admin portal stub uses Tailwind.
-2. **Video:** `expo-video` only. Do not use `expo-av` for the reel player (it is still in `package.json` but must not be wired). Do not set `useCaching: true`. PLAY-01 patches 57.0.5's web play promises and pause intent; pnpm applies the versioned patch during install. Review/remove or port it when upgrading Expo Video; app try/catch cannot catch a discarded DOM play promise. See [PLAY-01](docs/agents/PLAY-01.md).
+1. **Frontend:** React Native (Expo Router SDK 58), TypeScript, StyleSheet + `apps/mobile/src/frontend/constants/theme.ts` (Daylight default; focal hexes from `apps/mobile/src/frontend/theme/motion.ts`). Skia glow via `@shopify/react-native-skia` (`Effects/GlowingNeonBorder`). **Not NativeWind/Tailwind** in mobile. Admin portal stub uses Tailwind.
+2. **Video:** `expo-video` only. Do not use `expo-av` for the reel player (it is still in `package.json` but must not be wired). Do not set `useCaching: true`. PLAY-01 patches Expo Video's web play promises and pause intent (ported from 57.0.5 to 58.0.11 with SDK 58); pnpm applies the versioned patch during install. Review/remove or port it when upgrading Expo Video; app try/catch cannot catch a discarded DOM play promise. See [PLAY-01](docs/agents/PLAY-01.md). `patches/expo@58.0.14.patch` removes web-only style declarations that clash with React Native 0.88's own types; drop it once Expo fixes them.
 3. **Backend & Realtime:** Supabase PostgreSQL, Auth, Realtime WebSockets, Storage buckets `game_highlights`, `reels`, `avatars`.
 4. **Payments:** Stripe PaymentSheet (`@stripe/stripe-react-native`) + Expo API routes. Connect Express Account Links are minted only by Edge Function `create-stripe-account` with the session JWT (`sk_` never in `apps/mobile/src/frontend/`). Native vs web PaymentSheet is split by Metro platform files.
 5. **Environment:** Mobile client keys must start with `EXPO_PUBLIC_` in `apps/mobile/.env.local`. Admin portal uses `NEXT_PUBLIC_*` in `apps/admin-portal/.env.local`. Never `aladb.env` or secrets under `src/frontend/`.
