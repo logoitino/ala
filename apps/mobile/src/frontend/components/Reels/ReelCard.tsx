@@ -868,8 +868,8 @@ function ReelVideoLayer({ clipId, videoUrl, active, focused, locked, muted, onPl
   const lastMutedRef = useRef(muted);
   const controllerRef = useRef<ReturnType<typeof createReelPlaybackController> | null>(null);
 
-  // A mounted offscreen card starts with no source, preserving the no-decoder/no-network boundary.
-  const videoPlayer = useVideoPlayer(null, (instance) => { instance.loop = true; instance.muted = true; });
+  // Only the card on screen is given a file. A mounted neighbor stays on an empty player.
+  const videoPlayer = useVideoPlayer(active && videoUrl ? videoUrl : null, (instance) => { instance.loop = true; instance.muted = true; });
   const resetLoad = useCallback(() => {
     loadStartedAtRef.current = Date.now();
     firstFrameLoggedRef.current = false;
@@ -912,10 +912,18 @@ function ReelVideoLayer({ clipId, videoUrl, active, focused, locked, muted, onPl
   }, [videoPlayer, resetLoad]);
 
   useEffect(() => {
-    if (!active || !videoUrl || loadedUriRef.current === videoUrl) return;
+    const controller = controllerRef.current;
+    if (!controller) return;
+    // The player hook drops the file when this card is not the one on screen.
+    if (!active || !videoUrl) {
+      loadedUriRef.current = '';
+      controller.pause();
+      return;
+    }
+    if (loadedUriRef.current === videoUrl) return;
     loadedUriRef.current = videoUrl;
     resetLoad();
-    void controllerRef.current?.load(videoUrl);
+    void controller.load(videoUrl);
   }, [active, videoUrl, videoPlayer, resetLoad]);
 
   useEffect(() => {
@@ -961,6 +969,7 @@ function ReelVideoLayer({ clipId, videoUrl, active, focused, locked, muted, onPl
     if (controllerRef.current?.isCurrentReady() && latest.current.active && latest.current.focused && !latest.current.locked) latest.current.onLoopEnd();
   });
 
+  if (!active) return <View style={styles.videoFill} />;
   return <VideoView player={videoPlayer} style={styles.videoFill} contentFit="cover" nativeControls={false} surfaceType="textureView" allowsVideoFrameAnalysis={false} allowsPictureInPicture={false} playsInline />;
 }
 

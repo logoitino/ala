@@ -14,6 +14,7 @@ import type { Player } from '@/types/database';
  * @param playerId `players.id` (demo/dev ids skip the network).
  * @param player Optional hydrated player so height/weight paint without a second round-trip.
  * @param targetSport Explicit selected sport from the linked athlete's own profile, when known.
+ * @param enabled When false, skip the network read until this profile is the open screen.
  * @returns `{ stats, loading, refresh }`.
  * @sideEffects `fetchAthleteStats` → `players` / `athlete_career_stats` / `athlete_game_logs`.
  */
@@ -21,6 +22,7 @@ export function useAthleteStats(
   playerId: string | null | undefined,
   player?: Player | null,
   targetSport?: string | null,
+  enabled = true,
 ) {
   const hydratedPlayer = player?.id === playerId?.trim() ? player : null;
   const empty = useMemo(() => emptyAthleteStats(hydratedPlayer, targetSport), [hydratedPlayer, targetSport]);
@@ -56,11 +58,12 @@ export function useAthleteStats(
   }, [empty, player, playerId, targetSport]);
 
   useEffect(() => {
+    if (!enabled) return;
     void refresh();
     return () => { request.current += 1; };
-  }, [refresh]);
+  }, [enabled, refresh]);
 
   // Effects run after paint; this boundary prevents even one frame of the previous athlete's totals.
   return { stats: isCurrent ? state.stats : empty,
-    loading: isCurrent ? state.loading : Boolean(playerId), refresh };
+    loading: !enabled ? false : isCurrent ? state.loading : Boolean(playerId), refresh };
 }

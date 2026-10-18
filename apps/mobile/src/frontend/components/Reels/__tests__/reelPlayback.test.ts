@@ -110,6 +110,14 @@ it('does not restart actual playback to change mute or retry an offscreen reques
   expect(f.player.play).toHaveBeenCalledTimes(1); f.controller.pause(); f.allowed(false); f.controller.retryPlay();
   expect(f.player.play).toHaveBeenCalledTimes(1);
 });
+it('drops the source when the card leaves the screen so a late ready event cannot play', async () => {
+  const f = fixture(); const loading = deferred(); f.player.replaceAsync.mockReturnValueOnce(loading.promise);
+  const pending = f.controller.load('a.mp4'); await Promise.resolve();
+  const released = f.controller.release(); loading.resolve(); await pending; await released;
+  f.controller.statusChanged('readyToPlay'); f.controller.playingChanged(true);
+  expect(f.player.play).not.toHaveBeenCalled();
+  expect(f.player.replaceAsync).toHaveBeenLastCalledWith(null);
+});
 it('reports a delayed web media error before source metadata or sourceChange can load', async () => {
   const f = fixture(); f.player.status = 'loading'; f.player.replaceAsync.mockImplementationOnce(async () => undefined);
   await f.controller.load('a.mp4'); f.controller.statusChanged('error', { message: 'Unsupported media' });

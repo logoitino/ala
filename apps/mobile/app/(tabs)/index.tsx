@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { clearVideoCacheAsync } from 'expo-video';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +28,7 @@ import {
   HIGHLIGHT_CLIPS,
   HIGHLIGHT_FEED_BEYOND,
   HIGHLIGHT_FEED_HOME,
+  homePagerClips,
   isBeyondHighlight,
   isSekiHighlight,
   pinFeedOrder,
@@ -84,6 +85,9 @@ export default function HighlightsTab() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [cacheReady, setCacheReady] = useState(false);
+  // Web server render and the first browser paint share this shell. The feed mounts after that.
+  const [clientFeed, setClientFeed] = useState(Platform.OS !== 'web');
+  const [extrasReady, setExtrasReady] = useState(false);
   const [tipTarget, setTipTarget] = useState<{ player: Player; reelId?: string } | null>(null);
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const [feedFilter, setFeedFilter] = useState<HighlightFeedFilter>('home');
@@ -92,6 +96,10 @@ export default function HighlightsTab() {
   useEffect(() => {
     if (!runtime.tabs.beyond && feedFilter === 'beyond') setFeedFilter('home');
   }, [feedFilter, runtime.tabs.beyond]);
+  useEffect(() => {
+    setClientFeed(true);
+    setExtrasReady(true);
+  }, []);
   const [pendingClipId, setPendingClipId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,7 +150,7 @@ export default function HighlightsTab() {
         players[index % Math.max(players.length, 1)] ??
         null,
     }));
-    return [...uploaded, ...seeded].filter((item) => {
+    return homePagerClips(uploaded, seeded).filter((item) => {
       const uploadedReel = reels.find((reel) => reel.id === item.clip.id);
       return !reelHiddenForUser(uploadedReel ?? { id: item.clip.id }, user?.id, hiddenIds);
     });
@@ -453,7 +461,7 @@ export default function HighlightsTab() {
         style={styles.fill}
         onLayout={(event) => setPageHeight(event.nativeEvent.layout.height)}
       >
-        {pageHeight === 0 || !cacheReady ? (
+        {pageHeight === 0 || !cacheReady || !clientFeed ? (
           <View style={styles.boot}>
             <ActivityIndicator color={colors.primary} />
           </View>
@@ -504,6 +512,7 @@ export default function HighlightsTab() {
             // 2026-09 fix: RN's default (10) meant the first render mounted up to 10 `ReelCard`s at
             // once — see ReelCard.tsx's `videoPlayer` comment for what that caused on a real device.
             // `windowSize`/`maxToRenderPerBatch` below only bound growth after the initial render.
+            // The neighbor stays mounted as a poster. ReelVideoLayer releases its file until it is on screen.
             initialNumToRender={2}
             windowSize={2}
             maxToRenderPerBatch={1}
@@ -710,8 +719,8 @@ export default function HighlightsTab() {
             </AnimatedButton>
           ) : null}
           <SlangGuideBanner />
+          {extrasReady ? <FamilyFunDiscovery surface="home" /> : null}
         </View>
-        <FamilyFunDiscovery surface="home" />
         <HomeSearchOverlay
           open={searchOpen && runtime.layouts.homeSearch}
           query={searchQuery}

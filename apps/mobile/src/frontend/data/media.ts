@@ -7,6 +7,11 @@ export const HIGHLIGHT_MAX_MS = HIGHLIGHT_MAX_SECONDS * 1000;
 export const HIGHLIGHT_TOO_LONG =
   'Highlight clips must be 45 seconds or less to showcase your best plays!';
 
+/** Hard stop before Storage. A compressed 45s clip at the upload bitrate stays under this. */
+export const HIGHLIGHT_MAX_BYTES = 8 * 1024 * 1024;
+
+export const HIGHLIGHT_TOO_BIG = 'This clip is too big to upload. Keep it under 8 MB.';
+
 export const HIGHLIGHT_OPTIMIZING = 'Optimizing highlight quality...';
 
 export const HIGHLIGHT_PICKER_TITLE = 'Pick a Highlight ⚡';

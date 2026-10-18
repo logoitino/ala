@@ -1,6 +1,6 @@
 /**
  * Picking-to-upload pipeline for media: names the Storage buckets (`reels`, `game_highlights`, `avatars`, `reel_vault`),
- * enforces the 45 s Highlight cap (normalising picker durations that arrive in seconds or milliseconds), compresses
+ * enforces the 45 s Highlight cap and the 8 MB upload cap, compresses
  * video with `react-native-compressor`, and uploads Highlights, photo-story photos and avatars. Also owns the one
  * `reels` insert path shared by videos and photo stories (`insertReelRow`) and the JPEG metadata stripper that keeps
  * GPS / camera data out of public photos (PHOTO_STORIES_DESIGN.md "Privacy and safety"). Process-wide helper, so it
@@ -13,8 +13,10 @@ import { Platform, TurboModuleRegistry } from 'react-native';
 
 import { RIGHTS_VERSION } from '@/data/contentRights';
 import {
+  HIGHLIGHT_MAX_BYTES,
   HIGHLIGHT_MAX_MS,
-  HIGHLIGHT_OPTIMIZING } from '@/data/media';
+  HIGHLIGHT_OPTIMIZING,
+  HIGHLIGHT_TOO_BIG } from '@/data/media';
 import { parseReelCategory, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
 import { mediaValueToStore, publicMediaUrl } from '@/lib/media';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -31,8 +33,8 @@ export const REEL_VAULT_PREFIX = 'reelvault:';
 const STORY_PHOTO_MAX_EDGE = 1600;
 const STORY_PHOTO_QUALITY = 0.85;
 
-/** 1080p vertical, ~2.5 Mbps — fits a 45s Seki clip without crushing jade edges. */
-const VERTICAL_1080_BITRATE = 2_500_000;
+/** 1080p vertical, ~1.2 Mbps — a 45s clip stays under the 8 MB upload cap. */
+const VERTICAL_1080_BITRATE = 1_200_000;
 const VERTICAL_MAX_EDGE = 1080;
 
 export type CompressProgress = (ratio: number) => void;
@@ -307,6 +309,7 @@ export async function uploadHighlight({
     throw new Error('Sign in before uploading a Vault clip.');
   }
   const body = await bytesFromUri(localUri);
+  if (body.byteLength > HIGHLIGHT_MAX_BYTES) throw new Error(HIGHLIGHT_TOO_BIG);
   onProgress?.(0.48);
 
   let videoUrl: string;

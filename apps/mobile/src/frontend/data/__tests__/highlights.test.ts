@@ -5,6 +5,7 @@ import {
   parseReelCategory,
   PHOTO_DESCRIPTION_MAX,
   PHOTO_STORY_MAX_PHOTOS,
+  homePagerClips,
   pinFeedOrder,
   rankHomeFeed,
   REEL_CATEGORY_PILLS,
@@ -31,6 +32,16 @@ describe('pinFeedOrder', () => {
     expect(pinned.map((item) => item.clip.id)).toEqual(['a', 'b', 'c']);
     expect(pinned[0].clip.sekiCount).toBe(2);
     expect(pinned[0]).toBe(after[1]);
+  });
+
+  it('pages uploaded clips and leaves empty samples off once a file exists', () => {
+    const sample = { clip: { videoUrl: '', mediaType: undefined, photoCount: 0 } };
+    const upload = { clip: { videoUrl: 'https://example.com/a.mp4', mediaType: undefined, photoCount: 0 } };
+    const story = { clip: { videoUrl: '', mediaType: 'photo_story' as const, photoCount: 2 } };
+    const brokenStory = { clip: { videoUrl: '', mediaType: 'photo_story' as const, photoCount: 0 } };
+    expect(homePagerClips([upload, brokenStory], [sample])).toEqual([upload]);
+    expect(homePagerClips([story], [sample])).toEqual([story]);
+    expect(homePagerClips([brokenStory], [sample])).toEqual([sample]);
   });
 
   it('drops ids that are no longer in the list', () => {

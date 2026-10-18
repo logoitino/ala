@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-18 — Home shows a clip that has a file
+
+Once an uploaded Highlight or a finished photo story is available, Home no longer pages the five sample cards that have no video. Those names remain when the feed has nothing else to play.
+
+## 2026-10-18 — One live Highlight, and a smaller upload
+
+Home keeps a decoded video only for the clip on screen. The next card is a poster until you swipe to it. A Highlight upload still has to be 45 seconds or less, and it also has to be under 8 MB. Profile numbers and the Home trivia notice load when that part is open. The trivia database was not changed.
+
 ## 2026-10-17 — Fan Zone and Beyond on development
 
 Fan Zone and Beyond are on the development project. The extra unique indexes on storage objects were removed because that table is owned by the storage admin role. The write guards are triggers, and both media buckets are private. An admin still has to turn the switches on. Coach-level SQL was not run.

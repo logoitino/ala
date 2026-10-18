@@ -1,7 +1,7 @@
 /** Keeps source replacement, focus and real playback events in one lifecycle. Serial replacement
  * avoids native URI races; no load or failed play contributes to a Highlight's view threshold. */
 type PlaybackPlayer = {
-  replaceAsync(uri: string): Promise<void>;
+  replaceAsync(uri: string | null): Promise<void>;
   play(): void;
   pause(): void;
   status: string;
@@ -98,6 +98,26 @@ export function createReelPlaybackController(options: PlaybackOptions) {
       return task;
     },
     pause,
+    /** Drop the decoded source. A later ready event must not start an off-screen Highlight. */
+    release(): Promise<void> {
+      const attempt = ++generation;
+      acceptedUri = null;
+      observedUri = null;
+      metadataUri = null;
+      readyForUri = null;
+      pendingReady = false;
+      replacingUri = null;
+      busy = false;
+      ready = false;
+      failed = false;
+      pause();
+      const task = queue.then(async () => {
+        if (disposed || attempt !== generation) return;
+        try { await player.replaceAsync(null); } catch { /* The player may already have no source. */ }
+      });
+      queue = task;
+      return task;
+    },
     requestPlay,
     retryPlay() {
       // A deliberate mute action may recover an autoplay refusal; never restart a playing clip.

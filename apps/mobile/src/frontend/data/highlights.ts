@@ -231,13 +231,9 @@ export function pinFeedOrder<T extends { clip: { id: string } }>(orderedIds: rea
   return out;
 }
 
-// 2026-09 fix: these used to point at Google's public `commondatastorage.googleapis.com` sample
-// video bucket, which now rejects every request with a permission error. Combined with a Home feed
-// bug (see ReelCard.tsx) that loaded every mounted card's video eagerly, several dead URLs failing
-// at once contributed to real-device freezes. `videoUrl: ''` is a real "no video" value `ReelCard`
-// already handles (`clip.videoUrl || null` — see its `videoSource`), so these entries keep serving
-// their non-video purpose (Home feed filler metadata, `demoSpotlightAward`'s Westlake fallback in
-// lib/spotlight.ts) without ever touching the video decoder.
+// 2026-09 fix: these used to point at a public sample bucket that now rejects every request.
+// `videoUrl: ''` never opens a player. They fill Home only while no uploaded clip has a file,
+// and they remain the Westlake fallback for `demoSpotlightAward` in lib/spotlight.ts.
 export const HIGHLIGHT_CLIPS: HighlightClip[] = [
   {
     id: 'hl-1',
@@ -281,3 +277,20 @@ export const HIGHLIGHT_CLIPS: HighlightClip[] = [
     videoUrl: '',
   },
 ];
+
+/**
+ * @purpose Home pages real clips. Empty sample cards stay only while nothing uploaded can play.
+ * @param uploaded Rows from `reels_feed`.
+ * @param samples `HIGHLIGHT_CLIPS` joined to the roster. Used when every upload lacks a file.
+ * @returns Playable uploads, or the samples when that list is empty.
+ */
+export function homePagerClips<T extends { clip: Pick<HighlightClip, 'videoUrl' | 'mediaType' | 'photoCount'> }>(
+  uploaded: readonly T[],
+  samples: readonly T[],
+): T[] {
+  const playable = uploaded.filter((item) => {
+    if (isPhotoStory(item.clip)) return (item.clip.photoCount ?? 0) > 0;
+    return Boolean(item.clip.videoUrl?.trim());
+  });
+  return playable.length > 0 ? [...playable] : [...samples];
+}

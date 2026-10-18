@@ -1,8 +1,8 @@
 /** Own profile shares the public sports layout; only the exact linked athlete supplies selected sport stats. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
-import { type Href, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type Href, useFocusEffect, useIsFocused, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ScrollFxParallax, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
@@ -78,18 +78,7 @@ export default function MyHubTab() {
   const [vaultLockBusy, setVaultLockBusy] = useState(false);
   const [localOnboardTeam, setLocalOnboardTeam] = useState<SchoolTeam | null>(null);
 
-  useEffect(() => {
-  }, []);
-
-  useEffect(() => {
-    void fetchRecentTips().then(setTips);
-  }, []);
-
-  useEffect(() => {
-    return subscribePlayerAura((playerId, auraPoints) => {
-      setAuraById((current) => ({ ...current, [playerId]: auraPoints }));
-    });
-  }, []);
+  const profileOpen = useIsFocused();
 
   const rosterAthlete = useMemo(() => {
     if (profile?.player_id) {
@@ -117,7 +106,7 @@ export default function MyHubTab() {
   }, [auraById, rosterAthlete]);
 
   const ownsRoster = Boolean(isAthlete && profile?.player_id && profile.player_id === athlete.id);
-  const { stats, loading: statsLoading } = useAthleteStats(athlete.id, athlete, isAthlete && profile?.player_id === athlete.id ? profile.athlete_sport : undefined);
+  const { stats, loading: statsLoading } = useAthleteStats(athlete.id, athlete, isAthlete && profile?.player_id === athlete.id ? profile.athlete_sport : undefined, profileOpen);
   const { subscribed, grant } = useAthleteSubscription(athlete.id);
 
   const hubAuraPoints = useMemo(() => {
@@ -127,6 +116,13 @@ export default function MyHubTab() {
 
   useFocusEffect(
     useCallback(() => {
+      let cancelled = false;
+      void fetchRecentTips().then((rows) => {
+        if (!cancelled) setTips(rows);
+      });
+      const unsubscribeAura = subscribePlayerAura((playerId, auraPoints) => {
+        setAuraById((current) => ({ ...current, [playerId]: auraPoints }));
+      });
       void readMaloDroppedCount().then(setTipsDropped);
       void countStoredCheerVotes().then(setPollVotes);
       void readAthleteOnboarding().then((onboard) => setLocalOnboardTeam(onboard?.team ?? null));
@@ -137,9 +133,15 @@ export default function MyHubTab() {
         athlete.id.startsWith(FAN_SELF_PREFIX)
       ) {
         setTaggedRows([]);
-        return;
+      } else {
+        void fetchReelsForPlayer(athlete.id).then((rows) => {
+          if (!cancelled) setTaggedRows(rows);
+        });
       }
-      void fetchReelsForPlayer(athlete.id).then(setTaggedRows);
+      return () => {
+        cancelled = true;
+        unsubscribeAura();
+      };
     }, [athlete.id]),
   );
 

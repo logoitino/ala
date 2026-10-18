@@ -24,7 +24,7 @@ order, then dip into the folders as you need them.
 | [Timed trivia plan](engineering/design/TIMED_TRIVIA_IMPLEMENTATION_PLAN.md) | Approved 30/90-second server/admin/player work and local verification. |
 | [QUIZ-02](agents/QUIZ-02.md) | New timed trivia enrollment and actual readiness; QUIZ-01 remains historical. |
 | [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md) | The engineering readiness plan: readiness phases R1–R4, from dev-only to a separate production environment. |
-| [ENVIRONMENTS_AND_HOSTING.md](engineering/ENVIRONMENTS_AND_HOSTING.md) | Dev / staging / prod, stay on Supabase or move to AWS / Azure (options, cost, exit drill), and the merge-to-deploy pipeline (phases E0–E3). |
+| [ENVIRONMENTS_AND_HOSTING.md](engineering/ENVIRONMENTS_AND_HOSTING.md) | Laptop, development, staging, and production; the scalability ladder (no cache server we run; video host not selected); stay on Supabase or move to AWS / Azure; phases E0–E3. |
 | [HOSTING_DECISION_BRIEF.md](engineering/HOSTING_DECISION_BRIEF.md) | Prior engineering recommendations plus the owner's $50/month follow-up (§10): phased costs, Supabase/AWS/Azure/own-server options, video workload, operating effort and a prepared Claude review. Prices unverified. |
 | [GROWTH_CAPACITY_REVIEW.md](engineering/GROWTH_CAPACITY_REVIEW.md) | One accountable growth/capacity team, accepted measurement sources, per-service review triggers and CTO/owner decisions. |
 | [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md) | Standing up the staging project and a tester build. |

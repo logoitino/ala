@@ -11,6 +11,8 @@ applying SQL are the owner's call (`FACILITATOR`). This extends readiness phases
 (production environment) in [CODE_ORGANIZATION_PLAN.md](CODE_ORGANIZATION_PLAN.md). It reopens, on purpose, the
 2026-09-29 note "we are not moving hosts" by giving the owner the options, the cost and a tested exit.
 
+**Testing-app adjustment (2026-10-18):** development `ulfapgtabidorgwfjvwz` now has the catch-up through trivia, IQ, Fan Zone, and Beyond. Staging was not changed. There is still no production project and no cache server we run. Home plays one decoded Highlight, new uploads stop at 45 seconds and 8 MB, and empty sample cards leave the pager once a real file exists. Development highlight rows still share one surviving video file. `INFRASTRUCTURE` updates the “today” facts in this file in the same change that moves a host, bucket, upload cap, or environment. `GROWTH_ANALYTICS` still brings the capacity packet on the standing review (next **2026-10-20**). A testing-app change does not buy a plan or start E2.
+
 Chain of command: owner → `CTO` (owns the recommendation) → `BACKEND` (`DATABASE_MIGRATIONS`), `OPERATIONS`
 (`CI`, `RELEASE`, `COST_OPERATIONS`), `SECURITY`, `PRIVACY_ENGINEERING`, `RELIABILITY`; spend with the CFO's office
 (`TREASURY`). `DATA_GOVERNANCE` reviews anything that moves data between environments.
@@ -42,11 +44,11 @@ a paid plan or automatic migration. Actual setup: [GROWTH-01](../agents/GROWTH-0
 | --- | --- | --- |
 | Database | Postgres on Supabase: 54 tables, 199 functions, 101 RLS policies, 174 security definer functions | Plain Postgres, but security leans on Supabase's request identity: `auth.uid()` 182×, `auth.role()` 80×; a trigger on `auth.users`; policies on `storage.objects` and `realtime.messages` |
 | Sign-in | Supabase Auth: Apple, Google, magic link, password (11 client call sites) | Tight: sessions, JWTs, `auth.users`, provider settings and redirect URLs live in the dashboard |
-| Files | Storage buckets `reels`, `avatars`, `game_highlights`, private `reel_vault` (48 SQL refs; 9 client calls through `MediaUploadService`) | Medium: one service file plus storage policies; **`reels.video_url` stores the full `<project>.supabase.co` URL** |
+| Files | Storage buckets `reels`, `avatars`, `game_highlights`, private `reel_vault`, plus private `fan_zone` and `beyond_game` on development (2026-10-17). The 2026-10-13 SQL counts in this table are historical; current depth is the [infrastructure register](INFRASTRUCTURE_REGISTER.md) | Medium: one service file plus storage policies; **`reels.video_url` stores the full `<project>.supabase.co` URL** |
 | Live updates | Supabase Realtime (11 channels in hooks/lib) | Medium |
 | Server code | 3 Edge Functions (Deno): payment intent, Stripe account, Stripe webhook (**not deployed; do not deploy** until Phase 1a, STATE §0) | Low: plain HTTP handlers |
 | Admin portal (Next.js, read-only) | Runs locally; not hosted | None |
-| Projects | Development `ulfapgtabidorgwfjvwz` (lacks the September SQL), staging `tucioqipfejqqqtuakdi`; **no production** | — |
+| Projects | Development `ulfapgtabidorgwfjvwz` (catch-up through trivia, IQ, Fan Zone, and Beyond applied 2026-10-17; coach-level SQL not run), staging `tucioqipfejqqqtuakdi` (not updated in that catch-up); **no production** | — |
 | App builds | EAS profiles `development` / `preview` / `production`. Until 2026-10-13 they set only `APP_ENV`, which nothing read, so a production build would have shown the demo sign-in; now each also sets `EXPO_PUBLIC_APP_ENV` (test `appEnv.test.ts`). `app.json` is static | — |
 | Database changes | Migrations written in `supabase/migrations/` but **pasted by hand** into the SQL Editor; 52 loose legacy `supabase/*.sql` files; Supabase's migration history table on staging is empty or partial | — |
 | Proof the schema rebuilds | `scripts/replay/schema-replay.mjs` (PGlite, mimics Supabase default grants, 35/35) plus three migration replays — **now in CI** (hash-pinned PGlite 0.5.9) | — |
@@ -88,7 +90,7 @@ CloudFront for new uploads), behind one `media_ref` adapter ([brief §2](HOSTING
 | | Local | Development | Staging | Production |
 | --- | --- | --- | --- | --- |
 | Purpose | One engineer's machine | Shared sandbox | Release candidate; mirrors prod settings | Real families and money |
-| Database | PGlite replays; Supabase CLI local stack (`supabase start`) where Docker exists | Supabase `ulfapgtabidorgwfjvwz`, **rebuilt from the baseline first** (it lacks the September SQL) | Supabase `tucioqipfejqqqtuakdi` | **New** Supabase Pro project, US region (cannot change later) |
+| Database | PGlite replays; Supabase CLI local stack (`supabase start`) where Docker exists | Supabase `ulfapgtabidorgwfjvwz`. Catch-up through 2026-10-17 is applied by hand. The E1 rebuild from a baseline is still not done | Supabase `tucioqipfejqqqtuakdi`. Not brought forward with the 2026-10-17 development catch-up | **New** Supabase Pro project, US region (cannot change later) |
 | Data | Synthetic seed | Synthetic seed only | **Real tester accounts and consented clips** (STAGING_RUNBOOK §4b, minors with parent OK). Personal data: named access, deletion on request, never copied to dev | Real. Never copied down |
 | Stripe | test | test | test | live — only after STATE §6 items 8 and 9 |
 | App build | Expo dev client | EAS `development` (needs its own channel), "Tapua'i Dev" | EAS `preview`, "Tapua'i Beta" | EAS `production`, "Tapua'i" |
@@ -155,6 +157,21 @@ tag vX.Y ──▶ CI posts `db push --dry-run` for prod ──▶ owner approve
 | **E1 — baseline, then automated dev + staging** | **Step 0 (read-only):** list staging's `supabase_migrations.schema_migrations` and compare with the migrations README. **Step 1:** `supabase db dump` staging into `<ts>_baseline.sql` timestamped after the last staging-applied file; add by hand what the dump skips (the `auth.users` trigger, `storage.objects` and `realtime.messages` policies) and check it on a local stack; classify every migration file as in the dump or not **by checking its objects in the dump, not by the README** (some files may have been pasted without being recorded, which the Step 3 dry-run cannot catch); move the files the dump contains to `supabase/migrations-history/`; re-timestamp only files not in the dump, after the baseline. **Step 2:** `supabase migration repair --status reverted` for history rows with no local file, `--status applied <baseline>`. **Step 3:** `supabase db push --dry-run` must list only unapplied files. **Step 4:** rebuild development from the baseline (synthetic data). **Step 5:** `config.toml` from hosted settings; deploy jobs (dev auto, staging behind approval). No more SQL Editor pastes | Owner: bot accounts and secrets in GitHub / Supabase; GitHub plan decision | $0 (Free org) or ≈ $20/mo (dev + staging in Pro org) + GitHub plan | `DATABASE_MIGRATIONS`, `CI`, `SECURITY` |
 | **E2 — production** | New Supabase Pro project (US region); production hardening from STATE §5 (private buckets, no anon bypass, no demo PIN or built-in demo password, webhook crediting); SMTP; PITR and a restore drill; error monitoring; release-tag pipeline with owner approval; processor list updated | Wave 1 decision, counsel items, spend approval, store accounts | ≈ $30–60/mo, ≈ $135–175 with PITR, plus shared lines (§2) | `CTO`, `RELIABILITY`, `SECURITY`, `PRIVACY_ENGINEERING`, `TREASURY` |
 | **E3 — exit drill (quarterly)** | Stand up self-hosted Supabase (Docker) on a temporary AWS VM from the repo alone: baseline, seed, Edge Functions, one sign-in, one upload; tear it down; record the result. **Synthetic data only** (then AWS is not a processor of real data) | E1 baseline; a machine with Docker and AWS access | a few dollars per drill | `BACKEND`, `RELIABILITY`, `COST_OPERATIONS` |
+
+## 5b. Scalability ladder (immediate need, then the concrete system)
+
+We do not run a cache server, and this plan does not add one. The phone is the cache (`clearVideoCacheAsync` on Home). The higher-end replacement for “every view downloads the file from Supabase Storage” is a managed video host that transcodes and caches at the edge. Mux is the provisional experiment; Bunny Stream and Cloudflare Stream stay in the same comparison. None is selected, and none is purchased. Prices in the hosting brief are unverified until COST_OPERATIONS checks the vendor page.
+
+| Rung | What it is | Status on 2026-10-18 | Who tends it |
+| --- | --- | --- | --- |
+| Laptop | Expo on the engineer’s machine. Not a shared server | In use when someone starts `pnpm mobile` | The engineer at the keyboard |
+| Development | Supabase `ulfapgtabidorgwfjvwz`, Stripe test mode, free project | In use. Catch-up applied. Can pause if idle | `BACKEND` / `DATABASE_MIGRATIONS` apply SQL only when the owner asks. `INFRASTRUCTURE` records the fact |
+| Staging | Supabase `tucioqipfejqqqtuakdi`, Stripe test mode | Exists. Behind development after 2026-10-17 | `RELEASE` with `DATABASE_MIGRATIONS`. Owner approves hosted SQL |
+| Production | New Supabase Pro project, live Stripe, PITR | Not created. E2. Wave 1 | `CTO` recommends. Owner decides. `RELIABILITY`, `SECURITY`, `PRIVACY_ENGINEERING`, `TREASURY` |
+| Video cache / delivery | Managed host (Mux, Bunny, or Cloudflare Stream), behind the media adapter | Not selected. Immediate guard is the 45-second and 8 MB upload cap and one decoded Highlight | `STORAGE` and `PLAYBACK` design the adapter. `COST_OPERATIONS` brings a current quote. Owner buys |
+| Exit | Self-hosted Supabase on a temporary AWS VM, synthetic data, then tear it down | E3. Never run | `BACKEND`, `RELIABILITY`, `COST_OPERATIONS` |
+
+Moving up a rung is a Growth and Capacity Review packet, then a CTO recommendation, then an owner decision. A quieter testing app does not climb the ladder by itself.
 
 ## 6. When to revisit the host (triggers)
 
