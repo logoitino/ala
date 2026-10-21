@@ -25,7 +25,7 @@ import { HypeStoryPills } from '@/components/Reels/HypeStoryPills';
 import { hypeStories } from '@/data/hypeStory';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors } from '@/constants/theme';
+import { colors, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { formatCompactCount } from '@/lib/hype';
 import { formatTipDollars, type ReelHype } from '@/lib/reels';
 import type { PlayReactionId } from '@/data/players';
@@ -656,6 +656,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   reactCount: {
+    ...SCOREBOARD_DIGITS,
     color: colors.onVideo,
     fontSize: 10,
     fontWeight: '800',

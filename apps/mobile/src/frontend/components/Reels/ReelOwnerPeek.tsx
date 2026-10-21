@@ -14,7 +14,7 @@ import Animated, { FadeInDown, FadeInUp, useReducedMotion } from 'react-native-r
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, MENU_METRICS } from '@/constants/theme';
+import { colors, MENU_METRICS, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { isPhotoStory, type HighlightClip } from '@/data/highlights';
 import { hypeStories } from '@/data/hypeStory';
@@ -758,6 +758,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   statValue: {
+    ...SCOREBOARD_DIGITS,
     color: FOCAL.ink,
     fontSize: 18,
     fontWeight: '900',

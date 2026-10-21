@@ -37,6 +37,7 @@ import {
 import type { SchoolBadge } from '@/lib/schoolBadge';
 import type { UserRole } from '@/types/database';
 import { FOCAL, SPRING_FLIP } from '@/theme/motion';
+import { JerseyBadge } from '@/components/UI/JerseyBadge';
 
 const TICK = 16;
 const PERSPECTIVE = 1000;
@@ -352,9 +353,7 @@ export function AuraTradingCard({
                       <Text style={[styles.initials, { color: tier.ink }]}>{initialsFor(name)}</Text>
                     </View>
                     {jersey != null && jersey !== '' ? (
-                      <View style={[styles.jerseyChip, { borderColor: tier.color }]}>
-                        <Text style={[styles.jerseyLabel, { color: tier.ink }]}>#{jersey}</Text>
-                      </View>
+                      <JerseyBadge number={jersey} color={tier.color} ink={tier.ink} style={styles.jerseyChip} />
                     ) : null}
                     {subscriberCrest ? (
                       <View style={styles.crest}>
@@ -655,17 +654,8 @@ const styles = StyleSheet.create({
   },
   jerseyChip: {
     position: 'absolute',
-    right: -6,
-    bottom: -4,
-    borderWidth: 1,
-    borderRadius: 999,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  jerseyLabel: {
-    fontSize: 10,
-    fontWeight: '800',
+    right: -10,
+    bottom: -8,
   },
   crest: {
     position: 'absolute',

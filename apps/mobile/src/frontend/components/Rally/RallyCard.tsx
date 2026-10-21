@@ -8,7 +8,7 @@ import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { ThanksPicker } from '@/components/Thanks/ThanksPicker';
 import { MaloTipModal } from '@/components/TipSheetModal';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
 import { useSoftWall } from '@/context/SoftWallContext';
@@ -362,6 +362,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   amount: {
+    ...SCOREBOARD_DIGITS,
     fontSize: 15,
     fontWeight: '800',
     color: colors.text,

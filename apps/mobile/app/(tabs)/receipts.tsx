@@ -8,7 +8,7 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { EmptyState } from '@/components/UI/EmptyState';
-import { colors, radii } from '@/constants/theme';
+import { colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useFanTipHistory } from '@/hooks/useFanTipHistory';
@@ -168,6 +168,7 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   metricValue: {
+    ...SCOREBOARD_DIGITS,
     color: colors.primary,
     fontSize: 16,
     fontWeight: '800',

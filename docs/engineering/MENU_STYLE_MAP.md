@@ -245,3 +245,8 @@ athlete hero, the `/gift/[handle]` program header, the featured Spotlight card (
 Local `GameCard` (own clipped layer, shadow kept). `SCOREBOARD_DIGITS` (theme) sets tabular, heavy live numbers;
 `UI/JerseyBadge` replaces the `#n` pill. Community heroes stay plain. Evidence and review: [UX-08](../agents/UX-08.md).
 
+App-wide (same day, owner request): `ScreenHeading`, Beyond's header and `EmptyState` draw the viewer's field
+(`hooks/useViewerSport`; generic for non-athletes) — headings on the right with a left fade, empty cards in their
+gold ink. All profile heroes carry a field. `SCOREBOARD_DIGITS` and `JerseyBadge` cover the remaining counts,
+amounts and standalone jersey numbers. Video surfaces and admin desks are deliberately unchanged.
+

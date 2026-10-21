@@ -7,6 +7,8 @@ import { useChallenges } from '@/hooks/useChallenges';
 import { fetchBeyondStatus, fetchBeyondPosts, fetchMyBeyondPosts, removeBeyondPost, reportBeyondPost, exportMyBeyondData } from '@/lib/beyondGame';
 import { exportCsv } from '@/lib/csvExport';
 import { CoachLevelBadge } from '@/components/Reels/CoachLevelBadge';
+import { SportField } from '@/components/Effects/SportField';
+import { useViewerSport } from '@/hooks/useViewerSport';
 import { WORKOUT_IDEAS_LINE } from '@/lib/safetyLabels';
 import { BeyondButton, BeyondGameComposer } from './BeyondGameComposer';
 import { BeyondGameMedia } from './BeyondGameMedia';
@@ -115,9 +117,12 @@ function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = 
     {!own && actor ? <BeyondButton variant="quiet" label="Report unsafe content" disabled={disabled}
       onPress={() => void model.run(async profileId => { await reportBeyondPost(profileId, post.id, 'Unsafe content concern'); return 'Concern received. This post is hidden for staff review.'; })} /> : null}
   </View>;
+  const viewerSport = useViewerSport();
   const continuing = exportState.current.started && Object.values(exportState.current.cursors).some(Boolean);
   return <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.screen}>
     <View style={styles.header}>
+      {/* UX-08: the same fading field band as every tab heading (viewer's sport, generic for fans). */}
+      <View pointerEvents="none" style={styles.headerField}><SportField sport={viewerSport} fade="left" labels={false} opacity={0.11} /></View>
       <Text accessibilityRole="header" style={styles.title}>Beyond the Game</Text>
       <Text style={styles.hint}>Share effort, kindness, learning and everyday stories. Highlights remains the game showcase.</Text>
     </View>

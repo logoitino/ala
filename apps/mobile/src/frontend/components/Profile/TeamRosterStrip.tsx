@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import type { Player } from '@/data/players';
 import { fetchClaimedPlayerIds } from '@/lib/roster';
 import { FOCAL } from '@/theme/motion';
+import { JerseyBadge } from '@/components/UI/JerseyBadge';
 
 type TeamRosterStripProps = {
   schoolName: string;
@@ -78,7 +79,7 @@ export function TeamRosterStrip({
               contentStyle={[styles.row, isSelf && styles.rowSelf]}
             >
               <View style={styles.jersey}>
-                <Text style={styles.jerseyLabel}>#{player.jersey_number ?? '—'}</Text>
+                <JerseyBadge number={player.jersey_number ?? '—'} />
               </View>
               <View style={styles.copy}>
                 <Text style={styles.name} numberOfLines={1}>
@@ -143,11 +144,6 @@ const styles = StyleSheet.create({
   jersey: {
     minWidth: 44,
     alignItems: 'center',
-  },
-  jerseyLabel: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: FOCAL.jadeInk,
   },
   copy: {
     flex: 1,

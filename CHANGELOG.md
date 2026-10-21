@@ -1,6 +1,13 @@
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-21 — Sport field theme across the app, and athlete profiles load again
+
+- Carry the field lines on every tab heading, role home, Beyond the Game, empty and paused cards and every profile.
+- Follow the viewer: athletes see their own sport, everyone else a generic field.
+- Use scoreboard digits for counts and amounts and the jersey patch wherever a jersey number stands alone.
+- Fix athlete profiles that showed "Couldn't load athlete" after tag approval.
+
 ## 2026-10-21 — Sport field lines and scoreboard digits (UX-08)
 
 - Draw each athlete's own playing surface faintly behind their profile, the QR donate page and Local game cards; sports added later get a generic field.

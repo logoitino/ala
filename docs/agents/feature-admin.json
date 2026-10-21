@@ -1617,7 +1617,7 @@
       "plannedAt": "2026-10-21T22:01:29.000Z",
       "exemption": {
         "kind": "presentation-only",
-        "reason": "Decorative sport-surface line art (hidden from screen readers, non-interactive) behind athlete heroes, the QR donate header, the featured Spotlight card and Local game cards; tabular scoreboard digits; a jersey-number patch; the swipe-hint position fix. Displays only fields already read: public athlete_sport and school_visible from the privacy-applied get_public_profiles row, roster position/jersey. No table, write, permission, telemetry or reporting duty. Calm Island palette unchanged.",
+        "reason": "Decorative sport-surface line art (hidden from screen readers, non-interactive) behind athlete heroes, the QR donate header, the featured Spotlight card and Local game cards; tabular scoreboard digits; a jersey-number patch; the swipe-hint position fix. Displays only fields already read: public athlete_sport and school_visible from the privacy-applied get_public_profiles row, roster position/jersey. No table, write, permission, telemetry or reporting duty. Calm Island palette unchanged. App-wide rollout (owner 2026-10-21): the same decoration on every tab/role-home heading, Beyond header, empty states and all profile heroes, scoreboard digits on existing counts/amounts and the jersey patch on existing jersey numbers; the viewer's sport comes from the signed-in profile already loaded (useViewerSport).",
         "reviewedBy": "Independent read-only Claude review subagent (UX-08 exemption/accessibility/palette review, 2026-10-21); review ran after implementation, recorded in UX-08"
       },
       "source": null,
@@ -1638,7 +1638,25 @@
           "apps/mobile/src/frontend/components/Spotlight/SpotlightAwardCard.tsx",
           "apps/mobile/app/gift/[handle].tsx",
           "apps/mobile/src/frontend/lib/giftLink.ts",
-          "apps/mobile/src/frontend/components/Reels/ReelPage.tsx"
+          "apps/mobile/src/frontend/components/Reels/ReelPage.tsx",
+          "apps/mobile/src/frontend/hooks/useViewerSport.ts",
+          "apps/mobile/src/frontend/context/AuthContext.tsx",
+          "apps/mobile/src/frontend/components/ScreenHeading.tsx",
+          "apps/mobile/src/frontend/components/UI/EmptyState.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameScreen.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameStyles.ts",
+          "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx",
+          "apps/mobile/src/frontend/components/Reels/ReelOwnerPeek.tsx",
+          "apps/mobile/src/frontend/components/Profile/HypeBoard.tsx",
+          "apps/mobile/src/frontend/components/Filmers/FilmerCard.tsx",
+          "apps/mobile/src/frontend/components/Profile/TaggedReelGrid.tsx",
+          "apps/mobile/app/(tabs)/activity.tsx",
+          "apps/mobile/app/(tabs)/receipts.tsx",
+          "apps/mobile/src/frontend/components/Spotlight/LeaderboardsBoard.tsx",
+          "apps/mobile/src/frontend/components/Rally/RallyCard.tsx",
+          "apps/mobile/src/frontend/components/Spotlight/SpotlightModal.tsx",
+          "apps/mobile/src/frontend/components/Profile/TeamRosterStrip.tsx",
+          "apps/mobile/src/frontend/components/Profile/AuraTradingCard.tsx"
         ]
       },
       "readiness": {
@@ -1653,12 +1671,17 @@
           ]
         },
         "app": {
-          "date": "2026-10-21T22:13:29.000Z",
+          "date": "2026-10-21T23:02:25.000Z",
           "evidence": [
             {
               "path": "docs/agents/UX-08.md",
               "command": "All seven review findings fixed; focused Jest (20 suites / 162 tests), app typecheck, comments/copy/data-boundaries/unused/client-keys guards; Expo web 390x844 browser checks",
               "result": "School hidden when school_visible is false (tested); hint skipped on too-short screens; spacing scoped to featured card; headers added; name read before jersey number; community heroes draw no field (tested incl. hidden elements). Native devices, Dynamic Type on device and hosted data unverified."
+            },
+            {
+              "path": "docs/agents/UX-08.md",
+              "command": "App-wide rollout: full mobile Jest, app typecheck, useViewerSport test, hero/empty-state/heading checks, Expo web 390x844 captures of Spotlight, Activity, Local, Profile, Drip and Beyond",
+              "result": "245 suites / 2,348 tests and typecheck passed before the final generic-field and Beyond edits; rendered tabs share the fading field band, empty states and heroes carry the field, numbers use scoreboard digits. Native devices unverified."
             }
           ]
         }

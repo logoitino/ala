@@ -12,7 +12,7 @@ import { formatCompactCount } from '@/lib/hype';
 import { BlurTargetView, BlurView } from 'expo-blur';
 
 import { ReelViewModal } from '@/components/Reels/ReelViewModal';
-import { colors } from '@/constants/theme';
+import { colors, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { isClipVaultOnly, isFlashUnlockActive, VAULT_BADGE_LABEL } from '@/data/exclusive';
 import { isPhotoStory, type HighlightClip } from '@/data/highlights';
 import type { Player } from '@/data/players';
@@ -330,6 +330,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   viewsLabel: {
+    ...SCOREBOARD_DIGITS,
     color: colors.onVideo,
     fontSize: 10,
     fontWeight: '800',

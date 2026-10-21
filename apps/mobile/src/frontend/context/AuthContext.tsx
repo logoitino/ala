@@ -621,3 +621,11 @@ export function useAuth(): AuthContextValue {
   }
   return context;
 }
+
+/**
+ * @purpose Auth when present, null outside `AuthProvider` — for purely decorative consumers (UX-08 field lines)
+ * that must never crash a screen or test that renders without the provider.
+ */
+export function useOptionalAuth(): AuthContextValue | null {
+  return useContext(AuthContext);
+}

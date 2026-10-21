@@ -6,7 +6,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
-import { colors, radii } from '@/constants/theme';
+import { colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import {  type PlayReactionId } from '@/data/players';
 import { formatCompactCount, type PlayerHype } from '@/lib/hype';
 
@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   value: {
+    ...SCOREBOARD_DIGITS,
     color: colors.text,
     fontSize: 18,
     fontWeight: '800',

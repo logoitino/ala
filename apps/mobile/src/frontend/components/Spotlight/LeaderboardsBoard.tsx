@@ -10,7 +10,7 @@ import { ActivityIndicator, Share, StyleSheet, Text, View } from 'react-native';
 import { ScrollFxItem } from '@/components/Effects/ScrollFx';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { EmptyState } from '@/components/UI/EmptyState';
-import { cardShadow, colors, radii, space } from '@/constants/theme';
+import { cardShadow, colors, radii, space, SCOREBOARD_DIGITS } from '@/constants/theme';
 import type { Leaderboards } from '@/lib/leaderboards';
 import { boardShareMessage } from '@/lib/shareCard';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
@@ -299,6 +299,7 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.electricGold,
   },
   rankText: {
+    ...SCOREBOARD_DIGITS,
     color: colors.textMuted,
     fontSize: 13,
     fontWeight: '800',
@@ -321,6 +322,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   metric: {
+    ...SCOREBOARD_DIGITS,
     color: FOCAL.goldInk,
     fontSize: 13,
     fontWeight: '800',

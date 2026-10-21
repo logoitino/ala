@@ -35,11 +35,9 @@ describe.each([false, true])('ProfileHeroAvatar identity (compact=%s)', (compact
     expect(screen.getByRole('header', { name: longName })).toBeTruthy();
     expect(within(screen.getByLabelText('Jersey number 0')).getByText('0')).toBeTruthy();
     expect(screen.getByLabelText('Sport: Volleyball')).toBeTruthy();
-    // The compact athlete hero draws the athlete's own surface, hidden from screen readers.
-    if (compact) {
-      expect(screen.getByTestId('sport-field-volleyball', { includeHiddenElements: true })).toBeTruthy();
-      expect(screen.queryByTestId('sport-field-volleyball')).toBeNull();
-    }
+    // Both hero sizes draw the athlete's own surface, hidden from screen readers.
+    expect(screen.getByTestId('sport-field-volleyball', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByTestId('sport-field-volleyball')).toBeNull();
     expect(screen.getByLabelText('Position: Outside hitter / defensive specialist')).toBeTruthy();
     expect(screen.getByLabelText("Class: '27")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Flip Aura card'));
@@ -62,8 +60,9 @@ describe.each([false, true])('ProfileHeroAvatar identity (compact=%s)', (compact
       sport="Football" position="Quarterback" classYear="26" />);
     expect(screen.getByText('Community profile')).toBeTruthy();
     expect(screen.queryByLabelText('Jersey number 12')).toBeNull();
-    // UX-08: field lines are athlete identity; community heroes stay plain.
-    expect(screen.queryByTestId(/^sport-field-/, { includeHiddenElements: true })).toBeNull();
+    // UX-08: community heroes share the look with the generic field, never a favourite athlete's sport.
+    expect(screen.getByTestId('sport-field-field', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByTestId('sport-field-gridiron', { includeHiddenElements: true })).toBeNull();
     expect(screen.queryByText('Football')).toBeNull();
     expect(screen.queryByText('Quarterback')).toBeNull();
     expect(screen.queryByText("'26")).toBeNull();

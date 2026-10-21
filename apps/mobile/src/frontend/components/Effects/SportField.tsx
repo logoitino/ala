@@ -5,9 +5,9 @@
  * sport added on /admin/sports still draws something sensible (a generic field when unrecognised).
  */
 
-import { memo, type ReactNode } from 'react';
+import { memo, useId, type ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, G, Line, LinearGradient, Mask, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { sportFieldKind, type SportFieldKind } from '@/data/sportField';
 import { FOCAL } from '@/theme/motion';
@@ -19,6 +19,10 @@ type SportFieldProps = {
   color?: string;
   /** Overall strength. Keep low (0.08–0.18) so text above stays AA. */
   opacity?: number;
+  /** `left` fades the lines in from the left edge, so a heading's text sits on clear ground. */
+  fade?: 'none' | 'left';
+  /** Yard numbers and similar labels; turn off where they would sit behind stats. */
+  labels?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -32,7 +36,7 @@ function range(from: number, to: number, step: number): number[] {
   return out;
 }
 
-function Gridiron({ c }: { c: string }) {
+function Gridiron({ c, labels = true }: { c: string; labels?: boolean }) {
   const yards = range(50, 350, 30);
   const numbers = ['10', '20', '30', '40', '50', '40', '30', '20', '10'];
   return (
@@ -49,7 +53,7 @@ function Gridiron({ c }: { c: string }) {
       {range(56, 344, 6).filter((x) => (x - 50) % 30 !== 0).map((x) => (
         <Line key={`k${x}`} x1={x} y1={110} x2={x} y2={116} stroke={c} strokeWidth={1} />
       ))}
-      {numbers.map((label, i) => (
+      {labels && numbers.map((label, i) => (
         <SvgText key={`n${i}`} x={80 + i * 30} y={172} fill={c} fontSize={9} fontWeight="700" textAnchor="middle">{label}</SvgText>
       ))}
     </>
@@ -193,7 +197,11 @@ function Rink({ c }: { c: string }) {
 function Field({ c }: { c: string }) {
   return (
     <>
-      <Rect x={16} y={14} width={368} height={172} rx={10} stroke={c} strokeWidth={2} fill="none" />
+      {/* Corner arcs instead of a full outline, so inside a card it never reads as a second border. */}
+      <Path d="M16 30 A16 16 0 0 0 32 14" stroke={c} strokeWidth={1.6} fill="none" />
+      <Path d="M368 14 A16 16 0 0 0 384 30" stroke={c} strokeWidth={1.6} fill="none" />
+      <Path d="M16 170 A16 16 0 0 1 32 186" stroke={c} strokeWidth={1.6} fill="none" />
+      <Path d="M368 186 A16 16 0 0 1 384 170" stroke={c} strokeWidth={1.6} fill="none" />
       <Line x1={200} y1={14} x2={200} y2={186} stroke={c} strokeWidth={1.6} />
       <Circle cx={200} cy={100} r={28} stroke={c} strokeWidth={1.6} fill="none" />
       <Circle cx={200} cy={100} r={2.5} fill={c} />
@@ -201,7 +209,7 @@ function Field({ c }: { c: string }) {
   );
 }
 
-const SURFACES: Record<SportFieldKind, (props: { c: string }) => ReactNode> = {
+const SURFACES: Record<SportFieldKind, (props: { c: string; labels?: boolean }) => ReactNode> = {
   gridiron: Gridiron,
   rugby: Rugby,
   pitch: Pitch,
@@ -220,9 +228,11 @@ const SURFACES: Record<SportFieldKind, (props: { c: string }) => ReactNode> = {
  * @param sport Sport label; drives the surface through `sportFieldKind`.
  * @returns A non-interactive, screen-reader-hidden SVG layer.
  */
-function SportFieldImpl({ sport, color = FOCAL.jadeInk, opacity = 0.12, style }: SportFieldProps) {
+function SportFieldImpl({ sport, color = FOCAL.jadeInk, opacity = 0.12, fade = 'none', labels = true, style }: SportFieldProps) {
   const kind = sportFieldKind(sport);
   const Surface = SURFACES[kind];
+  // One mask id per instance; several fields can share a screen.
+  const maskId = `sport-field-fade-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   return (
     <View
       pointerEvents="none"
@@ -232,7 +242,24 @@ function SportFieldImpl({ sport, color = FOCAL.jadeInk, opacity = 0.12, style }:
       style={[StyleSheet.absoluteFill, { opacity }, style]}
     >
       <Svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice">
-        <Surface c={color} />
+        {fade === 'left' ? (
+          <>
+            <Defs>
+              <LinearGradient id={`${maskId}-g`} x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0" stopColor="#fff" stopOpacity={0} />
+                <Stop offset="0.55" stopColor="#fff" stopOpacity={1} />
+              </LinearGradient>
+              <Mask id={maskId}>
+                <Rect x={0} y={0} width={W} height={H} fill={`url(#${maskId}-g)`} />
+              </Mask>
+            </Defs>
+            <G mask={`url(#${maskId})`}>
+              <Surface c={color} labels={labels} />
+            </G>
+          </>
+        ) : (
+          <Surface c={color} labels={labels} />
+        )}
       </Svg>
     </View>
   );

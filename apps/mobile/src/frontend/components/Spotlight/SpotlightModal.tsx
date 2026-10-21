@@ -25,6 +25,7 @@ import {
 } from '@/lib/spotlight';
 import { FOCAL, JADE_BORDER_GLOW, SPRING_CARD } from '@/theme/motion';
 import type { Player, SpotlightAward } from '@/types/database';
+import { JerseyBadge } from '@/components/UI/JerseyBadge';
 
 type SpotlightModalProps = {
   award: SpotlightAward | null;
@@ -182,9 +183,7 @@ function SpotlightBody({
                 </View>
               </View>
               {player?.jersey_number ? (
-                <View style={[styles.jerseyChip, { borderColor: tier.color }]}>
-                  <Text style={[styles.jerseyLabel, { color: tier.color }]}>#{player.jersey_number}</Text>
-                </View>
+                <JerseyBadge number={player.jersey_number} color={tier.color} ink={tier.color} background={FOCAL.videoBase} style={styles.jerseyChip} />
               ) : null}
             </View>
             <Text style={[styles.tierChip, { color: tier.color, borderColor: tier.color }]}>
@@ -386,17 +385,8 @@ const styles = StyleSheet.create({
   },
   jerseyChip: {
     position: 'absolute',
-    right: 8,
-    bottom: 10,
-    borderWidth: 1,
-    borderRadius: 999,
-    backgroundColor: FOCAL.videoBase,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  jerseyLabel: {
-    fontSize: 12,
-    fontWeight: '800',
+    right: 4,
+    bottom: 6,
   },
   tierChip: {
     fontSize: 12,

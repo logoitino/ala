@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { cardShadow, colors, radii, space } from '@/constants/theme';
+import { cardShadow, colors, radii, space, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { filmerTier, nextFilmerTierHint, type FilmerStats } from '@/lib/filmers';
 import { formatCompactCount } from '@/lib/hype';
 import { FOCAL } from '@/theme/motion';
@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statValue: {
+    ...SCOREBOARD_DIGITS,
     color: colors.text,
     fontSize: 18,
     fontWeight: '900',

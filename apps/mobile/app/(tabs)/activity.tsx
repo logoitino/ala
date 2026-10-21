@@ -15,7 +15,7 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { cardShadow, colors, radii } from '@/constants/theme';
+import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
@@ -315,6 +315,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   rowAmount: {
+    ...SCOREBOARD_DIGITS,
     fontSize: 15,
     lineHeight: 21,
     flexShrink: 1,

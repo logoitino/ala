@@ -3343,6 +3343,7 @@
         "apps/mobile/src/frontend/lib/guestGames.ts",
         "apps/mobile/src/frontend/lib/localSearch.ts",
         "apps/mobile/src/frontend/lib/operator.ts",
+        "apps/mobile/src/frontend/lib/reels.ts",
         "apps/mobile/src/frontend/lib/roster.ts",
         "apps/mobile/src/frontend/lib/teams.ts"
       ],

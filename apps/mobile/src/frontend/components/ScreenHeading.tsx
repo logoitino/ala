@@ -1,8 +1,13 @@
-/** Shared, wrapping page hierarchy keeps published Look-desk copy and colors authoritative. */
+/**
+ * Shared, wrapping page hierarchy keeps published Look-desk copy and colors authoritative.
+ * UX-08: the viewer's sport (generic field for non-athletes) fades in behind the right side of every heading.
+ */
 import { StyleSheet, Text, View } from 'react-native';
 
+import { SportField } from '@/components/Effects/SportField';
 import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useViewerSport } from '@/hooks/useViewerSport';
 import { FOCAL } from '@/theme/motion';
 
 type ScreenHeadingProps = {
@@ -25,8 +30,13 @@ type ScreenHeadingProps = {
 export function ScreenHeading({ kicker, title, lede, compact = false, accent }: ScreenHeadingProps) {
   const { live } = useAppRuntime();
   const mark = accent ?? live.theme.gold ?? FOCAL.goldInk;
+  const sport = useViewerSport();
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact]}>
+      {/* Field lines stay on the right and fade in, so the title always sits on clear ground. */}
+      <View pointerEvents="none" style={styles.field}>
+        <SportField sport={sport} fade="left" labels={false} opacity={0.11} />
+      </View>
       {kicker ? (
         <View style={styles.kickerRow}>
           <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.accentDot, { backgroundColor: mark }]} />
@@ -43,6 +53,15 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
 const styles = StyleSheet.create({
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   accentDot: { width: 6, height: 6, borderRadius: 3 },
+  field: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    left: '38%',
+    overflow: 'hidden',
+    borderRadius: 14,
+  },
   wrap: {
     gap: 8,
     paddingTop: 8,

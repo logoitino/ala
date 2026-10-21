@@ -110,9 +110,9 @@ export function ProfileHeroAvatar({
 
   if (compact) {
     return (
-      <View style={[styles.wrap, styles.compactWrap, athlete && styles.fieldClip, { borderTopColor: tier.color }]}>
-        {/* UX-08: the athlete's own playing surface, faint behind the identity; community profiles stay plain. */}
-        {athlete ? <SportField sport={sport} opacity={0.09} /> : null}
+      <View style={[styles.wrap, styles.compactWrap, styles.fieldClip, { borderTopColor: tier.color }]}>
+        {/* UX-08: an athlete's own playing surface; community profiles get the generic field. No yard numbers behind stats. */}
+        <SportField sport={athlete ? sport : null} labels={false} opacity={0.09} />
         <View style={styles.compactIdentityRow}>
           <View style={styles.compactAvatarStage}>
             {schoolBadge ? <View style={styles.compactSchoolBand}><SchoolHeroBand badge={schoolBadge} /></View> : null}
@@ -179,7 +179,8 @@ export function ProfileHeroAvatar({
   }
 
   return (
-    <View style={[styles.wrap, schoolBadge ? styles.wrapBanded : null]}>
+    <View style={[styles.wrap, styles.fieldClip, schoolBadge ? styles.wrapBanded : null]}>
+      <SportField sport={athlete ? sport : null} labels={false} opacity={0.09} />
       <View style={[styles.identityRail, { backgroundColor: tier.color }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       <Text style={[styles.kicker, { color: tier.ink }]}>{athlete ? 'Athlete profile' : 'Community profile'}</Text>
       <View style={[styles.avatarStage, schoolBadge ? styles.avatarStageBanded : null]}>

@@ -14,6 +14,8 @@ type JerseyBadgeProps = {
   /** Frame colour (outer stitch). Text uses `ink`. */
   color?: string;
   ink?: string;
+  /** Patch fill; pass the video base on dark chrome (Spotlight popup). */
+  background?: string;
   size?: 'sm' | 'md';
   style?: StyleProp<ViewStyle>;
 };
@@ -21,12 +23,12 @@ type JerseyBadgeProps = {
 /**
  * @purpose Render a jersey number patch; returns null for an empty number so callers can pass roster values as-is.
  */
-export function JerseyBadge({ number, color = FOCAL.jadeInk, ink = FOCAL.ink, size = 'sm', style }: JerseyBadgeProps) {
+export function JerseyBadge({ number, color = FOCAL.jadeInk, ink = FOCAL.ink, background, size = 'sm', style }: JerseyBadgeProps) {
   const label = String(number ?? '').replace(/^#/, '').trim();
   if (!label) return null;
   const md = size === 'md';
   return (
-    <View accessible accessibilityLabel={`Jersey number ${label}`} style={[styles.outer, md && styles.outerMd, { borderColor: color }, style]}>
+    <View accessible accessibilityLabel={`Jersey number ${label}`} style={[styles.outer, md && styles.outerMd, { borderColor: color }, background ? { backgroundColor: background } : null, style]}>
       <View style={[styles.inner, md && styles.innerMd, { borderColor: color }]}>
         <Text style={[styles.number, md && styles.numberMd, { color: ink }]} maxFontSizeMultiplier={1.4}>{label}</Text>
       </View>

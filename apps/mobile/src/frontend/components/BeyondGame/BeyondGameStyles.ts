@@ -6,6 +6,7 @@ import { FOCAL } from '@/theme/motion';
 export const beyondStyles = StyleSheet.create({
   screen: { padding: space.md, paddingBottom: 36, gap: space.md },
   header: { gap: space.xs },
+  headerField: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '38%', overflow: 'hidden', borderRadius: 14 },
   title: { fontSize: 28, lineHeight: 34, fontWeight: '800', color: colors.text },
   heading: { fontSize: 20, lineHeight: 26, fontWeight: '700', color: colors.text },
   body: { fontSize: 16, lineHeight: 23, color: colors.text },
