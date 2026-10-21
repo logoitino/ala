@@ -361,101 +361,50 @@ async function playable(rows: ReelWithPlayer[]): Promise<ReelWithPlayer[]> {
   return (await withPlaybackUrls(rows)).filter(isListableReel);
 }
 
+/**
+ * @purpose Attach each clip's athlete from one `players` read.
+ * `reels_feed.player_id` is a CASE expression (pending tags stay hidden), so PostgREST cannot follow it to
+ * `players`; a `players(...)` embed detoured through the locked `reel_tag_rejections` junction and failed with
+ * 42501 for everyone. The view's (already privacy-blanked) `player_id` decides who is attached.
+ * @sideEffects `players` SELECT for the distinct ids; a failed read leaves `players` null and keeps the clips.
+ */
+async function attachPlayers(rows: Reel[]): Promise<ReelWithPlayer[]> {
+  const ids = [...new Set(rows.map((row) => row.player_id).filter((id): id is string => typeof id === 'string' && Boolean(id)))];
+  const byId = new Map<string, Player>();
+  if (ids.length) {
+    try {
+      const { data, error } = await supabase.from('players').select(PLAYER_SELECT).in('id', ids);
+      if (!error && Array.isArray(data)) for (const player of data as unknown as Player[]) byId.set(player.id, player);
+    } catch {
+      // Clips still show without their athlete card; the next refresh retries.
+    }
+  }
+  return rows.map((row) => ({ ...row, players: row.player_id ? byId.get(row.player_id) ?? null : null }));
+}
+
+// Newest schema first; each older tier drops columns a database without that migration lacks.
+const REEL_TIERS: Array<{ columns: string; keep: (row: Reel) => boolean }> = [
+  { columns: REEL_COLUMNS_LABEL, keep: isListableReel },
+  { columns: REEL_COLUMNS_MEDIA, keep: isListableReel },
+  { columns: REEL_COLUMNS_CREDIT, keep: (row) => Boolean(row.video_url) && row.is_removed !== true },
+  { columns: REEL_COLUMNS_TAG, keep: (row) => Boolean(row.video_url) && row.is_removed !== true },
+  { columns: REEL_COLUMNS_REMOVED, keep: (row) => Boolean(row.video_url) && row.is_removed !== true },
+  { columns: REEL_COLUMNS_FLASH, keep: (row) => Boolean(row.video_url) },
+  { columns: REEL_COLUMNS_CATEGORY, keep: (row) => Boolean(row.video_url) },
+  { columns: REEL_COLUMNS_VAULT, keep: (row) => Boolean(row.video_url) },
+  { columns: REEL_COLUMNS_MODERATION, keep: (row) => Boolean(row.video_url) },
+  { columns: REEL_COLUMNS_EXCLUSIVE, keep: (row) => Boolean(row.video_url) },
+  { columns: REEL_COLUMNS, keep: (row) => Boolean(row.video_url) },
+];
+
 async function queryReels(playerId?: string): Promise<ReelWithPlayer[]> {
-  const labelled = await selectReels(`${REEL_COLUMNS_LABEL}, players (${PLAYER_SELECT})`, playerId);
-  if (!labelled.error) {
-    return playable(rowsFromQuery<ReelWithPlayer>(labelled.data).filter(isListableReel));
+  for (const tier of REEL_TIERS) {
+    const result = await selectReels(tier.columns, playerId);
+    if (!result.error) return playable(await attachPlayers(rowsFromQuery<Reel>(result.data).filter(tier.keep)));
   }
-  const media = await selectReels(`${REEL_COLUMNS_MEDIA}, players (${PLAYER_SELECT})`, playerId);
-  if (!media.error) {
-    return playable(rowsFromQuery<ReelWithPlayer>(media.data).filter(isListableReel));
-  }
-
-  const credited = await selectReels(`${REEL_COLUMNS_CREDIT}, players (${PLAYER_SELECT})`, playerId);
-  if (!credited.error) {
-    return playable(
-      rowsFromQuery<ReelWithPlayer>(credited.data).filter(
-        (row) => Boolean(row.video_url) && row.is_removed !== true,
-      ),
-    );
-  }
-
-  const tagged = await selectReels(`${REEL_COLUMNS_TAG}, players (${PLAYER_SELECT})`, playerId);
-  if (!tagged.error) {
-    return playable(
-      rowsFromQuery<ReelWithPlayer>(tagged.data).filter(
-        (row) => Boolean(row.video_url) && row.is_removed !== true,
-      ),
-    );
-  }
-
-  const live = await selectReels(`${REEL_COLUMNS_REMOVED}, players (${PLAYER_SELECT})`, playerId);
-  if (!live.error) {
-    return playable(
-      rowsFromQuery<ReelWithPlayer>(live.data).filter(
-        (row) => Boolean(row.video_url) && row.is_removed !== true,
-      ),
-    );
-  }
-
-  const flashed = await selectReels(`${REEL_COLUMNS_FLASH}, players (${PLAYER_SELECT})`, playerId);
-  if (!flashed.error) {
-    return playable(rowsFromQuery<ReelWithPlayer>(flashed.data).filter((row) => Boolean(row.video_url)));
-  }
-
-  const categorized = await selectReels(`${REEL_COLUMNS_CATEGORY}, players (${PLAYER_SELECT})`, playerId);
-  if (!categorized.error) {
-    return playable(rowsFromQuery<ReelWithPlayer>(categorized.data).filter((row) => Boolean(row.video_url)));
-  }
-
-  const vaulted = await selectReels(`${REEL_COLUMNS_VAULT}, players (${PLAYER_SELECT})`, playerId);
-  if (!vaulted.error) {
-    return playable(rowsFromQuery<ReelWithPlayer>(vaulted.data).filter((row) => Boolean(row.video_url)));
-  }
-
-  const moderated = await selectReels(`${REEL_COLUMNS_MODERATION}, players (${PLAYER_SELECT})`, playerId);
-  if (!moderated.error) {
-    return playable(rowsFromQuery<ReelWithPlayer>(moderated.data).filter((row) => Boolean(row.video_url)));
-  }
-
-  const exclusiveWithPlayers = await selectReels(`${REEL_COLUMNS_EXCLUSIVE}, players (${PLAYER_SELECT})`, playerId);
-  if (!exclusiveWithPlayers.error) {
-    return playable(
-      rowsFromQuery<ReelWithPlayer>(exclusiveWithPlayers.data).filter((row) => Boolean(row.video_url)),
-    );
-  }
-
-  const selectWithPlayers = `${REEL_COLUMNS}, players (${PLAYER_SELECT})`;
-  const withPlayers = await selectReels(selectWithPlayers, playerId);
-  if (!withPlayers.error) {
-    return playable(rowsFromQuery<ReelWithPlayer>(withPlayers.data).filter((row) => Boolean(row.video_url)));
-  }
-
-  const exclusiveOnly = await selectReels(REEL_COLUMNS_EXCLUSIVE, playerId);
-  if (!exclusiveOnly.error) {
-    return playable(
-      rowsFromQuery<Reel>(exclusiveOnly.data)
-        .filter((row) => Boolean(row.video_url))
-        .map((row) => ({ ...row, players: null })),
-    );
-  }
-
-  const fallback = await selectReels(REEL_COLUMNS, playerId);
-  if (!fallback.error) {
-    return playable(
-      rowsFromQuery<Reel>(fallback.data)
-        .filter((row) => Boolean(row.video_url))
-        .map((row) => ({ ...row, players: null })),
-    );
-  }
-
   const basicResult = await selectReels(REEL_COLUMNS_BASIC, playerId);
   if (basicResult.error) throw new Error(basicResult.error.message);
-  return playable(
-    rowsFromQuery<Reel>(basicResult.data)
-      .filter((row) => Boolean(row.video_url))
-      .map((row) => ({ ...row, players: null })),
-  );
+  return playable(await attachPlayers(rowsFromQuery<Reel>(basicResult.data).filter((row) => Boolean(row.video_url))));
 }
 
 export async function fetchReels(): Promise<ReelWithPlayer[]> {
