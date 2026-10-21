@@ -18,6 +18,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { PlayCard, resolveEventPlayer } from '@/components/PlayCard';
 import { LiveMatchBanner } from '@/components/Reels/LiveMatchBanner';
 import { NotificationPrefsBar } from '@/components/Local/NotificationPrefsBar';
+import { GameVenueCard } from '@/components/Local/GameVenueCard';
 import { PlayerListItem } from '@/components/Local/PlayerListItem';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TabSwitcher } from '@/components/Local/TabSwitcher';
@@ -54,6 +55,7 @@ export default function GameOverviewScreen() {
   const gameId = Array.isArray(id) ? id[0] : id;
   const mountedRef = useRef(true);
   const overviewRequestRef = useRef(0);
+  const liveGameRevisionRef = useRef(0);
   const playersRef = useRef<Player[]>([]);
 
   const [game, setGame] = useState<Game | null>(null);
@@ -104,6 +106,7 @@ export default function GameOverviewScreen() {
 
   const fetchGame = useCallback(async () => {
     const request = ++overviewRequestRef.current;
+    const liveRevisionAtStart = liveGameRevisionRef.current;
     if (!gameId) {
       setGame(null);
       setError('Missing game id.');
@@ -128,7 +131,8 @@ export default function GameOverviewScreen() {
 
     const nextPlayers = result.players;
     playersRef.current = nextPlayers;
-    setGame(result.game);
+    // Roster/feed reads can finish after a live venue correction; never restore an older destination.
+    if (liveGameRevisionRef.current === liveRevisionAtStart) setGame(result.game);
     setPlayers(nextPlayers);
 
     if (result.feedError) {
@@ -159,7 +163,10 @@ export default function GameOverviewScreen() {
     if (!gameId) return;
     let active = true;
     const unsubscribe = subscribeToGuestGame(gameId, {
-      onGame: setGame,
+      onGame: (nextGame) => {
+        liveGameRevisionRef.current += 1;
+        setGame(nextGame);
+      },
       onEvent: (row) => {
         void (async () => {
           const joined = await fetchGuestGameEvent(row.id);
@@ -239,6 +246,7 @@ export default function GameOverviewScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
           <LiveMatchBanner gameId={game.id} />
+          <GameVenueCard game={game} />
           <NotificationPrefsBar value={alertPref} onChange={setAlertPref} />
           <TabSwitcher value={tab} onChange={setTab} />
 

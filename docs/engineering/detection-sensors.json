@@ -392,6 +392,24 @@
       ],
       "limitation": "SQL unapplied and engine unavailable; no provider feedback, scheduled worker or verified telemetry intake. Optional email blocked until unsubscribe/provider support; all sources paused.",
       "next": "NOTIFICATIONS with SUPPORT/BACKEND reviews NOTIF_RETRYABLE only below three attempts; unknown sends require provider reconciliation. AUTH owns account source; COMMERCE/RECONCILIATION owns donation business truth."
+    },
+    {
+      "id": "game-venue-directions",
+      "area": "app",
+      "owner": "LOCAL",
+      "status": "partial",
+      "detects": "LOCAL-02 executed focused admin/database/fan regressions cover save/edit/clear/park preservation, bounds, denied actors, missing migration, encoded selected-game destinations, failed map opens, duplicate taps and stale overview/launch completions. Existing Health issues uses fixed local_directions_open_failed code only.",
+      "evidence": [
+        "apps/mobile/src/frontend/lib/__tests__/gameVenueAdmin.test.ts",
+        "apps/mobile/src/frontend/components/Admin/__tests__/GamesToolVenue.test.tsx",
+        "scripts/replay/game-venues-replay.mjs",
+        "docs/agents/LOCAL-02.md",
+        "apps/mobile/src/frontend/components/Local/__tests__/GameVenueCard.test.tsx",
+        "apps/mobile/src/frontend/components/Local/__tests__/GameVenueRoute.test.tsx",
+        "apps/mobile/src/frontend/lib/__tests__/gameVenue.test.ts"
+      ],
+      "limitation": "Local test execution only; map-provider accuracy/arrival, physical map launch, hosted SQL and telemetry delivery are unverified. No passive location or fleet monitoring.",
+      "next": "LOCAL + ADMIN correct/clear public venue address in Games; SUPPORT investigates fixed failure with device reproduction; QA verifies configured venue and physical map handoff after owner applies SQL."
     }
   ]
 }

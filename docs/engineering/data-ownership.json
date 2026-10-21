@@ -108,7 +108,7 @@
     },
     "games": {
       "owner": "LOCAL",
-      "purpose": "Local match board: teams, scores, clock, status."
+      "purpose": "Local match board: teams, scores, clock and status; LOCAL-02 public venue name plus venue_school (160), venue_address (320) and venue_notes (400). Each game owns its destination, including away/neutral venues. Only trusted admins edit location; legacy score-only writes remain. No fan GPS or operator check-in reuse."
     },
     "guardian_approval_requests": {
       "owner": "PROFILE",
@@ -1473,6 +1473,10 @@
     "apply_notification_payment_event": {
       "owner": "RECONCILIATION",
       "use": "Service-only unique validated processor observation with mode/currency/allocation and refund/dispute ordering; no donation, Aura, ledger or notification intent writes."
+    },
+    "games_venue_guard": {
+      "owner": "LOCAL",
+      "use": "LOCAL-02 trigger-only trusted admin authorization, trimming and bounds for public sporting venue fields; client EXECUTE revoked. No standalone client RPC. Clearing address disables directions. Local PostgreSQL replay is separate from hosted migration application."
     }
   },
   "exceptions": {

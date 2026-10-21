@@ -8,6 +8,7 @@
  */
 
 import { fetchAdminSpotlightAwards } from '@/lib/admin';
+import { isMissingColumn } from '@/lib/dbErrors';
 import { fetchAdminShopProducts, slugify } from '@/lib/adminShop';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type {
@@ -229,12 +230,29 @@ export async function upsertGame(input: Partial<Game> & { home_team: string; awa
   const home = input.home_team.trim();
   const away = input.away_team.trim();
   if (!home || !away) throw new Error('Add both team names.');
+  if (!input.id && input.venue !== undefined && Array.from(input.venue.trim()).length > 160) {
+    throw new Error('Venue name is too long. Use 160 characters or fewer.');
+  }
+  const venueFields: Partial<Pick<Game, 'venue_school' | 'venue_address' | 'venue_notes'>> = {};
+  for (const [field, limit, label] of [
+    ['venue_school', 160, 'Venue school'],
+    ['venue_address', 320, 'Venue address'],
+    ['venue_notes', 400, 'Arrival note'],
+  ] as const) {
+    // Omitted means preserve: score/park callers must not erase a location they did not edit.
+    if (input[field] === undefined) continue;
+    const value = input[field].trim();
+    if (Array.from(value).length > limit) throw new Error(`${label} is too long. Use ${limit} characters or fewer.`);
+    venueFields[field] = value;
+  }
   const payload = {
     home_team: home,
     away_team: away,
     home_school: (input.home_school ?? home).trim(),
     away_school: (input.away_school ?? away).trim(),
-    venue: (input.venue ?? '').trim(),
+    // Existing names can predate bounds/normalization. Let the server normalize only an actual name edit.
+    ...(!input.id || input.venue !== undefined ? { venue: input.id ? input.venue! : (input.venue ?? '').trim() } : {}),
+    ...venueFields,
     quarter: (input.quarter ?? 'Q1').trim() || 'Q1',
     sport: (input.sport ?? 'Football').trim() || 'Football',
     status: (input.status ?? 'live').trim() || 'live',
@@ -243,9 +261,17 @@ export async function upsertGame(input: Partial<Game> & { home_team: string; awa
     clock: (input.clock ?? '12:00').trim() || '12:00',
     is_active: input.is_active !== false,
   };
-  const { error } = input.id
-    ? await supabase.from('games').update(payload).eq('id', input.id)
-    : await supabase.from('games').insert(payload);
+  const write = input.id
+    ? supabase.from('games').update(payload).eq('id', input.id)
+    : supabase.from('games').insert(payload);
+  // RLS can reject an UPDATE by filtering every row without an error; require the saved row before clearing a draft.
+  const { data, error } = await write.select('id').single();
+  if (isMissingColumn(error) && /venue_(school|address|notes)/i.test(error?.message ?? '')) {
+    throw new Error('Venue details are not switched on for this database yet. Apply the game venue migration before saving these details.');
+  }
+  if (error?.code === 'PGRST116' || (!error && (!data?.id || (input.id && data.id !== input.id)))) {
+    throw new Error('Could not save this game. It may have been removed or your access changed. Refresh and try again.');
+  }
   throwIf(error, 'Could not save this game.');
 }
 

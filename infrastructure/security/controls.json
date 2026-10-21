@@ -42,6 +42,10 @@
       "INFRA_SECURITY",
       "SUPPLY_CHAIN_SECURITY",
       "RECOVERY_SECURITY"
+    ],
+    "game-directions": [
+      "SESSION_SECURITY",
+      "INFRA_SECURITY"
     ]
   },
   "componentReviewers": {

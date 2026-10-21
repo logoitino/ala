@@ -11,6 +11,13 @@ Companion to [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md), [COMPANY_PHASES.md
 from hosted/device verification and owner decisions. Guest route boundaries and account-tag
 reliability have earlier local evidence; Phase 2 below records the corrected staging status.
 
+**Game venue direction (owner-approved, 2026-10-21):** per-game stadium/gym, venue school,
+public address, arrival note and Apple/Google directions are implemented locally in LOCAL-02.
+Admin controls and public-venue guards passed before the fan section. Hosted migration,
+configured save/readback and physical map destinations remain unverified. Embedded maps,
+fan-location collection and a reusable venue catalog stay future alternatives, with no new
+phase or launch completion inferred. Evidence: [LOCAL-02](../agents/LOCAL-02.md).
+
 **Current market direction:** Utah is first, with a bounded one-metro scope; planning for the all-50-state goal can proceed in parallel. Expand one state at a time after its applicable legal/school/privacy/payment rules, actual local reach and loaded costs are accepted. No state is certified legally easier and no nationwide/public launch is approved. Fans/families/athletes and casual/repeat filmers have overlapping first-action/voluntary-return plans in [USER_GROWTH_PLANS](USER_GROWTH_PLANS.md). GROWTH_ANALYTICS brings existing authorized reports, consented feedback, source gaps and review/support costs through MARKETING → CTO → owner in the existing October20 packet. Its actual execution receipt and current conversion, retention, invoices and moderation capacity remain unverified.
 
 **Owner media direction (2026-10-20 America/Denver):** short Highlights remain open to all

@@ -212,6 +212,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
 
   { id: 'tab.local', label: 'Local', hint: 'Home pill → /local', surface: 'local', fanHref: '/local', adminHref: '/admin/features', flag: 'tabs.local', telemetry: 'tab.local' },
   { id: 'local_search', label: 'Local Explore', hint: 'Players, schools, sponsors', surface: 'local', fanHref: '/local', adminHref: '/admin/features', flag: 'layouts.localSearch' },
+  { id: 'local_directions', label: 'Get directions', hint: 'Public per-game venue address; Games edits/corrects/clears destination. No new runtime flag: clear address disables directions. Fixed tap/failure codes only; no location collection or destination logs.', surface: 'local', fanHref: '/local', adminHref: '/admin/games', telemetry: 'local_directions' },
   { id: 'hub.matches', label: 'Live Matches', hint: 'Scoreboard list', surface: 'local', fanHref: '/local', adminHref: '/admin/games', flag: 'layouts.liveMatches', telemetry: 'hub.matches' },
   { id: 'live_game', label: 'Open match', hint: '/local/game/[id]', surface: 'local', fanHref: '/local', adminHref: '/admin/games', telemetry: 'live_game' },
   { id: 'hub.polls', label: 'School Polls', hint: 'Cheer matchups', surface: 'local', fanHref: '/local', adminHref: '/admin/polls', flag: 'layouts.cheerPolls', telemetry: 'hub.polls' },

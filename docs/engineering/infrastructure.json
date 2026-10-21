@@ -204,6 +204,19 @@
       "plan": "Provider/region/spend undecided; one VM is not HA",
       "decision": "Exit A preparation per PORTABILITY; version/checksum/image review and isolated rehearsal required before execution",
       "source": "docs/engineering/EXIT_READY_RUNBOOK.md"
+    },
+    {
+      "id": "game-directions",
+      "name": "Apple Maps / Google Maps (directions links)",
+      "role": "Explicit external handoff of the public game venue address; no embedded map, geolocation, map API or server integration",
+      "status": "implemented locally; physical/provider handoff unverified",
+      "environments": [
+        "iOS (Apple Maps HTTPS)",
+        "Android/web (Google Maps HTTPS)"
+      ],
+      "plan": "No map API account or paid SDK added; map provider terms apply",
+      "decision": "Owner approved LOCAL-02 venue + directions. Public destination only after a fan tap; no fan origin or coordinates read. Existing Expo Linking opens the URL. Correct/clear per-game address in Expo Games desk. Hosted SQL/device acceptance remains separate.",
+      "source": "docs/agents/LOCAL-02.md"
     }
   ],
   "appConfig": {

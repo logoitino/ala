@@ -366,31 +366,31 @@ begin
  return jsonb_build_object('allowed',false,'reason',reason);
 end $$;
 create or replace function public.begin_notification_attempt(job_id uuid,lease_token uuid) returns jsonb language plpgsql security definer set search_path='' as $$
-declare d public.notification_deliveries; authorization jsonb;
+declare d public.notification_deliveries; send_authorization jsonb;
 begin
  if job_id is null or lease_token is null then raise exception using errcode='22023',message='invalid_lease'; end if;
  perform public.notification_require_service();select * into d from public.notification_deliveries where id=job_id for update;
  if d.started_at is not null then return jsonb_build_object('allowed',false,'reason','lease_lost'); end if;
- authorization:=public.authorize_notification_send(job_id,lease_token);
- if not coalesce((authorization->>'allowed')::boolean,false) then
+ send_authorization:=public.authorize_notification_send(job_id,lease_token);
+ if not coalesce((send_authorization->>'allowed')::boolean,false) then
   -- The worker persists suppression through complete; preserve its lease until that write.
-  return authorization;
+  return send_authorization;
  end if;
  -- Only a fresh authorization snapshot may be handed to a future configured transport.
  if d.attempts>=3 then return jsonb_build_object('allowed',false,'reason','lease_lost'); end if;
  update public.notification_deliveries set attempts=attempts+1,started_at=now(),updated_at=now() where id=job_id;
  insert into public.notification_delivery_attempts(job_id,attempt_number,lease_token,outcome) values(job_id,d.attempts+1,lease_token,'attempting');
- return authorization;
+ return send_authorization;
 end $$;
 create or replace function public.release_notification_job(job_id uuid,lease_token uuid) returns boolean language plpgsql security definer set search_path='' as $$
-declare d public.notification_deliveries; authorization jsonb;
+declare d public.notification_deliveries; send_authorization jsonb;
 begin
  if job_id is null or lease_token is null then raise exception using errcode='22023',message='invalid_lease'; end if;
  perform public.notification_require_service();select * into d from public.notification_deliveries where id=job_id for update;
  if d.id is null or d.lease_token is distinct from lease_token or d.status<>'attempting' or d.started_at is not null or d.lease_until<=now() then return false; end if;
- authorization:=public.authorize_notification_send(job_id,lease_token);
- update public.notification_deliveries set status=case when authorization->>'reason'='unsubscribe_unavailable' then 'queued' else 'suppressed' end,
- last_error_code=case when authorization->>'reason'='unsubscribe_unavailable' then null else authorization->>'reason' end,lease_token=null,lease_until=null,updated_at=now() where id=job_id;
+ send_authorization:=public.authorize_notification_send(job_id,lease_token);
+ update public.notification_deliveries set status=case when send_authorization->>'reason'='unsubscribe_unavailable' then 'queued' else 'suppressed' end,
+ last_error_code=case when send_authorization->>'reason'='unsubscribe_unavailable' then null else send_authorization->>'reason' end,lease_token=null,lease_until=null,updated_at=now() where id=job_id;
  return true;
 end $$;
 create or replace function public.complete_notification_attempt(job_id uuid,lease_token uuid,outcome text,error_code text default null,provider_message_id text default null,safe_retry boolean default false)

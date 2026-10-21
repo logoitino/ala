@@ -36,6 +36,22 @@ Read with [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) (the issue map — COP
 | Existing Connect convenience cache (client repair, 2026-10-20) | AsyncStorage `tapuai.stripeConnect.{auth-user-id}` | Signed-in payee | CONNECT owns the existing account-id/onboarding/transfer-flag cache. Unencrypted device storage; no identity/TIN, bank data, JWT or link URL is written. No timed expiry; existing records remain until overwritten or app/device data removal. Legacy cache rendering requires current account lifetime and matching current-profile Stripe binding; fresh API status may fill a missing profile only within the same account lifetime. Explicit profile booleans win. Cache never waives first-onboarding Terms or authorizes server payouts. IO failures are best-effort. The new account-lifetime guard is memory-only, adds no persisted identifier or telemetry, and is not a server authorization control. |
 | Device-local queue | `AsyncStorage` (`OfflineQueue`) | Any signed-in user | Can hold a `userId` plus pending Aura/vote/bookmark/report actions unencrypted on-device until the next successful flush. |
 
+### Public game venues (LOCAL-02, 2026-10-21)
+
+`games.venue`, `venue_school`, `venue_address` and `venue_notes` describe a public sporting
+venue for one game. Admins enter/correct/clear them; guests and fans can read them with the
+existing game row. They must not contain private homes, attendee whereabouts or operator GPS.
+No fan location permission, tracking or new account/location identifier is collected. Venue
+information follows existing game retention; no new timed retention process is created.
+
+Get directions sends only the selected public address to Apple Maps (iOS) or Google Maps
+(Android/web) on an explicit tap; the provider applies its own location/privacy choices.
+Tapua'i does not read that provider's location or route. Existing telemetry may record only
+fixed `local_directions` / `local_directions_open_failed` event codes with surface `local`,
+never game identity, school/address/note, destination URL or raw provider exception. A tap
+records intent, not navigation success or attendance. Hosted delivery/consent remains governed
+by existing telemetry rules. Written venue SQL is not hosted activation; see [LOCAL-02](../agents/LOCAL-02.md).
+
 ### Telemetry delivery and local health (HEALTH-01)
 
 The 2026-10-13 local repair keeps the existing `TelemetryEvent` / `track*` API and

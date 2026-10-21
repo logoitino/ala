@@ -1,3 +1,4 @@
+/** LOCAL-02: the Games desk owns public venue details; each match can use a neutral venue and clear its address to remove directions. */
 import { useCallback, useMemo, useState } from 'react';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';
 
@@ -17,6 +18,7 @@ import {
 import { formatTeamBadge, type SchoolTeam } from '@/data/teams';
 import { sportClockLabel } from '@/data/sports';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
+import { useAdminAction } from '@/hooks/useAdminAction';
 import { fetchAdminGames, fetchAdminSchools, upsertGame } from '@/lib/adminCatalog';
 import { useAuth } from '@/context/AuthContext';
 import { updateGameScore } from '@/lib/operator';
@@ -30,6 +32,9 @@ const empty = {
   home_school: '',
   away_school: '',
   venue: '',
+  venue_school: '',
+  venue_address: '',
+  venue_notes: '',
   quarter: 'Q1',
   clock: '12:00',
   home_score: '0',
@@ -52,9 +57,6 @@ export function GamesTool() {
   const [filter, setFilter] = useState<BoardFilter>('live');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [nudgeId, setNudgeId] = useState<string | null>(null);
 
   const schoolOptions = useMemo(
     () => schools.map((row) => ({ id: row.id, title: row.name, meta: `${row.mascot} · ${formatTeamBadge(row)}` })),
@@ -89,18 +91,29 @@ export function GamesTool() {
     }, [refresh]),
   );
 
+  const { busy, message, run } = useAdminAction(refresh);
+
   const persist = async (extra?: Partial<Game>) => {
-    setBusy(true);
-    setMessage(null);
-    try {
+    await run('save', async () => {
+      const source = rows.find((game) => game.id === form.id);
+      const venueFields: Partial<Game> = {};
+      for (const field of ['venue_school', 'venue_address', 'venue_notes'] as const) {
+        if (extra?.id) {
+          // Row actions preserve that row's destination, even while a different draft is being edited.
+          if (extra[field] !== undefined) venueFields[field] = extra[field];
+        } else if (form[field].trim() || source?.[field] !== undefined || rows.some((game) => game[field] !== undefined)) {
+          venueFields[field] = form[field];
+        }
+      }
       await upsertGame({
-        id: form.id || extra?.id || undefined,
+        id: extra?.id || form.id || undefined,
         sport: extra?.sport ?? form.sport,
         home_team: extra?.home_team ?? form.home_team,
         away_team: extra?.away_team ?? form.away_team,
         home_school: extra?.home_school ?? form.home_school,
         away_school: extra?.away_school ?? form.away_school,
         venue: extra?.venue ?? form.venue,
+        ...venueFields,
         quarter: extra?.quarter ?? form.quarter,
         clock: extra?.clock ?? form.clock,
         home_score: extra?.home_score ?? (Number(form.home_score) || 0),
@@ -109,29 +122,19 @@ export function GamesTool() {
         status: extra?.status,
       });
       if (!extra?.id || extra.id === form.id) setForm(empty);
-      setMessage(extra?.is_active === false ? 'Parked. Off Local.' : 'Match is live on Local.');
-      await refresh();
-    } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : 'Could not save this game.');
-    } finally {
-      setBusy(false);
-    }
+      return extra?.is_active === false ? 'Parked. Off Local.' : 'Match is live on Local.';
+    }, 'Could not save this game.');
   };
 
   const nudge = async (game: Game, side: 'home' | 'away') => {
-    setNudgeId(game.id);
-    try {
+    await run('score', async () => {
       await updateGameScore({
         game,
         homeDelta: side === 'home' ? 1 : 0,
         awayDelta: side === 'away' ? 1 : 0,
       });
-      await refresh();
-    } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : 'Could not bump this score.');
-    } finally {
-      setNudgeId(null);
-    }
+      return 'Score updated.';
+    }, 'Could not bump this score.');
   };
 
   const pickSchool = (side: 'home' | 'away', option: { title: string; meta?: string }) => {
@@ -185,7 +188,11 @@ export function GamesTool() {
           <AdminField label="Home name on the board" value={form.home_team} onChangeText={(home_team) => setForm((c) => ({ ...c, home_team }))} placeholder="Thunder" />
           <AdminField label="Away name on the board" value={form.away_team} onChangeText={(away_team) => setForm((c) => ({ ...c, away_team }))} placeholder="Knights" />
         </AdminFieldRow>
-        <AdminField label="Venue" value={form.venue} onChangeText={(venue) => setForm((c) => ({ ...c, venue }))} placeholder="Westlake Stadium" />
+        <AdminField label="Stadium, gym or field" value={form.venue} onChangeText={(venue) => setForm((c) => ({ ...c, venue }))} placeholder="Westlake Stadium" editable={!busy} />
+        <AdminField label="Venue school (optional)" value={form.venue_school} onChangeText={(venue_school) => setForm((c) => ({ ...c, venue_school }))} placeholder="School where this game is played" editable={!busy} />
+        <AdminField label="Venue address" value={form.venue_address} onChangeText={(venue_address) => setForm((c) => ({ ...c, venue_address }))} placeholder="Street address, city, state and ZIP" multiline editable={!busy} />
+        <AdminField label="Arrival note (optional)" value={form.venue_notes} onChangeText={(venue_notes) => setForm((c) => ({ ...c, venue_notes }))} placeholder="Use the east entrance; visitor parking nearby" multiline editable={!busy} />
+        <AdminNotice text="Use the public sporting venue address, including away and tournament venues. Clear the address to remove directions. These details are visible to fans." />
         <AdminPills
           label="Sport"
           items={configs
@@ -212,13 +219,13 @@ export function GamesTool() {
           <AdminField label="Clock" value={form.clock} onChangeText={(clock) => setForm((c) => ({ ...c, clock }))} />
         ) : null}
         <AdminBtn
-          label={busy ? 'Saving…' : form.id ? 'Save match' : 'Go live on Local'}
+          label={busy === 'save' ? 'Saving…' : form.id ? 'Save match' : 'Go live on Local'}
           kind="primary"
-          disabled={busy}
+          disabled={busy !== null}
           onPress={() => void persist({ is_active: true, status: form.quarter === 'Final' ? 'Final' : 'live' })}
         />
-        {form.id ? <AdminBtn label="Clear form" onPress={() => setForm(empty)} /> : null}
-        <AdminNotice text={message} />
+        {form.id ? <AdminBtn label="Clear form" disabled={busy !== null} onPress={() => setForm(empty)} /> : null}
+        <AdminNotice text={message?.text ?? null} tone={message?.tone} />
       </AdminPanel>
       {visible.length === 0 ? (
         <AdminEmpty text={filter === 'live' ? 'Nothing live. Publish a match to fill Local.' : 'No parked matches.'} />
@@ -227,16 +234,17 @@ export function GamesTool() {
           <AdminRow
             key={game.id}
             title={`${game.home_team} ${game.home_score} – ${game.away_score} ${game.away_team}`}
-            meta={`${configFor(game.sport).emoji} ${game.sport || 'Football'} · ${game.home_school || game.home_team} vs ${game.away_school || game.away_team} · ${game.quarter || game.status} ${game.clock || ''} · ${game.is_active ? 'On Local' : 'Parked'}`}
+            meta={`${configFor(game.sport).emoji} ${game.sport || 'Football'} · ${game.home_school || game.home_team} vs ${game.away_school || game.away_team} · ${game.quarter || game.status} ${game.clock || ''} · ${game.is_active ? 'On Local' : 'Parked'} · ${game.venue?.trim() || 'Venue TBA'}${game.venue_school?.trim() ? ` · ${game.venue_school.trim()}` : ''} · ${game.venue_address?.trim() || 'Address TBA'}${game.venue_notes?.trim() ? ` · ${game.venue_notes.trim()}` : ''}`}
           >
             {game.is_active ? (
               <>
-                <AdminBtn label={`${game.home_team} +1`} disabled={nudgeId === game.id} onPress={() => void nudge(game, 'home')} />
-                <AdminBtn label={`${game.away_team} +1`} disabled={nudgeId === game.id} onPress={() => void nudge(game, 'away')} />
+                <AdminBtn label={`${game.home_team} +1`} disabled={busy !== null} onPress={() => void nudge(game, 'home')} />
+                <AdminBtn label={`${game.away_team} +1`} disabled={busy !== null} onPress={() => void nudge(game, 'away')} />
               </>
             ) : null}
             <AdminBtn
               label="Edit"
+              disabled={busy !== null}
               onPress={() =>
                 setForm({
                   id: game.id,
@@ -246,6 +254,9 @@ export function GamesTool() {
                   home_school: game.home_school,
                   away_school: game.away_school,
                   venue: game.venue,
+                  venue_school: game.venue_school ?? '',
+                  venue_address: game.venue_address ?? '',
+                  venue_notes: game.venue_notes ?? '',
                   quarter: game.quarter || 'Q1',
                   clock: game.clock || '12:00',
                   home_score: String(game.home_score),
@@ -255,6 +266,7 @@ export function GamesTool() {
             />
             <AdminBtn
               label={game.is_active ? 'Park' : 'Go live'}
+              disabled={busy !== null}
               kind={game.is_active ? 'ghost' : 'primary'}
               onPress={() =>
                 void persist({
@@ -265,6 +277,9 @@ export function GamesTool() {
                   home_school: game.home_school,
                   away_school: game.away_school,
                   venue: game.venue,
+                  venue_school: game.venue_school,
+                  venue_address: game.venue_address,
+                  venue_notes: game.venue_notes,
                   quarter: game.quarter || 'Q1',
                   clock: game.clock || '12:00',
                   home_score: game.home_score,

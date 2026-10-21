@@ -215,6 +215,10 @@ export type Game = {
   quarter?: string | null;
   status: string;
   venue: string;
+  /** LOCAL-02 public game destination. Optional until the venue migration is applied; never inferred from teams. */
+  venue_school?: string;
+  venue_address?: string;
+  venue_notes?: string;
   /** Playbook key into `sport_configs.sport`. Drives operator buttons and period chips. */
   sport?: string | null;
   is_active: boolean;

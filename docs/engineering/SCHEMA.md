@@ -366,7 +366,8 @@ Live scoreboard. Realtime. Operator console writes score / `clock` / `quarter` /
 | `home_score`, `away_score` | integer | Incremented by `update_game_score` |
 | `quarter` | text | `Q1`…`Final` |
 | `status` | text | Often `live` |
-| `venue` | text | |
+| `venue` | text | Public stadium/gym/field name; LOCAL-02 protects location edits for admins, new/changed names bounded to 160 characters. |
+| `venue_school`, `venue_address`, `venue_notes` | text default empty | LOCAL-02 public venue school (160 chars), full address (320), optional arrival/parking note (400). Per-game location; never inferred from home school. Migration `20261021220000`, locally written/unapplied. |
 | `clock` | text default `12:00` | |
 | `is_clock_running` | boolean default false | Start / Pause Clock |
 | `claimed_by` | uuid FK → `profiles(id)` ON DELETE SET NULL | Set after valid operator PIN |
@@ -379,6 +380,16 @@ Live scoreboard. Realtime. Operator console writes score / `clock` / `quarter` /
 ### `games_live_seq_bump` / `games_broadcast_score_change` (SCALE-03 triggers, not applied)
 
 Trigger functions, not RPCs (EXECUTE revoked from API roles). `games_live_seq_bump` (BEFORE INSERT/UPDATE) keeps `games.live_seq`. `games_broadcast_score_change` (AFTER INSERT/UPDATE/DELETE, SECURITY DEFINER, `search_path = ''`) calls `realtime.send` on private topic `game_scores_{id}` with event `score` and payload `{v:1, id, seq, changes}` (only the changed scoreboard columns; never `claimed_by`), and on `game_scores_index` with event `membership` and payload `{v:1, id, op}` for insert / delete / `is_active` flips. A send failure only raises a warning. Policy `Fans receive game score changes` on `realtime.messages`: anon + authenticated SELECT, Broadcast only, topic exactly `game_scores_<uuid>` or `game_scores_index`; no INSERT policy, so clients cannot send. Client: `lib/liveScoreSync.ts` behind `EXPO_PUBLIC_LIVE_SCORES_BROADCAST` (default off).
+
+### `games_venue_guard` (LOCAL-02 trigger, not applied)
+
+Before INSERT/UPDATE, this trigger normalizes public venue fields, enforces text bounds and
+requires the existing trusted admin guard for location writes. Legacy anon/operator score-only
+updates keep their location exactly; blank-location operator inserts retain existing permissions.
+No client EXECUTE grant. Trusted server/SQL Editor keeps maintenance authority. Clear address
+removes fan directions; no user GPS, map coordinates, personal address or check-in reference.
+Owner applies `20261021220000_game_venues.sql` after trusted admin helpers, then QA verifies
+hosted save/clear/denial; local source and replay evidence in [LOCAL-02](../agents/LOCAL-02.md).
 
 ### `update_game_score`
 

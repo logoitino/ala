@@ -269,6 +269,7 @@ export type Database = {
           reviewer_id: string | null
           revision: number
           rights_version: string
+          safety_label: string
           safety_version: string
           status: string
           submitted_at: string | null
@@ -291,6 +292,7 @@ export type Database = {
           reviewer_id?: string | null
           revision?: number
           rights_version: string
+          safety_label?: string
           safety_version: string
           status?: string
           submitted_at?: string | null
@@ -313,6 +315,7 @@ export type Database = {
           reviewer_id?: string | null
           revision?: number
           rights_version?: string
+          safety_label?: string
           safety_version?: string
           status?: string
           submitted_at?: string | null
@@ -826,6 +829,345 @@ export type Database = {
         }
         Relationships: []
       }
+      fan_zone_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          campaign_id: string
+          created_at: string
+          detail: Json
+          id: string
+          subject_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          campaign_id: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          subject_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          campaign_id?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          subject_id?: string | null
+        }
+        Relationships: []
+      }
+      fan_zone_ballots: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          entry_id: string
+          id: string
+          invalid_reason: string | null
+          invalidated_at: string | null
+          updated_at: string
+          version: number
+          voter_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          entry_id: string
+          id?: string
+          invalid_reason?: string | null
+          invalidated_at?: string | null
+          updated_at?: string
+          version: number
+          voter_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          entry_id?: string
+          id?: string
+          invalid_reason?: string | null
+          invalidated_at?: string | null
+          updated_at?: string
+          version?: number
+          voter_id?: string
+        }
+        Relationships: []
+      }
+      fan_zone_campaigns: {
+        Row: {
+          created_at: string
+          entry_closes_at: string
+          entry_opens_at: string
+          id: string
+          opened_at: string | null
+          period: string
+          pilot_accounts: string[]
+          recount_required: boolean
+          result_signature: string | null
+          results: Json
+          rules: string
+          status: string
+          story_reel_id: string | null
+          support_contact: string
+          testing_only: boolean
+          theme: string
+          title: string
+          updated_at: string
+          vote_closes_at: string
+          vote_opens_at: string
+        }
+        Insert: {
+          created_at?: string
+          entry_closes_at: string
+          entry_opens_at: string
+          id?: string
+          opened_at?: string | null
+          period: string
+          pilot_accounts?: string[]
+          recount_required?: boolean
+          result_signature?: string | null
+          results?: Json
+          rules: string
+          status?: string
+          story_reel_id?: string | null
+          support_contact?: string
+          testing_only?: boolean
+          theme: string
+          title: string
+          updated_at?: string
+          vote_closes_at: string
+          vote_opens_at: string
+        }
+        Update: {
+          created_at?: string
+          entry_closes_at?: string
+          entry_opens_at?: string
+          id?: string
+          opened_at?: string | null
+          period?: string
+          pilot_accounts?: string[]
+          recount_required?: boolean
+          result_signature?: string | null
+          results?: Json
+          rules?: string
+          status?: string
+          story_reel_id?: string | null
+          support_contact?: string
+          testing_only?: boolean
+          theme?: string
+          title?: string
+          updated_at?: string
+          vote_closes_at?: string
+          vote_opens_at?: string
+        }
+        Relationships: []
+      }
+      fan_zone_cases: {
+        Row: {
+          created_at: string
+          details: string
+          entry_id: string
+          expires_at: string
+          id: string
+          kind: string
+          path: string
+          reason: string | null
+          reporter_id: string | null
+          revision: number
+          secret_hash: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          details: string
+          entry_id: string
+          expires_at?: string
+          id?: string
+          kind: string
+          path: string
+          reason?: string | null
+          reporter_id?: string | null
+          revision: number
+          secret_hash: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string
+          entry_id?: string
+          expires_at?: string
+          id?: string
+          kind?: string
+          path?: string
+          reason?: string | null
+          reporter_id?: string | null
+          revision?: number
+          secret_hash?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fan_zone_consents: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          entry_id: string
+          id: string
+          link_id: string | null
+          revision: number
+          scope: Json
+          sequence_id: number
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          entry_id: string
+          id?: string
+          link_id?: string | null
+          revision: number
+          scope: Json
+          sequence_id?: number
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          entry_id?: string
+          id?: string
+          link_id?: string | null
+          revision?: number
+          scope?: Json
+          sequence_id?: number
+        }
+        Relationships: []
+      }
+      fan_zone_entries: {
+        Row: {
+          alias: string
+          bytes: number | null
+          campaign_id: string
+          caption: string
+          created_at: string
+          digest: string | null
+          duration_ms: number | null
+          guardian_consent_id: string | null
+          id: string
+          owner_id: string
+          path: string
+          reason: string | null
+          removed_at: string | null
+          revision: number
+          rights_confirmed: boolean
+          status: string
+          updated_at: string
+          verified: boolean
+        }
+        Insert: {
+          alias?: string
+          bytes?: number | null
+          campaign_id: string
+          caption?: string
+          created_at?: string
+          digest?: string | null
+          duration_ms?: number | null
+          guardian_consent_id?: string | null
+          id?: string
+          owner_id: string
+          path: string
+          reason?: string | null
+          removed_at?: string | null
+          revision?: number
+          rights_confirmed?: boolean
+          status?: string
+          updated_at?: string
+          verified?: boolean
+        }
+        Update: {
+          alias?: string
+          bytes?: number | null
+          campaign_id?: string
+          caption?: string
+          created_at?: string
+          digest?: string | null
+          duration_ms?: number | null
+          guardian_consent_id?: string | null
+          id?: string
+          owner_id?: string
+          path?: string
+          reason?: string | null
+          removed_at?: string | null
+          revision?: number
+          rights_confirmed?: boolean
+          status?: string
+          updated_at?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
+      fan_zone_reflections: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          idea: string
+          owner_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          idea: string
+          owner_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          idea?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
+      fan_zone_requests: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          entry_id: string
+          expected_version: number
+          expires_at: string
+          receipt: Json
+          request_id: string
+          voter_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          entry_id: string
+          expected_version: number
+          expires_at: string
+          receipt: Json
+          request_id: string
+          voter_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          entry_id?: string
+          expected_version?: number
+          expires_at?: string
+          receipt?: Json
+          request_id?: string
+          voter_id?: string
+        }
+        Relationships: []
+      }
       filmer_props: {
         Row: {
           created_at: string
@@ -966,11 +1308,15 @@ export type Database = {
           id: string
           is_active: boolean
           is_clock_running: boolean
+          live_seq: number
           quarter: string
           sport: string
           status: string
           updated_at: string
           venue: string
+          venue_address: string
+          venue_notes: string
+          venue_school: string
         }
         Insert: {
           away_school?: string
@@ -985,11 +1331,15 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_clock_running?: boolean
+          live_seq?: number
           quarter?: string
           sport?: string
           status?: string
           updated_at?: string
           venue?: string
+          venue_address?: string
+          venue_notes?: string
+          venue_school?: string
         }
         Update: {
           away_school?: string
@@ -1004,11 +1354,15 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_clock_running?: boolean
+          live_seq?: number
           quarter?: string
           sport?: string
           status?: string
           updated_at?: string
           venue?: string
+          venue_address?: string
+          venue_notes?: string
+          venue_school?: string
         }
         Relationships: []
       }
@@ -1315,6 +1669,357 @@ export type Database = {
           reason?: string
           reopened_at?: string
           reopened_by?: string | null
+        }
+        Relationships: []
+      }
+      notification_account_activations: {
+        Row: {
+          activated_at: string | null
+          enrolled_at: string
+          recipient_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          enrolled_at?: string
+          recipient_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          enrolled_at?: string
+          recipient_id?: string
+        }
+        Relationships: []
+      }
+      notification_admin_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_revision: number | null
+          before_revision: number | null
+          created_at: string
+          id: string
+          job_id: string | null
+          reason: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_revision?: number | null
+          before_revision?: number | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          reason: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_revision?: number | null
+          before_revision?: number | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          reason?: string
+        }
+        Relationships: []
+      }
+      notification_config: {
+        Row: {
+          categories: Json
+          email_enabled: boolean
+          in_app_enabled: boolean
+          revision: number
+          singleton: boolean
+        }
+        Insert: {
+          categories?: Json
+          email_enabled?: boolean
+          in_app_enabled?: boolean
+          revision?: number
+          singleton?: boolean
+        }
+        Update: {
+          categories?: Json
+          email_enabled?: boolean
+          in_app_enabled?: boolean
+          revision?: number
+          singleton?: boolean
+        }
+        Relationships: []
+      }
+      notification_deliveries: {
+        Row: {
+          attempts: number
+          category: string
+          created_at: string
+          event_id: string
+          id: string
+          last_error_code: string | null
+          lease_token: string | null
+          lease_until: string | null
+          recipient_id: string | null
+          retryable: boolean
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          category: string
+          created_at?: string
+          event_id: string
+          id?: string
+          last_error_code?: string | null
+          lease_token?: string | null
+          lease_until?: string | null
+          recipient_id?: string | null
+          retryable?: boolean
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          category?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          last_error_code?: string | null
+          lease_token?: string | null
+          lease_until?: string | null
+          recipient_id?: string | null
+          retryable?: boolean
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_delivery_attempts: {
+        Row: {
+          attempt_number: number
+          created_at: string
+          error_code: string | null
+          finished_at: string | null
+          id: string
+          job_id: string
+          lease_token: string
+          outcome: string
+          provider_message_id: string | null
+        }
+        Insert: {
+          attempt_number: number
+          created_at?: string
+          error_code?: string | null
+          finished_at?: string | null
+          id?: string
+          job_id: string
+          lease_token: string
+          outcome: string
+          provider_message_id?: string | null
+        }
+        Update: {
+          attempt_number?: number
+          created_at?: string
+          error_code?: string | null
+          finished_at?: string | null
+          id?: string
+          job_id?: string
+          lease_token?: string
+          outcome?: string
+          provider_message_id?: string | null
+        }
+        Relationships: []
+      }
+      notification_events: {
+        Row: {
+          category: string
+          created_at: string
+          event_key: string
+          event_type: string
+          id: string
+          payload: Json
+          reference_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          event_key: string
+          event_type: string
+          id?: string
+          payload: Json
+          reference_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          event_key?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          reference_id?: string
+        }
+        Relationships: []
+      }
+      notification_inbox: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          event_id: string
+          id: string
+          read_at: string | null
+          recipient_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          read_at?: string | null
+          recipient_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          read_at?: string | null
+          recipient_id?: string
+        }
+        Relationships: []
+      }
+      notification_inbox_snapshots: {
+        Row: {
+          cutoff_at: string
+          expires_at: string
+          id: string
+          inbox_ids: string[]
+          recipient_id: string
+        }
+        Insert: {
+          cutoff_at?: string
+          expires_at?: string
+          id?: string
+          inbox_ids?: string[]
+          recipient_id: string
+        }
+        Update: {
+          cutoff_at?: string
+          expires_at?: string
+          id?: string
+          inbox_ids?: string[]
+          recipient_id?: string
+        }
+        Relationships: []
+      }
+      notification_payment_contexts: {
+        Row: {
+          athlete_id: string
+          cover_fee_cents: number
+          created_at: string
+          currency: string
+          dispute_observed: boolean
+          donor_user_id: string
+          gift_cents: number
+          id: string
+          livemode: boolean
+          notification_authority: boolean
+          observation_state: string
+          payment_intent_id: string
+          platform_tip_cents: number
+          purpose: string
+          refunded_cents: number
+          success_observed: boolean
+          total_cents: number
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          cover_fee_cents: number
+          created_at?: string
+          currency: string
+          dispute_observed?: boolean
+          donor_user_id: string
+          gift_cents: number
+          id: string
+          livemode?: boolean
+          notification_authority?: boolean
+          observation_state?: string
+          payment_intent_id: string
+          platform_tip_cents: number
+          purpose?: string
+          refunded_cents?: number
+          success_observed?: boolean
+          total_cents: number
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          cover_fee_cents?: number
+          created_at?: string
+          currency?: string
+          dispute_observed?: boolean
+          donor_user_id?: string
+          gift_cents?: number
+          id?: string
+          livemode?: boolean
+          notification_authority?: boolean
+          observation_state?: string
+          payment_intent_id?: string
+          platform_tip_cents?: number
+          purpose?: string
+          refunded_cents?: number
+          success_observed?: boolean
+          total_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_payment_observations: {
+        Row: {
+          context_id: string
+          observation_kind: string
+          observed_at: string
+          provider_event_id: string
+          refunded_cents: number
+        }
+        Insert: {
+          context_id: string
+          observation_kind: string
+          observed_at?: string
+          provider_event_id: string
+          refunded_cents: number
+        }
+        Update: {
+          context_id?: string
+          observation_kind?: string
+          observed_at?: string
+          provider_event_id?: string
+          refunded_cents?: number
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          categories: Json
+          email_enabled: boolean
+          in_app_enabled: boolean
+          recipient_id: string
+          revision: number
+        }
+        Insert: {
+          categories?: Json
+          email_enabled?: boolean
+          in_app_enabled?: boolean
+          recipient_id: string
+          revision?: number
+        }
+        Update: {
+          categories?: Json
+          email_enabled?: boolean
+          in_app_enabled?: boolean
+          recipient_id?: string
+          revision?: number
         }
         Relationships: []
       }
@@ -1675,6 +2380,66 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_athlete_facts: {
+        Row: {
+          admin_decided_at: string | null
+          admin_decided_by: string | null
+          answer_text: string | null
+          athlete_id: string
+          clear_cause: string | null
+          cleared_at: string | null
+          decline_reason: string | null
+          guardian_decided_at: string | null
+          guardian_decision: string | null
+          guardian_request_id: string | null
+          id: string
+          look_reasons: string[]
+          prompt_key: string
+          question_id: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          admin_decided_at?: string | null
+          admin_decided_by?: string | null
+          answer_text?: string | null
+          athlete_id: string
+          clear_cause?: string | null
+          cleared_at?: string | null
+          decline_reason?: string | null
+          guardian_decided_at?: string | null
+          guardian_decision?: string | null
+          guardian_request_id?: string | null
+          id?: string
+          look_reasons?: string[]
+          prompt_key: string
+          question_id?: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+        }
+        Update: {
+          admin_decided_at?: string | null
+          admin_decided_by?: string | null
+          answer_text?: string | null
+          athlete_id?: string
+          clear_cause?: string | null
+          cleared_at?: string | null
+          decline_reason?: string | null
+          guardian_decided_at?: string | null
+          guardian_decision?: string | null
+          guardian_request_id?: string | null
+          id?: string
+          look_reasons?: string[]
+          prompt_key?: string
+          question_id?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rallies: {
         Row: {
           approved_at: string | null
@@ -1903,10 +2668,12 @@ export type Database = {
           is_removed: boolean
           is_vault_only: boolean
           media_type: string
+          photo_cleanup_pending: boolean
           photo_count: number
           player_id: string | null
           reported_by: string[]
           rights_version: string | null
+          safety_label: string
           seki_count: number
           tag_confirmed_at: string | null
           tag_confirmed_by: string | null
@@ -1931,10 +2698,12 @@ export type Database = {
           is_removed?: boolean
           is_vault_only?: boolean
           media_type?: string
+          photo_cleanup_pending?: boolean
           photo_count?: number
           player_id?: string | null
           reported_by?: string[]
           rights_version?: string | null
+          safety_label?: string
           seki_count?: number
           tag_confirmed_at?: string | null
           tag_confirmed_by?: string | null
@@ -1959,10 +2728,12 @@ export type Database = {
           is_removed?: boolean
           is_vault_only?: boolean
           media_type?: string
+          photo_cleanup_pending?: boolean
           photo_count?: number
           player_id?: string | null
           reported_by?: string[]
           rights_version?: string | null
+          safety_label?: string
           seki_count?: number
           tag_confirmed_at?: string | null
           tag_confirmed_by?: string | null
@@ -1972,6 +2743,39 @@ export type Database = {
           uploaded_by?: string | null
           video_url?: string
           view_count?: number
+        }
+        Relationships: []
+      }
+      safety_label_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          new_label: string
+          old_label: string
+          reason: string
+          target_id: string
+          target_kind: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          new_label: string
+          old_label: string
+          reason: string
+          target_id: string
+          target_kind: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          new_label?: string
+          old_label?: string
+          reason?: string
+          target_id?: string
+          target_kind?: string
         }
         Relationships: []
       }
@@ -2275,6 +3079,894 @@ export type Database = {
           stat_fields?: Json
           updated_at?: string
           uses_clock?: boolean
+        }
+        Relationships: []
+      }
+      sport_quiz_attempts: {
+        Row: {
+          answered_option: number | null
+          close_reason: string | null
+          closed_at: string | null
+          completed_at: string | null
+          correction_reason: string | null
+          duration_seconds: number | null
+          expires_at: string | null
+          group_id: string | null
+          id: string
+          issued_at: string
+          learn_athlete_id: string | null
+          mode: string
+          next_by: string | null
+          planned_items: number | null
+          position: number | null
+          profile_id: string
+          question_id: string | null
+          request_id: string | null
+          round_kind: string
+          round_size: number | null
+          round_state: string | null
+          session_hash: string | null
+          sport_filter: string | null
+          started_at: string | null
+          status: string
+          topic_category: string | null
+          voided_at: string | null
+          week_start: string
+        }
+        Insert: {
+          answered_option?: number | null
+          close_reason?: string | null
+          closed_at?: string | null
+          completed_at?: string | null
+          correction_reason?: string | null
+          duration_seconds?: number | null
+          expires_at?: string | null
+          group_id?: string | null
+          id?: string
+          issued_at?: string
+          learn_athlete_id?: string | null
+          mode?: string
+          next_by?: string | null
+          planned_items?: number | null
+          position?: number | null
+          profile_id: string
+          question_id?: string | null
+          request_id?: string | null
+          round_kind?: string
+          round_size?: number | null
+          round_state?: string | null
+          session_hash?: string | null
+          sport_filter?: string | null
+          started_at?: string | null
+          status: string
+          topic_category?: string | null
+          voided_at?: string | null
+          week_start: string
+        }
+        Update: {
+          answered_option?: number | null
+          close_reason?: string | null
+          closed_at?: string | null
+          completed_at?: string | null
+          correction_reason?: string | null
+          duration_seconds?: number | null
+          expires_at?: string | null
+          group_id?: string | null
+          id?: string
+          issued_at?: string
+          learn_athlete_id?: string | null
+          mode?: string
+          next_by?: string | null
+          planned_items?: number | null
+          position?: number | null
+          profile_id?: string
+          question_id?: string | null
+          request_id?: string | null
+          round_kind?: string
+          round_size?: number | null
+          round_state?: string | null
+          session_hash?: string | null
+          sport_filter?: string | null
+          started_at?: string | null
+          status?: string
+          topic_category?: string | null
+          voided_at?: string | null
+          week_start?: string
+        }
+        Relationships: []
+      }
+      sport_quiz_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          attempt_id: string | null
+          created_at: string
+          id: number
+          question_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          attempt_id?: string | null
+          created_at?: string
+          id?: number
+          question_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          attempt_id?: string | null
+          created_at?: string
+          id?: number
+          question_id?: string | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      sport_quiz_badges: {
+        Row: {
+          attempt_id: string | null
+          id: string
+          issued_at: string
+          kind: string
+          label: string
+          period: string
+          profile_id: string
+          sport: string | null
+          visibility: string
+          voided_at: string | null
+          week_start: string | null
+        }
+        Insert: {
+          attempt_id?: string | null
+          id?: string
+          issued_at?: string
+          kind: string
+          label?: string
+          period: string
+          profile_id: string
+          sport?: string | null
+          visibility?: string
+          voided_at?: string | null
+          week_start?: string | null
+        }
+        Update: {
+          attempt_id?: string | null
+          id?: string
+          issued_at?: string
+          kind?: string
+          label?: string
+          period?: string
+          profile_id?: string
+          sport?: string | null
+          visibility?: string
+          voided_at?: string | null
+          week_start?: string | null
+        }
+        Relationships: []
+      }
+      sport_quiz_exposures: {
+        Row: {
+          first_issued_at: string
+          profile_id: string
+          question_id: string
+          question_key: string
+        }
+        Insert: {
+          first_issued_at: string
+          profile_id: string
+          question_id: string
+          question_key: string
+        }
+        Update: {
+          first_issued_at?: string
+          profile_id?: string
+          question_id?: string
+          question_key?: string
+        }
+        Relationships: []
+      }
+      sport_quiz_group_cases: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          group_id: string
+          id: number
+          kind: string
+          reason: string | null
+          reason_code: string | null
+          subject_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at: string
+          group_id: string
+          id?: number
+          kind: string
+          reason?: string | null
+          reason_code?: string | null
+          subject_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          group_id?: string
+          id?: number
+          kind?: string
+          reason?: string | null
+          reason_code?: string | null
+          subject_id?: string | null
+        }
+        Relationships: []
+      }
+      sport_quiz_group_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          group_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at: string
+          created_by?: string | null
+          expires_at: string
+          group_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          group_id?: string
+        }
+        Relationships: []
+      }
+      sport_quiz_group_join_attempts: {
+        Row: {
+          created_at: string
+          group_id: string | null
+          id: number
+          outcome: string
+          profile_id: string
+          prune_after: string
+          refusal_reason: string | null
+        }
+        Insert: {
+          created_at: string
+          group_id?: string | null
+          id?: number
+          outcome: string
+          profile_id: string
+          prune_after: string
+          refusal_reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          group_id?: string | null
+          id?: number
+          outcome?: string
+          profile_id?: string
+          prune_after?: string
+          refusal_reason?: string | null
+        }
+        Relationships: []
+      }
+      sport_quiz_group_members: {
+        Row: {
+          group_id: string
+          joined_at: string
+          profile_id: string
+          removed_at: string | null
+          removed_reason: string | null
+          status: string
+        }
+        Insert: {
+          group_id: string
+          joined_at: string
+          profile_id: string
+          removed_at?: string | null
+          removed_reason?: string | null
+          status?: string
+        }
+        Update: {
+          group_id?: string
+          joined_at?: string
+          profile_id?: string
+          removed_at?: string | null
+          removed_reason?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      sport_quiz_group_sets: {
+        Row: {
+          created_at: string
+          group_id: string
+          position: number
+          prune_after: string
+          question_id: string
+          question_key: string
+          week_start: string
+        }
+        Insert: {
+          created_at: string
+          group_id: string
+          position: number
+          prune_after: string
+          question_id: string
+          question_key: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          position?: number
+          prune_after?: string
+          question_id?: string
+          question_key?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
+      sport_quiz_groups: {
+        Row: {
+          close_reason: string | null
+          closed_at: string | null
+          codes_issued: number
+          create_request_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name_key: string
+          owner_id: string | null
+          ref_salt: string
+          status: string
+          theme_sport: string | null
+        }
+        Insert: {
+          close_reason?: string | null
+          closed_at?: string | null
+          codes_issued?: number
+          create_request_id?: string | null
+          created_at: string
+          created_by?: string | null
+          id?: string
+          name_key: string
+          owner_id?: string | null
+          ref_salt?: string
+          status?: string
+          theme_sport?: string | null
+        }
+        Update: {
+          close_reason?: string | null
+          closed_at?: string | null
+          codes_issued?: number
+          create_request_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name_key?: string
+          owner_id?: string | null
+          ref_salt?: string
+          status?: string
+          theme_sport?: string | null
+        }
+        Relationships: []
+      }
+      sport_quiz_imports: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          reason: string
+          rows_imported: number
+          rows_refused: number
+          rows_total: number
+          rows_warned: number
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at: string
+          id?: string
+          reason: string
+          rows_imported: number
+          rows_refused: number
+          rows_total: number
+          rows_warned: number
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          reason?: string
+          rows_imported?: number
+          rows_refused?: number
+          rows_total?: number
+          rows_warned?: number
+        }
+        Relationships: []
+      }
+      sport_quiz_levels: {
+        Row: {
+          level: string
+          profile_id: string
+          rank: number
+          reached_at: string
+          track: string
+        }
+        Insert: {
+          level: string
+          profile_id: string
+          rank: number
+          reached_at: string
+          track: string
+        }
+        Update: {
+          level?: string
+          profile_id?: string
+          rank?: number
+          reached_at?: string
+          track?: string
+        }
+        Relationships: []
+      }
+      sport_quiz_life_chapters: {
+        Row: {
+          framing: string
+          id: string
+          open: boolean
+          position: number
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          framing?: string
+          id: string
+          open?: boolean
+          position: number
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          framing?: string
+          id?: string
+          open?: boolean
+          position?: number
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      sport_quiz_preferences: {
+        Row: {
+          history_version: number
+          invitation_mode: string
+          last_invited_week: string | null
+          life_notice_version: string | null
+          life_opt_in: boolean
+          life_opted_in_at: string | null
+          life_version: number
+          notice_accepted_at: string | null
+          notice_version: string | null
+          profile_id: string
+          topic_mode: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          history_version?: number
+          invitation_mode?: string
+          last_invited_week?: string | null
+          life_notice_version?: string | null
+          life_opt_in?: boolean
+          life_opted_in_at?: string | null
+          life_version?: number
+          notice_accepted_at?: string | null
+          notice_version?: string | null
+          profile_id: string
+          topic_mode?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          history_version?: number
+          invitation_mode?: string
+          last_invited_week?: string | null
+          life_notice_version?: string | null
+          life_opt_in?: boolean
+          life_opted_in_at?: string | null
+          life_version?: number
+          notice_accepted_at?: string | null
+          notice_version?: string | null
+          profile_id?: string
+          topic_mode?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      sport_quiz_question_stats: {
+        Row: {
+          difficulty: string | null
+          dismissed_flags: string[]
+          flags: string[]
+          pause_reason: string | null
+          paused_at: string | null
+          question_id: string
+          queued_at: string | null
+          responders: number
+          restored_at: string | null
+          restored_by: string | null
+          reviewed_at: string | null
+          right_count: number
+          timeouts: number
+          updated_at: string
+        }
+        Insert: {
+          difficulty?: string | null
+          dismissed_flags?: string[]
+          flags?: string[]
+          pause_reason?: string | null
+          paused_at?: string | null
+          question_id: string
+          queued_at?: string | null
+          responders?: number
+          restored_at?: string | null
+          restored_by?: string | null
+          reviewed_at?: string | null
+          right_count?: number
+          timeouts?: number
+          updated_at: string
+        }
+        Update: {
+          difficulty?: string | null
+          dismissed_flags?: string[]
+          flags?: string[]
+          pause_reason?: string | null
+          paused_at?: string | null
+          question_id?: string
+          queued_at?: string | null
+          responders?: number
+          restored_at?: string | null
+          restored_by?: string | null
+          reviewed_at?: string | null
+          right_count?: number
+          timeouts?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sport_quiz_questions: {
+        Row: {
+          chapter: string | null
+          correct_option: number
+          created_at: string
+          created_by: string | null
+          education_only: boolean
+          explanation: string
+          fact_id: string | null
+          id: string
+          media_alt_text: string | null
+          media_attribution: string | null
+          media_exif_stripped: boolean | null
+          media_has_person: boolean | null
+          media_licence: string | null
+          media_no_marks: boolean | null
+          media_path: string | null
+          media_reviewed_at: string | null
+          media_reviewed_by: string | null
+          media_size_bytes: number | null
+          media_source: string | null
+          min_age_band: string | null
+          options: Json
+          prompt: string
+          question_key: string
+          question_type: string
+          reason: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_notes: string
+          sport: string
+          status: string
+          topic_category: string
+          version: number
+        }
+        Insert: {
+          chapter?: string | null
+          correct_option: number
+          created_at?: string
+          created_by?: string | null
+          education_only?: boolean
+          explanation: string
+          fact_id?: string | null
+          id?: string
+          media_alt_text?: string | null
+          media_attribution?: string | null
+          media_exif_stripped?: boolean | null
+          media_has_person?: boolean | null
+          media_licence?: string | null
+          media_no_marks?: boolean | null
+          media_path?: string | null
+          media_reviewed_at?: string | null
+          media_reviewed_by?: string | null
+          media_size_bytes?: number | null
+          media_source?: string | null
+          min_age_band?: string | null
+          options: Json
+          prompt: string
+          question_key?: string
+          question_type?: string
+          reason: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_notes?: string
+          sport: string
+          status?: string
+          topic_category?: string
+          version: number
+        }
+        Update: {
+          chapter?: string | null
+          correct_option?: number
+          created_at?: string
+          created_by?: string | null
+          education_only?: boolean
+          explanation?: string
+          fact_id?: string | null
+          id?: string
+          media_alt_text?: string | null
+          media_attribution?: string | null
+          media_exif_stripped?: boolean | null
+          media_has_person?: boolean | null
+          media_licence?: string | null
+          media_no_marks?: boolean | null
+          media_path?: string | null
+          media_reviewed_at?: string | null
+          media_reviewed_by?: string | null
+          media_size_bytes?: number | null
+          media_source?: string | null
+          min_age_band?: string | null
+          options?: Json
+          prompt?: string
+          question_key?: string
+          question_type?: string
+          reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_notes?: string
+          sport?: string
+          status?: string
+          topic_category?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      sport_quiz_reports: {
+        Row: {
+          counted: boolean
+          created_at: string
+          id: number
+          is_fact: boolean
+          not_counted_reason: string | null
+          question_id: string
+          reason: string
+          reporter_cleared_at: string | null
+          reporter_id: string | null
+          topic_category: string
+        }
+        Insert: {
+          counted: boolean
+          created_at: string
+          id?: number
+          is_fact: boolean
+          not_counted_reason?: string | null
+          question_id: string
+          reason: string
+          reporter_cleared_at?: string | null
+          reporter_id?: string | null
+          topic_category: string
+        }
+        Update: {
+          counted?: boolean
+          created_at?: string
+          id?: number
+          is_fact?: boolean
+          not_counted_reason?: string | null
+          question_id?: string
+          reason?: string
+          reporter_cleared_at?: string | null
+          reporter_id?: string | null
+          topic_category?: string
+        }
+        Relationships: []
+      }
+      sport_quiz_requests: {
+        Row: {
+          attempt_id: string | null
+          capacity_class: string
+          created_at: string
+          operation: string
+          payload_digest: string | null
+          profile_id: string
+          prune_after: string
+          receipt: Json
+          request_id: string
+          round_kind: string
+          week_start: string
+        }
+        Insert: {
+          attempt_id?: string | null
+          capacity_class?: string
+          created_at: string
+          operation: string
+          payload_digest?: string | null
+          profile_id: string
+          prune_after: string
+          receipt: Json
+          request_id: string
+          round_kind?: string
+          week_start: string
+        }
+        Update: {
+          attempt_id?: string | null
+          capacity_class?: string
+          created_at?: string
+          operation?: string
+          payload_digest?: string | null
+          profile_id?: string
+          prune_after?: string
+          receipt?: Json
+          request_id?: string
+          round_kind?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
+      sport_quiz_round_items: {
+        Row: {
+          answer_request_id: string | null
+          answered_at: string | null
+          answered_option: number | null
+          answered_position: number | null
+          attempt_id: string
+          closed_at: string | null
+          correction_reason: string | null
+          expires_at: string
+          issued_at: string
+          next_request_id: string | null
+          position: number
+          question_id: string
+          question_key: string
+          shown_order: number[] | null
+          status: string
+          voided_at: string | null
+        }
+        Insert: {
+          answer_request_id?: string | null
+          answered_at?: string | null
+          answered_option?: number | null
+          answered_position?: number | null
+          attempt_id: string
+          closed_at?: string | null
+          correction_reason?: string | null
+          expires_at: string
+          issued_at: string
+          next_request_id?: string | null
+          position: number
+          question_id: string
+          question_key: string
+          shown_order?: number[] | null
+          status: string
+          voided_at?: string | null
+        }
+        Update: {
+          answer_request_id?: string | null
+          answered_at?: string | null
+          answered_option?: number | null
+          answered_position?: number | null
+          attempt_id?: string
+          closed_at?: string | null
+          correction_reason?: string | null
+          expires_at?: string
+          issued_at?: string
+          next_request_id?: string | null
+          position?: number
+          question_id?: string
+          question_key?: string
+          shown_order?: number[] | null
+          status?: string
+          voided_at?: string | null
+        }
+        Relationships: []
+      }
+      sport_quiz_settings: {
+        Row: {
+          athlete_questions_enabled: boolean
+          athlete_share_pct: number
+          enabled: boolean
+          fact_salt: string
+          groups_enabled: boolean
+          images_enabled: boolean
+          level_thresholds: Json
+          life_enabled: boolean
+          pilot_accounts: string[]
+          reason: string
+          reports_paused: boolean
+          round_size: number
+          self_heal: Json
+          singleton: boolean
+          testing_only: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          athlete_questions_enabled?: boolean
+          athlete_share_pct?: number
+          enabled?: boolean
+          fact_salt?: string
+          groups_enabled?: boolean
+          images_enabled?: boolean
+          level_thresholds?: Json
+          life_enabled?: boolean
+          pilot_accounts?: string[]
+          reason?: string
+          reports_paused?: boolean
+          round_size?: number
+          self_heal?: Json
+          singleton?: boolean
+          testing_only?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          athlete_questions_enabled?: boolean
+          athlete_share_pct?: number
+          enabled?: boolean
+          fact_salt?: string
+          groups_enabled?: boolean
+          images_enabled?: boolean
+          level_thresholds?: Json
+          life_enabled?: boolean
+          pilot_accounts?: string[]
+          reason?: string
+          reports_paused?: boolean
+          round_size?: number
+          self_heal?: Json
+          singleton?: boolean
+          testing_only?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      sport_quiz_week_guards: {
+        Row: {
+          profile_id: string
+          prune_after: string
+          round_kind: string
+          spent_at: string
+          week_start: string
+        }
+        Insert: {
+          profile_id: string
+          prune_after: string
+          round_kind?: string
+          spent_at: string
+          week_start: string
+        }
+        Update: {
+          profile_id?: string
+          prune_after?: string
+          round_kind?: string
+          spent_at?: string
+          week_start?: string
         }
         Relationships: []
       }
@@ -2840,6 +4532,7 @@ export type Database = {
           photo_count: number | null
           player_id: string | null
           reported_by: string[] | null
+          safety_label: string | null
           seki_count: number | null
           tag_confirmed_at: string | null
           tag_confirmed_by: string | null
@@ -3277,6 +4970,19 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      apply_notification_payment_event: {
+        Args: {
+          provider_event_id: string
+          provider_intent_id: string
+          observation_kind: string
+          provider_livemode: boolean
+          currency_code: string
+          total_cents: number
+          refunded_cents: number
+          context_metadata: Json
+        }
+        Returns: Json
+      }
       apply_privacy_settings: {
         Args: {
           target: string
@@ -3376,6 +5082,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      authorize_notification_send: {
+        Args: {
+          job_id: string
+          lease_token: string
+        }
+        Returns: Json
+      }
       award_filmer_aura: {
         Args: {
           target_profile_id: string
@@ -3385,6 +5098,19 @@ export type Database = {
           points: number
         }
         Returns: boolean
+      }
+      begin_failed_photo_story_cleanup: {
+        Args: {
+          p_reel_id: string
+        }
+        Returns: Json
+      }
+      begin_notification_attempt: {
+        Args: {
+          job_id: string
+          lease_token: string
+        }
+        Returns: Json
       }
       beyond_actor: {
         Args: {
@@ -3529,6 +5255,13 @@ export type Database = {
       can_confirm_player_tag: {
         Args: {
           target_player_id: string
+        }
+        Returns: boolean
+      }
+      can_delete_failed_photo_story_object: {
+        Args: {
+          p_bucket: string
+          p_name: string
         }
         Returns: boolean
       }
@@ -3729,6 +5462,14 @@ export type Database = {
         }
         Returns: Json
       }
+      claim_notification_jobs: {
+        Args: {
+          worker_id: string
+          batch_size?: number
+          lease_seconds?: number
+        }
+        Returns: Json
+      }
       claimed_player_ids: {
         Args: {
           target_player_ids: string[]
@@ -3773,11 +5514,26 @@ export type Database = {
         }
         Returns: undefined
       }
+      coach_label_desk: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       company_revenue_bps: {
         Args: {
           stream_source: string
         }
         Returns: number
+      }
+      complete_notification_attempt: {
+        Args: {
+          job_id: string
+          lease_token: string
+          outcome: string
+          error_code?: string
+          provider_message_id?: string
+          safe_retry?: boolean
+        }
+        Returns: boolean
       }
       confirm_account_tag: {
         Args: {
@@ -3846,6 +5602,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      emit_notification_event: {
+        Args: {
+          event_key: string
+          event_type: string
+          reference_id: string
+        }
+        Returns: string
+      }
       end_guardian_link: {
         Args: {
           link_id: string
@@ -3870,6 +5634,12 @@ export type Database = {
         }
         Returns: Json
       }
+      finish_failed_photo_story_cleanup: {
+        Args: {
+          p_reel_id: string
+        }
+        Returns: Json
+      }
       first_name_of: {
         Args: {
           target: string
@@ -3879,6 +5649,217 @@ export type Database = {
       friend_requests_enabled: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      fun_actor: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      fun_admin_ballot: {
+        Args: {
+          p_ballot_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      fun_admin_campaign: {
+        Args: {
+          p_id: string
+          p_action: string
+          p_payload: Json
+        }
+        Returns: Json
+      }
+      fun_admin_case: {
+        Args: {
+          p_case_id: string
+          p_action: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      fun_admin_entry: {
+        Args: {
+          p_entry_id: string
+          p_action: string
+          p_reason: string
+          p_expected_scope: Json
+        }
+        Returns: Json
+      }
+      fun_admin_guard: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      fun_admin_snapshot: {
+        Args: {
+          p_campaign_id?: string
+          p_before?: string
+        }
+        Returns: Json
+      }
+      fun_audit: {
+        Args: {
+          p_campaign: string
+          p_action: string
+          p_subject: string
+          p_detail?: Json
+        }
+        Returns: undefined
+      }
+      fun_campaign_json: {
+        Args: {
+          p_campaign: Database["public"]["Tables"]["fan_zone_campaigns"]["Row"]
+        }
+        Returns: Json
+      }
+      fun_candidate: {
+        Args: {
+          p_entry: Database["public"]["Tables"]["fan_zone_entries"]["Row"]
+        }
+        Returns: boolean
+      }
+      fun_case: {
+        Args: {
+          p_entry_id: string
+          p_kind: string
+          p_details: string
+          p_secret: string
+        }
+        Returns: Json
+      }
+      fun_case_json: {
+        Args: {
+          p_case: Database["public"]["Tables"]["fan_zone_cases"]["Row"]
+        }
+        Returns: Json
+      }
+      fun_case_status: {
+        Args: {
+          p_case_id: string
+          p_secret: string
+        }
+        Returns: Json
+      }
+      fun_complete_removal: {
+        Args: {
+          p_entry_id: string
+          p_revision: number
+        }
+        Returns: Json
+      }
+      fun_eligible: {
+        Args: {
+          p_profile: string
+        }
+        Returns: boolean
+      }
+      fun_entry: {
+        Args: {
+          p_campaign_id: string
+          p_entry_id: string
+          p_action: string
+          p_payload: Json
+        }
+        Returns: Json
+      }
+      fun_entry_json: {
+        Args: {
+          p_entry: Database["public"]["Tables"]["fan_zone_entries"]["Row"]
+        }
+        Returns: Json
+      }
+      fun_guardian: {
+        Args: {
+          p_owner: string
+          p_actor: string
+        }
+        Returns: boolean
+      }
+      fun_guardian_grant_valid: {
+        Args: {
+          p_entry: Database["public"]["Tables"]["fan_zone_entries"]["Row"]
+        }
+        Returns: boolean
+      }
+      fun_media_access: {
+        Args: {
+          p_entry_id: string
+          p_revision: number
+          p_intent: string
+        }
+        Returns: Json
+      }
+      fun_permission: {
+        Args: {
+          p_entry_id: string
+          p_revision: number
+          p_action: string
+          p_expected_scope: Json
+        }
+        Returns: Json
+      }
+      fun_permission_valid: {
+        Args: {
+          p_entry: Database["public"]["Tables"]["fan_zone_entries"]["Row"]
+        }
+        Returns: boolean
+      }
+      fun_pilot: {
+        Args: {
+          p_campaign: string
+          p_profile: string
+        }
+        Returns: boolean
+      }
+      fun_prune_receipts: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      fun_reflection: {
+        Args: {
+          p_campaign_id: string
+          p_id: string
+          p_idea: string
+          p_action: string
+        }
+        Returns: Json
+      }
+      fun_scope: {
+        Args: {
+          p_entry: Database["public"]["Tables"]["fan_zone_entries"]["Row"]
+        }
+        Returns: Json
+      }
+      fun_signature: {
+        Args: {
+          p_campaign: string
+        }
+        Returns: string
+      }
+      fun_snapshot: {
+        Args: {
+          p_campaign_id?: string
+        }
+        Returns: Json
+      }
+      fun_verify_media: {
+        Args: {
+          p_entry_id: string
+          p_revision: number
+          p_digest: string
+          p_bytes: number
+          p_duration_ms: number
+        }
+        Returns: Json
+      }
+      fun_vote: {
+        Args: {
+          p_campaign_id: string
+          p_entry_id: string
+          p_request_id: string
+          p_expected_version: number
+        }
+        Returns: Json
       }
       get_active_rally: {
         Args: {
@@ -3894,6 +5875,21 @@ export type Database = {
       }
       get_admin_malo_breakdown: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_admin_notification_config: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_admin_notification_health: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_admin_notification_jobs: {
+        Args: {
+          cursor?: string
+          page_size?: number
+        }
         Returns: Json
       }
       get_admin_platform_metrics: {
@@ -4015,6 +6011,22 @@ export type Database = {
         Returns: Json
       }
       get_my_verification: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_notification_availability: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_notification_inbox: {
+        Args: {
+          archived?: boolean
+          cursor?: string
+          page_size?: number
+        }
+        Returns: Json
+      }
+      get_notification_preferences: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
@@ -4338,6 +6350,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_all_notifications_read: {
+        Args: {
+          cutoff: string
+        }
+        Returns: number
+      }
       minor_guardian_count: {
         Args: {
           minor: string
@@ -4395,6 +6413,35 @@ export type Database = {
           raw_code: string
         }
         Returns: string
+      }
+      notification_activate_account: {
+        Args: {
+          recipient_id: string
+        }
+        Returns: string
+      }
+      notification_actor: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      notification_categories: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
+      }
+      notification_require_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      notification_require_service: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      notification_source_eligible: {
+        Args: {
+          event_id: string
+          recipient_id: string
+        }
+        Returns: boolean
       }
       parent_set_player_consent: {
         Args: {
@@ -4480,6 +6527,1269 @@ export type Database = {
         }
         Returns: Json
       }
+      quiz_active_item: {
+        Args: {
+          p_attempt: string
+        }
+        Returns: Json
+      }
+      quiz_actor: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      quiz_admin_actor: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      quiz_admin_fact_decide: {
+        Args: {
+          p_fact_id: string
+          p_action: string
+          p_payload: Json
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_fact_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_admin_forecast: {
+        Args: {
+          p_at: string
+        }
+        Returns: Json
+      }
+      quiz_admin_fresh_settings: {
+        Args: {
+          p_payload: Json
+          p_reason: string
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_group_case: {
+        Args: {
+          p_group_id: string
+          p_reason: string
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_group_remove: {
+        Args: {
+          p_group_id: string
+          p_profile_id: string
+          p_reason: string
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_import: {
+        Args: {
+          p_rows: Json
+          p_dry_run: boolean
+          p_reason: string
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_life_chapter: {
+        Args: {
+          p_chapter: string
+          p_open: boolean
+          p_reason: string
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_life_settings: {
+        Args: {
+          p_payload: Json
+          p_reason: string
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_life_snapshot: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_admin_needs_look: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_admin_needs_look_action: {
+        Args: {
+          p_question_id: string
+          p_action: string
+          p_reason: string
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_play_settings: {
+        Args: {
+          p_payload: Json
+          p_reason: string
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_question: {
+        Args: {
+          p_id: string
+          p_action: string
+          p_payload: Json
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_refill: {
+        Args: {
+          p_at: string
+        }
+        Returns: Json
+      }
+      quiz_admin_retention: {
+        Args: {
+          p_reason: string
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_settings: {
+        Args: {
+          p_payload: Json
+          p_reason: string
+          p_expected_actor_id: string
+        }
+        Returns: Json
+      }
+      quiz_admin_snapshot: {
+        Args: {
+          p_question_cursor?: string
+          p_audit_before?: number
+        }
+        Returns: Json
+      }
+      quiz_answer: {
+        Args: {
+          p_attempt_id: string
+          p_option: number
+          p_request_id: string
+          p_session_secret: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_attempt_qualifies: {
+        Args: {
+          p_attempt: string
+        }
+        Returns: boolean
+      }
+      quiz_audit_is_life: {
+        Args: {
+          p_id: number
+        }
+        Returns: boolean
+      }
+      quiz_badge_shelf: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_badge_visibility: {
+        Args: {
+          p_badge_id: string
+          p_visibility: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_bucket: {
+        Args: {
+          p_seed: string
+          p_slice: number
+        }
+        Returns: number
+      }
+      quiz_bump_history: {
+        Args: {
+          p_me: string
+        }
+        Returns: undefined
+      }
+      quiz_cursor: {
+        Args: {
+          p_cursor: string
+          p_stream: string
+        }
+        Returns: Json
+      }
+      quiz_digest: {
+        Args: {
+          p_payload: Json
+        }
+        Returns: string
+      }
+      quiz_end: {
+        Args: {
+          p_attempt_id: string
+          p_start_request_id: string
+          p_expected_week: string
+          p_reason: string
+          p_request_id: string
+          p_expected_profile_id: string
+          p_round_kind: string
+        }
+        Returns: Json
+      }
+      quiz_erase_history: {
+        Args: {
+          p_expected_history_version: number
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_expected_actor: {
+        Args: {
+          p_expected: string
+          p_admin?: boolean
+        }
+        Returns: string
+      }
+      quiz_expire: {
+        Args: {
+          p_me: string
+          p_at: string
+        }
+        Returns: undefined
+      }
+      quiz_fact_actor: {
+        Args: {
+          p_expected: string
+        }
+        Returns: string
+      }
+      quiz_fact_audience_ok: {
+        Args: {
+          p_athlete: string
+          p_viewer: string
+        }
+        Returns: boolean
+      }
+      quiz_fact_clear: {
+        Args: {
+          p_fact: string
+          p_cause: string
+          p_actor: string
+          p_at: string
+        }
+        Returns: undefined
+      }
+      quiz_fact_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_fact_export: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_fact_fill: {
+        Args: {
+          p_question: string
+          p_viewer: string
+        }
+        Returns: Json
+      }
+      quiz_fact_guardian_decide: {
+        Args: {
+          p_fact_id: string
+          p_approve: boolean
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_fact_guardian_pending: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_fact_look_reasons: {
+        Args: {
+          p_text: string
+          p_prompt: string
+        }
+        Returns: string[]
+      }
+      quiz_fact_mine: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_fact_month_bucket: {
+        Args: {
+          p_fact: string
+          p_month: string
+        }
+        Returns: string
+      }
+      quiz_fact_not_okay_words: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_fact_owner_dto: {
+        Args: {
+          p_fact: string
+        }
+        Returns: Json
+      }
+      quiz_fact_pick: {
+        Args: {
+          p_me: string
+          p_attempt: string
+        }
+        Returns: string
+      }
+      quiz_fact_prompt: {
+        Args: {
+          p_key: string
+        }
+        Returns: Json
+      }
+      quiz_fact_prompts: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_fact_request_open: {
+        Args: {
+          p_request: string
+        }
+        Returns: boolean
+      }
+      quiz_fact_retire_question: {
+        Args: {
+          p_question: string
+          p_reason: string
+          p_at: string
+        }
+        Returns: undefined
+      }
+      quiz_fact_slot: {
+        Args: {
+          p_me: string
+          p_attempt: string
+        }
+        Returns: number
+      }
+      quiz_fact_submit: {
+        Args: {
+          p_prompt_key: string
+          p_answer: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_fact_text_problems: {
+        Args: {
+          p_text: string
+          p_prompt: string
+          p_athlete: string
+        }
+        Returns: string[]
+      }
+      quiz_fact_viewer_ok: {
+        Args: {
+          p_fact: string
+          p_viewer: string
+          p_learn: string
+        }
+        Returns: boolean
+      }
+      quiz_fact_visible: {
+        Args: {
+          p_fact: string
+          p_viewer: string
+        }
+        Returns: boolean
+      }
+      quiz_fact_void_items: {
+        Args: {
+          p_question: string
+          p_viewer: string
+          p_reason: string
+          p_at: string
+        }
+        Returns: number
+      }
+      quiz_fact_withdraw: {
+        Args: {
+          p_fact_id: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_fact_word_scan: {
+        Args: {
+          p_text: string
+        }
+        Returns: Json
+      }
+      quiz_facts: {
+        Args: {
+          p_me: string
+          p_from: string
+          p_to: string
+        }
+        Returns: number
+      }
+      quiz_fold_lookalikes: {
+        Args: {
+          p: string
+        }
+        Returns: string
+      }
+      quiz_fresh_norm: {
+        Args: {
+          p: string
+        }
+        Returns: string
+      }
+      quiz_fun_available: {
+        Args: {
+          p_me: string
+        }
+        Returns: boolean
+      }
+      quiz_fun_slot: {
+        Args: {
+          p_me: string
+          p_week: string
+        }
+        Returns: boolean
+      }
+      quiz_group_active_count: {
+        Args: {
+          p_group: string
+        }
+        Returns: number
+      }
+      quiz_group_case: {
+        Args: {
+          p_group: string
+          p_kind: string
+          p_actor: string
+          p_subject: string
+          p_code: string
+          p_reason: string
+          p_at: string
+        }
+        Returns: undefined
+      }
+      quiz_group_code_new: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      quiz_group_create: {
+        Args: {
+          p_name_key: string
+          p_theme_sport: string
+          p_request_id: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_group_display_name: {
+        Args: {
+          p_member: string
+        }
+        Returns: string
+      }
+      quiz_group_ensure_set: {
+        Args: {
+          p_group: string
+          p_week: string
+          p_size: number
+          p_at: string
+        }
+        Returns: number
+      }
+      quiz_group_facts: {
+        Args: {
+          p_me: string
+          p_from: string
+          p_to: string
+        }
+        Returns: number
+      }
+      quiz_group_handover: {
+        Args: {
+          p_group: string
+          p_leaving: string
+          p_at: string
+        }
+        Returns: string
+      }
+      quiz_group_issue_code: {
+        Args: {
+          p_group: string
+          p_actor: string
+          p_at: string
+        }
+        Returns: Json
+      }
+      quiz_group_join: {
+        Args: {
+          p_code: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_group_leave: {
+        Args: {
+          p_group_id: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_group_mark_removed: {
+        Args: {
+          p_group: string
+          p_member: string
+          p_reason: string
+          p_actor: string
+          p_note: string
+          p_at: string
+        }
+        Returns: undefined
+      }
+      quiz_group_needs_recheck: {
+        Args: {
+          p_group: string
+        }
+        Returns: boolean
+      }
+      quiz_group_owned: {
+        Args: {
+          p_group: string
+          p_me: string
+        }
+        Returns: Database["public"]["Tables"]["sport_quiz_groups"]["Row"]
+      }
+      quiz_group_page: {
+        Args: {
+          p_group_id: string
+        }
+        Returns: Json
+      }
+      quiz_group_page_dto: {
+        Args: {
+          p_group: string
+          p_me: string
+          p_at: string
+        }
+        Returns: Json
+      }
+      quiz_group_recheck: {
+        Args: {
+          p_profile: string
+          p_remove_self?: boolean
+        }
+        Returns: number
+      }
+      quiz_group_recheck_group: {
+        Args: {
+          p_group: string
+        }
+        Returns: number
+      }
+      quiz_group_recheck_pair: {
+        Args: {
+          p_a: string
+          p_b: string
+        }
+        Returns: number
+      }
+      quiz_group_refusal: {
+        Args: {
+          p_group: string
+          p_joiner: string
+        }
+        Returns: string
+      }
+      quiz_group_remove_member: {
+        Args: {
+          p_group_id: string
+          p_member_ref: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_group_renew_code: {
+        Args: {
+          p_group_id: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_group_report: {
+        Args: {
+          p_group_id: string
+          p_reason_code: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_group_set_theme: {
+        Args: {
+          p_group_id: string
+          p_theme_sport: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_group_start: {
+        Args: {
+          p_group_id: string
+          p_duration_seconds: number
+          p_expected_week: string
+          p_notice_version: string
+          p_request_id: string
+          p_session_secret: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_groups_mine: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_history: {
+        Args: {
+          p_before?: string
+        }
+        Returns: Json
+      }
+      quiz_invitation: {
+        Args: {
+          p_expected_week: string
+          p_request_id: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_item_fact_ok: {
+        Args: {
+          p_attempt: string
+          p_position: number
+        }
+        Returns: boolean
+      }
+      quiz_item_question_dto: {
+        Args: {
+          p_attempt: string
+          p_position: number
+        }
+        Returns: Json
+      }
+      quiz_item_result_dto: {
+        Args: {
+          p_attempt: string
+          p_position: number
+        }
+        Returns: Json
+      }
+      quiz_learn_start: {
+        Args: {
+          p_athlete_player_id: string
+          p_sport: string
+          p_duration_seconds: number
+          p_expected_week: string
+          p_notice_version: string
+          p_request_id: string
+          p_session_secret: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_level: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_level_keys: {
+        Args: Record<PropertyKey, never>
+        Returns: string[]
+      }
+      quiz_level_label: {
+        Args: {
+          p_rank: number
+        }
+        Returns: string
+      }
+      quiz_level_rank: {
+        Args: {
+          p_facts: number
+          p_thresholds: Json
+        }
+        Returns: number
+      }
+      quiz_levenshtein: {
+        Args: {
+          a: string
+          b: string
+        }
+        Returns: number
+      }
+      quiz_life_access: {
+        Args: {
+          p_me: string
+        }
+        Returns: boolean
+      }
+      quiz_life_actor: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      quiz_life_alt: {
+        Args: {
+          p_list: Json
+        }
+        Returns: string
+      }
+      quiz_life_approved_count: {
+        Args: {
+          p_chapter: string
+        }
+        Returns: number
+      }
+      quiz_life_band_ok: {
+        Args: {
+          p_profile_band: string
+        }
+        Returns: boolean
+      }
+      quiz_life_chapter_open: {
+        Args: {
+          p_chapter: string
+        }
+        Returns: boolean
+      }
+      quiz_life_chapter_state: {
+        Args: {
+          p_chapter: string
+        }
+        Returns: Json
+      }
+      quiz_life_chapters: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_life_copy_problems: {
+        Args: {
+          p_prompt: string
+          p_options: Json
+          p_explanation: string
+          p_chapter: string
+        }
+        Returns: string[]
+      }
+      quiz_life_copy_rules: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_life_expected_actor: {
+        Args: {
+          p_expected: string
+        }
+        Returns: string
+      }
+      quiz_life_figure_re: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      quiz_life_normalize: {
+        Args: {
+          p: string
+        }
+        Returns: string
+      }
+      quiz_life_open_at: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      quiz_life_phrase_re: {
+        Args: {
+          p_list: Json
+        }
+        Returns: string
+      }
+      quiz_life_pool: {
+        Args: {
+          p_me: string
+          p_chapter: string
+        }
+        Returns: {
+          id: string
+          question_key: string
+          chapter: string
+        }[]
+      }
+      quiz_life_preferences: {
+        Args: {
+          p_opt_in: boolean
+          p_notice_version: string
+          p_expected_version: number
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_life_preferences_dto: {
+        Args: {
+          p_me: string
+        }
+        Returns: Json
+      }
+      quiz_life_progress: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_life_snapshot: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_life_start: {
+        Args: {
+          p_expected_week: string
+          p_request_id: string
+          p_session_secret: string
+          p_expected_profile_id: string
+          p_notice_version: string
+          p_chapter?: string
+          p_duration_seconds?: number
+        }
+        Returns: Json
+      }
+      quiz_life_strip: {
+        Args: {
+          p: string
+        }
+        Returns: string
+      }
+      quiz_life_unseen_count: {
+        Args: {
+          p_me: string
+          p_chapter: string
+        }
+        Returns: number
+      }
+      quiz_lock: {
+        Args: {
+          p_me: string
+        }
+        Returns: undefined
+      }
+      quiz_member_ref: {
+        Args: {
+          p_group: string
+          p_member: string
+        }
+        Returns: string
+      }
+      quiz_near_match: {
+        Args: {
+          a: string
+          b: string
+        }
+        Returns: boolean
+      }
+      quiz_needs_look: {
+        Args: {
+          p_question: string
+        }
+        Returns: boolean
+      }
+      quiz_next: {
+        Args: {
+          p_attempt_id: string
+          p_expected_position: number
+          p_request_id: string
+          p_session_secret: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_normalize_options: {
+        Args: {
+          p_options: Json
+        }
+        Returns: Json
+      }
+      quiz_open_reports: {
+        Args: {
+          p_question: string
+        }
+        Returns: number
+      }
+      quiz_pair_ok: {
+        Args: {
+          p_a: string
+          p_b: string
+        }
+        Returns: boolean
+      }
+      quiz_played: {
+        Args: {
+          p_me: string
+          p_week: string
+        }
+        Returns: boolean
+      }
+      quiz_preferences: {
+        Args: {
+          p_payload: Json
+          p_expected_version: number
+          p_request_id: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_preferences_dto: {
+        Args: {
+          p_me: string
+        }
+        Returns: Json
+      }
+      quiz_profile_closed: {
+        Args: {
+          p_profile: string
+        }
+        Returns: boolean
+      }
+      quiz_quarter_of: {
+        Args: {
+          p_day: string
+        }
+        Returns: string
+      }
+      quiz_question_dto: {
+        Args: {
+          p_question: string
+        }
+        Returns: Json
+      }
+      quiz_question_hard: {
+        Args: {
+          p_question: string
+        }
+        Returns: boolean
+      }
+      quiz_question_paused: {
+        Args: {
+          p_question: string
+        }
+        Returns: boolean
+      }
+      quiz_question_stats_refresh: {
+        Args: {
+          p_question: string
+        }
+        Returns: undefined
+      }
+      quiz_random_order: {
+        Args: {
+          p_n: number
+        }
+        Returns: number[]
+      }
+      quiz_receipt: {
+        Args: {
+          p_request_id: string
+        }
+        Returns: Json
+      }
+      quiz_receipt_dto: {
+        Args: {
+          p_me: string
+          p_request: string
+          p_asof: string
+        }
+        Returns: Json
+      }
+      quiz_report: {
+        Args: {
+          p_question_id: string
+          p_reason: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_report_rules: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_require_testing: {
+        Args: {
+          me: string
+        }
+        Returns: undefined
+      }
+      quiz_result_dto: {
+        Args: {
+          p_attempt: string
+          p_asof: string
+        }
+        Returns: Json
+      }
+      quiz_round_begin: {
+        Args: {
+          p_me: string
+          p_kind: string
+          p_topic: string
+          p_sport: string
+          p_duration: number
+          p_expected_week: string
+          p_notice: string
+          p_request: string
+          p_secret: string
+          p_group: string
+          p_chapter: string
+          p_learn_player: string
+        }
+        Returns: Json
+      }
+      quiz_round_close: {
+        Args: {
+          p_attempt: string
+          p_at: string
+          p_reason: string
+          p_closed_at?: string
+        }
+        Returns: string
+      }
+      quiz_round_gap: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      quiz_round_hard_count: {
+        Args: {
+          p_attempt: string
+        }
+        Returns: number
+      }
+      quiz_round_issue: {
+        Args: {
+          p_me: string
+          p_attempt: string
+          p_position: number
+          p_question: string
+          p_at: string
+          p_duration: number
+          p_request: string
+        }
+        Returns: undefined
+      }
+      quiz_round_items_dto: {
+        Args: {
+          p_attempt: string
+          p_asof: string
+        }
+        Returns: Json
+      }
+      quiz_round_pick: {
+        Args: {
+          p_me: string
+          p_attempt: string
+          p_position: number
+        }
+        Returns: string
+      }
+      quiz_round_settle: {
+        Args: {
+          p_attempt: string
+          p_at: string
+        }
+        Returns: undefined
+      }
+      quiz_round_view: {
+        Args: {
+          p_attempt: string
+          p_asof: string
+        }
+        Returns: Json
+      }
+      quiz_same_options: {
+        Args: {
+          a: Json
+          b: Json
+        }
+        Returns: boolean
+      }
+      quiz_save_receipt: {
+        Args: {
+          p_me: string
+          p_request: string
+          p_operation: string
+          p_week: string
+          p_digest: string
+          p_attempt: string
+          p_outcome: string
+          p_at: string
+          p_kind: string
+          p_preferences?: Json
+        }
+        Returns: Json
+      }
+      quiz_save_request: {
+        Args: {
+          p_me: string
+          p_request: string
+          p_operation: string
+          p_week: string
+          p_digest: string
+          p_attempt: string
+          p_outcome: string
+          p_at: string
+          p_preferences?: Json
+        }
+        Returns: Json
+      }
+      quiz_season_recap: {
+        Args: {
+          p_quarter?: string
+        }
+        Returns: Json
+      }
+      quiz_self_heal_defaults: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_self_heal_ok: {
+        Args: {
+          p: Json
+        }
+        Returns: boolean
+      }
+      quiz_shown_position: {
+        Args: {
+          p_order: number[]
+          p_stored: number
+        }
+        Returns: number
+      }
+      quiz_shuffle_options: {
+        Args: {
+          p_options: Json
+          p_correct: number
+          p_type: string
+        }
+        Returns: Json
+      }
+      quiz_skip: {
+        Args: {
+          p_expected_week: string
+          p_request_id: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_snapshot: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      quiz_spend:
+        | {
+            Args: {
+              p_me: string
+              p_week: string
+              p_at: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_me: string
+              p_week: string
+              p_at: string
+              p_kind: string
+            }
+            Returns: undefined
+          }
+      quiz_start: {
+        Args: {
+          p_topic_category: string
+          p_sport: string
+          p_duration_seconds: number
+          p_expected_week: string
+          p_notice_version: string
+          p_request_id: string
+          p_session_secret: string
+          p_expected_profile_id: string
+        }
+        Returns: Json
+      }
+      quiz_summary: {
+        Args: {
+          p_attempt: string
+          p_asof: string
+        }
+        Returns: Json
+      }
+      quiz_sync_badges: {
+        Args: {
+          p_me: string
+          p_at: string
+        }
+        Returns: undefined
+      }
+      quiz_teen_accepts: {
+        Args: {
+          p_teen: string
+          p_other: string
+        }
+        Returns: boolean
+      }
+      quiz_thresholds_ok: {
+        Args: {
+          p: Json
+        }
+        Returns: boolean
+      }
+      quiz_trivia_band: {
+        Args: {
+          p_me: string
+        }
+        Returns: boolean
+      }
+      quiz_unseen_count: {
+        Args: {
+          p_me: string
+          p_topic: string
+          p_sport: string
+        }
+        Returns: number
+      }
+      quiz_week: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      quiz_week_at: {
+        Args: {
+          p_time: string
+        }
+        Returns: string
+      }
+      quiz_week_end: {
+        Args: {
+          p_week: string
+        }
+        Returns: string
+      }
+      quiz_word_overlap: {
+        Args: {
+          a: string
+          b: string
+        }
+        Returns: number
+      }
       rally_manager_role: {
         Args: {
           target_player_id: string
@@ -4519,6 +7829,20 @@ export type Database = {
           p_lines: Json
         }
         Returns: string
+      }
+      record_notification_payment_context: {
+        Args: {
+          context_id: string
+          provider_intent_id: string
+          donor_user_id: string
+          athlete_id: string
+          gift_cents: number
+          cover_fee_cents: number
+          platform_tip_cents: number
+          currency_code: string
+          provider_livemode: boolean
+        }
+        Returns: boolean
       }
       record_reel_view: {
         Args: {
@@ -4582,6 +7906,13 @@ export type Database = {
           p_manifest: Json
         }
         Returns: string
+      }
+      release_notification_job: {
+        Args: {
+          job_id: string
+          lease_token: string
+        }
+        Returns: boolean
       }
       remove_friend: {
         Args: {
@@ -4648,11 +7979,39 @@ export type Database = {
         }
         Returns: Json
       }
+      retry_notification_job: {
+        Args: {
+          job_id: string
+          expected_actor: string
+          reason?: string
+        }
+        Returns: boolean
+      }
       revoke_guardian_consent: {
         Args: {
           minor_profile_id: string
         }
         Returns: Json
+      }
+      save_notification_preferences: {
+        Args: {
+          expected_revision: number
+          preferences: Json
+          expected_actor: string
+        }
+        Returns: Json
+      }
+      save_stripe_connect_account: {
+        Args: {
+          actor_user_id: string
+          target_player_id: string
+          expected_profile_id: string
+          expected_account_id: string
+          account_id: string
+          onboarding_complete: boolean
+          transfers_enabled: boolean
+        }
+        Returns: string
       }
       school_confirm_athlete: {
         Args: {
@@ -4708,10 +8067,28 @@ export type Database = {
           label: string
         }[]
       }
+      set_admin_notification_config: {
+        Args: {
+          expected_revision: number
+          config: Json
+          expected_actor: string
+          reason?: string
+        }
+        Returns: Json
+      }
       set_allow_challenges: {
         Args: {
           expected_actor_id: string
           allow: boolean
+        }
+        Returns: Json
+      }
+      set_coach_label: {
+        Args: {
+          target_kind: string
+          target_id: string
+          label: string
+          reason: string
         }
         Returns: Json
       }
@@ -4733,6 +8110,28 @@ export type Database = {
       set_my_privacy: {
         Args: {
           settings: Json
+        }
+        Returns: Json
+      }
+      set_notification_archived: {
+        Args: {
+          notification_id: string
+          is_archived: boolean
+        }
+        Returns: boolean
+      }
+      set_notification_read: {
+        Args: {
+          notification_id: string
+          is_read: boolean
+        }
+        Returns: boolean
+      }
+      set_own_coach_label: {
+        Args: {
+          target_kind: string
+          target_id: string
+          label: string
         }
         Returns: Json
       }
@@ -4792,6 +8191,13 @@ export type Database = {
       }
       start_school_check: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      stripe_connect_context: {
+        Args: {
+          actor_user_id: string
+          target_player_id?: string
+        }
         Returns: Json
       }
       submit_app_feedback: {

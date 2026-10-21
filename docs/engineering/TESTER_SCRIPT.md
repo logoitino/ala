@@ -14,6 +14,25 @@ perfect. "This felt slow" counts as a bug.
 
 ---
 
+## Game venue checks — LOCAL-02 (local implementation; activation pending)
+
+After the owner applies `20261021220000_game_venues.sql` to the approved test environment:
+
+1. In Expo `/admin/games`, save a public stadium/gym, venue school, full address and arrival note.
+   Reopen that game and confirm every value was saved. Use a neutral venue distinct from the home school.
+2. Open that game as a guest and signed-in fan. Confirm **Where to watch**, wrapping text and
+   the address. On a physical iPhone/Android device, tap **Get directions** and verify the actual
+   destination/entrance in Apple/Google Maps. Web uses Google Maps. No location permission is requested.
+3. Clear the address in admin while the game is open. Confirm directions disappear and a slow
+   overview refresh does not restore them. Retain the name, school and arrival note.
+4. Simulate map-launch failure in the approved test harness: selectable address remains,
+   readable retry appears and repeated taps create one in-flight request.
+5. Check hosted fan/operator/anonymous venue writes are denied while existing permitted score
+   changes still work. Report inaccurate locations to staff; do not enter private home addresses.
+
+Local component/SQL/browser fixtures pass separately from these hosted/device tasks. Actual
+execution and remaining gaps: [LOCAL-02](../agents/LOCAL-02.md).
+
 ## Before you start (2 minutes)
 
 1. Install from the link you were sent (iPhone needs your device registered first).

@@ -32,6 +32,7 @@ order, then dip into the folders as you need them.
 | [SYSTEM_OVERVIEW.md](engineering/SYSTEM_OVERVIEW.md) | Executive summary, tech stack, directory map, feature tracker. |
 | [CONVENTIONS.md](engineering/CONVENTIONS.md) | Folder rules, file naming, where code goes, the comment standard (§5). |
 | [INNOVATION_AND_HANDOFF.md](engineering/INNOVATION_AND_HANDOFF.md) | Test new solutions, retain decisions and evidence, and prepare understandable engineering/legal/investor handoffs. |
+| [LOCAL-02](agents/LOCAL-02.md) | Game venue details and directions: approved scope, admin-first implementation and verification. |
 | [SCHEMA.md](engineering/SCHEMA.md) | Every table, RPC, policy and storage bucket. Checked by `pnpm docs:check`. |
 | [Timed trivia plan](engineering/design/TIMED_TRIVIA_IMPLEMENTATION_PLAN.md) | Approved 30/90-second server/admin/player work and local verification. |
 | [QUIZ-02](agents/QUIZ-02.md) | New timed trivia enrollment and actual readiness; QUIZ-01 remains historical. |
