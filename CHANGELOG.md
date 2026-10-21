@@ -1,6 +1,14 @@
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-21 — Share & Donate QR build-out
+
+- Add **Donate to {name}** on the QR landing page, opening the usual donate sheet tagged as a QR donation.
+- Say plainly when a QR link names nobody, and offer Try again when the lookup fails.
+- Add **Share & Donate ⚡** for each linked athlete in Parent HQ.
+- Keep QR links working for athletes without a username by using their athlete id.
+- Let a build point printed QRs at a hosted preview with `EXPO_PUBLIC_WEB_ORIGIN` until tapuai.app serves the web app.
+
 ## 2026-10-21 — Notification settings, inbox and staff/source contracts
 
 - Add Profile channel/category choices and Activity read/unread, active-inbox snapshot mark-all, archive/restore and bounded pages.

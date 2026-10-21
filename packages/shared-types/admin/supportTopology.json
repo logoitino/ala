@@ -1193,6 +1193,7 @@
         "/admin/athletes",
         "/admin/people",
         "/api/create-stripe-account+api",
+        "/gift/[handle]",
         "/parent",
         "/profile",
         "/spotlight",
@@ -1268,6 +1269,7 @@
         "/",
         "/activity",
         "/admin/people",
+        "/gift/[handle]",
         "/parent",
         "/profile",
         "/spotlight",
@@ -1886,6 +1888,7 @@
         "/admin/qa",
         "/admin/spotlight",
         "/api/create-stripe-account+api",
+        "/gift/[handle]",
         "/local",
         "/parent",
         "/profile",
@@ -2553,6 +2556,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -2639,6 +2643,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -2797,6 +2802,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -3286,6 +3292,7 @@
         "/activity",
         "/admin/people",
         "/api/create-stripe-account+api",
+        "/gift/[handle]",
         "/parent",
         "/profile",
         "/spotlight",
@@ -3443,6 +3450,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -4212,6 +4220,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -4410,6 +4419,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -4480,11 +4490,11 @@
       "owner": "DRIP",
       "purpose": "Drip store catalog.",
       "writers": [
-        "apps/mobile/src/frontend/lib/adminCatalog.ts"
+        "apps/mobile/src/frontend/lib/adminShop.ts"
       ],
       "readers": [
-        "apps/mobile/src/frontend/lib/adminCatalog.ts",
-        "apps/mobile/src/frontend/lib/adminReports.ts"
+        "apps/mobile/src/frontend/lib/adminReports.ts",
+        "apps/mobile/src/frontend/lib/adminShop.ts"
       ],
       "sqlWriters": [],
       "sqlReaders": [
@@ -4496,10 +4506,17 @@
       "screens": [
         "/admin",
         "/admin/analytics",
+        "/admin/athletes",
         "/admin/audience",
+        "/admin/boosters",
         "/admin/departments",
         "/admin/drip",
+        "/admin/games",
         "/admin/health",
+        "/admin/highlights",
+        "/admin/money",
+        "/admin/people",
+        "/admin/polls",
         "/admin/product",
         "/admin/product/coverage",
         "/admin/product/features",
@@ -4508,8 +4525,12 @@
         "/admin/product/sign-in",
         "/admin/publish",
         "/admin/revenue",
+        "/admin/schools",
         "/admin/trends",
+        "/admin/wishlist",
         "/drip",
+        "/local",
+        "/profile",
         "portal:/",
         "portal:/analytics",
         "portal:/audience",
@@ -5842,6 +5863,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -6142,6 +6164,7 @@
         "/athlete",
         "/drip",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -6339,6 +6362,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -6367,10 +6391,10 @@
       "owner": "WISHLIST",
       "purpose": "Gear goals fans donate to.",
       "writers": [
-        "apps/mobile/src/frontend/lib/adminCatalog.ts"
+        "apps/mobile/src/frontend/lib/adminShop.ts"
       ],
       "readers": [
-        "apps/mobile/src/frontend/lib/adminCatalog.ts"
+        "apps/mobile/src/frontend/lib/adminShop.ts"
       ],
       "sqlWriters": [
         "chip_in_wishlist_item"
@@ -6381,7 +6405,19 @@
       "removers": [],
       "triggers": [],
       "screens": [
+        "/admin/athletes",
+        "/admin/boosters",
+        "/admin/drip",
+        "/admin/games",
+        "/admin/highlights",
+        "/admin/money",
+        "/admin/people",
+        "/admin/polls",
+        "/admin/publish",
+        "/admin/schools",
         "/admin/wishlist",
+        "/drip",
+        "/local",
         "/profile",
         "/user/[id]"
       ]
@@ -15388,6 +15424,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -15493,6 +15530,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -15563,6 +15601,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -15636,6 +15675,7 @@
         "/drip",
         "/fan-zone",
         "/game/[id]",
+        "/gift/[handle]",
         "/local",
         "/local/game/[id]",
         "/operator",
@@ -15666,6 +15706,7 @@
       "readers": [
         "apps/mobile/app/(tabs)/beyond.tsx",
         "apps/mobile/app/(tabs)/index.tsx",
+        "apps/mobile/src/frontend/components/Reels/HomeFeedSwitch.tsx",
         "apps/mobile/src/frontend/context/UploadSheetContext.tsx"
       ]
     },
@@ -15674,8 +15715,8 @@
       "key": "local",
       "path": "tabs.local",
       "readers": [
-        "apps/mobile/app/(tabs)/index.tsx",
-        "apps/mobile/app/(tabs)/local/index.tsx"
+        "apps/mobile/app/(tabs)/local/index.tsx",
+        "apps/mobile/src/frontend/components/Reels/HomeFeedSwitch.tsx"
       ]
     },
     {
@@ -15722,7 +15763,7 @@
       "path": "tabs.upload",
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
-        "apps/mobile/app/(tabs)/index.tsx",
+        "apps/mobile/src/frontend/components/Reels/HomeFeedEmpty.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx",
         "apps/mobile/src/frontend/components/UI/PlayNavBar.tsx"
       ]
@@ -15756,6 +15797,7 @@
       "key": "malo",
       "path": "buttons.malo",
       "readers": [
+        "apps/mobile/app/gift/[handle].tsx",
         "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx",
         "apps/mobile/src/frontend/components/Rally/RallyCard.tsx",
         "apps/mobile/src/frontend/components/Rally/RallyMeter.tsx",
@@ -15784,7 +15826,7 @@
       "key": "crew",
       "path": "buttons.crew",
       "readers": [
-        "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx",
+        "apps/mobile/src/frontend/components/Profile/ProfileStatRow.tsx",
         "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx"
       ]
     },

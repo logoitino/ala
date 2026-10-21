@@ -302,6 +302,14 @@ This section records product controls checked in the repo on 2026-10-10 and name
 
 Tracker inventory, hosted SQL, and a device pass were not re-checked this pass.
 
+### Share & Donate QR landing copy — 2026-10-21 (flag for LEGAL / VOICE)
+
+`app/gift/[handle].tsx` now shows **Donate to {name}** (the existing `maloAthleteCta`), the line
+"Donate to {name} here, or pass this page on to family and friends.", and not-found / retry text with
+no money words. The donate sheet itself is unchanged (90 / 10, No tip, held notice). The existing QR
+subtitle still says families can donate "without downloading the app"; that is only true once the
+web app is hosted at the QR origin, which it is not yet. `copy:check` passes.
+
 ### Who does the next product work
 
 No row below assigns anyone to draft legal text. "Stopped" means the owner and counsel have not authorized that step. Wave 0 does not include hiring counsel, an LLC, or an association letter.

@@ -23,6 +23,8 @@ type ShareQrModalProps = {
   onClose: () => void;
   athleteName: string;
   username?: string | null;
+  /** `players.id`; the link uses it when the athlete has no username, so the scan still finds them. */
+  playerId?: string | null;
 };
 
 /**
@@ -30,12 +32,12 @@ type ShareQrModalProps = {
  * @param visible Opens from Athlete Profile or a Locker Room Wishlist card.
  * @sideEffects `expo-clipboard`; `Share.share`; telemetry `share_qr`.
  */
-export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQrModalProps) {
+export function ShareQrModal({ visible, onClose, athleteName, username, playerId }: ShareQrModalProps) {
   const frame = useSheetFrame();
   const celebration = useOptionalCelebration();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<'copy' | 'share' | null>(null);
-  const target = giftQrTarget(athleteName, username);
+  const target = giftQrTarget(athleteName, username, playerId);
 
   useEffect(() => {
     if (visible) {

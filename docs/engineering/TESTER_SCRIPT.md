@@ -666,6 +666,13 @@ through?*
 5. When it fills, tap **Say thanks to everyone 🙏**, pick a clip and a message. Fans should see it on
    the card. Under "Support received", thank one donor with **Say thanks 🙏**.
 
+6. **Share & Donate QR.** Under your athlete, tap **Share & Donate ⚡ · {name}**. Save the QR, then
+   open the copied link on a second device signed in as a test fan: it should open **Support {name}**
+   with **Donate to {name}**. Donate with the test card; the receipt should say it came via QR. Change
+   one letter in the link: the page should say it couldn't find the athlete, with no Donate button.
+   (Printed codes open `https://tapuai.app` unless the build sets `EXPO_PUBLIC_WEB_ORIGIN`; that site
+   is not hosted yet, so test with the in-app link until it is.)
+
 Tell us: *Would you trust this with your kid's money? What would you need to see first? What would
 make you share your kid's page with family?*
 

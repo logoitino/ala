@@ -96,7 +96,8 @@
       ],
       "env": [
         "EXPO_PUBLIC_APP_ENV",
-        "EXPO_PUBLIC_API_ORIGIN"
+        "EXPO_PUBLIC_API_ORIGIN",
+        "EXPO_PUBLIC_WEB_ORIGIN"
       ],
       "source": "docs/engineering/ENVIRONMENTS_AND_HOSTING.md"
     },

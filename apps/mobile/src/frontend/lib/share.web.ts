@@ -5,22 +5,13 @@
 import { Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 
-import { formatGiftUrl, normalizeAthleteHandle, shareQrSubtitle } from '@/data/share';
-import { handleFromName } from '@/lib/aura';
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { shareQrSubtitle } from '@/data/share';
 
 import type { GiftQrTarget } from '@/lib/share.types';
-import { getPublicProfiles } from '@/lib/privacy';
 
 export type { GiftQrTarget } from '@/lib/share.types';
-
-/**
- * @purpose Build the public gift link encoded in ShareQrModal (web).
- */
-export function giftQrTarget(athleteName: string, username?: string | null): GiftQrTarget {
-  const handle = normalizeAthleteHandle(username || handleFromName(athleteName));
-  return { handle, url: formatGiftUrl(handle), athleteName: athleteName.trim() || 'this athlete' };
-}
+// One platform-neutral link builder; both share variants re-export it so callers keep importing `@/lib/share`.
+export { giftQrTarget } from '@/lib/giftLink';
 
 /**
  * @purpose Web has no Camera Roll — copy the tipping URL instead.
@@ -44,23 +35,4 @@ export async function copyGiftLink(url: string): Promise<void> {
 export async function shareGiftLink(target: GiftQrTarget): Promise<void> {
   const message = `${shareQrSubtitle(target.athleteName)}\n${target.url}`;
   await Share.share({ message });
-}
-
-/**
- * @purpose Resolve a gift-link handle to a claimed roster row for `/gift/[handle]`.
- * @sideEffects `profiles` SELECT by username.
- */
-export async function lookupPlayerByHandle(
-  rawHandle: string,
-): Promise<{ playerId: string | null; name: string; username: string } | null> {
-  const handle = normalizeAthleteHandle(rawHandle);
-  if (!isSupabaseConfigured) return { playerId: null, name: handle, username: handle };
-  // An exact-handle lookup that applies privacy (PRIV-01); name and username stay public.
-  const data = (await getPublicProfiles({ handle }))[0] ?? null;
-  if (!data) return { playerId: null, name: handle, username: handle };
-  return {
-    playerId: typeof data.player_id === 'string' ? data.player_id : null,
-    name: typeof data.full_name === 'string' && data.full_name.trim() ? data.full_name.trim() : handle,
-    username: typeof data.username === 'string' && data.username.trim() ? data.username.trim() : handle,
-  };
 }

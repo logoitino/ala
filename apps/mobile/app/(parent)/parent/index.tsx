@@ -1,6 +1,7 @@
 /**
  * Parent HQ: for a guardian, the linked athletes, consent for each (`setParentPlayerConsent`), the custodial
- * money card, the Rally card and teen supervision (MINOR-01). Failures show Retry rather than an empty list.
+ * money card, the Rally card, a Share & Donate QR per athlete and teen supervision (MINOR-01).
+ * Failures show Retry rather than an empty list.
  */
 
 import { useMemo, useState } from 'react';
@@ -10,6 +11,7 @@ import { Stack } from 'expo-router';
 
 import { GuardianCustodialCard } from '@/components/Custodial/GuardianCustodialCard';
 import { ReceivedMaloPanel } from '@/components/Profile/ReceivedMaloPanel';
+import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { RallyCard } from '@/components/Rally/RallyCard';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
@@ -22,7 +24,8 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { telemetry } from '@/services/TelemetryManager';
 import { COMPLIANCE_PARENT } from '@/data/legal';
-import { displayValue } from '@/data/players';
+import { displayValue, type Player } from '@/data/players';
+import { SHARE_FUND_CTA } from '@/data/share';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
 import { useRoster } from '@/hooks/useRoster';
 import { setParentPlayerConsent } from '@/lib/custodial';
@@ -40,6 +43,7 @@ export default function ParentHomeScreen() {
   );
   const pending = usePendingPlayerTags();
   const [busy, setBusy] = useState(false);
+  const [shareFor, setShareFor] = useState<Player | null>(null);
 
   const toggleConsent = async (playerId: string, approved: boolean) => {
     if (approved) {
@@ -144,6 +148,17 @@ export default function ParentHomeScreen() {
         <GuardianSupervisionPanel />
         {!rosterError ? players.map((player) => (
           <View key={player.id} style={styles.athlete}>
+            {/* Families do most of the sharing; the QR uses the athlete id, so it works before the athlete picks a username. */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${SHARE_FUND_CTA} for ${displayValue(player.name, 'your athlete')}`}
+              haptic="selection"
+              onPress={() => setShareFor(player)}
+              style={styles.share}
+            >
+              <Text style={styles.shareLabel}>{`${SHARE_FUND_CTA} · ${displayValue(player.name, 'your athlete')}`}</Text>
+              <Text style={styles.muted}>A QR and link family can use to donate.</Text>
+            </Pressable>
             {/* Rally goal (start / approve / close / thank) and donations to say thanks for. */}
             <RallyCard player={player} athleteName={displayValue(player.name, 'your athlete')} manage guardian />
             <ReceivedMaloPanel playerId={player.id} />
@@ -151,6 +166,15 @@ export default function ParentHomeScreen() {
           </View>
         )) : null}
       </ScrollView>
+      {/* Mounted only while open: the sheet finishes its own close animation before onClose clears it. */}
+      {shareFor ? (
+        <ShareQrModal
+          visible
+          athleteName={displayValue(shareFor.name, 'your athlete')}
+          playerId={shareFor.id}
+          onClose={() => setShareFor(null)}
+        />
+      ) : null}
     </ScreenShell>
   );
 }
@@ -165,6 +189,20 @@ const styles = StyleSheet.create({
   },
   athlete: {
     gap: 14,
+  },
+  share: {
+    minHeight: 44,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.deepGreen,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 2,
+  },
+  shareLabel: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.deepGreen,
   },
   row: {
     flexDirection: 'row',

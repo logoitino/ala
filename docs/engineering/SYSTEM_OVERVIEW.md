@@ -89,7 +89,7 @@ apps/mobile/app/                  Expo Router
     receipts.tsx                  Fan Tip History & Receipts (hidden tab; fan bar stays)
     user/[id].tsx                 Public athlete sheet (same chrome as Profile; back instead of hamburger; fan bar stays)
     athlete/[id].tsx              Redirect → `/user/[id]`
-  gift/[handle].tsx               Public family gift landing (`https://tapuai.app/gift/{handle}`)
+  gift/[handle].tsx               Public family gift landing (`https://tapuai.app/gift/{username or athlete id}`): Donate, profile, share
   operator/                       Field portal (`index`, `[gameId]` scorekeeper, `scorer`)
   (admin)/admin                   Main control plane (`/admin`): report navigation and consolidated Manage directory with role lenses, search and Back / Home / Open in app. Editing stays in the owned desks; saved routes remain available. App setup combines configuration controls; Finance & Books owns accounting, Engineering Support owns issue/flow/audit/recovery handling. Actual menu/access mapping: `src/frontend/lib/admin.ts` and `components/Admin/AdminShell.tsx`.
   api/*+api.ts                    Stripe

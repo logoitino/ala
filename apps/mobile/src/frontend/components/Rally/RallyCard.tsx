@@ -284,12 +284,12 @@ export function RallyCard({
         onClose={() => setDonateOpen(false)}
         onTipped={() => void refresh()}
       />
-      <ShareQrModal visible={shareOpen} athleteName={athleteName} username={username} onClose={() => setShareOpen(false)} />
+      <ShareQrModal visible={shareOpen} athleteName={athleteName} username={username} playerId={player.id} onClose={() => setShareOpen(false)} />
       <RallyFillMoment
         visible={fillMoment}
         title={rally.title}
         athleteName={athleteName}
-        giftUrl={username ? giftQrTarget(athleteName, username).url : null}
+        giftUrl={giftQrTarget(athleteName, username, player.id).url}
         onWatch={
           rally.thanksReelId && onOpenClip
             ? () => {

@@ -213,6 +213,7 @@ export function LockerRoomWishlist({ player, athleteName, username, onEquipped, 
         visible={shareOpen}
         athleteName={name}
         username={username}
+        playerId={player.id}
         onClose={() => setShareOpen(false)}
       />
 

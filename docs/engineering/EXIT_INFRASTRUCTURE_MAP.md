@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `be6ee22c4c05` |
-| Last announced plan | `be6ee22c4c05` — up to date |
+| Exit plan version (what the app uses on Supabase) | `ba152bcf4770` |
+| Last announced plan | `ba152bcf4770` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
 | Latest migration | `20261021150000_notification_payment_context.sql` (47 files) |
 | Canonical schema hash | `3244b370aea3a982c472de267fe1f106c5a062382fd578133f6c21711c2529e9` (`schema.sql`) |
-| Complete source/configuration content hash | `be6ee22c4c05c2931d65e4ea64a4a6fc5e22d26d4a9a1260ac4923eedbb2e26d` across 1203 files |
+| Complete source/configuration content hash | `ba152bcf4770301db25016f18b7fddaf37d73323fba1bf78a265bcf3d8207e60` across 1221 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -157,13 +157,13 @@ Counts come from static statements in `schema.sql` and the source; the live data
 | Auth methods called | 17 | `exchangeCodeForSession` (PKCE code exchange after a redirect), `getSession` (Read the local session), `getUser` (Validate the current session with the server), `mfa.challenge` (TOTP challenge), `mfa.enroll` (TOTP factor enrollment), `mfa.getAuthenticatorAssuranceLevel` (Read aal1 / aal2), `mfa.listFactors` (List MFA factors), `mfa.unenroll` (TOTP removal), `mfa.verify` (TOTP verification), `onAuthStateChange` (Session change events), `setSession` (Restore a session from tokens), `signInWithIdToken` (Native Apple / Google ID token), `signInWithOAuth` (OAuth redirect (Google)), `signInWithOtp` (Email link / one-time code), `signInWithPassword` (Email and password sign-in), `signOut` (Sign out), `signUp` (Email sign-up) |
 | OAuth providers | 2 | `apple`, `google` |
 | Realtime features | 3 | `broadcast`, `postgres_changes`, `private channels` |
-| Public client environment names | 15 | `EXPO_PUBLIC_ADMIN_REQUIRE_MFA`, `EXPO_PUBLIC_API_ORIGIN`, `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `EXPO_PUBLIC_LIVE_SCORES_BROADCAST`, `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPPORT_ENVIRONMENT`, `EXPO_PUBLIC_SUPPORT_RELEASE`, `EXPO_PUBLIC_SUPPORT_SENSORS_ENABLED`, `NEXT_PUBLIC_ADMIN_REQUIRE_MFA`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL` |
+| Public client environment names | 16 | `EXPO_PUBLIC_ADMIN_REQUIRE_MFA`, `EXPO_PUBLIC_API_ORIGIN`, `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `EXPO_PUBLIC_LIVE_SCORES_BROADCAST`, `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPPORT_ENVIRONMENT`, `EXPO_PUBLIC_SUPPORT_RELEASE`, `EXPO_PUBLIC_SUPPORT_SENSORS_ENABLED`, `EXPO_PUBLIC_WEB_ORIGIN`, `NEXT_PUBLIC_ADMIN_REQUIRE_MFA`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL` |
 | Server environment names | 8 | `ANALYTICS_TEST_RESOLVER`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `SUPPORT_ENVIRONMENT`, `SUPPORT_RELEASE_ID` |
 | Direct Supabase calls outside `lib/` | 37 | places an exit B adapter change must touch (may only shrink, `pnpm app:data-boundaries`) |
 
 ### SDK callsite coverage
 
-AST callsites: 1088; literal targets: 470; explicit owner-review candidates: 89.
+AST callsites: 1090; literal targets: 470; explicit owner-review candidates: 89.
 The complete machine inventory (`node scripts/exit-map.mjs --json`) records each detected callsite path, line, column,
 operation and literal target. Dynamic arguments and unresolved client origins require owner review. Syntax inspection
 does not prove runtime/provider coverage; overloads, dynamic SQL and deployed drift require live catalog parity.

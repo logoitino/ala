@@ -29,7 +29,7 @@ owner-reported or unverified. Portability and exits: [PORTABILITY.md](PORTABILIT
 | --- | --- | --- | --- | --- |
 | Supabase (managed) | `@supabase/supabase-js`, `@supabase/ssr` | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_ADMIN_REQUIRE_MFA`, `EXPO_PUBLIC_ADMIN_REQUIRE_MFA`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `EXPO_PUBLIC_LIVE_SCORES_BROADCAST` | `create-payment-intent`, `create-stripe-account`, `stripe-webhook`; `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload` | `reels`, `avatars`, `game_highlights`, `reel_vault`, `beyond_game`, `fan_zone`; `pgcrypto` |
 | Stripe (PaymentSheet, Connect) | `@stripe/stripe-react-native`, `stripe` | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | `create-payment-intent`, `create-payout`, `create-stripe-account` | — |
-| Expo / EAS (builds, over-the-air updates) | `expo`, `expo-updates`, `expo-router`, `@expo/metro-runtime` | `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_API_ORIGIN` | — | — |
+| Expo / EAS (builds, over-the-air updates) | `expo`, `expo-updates`, `expo-router`, `@expo/metro-runtime` | `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_API_ORIGIN`, `EXPO_PUBLIC_WEB_ORIGIN` | — | — |
 | Apple and Google sign-in (OAuth) | `expo-apple-authentication`, `expo-auth-session`, `expo-web-browser`, `expo-crypto` | — | — | — |
 | Managed video host (Mux provisional first experiment; Bunny / Cloudflare compared) | — | — | — | — |
 | GitHub (repository, Actions CI) | — | — | — | `ci-checks.yml`, `exit-release.yml` |

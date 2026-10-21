@@ -570,6 +570,7 @@ export function AthleteProfileView({
         visible={shareOpen}
         athleteName={name}
         username={username}
+        playerId={player.id}
         onClose={() => setShareOpen(false)}
       />
     </View>

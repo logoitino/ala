@@ -41,6 +41,8 @@ type ShareQrModalProps = {
   onClose: () => void;
   athleteName: string;
   username?: string | null;
+  /** `players.id`; the link uses it when the athlete has no username, so the scan still finds them. */
+  playerId?: string | null;
 };
 
 type QrSvgRef = {
@@ -51,11 +53,12 @@ type QrSvgRef = {
  * @purpose Obsidian Share & Fund sheet — flyer QR to `https://tapuai.app/gift/{handle}` so family can support without the app.
  * @param visible Opens from Athlete Profile or a Locker Room Wishlist card.
  * @param athleteName Name interpolated into the scan explainer.
- * @param username Handle encoded in the gift URL (falls back to a name slug).
+ * @param username Handle encoded in the gift URL (falls back to `playerId`, then a name slug).
+ * @param playerId Athlete id used when there is no username.
  * @returns Centered neon-jade QR on Obsidian with save / copy / native share actions.
  * @sideEffects `react-native-qrcode-svg`; `expo-media-library` Camera Roll save; `expo-clipboard`; `Share.share`; haptics; telemetry `share_qr`.
  */
-export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQrModalProps) {
+export function ShareQrModal({ visible, onClose, athleteName, username, playerId }: ShareQrModalProps) {
   const frame = useSheetFrame();
   const celebration = useOptionalCelebration();
   const [open, setOpen] = useState(false);
@@ -64,7 +67,7 @@ export function ShareQrModal({ visible, onClose, athleteName, username }: ShareQ
   const pulse = useSharedValue(0.45);
   const translateY = useSharedValue(SHEET_TRAVEL);
   const backdropOpacity = useSharedValue(0);
-  const target = giftQrTarget(athleteName, username);
+  const target = giftQrTarget(athleteName, username, playerId);
 
   useEffect(() => {
     if (visible) {

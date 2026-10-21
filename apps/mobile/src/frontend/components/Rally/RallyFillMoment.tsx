@@ -15,7 +15,7 @@ const COLORS = [FOCAL.neonJade, FOCAL.electricGold, '#FFFFFF'];
  * @param title The Rally's name.
  * @param athleteName Who the community was supporting.
  * @param onWatch Opens the "what it paid for" clip when the family attached one.
- * @param giftUrl Public gift link included on the share card when the athlete has a handle.
+ * @param giftUrl Public gift link included on the share card (username or athlete-id link).
  * @param onClose Dismisses the moment.
  * @sideEffects The share button opens the device share sheet with the filled-Rally message.
  */
