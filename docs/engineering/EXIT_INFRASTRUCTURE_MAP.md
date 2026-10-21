@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `7ed4bbc4cef6` |
-| Last announced plan | `7ed4bbc4cef6` — up to date |
+| Exit plan version (what the app uses on Supabase) | `76fc24495bc8` |
+| Last announced plan | `76fc24495bc8` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
-| Latest migration | `20261021150000_notification_payment_context.sql` (47 files) |
-| Canonical schema hash | `3244b370aea3a982c472de267fe1f106c5a062382fd578133f6c21711c2529e9` (`schema.sql`) |
-| Complete source/configuration content hash | `7ed4bbc4cef63cea88460038aac96bb3559f582072ccad6b3f01ef8aab350c54` across 1226 files |
+| Latest migration | `20261021220000_game_venues.sql` (48 files) |
+| Canonical schema hash | `1dd62100a5da953bbab9831419545d92a4833204ae07ef1b1e29c5b5caedc5f8` (`schema.sql`) |
+| Complete source/configuration content hash | `76fc24495bc8f1b567994b5319d272bd123c47bde363c6c0549cd6f14cb94349` across 1240 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -144,14 +144,14 @@ Counts come from static statements in `schema.sql` and the source; the live data
 | Application schemas | 1 | `fan_zone_private` |
 | Tables | 122 | covered by backup, restore list and parity automatically |
 | Views | 3 | `public.profiles_public`, `public.reel_photos_feed`, `public.reels_feed` |
-| Database functions | 598 | covered by parity (body, settings, owner, execute rights) |
+| Database functions | 599 | covered by parity (body, settings, owner, execute rights) |
 | Row level security policies | 99 declared by name | policies created in DO blocks (for example per-table "Closed accounts") are not visible here; parity counts the live set, and extra or missing policies block cutover |
-| Triggers | 63 | covered by parity |
+| Triggers | 64 | covered by parity |
 | App policies/triggers on Supabase's own tables | 33 | `policy realtime.messages: Fans receive game score changes`, `policy realtime.messages: Fans receive game_events broadcast`, `policy realtime.messages: Operators send game_events broadcast`, `policy storage.objects: Beyond approved and inspection media`, `policy storage.objects: Beyond private delete guard`, `policy storage.objects: Beyond private insert guard`, `policy storage.objects: Beyond private read guard`, `policy storage.objects: Beyond private update guard`, `policy storage.objects: Beyond removed cleanup`, `policy storage.objects: Beyond reserved owner upload`, `policy storage.objects: Closed accounts`, `policy storage.objects: Delete claimed failed photo story objects`, `policy storage.objects: Owner delete avatars`, `policy storage.objects: Public read avatars`, `policy storage.objects: Public read game highlights`, `policy storage.objects: Public read reels bucket`, `policy storage.objects: Public update avatars`, `policy storage.objects: Public update reels bucket`, `policy storage.objects: Public upload avatars`, `policy storage.objects: Public upload game highlights`, `policy storage.objects: Public upload reels bucket`, `policy storage.objects: Read entitled vault reel`, `policy storage.objects: Upload own vault reel`, `policy storage.objects: fan_zone_insert`, `policy storage.objects: fan_zone_insert_boundary`, `policy storage.objects: fan_zone_no_delete`, `policy storage.objects: fan_zone_no_read`, `policy storage.objects: fan_zone_no_update`, `trigger auth.users: on_auth_user_created`, `trigger auth.users: zz_notification_auth_activation`, `trigger storage.objects: beyond_storage_guard`, `trigger storage.objects: fan_zone_storage_guard`, `trigger storage.objects: guard_photo_story_storage_write` |
 | Extensions | 1 | `pgcrypto` |
 | Realtime publication tables | 4 | `public.app_runtime_config`, `public.cheer_polls`, `public.game_events`, `public.games` |
 | Storage buckets | 6 | `avatars`, `beyond_game`, `fan_zone`, `game_highlights`, `reel_vault`, `reels` |
-| Migration files | 47 | latest `20261021150000_notification_payment_context.sql` |
+| Migration files | 48 | latest `20261021220000_game_venues.sql` |
 | Edge Functions | 3 | `create-payment-intent` (self-host allowlist), `create-stripe-account` (self-host allowlist), `stripe-webhook` (excluded: Must not be deployed until P1-05 retires the client tips insert (STATE §0, §6 item 3).) |
 | Expo API routes | 6 | `create-payment-intent`, `create-payout`, `create-stripe-account`, `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload` |
 | Auth methods called | 17 | `exchangeCodeForSession` (PKCE code exchange after a redirect), `getSession` (Read the local session), `getUser` (Validate the current session with the server), `mfa.challenge` (TOTP challenge), `mfa.enroll` (TOTP factor enrollment), `mfa.getAuthenticatorAssuranceLevel` (Read aal1 / aal2), `mfa.listFactors` (List MFA factors), `mfa.unenroll` (TOTP removal), `mfa.verify` (TOTP verification), `onAuthStateChange` (Session change events), `setSession` (Restore a session from tokens), `signInWithIdToken` (Native Apple / Google ID token), `signInWithOAuth` (OAuth redirect (Google)), `signInWithOtp` (Email link / one-time code), `signInWithPassword` (Email and password sign-in), `signOut` (Sign out), `signUp` (Email sign-up) |

@@ -16,7 +16,7 @@ import Reanimated, {
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
@@ -211,6 +211,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   statValue: {
+    ...SCOREBOARD_DIGITS,
     fontSize: 20,
     lineHeight: 24,
     fontWeight: '900',

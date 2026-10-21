@@ -28,7 +28,7 @@ jest.mock('@/components/TipSheetModal', () => ({
   },
 }));
 
-const player = { id: '3f2b8c1e-5a4d-4c2b-9e1f-0a1b2c3d4e5f', name: 'Mele Tupou' };
+const player = { id: '3f2b8c1e-5a4d-4c2b-9e1f-0a1b2c3d4e5f', name: 'Mele Tupou', jersey_number: 5, position: 'Linebacker', school_name: 'Westlake High' };
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -37,7 +37,7 @@ beforeEach(() => {
 
 describe('gift landing', () => {
   it('opens the donate sheet as a QR donation after the soft wall', async () => {
-    mockResolve.mockResolvedValue({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: 'mele' });
+    mockResolve.mockResolvedValue({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: 'mele', sport: 'Football', schoolVisible: true });
     await render(<GiftHandleScreen />);
     await fireEvent.press(await screen.findByText('Donate to Mele'));
     expect(mockRequireAuth).toHaveBeenCalledWith(expect.objectContaining({ kind: 'malo', athleteId: player.id }));
@@ -46,9 +46,21 @@ describe('gift landing', () => {
     expect(mockPush).toHaveBeenCalledWith(`/user/${player.id}?entry=qr`);
   });
 
+  it('shows the school only when the athlete makes it public', async () => {
+    mockResolve.mockResolvedValue({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: 'mele', sport: 'Football', schoolVisible: true });
+    const view = await render(<GiftHandleScreen />);
+    expect(await screen.findByText('Linebacker · Westlake High · Football')).toBeTruthy();
+    await view.unmount();
+    mockResolve.mockResolvedValue({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: 'mele', sport: 'Football', schoolVisible: false });
+    await render(<GiftHandleScreen />);
+    expect(await screen.findByText('Linebacker · Football')).toBeTruthy();
+    expect(screen.queryByText(/Westlake/)).toBeNull();
+    expect(screen.getByLabelText('Jersey number 5')).toBeTruthy();
+  });
+
   it('hides Donate when donations are switched off', async () => {
     mockLive.buttons.malo = false;
-    mockResolve.mockResolvedValue({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: 'mele' });
+    mockResolve.mockResolvedValue({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: 'mele', sport: 'Football', schoolVisible: true });
     await render(<GiftHandleScreen />);
     await screen.findByText('Support Mele');
     expect(screen.queryByText('Donate to Mele')).toBeNull();
@@ -65,7 +77,7 @@ describe('gift landing', () => {
 
   it('retries a failed lookup', async () => {
     mockResolve.mockResolvedValueOnce({ status: 'error', handle: 'mele', message: 'Could not load this athlete. Check your connection and try again.' });
-    mockResolve.mockResolvedValueOnce({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: null });
+    mockResolve.mockResolvedValueOnce({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: null, sport: null, schoolVisible: true });
     await render(<GiftHandleScreen />);
     await fireEvent.press(await screen.findByText('Try again'));
     expect(await screen.findByText('Donate to Mele')).toBeTruthy();

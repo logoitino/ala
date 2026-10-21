@@ -9,12 +9,14 @@ import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { SportField } from '@/components/Effects/SportField';
 import { ProfileAvatarPicker } from '@/components/Profile/ProfileAvatarPicker';
 import { SubscriberCrest } from '@/components/Profile/SubscriberCrest';
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { JerseyBadge } from '@/components/UI/JerseyBadge';
 import { SchoolCrest, SchoolHeroBand } from '@/components/Verification/SchoolCrest';
-import { colors, radii } from '@/constants/theme';
+import { colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { CLAIM_VERIFY_CTA, type VerificationStatus } from '@/data/verification';
 import { classYearLabel } from '@/data/teams';
 import { auraBadgeLabel, auraProgressTowardNext, auraTierForPoints } from '@/lib/aura';
@@ -108,7 +110,9 @@ export function ProfileHeroAvatar({
 
   if (compact) {
     return (
-      <View style={[styles.wrap, styles.compactWrap, { borderTopColor: tier.color }]}>
+      <View style={[styles.wrap, styles.compactWrap, athlete && styles.fieldClip, { borderTopColor: tier.color }]}>
+        {/* UX-08: the athlete's own playing surface, faint behind the identity; community profiles stay plain. */}
+        {athlete ? <SportField sport={sport} opacity={0.09} /> : null}
         <View style={styles.compactIdentityRow}>
           <View style={styles.compactAvatarStage}>
             {schoolBadge ? <View style={styles.compactSchoolBand}><SchoolHeroBand badge={schoolBadge} /></View> : null}
@@ -118,9 +122,7 @@ export function ProfileHeroAvatar({
               </ProfileAvatarPicker>
               {subscriberCrest ? <View style={styles.crest}><SubscriberCrest /></View> : null}
               {athlete && jersey != null && String(jersey).trim() ? (
-                <View style={[styles.jerseyChip, { borderColor: tier.color }]}>
-                  <Text style={[styles.jerseyLabel, { color: tier.ink }]}>#{jersey}</Text>
-                </View>
+                <JerseyBadge number={jersey} color={tier.color} ink={tier.ink} style={styles.jerseyPatch} />
               ) : null}
               {schoolBadge ? (
                 <View style={styles.compactSchoolCrest}><SchoolCrest badge={schoolBadge} athleteName={name} size={32} /></View>
@@ -151,7 +153,7 @@ export function ProfileHeroAvatar({
           <View style={styles.compactAura} accessible accessibilityRole="progressbar" accessibilityLabel="Aura progress"
             accessibilityValue={{ min: 0, max: 100, now: progressPct,
               text: `${Math.round(auraPoints)} Aura, ${auraBadgeLabel(tier)}. ${progress.next ? `${progressPct}% to ${progress.next.title}` : 'Max Aura band'}` }}>
-            <Text style={[styles.tier, styles.compactAuraLabel, { color: tier.ink }]}>{Math.round(auraPoints)} Aura · {tier.title}</Text>
+            <Text style={[styles.tier, styles.compactAuraLabel, { color: tier.ink }]}><Text style={SCOREBOARD_DIGITS}>{Math.round(auraPoints)}</Text> Aura · {tier.title}</Text>
             <View style={[styles.progressTrack, styles.compactProgressTrack, { backgroundColor: tier.face }]}>
               <View style={[styles.progressFill, { width: `${progressPct}%`, backgroundColor: tier.color }]} />
             </View>
@@ -197,9 +199,7 @@ export function ProfileHeroAvatar({
             </View>
           ) : null}
           {athlete && jersey != null && String(jersey).trim() ? (
-            <View style={[styles.jerseyChip, { borderColor: tier.color }]}>
-              <Text style={[styles.jerseyLabel, { color: tier.ink }]}>#{jersey}</Text>
-            </View>
+            <JerseyBadge number={jersey} color={tier.color} ink={tier.ink} style={styles.jerseyPatch} />
           ) : null}
           {schoolBadge ? (
             <View style={styles.schoolCrest}>
@@ -404,19 +404,13 @@ const styles = StyleSheet.create({
     top: 6,
     right: 6,
   },
-  jerseyChip: {
+  jerseyPatch: {
     position: 'absolute',
-    bottom: -4,
+    bottom: -8,
     alignSelf: 'center',
-    borderRadius: 999,
-    borderWidth: 1.5,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
   },
-  jerseyLabel: {
-    fontSize: 13,
-    fontWeight: '800',
+  fieldClip: {
+    overflow: 'hidden',
   },
   name: {
     marginTop: 10,

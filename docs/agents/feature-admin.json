@@ -1513,6 +1513,156 @@
           ]
         }
       }
+    },
+    {
+      "id": "LOCAL-02",
+      "title": "Game venue details and directions",
+      "owner": "LOCAL",
+      "status": "app-ready",
+      "plannedAt": "2026-10-21T21:42:18.860Z",
+      "exemption": null,
+      "source": {
+        "description": "games.venue plus optional public venue_school, venue_address and venue_notes, owned by LOCAL. Each game chooses its own venue, never inferred from the home school. Existing bounded admin read (40 latest games) and selected-game guest read; missing columns remain absent, no address means no directions. No user GPS, coordinates, map SDK/API account, paid map service or personal locations. Fixed validation and server authorization protect location edits.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/adminCatalog.ts",
+          "apps/mobile/src/frontend/types/database.ts",
+          "supabase/migrations/20261021220000_game_venues.sql"
+        ]
+      },
+      "admin": {
+        "route": "/admin/games",
+        "actions": [
+          "Create and edit stadium/gym name, venue school, full public venue address and optional arrival/parking note",
+          "Review saved location details in the existing game list",
+          "Clear venue address to remove directions; correct details or park game through existing controls"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/GamesTool.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/games",
+        "metrics": [
+          "Existing list is the primary operational report: location details/status for the latest 40 games, live/parked filters, source errors remain visible. No new aggregate metric: this adds navigation, not attendance or map-provider success measurements. Address must stay out of logs. SUPPORT regression evidence covers invalid/oversized edits, missing columns, failed map opens and late callbacks; actual map destination accuracy remains staff/device verification."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/GamesTool.tsx",
+          "docs/engineering/detection-sensors.json"
+        ]
+      },
+      "disable": {
+        "strategy": "No new runtime switch: admin can clear venue_address to remove directions while retaining readable venue/game, correct details, or park through existing game control. Older databases/readers remain Venue TBA or venue-name-only. Missing-column writes show explicit not switched on without discarding nonempty location input. No automatic retry dropping requested changes.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/adminCatalog.ts",
+          "supabase/migrations/20261021220000_game_venues.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin"
+        ],
+        "deniedBehavior": "Public game locations are readable by guests/fans; only trusted admins may write protected venue fields. Database trigger uses existing trusted admin rules and bounds/normalizes text while preserving legacy operator score updates. AdminShell retains route authorization. No fan location permission/collection. Owner must separately apply migration and verify hosted denial before activation.",
+        "paths": [
+          "supabase/migrations/20261021220000_game_venues.sql",
+          "apps/mobile/src/frontend/components/Admin/AdminShell.tsx",
+          "scripts/replay/game-venues-replay.mjs"
+        ]
+      },
+      "app": {
+        "route": "/local/game/[id]",
+        "paths": [
+          "apps/mobile/src/frontend/components/Local/GameVenueCard.tsx",
+          "apps/mobile/src/frontend/lib/gameVenue.ts",
+          "apps/mobile/app/(guest)/game/[id].tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-21T21:50:36.398Z",
+          "evidence": [
+            {
+              "path": "docs/agents/LOCAL-02.md",
+              "command": "cd apps/mobile && ../../node_modules/.bin/jest --watchman=false --runInBand src/frontend/components/Admin/__tests__/GamesToolVenue.test.tsx src/frontend/lib/__tests__/gameVenueAdmin.test.ts src/frontend/components/Admin/__tests__/AccessRestricted.test.tsx",
+              "result": "3 suites / 20 tests passed locally on Node24.21.0; independent admin/client/type3suites19tests and PostgreSQL68/68 passed, Data/Security/SUPPORT/QA source accepted. Hosted SQL, configured admin-browser save and physical-device behavior not run."
+            },
+            {
+              "path": "docs/agents/LOCAL-02.md",
+              "command": "node scripts/replay/game-venues-replay.mjs .claude/worktrees/fan-zone/.smoke/runtime/pglite-cache/package/dist",
+              "result": "68 of68 local full-canonical PostgreSQL18.6 checks pass with PGlite0.5.9; anon/fan/operator venue denial and unchanged legacy score behavior verified; migration unapplied."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-21T22:00:20.525Z",
+          "evidence": [
+            {
+              "path": "docs/agents/LOCAL-02.md",
+              "command": "cd apps/mobile && ../../node_modules/.bin/jest --watchman=false --runInBand src/frontend/components/Local/__tests__/GameVenueRoute.test.tsx src/frontend/components/Local/__tests__/GameVenueCard.test.tsx src/frontend/lib/__tests__/gameVenue.test.ts src/frontend/components/Local/__tests__/GameCard.test.tsx",
+              "result": "4 suites / 26 tests PASS locally; encoded platform destinations, missing/failing launch, duplicate taps and stale Realtime/overview repair covered. Independent final source/docs PASS; current-component browser failure/retry/clear and 390/320 container layout verified with intercepted provider boundary. Hosted migration/admin save and physical map launches unverified."
+            },
+            {
+              "path": "docs/agents/LOCAL-02.md",
+              "command": "pnpm detection:scan",
+              "result": "Settled-source scan 2026-10-21T22-08-16-184Z-7500029d-final exit0: actual pnpm check and both app typechecks/mobile tests/all source gates passed; portal106/106 PASS; no skipped checks, declared runtime gaps remain explicit. Source ensure synced/current, cutover readiness false. No hosted/device acceptance."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-08",
+      "title": "Sport field lines and scoreboard digits",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-10-21T22:01:29.000Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Decorative sport-surface line art (hidden from screen readers, non-interactive) behind athlete heroes, the QR donate header, the featured Spotlight card and Local game cards; tabular scoreboard digits; a jersey-number patch; the swipe-hint position fix. Displays only fields already read: public athlete_sport and school_visible from the privacy-applied get_public_profiles row, roster position/jersey. No table, write, permission, telemetry or reporting duty. Calm Island palette unchanged.",
+        "reviewedBy": "Independent read-only Claude review subagent (UX-08 exemption/accessibility/palette review, 2026-10-21); review ran after implementation, recorded in UX-08"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/gift/[handle]",
+        "paths": [
+          "apps/mobile/src/frontend/components/Effects/SportField.tsx",
+          "apps/mobile/src/frontend/data/sportField.ts",
+          "apps/mobile/src/frontend/components/UI/JerseyBadge.tsx",
+          "apps/mobile/src/frontend/constants/theme.ts",
+          "apps/mobile/src/frontend/components/Profile/ProfileHeroAvatar.tsx",
+          "apps/mobile/src/frontend/components/Profile/ProfileStatRow.tsx",
+          "apps/mobile/src/frontend/components/Local/GameCard.tsx",
+          "apps/mobile/src/frontend/components/Spotlight/SpotlightAwardCard.tsx",
+          "apps/mobile/app/gift/[handle].tsx",
+          "apps/mobile/src/frontend/lib/giftLink.ts",
+          "apps/mobile/src/frontend/components/Reels/ReelPage.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-21T22:01:29.000Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-08.md",
+              "command": "Independent read-only review subagent: exemption fit, accessibility, Calm Island palette, correctness, conventions",
+              "result": "ACCEPT WITH FIXES. Blocker: QR page showed roster school_name without the athlete's school_visible flag. Also short-screen hint clamp, Spotlight non-featured spacing, two missing file headers, reading order, community-hero test gap, soccer-before-football mapping. Review ran after implementation (not before, as the workflow expects)."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-21T22:13:29.000Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-08.md",
+              "command": "All seven review findings fixed; focused Jest (20 suites / 162 tests), app typecheck, comments/copy/data-boundaries/unused/client-keys guards; Expo web 390x844 browser checks",
+              "result": "School hidden when school_visible is false (tested); hint skipped on too-short screens; spacing scoped to featured card; headers added; name read before jersey number; community heroes draw no field (tested incl. hidden elements). Native devices, Dynamic Type on device and hosted data unverified."
+            }
+          ]
+        }
+      }
     }
   ]
 }

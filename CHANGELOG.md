@@ -1,6 +1,21 @@
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-21 — Sport field lines and scoreboard digits (UX-08)
+
+- Draw each athlete's own playing surface faintly behind their profile, the QR donate page and Local game cards; sports added later get a generic field.
+- Show jersey numbers as a stitched patch and live numbers as fixed-width scoreboard digits.
+- Give the featured Spotlight card award-gold field lines and a jersey patch.
+- Hide the athlete's school on the QR donate page when they have made it private.
+- Keep Home's "Swipe for the athlete" hint off the Serve Like Me chip.
+
+## 2026-10-21 — Game venue details and directions (LOCAL-02)
+
+- Add school, public venue address and arrival notes to Expo admin Games and the shared game page.
+- Open Apple Maps on iOS and Google Maps on Android/web from **Get directions**; retain selectable address after failure.
+- Protect all venue edits with trusted admin SQL, preserve operator score writes and prevent stale overview responses restoring corrected locations.
+- Register source/data/privacy/support/infrastructure ownership; migration remains unapplied and device/provider verification remains open in [LOCAL-02](docs/agents/LOCAL-02.md).
+
 ## 2026-10-21 — Share & Donate QR build-out
 
 - Add **Donate to {name}** on the QR landing page, opening the usual donate sheet tagged as a QR donation.

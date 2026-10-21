@@ -1,12 +1,15 @@
+/** Public QR landing (`/gift/[handle]`): a game-program header and Donate for the athlete a family shared. */
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { ShareQrModal } from '@/components/Profile/ShareQrModal';
+import { SportField } from '@/components/Effects/SportField';
 import { ScreenShell } from '@/components/ScreenShell';
 import { MaloTipModal } from '@/components/TipSheetModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors, radii } from '@/constants/theme';
+import { JerseyBadge } from '@/components/UI/JerseyBadge';
+import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { maloAthleteCta } from '@/data/malo';
@@ -14,6 +17,14 @@ import { SHARE_FUND_CTA } from '@/data/share';
 import { resolveGiftLink, type GiftLink } from '@/lib/giftLink';
 import { userProfileHref } from '@/lib/navigation';
 import { FOCAL } from '@/theme/motion';
+
+/** Position, school (only when the athlete shows it) and sport, skipping whatever the roster does not know. */
+export function programLine(link: Extract<GiftLink, { status: 'found' }>): string {
+  return [link.player.position, link.schoolVisible ? link.player.school_name : null, link.sport]
+    .map((part) => (typeof part === 'string' ? part.trim() : ''))
+    .filter((part) => part && part !== '—')
+    .join(' · ');
+}
 
 /**
  * @purpose Public gift landing for family QR scans (`https://tapuai.app/gift/{handle}` / Expo `/gift/[handle]`):
@@ -63,8 +74,19 @@ export default function GiftHandleScreen() {
           <ActivityIndicator accessibilityLabel="Loading athlete" color={FOCAL.jadeInk} />
         ) : link.status === 'found' ? (
           <>
-            <Text style={styles.kicker}>Donate on Tapua'i</Text>
-            <Text accessibilityRole="header" style={styles.title}>Support {link.name}</Text>
+            {/* UX-08: a game-program header — the athlete's surface, jersey patch, then who they play for. */}
+            <View style={styles.program}>
+              <SportField sport={link.sport} opacity={0.12} />
+              {/* row-reverse: the patch draws on the left but screen readers hear the name first. */}
+              <View style={styles.programRow}>
+                <View style={styles.programId}>
+                  <Text style={styles.kicker}>Donate on Tapua'i</Text>
+                  <Text accessibilityRole="header" style={styles.title}>Support {link.name}</Text>
+                </View>
+                <JerseyBadge number={link.player.jersey_number} size="md" />
+              </View>
+              {programLine(link) ? <Text style={styles.programLine}>{programLine(link)}</Text> : null}
+            </View>
             <Text style={styles.body}>{`Donate to ${link.name} here, or pass this page on to family and friends.`}</Text>
             {live.buttons.malo ? (
               <AnimatedButton
@@ -138,6 +160,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 24,
     gap: 12,
+  },
+  program: {
+    overflow: 'hidden',
+    borderRadius: MENU_METRICS.cardRadius,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderTopWidth: 3,
+    borderTopColor: FOCAL.jadeInk,
+    backgroundColor: colors.surface,
+    padding: 18,
+    gap: 10,
+  },
+  programRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 14,
+  },
+  programId: {
+    flex: 1,
+    gap: 2,
+  },
+  programLine: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textMuted,
   },
   kicker: {
     fontSize: 11,

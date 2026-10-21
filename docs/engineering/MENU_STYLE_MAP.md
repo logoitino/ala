@@ -1,7 +1,7 @@
 <!-- Current shared UI source coverage is separate from dated rendered/native acceptance. -->
 # Menu and page style coverage
 
-**Current source alignment:** 2026-10-20 America/Denver · Calm Island after UX-07; UX-06 retained; earlier UX-02/UX-03 evidence below remains dated history. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
+**Current source alignment:** 2026-10-21 America/Denver · Calm Island after UX-07; UX-06 retained; earlier UX-02/UX-03 evidence below remains dated history. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
 `ACCESSIBILITY`, `DEVICE_QA` review; `DOCUMENTATION` keeps this map current.
 
 This is a source inventory of shared presentation coverage. It is not a rendered-device audit.
@@ -226,3 +226,22 @@ Shared primitive changes cover their consumers; this does not claim every desk o
 ### Current UX-07 rendered follow-up
 
 Actual independent outside Codex review accepted synthetic current-component Story at390px and320px enlarged CSS text, plus normal/enlarged Upload at320x640. Capture URL, viewport and PNG widths match. Existing Highlight/Beyond callback assertions and Cancel event wait completed before a later optional page open failed. A subsequent hidden-subject DOM read succeeded at desktop width; it supplies no narrow visual or hosted-policy acceptance. Final post-scroll `pnpm check` passed212mobile suites/1849tests and all included gates; selected local app-ready passed. Native/assistive checks, configured-theme/full-route visual coverage and engagement outcomes remain unverified. Exact receipts and failure limits: [UX-07](../agents/UX-07.md).
+
+## LOCAL-02 game venue section — 2026-10-21
+
+The guest/Local game page composes `Local/GameVenueCard.tsx` below the scoreboard using existing
+Calm Island surface/border/radius tokens and a wrapping 44-point primary action. Venue school,
+selectable address and arrival note are separate text; no location is inferred from the home team.
+Venue/address unknown states retain the existing game flow; a failed map handoff leaves the
+address and retry available. No new sheet or navigation bar. Games uses the existing admin
+fields, notice and row report; selected admin-first evidence is in [LOCAL-02](../agents/LOCAL-02.md).
+Rendered current-component phone/desktop checks and physical-device gaps are recorded there.
+
+## UX-08 — sport field lines and scoreboard digits (2026-10-21)
+
+Owner chose "both, lightly" inside Calm Island. `Effects/SportField` draws the athlete's or game's surface
+(11 kinds from `data/sportField.ts`; unknown sports get a generic field) at 0.08–0.12 opacity behind the compact
+athlete hero, the `/gift/[handle]` program header, the featured Spotlight card (award gold, generic field) and
+Local `GameCard` (own clipped layer, shadow kept). `SCOREBOARD_DIGITS` (theme) sets tabular, heavy live numbers;
+`UI/JerseyBadge` replaces the `#n` pill. Community heroes stay plain. Evidence and review: [UX-08](../agents/UX-08.md).
+

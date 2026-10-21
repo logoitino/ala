@@ -15,7 +15,7 @@ import type { GiftQrTarget } from '@/lib/share.types';
 import { isSupabaseConfigured } from '@/lib/supabase';
 
 export type GiftLink =
-  | { status: 'found'; handle: string; player: Player; name: string; username: string | null }
+  | { status: 'found'; handle: string; player: Player; name: string; username: string | null; sport: string | null; schoolVisible: boolean }
   | { status: 'not_found'; handle: string }
   | { status: 'error'; handle: string; message: string };
 
@@ -65,6 +65,10 @@ export async function resolveGiftLink(raw: string | null | undefined): Promise<G
       player: loaded.player,
       name: text(profile?.full_name) ?? text(loaded.player.name) ?? 'this athlete',
       username: text(profile?.username),
+      // Public athlete sport (PRIV-01 applied); null until the athlete sets it or the column exists.
+      sport: text(profile?.athlete_sport),
+      // The athlete can hide their school (PRIV-01); the roster row ignores that, so carry the public flag.
+      schoolVisible: profile?.school_visible ?? true,
     };
   } catch {
     return { status: 'error', handle, message: LOAD_ERROR };

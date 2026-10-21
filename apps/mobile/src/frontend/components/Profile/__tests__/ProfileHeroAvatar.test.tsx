@@ -1,5 +1,5 @@
-/** Profile identity must omit missing credentials and keep favorite-athlete details off community heroes. */
-import { fireEvent, render, screen } from '@testing-library/react-native';
+/** Profile identity must preserve the accessible jersey value and keep favorite-athlete details off community heroes. */
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 
 import { ProfileHeroAvatar } from '@/components/Profile/ProfileHeroAvatar';
@@ -33,8 +33,13 @@ describe.each([false, true])('ProfileHeroAvatar identity (compact=%s)', (compact
         showFlipControl onFlipAura={onFlip} />,
     );
     expect(screen.getByRole('header', { name: longName })).toBeTruthy();
-    expect(screen.getByText('#0')).toBeTruthy();
+    expect(within(screen.getByLabelText('Jersey number 0')).getByText('0')).toBeTruthy();
     expect(screen.getByLabelText('Sport: Volleyball')).toBeTruthy();
+    // The compact athlete hero draws the athlete's own surface, hidden from screen readers.
+    if (compact) {
+      expect(screen.getByTestId('sport-field-volleyball', { includeHiddenElements: true })).toBeTruthy();
+      expect(screen.queryByTestId('sport-field-volleyball')).toBeNull();
+    }
     expect(screen.getByLabelText('Position: Outside hitter / defensive specialist')).toBeTruthy();
     expect(screen.getByLabelText("Class: '27")).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Flip Aura card'));
@@ -56,7 +61,9 @@ describe.each([false, true])('ProfileHeroAvatar identity (compact=%s)', (compact
     await render(<ProfileHeroAvatar compact={compact} name="Fan" athlete={false} auraPoints={0} jersey={12}
       sport="Football" position="Quarterback" classYear="26" />);
     expect(screen.getByText('Community profile')).toBeTruthy();
-    expect(screen.queryByText('#12')).toBeNull();
+    expect(screen.queryByLabelText('Jersey number 12')).toBeNull();
+    // UX-08: field lines are athlete identity; community heroes stay plain.
+    expect(screen.queryByTestId(/^sport-field-/, { includeHiddenElements: true })).toBeNull();
     expect(screen.queryByText('Football')).toBeNull();
     expect(screen.queryByText('Quarterback')).toBeNull();
     expect(screen.queryByText("'26")).toBeNull();

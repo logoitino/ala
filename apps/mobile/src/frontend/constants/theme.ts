@@ -4,7 +4,7 @@
  * default look the owner can override from Expo /admin → Look. Focal and motion tokens live in `theme/motion.ts`.
  */
 
-import { Platform, type ViewStyle } from 'react-native';
+import { Platform, type TextStyle, type ViewStyle } from 'react-native';
 
 import { FOCAL } from '@/theme/motion';
 
@@ -151,6 +151,16 @@ export const MENU_METRICS = {
 } as const;
 
 export const SCREEN_BOTTOM_GAP = 52;
+
+/**
+ * Scoreboard digits (UX-08): fixed-width figures so live numbers (scores, Aura, hype counts) never jitter as they
+ * tick, set heavy like a stadium board. Spread into a number's text style; colour and size stay with the caller.
+ */
+export const SCOREBOARD_DIGITS: TextStyle = {
+  fontVariant: ['tabular-nums'],
+  fontWeight: '900',
+  letterSpacing: -0.4,
+};
 
 export const cardShadow: ViewStyle = Platform.select({
   ios: {

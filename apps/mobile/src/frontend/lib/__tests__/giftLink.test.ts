@@ -32,16 +32,16 @@ describe('giftQrTarget', () => {
 
 describe('resolveGiftLink', () => {
   it('finds an athlete by username', async () => {
-    mockProfiles.mockResolvedValue([{ player_id: ID, full_name: 'Mele T.', username: 'mele_t' }]);
+    mockProfiles.mockResolvedValue([{ player_id: ID, full_name: 'Mele T.', username: 'mele_t', athlete_sport: 'Rugby', school_visible: false }]);
     mockPlayer.mockResolvedValue({ player, error: null });
-    await expect(resolveGiftLink('@Mele_T')).resolves.toEqual({ status: 'found', handle: 'mele_t', player, name: 'Mele T.', username: 'mele_t' });
+    await expect(resolveGiftLink('@Mele_T')).resolves.toEqual({ status: 'found', handle: 'mele_t', player, name: 'Mele T.', username: 'mele_t', sport: 'Rugby', schoolVisible: false });
     expect(mockProfiles).toHaveBeenCalledWith({ handle: 'mele_t' });
   });
 
   it('finds an athlete by id even without a public profile', async () => {
     mockProfiles.mockResolvedValue([]);
     mockPlayer.mockResolvedValue({ player, error: null });
-    await expect(resolveGiftLink(ID)).resolves.toMatchObject({ status: 'found', name: 'Mele Tupou', username: null });
+    await expect(resolveGiftLink(ID)).resolves.toMatchObject({ status: 'found', name: 'Mele Tupou', username: null, sport: null, schoolVisible: true });
     expect(mockProfiles).toHaveBeenCalledWith({ playerIds: [ID] });
   });
 

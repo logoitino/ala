@@ -7,9 +7,9 @@ No providers contacted; operationalAcceptance=false; readyToCutOver=false.
 
 ## Source binding
 
-- Safe source SHA256: `7ed4bbc4cef63cea88460038aac96bb3559f582072ccad6b3f01ef8aab350c54` (1226 files).
-- Security metadata SHA256: `8e9980771bed906d4653adfde3923e5ad087ca47ac793005bec4530f5eee7c78` (12 files).
-- Combined binding: `c6149df2fe8d12fa4a61736df9781dd563f4432a29314ddd1720e70d359ca6b5`.
+- Safe source SHA256: `76fc24495bc8f1b567994b5319d272bd123c47bde363c6c0549cd6f14cb94349` (1240 files).
+- Security metadata SHA256: `4eab11bc228f4ded473bd81115aaa9c65e5bfaffc35ee847d6fb7c0d9ea3afec` (12 files).
+- Combined binding: `e3b7ea7659cb1134d4007df4dedf361164f828ec027ecbaeb69a9c3b0d7b3b6c`.
 - Unresolved SDK syntax candidates: 89; their owners still need semantic review.
 
 Scope is registered services/components and governed safe source, not unknown shadow systems or live cloud observations.
@@ -22,6 +22,7 @@ See [security workflow](INFRASTRUCTURE_SECURITY.md) and [dated scoped findings](
 | `admin-portal-hosting` | `INFRASTRUCTURE` | `INFRA_SECURITY`, `SESSION_SECURITY` |
 | `engineering-support` | `INFRASTRUCTURE` | `RECOVERY_SECURITY`, `THREAT_DETECTION` |
 | `expo-eas` | `INFRASTRUCTURE` | `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY` |
+| `game-directions` | `INFRASTRUCTURE` | `INFRA_SECURITY`, `SESSION_SECURITY` |
 | `github-actions` | `INFRASTRUCTURE` | `INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY` |
 | `portable-recovery` | `INFRASTRUCTURE` | `RECOVERY_SECURITY`, `SUPPLY_CHAIN_SECURITY` |
 | `self-hosted-exit` | `INFRASTRUCTURE` | `INFRA_SECURITY`, `RECOVERY_SECURITY`, `SUPPLY_CHAIN_SECURITY` |

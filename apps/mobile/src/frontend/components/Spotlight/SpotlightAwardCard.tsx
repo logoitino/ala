@@ -1,7 +1,10 @@
+/** One Spotlight award row; the featured card adds award-gold field lines and a jersey patch (UX-08). */
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
 import { CardShine } from '@/components/Effects/CardShine';
+import { SportField } from '@/components/Effects/SportField';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { JerseyBadge } from '@/components/UI/JerseyBadge';
 import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
 import { auraBadgeLabel, auraTierForPoints, resolveAuraPoints } from '@/lib/aura';
@@ -32,6 +35,7 @@ export function SpotlightAwardCard({ award, featured = false, onPress }: Spotlig
   const name = displayValue(award.player?.name, 'Spotlight athlete');
   const tier = auraTierForPoints(award.player ? resolveAuraPoints(award.player) : 0);
   const label = featured ? spotlightBadgeLabel(award) : spotlightWindowLabel(award);
+  const jersey = featured ? award.player?.jersey_number : null;
 
   return (
     <AnimatedButton
@@ -41,15 +45,23 @@ export function SpotlightAwardCard({ award, featured = false, onPress }: Spotlig
       contentStyle={[styles.card, featured && styles.featured]}
       onPress={onPress}
     >
+      {/* UX-08: awards carry no sport, so the featured card gets the generic field, in award gold. */}
+      {featured ? <SportField color={FOCAL.goldInk} opacity={0.1} /> : null}
       {featured ? <CardShine loopMs={3400} width={60} tint={`${FOCAL.electricGold}80`} /> : null}
-      <View
-        style={[
-          styles.portrait,
-          { borderColor: featured ? FOCAL.electricGold : tier.color, backgroundColor: featured ? FOCAL.mistGold : `${tier.color}1A` },
-        ]}
-      >
-        <View pointerEvents="none" style={styles.portraitGloss} />
-        <Text style={[styles.initials, { color: featured ? FOCAL.goldInk : tier.ink }]}>{initialsFor(name)}</Text>
+      {/* Only the featured card with a jersey number makes room for the patch; other rows keep their spacing. */}
+      <View style={jersey != null && styles.portraitStage}>
+        <View
+          style={[
+            styles.portrait,
+            { borderColor: featured ? FOCAL.electricGold : tier.color, backgroundColor: featured ? FOCAL.mistGold : `${tier.color}1A` },
+          ]}
+        >
+          <View pointerEvents="none" style={styles.portraitGloss} />
+          <Text style={[styles.initials, { color: featured ? FOCAL.goldInk : tier.ink }]}>{initialsFor(name)}</Text>
+        </View>
+        {jersey != null ? (
+          <JerseyBadge number={jersey} color={FOCAL.electricGold} ink={FOCAL.goldInk} style={styles.jerseyPatch} />
+        ) : null}
       </View>
       {featured ? (
         <View style={styles.crown}>
@@ -101,6 +113,14 @@ const styles = StyleSheet.create({
       android: { elevation: 8 },
       default: { boxShadow: `0px 0px 18px ${FOCAL.electricGold}` },
     }),
+  },
+  portraitStage: {
+    paddingBottom: 12,
+  },
+  jerseyPatch: {
+    position: 'absolute',
+    bottom: -2,
+    alignSelf: 'center',
   },
   portrait: {
     width: 64,

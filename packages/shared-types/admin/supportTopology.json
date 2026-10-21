@@ -2414,7 +2414,7 @@
       "name": "games",
       "kind": "table",
       "owner": "LOCAL",
-      "purpose": "Local match board: teams, scores, clock, status.",
+      "purpose": "Local match board: teams, scores, clock and status; LOCAL-02 public venue name plus venue_school (160), venue_address (320) and venue_notes (400). Each game owns its destination, including away/neutral venues. Only trusted admins edit location; legacy score-only writes remain. No fan GPS or operator check-in reuse.",
       "writers": [
         "apps/mobile/src/frontend/lib/adminCatalog.ts",
         "apps/mobile/src/frontend/lib/operator.ts"
@@ -2440,7 +2440,8 @@
       "removers": [],
       "triggers": [
         "games_live_seq_bump → games_live_seq_bump",
-        "games_broadcast_score_change → games_broadcast_score_change"
+        "games_broadcast_score_change → games_broadcast_score_change",
+        "games_venue_guard → games_venue_guard"
       ],
       "screens": [
         "/",
@@ -3336,6 +3337,7 @@
       ],
       "readers": [
         "apps/mobile/src/frontend/lib/admin.ts",
+        "apps/mobile/src/frontend/lib/adminCatalog.ts",
         "apps/mobile/src/frontend/lib/athleteStats.ts",
         "apps/mobile/src/frontend/lib/bookkeeping.ts",
         "apps/mobile/src/frontend/lib/guestGames.ts",
@@ -9438,6 +9440,16 @@
       "reads": []
     },
     {
+      "name": "games_venue_guard",
+      "owner": "LOCAL",
+      "callers": [
+        "trigger:games_venue_guard on games"
+      ],
+      "manual": "LOCAL-02 trigger-only trusted admin authorization, trimming and bounds for public sporting venue fields; client EXECUTE revoked. No standalone client RPC. Clearing address disables directions. Local PostgreSQL replay is separate from hosted migration application.",
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "get_active_rally",
       "owner": "RALLY",
       "callers": [
@@ -10522,6 +10534,7 @@
         "sql:check constraint",
         "sql:chip_in_wishlist_item",
         "sql:disbursements_paid_final",
+        "sql:games_venue_guard",
         "sql:guard_consent_records",
         "sql:guard_payout_flags",
         "sql:guard_profiles_admin_escalation",
@@ -14533,6 +14546,7 @@
         "sql:challenge_admin_profile",
         "sql:check constraint",
         "sql:close_ledger_period",
+        "sql:games_venue_guard",
         "sql:get_admin_reports",
         "sql:get_ledger_books",
         "sql:record_ledger_entry",

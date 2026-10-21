@@ -6,9 +6,10 @@
  */
 import { Image, StyleSheet, Text, View } from 'react-native';
 
+import { SportField } from '@/components/Effects/SportField';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { gameScore, gameScoreboardStatus, gameTeamName } from '@/components/Local/gamePresentation';
-import { cardShadow, colors, radii } from '@/constants/theme';
+import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { initialsForBusiness } from '@/data/sponsorships';
 import { mediaUri } from '@/lib/media';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
@@ -84,6 +85,10 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
       onPress={onPress}
       contentStyle={styles.card}
     >
+      {/* UX-08: the game's surface, clipped in its own layer so the card keeps its iOS shadow. */}
+      <View pointerEvents="none" style={styles.fieldLayer}>
+        <SportField sport={sport} opacity={0.08} />
+      </View>
       <View style={styles.topRow}>
         <Text style={styles.sport}>{sport || 'Game day'}</Text>
         <View style={[styles.statusTag, status.isLive && styles.statusLive]}>
@@ -180,7 +185,8 @@ const styles = StyleSheet.create({
   side: { color: colors.textMuted, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.7 },
   teamName: { color: colors.text, fontSize: 17, fontWeight: '900', flexShrink: 1 },
   school: { color: colors.textMuted, fontSize: 12 },
-  score: { color: colors.text, fontSize: 34, fontWeight: '900', fontVariant: ['tabular-nums'], textAlign: 'right', marginLeft: 'auto', maxWidth: '100%' },
+  score: { ...SCOREBOARD_DIGITS, color: colors.text, fontSize: 34, textAlign: 'right', marginLeft: 'auto', maxWidth: '100%' },
+  fieldLayer: { ...StyleSheet.absoluteFill, borderRadius: radii.lg, overflow: 'hidden' },
   scoreDivider: { height: 1, backgroundColor: colors.border },
   venue: { color: colors.textMuted, fontSize: 12 },
   cta: {

@@ -63,6 +63,20 @@ function usePeekHint(active: boolean, index: number) {
   return useMemo(() => ({ show, dismiss }), [show, dismiss]);
 }
 
+/** Room for the clip's own chips (Flash Unlock, coach level, Train / Serve) stacked under the header. */
+const HINT_CHIP_CLEARANCE = 104;
+
+/**
+ * @purpose Vertical position of the "Swipe for the athlete" hint: mid-clip, but never over the chips that sit
+ * just under the floating header, and never down into the caption block.
+ * @param height Page height. @param insetTop Header clearance passed as `peekInsetTop`.
+ * @returns The top offset, or null on a screen too short to fit it between chips and caption (skip the hint).
+ */
+export function peekHintTop(height: number, insetTop: number): number | null {
+  const top = Math.max(height * 0.46, insetTop + HINT_CHIP_CLEARANCE);
+  return top <= height * 0.62 ? top : null;
+}
+
 export type ReelPageProps = {
   children: ReactNode;
   index: number;
@@ -119,6 +133,7 @@ export function ReelPage({
   const [width, setWidth] = useState(0);
   const [open, setOpen] = useState<PeekSide>(0);
   const hint = usePeekHint(active, index);
+  const hintTop = peekHintTop(height, peekInsetTop);
   const pageWidth = useSharedValue(0);
   const peekX = useSharedValue(0);
   const side = useSharedValue<PeekSide>(0);
@@ -334,8 +349,8 @@ export function ReelPage({
             </Animated.View>
           ) : null}
 
-          {hint.show && open === 0 ? (
-            <Animated.View pointerEvents="none" style={[styles.hint, hintStyle]} accessibilityLiveRegion="polite">
+          {hint.show && open === 0 && hintTop !== null ? (
+            <Animated.View pointerEvents="none" style={[styles.hint, { top: hintTop }, hintStyle]} accessibilityLiveRegion="polite">
               <Ionicons name="chevron-back" size={14} color={FOCAL.electricGold} />
               <Text style={styles.hintLabel}>Swipe for the athlete</Text>
               <Ionicons name="chevron-forward" size={14} color={FOCAL.electricGold} />
@@ -378,7 +393,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 16,
     right: 84,
-    top: '46%',
     zIndex: 19,
     flexDirection: 'row',
     alignItems: 'center',

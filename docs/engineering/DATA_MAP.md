@@ -11,7 +11,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Views | 3 |
 | Storage buckets | 6 |
 | Feature switches read by the fan app | 41 of 41 |
-| Database functions | 597 (236 used by hand, 57 trigger functions) |
+| Database functions | 598 (237 used by hand, 58 trigger functions) |
 | Tables reached by at least one screen or server route | 122 of 125 |
 | Code files that read or write the database | 83 |
 | Exported symbols nothing imports | 42 (0 proposed for archive, 42 kept on purpose) |
@@ -40,7 +40,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `HIGHLIGHTS` | `beyond_admin_events`, `beyond_media`, `beyond_posts`, `beyond_reports`, `beyond_settings`, `beyond_submission_quota`, `challenge_athlete_settings`, `challenge_badges`, `challenge_mutes`, `challenge_nudges`, `challenge_response_quota`, `challenge_responses`, `reel_hype_votes`, `reels`, `safety_label_events`, `saved_reels`, `reels_feed` | 54 |
 | `INCIDENT_TRIAGE` | `support_reviews` | 1 |
 | `LEDGER` | `company_revenue_logs`, `stripe_webhook_events`, `tips` | 7 |
-| `LOCAL` | `games` | 2 |
+| `LOCAL` | `games` | 3 |
 | `MINOR_SAFETY` | `fan_zone_consents`, `sport_quiz_group_cases` | 16 |
 | `MODERATION` | `fan_zone_cases`, `reel_reports` | 6 |
 | `NOTIFICATIONS` | `crew_push_queue`, `notification_config`, `notification_deliveries`, `notification_delivery_attempts`, `notification_events`, `notification_inbox`, `notification_inbox_snapshots` | 15 |
@@ -450,11 +450,11 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `games`
 
-**Owner:** `LOCAL` · Local match board: teams, scores, clock, status.
+**Owner:** `LOCAL` · Local match board: teams, scores, clock and status; LOCAL-02 public venue name plus venue_school (160), venue_address (320) and venue_notes (400). Each game owns its destination, including away/neutral venues. Only trusted admins edit location; legacy score-only writes remain. No fan GPS or operator check-in reuse.
 
 - Written by: `@/lib/adminCatalog.ts`, `@/lib/operator.ts`; database functions: `update_game_score`
 - Read by: `@/components/Reels/UploadVideoModal.tsx`, `@/hooks/useGameEventBroadcast.ts`, `@/lib/adminCatalog.ts`, `@/lib/guestGames.ts`, `@/lib/liveGames.ts`, `@/lib/localSearch.ts` +2 more; database functions: `get_admin_reports`, `search_local_entities`, `update_game_score`
-- Triggers: `games_live_seq_bump → games_live_seq_bump`, `games_broadcast_score_change → games_broadcast_score_change`
+- Triggers: `games_live_seq_bump → games_live_seq_bump`, `games_broadcast_score_change → games_broadcast_score_change`, `games_venue_guard → games_venue_guard`
 - Screens: `/`, `/admin`, `/admin/analytics`, `/admin/audience`, `/admin/departments`, `/admin/games`, `/admin/health`, `/admin/product`, `/admin/product/coverage`, `/admin/product/features` +23 more
 
 ### `guardian_approval_requests`
@@ -677,7 +677,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `ROSTERS` · Athlete roster that fans tag and donate to.
 
 - Written by: `@/lib/adminCatalog.ts`, `@/lib/boosterPortal.ts`, `@/lib/hype.ts`, `@/lib/payments.ts`, `@/lib/vault.ts`; database functions: `add_user_aura`, `admin_approve_player_consent`, `admin_set_player_guardian`, `increment_backer_count`, `increment_player_hype`, `parent_set_player_consent` +1 more
-- Read by: `@/lib/admin.ts`, `@/lib/athleteStats.ts`, `@/lib/bookkeeping.ts`, `@/lib/guestGames.ts`, `@/lib/localSearch.ts`, `@/lib/operator.ts` +2 more; database functions: `admin_add_athlete_game_log`, `admin_challenge_post_counts`, `admin_decide_payout_override`, `admin_payee_overview`, `admin_record_payee_check`, `admin_upsert_athlete_career_stats` +36 more
+- Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/athleteStats.ts`, `@/lib/bookkeeping.ts`, `@/lib/guestGames.ts`, `@/lib/localSearch.ts` +3 more; database functions: `admin_add_athlete_game_log`, `admin_challenge_post_counts`, `admin_decide_payout_override`, `admin_payee_overview`, `admin_record_payee_check`, `admin_upsert_athlete_career_stats` +36 more
 - Triggers: `players_payee_supersede → payee_changes_supersede`
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +60 more
 
@@ -1439,6 +1439,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `fun_vote` | `POLLS` | By hand: Atomic one free ballot/account/window; version CAS, caller/request/args retry binding, no-self vote and capped mutations. | `fan_zone_ballots`, `fan_zone_requests` | `fan_zone_campaigns`, `fan_zone_entries` |
 | `games_broadcast_score_change` | `REALTIME` | By hand: SCALE-03 trigger: sends only the changed scoreboard columns on private Broadcast game_scores_{id}, and add/remove/active notices on game_scores_index. | — | — |
 | `games_live_seq_bump` | `REALTIME` | By hand: SCALE-03 trigger: keeps games.live_seq server-owned; adds 1 only when a scoreboard column changes. | — | — |
+| `games_venue_guard` | `LOCAL` | By hand: LOCAL-02 trigger-only trusted admin authorization, trimming and bounds for public sporting venue fields; client EXECUTE revoked. No standalone client RPC. Clearing address disables directions. Local PostgreSQL replay is separate from hosted migration application. | — | — |
 | `get_active_rally` | `RALLY` | `@/lib/rallies.ts` | — | `rallies` |
 | `get_active_spotlight_award` | `ROSTERS` | `@/lib/spotlight.ts` | — | `players`, `profiles`, `reels` +2 more |
 | `get_admin_malo_breakdown` | `ROSTERS` | `portal/lib/reports.ts`, `@/lib/adminReports.ts` | — | `players`, `profiles`, `tips` |
@@ -1515,7 +1516,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `is_minor_band` | `BACKEND` | `sql:accept_guardian_invite`, `sql:admin_minor_report`, `sql:admin_set_birth_month` +16 more | — | — |
 | `is_school_operator_for` | `ROSTERS` | `sql:reels_apply_tag_defaults` | — | `players`, `profiles`, `schools_and_teams` |
 | `is_supervising_guardian` | `PROFILE` | `sql:beyond_can_view`, `sql:beyond_missing`, `sql:challenge_counts_visible` +6 more | — | `guardian_links` |
-| `is_trusted_server` | `BACKEND` | `sql:add_user_aura`, `sql:check constraint`, `sql:chip_in_wishlist_item` +11 more | — | — |
+| `is_trusted_server` | `BACKEND` | `sql:add_user_aura`, `sql:check constraint`, `sql:chip_in_wishlist_item` +12 more | — | — |
 | `ledger_lock_period` | `BACKEND` | `sql:close_ledger_period`, `sql:record_ledger_entry`, `sql:reopen_ledger_period` +1 more | — | — |
 | `ledger_period_is_closed` | `CONTROLLER` | `sql:record_ledger_entry`, `sql:void_ledger_entry` | — | `ledger_period_closes` |
 | `list_my_blocks` | `PROFILE` | `@/lib/privacy.ts` | — | `profiles`, `user_blocks` |
@@ -1778,7 +1779,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `request_athlete_verification` | `PROFILE` | `@/lib/verification.ts` | — | `profiles` |
 | `request_custodial_withdrawal` | `CUSTODIAL` | `@/lib/custodial.ts` | `custodial_withdrawals` | `custodial_accounts`, `profiles` |
 | `request_friend` | `PROFILE` | `@/lib/privacy.ts` | `friend_request_log`, `friendships` | `friendships`, `guardian_links`, `profiles` |
-| `require_admin_guard` | `BACKEND` | `sql:admin_add_athlete_game_log`, `sql:admin_confirm_payee_check`, `sql:admin_decide_payout_override` +29 more | — | — |
+| `require_admin_guard` | `BACKEND` | `sql:admin_add_athlete_game_log`, `sql:admin_confirm_payee_check`, `sql:admin_decide_payout_override` +30 more | — | — |
 | `respond_friend` | `PROFILE` | `@/lib/privacy.ts` | `friendships` | `friendships` |
 | `respond_guardian_link` | `PROFILE` | `@/lib/minors.ts` | `guardian_links` | `guardian_links` |
 | `retry_notification_job` | `ADMIN` | By hand: Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried. | `notification_admin_audit`, `notification_deliveries` | `notification_config` |
