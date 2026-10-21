@@ -1582,7 +1582,7 @@
       "status": "kept"
     },
     {
-      "file": "apps/mobile/src/frontend/lib/adminCatalog.ts",
+      "file": "apps/mobile/src/frontend/lib/adminShop.ts",
       "name": "setShopProductActive",
       "decision": "keep",
       "reason": "Drip desk action for when Drip turns on (Wave 1).",

@@ -1,4 +1,8 @@
-/** Athlete discovery keeps the existing feed/player contracts, with readable recovery and 44-point chrome. */
+/**
+ * Athlete discovery keeps the existing feed/player contracts, with readable recovery and 44-point chrome.
+ * R4-03 split (behaviour unchanged): the empty feed, campaign copy and pill row render from `components/Reels/`
+ * (`HomeFeedEmpty`, `HomeCampaignCopy`, `HomeFeedSwitch`); this route keeps every hook, state and callback.
+ */
 import { useRouter } from 'expo-router';
 import { clearVideoCacheAsync } from 'expo-video';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -7,6 +11,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { HomeCampaignCopy } from '@/components/Reels/HomeCampaignCopy';
+import { HomeFeedEmpty } from '@/components/Reels/HomeFeedEmpty';
+import { HomeFeedSwitch } from '@/components/Reels/HomeFeedSwitch';
 import { HomeSearchOverlay } from '@/components/Reels/HomeSearchOverlay';
 import { RivalryWeekBanner } from '@/components/Local/RivalryWeekBanner';
 import { RallyMeter } from '@/components/Rally/RallyMeter';
@@ -25,7 +32,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
-import { FOCAL, SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
+import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 import {
   HIGHLIGHT_CLIPS,
   HIGHLIGHT_FEED_BEYOND,
@@ -472,20 +479,7 @@ export default function HighlightsTab() {
           </View>
         ) : feed.length === 0 ? (
           <View style={styles.boot}>
-            <Text accessibilityRole="header" style={styles.empty}>{emptyCopy}</Text>
-            {feedFilter === 'beyond' ? (
-              <View style={styles.emptyActions}>
-                {runtime.tabs.upload ? (
-                  <AnimatedButton haptic="light" accessibilityRole="button" accessibilityLabel="Share a clip" contentStyle={styles.emptyPrimary} onPress={openUpload}>
-                    <Ionicons name="add" size={18} color="#FFFFFF" />
-                    <Text style={styles.emptyPrimaryLabel}>Share a clip</Text>
-                  </AnimatedButton>
-                ) : null}
-                <AnimatedButton haptic="selection" accessibilityRole="link" accessibilityLabel="Open Beyond the Game" contentStyle={styles.emptySecondary} onPress={() => router.push('/beyond')}>
-                  <Text style={styles.emptySecondaryLabel}>Open Beyond the Game</Text>
-                </AnimatedButton>
-              </View>
-            ) : null}
+            <HomeFeedEmpty emptyCopy={emptyCopy} feedFilter={feedFilter} runtime={runtime} openUpload={openUpload} router={router} />
           </View>
         ) : (
           <Animated.FlatList
@@ -602,24 +596,7 @@ export default function HighlightsTab() {
               jumpToClip(reelId);
             }}
           />
-          {runtime.copy.homeBannerTitle.trim() ? (
-            <View style={[styles.campaign, { borderColor: FOCAL.electricGold }]}>
-              <Text style={[styles.campaignTitle, { color: FOCAL.electricGold }]}>{runtime.copy.homeBannerTitle}</Text>
-              {runtime.copy.homeBannerBody.trim() ? (
-                <Text style={[styles.campaignBody, { color: runtime.theme.text }]}>{runtime.copy.homeBannerBody}</Text>
-              ) : null}
-            </View>
-          ) : null}
-          {runtime.copy.homeKicker.trim() || runtime.copy.homeLede.trim() ? (
-            <View style={styles.homeCopy}>
-              {runtime.copy.homeKicker.trim() ? (
-                <Text style={[styles.homeKicker, { color: FOCAL.electricGold }]}>{runtime.copy.homeKicker}</Text>
-              ) : null}
-              {runtime.copy.homeLede.trim() ? (
-                <Text style={[styles.homeLede, { color: runtime.theme.text }]}>{runtime.copy.homeLede}</Text>
-              ) : null}
-            </View>
-          ) : null}
+          <HomeCampaignCopy runtime={runtime} />
           <View style={styles.chromeRow}>
             {runtime.layouts.homeSearch ? (
             <AnimatedButton
@@ -653,59 +630,19 @@ export default function HighlightsTab() {
                 style={styles.searchField}
               />
             ) : (
-              <View style={styles.feedSwitch} accessibilityRole="tablist" accessibilityLabel="Home feed">
-                <Animated.View pointerEvents="none" style={[styles.feedIndicator, feedIndicatorStyle]} />
-                {feedPills.map((item) => {
-                  const on = feedFilter === item.id;
-                  const count = feedCounts[item.id];
-                  return (
-                    <View
-                      key={item.id}
-                      style={styles.feedPillSlot}
-                      onLayout={(event) => {
-                        const { x, width } = event.nativeEvent.layout;
-                        feedLayouts.current[item.id] = { x, width };
-                        if (item.id === feedFilter) placeFeedPill(item.id, feedReady.current);
-                      }}
-                    >
-                    <AnimatedButton
-                      haptic="selection"
-                      accessibilityRole="tab"
-                      accessibilityLabel={`${item.label}, ${count} ${count === 1 ? 'clip' : 'clips'}`}
-                      accessibilityState={{ selected: on }}
-                      style={styles.feedPillSlot}
-                      contentStyle={styles.feedPill}
-                      onPress={() => switchFeed(item.id)}
-                    >
-                      <Text style={[styles.feedPillLabel, on && styles.feedPillLabelOn]}>{item.label}</Text>
-                      {count > 0 ? (
-                        <Text style={[styles.feedPillCount, on && styles.feedPillCountOn]}>{count}</Text>
-                      ) : null}
-                    </AnimatedButton>
-                    </View>
-                  );
-                })}
-                {/* Local is a destination, not a feed filter — the divider and chevron say so. */}
-                {runtime.tabs.local ? (
-                  <>
-                    <View style={styles.feedDivider} />
-                    <AnimatedButton
-                      haptic="selection"
-                      accessibilityRole="button"
-                      accessibilityLabel="Open Local: live matches, school polls and boosters"
-                      contentStyle={[styles.feedPill, styles.localPill]}
-                      onPress={() => {
-                        trackFeature('feed.local_jump');
-                        router.push('/local');
-                      }}
-                    >
-                      <Ionicons name="location" size={13} color={TAB_ACCENTS.local.glow} />
-                      <Text style={[styles.feedPillLabel, styles.localPillLabel]}>Local</Text>
-                      <Ionicons name="chevron-forward" size={12} color={TAB_ACCENTS.local.glow} />
-                    </AnimatedButton>
-                  </>
-                ) : null}
-              </View>
+              <HomeFeedSwitch
+                feedIndicatorStyle={feedIndicatorStyle}
+                feedPills={feedPills}
+                feedFilter={feedFilter}
+                feedCounts={feedCounts}
+                feedLayouts={feedLayouts}
+                feedReady={feedReady}
+                placeFeedPill={placeFeedPill}
+                switchFeed={switchFeed}
+                runtime={runtime}
+                trackFeature={trackFeature}
+                router={router}
+              />
             )}
           </View>
           {feedFilter === 'beyond' && runtime.tabs.beyond && !searchOpen ? (
@@ -793,40 +730,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  campaign: {
-    borderRadius: 12,
-    borderWidth: 1.5,
-    backgroundColor: 'rgba(15,20,22,0.78)',
-    borderColor: FOCAL.electricGold,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 4,
-  },
-  campaignTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: FOCAL.electricGold,
-  },
-  campaignBody: {
-    fontSize: 12,
-    fontWeight: '600',
-    lineHeight: 16,
-  },
-  homeCopy: {
-    gap: 2,
-  },
-  homeKicker: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: FOCAL.electricGold,
-  },
-  homeLede: {
-    fontSize: 12,
-    fontWeight: '600',
-    opacity: 0.86,
-  },
   searchBtn: {
     width: 44,
     height: 44,
@@ -859,45 +762,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
-  empty: {
-    color: colors.onVideo,
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  emptyActions: {
-    marginTop: 18,
-    gap: 10,
-    alignItems: 'center',
-  },
-  emptyPrimary: {
-    minHeight: 44,
-    paddingHorizontal: 20,
-    borderRadius: 999,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: FOCAL.jadeInk,
-  },
-  emptyPrimaryLabel: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  emptySecondary: {
-    minHeight: 44,
-    paddingHorizontal: 18,
-    borderRadius: 999,
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.onVideoMuted,
-  },
-  emptySecondaryLabel: {
-    color: colors.onVideo,
-    fontSize: 14,
-    fontWeight: '700',
-  },
   beyondLink: {
     alignSelf: 'flex-start',
     minHeight: 44,
@@ -914,77 +778,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     flexShrink: 1,
-  },
-  feedSwitch: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: colors.videoScrim,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.35)',
-    padding: 3,
-  },
-  feedPill: {
-    flexGrow: 0,
-    minHeight: 44,
-    paddingHorizontal: 8,
-    borderRadius: 999,
-    flexDirection: 'row',
-    gap: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  feedPillSlot: {
-    flex: 1,
-    minWidth: 0,
-    zIndex: 1,
-  },
-  feedIndicator: {
-    position: 'absolute',
-    top: 3,
-    bottom: 3,
-    left: 0,
-    borderRadius: 999,
-    backgroundColor: FOCAL.goldInk,
-  },
-  feedPillCount: {
-    color: colors.onVideoMuted,
-    fontSize: 11,
-    fontWeight: '800',
-    opacity: 0.75,
-  },
-  feedPillCountOn: {
-    color: colors.videoScrim,
-    opacity: 0.9,
-  },
-  feedDivider: {
-    width: StyleSheet.hairlineWidth,
-    alignSelf: 'stretch',
-    marginVertical: 6,
-    marginHorizontal: 2,
-    backgroundColor: colors.onVideoMuted,
-    opacity: 0.35,
-  },
-  localPill: {
-    flex: 1,
-    minWidth: 0,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: `${TAB_ACCENTS.local.glow}55`,
-  },
-  localPillLabel: {
-    color: TAB_ACCENTS.local.mist,
-  },
-  feedPillLabel: {
-    color: colors.onVideoMuted,
-    fontSize: 13,
-    fontWeight: '800',
-    flexShrink: 1,
-  },
-  feedPillLabelOn: {
-    color: '#FFFFFF',
   },
 });

@@ -1,24 +1,24 @@
 /**
  * Field operator control center for one claimed game: score buttons, period chips, clock and callouts from the sport
  * playbook. Database reads and live channels go through `lib/operator` so this screen holds no Supabase client.
+ * The scoreboard column and callout buttons live in `components/Operator/ScoreColumn` / `CalloutButton` (R4-03).
  */
 
 import * as Haptics from 'expo-haptics';
 import { type Href, Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
+import { CalloutButton } from '@/components/Operator/CalloutButton';
 import { OperatorRosterModal } from '@/components/Operator/OperatorRosterModal';
 import { PlaySentBanner } from '@/components/Operator/PlaySentBanner';
+import { ScoreColumn } from '@/components/Operator/ScoreColumn';
 import { ScreenShell } from '@/components/ScreenShell';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
-import { SPRING_BOUNCE } from '@/theme/motion';
 import { displayValue, formatClock, type Player } from '@/data/players';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
-import type { SportScoreAction } from '@/data/sports';
 import {
   clockSeconds,
   fetchOperatorGame,
@@ -504,128 +504,6 @@ export default function OperatorScorekeeperScreen() {
   );
 }
 
-/** @purpose One side of the scoreboard. `steps` are the sport's score buttons from `/admin/sports`. */
-function ScoreColumn({
-  label,
-  team,
-  value,
-  disabled,
-  steps,
-  onBump,
-}: {
-  label: string;
-  team: string;
-  value: number;
-  disabled: boolean;
-  steps: SportScoreAction[];
-  onBump: (points: number) => void;
-}) {
-  const scale = useSharedValue(1);
-  const prev = useRef(value);
-  useEffect(() => {
-    if (prev.current === value) return;
-    prev.current = value;
-    scale.value = withSequence(withSpring(1.2, SPRING_BOUNCE), withSpring(1, SPRING_BOUNCE));
-  }, [scale, value]);
-  const scoreStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-
-  return (
-    <View style={styles.scoreCol}>
-      <Text style={styles.scoreTeamLabel}>{label}</Text>
-      <Text style={styles.scoreTeam} numberOfLines={1}>
-        {displayValue(team)}
-      </Text>
-      <Animated.Text style={[styles.score, scoreStyle]}>{value}</Animated.Text>
-      <View style={styles.stepCol}>
-        {steps.map((step) => (
-          <ScoreStepButton
-            key={step.id}
-            label={label}
-            points={step.points}
-            hint={step.label}
-            disabled={disabled}
-            onPress={() => onBump(step.points)}
-          />
-        ))}
-      </View>
-    </View>
-  );
-}
-
-/**
- * @purpose One score-step button (+1 / +3 / +6…). Flashes white the instant it's tapped, before the
- * `update_game_score` RPC resolves, so the operator gets confirmation the tap registered even under time pressure.
- */
-function ScoreStepButton({
-  label,
-  points,
-  hint,
-  disabled,
-  onPress,
-}: {
-  label: string;
-  points: number;
-  hint: string;
-  disabled: boolean;
-  onPress: () => void;
-}) {
-  const flash = useSharedValue(0);
-  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
-
-  return (
-    <AnimatedPressable
-      haptic="light"
-      scaleTo={0.92}
-      disabled={disabled}
-      accessibilityLabel={`${label} ${hint}`}
-      onPress={() => {
-        flash.value = withSequence(withTiming(0.55, { duration: 40 }), withTiming(0, { duration: 220 }));
-        onPress();
-      }}
-      contentStyle={[styles.step, disabled && styles.disabled]}
-    >
-      <Animated.View pointerEvents="none" style={[styles.stepFlash, flashStyle]} />
-      <Text style={styles.stepLabel}>+{points}</Text>
-      <Text style={styles.stepHint}>{hint}</Text>
-    </AnimatedPressable>
-  );
-}
-
-/**
- * @purpose One sideline callout button (⚡ Big Play, 🏆 Touchdown, …). Flashes jade the instant it's tapped,
- * ahead of the Broadcast round-trip, so the operator sees confirmation before `flashToast` lands.
- */
-function CalloutButton({
-  label,
-  disabled,
-  onPress,
-}: {
-  label: string;
-  disabled: boolean;
-  onPress: () => void;
-}) {
-  const flash = useSharedValue(0);
-  const flashStyle = useAnimatedStyle(() => ({ opacity: flash.value }));
-
-  return (
-    <AnimatedPressable
-      haptic="none"
-      scaleTo={0.94}
-      disabled={disabled}
-      accessibilityLabel={label}
-      onPress={() => {
-        flash.value = withSequence(withTiming(1, { duration: 50 }), withTiming(0, { duration: 260 }));
-        onPress();
-      }}
-      style={styles.calloutFlex}
-      contentStyle={[styles.callout, disabled && styles.disabled]}
-    >
-      <Animated.View pointerEvents="none" style={[styles.calloutFlash, flashStyle]} />
-      <Text style={styles.calloutLabel}>{label}</Text>
-    </AnimatedPressable>
-  );
-}
-
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
@@ -671,57 +549,6 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     padding: 12,
     gap: 8,
-  },
-  scoreCol: {
-    flex: 1,
-    gap: 6,
-    alignItems: 'center',
-  },
-  scoreTeamLabel: {
-    color: colors.primary,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  scoreTeam: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  score: {
-    color: colors.primary,
-    fontSize: 40,
-    fontWeight: '800',
-    letterSpacing: -1,
-  },
-  stepCol: {
-    alignSelf: 'stretch',
-    gap: 6,
-  },
-  step: {
-    minHeight: 44,
-    borderRadius: radii.md,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    overflow: 'hidden',
-  },
-  stepFlash: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: colors.onAccent,
-  },
-  stepLabel: {
-    color: colors.onAccent,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  stepHint: {
-    color: colors.onAccent,
-    fontSize: 9,
-    fontWeight: '700',
-    opacity: 0.8,
   },
   clockCol: {
     alignItems: 'center',
@@ -774,30 +601,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-  },
-  calloutFlex: {
-    flexGrow: 1,
-    flexBasis: '46%',
-    minWidth: 148,
-  },
-  callout: {
-    minHeight: 52,
-    borderRadius: radii.md,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  calloutFlash: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: colors.primary,
-  },
-  calloutLabel: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
   },
   row: {
     flexDirection: 'row',
