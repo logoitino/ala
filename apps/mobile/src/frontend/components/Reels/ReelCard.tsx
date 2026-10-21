@@ -13,7 +13,7 @@
 import { fetchReelAccountTags } from '@/lib/accountTags';
 import { useIsFocused } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Platform, Share, StyleSheet, Text, View, type ViewInstance } from 'react-native';
+import { Alert, Platform, Share, Text, View, type ViewInstance } from 'react-native';
 import { BlurTargetView, BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -40,7 +40,6 @@ import { HypeBurst } from '@/components/Effects/HypeBurst';
 import { useReelViewTracker } from '@/hooks/useReelViewTracker';
 import { VIEW_PLAY_MS, viewThresholdMs } from '@/lib/leaderboards';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, palette, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
@@ -54,14 +53,12 @@ import {
 import {
   displayValue,
   type PlayReactionId,
-  type Player,
 } from '@/data/players';
 import {
   doubleTapAuraForCategory,
   isPhotoStory,
   reelCategoryBadge,
   REEL_CATEGORY_SERVE,
-  type HighlightClip,
   type StoryPhoto,
 } from '@/data/highlights';
 import {
@@ -83,51 +80,18 @@ import { isVaultSealed } from '@/lib/vault';
 import { telemetry } from '@/services/TelemetryManager';
 import { offlineQueue } from '@/services/OfflineQueue';
 import { FOCAL } from '@/theme/motion';
-import type { UsageSurface } from '@/hooks/useSurfaceUsage';
+import { styles } from '@/components/Reels/ReelCardStyles';
+import {
+  countFor,
+  LIVE_BANNER_RESERVE,
+  popSize,
+  sameReelCardProps,
+  type HypePop,
+  type ReelCardProps,
+} from '@/components/Reels/reelCardModel';
 
-export type ReelCardProps = {
-  clip: HighlightClip;
-  player: Player | null;
-  active: boolean;
-  height: number;
-  /** Measured feed header clearance; oversized text stays scrollable below its scoreboard. */
-  overlayInsetTop?: number;
-  tipping: boolean;
-  sekiPlay?: boolean;
-  /** When true, play if `active` even if the host route is not focused (profile / athlete modal). */
-  playbackActive?: boolean;
-  onTip: () => void;
-  /** True after this fan has already dropped a Mālo on this clip. */
-  userTipped?: boolean;
-  onOpenProfile?: () => void;
-  onReelHypeChange?: (reelId: string, hype: ReelHype) => void;
-  /** After Report / Hide, parent drops this clip from the paging feed. */
-  onHide?: (reelId: string) => void;
-  /** Tab that owns this card so usage reports know which surface liked / failed the control. */
-  surface?: UsageSurface;
-};
-
-type HypePop = {
-  id: number;
-  x: number;
-  y: number;
-  kind: PlayReactionId;
-  boosted?: boolean;
-};
-
-/** Burst container size in points. Offsets are derived as half of this so it centres on the tap. */
-function popSize(burst: HypePop): number {
-  return burst.boosted ? 224 : 176;
-}
-
-/** Reads the counter for one hype kind so the optimistic/server comparisons stay readable. */
-function countFor(hype: ReelHype, kind: PlayReactionId): number {
-  return kind === 'seki' ? hype.seki_count : kind === 'aura' ? hype.aura_count : hype.flex_count;
-}
-
-const LIVE_BANNER_RESERVE = 108;
-/** Scene already ends at the fan bar; keep chrome on the clip, just above the nav. */
-const OVERLAY_BOTTOM_INSET = 8;
+// Props and the memo comparison live in reelCardModel.ts (R4-03); keep exporting the type from here.
+export type { ReelCardProps } from '@/components/Reels/reelCardModel';
 
 /**
  * @purpose Full-screen Reel feed card: Exclusive mute vs double-tap Aura ⚡, TikTok-style name + caption on the clip just above the fan bar, Train/Serve / Flash Unlock chips, one Seki / Aura / Flex per fan, Mālo for the confirmed athlete on the clip (not the uploader), ⋯ for Share / Save / Report. Vault clips lock when `players.vault_locked` (default) unless the fan is subscribed or a Flash Unlock window is live. Serve Like Me doubles double-tap Aura. Only Aura (chip or double-tap) fires a `HypeBurst`; Seki's chip briefly turns into a 🏈, Flex just lights up.
@@ -829,249 +793,6 @@ function ReelCardImpl({
         }}
       />
     </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  page: {
-    backgroundColor: colors.night,
-    overflow: 'hidden',
-  },
-  video: {
-    ...StyleSheet.absoluteFill,
-  },
-  videoFill: {
-    ...StyleSheet.absoluteFill,
-  },
-  hitLayer: {
-    ...StyleSheet.absoluteFill,
-  },
-  playbackFailure: {
-    position: 'absolute', top: '35%', left: 24, right: 24, zIndex: 9,
-    alignItems: 'center', gap: 12, padding: 20, borderRadius: radii.lg,
-    backgroundColor: colors.videoScrimSoft,
-  },
-  playbackFailureText: { color: colors.onVideo, fontSize: 16, fontWeight: '700', textAlign: 'center' },
-  playbackRetry: { minWidth: 88, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, borderRadius: 22, backgroundColor: palette.jadeInk },
-  playbackRetryText: { color: colors.onAccent, fontSize: 15, fontWeight: '800' },
-  lockBlur: {
-    ...StyleSheet.absoluteFill,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    zIndex: 8,
-  },
-  vaultPanel: {
-    alignItems: 'center',
-    gap: 14,
-    maxWidth: 300,
-  },
-  vaultBadge: {
-    backgroundColor: colors.videoScrimSoft,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,23,68,0.65)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  vaultBadgeLabel: {
-    color: FOCAL.ember,
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-    textAlign: 'center',
-  },
-  unlockBtn: {
-    backgroundColor: FOCAL.electricGold,
-    borderRadius: radii.md,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    minWidth: 220,
-    alignItems: 'center',
-  },
-  pressed: {
-    opacity: 0.88,
-  },
-  disabled: {
-    opacity: 0.55,
-  },
-  unlockLabel: {
-    color: FOCAL.ink,
-    fontSize: 15,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  scrim: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(7,22,15,0.28)',
-  },
-  hypePop: {
-    // Width/height/offset are set inline from `popSize` so the pop centres on the tap point.
-    position: 'absolute',
-    zIndex: 6,
-  },
-  muteBadge: {
-    ...StyleSheet.absoluteFill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 5,
-  },
-  muteChip: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.videoScrim,
-    borderWidth: 1,
-    borderColor: FOCAL.electricGold,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  meta: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    gap: 4,
-    zIndex: 3,
-  },
-  actionsLayer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: OVERLAY_BOTTOM_INSET,
-    zIndex: 3,
-  },
-  focalLeft: {
-    flex: 1,
-    gap: 6,
-  },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.videoScrim,
-    borderWidth: 1,
-    borderColor: 'rgba(243,251,247,0.35)',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    maxWidth: '100%',
-  },
-  flashChip: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0,230,118,0.18)',
-    borderWidth: 1,
-    borderColor: FOCAL.neonJade,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    maxWidth: '100%',
-    shadowColor: FOCAL.neonJade,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  flashChipLabel: {
-    color: FOCAL.neonJade,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-  },
-  categoryBadgeServe: {
-    borderColor: FOCAL.electricGold,
-    backgroundColor: 'rgba(255,215,0,0.18)',
-    shadowColor: FOCAL.electricGold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.85,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  categoryBadgeLabel: {
-    color: colors.onVideo,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-  },
-  categoryBadgeLabelServe: {
-    color: FOCAL.electricGold,
-  },
-  loopFlash: {
-    marginTop: 6,
-    color: FOCAL.electricGold,
-    fontSize: 12,
-    fontWeight: '800',
-  },
-});
-
-/**
- * Tapping a hype chip bubbles the new count to the feed, which rebuilds every `clip` object
- * and re-renders every mounted card — video chrome, blur layers, Skia glow and the action
- * rail included. That cascade, not the counter itself, is what made the chips feel janky.
- *
- * Function props are compared by identity. The exported `ReelCard` wrapper hands the memoized
- * card stable stand-ins that call the latest parent callback, so fresh parent closures do not
- * defeat the memo — and a skipped render can never leave a stale closure behind (the parents'
- * `onTip` goes through `requireAuth`, which captures auth `loading` / `session`).
- */
-function sameReelCardProps(prev: ReelCardProps, next: ReelCardProps): boolean {
-  if (
-    prev.active !== next.active ||
-    prev.height !== next.height ||
-    prev.overlayInsetTop !== next.overlayInsetTop ||
-    prev.tipping !== next.tipping ||
-    prev.playbackActive !== next.playbackActive ||
-    prev.userTipped !== next.userTipped ||
-    prev.surface !== next.surface ||
-    prev.sekiPlay !== next.sekiPlay ||
-    prev.onTip !== next.onTip ||
-    prev.onOpenProfile !== next.onOpenProfile ||
-    prev.onReelHypeChange !== next.onReelHypeChange ||
-    prev.onHide !== next.onHide
-  ) {
-    return false;
-  }
-
-  const a = prev.clip;
-  const b = next.clip;
-  if (
-    a.id !== b.id ||
-    a.videoUrl !== b.videoUrl ||
-    a.athleteName !== b.athleteName ||
-    a.school !== b.school ||
-    a.tag !== b.tag ||
-    a.sekiCount !== b.sekiCount ||
-    a.auraCount !== b.auraCount ||
-    a.flexCount !== b.flexCount ||
-    a.totalTipsCents !== b.totalTipsCents ||
-    a.isVaultOnly !== b.isVaultOnly ||
-    a.flashUnlockUntil !== b.flashUnlockUntil ||
-    a.category !== b.category ||
-    a.tagStatus !== b.tagStatus ||
-    a.playerId !== b.playerId ||
-    a.gameId !== b.gameId ||
-    a.sekiPlay !== b.sekiPlay ||
-    a.filmedBy !== b.filmedBy ||
-    a.uploadedBy !== b.uploadedBy ||
-    a.mediaType !== b.mediaType ||
-    a.photoCount !== b.photoCount ||
-    a.coverUrl !== b.coverUrl
-  ) {
-    return false;
-  }
-
-  const p = prev.player;
-  const q = next.player;
-  if (p === q) return true;
-  if (!p || !q) return false;
-  return (
-    p.id === q.id &&
-    p.name === q.name &&
-    p.vault_locked === q.vault_locked &&
-    p.aura_count === q.aura_count &&
-    p.seki_count === q.seki_count &&
-    p.flex_count === q.flex_count &&
-    p.view_count === q.view_count &&
-    p.backer_count === q.backer_count
   );
 }
 

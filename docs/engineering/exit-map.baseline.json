@@ -1,5 +1,5 @@
 {
- "planVersion": "ba152bcf4770",
+ "planVersion": "7ed4bbc4cef6",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1572,7 +1572,7 @@
    "apps/mobile/app/(tabs)/index.tsx 31029d9e8876fc2cfb2644fd3b14ec9c6ec62ff3f8f8f5b5372d793d6fe56023",
    "apps/mobile/app/(tabs)/local/_layout.tsx 5aceae7a0036a3d8525e9a567b035a146bbe217232bc5c14b23703499bd9592f",
    "apps/mobile/app/(tabs)/local/game/[id].tsx e0adfdd8c363e16fd6ad4b4e91dd9c2a11854e65bb24345441208b5625b7e9f6",
-   "apps/mobile/app/(tabs)/local/index.tsx 2ba96958187c76cd8c029d45d23325d63c97ef79e0d05fb114c5b1616ec8815c",
+   "apps/mobile/app/(tabs)/local/index.tsx f7c874c3e6955668898e74b7dcf82dd71b39ff069bf6647403889c4eb80d9ceb",
    "apps/mobile/app/(tabs)/profile.tsx 32fb7bafdb06df28845545b2c7bb1534ee19defa22d8aa1a17b7e8d0f03eec53",
    "apps/mobile/app/(tabs)/receipts.tsx 5a823891e4908f2ae5614c6cc0be6ccbe64b0617f1fbfcb665a230e88e2dc866",
    "apps/mobile/app/(tabs)/shop.tsx 064899d69c6c06d53a743168d6a1081ae2003e7837e46ddf40687b8240017464",
@@ -1836,10 +1836,12 @@
    "apps/mobile/src/frontend/components/Local/CheerPollCard.tsx f154fb8c720b4af99fbce5aab5ee28a6d03ef586bacbc8e7e28e174bac0deacd",
    "apps/mobile/src/frontend/components/Local/GameCard.tsx ee5a99b678a3d3f041be98f63b7583accc04cd2d2c7dc30f77f9361d8a522b92",
    "apps/mobile/src/frontend/components/Local/gamePresentation.ts 250e6ffde7c0a55f17bf69fb0641bbf31a65e149142550d625468108a9ccdd02",
+   "apps/mobile/src/frontend/components/Local/MatchupSkeleton.tsx 7193abdca7443f789b194e515c7a099c864d6a24bd9b913467217c41036ab9fb",
    "apps/mobile/src/frontend/components/Local/NotificationPrefsBar.tsx 5609de565286523143663109ca3a977ff28106a59257914468947d89836b301a",
    "apps/mobile/src/frontend/components/Local/PlayerListItem.tsx d4cbe715a70f0186abb5f8866fe744489b50089377babf57be46970ad8898391",
    "apps/mobile/src/frontend/components/Local/RivalryWeekBanner.tsx f55692331a0d2f719448a6e7588bb8580f157e3fac870cb52b15af3a87c27c07",
    "apps/mobile/src/frontend/components/Local/SearchResultsOverlay.tsx 35e125d281a975cf43fc04a2a9867c4675620fb704de25a0a84200f7b44c3e5b",
+   "apps/mobile/src/frontend/components/Local/SponsorRailCard.tsx b7d02aafcd81dd94eff058dc8b967a26c93b27817d8376e1dd487b0e616d920c",
    "apps/mobile/src/frontend/components/Local/SponsorshipModal.tsx 671f36500c49c9c625b907dab203f980701a56c42a9d3e72d73003b891640bd3",
    "apps/mobile/src/frontend/components/Local/TabSwitcher.tsx 2ef9db69575132e8cc5c0ce30ae0cdc69377b307ffad23240165e0b6f1387592",
    "apps/mobile/src/frontend/components/Local/TopAuraBoosters.tsx 2151b7a0f13bf98a126ed6ea86dd152eb1aeead7503f94ad6ce10cc25f0a1f80",
@@ -1935,7 +1937,9 @@
    "apps/mobile/src/frontend/components/Reels/PlayBroadcastBanner.tsx 5cc003f0bca0fd02b08d1e0aa737ea49c386faa8a65549c6eee1426025357db0",
    "apps/mobile/src/frontend/components/Reels/README.md caf9f229aa71e72b8eeb60476346c0016788deba5e4e3e606553dc29bb7b7b3a",
    "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx d1508eb779ecf124c4c5995ea1f71d2c2fb64d74d5053d8d416f849ca99d2fba",
-   "apps/mobile/src/frontend/components/Reels/ReelCard.tsx 067f0fcd6dfb32aad9db7d228e389caa67e54c0ed598b35ca08bdc3b930c21cc",
+   "apps/mobile/src/frontend/components/Reels/ReelCard.tsx b5568d8a1ef6583c63b44acfd3f6ea6cb157ef0fdd5462a927255ad30eb7f831",
+   "apps/mobile/src/frontend/components/Reels/reelCardModel.ts 1ec45afc5181eba65ebc5e8a5261f3a2984f4d5a407140bc75a0740ab026ce41",
+   "apps/mobile/src/frontend/components/Reels/ReelCardStyles.ts b3f0e1ce78333013d82be5adb90da934e9421a197ce28a92745dbb387176b962",
    "apps/mobile/src/frontend/components/Reels/ReelMoreSheet.tsx fe9c8dbfe3b7077a51e76cc7c253cc16f3a76b1c1a59587a79a9cda13cd0ee6c",
    "apps/mobile/src/frontend/components/Reels/ReelOwnerPeek.tsx b6c039256c90c9655c0881e5a4a8869a8b95be382d9c7103f197d04b46f0efcd",
    "apps/mobile/src/frontend/components/Reels/ReelPage.tsx f45f26a44579940b6d648e3d9fcdcc3125774c4b37fece07538cdf45b4f1dc66",
@@ -2040,6 +2044,7 @@
    "apps/mobile/src/frontend/data/highlights.ts f75651a2ef795bf7c3eb4e62c18ad6701b97b66085709e991f59778b75c52934",
    "apps/mobile/src/frontend/data/hypeStory.ts a5ad9539859d79836374010a9890b45817220e7bfd02be3e3987bdf10b4a8541",
    "apps/mobile/src/frontend/data/legal.ts aede86843f482590ff619a4c35d4857541d5ffdffa6f0d0fc2eb8284ed1060b6",
+   "apps/mobile/src/frontend/data/localHub.ts c06584453585cb2b14976c5a11cd69441004e2b99d1fe45aba19f19e2c222cd0",
    "apps/mobile/src/frontend/data/malo.ts f08edae6dc38a7263bd05dc5f7531ed837e758542c4e88664c421de3ef4b1fc9",
    "apps/mobile/src/frontend/data/media.ts d06ac2fb3232668d50b83967b5feca2193abb855fe7461ebf1b91b9172e0d165",
    "apps/mobile/src/frontend/data/players.ts 0e2cbe8dcccae800dafc69a313c9956e1dd03fb4cc647dcfdc39013842186c48",

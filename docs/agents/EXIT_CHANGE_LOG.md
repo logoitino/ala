@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-21 · plan `ba152bcf4770` → `7ed4bbc4cef6` · announced by Claude Code (Opus 5.5) 2026-10-21: R4-03 round 3 splits (ReelCard, Local)
+
+App at announcement: commit `64b9b7c14620e28a5b2b39930179e22789cb2152` + 7 uncommitted file(s), source `7ed4bbc4cef63cea88460038aac96bb3559f582072ccad6b3f01ef8aab350c54`, app 1.0.0, latest migration `20261021150000_notification_payment_context.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app/(tabs)/local/index.tsx f7c874c3e6955668898e74b7dcf82dd71b39ff069bf6647403889c4eb80d9ceb`, `apps/mobile/src/frontend/components/Local/MatchupSkeleton.tsx 7193abdca7443f789b194e515c7a099c864d6a24bd9b913467217c41036ab9fb`, `apps/mobile/src/frontend/components/Local/SponsorRailCard.tsx b7d02aafcd81dd94eff058dc8b967a26c93b27817d8376e1dd487b0e616d920c`, `apps/mobile/src/frontend/components/Reels/ReelCard.tsx b5568d8a1ef6583c63b44acfd3f6ea6cb157ef0fdd5462a927255ad30eb7f831`, `apps/mobile/src/frontend/components/Reels/reelCardModel.ts 1ec45afc5181eba65ebc5e8a5261f3a2984f4d5a407140bc75a0740ab026ce41`, `apps/mobile/src/frontend/components/Reels/ReelCardStyles.ts b3f0e1ce78333013d82be5adb90da934e9421a197ce28a92745dbb387176b962`, `apps/mobile/src/frontend/data/localHub.ts c06584453585cb2b14976c5a11cd69441004e2b99d1fe45aba19f19e2c222cd0`; removed `apps/mobile/app/(tabs)/local/index.tsx 2ba96958187c76cd8c029d45d23325d63c97ef79e0d05fb114c5b1616ec8815c`, `apps/mobile/src/frontend/components/Reels/ReelCard.tsx 067f0fcd6dfb32aad9db7d228e389caa67e54c0ed598b35ca08bdc3b930c21cc`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-21 · plan `5d35dcc8560d` → `ba152bcf4770` · announced by Claude Code (Opus 5.5) 2026-10-21: R4-03 round 2 splits (AthleteProfileView, Home route, shared analytics)
 
 App at announcement: commit `6a3f0bfc08c9fd580ce2592a9b15f745b074b7fc` + 38 uncommitted file(s), source `ba152bcf4770301db25016f18b7fddaf37d73323fba1bf78a265bcf3d8207e60`, app 1.0.0, latest migration `20261021150000_notification_payment_context.sql`.

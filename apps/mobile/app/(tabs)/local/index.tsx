@@ -1,6 +1,7 @@
 /**
  * Local tab (game day): Matches, School Polls and Top Boosters hubs, plus search (`SearchResultsOverlay`).
- * Booster logos display through `mediaUri` from lib/media (legacy full URL or `sb:` reference, SCALE-02).
+ * Booster logos display through `mediaUri` in `Local/SponsorRailCard` (legacy full URL or `sb:` reference, SCALE-02).
+ * Matching helpers live in `data/localHub.ts`; the rail card and loading skeleton in `components/Local/` (R4-03).
  * Reached from the Home pill, not the tab bar. The `tabs.local` runtime flag can pause it (`RuntimePaused`).
  * UX-07 keeps school/actor labels readable and directs fans through existing filters without desk instructions.
  */
@@ -10,7 +11,6 @@ import * as Haptics from 'expo-haptics';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Keyboard,
   ScrollView,
   StyleSheet,
@@ -25,6 +25,8 @@ import { CheerPollCard } from '@/components/Local/CheerPollCard';
 import { SearchResultsOverlay } from '@/components/Local/SearchResultsOverlay';
 import { SponsorshipModal } from '@/components/Local/SponsorshipModal';
 import { GameCard } from '@/components/Local/GameCard';
+import { MatchupSkeleton } from '@/components/Local/MatchupSkeleton';
+import { SponsorRailCard } from '@/components/Local/SponsorRailCard';
 import { RuntimePaused } from '@/components/RuntimePaused';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
@@ -39,16 +41,21 @@ import {
   gameInRegion,
   isRivalryGame,
 } from '@/data/regions';
-import { initialsForBusiness, sponsorTierById } from '@/data/sponsorships';
+import {
+  blobMatchesSchool,
+  extraLocalHits,
+  isWestlakeLonePeak,
+  schoolOptionsFromGames,
+  sponsorsForGame,
+  withMascot,
+} from '@/data/localHub';
 import { useLiveScores } from '@/hooks/useLiveScores';
 import { usePublishedCheerPolls } from '@/hooks/useCheerPoll';
 import { useSponsorships } from '@/hooks/useSponsorships';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
-import { mediaUri } from '@/lib/media';
 import { localGameHref, userProfileHref } from '@/lib/navigation';
-import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
-import type { Game, LocalSearchHit, Sponsorship } from '@/types/database';
+import { TAB_ACCENTS } from '@/theme/motion';
 
 type LocalHubId = 'matches' | 'polls' | 'boosters';
 
@@ -56,160 +63,12 @@ const LOCAL_HUB_IDS: LocalHubId[] = ['matches', 'polls', 'boosters'];
 
 const TYPE_HAPTIC_MS = 110;
 
-const MASCOTS: Record<string, string> = {
-  westlake: 'Thunder',
-  'lone peak': 'Knights',
-};
-
-function withMascot(name: string | null | undefined): string {
-  const value = typeof name === 'string' ? name.trim() : '';
-  if (!value) return '';
-  const lower = value.toLowerCase();
-  for (const [key, mascot] of Object.entries(MASCOTS)) {
-    if (lower.includes(key) && !lower.includes(mascot.toLowerCase())) {
-      return `${value} ${mascot}`;
-    }
-  }
-  return value;
-}
-
-function isWestlakeLonePeak(home: string, away: string, homeSchool: string, awaySchool: string) {
-  const blob = `${home} ${away} ${homeSchool} ${awaySchool}`.toLowerCase();
-  return blob.includes('westlake') && blob.includes('lone peak');
-}
-
-function schoolOptionsFromGames(games: Game[]): string[] {
-  const seen = new Set<string>();
-  const names: string[] = [];
-  for (const game of games) {
-    for (const raw of [game.home_team, game.away_team, game.home_school, game.away_school]) {
-      const name = withMascot(raw);
-      const key = name.toLowerCase();
-      if (!name || seen.has(key)) continue;
-      seen.add(key);
-      names.push(name);
-    }
-  }
-  return names;
-}
-
-function sponsorsForGame(game: Game, sponsors: Sponsorship[]): Sponsorship[] {
-  const blob = `${game.home_team} ${game.away_team} ${game.home_school} ${game.away_school}`.toLowerCase();
-  return sponsors.filter((sponsor) => {
-    const tag = sponsor.school_team.trim().toLowerCase();
-    if (!tag) return false;
-    if (blob.includes(tag)) return true;
-    return tag.split(/\s+/).some((token) => token.length > 3 && blob.includes(token));
-  });
-}
-
 function lightImpact() {
   try {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   } catch {
     // Simulator / web may not expose haptics.
   }
-}
-
-function blobMatchesSchool(blob: string, school: string): boolean {
-  const hay = blob.toLowerCase();
-  const needle = school.trim().toLowerCase();
-  if (!needle) return false;
-  if (hay.includes(needle) || needle.includes(hay)) return true;
-  return needle.split(/\s+/).some((token) => token.length > 3 && hay.includes(token));
-}
-
-function extraLocalHits(query: string, sponsors: Sponsorship[], schools: string[]): LocalSearchHit[] {
-  const needle = query.trim().toLowerCase();
-  if (needle.length <= 1) return [];
-  const hits: LocalSearchHit[] = [];
-  for (const school of schools) {
-    if (!school.toLowerCase().includes(needle)) continue;
-    hits.push({
-      entity_type: 'school',
-      entity_id: school,
-      title: school,
-      subtitle: 'High school',
-    });
-  }
-  for (const sponsor of sponsors) {
-    if (
-      !sponsor.business_name.toLowerCase().includes(needle) &&
-      !sponsor.school_team.toLowerCase().includes(needle)
-    ) {
-      continue;
-    }
-    hits.push({
-      entity_type: 'booster',
-      entity_id: sponsor.id,
-      title: sponsor.business_name,
-      subtitle: sponsor.school_team,
-    });
-  }
-  return hits;
-}
-
-function SponsorRailCard({
-  sponsor,
-  highlighted,
-  onLayoutX,
-  onPress,
-}: {
-  sponsor: Sponsorship;
-  highlighted: boolean;
-  onLayoutX: (x: number) => void;
-  onPress: () => void;
-}) {
-  const pack = sponsorTierById(sponsor.tier);
-  const logo = mediaUri(sponsor.logo_url);
-  return (
-    <View onLayout={(event) => onLayoutX(event.nativeEvent.layout.x)}>
-      <AnimatedButton
-        accessibilityRole="button"
-        accessibilityLabel={`${sponsor.business_name}, ${pack.badge}, ${sponsor.school_team}`}
-        haptic="selection"
-        onPress={onPress}
-        contentStyle={[
-          styles.sponsorCard,
-          sponsor.tier === 'gold' || sponsor.tier === 'platinum' ? styles.sponsorCardGold : undefined,
-          highlighted ? styles.sponsorCardOn : undefined,
-        ]}
-      >
-        <View style={styles.sponsorLogo}>
-          {logo ? (
-            <Image source={{ uri: logo }} resizeMode="cover" style={styles.sponsorLogoImage} />
-          ) : (
-            <Text style={styles.sponsorInitials}>{initialsForBusiness(sponsor.business_name)}</Text>
-          )}
-        </View>
-        <Text style={styles.sponsorName}>
-          {sponsor.business_name}
-        </Text>
-        {sponsor.school_team ? (
-          <Text style={styles.sponsorSchool}>
-            {sponsor.school_team}
-          </Text>
-        ) : null}
-        <View style={[styles.tierBadge, { borderColor: pack.accent }]}>
-          <Text style={[styles.tierBadgeLabel, { color: pack.accent }]}>{pack.badge}</Text>
-        </View>
-      </AnimatedButton>
-    </View>
-  );
-}
-
-function MatchupSkeleton() {
-  return (
-    <View style={styles.skeleton}>
-      <View style={styles.skeletonChip} />
-      <View style={styles.skeletonRow}>
-        <View style={styles.skeletonLogo} />
-        <View style={styles.skeletonScore} />
-        <View style={styles.skeletonLogo} />
-      </View>
-      <View style={styles.skeletonCta} />
-    </View>
-  );
 }
 
 /**
@@ -719,71 +578,6 @@ const styles = StyleSheet.create({
     paddingRight: 8,
     paddingBottom: 4,
   },
-  sponsorCard: {
-    width: 168,
-    backgroundColor: FOCAL.mistCyan,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 12,
-    gap: 8,
-    ...cardShadow,
-  },
-  sponsorCardGold: {
-    backgroundColor: FOCAL.mistGold,
-    borderColor: FOCAL.electricGold,
-  },
-  sponsorCardOn: {
-    borderWidth: 2,
-    borderColor: FOCAL.electricGold,
-    shadowColor: FOCAL.electricGold,
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 6,
-  },
-  sponsorLogo: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    backgroundColor: colors.photoPlaceholder,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  sponsorLogoImage: {
-    width: 48,
-    height: 48,
-  },
-  sponsorInitials: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  sponsorName: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  sponsorSchool: {
-    color: colors.primary,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  tierBadge: {
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderRadius: 999,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  tierBadgeLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
   ctaCard: {
     width: 168,
     minHeight: 168,
@@ -859,42 +653,5 @@ const styles = StyleSheet.create({
     color: colors.onAccent,
     fontSize: 14,
     fontWeight: '800',
-  },
-  skeleton: {
-    alignSelf: 'stretch',
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
-    gap: 14,
-  },
-  skeletonChip: {
-    width: 72,
-    height: 18,
-    borderRadius: 999,
-    backgroundColor: colors.photoPlaceholder,
-  },
-  skeletonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  skeletonLogo: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.photoPlaceholder,
-  },
-  skeletonScore: {
-    width: 64,
-    height: 18,
-    borderRadius: 8,
-    backgroundColor: colors.photoPlaceholder,
-  },
-  skeletonCta: {
-    height: 48,
-    borderRadius: radii.md,
-    backgroundColor: colors.photoPlaceholder,
   },
 });
